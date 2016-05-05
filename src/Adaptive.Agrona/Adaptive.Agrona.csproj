@@ -43,10 +43,20 @@
   <ItemGroup>
     <Compile Include="BitUtil.cs" />
     <Compile Include="ByteOrder.cs" />
+    <Compile Include="Concurrent\IEpochClock.cs" />
+    <Compile Include="Concurrent\IAgent.cs" />
     <Compile Include="Concurrent\IAtomicBuffer.cs" />
+    <Compile Include="Concurrent\IIdleStrategy.cs" />
+    <Compile Include="Concurrent\IMessageHandler.cs" />
+    <Compile Include="Concurrent\INanoClock.cs" />
+    <Compile Include="Concurrent\RingBuffer\IRingBuffer.cs" />
+    <Compile Include="Concurrent\Status\IPosition.cs" />
+    <Compile Include="Concurrent\Status\IReadablePosition.cs" />
     <Compile Include="EndianessConverter.cs" />
+    <Compile Include="IErrorHandler.cs" />
     <Compile Include="IDirectBuffer.cs" />
     <Compile Include="IMutableDirectBuffer.cs" />
+    <Compile Include="IManagedResource.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
