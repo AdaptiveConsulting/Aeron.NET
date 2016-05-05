@@ -29,4 +29,4 @@ namespace Adaptive.Agrona.Concurrent
         /// <returns> the name of this agent's role. </returns>
         string RoleName();
 	}
-}1
+}

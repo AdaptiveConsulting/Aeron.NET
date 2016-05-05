@@ -43,6 +43,10 @@
   <ItemGroup>
     <Compile Include="BitUtil.cs" />
     <Compile Include="ByteOrder.cs" />
+    <Compile Include="Concurrent\Broadcast\BroadcastBufferDescriptor.cs" />
+    <Compile Include="Concurrent\Broadcast\BroadcastReceiver.cs" />
+    <Compile Include="Concurrent\Broadcast\CopyBroadcastReceiver.cs" />
+    <Compile Include="Concurrent\Broadcast\RecordDescriptor.cs" />
     <Compile Include="Concurrent\IEpochClock.cs" />
     <Compile Include="Concurrent\IAgent.cs" />
     <Compile Include="Concurrent\IAtomicBuffer.cs" />
