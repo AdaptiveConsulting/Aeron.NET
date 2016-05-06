@@ -45,6 +45,7 @@
     <Compile Include="BitUtil.cs" />
     <Compile Include="BufferUtil.cs" />
     <Compile Include="ByteOrder.cs" />
+    <Compile Include="CloseHelper.cs" />
     <Compile Include="Concurrent\Broadcast\BroadcastBufferDescriptor.cs" />
     <Compile Include="Concurrent\Broadcast\BroadcastReceiver.cs" />
     <Compile Include="Concurrent\Broadcast\CopyBroadcastReceiver.cs" />
@@ -67,9 +68,10 @@
     <Compile Include="IDirectBuffer.cs" />
     <Compile Include="IMutableDirectBuffer.cs" />
     <Compile Include="IManagedResource.cs" />
+    <Compile Include="IoUtil.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Util\ByteUtil.cs" />
-    <Compile Include="Util\MemoryMappedFilePointer.cs" />
+    <Compile Include="Util\MemoryMappedFileWrapper.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
