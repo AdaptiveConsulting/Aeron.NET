@@ -29,7 +29,7 @@ namespace Adaptive.Agrona.Concurrent.RingBuffer
         /// </summary>
         /// <param name="handler"> to be called for processing each message in turn. </param>
         /// <returns> the number of messages that have been processed. </returns>
-        int Read(IMessageHandler handler);
+        int Read(MessageHandler handler);
 
         /// <summary>
         /// Read as many messages as are available from the ring buffer to up a supplied maximum.
@@ -37,7 +37,7 @@ namespace Adaptive.Agrona.Concurrent.RingBuffer
         /// <param name="handler"> to be called for processing each message in turn. </param>
         /// <param name="messageCountLimit"> the number of messages will be read in a single invocation. </param>
         /// <returns> the number of messages that have been processed. </returns>
-        int Read(IMessageHandler handler, int messageCountLimit);
+        int Read(MessageHandler handler, int messageCountLimit);
 
         /// <summary>
         /// The maximum message length in bytes supported by the underlying ring buffer.

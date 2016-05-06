@@ -34,7 +34,7 @@ namespace Adaptive.Agrona.Concurrent.Broadcast
         /// </summary>
         /// <param name="handler"> to be called for each message received. </param>
         /// <returns> the number of messages that have been received. </returns>
-        public virtual int Receive(IMessageHandler handler)
+        public virtual int Receive(MessageHandler handler)
         {
             var messagesReceived = 0;
             var receiver = _receiver;
@@ -62,7 +62,7 @@ namespace Adaptive.Agrona.Concurrent.Broadcast
                     throw new InvalidOperationException("Unable to keep up with broadcast buffer");
                 }
 
-                handler.OnMessage(msgTypeId, _scratchBuffer, 0, length);
+                handler(msgTypeId, _scratchBuffer, 0, length);
 
                 messagesReceived = 1;
             }
