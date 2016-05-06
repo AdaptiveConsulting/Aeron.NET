@@ -21,7 +21,7 @@ namespace Adaptive.Agrona.Concurrent.RingBuffer
         /// <param name="srcIndex"> at which the encoded message begins. </param>
         /// <param name="length"> of the encoded message in bytes. </param>
         /// <returns> true if written to the ring-buffer, or false if insufficient space exists. </returns>
-        /// <exception cref="ArgumentException"> if the length is greater than <seealso cref="IRingBuffer#maxMsgLength()"/> </exception>
+        /// <exception cref="ArgumentException"> if the length is greater than <seealso cref="IRingBuffer.MaxMsgLength()"/> </exception>
         bool Write(int msgTypeId, IDirectBuffer srcBuffer, int srcIndex, int length);
 
         /// <summary>
@@ -62,9 +62,7 @@ namespace Adaptive.Agrona.Concurrent.RingBuffer
         /// <summary>
         /// Set the time of the last consumer heartbeat.
         /// 
-        /// TODO JW not applicable in .net
-        /// <b>Note:</b> The value for time must be valid across processes which means <seealso cref="System#nanoTime()"/>
-        /// is not a valid option.
+        /// <b>Note:</b> The value for time must be valid across processes.
         /// </summary>
         /// <param name="time"> of the last consumer heartbeat. </param>
         void ConsumerHeartbeatTime(long time);
