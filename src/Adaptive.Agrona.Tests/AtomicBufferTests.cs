@@ -30,7 +30,7 @@ namespace Adaptive.Agrona.Tests
 
         [Datapoint]
         public static readonly IAtomicBuffer MemoryMappedFileBacked 
-            = new UnsafeBuffer(new MemoryMappedFilePointer(MemoryMappedFile.CreateNew("testmap", BufferCapacity)).Pointer, BufferCapacity);
+            = new UnsafeBuffer(new MemoryMappedFileWrapper(MemoryMappedFile.CreateNew("testmap", BufferCapacity)).Pointer, BufferCapacity);
         
         [Theory]
         public void ShouldGetCapacity(IAtomicBuffer buffer)
