@@ -69,7 +69,7 @@ namespace Adaptive.Agrona.Concurrent.Broadcast
         /// <returns> the capacity of the underlying broadcast buffer. </returns>
         public virtual long LappedCount()
         {
-            return _lappedCount.get();
+            return _lappedCount.Get();
         }
 
         /// <summary>
@@ -130,7 +130,7 @@ namespace Adaptive.Agrona.Concurrent.Broadcast
 
                 if (!Validate(cursor))
                 {
-                    _lappedCount.lazySet(_lappedCount.get() + 1);
+                    _lappedCount.LazySet(_lappedCount.Get() + 1);
 
                     cursor = buffer.GetLong(_latestCounterIndex);
                     recordOffset = (int) cursor & (_capacity - 1);

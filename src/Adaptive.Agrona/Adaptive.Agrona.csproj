@@ -41,6 +41,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AtomicLong.cs" />
     <Compile Include="BitUtil.cs" />
     <Compile Include="ByteOrder.cs" />
     <Compile Include="Concurrent\Broadcast\BroadcastBufferDescriptor.cs" />
