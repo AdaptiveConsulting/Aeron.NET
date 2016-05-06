@@ -135,19 +135,19 @@ namespace Adaptive.Agrona.Concurrent
         /// <param name="value"> for at a given index </param>
         void PutShortVolatile(int index, short value);
 
-        /// <summary>
-        /// Get the value at a given index with volatile semantics.
-        /// </summary>
-        /// <param name="index"> in bytes from which to get. </param>
-        /// <returns> the value for at a given index </returns>
-        char GetCharVolatile(int index);
+        ///// <summary>
+        ///// Get the value at a given index with volatile semantics.
+        ///// </summary>
+        ///// <param name="index"> in bytes from which to get. </param>
+        ///// <returns> the value for at a given index </returns>
+        //char GetCharVolatile(int index);
 
-        /// <summary>
-        /// Put a value to a given index with volatile semantics.
-        /// </summary>
-        /// <param name="index"> in bytes for where to put. </param>
-        /// <param name="value"> for at a given index </param>
-        void PutCharVolatile(int index, char value);
+        ///// <summary>
+        ///// Put a value to a given index with volatile semantics.
+        ///// </summary>
+        ///// <param name="index"> in bytes for where to put. </param>
+        ///// <param name="value"> for at a given index </param>
+        //void PutCharVolatile(int index, char value);
 
         /// <summary>
         /// Get the value at a given index with volatile semantics.
