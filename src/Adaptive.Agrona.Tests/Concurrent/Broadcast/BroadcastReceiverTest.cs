@@ -20,7 +20,7 @@ namespace Adaptive.Agrona.Tests.Concurrent.Broadcast
         private BroadcastReceiver _broadcastReceiver;
 
         [SetUp]
-        public virtual void SetUp()
+        public void SetUp()
         {
             A.CallTo(() => _buffer.Capacity).Returns(TotalBufferLength);
 
@@ -28,37 +28,37 @@ namespace Adaptive.Agrona.Tests.Concurrent.Broadcast
         }
 
         [Test]
-        public virtual void ShouldCalculateCapacityForBuffer()
+        public void ShouldCalculateCapacityForBuffer()
         {
             Assert.AreEqual(Capacity, _broadcastReceiver.Capacity());
         }
 
         [Test]
-        public virtual void ShouldThrowExceptionForCapacityThatIsNotPowerOfTwo()
+        [ExpectedException(typeof(InvalidOperationException))]
+        public void ShouldThrowExceptionForCapacityThatIsNotPowerOfTwo()
         {
             const int capacity = 777;
             var totalBufferLength = capacity + BroadcastBufferDescriptor.TrailerLength;
 
             A.CallTo(() => _buffer.Capacity).Returns(totalBufferLength);
 
-            Assert.Throws<Exception>(() => new BroadcastReceiver(_buffer));
+            new BroadcastReceiver(_buffer);
         }
 
         [Test]
-        public virtual void ShouldNotBeLappedBeforeReception()
+        public void ShouldNotBeLappedBeforeReception()
         {
             Assert.AreEqual(0, _broadcastReceiver.LappedCount());
         }
 
         [Test]
-        public virtual void ShouldNotReceiveFromEmptyBuffer()
+        public void ShouldNotReceiveFromEmptyBuffer()
         {
             Assert.False(_broadcastReceiver.ReceiveNext());
         }
 
-
         [Test]
-        public virtual void ShouldReceiveFirstMessageFromBuffer()
+        public void ShouldReceiveFirstMessageFromBuffer()
         {
             const int length = 8;
             var recordLength = length + RecordDescriptor.HeaderLength;
@@ -85,7 +85,7 @@ namespace Adaptive.Agrona.Tests.Concurrent.Broadcast
         }
 
         [Test]
-        public virtual void ShouldReceiveTwoMessagesFromBuffer()
+        public void ShouldReceiveTwoMessagesFromBuffer()
         {
             const int length = 8;
             var recordLength = length + RecordDescriptor.HeaderLength;

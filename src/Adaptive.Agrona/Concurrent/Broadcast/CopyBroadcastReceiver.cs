@@ -19,7 +19,7 @@ namespace Adaptive.Agrona.Concurrent.Broadcast
         public CopyBroadcastReceiver(BroadcastReceiver receiver)
         {
             _receiver = receiver;
-            _scratchBuffer = new UnsafeBuffer(new sbyte[ScratchBufferSize]);
+            _scratchBuffer = new UnsafeBuffer(new byte[ScratchBufferSize]);
 
             while (receiver.ReceiveNext())
             {
