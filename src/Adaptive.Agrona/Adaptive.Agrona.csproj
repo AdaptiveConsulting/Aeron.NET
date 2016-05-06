@@ -54,9 +54,12 @@
     <Compile Include="Concurrent\IAtomicBuffer.cs" />
     <Compile Include="Concurrent\UnsafeBuffer.cs" />
     <Compile Include="Concurrent\IIdleStrategy.cs" />
-    <Compile Include="Concurrent\IMessageHandler.cs" />
+    <Compile Include="Concurrent\MessageHandler.cs" />
     <Compile Include="Concurrent\INanoClock.cs" />
     <Compile Include="Concurrent\RingBuffer\IRingBuffer.cs" />
+    <Compile Include="Concurrent\RingBuffer\ManyToOneRingBuffer.cs" />
+    <Compile Include="Concurrent\RingBuffer\RecordDescriptor.cs" />
+    <Compile Include="Concurrent\RingBuffer\RingBufferDescriptor.cs" />
     <Compile Include="Concurrent\Status\IPosition.cs" />
     <Compile Include="Concurrent\Status\IReadablePosition.cs" />
     <Compile Include="EndianessConverter.cs" />

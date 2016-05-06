@@ -188,6 +188,8 @@ namespace Adaptive.Agrona.Concurrent
 
         public void VerifyAlignment()
         {
+            return;
+
             // TODO Olivier: port if required
             throw new NotImplementedException();
         }
