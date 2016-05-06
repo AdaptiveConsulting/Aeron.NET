@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Threading;
+using Adaptive.Agrona.Util;
 
 namespace Adaptive.Agrona.Concurrent
 {
@@ -98,8 +100,6 @@ namespace Adaptive.Agrona.Concurrent
         {
             if (buffer == null) throw new ArgumentNullException(nameof(buffer));
 
-            // TODO consider moving bounds check to dedicated method(s) so we have the conditional compilation in a single place
-
 #if SHOULD_BOUNDS_CHECK
             int bufferLength = buffer.Length;
             if (offset != 0 && (offset < 0 || offset > bufferLength - 1))
@@ -168,14 +168,13 @@ namespace Adaptive.Agrona.Concurrent
         {
             BoundsCheck0(index, length);
 
-            // TODO PERF this is a naive implementation, if this is performance critical we may want to optimize
+            // TODO PERF Naive implementation, we should not write byte by byte, this is slow
             //UNSAFE.SetMemory(byteArray, addressOffset + index, length, value);
             for (int i = index; i < index + length; i++)
             {
                 _pBuffer[i] = value;
             }
         }
-        
 
         public void CheckLimit(int limit)
         {
@@ -185,7 +184,7 @@ namespace Adaptive.Agrona.Concurrent
             }
         }
 
-        public bool Expandable => false;
+        public bool IsExpandable => false;
 
         public void VerifyAlignment()
         {
@@ -195,21 +194,21 @@ namespace Adaptive.Agrona.Concurrent
 
         ///////////////////////////////////////////////////////////////////////////
 
-        public long GetLong(int index, ByteOrder byteOrder)
-        {
-            BoundsCheck0(index, BitUtil.SizeOfLong);
+        //public long GetLong(int index, ByteOrder byteOrder)
+        //{
+        //    BoundsCheck0(index, BitUtil.SizeOfLong);
 
-            var value = *(long*)(_pBuffer + index);
-            return EndianessConverter.ApplyInt64(byteOrder, value);
-        }
+        //    var value = *(long*)(_pBuffer + index);
+        //    return EndianessConverter.ApplyInt64(byteOrder, value);
+        //}
 
-        public void PutLong(int index, long value, ByteOrder byteOrder)
-        {
-            BoundsCheck0(index, BitUtil.SizeOfLong);
+        //public void PutLong(int index, long value, ByteOrder byteOrder)
+        //{
+        //    BoundsCheck0(index, BitUtil.SizeOfLong);
             
-            value = EndianessConverter.ApplyInt64(byteOrder, value);
-            *(long*)(_pBuffer + index) = value;
-        }
+        //    value = EndianessConverter.ApplyInt64(byteOrder, value);
+        //    *(long*)(_pBuffer + index) = value;
+        //}
 
         public long GetLong(int index)
         {
@@ -228,39 +227,29 @@ namespace Adaptive.Agrona.Concurrent
         {
             BoundsCheck0(index, BitUtil.SizeOfLong);
 
-            return Thread.VolatileRead(ref *(long*) (_pBuffer + index));
+            return Volatile.Read(ref *(long*) (_pBuffer + index));
         }
 
         public void PutLongVolatile(int index, long value)
         {
             BoundsCheck0(index, BitUtil.SizeOfLong);
-
-            Thread.VolatileWrite(ref *(long*) (_pBuffer + index), value);
-            //UNSAFE.PutLongVolatile(byteArray, addressOffset + index, value);
+            
+            Interlocked.Exchange(ref *(long*) (_pBuffer + index), value);
         }
 
         public void PutLongOrdered(int index, long value)
         {
             BoundsCheck0(index, BitUtil.SizeOfLong);
 
-            Thread.VolatileWrite(ref *(long*) (_pBuffer + index), value);
-            //UNSAFE.PutOrderedLong(byteArray, addressOffset + index, value);
+            Volatile.Write(ref *(long*) (_pBuffer + index), value);
         }
 
         public long AddLongOrdered(int index, long increment)
         {
             BoundsCheck0(index, BitUtil.SizeOfLong);
 
-            //JAVA TO C# CONVERTER WARNING: The original Java variable was marked 'final':
-            //ORIGINAL LINE: final long offset = addressOffset + index;
-            long offset = addressOffset + index;
-            //JAVA TO C# CONVERTER WARNING: The original Java variable was marked 'final':
-            //ORIGINAL LINE: final byte[] byteArray = this.byteArray;
-            sbyte[] byteArray = this.byteArray;
-            //JAVA TO C# CONVERTER WARNING: The original Java variable was marked 'final':
-            //ORIGINAL LINE: final long value = UNSAFE.getLong(byteArray, offset);
-            long value = UNSAFE.GetLong(byteArray, offset);
-            UNSAFE.PutOrderedLong(byteArray, offset, value + increment);
+            var value = GetLong(index);
+            PutLongOrdered(index, value + increment);
 
             return value;
         }
@@ -269,36 +258,386 @@ namespace Adaptive.Agrona.Concurrent
         {
             BoundsCheck0(index, BitUtil.SizeOfLong);
 
-            return UNSAFE.CompareAndSwapLong(byteArray, addressOffset + index, expectedValue, updateValue);
+            var original = Interlocked.CompareExchange(ref *(long*) (_pBuffer + index), updateValue, expectedValue);
+
+            return original == expectedValue;
         }
 
         public long GetAndSetLong(int index, long value)
         {
-            BoundsCheck0(index, BitUtil.SizeOfLong);
-
-            return UNSAFE.GetAndSetLong(byteArray, addressOffset + index, value);
+            // Note ODE: does not seem to be used in the codebase
+            throw new NotImplementedException();
         }
 
         public long GetAndAddLong(int index, long delta)
         {
             BoundsCheck0(index, BitUtil.SizeOfLong);
 
-            return UNSAFE.GetAndAddLong(byteArray, addressOffset + index, delta);
+            return Interlocked.Add(ref *(long*)(_pBuffer + index), delta) - delta;
         }
 
         ///////////////////////////////////////////////////////////////////////////
 
+        //public int GetInt(int index, ByteOrder byteOrder)
+        //{
+        //    BoundsCheck0(index, BitUtil.SizeOfInt);
+
+        //    var value = *(int*)(_pBuffer + index);
+        //    return EndianessConverter.ApplyInt32(byteOrder, value);
+        //}
+
+        //public void PutInt(int index, int value, ByteOrder byteOrder)
+        //{
+        //    BoundsCheck0(index, BitUtil.SizeOfInt);
+
+        //    value = EndianessConverter.ApplyInt32(byteOrder, value);
+        //    *(int*)(_pBuffer + index) = value;
+        //}
+
+        public int GetInt(int index)
+        {
+            BoundsCheck0(index, BitUtil.SizeOfInt);
+
+            return *(int*)(_pBuffer + index);
+        }
+
+        public void PutInt(int index, int value)
+        {
+            BoundsCheck0(index, BitUtil.SizeOfInt);
+            *(int*)(_pBuffer + index) = value;
+        }
+
+        public int GetIntVolatile(int index)
+        {
+            BoundsCheck0(index, BitUtil.SizeOfInt);
+
+            return Volatile.Read(ref *(int*)(_pBuffer + index));
+        }
+
+        public void PutIntVolatile(int index, int value)
+        {
+            BoundsCheck0(index, BitUtil.SizeOfInt);
+
+            Interlocked.Exchange(ref *(int*)(_pBuffer + index), value);
+        }
+
+        public void PutIntOrdered(int index, int value)
+        {
+            BoundsCheck0(index, BitUtil.SizeOfInt);
+
+            Volatile.Write(ref *(int*)(_pBuffer + index), value);
+        }
+
+        public int AddIntOrdered(int index, int increment)
+        {
+            BoundsCheck0(index, BitUtil.SizeOfInt);
+
+            var value = GetInt(index);
+            PutIntOrdered(index, value + increment);
+
+            return value;
+        }
+
+        public bool CompareAndSetInt(int index, int expectedValue, int updateValue)
+        {
+            BoundsCheck0(index, BitUtil.SizeOfInt);
+
+            var original = Interlocked.CompareExchange(ref *(int*)(_pBuffer + index), updateValue, expectedValue);
+
+            return original == expectedValue;
+        }
+
+        public int GetAndSetInt(int index, int value)
+        {
+            // Note ODE: does not seem to be used in the codebase
+            throw new NotImplementedException();
+        }
 
 
+        public int GetAndAddInt(int index, int delta)
+        {
+            BoundsCheck0(index, BitUtil.SizeOfInt);
+
+            return Interlocked.Add(ref *(int*)(_pBuffer + index), delta) - delta;
+        }
+
+        ///////////////////////////////////////////////////////////////////////////
+
+        // TODO Olivier: Martin told me this is not required for the client
+
+        //public virtual double GetDouble(int index, ByteOrder byteOrder)
+        //{
+        //    if (SHOULD_BOUNDS_CHECK)
+        //    {
+        //        BoundsCheck0(index, SIZE_OF_DOUBLE);
+        //    }
+
+        //    if (NATIVE_BYTE_ORDER != byteOrder)
+        //    {
+        //        long bits = UNSAFE.GetLong(byteArray, addressOffset + index);
+        //        return Double.LongBitsToDouble(Long.ReverseBytes(bits));
+        //    }
+        //    else
+        //    {
+        //        return UNSAFE.GetDouble(byteArray, addressOffset + index);
+        //    }
+        //}
+
+        //public virtual void PutDouble(int index, double value, ByteOrder byteOrder)
+        //{
+        //    if (SHOULD_BOUNDS_CHECK)
+        //    {
+        //        BoundsCheck0(index, SIZE_OF_DOUBLE);
+        //    }
+
+        //    if (NATIVE_BYTE_ORDER != byteOrder)
+        //    {
+        //        long bits = Long.ReverseBytes(Double.DoubleToRawLongBits(value));
+        //        UNSAFE.PutLong(byteArray, addressOffset + index, bits);
+        //    }
+        //    else
+        //    {
+        //        UNSAFE.PutDouble(byteArray, addressOffset + index, value);
+        //    }
+        //}
+
+        public double GetDouble(int index)
+        {
+            BoundsCheck0(index, BitUtil.SizeOfDouble);
+
+            return *(double*)(_pBuffer + index);
+        }
+
+        public void PutDouble(int index, double value)
+        {
+            BoundsCheck0(index, BitUtil.SizeOfDouble);
+
+            *(double*)(_pBuffer + index) = value;
+        }
+
+        ///////////////////////////////////////////////////////////////////////////
+
+        public float GetFloat(int index)
+        {
+            BoundsCheck0(index, BitUtil.SizeOfFloat);
+
+            return *(float*)(_pBuffer + index);
+        }
+
+        public void PutFloat(int index, float value)
+        {
+            BoundsCheck0(index, BitUtil.SizeOfFloat);
+
+            *(float*)(_pBuffer + index) = value;
+        }
+
+        ///////////////////////////////////////////////////////////////////////////
+
+        public short GetShort(int index)
+        {
+            BoundsCheck0(index, BitUtil.SizeOfShort);
+
+            return *(short*)(_pBuffer + index);
+        }
+
+        public void PutShort(int index, short value)
+        {
+            BoundsCheck0(index, BitUtil.SizeOfShort);
+
+            *(short*)(_pBuffer + index) = value;
+        }
+
+        public short GetShortVolatile(int index)
+        {
+            BoundsCheck0(index, BitUtil.SizeOfShort);
+
+            return Volatile.Read(ref *(short*)(_pBuffer + index));
+        }
+
+        public void PutShortVolatile(int index, short value)
+        {
+            BoundsCheck0(index, BitUtil.SizeOfShort);
+
+            Volatile.Write(ref (*(short*)(_pBuffer + index)), value);
+        }
+
+        ///////////////////////////////////////////////////////////////////////////
+
+        public byte GetByte(int index)
+        {
+            BoundsCheck(index);
+
+            return *(_pBuffer + index);
+        }
+
+        public void PutByte(int index, byte value)
+        {
+            BoundsCheck(index);
+
+            *(_pBuffer + index) = value;
+        }
+
+        public byte GetByteVolatile(int index)
+        {
+            BoundsCheck(index);
+
+            return Volatile.Read(ref *(_pBuffer + index));
+        }
+
+        public void PutByteVolatile(int index, byte value)
+        {
+            BoundsCheck(index);
+
+            Volatile.Write(ref *(_pBuffer + index), value);
+        }
+
+        ///////////////////////////////////////////////////////////////////////////
+
+        public void GetBytes(int index, byte[] dst)
+        {
+            GetBytes(index, dst, 0, dst.Length);
+        }
+
+        public void GetBytes(int index, byte[] dst, int offset, int length)
+        {
+            BoundsCheck0(index, length);
+            BufferUtil.BoundsCheck(dst, offset, length);
+
+            void* source = _pBuffer + index;
+            fixed (void* destination = &dst[offset])
+            {
+                ByteUtil.MemoryCopy(destination, source, (uint) length);
+            }
+        }
+
+        public void GetBytes(int index, IMutableDirectBuffer dstBuffer, int dstIndex, int length)
+        {
+            dstBuffer.PutBytes(dstIndex, this, index, length);
+        }
+
+        public void PutBytes(int index, byte[] src)
+        {
+            PutBytes(index, src, 0, src.Length);
+        }
+
+        public void PutBytes(int index, byte[] src, int offset, int length)
+        {
+            BoundsCheck0(index, length);
+            BufferUtil.BoundsCheck(src, offset, length);
+
+            void* destination = _pBuffer + index;
+            fixed (void* source = &src[offset])
+            {
+                ByteUtil.MemoryCopy(destination, source, (uint)length);
+            }
+        }
+
+        public void PutBytes(int index, IDirectBuffer srcBuffer, int srcIndex, int length)
+        {
+            BoundsCheck0(index, length);
+            srcBuffer.BoundsCheck(srcIndex, length);
+
+            void* destination = _pBuffer + index;
+            void* source = (byte*)srcBuffer.BufferPointer.ToPointer() + srcIndex;
+            ByteUtil.MemoryCopy(destination, source, (uint)length);
+        }
+
+        ///////////////////////////////////////////////////////////////////////////
+       
+        public char GetChar(int index)
+        {
+            BoundsCheck0(index, BitUtil.SizeOfChar);
+
+            return *(char*)(_pBuffer + index);
+        }
+
+        public void PutChar(int index, char value)
+        {
+            BoundsCheck0(index, BitUtil.SizeOfChar);
+
+            *(char*)(_pBuffer + index) = value;
+        }
+
+        //public char GetCharVolatile(int index)
+        //{
+        //    BoundsCheck0(index, BitUtil.SizeOfChar);
+
+        //    return (char)Volatile.Read(ref *(short*)(_pBuffer + index));
+        //}
+
+        //public void PutCharVolatile(int index, char value)
+        //{
+        //    BoundsCheck0(index, BitUtil.SizeOfChar);
+
+        //    Interlocked.Exchange(ref *(short*)(_pBuffer + index), (short)value);
+        //}
+
+        ///////////////////////////////////////////////////////////////////////////
+
+        public string GetStringUtf8(int index)
+        {
+            int length = GetInt(index);
+
+            return GetStringUtf8(index, length);
+        }
+
+        public string GetStringUtf8(int index, int length)
+        {
+            var stringInBytes = new byte[length];
+            GetBytes(index + BitUtil.SizeOfInt, stringInBytes);
+            
+            return Encoding.UTF8.GetString(stringInBytes);
+        }
+
+        public int PutStringUtf8(int index, string value)
+        {
+            return PutStringUtf8(index, value, int.MaxValue);
+        }
+
+        public int PutStringUtf8(int index, string value, int maxEncodedSize)
+        {
+            var bytes = value == null
+                ? BufferUtil.NullBytes 
+                : Encoding.UTF8.GetBytes(value);
+            if (bytes.Length > maxEncodedSize)
+            {
+                throw new ArgumentException("Encoded string larger than maximum size: " + maxEncodedSize);
+            }
+
+            PutInt(index, bytes.Length);
+            PutBytes(index + BitUtil.SizeOfInt, bytes);
+
+            return BitUtil.SizeOfInt + bytes.Length;
+        }
+
+        public string GetStringWithoutLengthUtf8(int index, int length)
+        {
+            var stringInBytes = new byte[length];
+            GetBytes(index, stringInBytes);
+
+            return Encoding.UTF8.GetString(stringInBytes);
+        }
+
+        public int PutStringWithoutLengthUtf8(int index, string value)
+        {
+            var bytes = value == null
+                ? BufferUtil.NullBytes
+                : Encoding.UTF8.GetBytes(value);
+            PutBytes(index, bytes);
+
+            return bytes.Length;
+        }
 
         ///////////////////////////////////////////////////////////////////////////
 
         private void BoundsCheck(int index)
         {
+#if SHOULD_BOUNDS_CHECK
             if (index < 0 || index >= _capacity)
             {
                 throw new IndexOutOfRangeException($"index={index:D}, capacity={_capacity:D}");
             }
+#endif
         }
 
         private void BoundsCheck0(int index, int length)
@@ -319,8 +658,31 @@ namespace Adaptive.Agrona.Concurrent
 
         ///////////////////////////////////////////////////////////////////////////
 
+        public int CompareTo(IDirectBuffer that)
+        {
+            int thisCapacity = this.Capacity;
+            int thatCapacity = that.Capacity;
 
+            var thisPointer = this._pBuffer;
+            var thatPointer = (byte*)that.BufferPointer.ToPointer();
+            
+            for (int i = 0, length = Math.Min(thisCapacity, thatCapacity); i < length; i++)
+            {
+                int cmp = thisPointer[i] - thatPointer[i];
+                
+                if (0 != cmp)
+                {
+                    return cmp;
+                }
+            }
 
+            if (thisCapacity != thatCapacity)
+            {
+                return thisCapacity - thatCapacity;
+            }
+
+            return 0;
+        }
 
         /// <summary>
         /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
