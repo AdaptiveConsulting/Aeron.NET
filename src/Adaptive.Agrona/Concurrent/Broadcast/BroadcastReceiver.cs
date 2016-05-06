@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 
 namespace Adaptive.Agrona.Concurrent.Broadcast
 {
@@ -30,11 +31,11 @@ namespace Adaptive.Agrona.Concurrent.Broadcast
         /// <summary>
         /// Construct a new broadcast receiver based on an underlying <seealso cref="IAtomicBuffer"/>.
         /// The underlying buffer must a power of 2 in size plus sufficient space
-        /// for the <seealso cref="BroadcastBufferDescriptor#TRAILER_LENGTH"/>.
+        /// for the <seealso cref="BroadcastBufferDescriptor.TrailerLength"/>.
         /// </summary>
         /// <param name="buffer"> via which messages will be exchanged. </param>
         /// <exception cref="InvalidOperationException"> if the buffer capacity is not a power of 2
-        /// plus <seealso cref="BroadcastBufferDescriptor#TRAILER_LENGTH"/> in capacity. </exception>
+        /// plus <seealso cref="BroadcastBufferDescriptor.TrailerLength"/> in capacity. </exception>
         public BroadcastReceiver(IAtomicBuffer buffer)
         {
             _buffer = buffer;
@@ -163,7 +164,9 @@ namespace Adaptive.Agrona.Concurrent.Broadcast
         /// <returns> true if still valid otherwise false. </returns>
         public virtual bool Validate()
         {
-            UNSAFE.loadFence(); // Needed to prevent older loads being moved ahead of the validate, see j.u.c.StampedLock.
+            // TODO check equivalent semantics
+            // Replaces UNSAFE.loadFence(); Needed to prevent older loads being moved ahead of the validate, see j.u.c.StampedLock.
+            Thread.MemoryBarrier();
 
             return Validate(_cursor);
         }

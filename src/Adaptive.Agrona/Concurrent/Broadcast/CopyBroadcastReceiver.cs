@@ -1,4 +1,6 @@
-﻿namespace Adaptive.Agrona.Concurrent.Broadcast
+﻿using System;
+
+namespace Adaptive.Agrona.Concurrent.Broadcast
 {
     /// <summary>
     /// Receiver that copies messages that have been broadcast to enable a simpler API for the client.
@@ -42,14 +44,14 @@
             {
                 if (lastSeenLappedCount != receiver.LappedCount())
                 {
-                    throw new System.InvalidOperationException("Unable to keep up with broadcast buffer");
+                    throw new InvalidOperationException("Unable to keep up with broadcast buffer");
                 }
 
                 var length = receiver.Length();
                 var capacity = _scratchBuffer.Capacity;
                 if (length > capacity)
                 {
-                    throw new System.InvalidOperationException($"Buffer required size {length:D} but only has {capacity:D}");
+                    throw new InvalidOperationException($"Buffer required size {length:D} but only has {capacity:D}");
                 }
 
                 var msgTypeId = receiver.TypeId();
@@ -57,7 +59,7 @@
 
                 if (!receiver.Validate())
                 {
-                    throw new System.InvalidOperationException("Unable to keep up with broadcast buffer");
+                    throw new InvalidOperationException("Unable to keep up with broadcast buffer");
                 }
 
                 handler.OnMessage(msgTypeId, _scratchBuffer, 0, length);
