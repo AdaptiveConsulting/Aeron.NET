@@ -51,6 +51,7 @@
     <Compile Include="AtomicBufferTests.cs" />
     <Compile Include="BitUtilTest.cs" />
     <Compile Include="Collections\ArrayUtilTests.cs" />
+    <Compile Include="Collections\CollectionUtilTests.cs" />
     <Compile Include="Concurrent\Broadcast\BroadcastReceiverTest.cs" />
     <Compile Include="Concurrent\RingBuffer\ManyToOneRingBufferConcurrentTest.cs" />
     <Compile Include="Concurrent\RingBuffer\ManyToOneRingBufferTest.cs" />

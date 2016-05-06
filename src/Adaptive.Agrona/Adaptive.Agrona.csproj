@@ -47,6 +47,7 @@
     <Compile Include="ByteOrder.cs" />
     <Compile Include="CloseHelper.cs" />
     <Compile Include="Collections\ArrayUtil.cs" />
+    <Compile Include="Collections\CollectionUtil.cs" />
     <Compile Include="Concurrent\Broadcast\BroadcastBufferDescriptor.cs" />
     <Compile Include="Concurrent\Broadcast\BroadcastReceiver.cs" />
     <Compile Include="Concurrent\Broadcast\CopyBroadcastReceiver.cs" />
