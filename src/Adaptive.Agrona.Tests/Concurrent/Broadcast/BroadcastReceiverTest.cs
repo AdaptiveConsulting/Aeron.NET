@@ -16,14 +16,14 @@ namespace Adaptive.Agrona.Tests.Concurrent.Broadcast
         private static readonly int TailCounterIndex = Capacity + BroadcastBufferDescriptor.TailCounterOffset;
         private static readonly int LatestCounterIndex = Capacity + BroadcastBufferDescriptor.LatestCounterOffset;
 
-        private readonly IAtomicBuffer _buffer = A.Fake<IAtomicBuffer>();
+        private IAtomicBuffer _buffer;
         private BroadcastReceiver _broadcastReceiver;
 
         [SetUp]
         public void SetUp()
         {
+            _buffer = A.Fake<IAtomicBuffer>();
             A.CallTo(() => _buffer.Capacity).Returns(TotalBufferLength);
-
             _broadcastReceiver = new BroadcastReceiver(_buffer);
         }
 
