@@ -53,9 +53,13 @@
     <Compile Include="Concurrent\Broadcast\BroadcastReceiver.cs" />
     <Compile Include="Concurrent\Broadcast\CopyBroadcastReceiver.cs" />
     <Compile Include="Concurrent\Broadcast\RecordDescriptor.cs" />
+    <Compile Include="Concurrent\BusySpinIdleStrategy.cs" />
     <Compile Include="Concurrent\IEpochClock.cs" />
     <Compile Include="Concurrent\IAgent.cs" />
     <Compile Include="Concurrent\IAtomicBuffer.cs" />
+    <Compile Include="Concurrent\NoOpIdleStrategy.cs" />
+    <Compile Include="Concurrent\SleepingIdleStrategy.cs" />
+    <Compile Include="Concurrent\SpinWaitIdleStrategy.cs" />
     <Compile Include="Concurrent\UnsafeBuffer.cs" />
     <Compile Include="Concurrent\IIdleStrategy.cs" />
     <Compile Include="Concurrent\MessageHandler.cs" />
@@ -66,6 +70,7 @@
     <Compile Include="Concurrent\RingBuffer\RingBufferDescriptor.cs" />
     <Compile Include="Concurrent\Status\IPosition.cs" />
     <Compile Include="Concurrent\Status\IReadablePosition.cs" />
+    <Compile Include="Concurrent\YieldingIdleStrategy.cs" />
     <Compile Include="EndianessConverter.cs" />
     <Compile Include="IErrorHandler.cs" />
     <Compile Include="IDirectBuffer.cs" />
