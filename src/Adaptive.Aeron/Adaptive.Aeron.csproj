@@ -40,14 +40,20 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="LogBuffer\BufferClaim.cs" />
     <Compile Include="LogBuffer\ControlledFragmentHandlerAction.cs" />
     <Compile Include="LogBuffer\FrameDescriptor.cs" />
     <Compile Include="LogBuffer\Header.cs" />
+    <Compile Include="LogBuffer\HeaderWriter.cs" />
     <Compile Include="LogBuffer\IBlockHandler.cs" />
     <Compile Include="LogBuffer\IControlledFragmentHandler.cs" />
+    <Compile Include="LogBuffer\IFileBlockHandler.cs" />
     <Compile Include="LogBuffer\IFragmentHandler.cs" />
     <Compile Include="LogBuffer\LogBufferDescriptor.cs" />
     <Compile Include="LogBuffer\LogBufferPartition.cs" />
+    <Compile Include="LogBuffer\TermAppender.cs" />
+    <Compile Include="LogBuffer\TermBlockScanner.cs" />
+    <Compile Include="LogBuffer\TermReader.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Protocol\DataHeaderFlyweight.cs" />
     <Compile Include="Protocol\HeaderFlyweight.cs" />
