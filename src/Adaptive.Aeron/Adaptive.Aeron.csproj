@@ -40,6 +40,19 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Command\ControlProtocolEvents.cs" />
+    <Compile Include="Command\CorrelatedMessageFlyweight.cs" />
+    <Compile Include="Command\ErrorResponseFlyweight.cs" />
+    <Compile Include="Command\ImageBuffersReadyFlyweight.cs" />
+    <Compile Include="Command\ImageMessageFlyweight.cs" />
+    <Compile Include="Command\PublicationBuffersReadyFlyweight.cs" />
+    <Compile Include="Command\PublicationMessageFlyweight .cs" />
+    <Compile Include="Command\RemoveMessageFlyweight .cs" />
+    <Compile Include="Command\SubscriptionMessageFlyweight .cs" />
+    <Compile Include="ErrorCode.cs" />
+    <Compile Include="Exceptions\ConductorServiceTimeoutException .cs" />
+    <Compile Include="Exceptions\DriverTimeoutException .cs" />
+    <Compile Include="Exceptions\RegistrationException .cs" />
     <Compile Include="LogBuffer\BufferClaim.cs" />
     <Compile Include="LogBuffer\ControlledFragmentHandlerAction.cs" />
     <Compile Include="LogBuffer\FrameDescriptor.cs" />
@@ -64,10 +77,7 @@
       <Name>Adaptive.Agrona</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Command\" />
-    <Folder Include="Exceptions\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
