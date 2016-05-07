@@ -2,11 +2,9 @@
 using System.Threading;
 using Adaptive.Agrona.Concurrent;
 using Adaptive.Agrona.Concurrent.RingBuffer;
-using NUnit.Framework;
 
-namespace Adaptive.Agrona.Tests.Concurrent.RingBuffer
+namespace Adaptive.Agrona.PerformanceTest
 {
-    [TestFixture]
     public class ManyToOneRingBufferConcurrentTest
     {
         private readonly bool _instanceFieldsInitialized;
@@ -32,10 +30,8 @@ namespace Adaptive.Agrona.Tests.Concurrent.RingBuffer
         private UnsafeBuffer _unsafeBuffer;
         private IRingBuffer _ringBuffer;
 
-        [Test]
-        public void ShouldProvideCorrelationIds()
+        public void ProvideCorrelationIds(int reps)
         {
-            const int reps = 10*1000*1000;
             const int numThreads = 2;
             var barrier = new Barrier(numThreads);
             var threads = new Thread[numThreads];
@@ -66,14 +62,15 @@ namespace Adaptive.Agrona.Tests.Concurrent.RingBuffer
                 t.Join();
             }
 
-            Assert.AreEqual(_ringBuffer.NextCorrelationId(), (long) (reps*numThreads));
+            var nextCorrelationId = _ringBuffer.NextCorrelationId();
+            if (nextCorrelationId != reps*numThreads)
+            {
+                Console.WriteLine("error - ProvideCorrelationIds - _ringBuffer.NextCorrelationId()={0}, reps*numThreads={1}", nextCorrelationId, reps * numThreads);
+            }
         }
 
-
-        [Test]
-        public void ShouldExchangeMessages()
+        public void ExchangeMessages(int reps)
         {
-            const int reps = 10*1000*1000;
             const int numProducers = 2;
             var barrier = new Barrier(numProducers);
 
@@ -95,7 +92,11 @@ namespace Adaptive.Agrona.Tests.Concurrent.RingBuffer
                 var iteration = buffer.GetInt(index + BitUtil.SizeOfInt);
 
                 var count = counts[producerId];
-                Assert.AreEqual(iteration, count);
+                if (iteration != count)
+                {
+                    Console.WriteLine("error - iteration != count. count={0}, iteration={1}", count, iteration);
+                    return;
+                }
 
                 counts[producerId]++;
             };
@@ -106,13 +107,18 @@ namespace Adaptive.Agrona.Tests.Concurrent.RingBuffer
                 var readCount = _ringBuffer.Read(handler);
                 if (0 == readCount)
                 {
+                    // TODO I think Thread.Yield in .NET and Java have a different meaning, to check
                     Thread.Yield();
                 }
 
                 msgCount += readCount;
             }
 
-            Assert.AreEqual(msgCount, reps*numProducers);
+            if (msgCount != reps * numProducers)
+            {
+                Console.WriteLine("error - msgCount != reps * numProducers. msgCount={0}, reps * numProducers={1}", msgCount, reps * numProducers);
+                return;
+            }
         }
 
         internal class Producer

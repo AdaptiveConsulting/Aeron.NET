@@ -15,6 +15,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Agrona", "Agrona", "{4AF9D7
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Adaptive.Agrona.Tests", "Adaptive.Agrona.Tests\Adaptive.Agrona.Tests.csproj", "{482D0D31-2B94-43D7-8D0A-F4EB5CB0800B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Adaptive.Agrona.PerformanceTest", "Adaptive.Agrona.PerformanceTest\Adaptive.Agrona.PerformanceTest.csproj", "{5181C0F3-516E-410B-A997-058AAE5537D7}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -37,6 +39,10 @@ Global
 		{482D0D31-2B94-43D7-8D0A-F4EB5CB0800B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{482D0D31-2B94-43D7-8D0A-F4EB5CB0800B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{482D0D31-2B94-43D7-8D0A-F4EB5CB0800B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5181C0F3-516E-410B-A997-058AAE5537D7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5181C0F3-516E-410B-A997-058AAE5537D7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5181C0F3-516E-410B-A997-058AAE5537D7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5181C0F3-516E-410B-A997-058AAE5537D7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -46,5 +52,6 @@ Global
 		{4D9DF40E-0726-47DD-8D70-34EB23429B59} = {4AF9D788-C727-4DA4-962F-0EB4D394ABEE}
 		{39A55715-D0FC-4142-98E1-372BFC857A36} = {4E5F66DD-871A-4BF0-BD2D-D9BF90F606C1}
 		{482D0D31-2B94-43D7-8D0A-F4EB5CB0800B} = {4AF9D788-C727-4DA4-962F-0EB4D394ABEE}
+		{5181C0F3-516E-410B-A997-058AAE5537D7} = {4AF9D788-C727-4DA4-962F-0EB4D394ABEE}
 	EndGlobalSection
 EndGlobal
