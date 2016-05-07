@@ -82,6 +82,17 @@ namespace Adaptive.Agrona.Concurrent
             Wrap(address, length);
         }
 
+        /// <summary>
+        /// Attach a view to an off-heap memory region by address.
+        /// </summary>
+        /// <param name="address"> where the memory begins off-heap </param>
+        /// <param name="offset"></param>
+        /// <param name="length">  of the buffer from the given address </param>
+        public UnsafeBuffer(IntPtr address, int offset, int length)
+        {
+            Wrap(address, offset, length);
+        }
+
         public void Wrap(byte[] buffer)
         {
             if (buffer == null) throw new ArgumentNullException(nameof(buffer));
@@ -163,6 +174,16 @@ namespace Adaptive.Agrona.Concurrent
             _needToFreeGcHandle = false;
 
             _pBuffer = (byte*)pointer.ToPointer();
+            _capacity = length;
+        }
+
+        public void Wrap(IntPtr pointer, int offset, int length)
+        {
+            FreeGcHandle();
+
+            _needToFreeGcHandle = false;
+
+            _pBuffer = (byte*)pointer.ToPointer() + offset;
             _capacity = length;
         }
 

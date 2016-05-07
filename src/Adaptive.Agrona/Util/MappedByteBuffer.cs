@@ -3,19 +3,29 @@ using System.IO.MemoryMappedFiles;
 
 namespace Adaptive.Agrona.Util
 {
-    public unsafe class MemoryMappedFileWrapper : IDisposable
+    public unsafe class MappedByteBuffer : IDisposable
     {
         private readonly MemoryMappedFile _memoryMappedFile;
         private readonly MemoryMappedViewAccessor _view;
         private bool _disposed;
 
-        public MemoryMappedFileWrapper(MemoryMappedFile memoryMappedFile)
+        public MappedByteBuffer(MemoryMappedFile memoryMappedFile)
         {
             _memoryMappedFile = memoryMappedFile;
             byte* ptr = (byte*)0;
             _view = memoryMappedFile.CreateViewAccessor();
             _view.SafeMemoryMappedViewHandle.AcquirePointer(ref ptr);
             
+            Pointer = new IntPtr(ptr);
+        }
+
+        public MappedByteBuffer(MemoryMappedFile memoryMappedFile, long offset, int length)
+        {
+            _memoryMappedFile = memoryMappedFile;
+            byte* ptr = (byte*)0;
+            _view = memoryMappedFile.CreateViewAccessor(offset, length);
+            _view.SafeMemoryMappedViewHandle.AcquirePointer(ref ptr);
+
             Pointer = new IntPtr(ptr);
         }
 
@@ -27,7 +37,7 @@ namespace Adaptive.Agrona.Util
             GC.SuppressFinalize(this);
         }
 
-        ~MemoryMappedFileWrapper()
+        ~MappedByteBuffer()
         {
             Dispose(false);
         }

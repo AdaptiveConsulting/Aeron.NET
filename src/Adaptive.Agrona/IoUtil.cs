@@ -8,25 +8,25 @@ namespace Adaptive.Agrona
     public class IoUtil
     {
         /// <summary>
-        /// Check that file exists, open file, and return <seealso cref="MemoryMappedFileWrapper"/> for entire file
+        /// Check that file exists, open file, and return <seealso cref="MappedByteBuffer"/> for entire file
         /// </summary>
         /// <param name="path">         of the file to map </param>
         /// <param name="descriptionLabel"> to be associated for any exceptions </param>
-        /// <returns> <seealso cref="MemoryMappedFileWrapper"/> for the file </returns>
-        public static MemoryMappedFileWrapper MapExistingFile(string path, string descriptionLabel)
+        /// <returns> <seealso cref="MappedByteBuffer"/> for the file </returns>
+        public static MappedByteBuffer MapExistingFile(string path, string descriptionLabel)
         {
             CheckFileExists(path, descriptionLabel);
 
             var mmf = MemoryMappedFile.CreateFromFile(path, FileMode.Open);
 
-            return new MemoryMappedFileWrapper(mmf);
+            return new MappedByteBuffer(mmf);
         }
 
         /// <summary>
-        /// Unmap a <seealso cref="MemoryMappedFileWrapper"/> without waiting for the next GC cycle.
+        /// Unmap a <seealso cref="MappedByteBuffer"/> without waiting for the next GC cycle.
         /// </summary>
         /// <param name="wrapper"> to be unmapped. </param>
-        public static void Unmap(MemoryMappedFileWrapper wrapper)
+        public static void Unmap(MappedByteBuffer wrapper)
         {
             wrapper?.Dispose();
         }

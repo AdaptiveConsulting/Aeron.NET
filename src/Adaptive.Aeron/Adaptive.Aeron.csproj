@@ -53,6 +53,8 @@
     <Compile Include="Exceptions\ConductorServiceTimeoutException .cs" />
     <Compile Include="Exceptions\DriverTimeoutException .cs" />
     <Compile Include="Exceptions\RegistrationException .cs" />
+    <Compile Include="IUnavailableImageHandler.cs" />
+    <Compile Include="LogBuffers.cs" />
     <Compile Include="LogBuffer\BufferClaim.cs" />
     <Compile Include="LogBuffer\ControlledFragmentHandlerAction.cs" />
     <Compile Include="LogBuffer\FrameDescriptor.cs" />
