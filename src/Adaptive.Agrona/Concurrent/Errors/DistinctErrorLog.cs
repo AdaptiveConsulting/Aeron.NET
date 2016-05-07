@@ -44,27 +44,27 @@ namespace Adaptive.Agrona.Concurrent.Errors
         /// <summary>
         /// Offset within a record at which the observation count field begins.
         /// </summary>
-        public static readonly int ObservationCountOffset = BitUtil.SizeOfInt;
+        public static readonly int ObservationCountOffset = BitUtil.SIZE_OF_INT;
 
         /// <summary>
         /// Offset within a record at which the last observation timestamp field begins.
         /// </summary>
-        public static readonly int LastObservationTimestampOffset = ObservationCountOffset + BitUtil.SizeOfInt;
+        public static readonly int LastObservationTimestampOffset = ObservationCountOffset + BitUtil.SIZE_OF_INT;
 
         /// <summary>
         /// Offset within a record at which the first observation timestamp field begins.
         /// </summary>
-        public static readonly int FirstObservationTimestampOffset = LastObservationTimestampOffset + BitUtil.SizeOfLong;
+        public static readonly int FirstObservationTimestampOffset = LastObservationTimestampOffset + BitUtil.SIZE_OF_LONG;
 
         /// <summary>
         /// Offset within a record at which the encoded exception field begins.
         /// </summary>
-        public static readonly int EncodedErrorOffset = FirstObservationTimestampOffset + BitUtil.SizeOfLong;
+        public static readonly int EncodedErrorOffset = FirstObservationTimestampOffset + BitUtil.SIZE_OF_LONG;
 
         /// <summary>
         /// Alignment to be applied for record beginning.
         /// </summary>
-        public static readonly int RecordAlignment = BitUtil.SizeOfLong;
+        public static readonly int RecordAlignment = BitUtil.SIZE_OF_LONG;
 
         private static readonly DistinctObservation InsufficientSpace = new DistinctObservation(null, 0);
 

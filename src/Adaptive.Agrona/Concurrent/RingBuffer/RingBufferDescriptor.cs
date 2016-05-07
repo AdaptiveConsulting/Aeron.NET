@@ -42,22 +42,22 @@ namespace Adaptive.Agrona.Concurrent.RingBuffer
         static RingBufferDescriptor()
         {
             var offset = 0;
-            offset += BitUtil.CacheLineLength*2;
+            offset += BitUtil.CACHE_LINE_LENGTH*2;
             TailPositionOffset = offset;
 
-            offset += BitUtil.CacheLineLength*2;
+            offset += BitUtil.CACHE_LINE_LENGTH*2;
             HeadCachePositionOffset = offset;
 
-            offset += BitUtil.CacheLineLength*2;
+            offset += BitUtil.CACHE_LINE_LENGTH*2;
             HeadPositionOffset = offset;
 
-            offset += BitUtil.CacheLineLength*2;
+            offset += BitUtil.CACHE_LINE_LENGTH*2;
             CorrelationCounterOffset = offset;
 
-            offset += BitUtil.CacheLineLength*2;
+            offset += BitUtil.CACHE_LINE_LENGTH*2;
             ConsumerHeartbeatOffset = offset;
 
-            offset += BitUtil.CacheLineLength*2;
+            offset += BitUtil.CACHE_LINE_LENGTH*2;
             TrailerLength = offset;
         }
 

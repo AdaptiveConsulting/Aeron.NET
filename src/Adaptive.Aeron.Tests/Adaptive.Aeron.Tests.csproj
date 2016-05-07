@@ -44,10 +44,21 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="FlyweightTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Adaptive.Aeron\Adaptive.Aeron.csproj">
+      <Project>{CE06A485-98F5-4FEF-A756-D0EF4DDA8309}</Project>
+      <Name>Adaptive.Aeron</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Adaptive.Agrona\Adaptive.Agrona.csproj">
+      <Project>{4D9DF40E-0726-47DD-8D70-34EB23429B59}</Project>
+      <Name>Adaptive.Agrona</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

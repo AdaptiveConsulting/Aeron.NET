@@ -11,47 +11,47 @@ namespace Adaptive.Agrona
         /// <summary>
         /// Size of a byte in bytes
         /// </summary>
-        public const int SizeOfByte = 1;
+        public const int SIZE_OF_BYTE = 1;
 
         /// <summary>
         /// Size of a boolean in bytes
         /// </summary>
-        public const int SizeOfBoolean= 1;
+        public const int SIZE_OF_BOOLEAN= 1;
 
         /// <summary>
         /// Size of a char in bytes
         /// </summary>
-        public const int SizeOfChar = 2;
+        public const int SIZE_OF_CHAR = 2;
 
         /// <summary>
         /// Size of a short in bytes
         /// </summary>
-        public const int SizeOfShort = 2;
+        public const int SIZE_OF_SHORT = 2;
 
         /// <summary>
         /// Size of an int in bytes
         /// </summary>
-        public const int SizeOfInt = 4;
+        public const int SIZE_OF_INT = 4;
 
         /// <summary>
         /// Size of a a float in bytes
         /// </summary>
-        public const int SizeOfFloat = 4;
+        public const int SIZE_OF_FLOAT = 4;
 
         /// <summary>
         /// Size of a long in bytes
         /// </summary>
-        public const int SizeOfLong = 8;
+        public const int SIZE_OF_LONG = 8;
 
         /// <summary>
         /// Size of a double in bytes
         /// </summary>
-        public const int SizeOfDouble = 8;
+        public const int SIZE_OF_DOUBLE = 8;
 
         /// <summary>
         /// Length of the data blocks used by the CPU cache sub-system in bytes.
         /// </summary>
-        public const int CacheLineLength = 64;
+        public const int CACHE_LINE_LENGTH = 64;
 
         // TODO use Char instead of Byte?
 

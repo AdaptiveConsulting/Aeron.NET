@@ -429,7 +429,7 @@ namespace Adaptive.Agrona.Tests
             foreach (byte v in testArray)
             {
                 buffer.PutByte(i, v);
-                i += BitUtil.SizeOfByte;
+                i += BitUtil.SIZE_OF_BYTE;
             }
 
             var result = new byte[testArray.Length];

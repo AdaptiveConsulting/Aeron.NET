@@ -33,11 +33,11 @@ namespace Adaptive.Agrona.Concurrent.Broadcast
 
         /// <summary>
         /// Offset within the record at which the message type field begins. </summary>
-        public const int TypeOffset = LengthOffset + BitUtil.SizeOfInt;
+        public const int TypeOffset = LengthOffset + BitUtil.SIZE_OF_INT;
 
         /// <summary>
         /// Length of the record header in bytes. </summary>
-        public const int HeaderLength = BitUtil.SizeOfInt*2;
+        public const int HeaderLength = BitUtil.SIZE_OF_INT*2;
 
         /// <summary>
         /// Alignment as a multiple of bytes for each record. </summary>

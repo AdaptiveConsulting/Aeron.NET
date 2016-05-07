@@ -25,7 +25,7 @@ namespace Adaptive.Agrona.Concurrent.RingBuffer
         /// </pre>
         /// </para>
         /// </summary>
-        public const int HeaderLength = BitUtil.SizeOfInt*2;
+        public const int HeaderLength = BitUtil.SIZE_OF_INT*2;
 
         /// <summary>
         /// Alignment as a multiple of bytes for each record.
@@ -49,7 +49,7 @@ namespace Adaptive.Agrona.Concurrent.RingBuffer
         /// <returns> offset from the beginning of a record at which the type field begins. </returns>
         public static int TypeOffset(int recordOffset)
         {
-            return recordOffset + BitUtil.SizeOfInt;
+            return recordOffset + BitUtil.SIZE_OF_INT;
         }
 
         /// <summary>
