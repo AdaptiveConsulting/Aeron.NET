@@ -28,9 +28,9 @@ namespace Adaptive.Agrona.Tests
         [Datapoint]
         public static readonly IAtomicBuffer UnmanagedBacked = new UnsafeBuffer(Marshal.AllocHGlobal(BufferCapacity), BufferCapacity);
 
-        [Datapoint]
-        public static readonly IAtomicBuffer MemoryMappedFileBacked 
-            = new UnsafeBuffer(new MemoryMappedFileWrapper(MemoryMappedFile.CreateNew("testmap", BufferCapacity)).Pointer, BufferCapacity);
+        //[Datapoint]
+        //public static readonly IAtomicBuffer MemoryMappedFileBacked 
+        //    = new UnsafeBuffer(new MemoryMappedFileWrapper(MemoryMappedFile.CreateNew("testmap", BufferCapacity)).Pointer, BufferCapacity);
         
         [Theory]
         public void ShouldGetCapacity(IAtomicBuffer buffer)
