@@ -1,4 +1,5 @@
-﻿using Adaptive.Agrona.Concurrent;
+﻿using Adaptive.Agrona;
+using Adaptive.Agrona.Concurrent;
 
 namespace Adaptive.Aeron.LogBuffer
 {
@@ -65,7 +66,7 @@ namespace Adaptive.Aeron.LogBuffer
 
         /// <summary>
         /// Get the current tail value in a volatile memory ordering fashion. If raw tail is greater than
-        /// <seealso cref="#termBuffer()"/>.<seealso cref="org.agrona.DirectBuffer#capacity()"/> then capacity will be returned.
+        /// <seealso cref="TermBuffer()"/>.<seealso cref="IDirectBuffer.Capacity"/> then capacity will be returned.
         /// </summary>
         /// <returns> the current tail value. </returns>
         public virtual int TailOffsetVolatile()

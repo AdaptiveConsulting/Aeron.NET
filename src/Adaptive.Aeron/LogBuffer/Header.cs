@@ -125,7 +125,7 @@ namespace Adaptive.Aeron.LogBuffer
         }
 
         /// <summary>
-        /// The offset in the term at which the frame begins. This will be the same as <seealso cref="#offset()"/>
+        /// The offset in the term at which the frame begins. This will be the same as <seealso cref="Offset()"/>
         /// </summary>
         /// <returns> the offset in the term at which the frame begins. </returns>
         public int TermOffset()
@@ -144,7 +144,7 @@ namespace Adaptive.Aeron.LogBuffer
 
         /// <summary>
         /// The flags for this frame. Valid flags are <seealso cref="DataHeaderFlyweight.BEGIN_FLAG"/>
-        /// and <seealso cref="DataHeaderFlyweight.END_FLAG"/>. A convenience flag <seealso cref="DataHeaderFlyweight#BEGIN_AND_END_FLAGS"/>
+        /// and <seealso cref="DataHeaderFlyweight.END_FLAG"/>. A convenience flag <seealso cref="DataHeaderFlyweight.BEGIN_AND_END_FLAGS"/>
         /// can be used for both flags.
         /// </summary>
         /// <returns> the flags for this frame. </returns>

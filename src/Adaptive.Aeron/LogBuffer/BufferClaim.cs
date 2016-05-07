@@ -8,11 +8,11 @@ namespace Adaptive.Aeron.LogBuffer
     /// <summary>
     /// Represents a claimed range in a buffer to be used for recording a message without copy semantics for later commit.
     /// <para>
-    /// The claimed space is in <seealso cref="#buffer()"/> between <seealso cref="#offset()"/> and <seealso cref="#offset()"/> + <seealso cref="#length()"/>.
-    /// When the buffer is filled with message data, use <seealso cref="#commit()"/> to make it available to subscribers.
+    /// The claimed space is in <seealso cref="Buffer()"/> between <seealso cref="Offset()"/> and <seealso cref="Offset()"/> + <seealso cref="Length()"/>.
+    /// When the buffer is filled with message data, use <seealso cref="Commit()"/> to make it available to subscribers.
     /// </para>
     /// <para>
-    /// If the claimed space is no longer required it can be aborted by calling <seealso cref="#abort()"/>.
+    /// If the claimed space is no longer required it can be aborted by calling <seealso cref="Abort()"/>.
     /// </para>
     /// </summary>
     public class BufferClaim
@@ -60,7 +60,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// <summary>
         /// Get the value stored in the reserve space at the end of a data frame header.
         /// 
-        /// Note: The value is in <seealso cref="ByteOrder#LITTLE_ENDIAN"/> format.
+        /// Note: The value is in <seealso cref="ByteOrder.LittleEndian"/> format.
         /// </summary>
         /// <returns> the value stored in the reserve space at the end of a data frame header. </returns>
         /// <seealso cref="DataHeaderFlyweight"/>
@@ -72,7 +72,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// <summary>
         /// Write the provided value into the reserved space at the end of the data frame header.
         /// 
-        /// Note: The value will be written in <seealso cref="ByteOrder#LITTLE_ENDIAN"/> format.
+        /// Note: The value will be written in <seealso cref="ByteOrder.LittleEndian"/> format.
         /// </summary>
         /// <param name="value"> to be stored in the reserve space at the end of a data frame header. </param>
         /// <returns> this for fluent API semantics. </returns>
