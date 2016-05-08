@@ -89,7 +89,7 @@ namespace Adaptive.Agrona.PerformanceTest
             MessageHandler handler = (msgTypeId, buffer, index, length) =>
             {
                 var producerId = buffer.GetInt(index);
-                var iteration = buffer.GetInt(index + BitUtil.SizeOfInt);
+                var iteration = buffer.GetInt(index + BitUtil.SIZE_OF_INT);
 
                 var count = counts[producerId];
                 if (iteration != count)
@@ -148,8 +148,8 @@ namespace Adaptive.Agrona.PerformanceTest
                     // ignored
                 }
 
-                const int length = BitUtil.SizeOfInt*2;
-                const int repsValueOffset = BitUtil.SizeOfInt;
+                const int length = BitUtil.SIZE_OF_INT*2;
+                const int repsValueOffset = BitUtil.SIZE_OF_INT;
                 var srcBuffer = new UnsafeBuffer(new byte[1024]);
 
                 srcBuffer.PutInt(0, ProducerId);

@@ -25,7 +25,7 @@ namespace Adaptive.Agrona.Tests
         [Test]
         public void ShouldAlignValueToNextMultipleOfAlignment()
         {
-            int alignment = BitUtil.CacheLineLength;
+            int alignment = BitUtil.CACHE_LINE_LENGTH;
 
             Assert.That(BitUtil.Align(0, alignment), Is.EqualTo(0));
             Assert.That(BitUtil.Align(1, alignment), Is.EqualTo(alignment));

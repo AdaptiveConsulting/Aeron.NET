@@ -30,7 +30,7 @@ namespace Adaptive.Agrona.Tests
 
         //[Datapoint]
         //public static readonly IAtomicBuffer MemoryMappedFileBacked 
-        //    = new UnsafeBuffer(new MemoryMappedFileWrapper(MemoryMappedFile.CreateNew("testmap", BufferCapacity)).Pointer, BufferCapacity);
+        //    = new UnsafeBuffer(new MappedByteBuffer(MemoryMappedFile.CreateNew("testmap", BufferCapacity)).Pointer, BufferCapacity);
         
         [Theory]
         public void ShouldGetCapacity(IAtomicBuffer buffer)
@@ -429,7 +429,7 @@ namespace Adaptive.Agrona.Tests
             foreach (byte v in testArray)
             {
                 buffer.PutByte(i, v);
-                i += BitUtil.SizeOfByte;
+                i += BitUtil.SIZE_OF_BYTE;
             }
 
             var result = new byte[testArray.Length];

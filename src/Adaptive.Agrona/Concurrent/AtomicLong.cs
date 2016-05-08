@@ -1,6 +1,6 @@
 ﻿using System.Threading;
 
-namespace Adaptive.Agrona
+namespace Adaptive.Agrona.Concurrent
 {
     // TODO JPW needs some more research
     public class AtomicLong

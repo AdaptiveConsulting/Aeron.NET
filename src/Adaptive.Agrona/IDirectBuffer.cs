@@ -43,6 +43,14 @@ namespace Adaptive.Agrona
         void Wrap(IntPtr pointer, int length);
 
         /// <summary>
+        /// Attach a view to an off-heap memory region by address.
+        /// </summary>
+        /// <param name="pointer"> where the memory begins off-heap </param>
+        /// <param name="offset"> at which the view begins. </param>
+        /// <param name="length">  of the buffer from the given address </param>
+        void Wrap(IntPtr pointer, int offset, int length);
+
+        /// <summary>
         /// A pointer to the underlying buffer.
         /// </summary>
         IntPtr BufferPointer { get; }

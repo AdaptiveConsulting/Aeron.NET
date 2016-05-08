@@ -33,13 +33,13 @@ namespace Adaptive.Agrona.Concurrent.Broadcast
             var offset = 0;
             TailIntentCounterOffset = offset;
 
-            offset += BitUtil.SizeOfLong;
+            offset += BitUtil.SIZE_OF_LONG;
             TailCounterOffset = offset;
 
-            offset += BitUtil.SizeOfLong;
+            offset += BitUtil.SIZE_OF_LONG;
             LatestCounterOffset = offset;
 
-            TrailerLength = BitUtil.CacheLineLength*2;
+            TrailerLength = BitUtil.CACHE_LINE_LENGTH*2;
         }
 
         /// <summary>
