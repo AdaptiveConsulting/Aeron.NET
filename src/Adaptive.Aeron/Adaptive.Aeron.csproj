@@ -41,6 +41,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BufferBuilder.cs" />
+    <Compile Include="ClientConductor.cs" />
     <Compile Include="CncFileDescriptor.cs" />
     <Compile Include="Command\ControlProtocolEvents.cs" />
     <Compile Include="Command\CorrelatedMessageFlyweight.cs" />
@@ -60,6 +61,7 @@
     <Compile Include="Exceptions\DriverTimeoutException .cs" />
     <Compile Include="Exceptions\RegistrationException .cs" />
     <Compile Include="FragmentAssembler .cs" />
+    <Compile Include="IAvailableImageHandler.cs" />
     <Compile Include="IDriverListener.cs" />
     <Compile Include="ILogBuffersFactory.cs" />
     <Compile Include="Image.cs" />
@@ -84,6 +86,7 @@
     <Compile Include="Protocol\DataHeaderFlyweight.cs" />
     <Compile Include="Protocol\HeaderFlyweight.cs" />
     <Compile Include="Publication.cs" />
+    <Compile Include="Subscription.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Adaptive.Agrona\Adaptive.Agrona.csproj">
