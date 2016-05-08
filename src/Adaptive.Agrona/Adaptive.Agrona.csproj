@@ -91,6 +91,7 @@
     <Compile Include="Concurrent\SystemEpochClock.cs" />
     <Compile Include="Util\ByteUtil.cs" />
     <Compile Include="Util\MappedByteBuffer.cs" />
+    <Compile Include="Util\UnixTimeConverter.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

@@ -13,7 +13,7 @@
         /// <param name="buffer">   containing the <seealso cref="DistinctErrorLog"/>. </param>
         /// <param name="consumer"> to be called for each exception encountered. </param>
         /// <returns> the number of entries that has been read. </returns>
-        public static int Read(IAtomicBuffer buffer, IErrorConsumer consumer)
+        public static int Read(IAtomicBuffer buffer, ErrorConsumer consumer)
         {
             return Read(buffer, consumer, 0);
         }
@@ -25,7 +25,7 @@
         /// <param name="consumer">       to be called for each exception encountered. </param>
         /// <param name="sinceTimestamp"> for filtering errors that have been recorded since this time. </param>
         /// <returns> the number of entries that has been read. </returns>
-        public static int Read(IAtomicBuffer buffer, IErrorConsumer consumer, long sinceTimestamp)
+        public static int Read(IAtomicBuffer buffer, ErrorConsumer consumer, long sinceTimestamp)
         {
             int entries = 0;
             int offset = 0;
@@ -44,7 +44,7 @@
                 {
                     ++entries;
 
-                    consumer.Accept(
+                    consumer(
                         buffer.GetInt(offset + DistinctErrorLog.ObservationCountOffset), 
                         buffer.GetLong(offset + DistinctErrorLog.FirstObservationTimestampOffset), 
                         lastObservationTimestamp, 

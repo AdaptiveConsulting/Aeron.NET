@@ -51,8 +51,10 @@
     <Compile Include="Command\PublicationMessageFlyweight .cs" />
     <Compile Include="Command\RemoveMessageFlyweight .cs" />
     <Compile Include="Command\SubscriptionMessageFlyweight .cs" />
+    <Compile Include="CommonContext.cs" />
     <Compile Include="ControlledFragmentAssembler .cs" />
     <Compile Include="DriverListenerAdapter .cs" />
+    <Compile Include="DriverProxy.cs" />
     <Compile Include="ErrorCode.cs" />
     <Compile Include="Exceptions\ConductorServiceTimeoutException .cs" />
     <Compile Include="Exceptions\DriverTimeoutException .cs" />
