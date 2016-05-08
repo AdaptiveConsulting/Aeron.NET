@@ -60,12 +60,12 @@
     <Compile Include="Concurrent\IEpochClock.cs" />
     <Compile Include="Concurrent\IAgent.cs" />
     <Compile Include="Concurrent\IAtomicBuffer.cs" />
+    <Compile Include="Concurrent\MessageHandler.cs" />
     <Compile Include="Concurrent\NoOpIdleStrategy.cs" />
     <Compile Include="Concurrent\SleepingIdleStrategy.cs" />
     <Compile Include="Concurrent\SpinWaitIdleStrategy.cs" />
     <Compile Include="Concurrent\UnsafeBuffer.cs" />
     <Compile Include="Concurrent\IIdleStrategy.cs" />
-    <Compile Include="Concurrent\MessageHandler.cs" />
     <Compile Include="Concurrent\INanoClock.cs" />
     <Compile Include="Concurrent\RingBuffer\IRingBuffer.cs" />
     <Compile Include="Concurrent\RingBuffer\ManyToOneRingBuffer.cs" />

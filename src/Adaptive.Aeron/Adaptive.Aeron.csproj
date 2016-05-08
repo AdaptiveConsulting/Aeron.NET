@@ -40,6 +40,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BufferBuilder.cs" />
+    <Compile Include="CncFileDescriptor.cs" />
     <Compile Include="Command\ControlProtocolEvents.cs" />
     <Compile Include="Command\CorrelatedMessageFlyweight.cs" />
     <Compile Include="Command\ErrorResponseFlyweight.cs" />
@@ -49,10 +51,15 @@
     <Compile Include="Command\PublicationMessageFlyweight .cs" />
     <Compile Include="Command\RemoveMessageFlyweight .cs" />
     <Compile Include="Command\SubscriptionMessageFlyweight .cs" />
+    <Compile Include="ControlledFragmentAssembler .cs" />
+    <Compile Include="DriverListenerAdapter .cs" />
     <Compile Include="ErrorCode.cs" />
     <Compile Include="Exceptions\ConductorServiceTimeoutException .cs" />
     <Compile Include="Exceptions\DriverTimeoutException .cs" />
     <Compile Include="Exceptions\RegistrationException .cs" />
+    <Compile Include="FragmentAssembler .cs" />
+    <Compile Include="IDriverListener.cs" />
+    <Compile Include="ILogBuffersFactory.cs" />
     <Compile Include="IUnavailableImageHandler.cs" />
     <Compile Include="LogBuffers.cs" />
     <Compile Include="LogBuffer\BufferClaim.cs" />
@@ -69,6 +76,7 @@
     <Compile Include="LogBuffer\TermAppender.cs" />
     <Compile Include="LogBuffer\TermBlockScanner.cs" />
     <Compile Include="LogBuffer\TermReader.cs" />
+    <Compile Include="MappedLogBuffersFactory .cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Protocol\DataHeaderFlyweight.cs" />
     <Compile Include="Protocol\HeaderFlyweight.cs" />

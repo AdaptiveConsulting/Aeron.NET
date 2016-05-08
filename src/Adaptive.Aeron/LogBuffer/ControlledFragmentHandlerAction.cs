@@ -7,24 +7,24 @@ namespace Adaptive.Aeron.LogBuffer
         /// <summary>
         /// Abort the current polling operation and do not advance the position for this fragment.
         /// </summary>
-        Abort,
+        ABORT,
 
         /// <summary>
         /// Break from the current polling operation and commit the position as of the end of the current fragment
         /// being handled.
         /// </summary>
-        Break,
+        BREAK,
 
         /// <summary>
         /// Continue processing but commit the position as of the end of the current fragment so that
         /// flow control is applied to this point.
         /// </summary>
-        Commit,
+        COMIT,
 
         /// <summary>
         /// Continue processing taking the same approach as the in
         /// <seealso cref="IFragmentHandler.OnFragment(IDirectBuffer, int, int, Header)"/>.
         /// </summary>
-        Continue,
+        CONTINUE,
     }
 }
