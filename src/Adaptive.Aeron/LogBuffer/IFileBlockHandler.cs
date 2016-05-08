@@ -14,6 +14,6 @@
         /////                    <seealso cref="io.aeron.logbuffer.FrameDescriptor#FRAME_ALIGNMENT"/>. </param>
         ///// <param name="sessionId">   of the stream of fragments. </param>
         ///// <param name="termId">      of the stream of fragments. </param>
-        //void OnBlock(FileChannel fileChannel, long offset, int length, int sessionId, int termId);
+        void OnBlock(FileChannel fileChannel, long offset, int length, int sessionId, int termId);
     }
 }

@@ -19,7 +19,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// Continue processing but commit the position as of the end of the current fragment so that
         /// flow control is applied to this point.
         /// </summary>
-        COMIT,
+        COMMIT,
 
         /// <summary>
         /// Continue processing taking the same approach as the in

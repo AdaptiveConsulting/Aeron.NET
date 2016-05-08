@@ -62,6 +62,7 @@
     <Compile Include="FragmentAssembler .cs" />
     <Compile Include="IDriverListener.cs" />
     <Compile Include="ILogBuffersFactory.cs" />
+    <Compile Include="Image.cs" />
     <Compile Include="IUnavailableImageHandler.cs" />
     <Compile Include="LogBuffers.cs" />
     <Compile Include="LogBuffer\BufferClaim.cs" />
