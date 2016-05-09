@@ -150,7 +150,7 @@ namespace Adaptive.Aeron
         internal static T[] CopyOf<T>(T[] original, int newLength)
         {
             T[] dest = new T[newLength];
-            Array.Copy(original, dest, newLength);
+            Array.Copy(original, 0, dest, 0, Math.Min(original.Length, newLength));
             return dest;
         }
     }
