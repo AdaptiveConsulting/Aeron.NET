@@ -32,9 +32,8 @@ namespace Adaptive.Aeron
             // if log length exceeds MAX_INT we need multiple mapped buffers, (see FileChannel.map doc).
             if (logLength < int.MaxValue)
             {
-                var memoryMappedFile = MemoryMappedFile.CreateFromFile(logFileName, FileMode.Open);
-                var mappedBuffer = new MappedByteBuffer(memoryMappedFile);
-
+                var mappedBuffer = IoUtil.OpenExisting(logFileName);
+                
                 _mappedByteBuffers = new[] { mappedBuffer };
 
                 int metaDataSectionOffset = termLength * LogBufferDescriptor.PARTITION_COUNT;

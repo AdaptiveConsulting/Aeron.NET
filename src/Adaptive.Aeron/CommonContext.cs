@@ -47,8 +47,6 @@ namespace Adaptive.Aeron
 
         static CommonContext()
         {
-            string baseDirName = IoUtil.TmpDirName() + "aeron";
-
             // Use shared memory on Linux to avoid contention on the page cache.
             //if ("Linux".Equals(System.GetProperty("os.name"), StringComparison.CurrentCultureIgnoreCase))
             //{
@@ -60,7 +58,7 @@ namespace Adaptive.Aeron
             //    }
             //}
 
-            AERON_DIR_PROP_DEFAULT = baseDirName + "-" + Environment.UserName;
+            AERON_DIR_PROP_DEFAULT = Path.Combine(IoUtil.TmpDirName(), "aeron-" + Environment.UserName);
         }
 
         /// <summary>
@@ -69,7 +67,7 @@ namespace Adaptive.Aeron
         /// <returns> random directory name with default directory name as base </returns>
         public static string GenerateRandomDirName()
         {
-            string randomDirName = Guid.NewGuid().ToString();
+            var randomDirName = Guid.NewGuid().ToString();
 
             return AERON_DIR_PROP_DEFAULT + "-" + randomDirName;
         }
@@ -80,7 +78,7 @@ namespace Adaptive.Aeron
         public CommonContext()
         {
             // TODO
-            _aeronDirectoryName = "todoMakeDirecotyrConfigurable"; // GetProperty(AERON_DIR_PROP_NAME, AERON_DIR_PROP_DEFAULT);
+            _aeronDirectoryName = AERON_DIR_PROP_DEFAULT; // GetProperty(AERON_DIR_PROP_NAME, AERON_DIR_PROP_DEFAULT);
         }
 
         /// <summary>
@@ -198,7 +196,7 @@ namespace Adaptive.Aeron
         /// <summary>
         /// Delete the current Aeron directory, throwing errors if not possible.
         /// </summary>
-	    public void DeleteAeronDirectory()
+        public void DeleteAeronDirectory()
         {
             Directory.Delete(_aeronDirectoryName, true);
         }
@@ -237,9 +235,9 @@ namespace Adaptive.Aeron
 
                         var toDriverBuffer = new ManyToOneRingBuffer(CncFileDescriptor.CreateToDriverBuffer(cncByteBuffer, cncMetaDataBuffer));
 
-                        long timestamp = toDriverBuffer.ConsumerHeartbeatTime();
-                        long now = UnixTimeConverter.CurrentUnixTimeMillis();
-                        long diff = now - timestamp;
+                        var timestamp = toDriverBuffer.ConsumerHeartbeatTime();
+                        var now = UnixTimeConverter.CurrentUnixTimeMillis();
+                        var diff = now - timestamp;
 
                         logHandler($"INFO: Aeron toDriver consumer heartbeat is {diff:D} ms old");
 
@@ -265,7 +263,7 @@ namespace Adaptive.Aeron
         /// <returns> the number of observations from the error log </returns>
         public int SaveErrorLog(StreamWriter stream)
         {
-            int result = 0;
+            var result = 0;
 
             if (Directory.Exists(_aeronDirectoryName))
             {
@@ -280,7 +278,7 @@ namespace Adaptive.Aeron
                         cncByteBuffer = IoUtil.MapExistingFile(cncFilePath, CncFileDescriptor.CNC_FILE);
                         var cncMetaDataBuffer = CncFileDescriptor.CreateMetaDataBuffer(cncByteBuffer);
 
-                        int cncVersion = cncMetaDataBuffer.GetInt(CncFileDescriptor.CncVersionOffset(0));
+                        var cncVersion = cncMetaDataBuffer.GetInt(CncFileDescriptor.CncVersionOffset(0));
 
                         if (CncFileDescriptor.CNC_VERSION != cncVersion)
                         {
@@ -289,14 +287,14 @@ namespace Adaptive.Aeron
 
                         var buffer = CncFileDescriptor.CreateErrorLogBuffer(cncByteBuffer, cncMetaDataBuffer);
 
-                        int distinctErrorCount = ErrorLogReader.Read(
-                            buffer, 
-                            (observationCount, firstObservationTimestamp, lastObservationTimestamp, encodedException) 
-                                => stream.Write("***\n{0} observations from {1} to {2} for:\n {3}\n", 
-                                observationCount, 
-                                UnixTimeConverter.FromUnixTimeMillis(firstObservationTimestamp).ToString("yyyy-MM-dd HH:mm:ss.SSSZ"),
-                                UnixTimeConverter.FromUnixTimeMillis(lastObservationTimestamp).ToString("yyyy-MM-dd HH:mm:ss.SSSZ"),
-                                encodedException));
+                        var distinctErrorCount = ErrorLogReader.Read(
+                            buffer,
+                            (observationCount, firstObservationTimestamp, lastObservationTimestamp, encodedException)
+                                => stream.Write("***\n{0} observations from {1} to {2} for:\n {3}\n",
+                                    observationCount,
+                                    UnixTimeConverter.FromUnixTimeMillis(firstObservationTimestamp).ToString("yyyy-MM-dd HH:mm:ss.SSSZ"),
+                                    UnixTimeConverter.FromUnixTimeMillis(lastObservationTimestamp).ToString("yyyy-MM-dd HH:mm:ss.SSSZ"),
+                                    encodedException));
 
                         stream.Write("\n{0} distinct errors observed.\n", distinctErrorCount);
 

@@ -73,11 +73,13 @@ namespace Adaptive.Aeron
             COUNTERS_VALUES_BUFFER_LENGTH_FIELD_OFFSET = COUNTERS_METADATA_BUFFER_LENGTH_FIELD_OFFSET + BitUtil.SIZE_OF_INT;
             CLIENT_LIVENESS_TIMEOUT_FIELD_OFFSET = COUNTERS_VALUES_BUFFER_LENGTH_FIELD_OFFSET + BitUtil.SIZE_OF_INT;
             ERROR_LOG_BUFFER_LENGTH_FIELD_OFFSET = CLIENT_LIVENESS_TIMEOUT_FIELD_OFFSET + BitUtil.SIZE_OF_LONG;
+            META_DATA_LENGTH = ERROR_LOG_BUFFER_LENGTH_FIELD_OFFSET + BitUtil.SIZE_OF_INT;
+            END_OF_METADATA_OFFSET = BitUtil.Align(BitUtil.SIZE_OF_INT + META_DATA_LENGTH, (BitUtil.CACHE_LINE_LENGTH*2));
         }
 
-        public static readonly int META_DATA_LENGTH = ERROR_LOG_BUFFER_LENGTH_FIELD_OFFSET + BitUtil.SIZE_OF_INT;
+        public static readonly int META_DATA_LENGTH;
 
-        public static readonly int END_OF_METADATA_OFFSET = BitUtil.Align(BitUtil.SIZE_OF_INT + META_DATA_LENGTH, (BitUtil.CACHE_LINE_LENGTH * 2));
+        public static readonly int END_OF_METADATA_OFFSET;
 
         /// <summary>
         /// Compute the length of the cnc file and return it.
@@ -149,28 +151,28 @@ namespace Adaptive.Aeron
 
         public static UnsafeBuffer CreateToClientsBuffer(MappedByteBuffer buffer, IDirectBuffer metaDataBuffer)
         {
-            int offset = END_OF_METADATA_OFFSET + metaDataBuffer.GetInt(ToDriverBufferLengthOffset(0));
+            var offset = END_OF_METADATA_OFFSET + metaDataBuffer.GetInt(ToDriverBufferLengthOffset(0));
 
             return new UnsafeBuffer(buffer.Pointer, offset, metaDataBuffer.GetInt(ToClientsBufferLengthOffset(0)));
         }
 
         public static UnsafeBuffer CreateCountersMetaDataBuffer(MappedByteBuffer buffer, IDirectBuffer metaDataBuffer)
         {
-            int offset = END_OF_METADATA_OFFSET + metaDataBuffer.GetInt(ToDriverBufferLengthOffset(0)) + metaDataBuffer.GetInt(ToClientsBufferLengthOffset(0));
+            var offset = END_OF_METADATA_OFFSET + metaDataBuffer.GetInt(ToDriverBufferLengthOffset(0)) + metaDataBuffer.GetInt(ToClientsBufferLengthOffset(0));
 
             return new UnsafeBuffer(buffer.Pointer, offset, metaDataBuffer.GetInt(CountersMetaDataBufferLengthOffset(0)));
         }
 
         public static UnsafeBuffer CreateCountersValuesBuffer(MappedByteBuffer buffer, IDirectBuffer metaDataBuffer)
         {
-            int offset = END_OF_METADATA_OFFSET + metaDataBuffer.GetInt(ToDriverBufferLengthOffset(0)) + metaDataBuffer.GetInt(ToClientsBufferLengthOffset(0)) + metaDataBuffer.GetInt(CountersMetaDataBufferLengthOffset(0));
+            var offset = END_OF_METADATA_OFFSET + metaDataBuffer.GetInt(ToDriverBufferLengthOffset(0)) + metaDataBuffer.GetInt(ToClientsBufferLengthOffset(0)) + metaDataBuffer.GetInt(CountersMetaDataBufferLengthOffset(0));
 
             return new UnsafeBuffer(buffer.Pointer, offset, metaDataBuffer.GetInt(CountersValuesBufferLengthOffset(0)));
         }
 
         public static UnsafeBuffer CreateErrorLogBuffer(MappedByteBuffer buffer, IDirectBuffer metaDataBuffer)
         {
-            int offset = END_OF_METADATA_OFFSET + metaDataBuffer.GetInt(ToDriverBufferLengthOffset(0)) + metaDataBuffer.GetInt(ToClientsBufferLengthOffset(0)) + metaDataBuffer.GetInt(CountersMetaDataBufferLengthOffset(0)) + metaDataBuffer.GetInt(CountersValuesBufferLengthOffset(0));
+            var offset = END_OF_METADATA_OFFSET + metaDataBuffer.GetInt(ToDriverBufferLengthOffset(0)) + metaDataBuffer.GetInt(ToClientsBufferLengthOffset(0)) + metaDataBuffer.GetInt(CountersMetaDataBufferLengthOffset(0)) + metaDataBuffer.GetInt(CountersValuesBufferLengthOffset(0));
 
             return new UnsafeBuffer(buffer.Pointer, offset, metaDataBuffer.GetInt(ErrorLogBufferLengthOffset(0)));
         }

@@ -7,6 +7,7 @@ namespace Adaptive.Agrona
 {
     public class IoUtil
     {
+        private static int name = 0;
         /// <summary>
         /// Check that file exists, open file, and return <seealso cref="MappedByteBuffer"/> for entire file
         /// </summary>
@@ -17,7 +18,19 @@ namespace Adaptive.Agrona
         {
             CheckFileExists(path, descriptionLabel);
 
-            var mmf = MemoryMappedFile.CreateFromFile(path, FileMode.Open);
+            var f = new FileStream(path, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite);
+            var mmf = MemoryMappedFile.CreateFromFile(f, "foo", 0, MemoryMappedFileAccess.ReadWrite, new MemoryMappedFileSecurity(), HandleInheritability.None, false);
+            
+            return new MappedByteBuffer(mmf);
+        }
+
+        public static MappedByteBuffer OpenExisting(string logFileName)
+        {
+            if( !File.Exists(logFileName)) throw new FileNotFoundException("Couldn't find memory map", logFileName);
+
+            var f = new FileStream(logFileName, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite);
+            
+            var mmf = MemoryMappedFile.CreateFromFile(f, "blah"+(++name), 0, MemoryMappedFileAccess.ReadWrite, new MemoryMappedFileSecurity(), HandleInheritability.None, false);
 
             return new MappedByteBuffer(mmf);
         }
@@ -51,13 +64,7 @@ namespace Adaptive.Agrona
         /// <returns> tmp directory for the runtime </returns>
         public static string TmpDirName()
         {
-            string tmpDirName = Path.GetTempPath();
-            if (!tmpDirName.EndsWith("/", StringComparison.Ordinal))
-            {
-                tmpDirName += "/";
-            }
-
-            return tmpDirName;
+            return Path.GetTempPath();
         }
     }
 }

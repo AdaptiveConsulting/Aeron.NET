@@ -48,14 +48,23 @@ namespace Adaptive.Aeron.Command
     /// +---------------------------------------------------------------+ 
     public class ImageBuffersReadyFlyweight
     {
-        private const int CORRELATION_ID_OFFSET = 0;
-        private static readonly int SESSION_ID_OFFSET = CORRELATION_ID_OFFSET + BitUtil.SIZE_OF_LONG;
-        private static readonly int STREAM_ID_FIELD_OFFSET = SESSION_ID_OFFSET + BitUtil.SIZE_OF_INT;
-        private static readonly int SUBSCRIBER_POSITION_BLOCK_LENGTH_OFFSET = STREAM_ID_FIELD_OFFSET + BitUtil.SIZE_OF_INT;
+        private static readonly int CORRELATION_ID_OFFSET;
+        private static readonly int SESSION_ID_OFFSET;
+        private static readonly int STREAM_ID_FIELD_OFFSET;
+        private static readonly int SUBSCRIBER_POSITION_BLOCK_LENGTH_OFFSET;
         private static readonly int SUBSCRIBER_POSITION_COUNT_OFFSET = SUBSCRIBER_POSITION_BLOCK_LENGTH_OFFSET + BitUtil.SIZE_OF_INT;
         private static readonly int SUBSCRIBER_POSITIONS_OFFSET = SUBSCRIBER_POSITION_COUNT_OFFSET + BitUtil.SIZE_OF_INT;
 
         private static readonly int SUBSCRIBER_POSITION_BLOCK_LENGTH = BitUtil.SIZE_OF_LONG + BitUtil.SIZE_OF_INT;
+
+        static ImageBuffersReadyFlyweight()
+        {
+            CORRELATION_ID_OFFSET = 0;
+            SESSION_ID_OFFSET = CORRELATION_ID_OFFSET + BitUtil.SIZE_OF_LONG;
+            STREAM_ID_FIELD_OFFSET = SESSION_ID_OFFSET + BitUtil.SIZE_OF_INT;
+            SUBSCRIBER_POSITION_BLOCK_LENGTH_OFFSET = STREAM_ID_FIELD_OFFSET + BitUtil.SIZE_OF_INT;
+
+        }
 
         private IMutableDirectBuffer _buffer;
         private int _offset;

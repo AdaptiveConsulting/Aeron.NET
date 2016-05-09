@@ -148,7 +148,7 @@ namespace Adaptive.Aeron
 
         /// <summary>
         /// Poll for new messages in a stream. If new messages are found beyond the last consumed position then they
-        /// will be delivered to the <seealso cref="IFragmentHandler"/> up to a limited number of fragments as specified.
+        /// will be delivered to the <seealso cref="FragmentHandler"/> up to a limited number of fragments as specified.
         /// 
         /// To assemble messages that span multiple fragments then use <seealso cref="FragmentAssembler"/>.
         /// </summary>

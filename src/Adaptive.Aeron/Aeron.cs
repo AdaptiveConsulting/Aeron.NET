@@ -158,9 +158,7 @@ namespace Adaptive.Aeron
             public new Context Conclude()
             {
                 base.Conclude();
-
-                try
-                {
+                
                     if (null == _epochClock)
                     {
                         _epochClock = new SystemEpochClock();
@@ -186,7 +184,7 @@ namespace Adaptive.Aeron
 
                         if (CncFileDescriptor.CNC_VERSION != cncVersion)
                         {
-                            throw new System.InvalidOperationException(
+                            throw new InvalidOperationException(
                                 "aeron cnc file version not understood: version=" + cncVersion);
                         }
                     }
@@ -243,13 +241,13 @@ namespace Adaptive.Aeron
                         {
                         };
                     }
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine("\n***\n*** Failed to connect to the Media Driver - is it currently running?\n***\n");
+                
+                //catch (Exception ex)
+                //{
+                //    Console.WriteLine("\n***\n*** Failed to connect to the Media Driver - is it currently running?\n***\n");
                     
-                    throw new InvalidOperationException("Could not initialise communication buffers", ex);
-                }
+                //    throw new InvalidOperationException("Could not initialise communication buffers", ex);
+                //}
 
                 return this;
             }

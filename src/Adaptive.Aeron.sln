@@ -17,6 +17,12 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Adaptive.Agrona.Tests", "Ad
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Adaptive.Agrona.PerformanceTest", "Adaptive.Agrona.PerformanceTest\Adaptive.Agrona.PerformanceTest.csproj", "{5181C0F3-516E-410B-A997-058AAE5537D7}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Samples", "Samples", "{05C2D2D4-06B2-4A7F-A30A-19B5B2F7C631}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Adaptive.Aeron.Samples.Ping", "Samples\Adaptive.Aeron.Samples.Ping\Adaptive.Aeron.Samples.Ping.csproj", "{FD5EA93A-CCCC-458B-A0DF-4E5568F15AD6}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Adaptive.Aeron.Samples.Common", "Samples\Adaptive.Aeron.Samples.Common\Adaptive.Aeron.Samples.Common.csproj", "{A8A90B16-DDEA-4A3E-A89A-7F7FB2D18416}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -43,6 +49,14 @@ Global
 		{5181C0F3-516E-410B-A997-058AAE5537D7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5181C0F3-516E-410B-A997-058AAE5537D7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5181C0F3-516E-410B-A997-058AAE5537D7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FD5EA93A-CCCC-458B-A0DF-4E5568F15AD6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FD5EA93A-CCCC-458B-A0DF-4E5568F15AD6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FD5EA93A-CCCC-458B-A0DF-4E5568F15AD6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FD5EA93A-CCCC-458B-A0DF-4E5568F15AD6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A8A90B16-DDEA-4A3E-A89A-7F7FB2D18416}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A8A90B16-DDEA-4A3E-A89A-7F7FB2D18416}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A8A90B16-DDEA-4A3E-A89A-7F7FB2D18416}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A8A90B16-DDEA-4A3E-A89A-7F7FB2D18416}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -53,5 +67,7 @@ Global
 		{39A55715-D0FC-4142-98E1-372BFC857A36} = {4E5F66DD-871A-4BF0-BD2D-D9BF90F606C1}
 		{482D0D31-2B94-43D7-8D0A-F4EB5CB0800B} = {4AF9D788-C727-4DA4-962F-0EB4D394ABEE}
 		{5181C0F3-516E-410B-A997-058AAE5537D7} = {4AF9D788-C727-4DA4-962F-0EB4D394ABEE}
+		{FD5EA93A-CCCC-458B-A0DF-4E5568F15AD6} = {05C2D2D4-06B2-4A7F-A30A-19B5B2F7C631}
+		{A8A90B16-DDEA-4A3E-A89A-7F7FB2D18416} = {05C2D2D4-06B2-4A7F-A30A-19B5B2F7C631}
 	EndGlobalSection
 EndGlobal

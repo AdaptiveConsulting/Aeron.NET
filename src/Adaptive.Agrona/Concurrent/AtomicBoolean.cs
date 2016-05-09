@@ -14,7 +14,7 @@ namespace Adaptive.Agrona.Concurrent
         {
             Interlocked.Exchange(ref _value, initialValue ? TRUE : FALSE);
         }
-        
+
         /// <summary>
         /// Atomically set the value to the given updated value if the current value equals the comparand
         /// </summary>
@@ -27,6 +27,11 @@ namespace Adaptive.Agrona.Concurrent
             var comparandInt = ToInt(comparand);
 
             return Interlocked.CompareExchange(ref _value, newValueInt, comparandInt) == comparandInt;
+        }
+
+        public bool Get()
+        {
+            return ToBool(Volatile.Read(ref _value));
         }
 
         private static bool ToBool(int value)
@@ -42,6 +47,11 @@ namespace Adaptive.Agrona.Concurrent
         private static int ToInt(bool value)
         {
             return value ? TRUE : FALSE;
+        }
+
+        public void Set(bool value)
+        {
+            Volatile.Write(ref _value, ToInt(value));
         }
     }
 }

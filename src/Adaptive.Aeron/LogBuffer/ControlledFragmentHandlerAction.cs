@@ -23,7 +23,7 @@ namespace Adaptive.Aeron.LogBuffer
 
         /// <summary>
         /// Continue processing taking the same approach as the in
-        /// <seealso cref="IFragmentHandler.OnFragment(IDirectBuffer, int, int, Header)"/>.
+        /// <seealso cref="FragmentHandler.OnFragment(IDirectBuffer, int, int, Header)"/>.
         /// </summary>
         CONTINUE,
     }
