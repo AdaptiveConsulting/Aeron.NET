@@ -25,7 +25,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// <param name="header">         to be used for mapping over the header for a given fragment. </param>
         /// <param name="errorHandler">   to be notified if an error occurs during the callback. </param>
         /// <returns> the number of fragments read </returns>
-        public static long Read(UnsafeBuffer termBuffer, int offset, IFragmentHandler handler, int fragmentsLimit, Header header, IErrorHandler errorHandler)
+        public static long Read(UnsafeBuffer termBuffer, int offset, IFragmentHandler handler, int fragmentsLimit, Header header, ErrorHandler errorHandler)
         {
             int fragmentsRead = 0;
             int capacity = termBuffer.Capacity;
@@ -56,7 +56,7 @@ namespace Adaptive.Aeron.LogBuffer
             }
             catch (Exception t)
             {
-                errorHandler.OnError(t);
+                errorHandler(t);
             }
 
             return Pack(offset, fragmentsRead);

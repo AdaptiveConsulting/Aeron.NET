@@ -49,6 +49,9 @@
     <Compile Include="CloseHelper.cs" />
     <Compile Include="Collections\ArrayUtil.cs" />
     <Compile Include="Collections\CollectionUtil.cs" />
+    <Compile Include="Collections\IntObjConsumer.cs" />
+    <Compile Include="Concurrent\AgentRunner.cs" />
+    <Compile Include="Concurrent\AtomicReference.cs" />
     <Compile Include="Concurrent\Broadcast\BroadcastBufferDescriptor.cs" />
     <Compile Include="Concurrent\Broadcast\BroadcastReceiver.cs" />
     <Compile Include="Concurrent\Broadcast\CopyBroadcastReceiver.cs" />
@@ -60,12 +63,16 @@
     <Compile Include="Concurrent\IEpochClock.cs" />
     <Compile Include="Concurrent\IAgent.cs" />
     <Compile Include="Concurrent\IAtomicBuffer.cs" />
-    <Compile Include="Concurrent\MessageHandler.cs" />
+    <Compile Include="Concurrent\Status\AtomicCounter.cs" />
+    <Compile Include="Concurrent\Status\CountersManager.cs" />
+    <Compile Include="Concurrent\Status\CountersReader.cs" />
     <Compile Include="Concurrent\NoOpIdleStrategy.cs" />
     <Compile Include="Concurrent\SleepingIdleStrategy.cs" />
     <Compile Include="Concurrent\SpinWaitIdleStrategy.cs" />
+    <Compile Include="Concurrent\Status\UnsafeBufferPosition.cs" />
     <Compile Include="Concurrent\UnsafeBuffer.cs" />
     <Compile Include="Concurrent\IIdleStrategy.cs" />
+    <Compile Include="Concurrent\MessageHandler.cs" />
     <Compile Include="Concurrent\INanoClock.cs" />
     <Compile Include="Concurrent\RingBuffer\IRingBuffer.cs" />
     <Compile Include="Concurrent\RingBuffer\ManyToOneRingBuffer.cs" />
@@ -75,7 +82,7 @@
     <Compile Include="Concurrent\Status\IReadablePosition.cs" />
     <Compile Include="Concurrent\YieldingIdleStrategy.cs" />
     <Compile Include="EndianessConverter.cs" />
-    <Compile Include="IErrorHandler.cs" />
+    <Compile Include="ErrorHandler.cs" />
     <Compile Include="IDirectBuffer.cs" />
     <Compile Include="IMutableDirectBuffer.cs" />
     <Compile Include="IManagedResource.cs" />
