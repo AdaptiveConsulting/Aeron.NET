@@ -52,7 +52,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// The length of the claimed range in the buffer.
         /// </summary>
         /// <returns> length of the range in the buffer. </returns>
-        public virtual int Length()
+        public int Length()
         {
             return _buffer.Capacity - DataHeaderFlyweight.HEADER_LENGTH;
         }
@@ -64,7 +64,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// </summary>
         /// <returns> the value stored in the reserve space at the end of a data frame header. </returns>
         /// <seealso cref="DataHeaderFlyweight"/>
-        public virtual long ReservedValue()
+        public long ReservedValue()
         {
             return _buffer.GetLong(DataHeaderFlyweight.RESERVED_VALUE_OFFSET);
         }
@@ -77,7 +77,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// <param name="value"> to be stored in the reserve space at the end of a data frame header. </param>
         /// <returns> this for fluent API semantics. </returns>
         /// <seealso cref="DataHeaderFlyweight" />
-        public virtual BufferClaim ReservedValue(long value)
+        public BufferClaim ReservedValue(long value)
         {
             _buffer.PutLong(DataHeaderFlyweight.RESERVED_VALUE_OFFSET, value);
             return this;
@@ -86,7 +86,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// <summary>
         /// Commit the message to the log buffer so that is it available to subscribers.
         /// </summary>
-        public virtual void Commit()
+        public void Commit()
         {
             int frameLength = _buffer.Capacity;
 
@@ -96,7 +96,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// <summary>
         /// Abort a claim of the message space to the log buffer so that the log can progress by ignoring this claim.
         /// </summary>
-        public virtual void Abort()
+        public void Abort()
         {
             int frameLength = _buffer.Capacity;
 

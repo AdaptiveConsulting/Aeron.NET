@@ -24,6 +24,7 @@ namespace Adaptive.Agrona.Concurrent
 
         public void Idle()
         {
+            // TODO PERF how many ticks should we use? There is no parameter in java
             Thread.SpinWait(1000);
         }
 

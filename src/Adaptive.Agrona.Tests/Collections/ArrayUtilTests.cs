@@ -14,7 +14,7 @@ namespace Adaptive.Agrona.Tests.Collections
         private readonly object[] _values = { One, Two };
 
         [Test]
-        public virtual void ShouldNotRemoveMissingElement()
+        public void ShouldNotRemoveMissingElement()
         {
             var result = ArrayUtil.Remove(_values, Three);
 
@@ -22,7 +22,7 @@ namespace Adaptive.Agrona.Tests.Collections
         }
 
         [Test]
-        public virtual void ShouldRemovePresentElementAtEnd()
+        public void ShouldRemovePresentElementAtEnd()
         {
             var result = ArrayUtil.Remove(_values, Two);
 
@@ -30,7 +30,7 @@ namespace Adaptive.Agrona.Tests.Collections
         }
 
         [Test]
-        public virtual void ShouldRemovePresentElementAtStart()
+        public void ShouldRemovePresentElementAtStart()
         {
             var result = ArrayUtil.Remove(_values, One);
 
@@ -38,7 +38,7 @@ namespace Adaptive.Agrona.Tests.Collections
         }
 
         [Test]
-        public virtual void ShouldRemoveByIndex()
+        public void ShouldRemoveByIndex()
         {
             var result = ArrayUtil.Remove(_values, 0);
 

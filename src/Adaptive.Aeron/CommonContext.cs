@@ -39,11 +39,11 @@ namespace Adaptive.Aeron
         /// </summary>
         public const long DEFAULT_DRIVER_TIMEOUT_MS = 10000;
 
-        private long _driverTimeoutMs = DEFAULT_DRIVER_TIMEOUT_MS;
+        protected long _driverTimeoutMs = DEFAULT_DRIVER_TIMEOUT_MS;
         private string _aeronDirectoryName;
         private FileInfo _cncFile;
         private UnsafeBuffer _countersMetaDataBuffer;
-        private UnsafeBuffer _countersValuesBuffer;
+        protected UnsafeBuffer _countersValuesBuffer;
 
         static CommonContext()
         {
@@ -315,7 +315,7 @@ namespace Adaptive.Aeron
         /// <summary>
         /// Release resources used by the CommonContext.
         /// </summary>
-        public void Dispose()
+        public virtual void Dispose()
         {
         }
     }

@@ -25,7 +25,7 @@ namespace Adaptive.Aeron.Command
         /// Get the registration id field
         /// </summary>
         /// <returns> registration id field </returns>
-        public virtual long RegistrationId()
+        public long RegistrationId()
         {
             return buffer.GetLong(offset + REGISTRATION_ID_OFFSET);
         }
@@ -35,7 +35,7 @@ namespace Adaptive.Aeron.Command
         /// </summary>
         /// <param name="registrationId"> field value </param>
         /// <returns> flyweight </returns>
-        public virtual RemoveMessageFlyweight RegistrationId(long registrationId)
+        public RemoveMessageFlyweight RegistrationId(long registrationId)
         {
             buffer.PutLong(offset + REGISTRATION_ID_OFFSET, registrationId);
 

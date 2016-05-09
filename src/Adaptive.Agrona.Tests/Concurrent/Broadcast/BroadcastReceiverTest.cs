@@ -127,7 +127,7 @@ namespace Adaptive.Agrona.Tests.Concurrent.Broadcast
         }
 
         [Test]
-        public virtual void ShouldLateJoinTransmission()
+        public void ShouldLateJoinTransmission()
         {
             const int length = 8;
             var recordLength = length + RecordDescriptor.HeaderLength;
@@ -155,7 +155,7 @@ namespace Adaptive.Agrona.Tests.Concurrent.Broadcast
 
 
         [Test]
-        public virtual void ShouldCopeWithPaddingRecordAndWrapOfBufferForNextRecord()
+        public void ShouldCopeWithPaddingRecordAndWrapOfBufferForNextRecord()
         {
             const int length = 120;
             var recordLength = length + RecordDescriptor.HeaderLength;
@@ -189,7 +189,7 @@ namespace Adaptive.Agrona.Tests.Concurrent.Broadcast
         }
 
         [Test]
-        public virtual void ShouldDealWithRecordBecomingInvalidDueToOverwrite()
+        public void ShouldDealWithRecordBecomingInvalidDueToOverwrite()
         {
             const int length = 8;
             var recordLength = length + RecordDescriptor.HeaderLength;

@@ -5,6 +5,8 @@ using Adaptive.Aeron.Exceptions;
 using Adaptive.Agrona;
 using Adaptive.Agrona.Concurrent;
 using Adaptive.Agrona.Concurrent.Broadcast;
+using Adaptive.Agrona.Concurrent.Status;
+using Adaptive.Agrona.Util;
 
 namespace Adaptive.Aeron
 {
@@ -15,82 +17,83 @@ namespace Adaptive.Aeron
     internal class ClientConductor : IAgent, IDriverListener
     {
         private const long NO_CORRELATION_ID = -1;
-        private static readonly TimeSpan RESOURCE_TIMEOUT = TimeSpan.FromSeconds(1);
-        private static readonly TimeSpan RESOURCE_LINGER = TimeSpan.FromSeconds(5);
+        private static readonly long RESOURCE_TIMEOUT_NS = NanoUtil.FromSeconds(1);
+        private static readonly long RESOURCE_LINGER_NS = NanoUtil.FromSeconds(5);
 
-        private readonly long keepAliveIntervalNs;
-        private readonly long driverTimeoutMs;
-        private readonly long driverTimeoutNs;
-        private readonly long interServiceTimeoutNs;
-        private readonly long publicationConnectionTimeoutMs;
-        private long timeOfLastKeepalive;
-        private long timeOfLastCheckResources;
-        private long timeOfLastWork;
-        private volatile bool driverActive = true;
+        private readonly long _keepAliveIntervalNs;
+        private readonly long _driverTimeoutMs;
+        private readonly long _driverTimeoutNs;
+        private readonly long _interServiceTimeoutNs; 
+        private readonly long _publicationConnectionTimeoutMs;
+        private long _timeOfLastKeepalive;
+        private long _timeOfLastCheckResources;
+        private long _timeOfLastWork;
+        private volatile bool _driverActive = true;
 
-        private readonly IEpochClock epochClock;
-        //private readonly NanoClock nanoClock;
-        private readonly DriverListenerAdapter driverListener;
-        private readonly ILogBuffersFactory logBuffersFactory;
-        private readonly ActivePublications activePublications = new ActivePublications();
-        private readonly ActiveSubscriptions activeSubscriptions = new ActiveSubscriptions();
-        private readonly List<IManagedResource> lingeringResources = new List<IManagedResource>();
-        private readonly UnsafeBuffer counterValuesBuffer;
-        private readonly DriverProxy driverProxy;
-        private readonly IErrorHandler errorHandler;
-        private readonly IAvailableImageHandler availableImageHandler;
-        private readonly IUnavailableImageHandler unavailableImageHandler;
+        private readonly IEpochClock _epochClock;
+        private readonly INanoClock _nanoClock;
+        private readonly DriverListenerAdapter _driverListener;
+        private readonly ILogBuffersFactory _logBuffersFactory;
+        private readonly ActivePublications _activePublications = new ActivePublications();
+        private readonly ActiveSubscriptions _activeSubscriptions = new ActiveSubscriptions();
+        private readonly List<IManagedResource> _lingeringResources = new List<IManagedResource>();
+        private readonly UnsafeBuffer _counterValuesBuffer;
+        private readonly DriverProxy _driverProxy;
+        private readonly ErrorHandler _errorHandler;
+        private readonly AvailableImageHandler _availableImageHandler;
+        private readonly UnavailableImageHandler _unavailableImageHandler;
 
-        private RegistrationException driverException;
+        private RegistrationException _driverException;
 
         internal ClientConductor(
             IEpochClock epochClock,
+            INanoClock nanoClock,
             CopyBroadcastReceiver broadcastReceiver, 
             ILogBuffersFactory logBuffersFactory, 
             UnsafeBuffer counterValuesBuffer, 
             DriverProxy driverProxy, 
-            IErrorHandler errorHandler, 
-            IAvailableImageHandler availableImageHandler, 
-            IUnavailableImageHandler unavailableImageHandler, 
+            ErrorHandler errorHandler, 
+            AvailableImageHandler availableImageHandler, 
+            UnavailableImageHandler unavailableImageHandler, 
             long keepAliveIntervalNs, 
             long driverTimeoutMs, 
             long interServiceTimeoutNs, 
             long publicationConnectionTimeoutMs)
         {
-            this.epochClock = epochClock;
-            //this.nanoClock = nanoClock;
-            this.timeOfLastKeepalive = nanoClock.NanoTime();
-            this.timeOfLastCheckResources = nanoClock.NanoTime();
-            this.timeOfLastWork = nanoClock.NanoTime();
-            this.errorHandler = errorHandler;
-            this.counterValuesBuffer = counterValuesBuffer;
-            this.driverProxy = driverProxy;
-            this.logBuffersFactory = logBuffersFactory;
-            this.availableImageHandler = availableImageHandler;
-            this.unavailableImageHandler = unavailableImageHandler;
-            this.keepAliveIntervalNs = keepAliveIntervalNs;
-            this.driverTimeoutMs = driverTimeoutMs;
-            this.driverTimeoutNs = MILLISECONDS.ToNanos(driverTimeoutMs);
-            this.interServiceTimeoutNs = interServiceTimeoutNs;
-            this.publicationConnectionTimeoutMs = publicationConnectionTimeoutMs;
+            _epochClock = epochClock;
+            _nanoClock = nanoClock;
+            _timeOfLastKeepalive = nanoClock.NanoTime();
+            _timeOfLastCheckResources = nanoClock.NanoTime();
+            _timeOfLastWork = nanoClock.NanoTime();
+            _errorHandler = errorHandler;
+            _counterValuesBuffer = counterValuesBuffer;
+            _driverProxy = driverProxy;
+            _logBuffersFactory = logBuffersFactory;
+            _availableImageHandler = availableImageHandler;
+            _unavailableImageHandler = unavailableImageHandler;
+            _keepAliveIntervalNs = keepAliveIntervalNs;
+            _driverTimeoutMs = driverTimeoutMs;
+            _driverTimeoutNs = NanoUtil.FromMilliseconds(driverTimeoutMs);
+            _interServiceTimeoutNs = interServiceTimeoutNs;
+            _publicationConnectionTimeoutMs = publicationConnectionTimeoutMs;
 
-            this.driverListener = new DriverListenerAdapter(broadcastReceiver, this);
+            _driverListener = new DriverListenerAdapter(broadcastReceiver, this);
         }
 
-        public virtual void OnClose()
+        public void OnClose()
         {
             lock (this)
             {
-                activePublications.Dispose();
-                activeSubscriptions.Dispose();
+                _activePublications.Dispose();
+                _activeSubscriptions.Dispose();
 
                 Thread.Yield();
 
-                lingeringResources.ForEach(mr => mr.Delete());
+                _lingeringResources.ForEach(mr => mr.Delete());
             }
         }
 
-        public virtual int DoWork()
+        public int DoWork()
         {
             lock (this)
             {
@@ -98,26 +101,26 @@ namespace Adaptive.Aeron
             }
         }
 
-        public virtual string RoleName()
+        public string RoleName()
         {
             return "client-conductor";
         }
 
-        internal virtual Publication AddPublication(string channel, int streamId)
+        internal Publication AddPublication(string channel, int streamId)
         {
             lock (this)
             {
                 VerifyDriverIsActive();
 
-                Publication publication = activePublications.Get(channel, streamId);
+                Publication publication = _activePublications.Get(channel, streamId);
                 if (publication == null)
                 {
-                    long correlationId = driverProxy.AddPublication(channel, streamId);
-                    long timeout = nanoClock.NanoTime() + driverTimeoutNs;
+                    long correlationId = _driverProxy.AddPublication(channel, streamId);
+                    long timeout = _nanoClock.NanoTime() + _driverTimeoutNs;
 
                     DoWorkUntil(correlationId, timeout, channel);
 
-                    publication = activePublications.Get(channel, streamId);
+                    publication = _activePublications.Get(channel, streamId);
                 }
 
                 publication.IncRef();
@@ -126,17 +129,17 @@ namespace Adaptive.Aeron
             }
         }
 
-        internal virtual void ReleasePublication(Publication publication)
+        internal void ReleasePublication(Publication publication)
         {
             lock (this)
             {
                 VerifyDriverIsActive();
 
-                if (publication == activePublications.Remove(publication.Channel(), publication.StreamId()))
+                if (publication == _activePublications.Remove(publication.Channel(), publication.StreamId()))
                 {
-                    long correlationId = driverProxy.RemovePublication(publication.RegistrationId());
+                    long correlationId = _driverProxy.RemovePublication(publication.RegistrationId());
 
-                    long timeout = nanoClock.NanoTime() + driverTimeoutNs;
+                    long timeout = _nanoClock.NanoTime() + _driverTimeoutNs;
 
                     LingerResource(publication.ManagedResource());
                     DoWorkUntil(correlationId, timeout, publication.Channel());
@@ -144,17 +147,17 @@ namespace Adaptive.Aeron
             }
         }
 
-        internal virtual Subscription AddSubscription(string channel, int streamId)
+        internal Subscription AddSubscription(string channel, int streamId)
         {
             lock (this)
             {
                 VerifyDriverIsActive();
 
-                long correlationId = driverProxy.AddSubscription(channel, streamId);
-                long timeout = nanoClock.NanoTime() + driverTimeoutNs;
+                long correlationId = _driverProxy.AddSubscription(channel, streamId);
+                long timeout = _nanoClock.NanoTime() + _driverTimeoutNs;
 
                 Subscription subscription = new Subscription(this, channel, streamId, correlationId);
-                activeSubscriptions.Add(subscription);
+                _activeSubscriptions.Add(subscription);
 
                 DoWorkUntil(correlationId, timeout, channel);
 
@@ -162,100 +165,100 @@ namespace Adaptive.Aeron
             }
         }
 
-        internal virtual void ReleaseSubscription(Subscription subscription)
+        internal void ReleaseSubscription(Subscription subscription)
         {
             lock (this)
             {
                 VerifyDriverIsActive();
 
-                long correlationId = driverProxy.RemoveSubscription(subscription.RegistrationId());
-                long timeout = nanoClock.NanoTime() + driverTimeoutNs;
+                long correlationId = _driverProxy.RemoveSubscription(subscription.RegistrationId());
+                long timeout = _nanoClock.NanoTime() + _driverTimeoutNs;
 
                 DoWorkUntil(correlationId, timeout, subscription.Channel());
 
-                activeSubscriptions.Remove(subscription);
+                _activeSubscriptions.Remove(subscription);
             }
         }
 
-        public virtual void OnNewPublication(string channel, int streamId, int sessionId, int publicationLimitId, string logFileName, long correlationId)
+        public void OnNewPublication(string channel, int streamId, int sessionId, int publicationLimitId, string logFileName, long correlationId)
         {
-            Publication publication = new Publication(this, channel, streamId, sessionId, new UnsafeBufferPosition(counterValuesBuffer, publicationLimitId), logBuffersFactory.Map(logFileName), correlationId);
+            Publication publication = new Publication(this, channel, streamId, sessionId, new UnsafeBufferPosition(_counterValuesBuffer, publicationLimitId), _logBuffersFactory.Map(logFileName), correlationId);
 
-            activePublications.Put(channel, streamId, publication);
+            _activePublications.Put(channel, streamId, publication);
         }
 
-        public virtual void OnAvailableImage(int streamId, int sessionId, Long2LongHashMap subscriberPositionMap, string logFileName, string sourceIdentity, long correlationId)
+        public void OnAvailableImage(int streamId, int sessionId, IDictionary<long, long> subscriberPositionMap, string logFileName, string sourceIdentity, long correlationId)
         {
-            activeSubscriptions.forEach(streamId, (subscription) =>
+            _activeSubscriptions.ForEach(streamId, (subscription) =>
             {
                 if (!subscription.HasImage(sessionId))
                 {
-                    long positionId = subscriberPositionMap.Get(subscription.RegistrationId());
-                    if (DriverListenerAdapter.MISSING_REGISTRATION_ID != positionId)
+                    long positionId = subscriberPositionMap[subscription.RegistrationId()];
+                    if (Adaptive.Aeron.DriverListenerAdapter.MISSING_REGISTRATION_ID != positionId)
                     {
-                        Image image = new Image(subscription, sessionId, new UnsafeBufferPosition(counterValuesBuffer, (int)positionId), logBuffersFactory.Map(logFileName), errorHandler, sourceIdentity, correlationId);
+                        var image = new Image(subscription, sessionId, new UnsafeBufferPosition(_counterValuesBuffer, (int)positionId), _logBuffersFactory.Map(logFileName), _errorHandler, sourceIdentity, correlationId);
                         subscription.AddImage(image);
-                        availableImageHandler.OnAvailableImage(image);
+                        _availableImageHandler(image);
                     }
                 }
             });
         }
 
-        public virtual void OnError(ErrorCode errorCode, string message, long correlationId)
+        public void OnError(ErrorCode errorCode, string message, long correlationId)
         {
-            driverException = new RegistrationException(errorCode, message);
+            _driverException = new RegistrationException(errorCode, message);
         }
 
-        public virtual void OnUnavailableImage(int streamId, long correlationId)
+        public void OnUnavailableImage(int streamId, long correlationId)
         {
-            activeSubscriptions.forEach(streamId, (subscription) =>
+            _activeSubscriptions.ForEach(streamId, (subscription) =>
             {
-                Image image = subscription.RemoveImage(correlationId);
+                var image = subscription.RemoveImage(correlationId);
                 if (null != image)
                 {
-                    unavailableImageHandler.OnUnavailableImage(image);
+                    _unavailableImageHandler(image);
                 }
             });
         }
 
-        internal virtual DriverListenerAdapter DriverListenerAdapter()
+        internal DriverListenerAdapter DriverListenerAdapter()
         {
-            return driverListener;
+            return _driverListener;
         }
 
-        internal virtual void LingerResource(IManagedResource managedResource)
+        internal void LingerResource(IManagedResource managedResource)
         {
-            managedResource.TimeOfLastStateChange(nanoClock.NanoTime());
-            lingeringResources.Add(managedResource);
+            managedResource.TimeOfLastStateChange(_nanoClock.NanoTime());
+            _lingeringResources.Add(managedResource);
         }
 
-        internal virtual bool IsPublicationConnected(long timeOfLastStatusMessage)
+        internal bool IsPublicationConnected(long timeOfLastStatusMessage)
         {
-            return (epochClock.Time() <= (timeOfLastStatusMessage + publicationConnectionTimeoutMs));
+            return (_epochClock.Time() <= (timeOfLastStatusMessage + _publicationConnectionTimeoutMs));
         }
 
-        internal virtual IUnavailableImageHandler UnavailableImageHandler()
+        internal UnavailableImageHandler UnavailableImageHandler()
         {
-            return unavailableImageHandler;
+            return _unavailableImageHandler;
         }
 
         private void CheckDriverHeartbeat()
         {
-            long now = epochClock.Time();
-            long currentDriverKeepaliveTime = driverProxy.TimeOfLastDriverKeepalive();
+            long now = _epochClock.Time();
+            long currentDriverKeepaliveTime = _driverProxy.TimeOfLastDriverKeepalive();
 
-            if (driverActive && (now > (currentDriverKeepaliveTime + driverTimeoutMs)))
+            if (_driverActive && (now > (currentDriverKeepaliveTime + _driverTimeoutMs)))
             {
-                driverActive = false;
+                _driverActive = false;
 
-                string msg = $"Driver has been inactive for over {driverTimeoutMs:D}ms";
-                errorHandler.OnError(new DriverTimeoutException(msg));
+                string msg = $"Driver has been inactive for over {_driverTimeoutMs:D}ms";
+                _errorHandler(new DriverTimeoutException(msg));
             }
         }
 
         private void VerifyDriverIsActive()
         {
-            if (!driverActive)
+            if (!_driverActive)
             {
                 throw new DriverTimeoutException("Driver is inactive");
             }
@@ -268,11 +271,11 @@ namespace Adaptive.Aeron
             try
             {
                 workCount += OnCheckTimeouts();
-                workCount += driverListener.PollMessage(correlationId, expectedChannel);
+                workCount += _driverListener.PollMessage(correlationId, expectedChannel);
             }
             catch (Exception ex)
             {
-                errorHandler.OnError(ex);
+                _errorHandler(ex);
             }
 
             return workCount;
@@ -280,63 +283,63 @@ namespace Adaptive.Aeron
 
         private void DoWorkUntil(long correlationId, long timeout, string expectedChannel)
         {
-            driverException = null;
+            _driverException = null;
 
             do
             {
                 DoWork(correlationId, expectedChannel);
 
-                if (driverListener.LastReceivedCorrelationId() == correlationId)
+                if (_driverListener.LastReceivedCorrelationId() == correlationId)
                 {
-                    if (null != driverException)
+                    if (null != _driverException)
                     {
-                        throw driverException;
+                        throw _driverException;
                     }
 
                     return;
                 }
-            } while (nanoClock.NanoTime() < timeout);
+            } while (_nanoClock.NanoTime() < timeout);
 
             throw new DriverTimeoutException("No response from driver within timeout");
         }
 
         private int OnCheckTimeouts()
         {
-            long now = nanoClock.NanoTime();
+            long now = _nanoClock.NanoTime();
             int result = 0;
 
-            if (now > (timeOfLastWork + interServiceTimeoutNs))
+            if (now > (_timeOfLastWork + _interServiceTimeoutNs))
             {
                 OnClose();
 
                 throw new ConductorServiceTimeoutException(
-                    $"Timeout between service calls over {interServiceTimeoutNs:D}ns");
+                    $"Timeout between service calls over {_interServiceTimeoutNs:D}ns");
             }
 
-            timeOfLastWork = now;
+            _timeOfLastWork = now;
 
-            if (now > (timeOfLastKeepalive + keepAliveIntervalNs))
+            if (now > (_timeOfLastKeepalive + _keepAliveIntervalNs))
             {
-                driverProxy.SendClientKeepalive();
+                _driverProxy.SendClientKeepalive();
                 CheckDriverHeartbeat();
 
-                timeOfLastKeepalive = now;
+                _timeOfLastKeepalive = now;
                 result++;
             }
 
-            if (now > (timeOfLastCheckResources + RESOURCE_TIMEOUT))
+            if (now > (_timeOfLastCheckResources + RESOURCE_TIMEOUT_NS))
             {
-                for (int i = lingeringResources.Count - 1; i >= 0; i--)
+                for (int i = _lingeringResources.Count - 1; i >= 0; i--)
                 {
-                    var resource = lingeringResources[i];
-                    if (now > (resource.TimeOfLastStateChange() + RESOURCE_LINGER))
+                    var resource = _lingeringResources[i];
+                    if (now > (resource.TimeOfLastStateChange() + RESOURCE_LINGER_NS))
                     {
-                        lingeringResources.Remove(i);
+                        _lingeringResources.RemoveAt(i);
                         resource.Delete();
                     }
                 }
 
-                timeOfLastCheckResources = now;
+                _timeOfLastCheckResources = now;
                 result++;
             }
 

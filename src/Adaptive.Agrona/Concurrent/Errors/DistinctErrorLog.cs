@@ -93,7 +93,7 @@ namespace Adaptive.Agrona.Concurrent.Errors
         /// </summary>
         /// <param name="observation"> to be logged as an error observation. </param>
         /// <returns> true if successfully logged otherwise false if insufficient space remaining in the log. </returns>
-        public virtual bool Record(Exception observation)
+        public bool Record(Exception observation)
         {
             long timestamp = _clock.Time();
             var existingObservations = _distinctObservations;

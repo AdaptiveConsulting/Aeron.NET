@@ -88,7 +88,7 @@ namespace Adaptive.Aeron.Command
         /// </summary>
         /// <param name="correlationId"> field value </param>
         /// <returns> flyweight </returns>
-        public virtual ImageBuffersReadyFlyweight CorrelationId(long correlationId)
+        public ImageBuffersReadyFlyweight CorrelationId(long correlationId)
         {
             _buffer.PutLong(_offset + CORRELATION_ID_OFFSET, correlationId);
 
@@ -99,7 +99,7 @@ namespace Adaptive.Aeron.Command
         /// return session id field
         /// </summary>
         /// <returns> session id field </returns>
-        public virtual int SessionId()
+        public int SessionId()
         {
             return _buffer.GetInt(_offset + SESSION_ID_OFFSET);
         }
@@ -228,7 +228,7 @@ namespace Adaptive.Aeron.Command
         /// Return the source identity string
         /// </summary>
         /// <returns> source identity string </returns>
-        public virtual string SourceIdentity()
+        public string SourceIdentity()
         {
             return _buffer.GetStringUtf8(_offset + SourceIdentityOffset());
         }
@@ -238,7 +238,7 @@ namespace Adaptive.Aeron.Command
         /// </summary>
         /// <param name="value"> for the source identity </param>
         /// <returns> flyweight </returns>
-        public virtual ImageBuffersReadyFlyweight SourceIdentity(string value)
+        public ImageBuffersReadyFlyweight SourceIdentity(string value)
         {
             _buffer.PutStringUtf8(_offset + SourceIdentityOffset(), value);
             return this;

@@ -42,6 +42,7 @@
   <ItemGroup>
     <Compile Include="ActivePublications.cs" />
     <Compile Include="ActiveSubscriptions.cs" />
+    <Compile Include="Aeron.cs" />
     <Compile Include="BufferBuilder.cs" />
     <Compile Include="ClientConductor.cs" />
     <Compile Include="CncFileDescriptor.cs" />
@@ -63,11 +64,10 @@
     <Compile Include="Exceptions\DriverTimeoutException .cs" />
     <Compile Include="Exceptions\RegistrationException .cs" />
     <Compile Include="FragmentAssembler .cs" />
-    <Compile Include="IAvailableImageHandler.cs" />
+    <Compile Include="ImageHandlers.cs" />
     <Compile Include="IDriverListener.cs" />
     <Compile Include="ILogBuffersFactory.cs" />
     <Compile Include="Image.cs" />
-    <Compile Include="IUnavailableImageHandler.cs" />
     <Compile Include="LogBuffers.cs" />
     <Compile Include="LogBuffer\BufferClaim.cs" />
     <Compile Include="LogBuffer\ControlledFragmentHandlerAction.cs" />

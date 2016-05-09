@@ -90,7 +90,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// <returns> the offset up to which the term has progressed. </returns>
         public static int Offset(long readOutcome)
         {
-            return (int)((long)((ulong)readOutcome >> 32));
+            return (int)(readOutcome >> 32);
         }
     }
 }

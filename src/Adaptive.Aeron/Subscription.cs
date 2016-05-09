@@ -167,26 +167,27 @@ namespace Adaptive.Aeron
             return bytesConsumed;
         }
 
-        /// <summary>
-        /// Poll the <seealso cref="Image"/>s under the subscription for available message fragments in blocks.
-        /// <para>
-        /// This method is useful for operations like bulk archiving a stream to file.
-        /// 
-        /// </para>
-        /// </summary>
-        /// <param name="fileBlockHandler"> to receive a block of fragments from each <seealso cref="Image"/>. </param>
-        /// <param name="blockLengthLimit"> for each <seealso cref="Image"/> polled. </param>
-        /// <returns> the number of bytes consumed. </returns>
-        public long FilePoll(IFileBlockHandler fileBlockHandler, int blockLengthLimit)
-        {
-            long bytesConsumed = 0;
-            foreach (Image image in images)
-            {
-                bytesConsumed += image.FilePoll(fileBlockHandler, blockLengthLimit);
-            }
+        // TODO come back to this
+        ///// <summary>
+        ///// Poll the <seealso cref="Image"/>s under the subscription for available message fragments in blocks.
+        ///// <para>
+        ///// This method is useful for operations like bulk archiving a stream to file.
+        ///// 
+        ///// </para>
+        ///// </summary>
+        ///// <param name="fileBlockHandler"> to receive a block of fragments from each <seealso cref="Image"/>. </param>
+        ///// <param name="blockLengthLimit"> for each <seealso cref="Image"/> polled. </param>
+        ///// <returns> the number of bytes consumed. </returns>
+        //public long FilePoll(IFileBlockHandler fileBlockHandler, int blockLengthLimit)
+        //{
+        //    long bytesConsumed = 0;
+        //    foreach (Image image in images)
+        //    {
+        //        bytesConsumed += image.FilePoll(fileBlockHandler, blockLengthLimit);
+        //    }
 
-            return bytesConsumed;
-        }
+        //    return bytesConsumed;
+        //}
 
         /// <summary>
         /// Count of images connected to this subscription.
@@ -257,11 +258,11 @@ namespace Adaptive.Aeron
 
                     foreach (Image image in images)
                     {
-                        clientConductor.UnavailableImageHandler().OnUnavailableImage(image);
+                        clientConductor.UnavailableImageHandler()(image);
                         clientConductor.LingerResource(image.ManagedResource());
                     }
 
-                    this.images = EMPTY_ARRAY;
+                    images = EMPTY_ARRAY;
                 }
             }
         }

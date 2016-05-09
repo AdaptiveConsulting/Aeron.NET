@@ -23,7 +23,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// The log of messages for a term.
         /// </summary>
         /// <returns> the log of messages for a term. </returns>
-        public virtual UnsafeBuffer TermBuffer()
+        public UnsafeBuffer TermBuffer()
         {
             return _termBuffer;
         }
@@ -32,7 +32,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// The meta data describing the term.
         /// </summary>
         /// <returns> the meta data describing the term. </returns>
-        public virtual UnsafeBuffer MetaDataBuffer()
+        public UnsafeBuffer MetaDataBuffer()
         {
             return _metaDataBuffer;
         }
@@ -40,7 +40,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// <summary>
         /// Clean down the buffers for reuse by zeroing them out.
         /// </summary>
-        public virtual void Clean()
+        public void Clean()
         {
             _termBuffer.SetMemory(0, _termBuffer.Capacity, 0);
             _metaDataBuffer.PutInt(LogBufferDescriptor.TERM_STATUS_OFFSET, LogBufferDescriptor.CLEAN);
@@ -50,7 +50,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// What is the current status of the buffer.
         /// </summary>
         /// <returns> the status of buffer as described in <seealso cref="LogBufferDescriptor"/> </returns>
-        public virtual int Status()
+        public int Status()
         {
             return _metaDataBuffer.GetIntVolatile(LogBufferDescriptor.TERM_STATUS_OFFSET);
         }
@@ -59,7 +59,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// Set the status of the log buffer with StoreStore memory ordering semantics.
         /// </summary>
         /// <param name="status"> to be set for the log buffer. </param>
-        public virtual void StatusOrdered(int status)
+        public void StatusOrdered(int status)
         {
             _metaDataBuffer.PutIntOrdered(LogBufferDescriptor.TERM_STATUS_OFFSET, status);
         }
@@ -69,7 +69,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// <seealso cref="TermBuffer()"/>.<seealso cref="IDirectBuffer.Capacity"/> then capacity will be returned.
         /// </summary>
         /// <returns> the current tail value. </returns>
-        public virtual int TailOffsetVolatile()
+        public int TailOffsetVolatile()
         {
             long tail = _metaDataBuffer.GetLongVolatile(LogBufferDescriptor.TERM_TAIL_COUNTER_OFFSET) & 0xFFFFFFFFL;
 
@@ -80,7 +80,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// Get the raw value for the tail containing both termId and offset.
         /// </summary>
         /// <returns> the raw value for the tail containing both termId and offset. </returns>
-        public virtual long RawTailVolatile()
+        public long RawTailVolatile()
         {
             return _metaDataBuffer.GetLongVolatile(LogBufferDescriptor.TERM_TAIL_COUNTER_OFFSET);
         }
@@ -89,7 +89,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// Set the value of the term id into the tail counter.
         /// </summary>
         /// <param name="termId"> for the tail counter </param>
-        public virtual void TermId(int termId)
+        public void TermId(int termId)
         {
             _metaDataBuffer.PutLong(LogBufferDescriptor.TERM_TAIL_COUNTER_OFFSET, ((long)termId) << 32);
         }
@@ -98,7 +98,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// Get the value of the term id into the tail counter.
         /// </summary>
         /// <returns> the current term id. </returns>
-        public virtual int TermId()
+        public int TermId()
         {
             long rawTail = _metaDataBuffer.GetLong(LogBufferDescriptor.TERM_TAIL_COUNTER_OFFSET);
 

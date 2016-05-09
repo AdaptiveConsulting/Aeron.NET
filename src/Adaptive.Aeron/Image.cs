@@ -23,7 +23,7 @@ namespace Adaptive.Aeron
         private readonly IPosition _subscriberPosition;
         private readonly UnsafeBuffer[] _termBuffers = new UnsafeBuffer[LogBufferDescriptor.PARTITION_COUNT];
         private readonly Header _header;
-        private readonly IErrorHandler _errorHandler;
+        private readonly ErrorHandler _errorHandler;
         private readonly LogBuffers _logBuffers;
         private readonly string _sourceIdentity;
         private readonly Subscription _subscription;
@@ -38,7 +38,7 @@ namespace Adaptive.Aeron
         /// <param name="errorHandler">       to be called if an error occurs when polling for messages. </param>
         /// <param name="sourceIdentity">     of the source sending the stream of messages. </param>
         /// <param name="correlationId">      of the request to the media driver. </param>
-        public Image(Subscription subscription, int sessionId, IPosition subscriberPosition, LogBuffers logBuffers, IErrorHandler errorHandler, string sourceIdentity, long correlationId)
+        public Image(Subscription subscription, int sessionId, IPosition subscriberPosition, LogBuffers logBuffers, ErrorHandler errorHandler, string sourceIdentity, long correlationId)
         {
             _subscription = subscription;
             _sessionId = sessionId;
@@ -61,7 +61,7 @@ namespace Adaptive.Aeron
         /// Get the length in bytes for each term partition in the log buffer.
         /// </summary>
         /// <returns> the length in bytes for each term partition in the log buffer. </returns>
-        public virtual int TermBufferLength()
+        public int TermBufferLength()
         {
             return _logBuffers.TermLength();
         }
@@ -70,7 +70,7 @@ namespace Adaptive.Aeron
         /// The sessionId for the steam of messages.
         /// </summary>
         /// <returns> the sessionId for the steam of messages. </returns>
-        public virtual int SessionId()
+        public int SessionId()
         {
             return _sessionId;
         }
@@ -79,7 +79,7 @@ namespace Adaptive.Aeron
         /// The source identity of the sending publisher as an abstract concept appropriate for the media.
         /// </summary>
         /// <returns> source identity of the sending publisher as an abstract concept appropriate for the media. </returns>
-        public virtual string SourceIdentity()
+        public string SourceIdentity()
         {
             return _sourceIdentity;
         }
@@ -88,7 +88,7 @@ namespace Adaptive.Aeron
         /// The initial term at which the stream started for this session.
         /// </summary>
         /// <returns> the initial term id. </returns>
-        public virtual int InitialTermId()
+        public int InitialTermId()
         {
             return _header.InitialTermId();
         }
@@ -97,7 +97,7 @@ namespace Adaptive.Aeron
         /// The correlationId for identification of the image with the media driver.
         /// </summary>
         /// <returns> the correlationId for identification of the image with the media driver. </returns>
-        public virtual long CorrelationId()
+        public long CorrelationId()
         {
             return _correlationId;
         }
@@ -106,7 +106,7 @@ namespace Adaptive.Aeron
         /// Get the <seealso cref="Subscription"/> to which this <seealso cref="Image"/> belongs.
         /// </summary>
         /// <returns> the <seealso cref="Subscription"/> to which this <seealso cref="Image"/> belongs. </returns>
-        public virtual Subscription Subscription()
+        public Subscription Subscription()
         {
             return _subscription;
         }
@@ -115,7 +115,7 @@ namespace Adaptive.Aeron
         /// Has this object been closed and should no longer be used?
         /// </summary>
         /// <returns> true if it has been closed otherwise false. </returns>
-        public virtual bool Closed
+        public bool Closed
         {
             get
             {
@@ -127,7 +127,7 @@ namespace Adaptive.Aeron
         /// The position this <seealso cref="Image"/> has been consumed to by the subscriber.
         /// </summary>
         /// <returns> the position this <seealso cref="Image"/> has been consumed to by the subscriber. </returns>
-        public virtual long Position()
+        public long Position()
         {
             if (_isClosed)
             {
@@ -141,7 +141,7 @@ namespace Adaptive.Aeron
         ///// The <seealso cref="FileChannel"/> to the raw log of the Image.
         ///// </summary>
         ///// <returns> the <seealso cref="FileChannel"/> to the raw log of the Image. </returns>
-        //public virtual FileChannel FileChannel()
+        //public FileChannel FileChannel()
         //{
         //    return logBuffers.FileChannel();
         //}
@@ -156,7 +156,7 @@ namespace Adaptive.Aeron
         /// <param name="fragmentLimit">   for the number of fragments to be consumed during one polling operation. </param>
         /// <returns> the number of fragments that have been consumed. </returns>
         /// <seealso cref="FragmentAssembler" />
-        public virtual int Poll(IFragmentHandler fragmentHandler, int fragmentLimit)
+        public int Poll(IFragmentHandler fragmentHandler, int fragmentLimit)
         {
             if (_isClosed)
             {
@@ -184,7 +184,7 @@ namespace Adaptive.Aeron
         /// <param name="fragmentLimit">   for the number of fragments to be consumed during one polling operation. </param>
         /// <returns> the number of fragments that have been consumed. </returns>
         /// <seealso cref="ControlledFragmentAssembler" />
-        public virtual int ControlledPoll(IControlledFragmentHandler fragmentHandler, int fragmentLimit)
+        public int ControlledPoll(IControlledFragmentHandler fragmentHandler, int fragmentLimit)
         {
             if (_isClosed)
             {
@@ -242,7 +242,7 @@ namespace Adaptive.Aeron
             }
             catch (Exception t)
             {
-                _errorHandler.OnError(t);
+                _errorHandler(t);
             }
 
             UpdatePosition(position, termOffset, offset);
@@ -257,7 +257,7 @@ namespace Adaptive.Aeron
         /// <param name="blockHandler">     to which block is delivered. </param>
         /// <param name="blockLengthLimit"> up to which a block may be in length. </param>
         /// <returns> the number of bytes that have been consumed. </returns>
-        public virtual int BlockPoll(IBlockHandler blockHandler, int blockLengthLimit)
+        public int BlockPoll(IBlockHandler blockHandler, int blockLengthLimit)
         {
             if (_isClosed)
             {
@@ -282,7 +282,7 @@ namespace Adaptive.Aeron
                 }
                 catch (Exception t)
                 {
-                    _errorHandler.OnError(t);
+                    _errorHandler(t);
                 }
 
                 _subscriberPosition.SetOrdered(position + bytesConsumed);
@@ -291,49 +291,50 @@ namespace Adaptive.Aeron
             return bytesConsumed;
         }
 
-        /// <summary>
-        /// Poll for new messages in a stream. If new messages are found beyond the last consumed position then they
-        /// will be delivered to the <seealso cref="IFileBlockHandler"/> up to a limited number of bytes.
-        /// </summary>
-        /// <param name="fileBlockHandler"> to which block is delivered. </param>
-        /// <param name="blockLengthLimit"> up to which a block may be in length. </param>
-        /// <returns> the number of bytes that have been consumed. </returns>
-        public virtual int FilePoll(IFileBlockHandler fileBlockHandler, int blockLengthLimit)
-        {
-            if (_isClosed)
-            {
-                return 0;
-            }
+        // TODO
+        ///// <summary>
+        ///// Poll for new messages in a stream. If new messages are found beyond the last consumed position then they
+        ///// will be delivered to the <seealso cref="IFileBlockHandler"/> up to a limited number of bytes.
+        ///// </summary>
+        ///// <param name="fileBlockHandler"> to which block is delivered. </param>
+        ///// <param name="blockLengthLimit"> up to which a block may be in length. </param>
+        ///// <returns> the number of bytes that have been consumed. </returns>
+        //public int FilePoll(IFileBlockHandler fileBlockHandler, int blockLengthLimit)
+        //{
+        //    if (_isClosed)
+        //    {
+        //        return 0;
+        //    }
 
-            long position = _subscriberPosition.Get();
-            int termOffset = (int)position & _termLengthMask;
-            int activeIndex = LogBufferDescriptor.IndexByPosition(position, _positionBitsToShift);
-            UnsafeBuffer termBuffer = _termBuffers[activeIndex];
-            int capacity = termBuffer.Capacity;
-            int limit = Math.Min(termOffset + blockLengthLimit, capacity);
+        //    long position = _subscriberPosition.Get();
+        //    int termOffset = (int)position & _termLengthMask;
+        //    int activeIndex = LogBufferDescriptor.IndexByPosition(position, _positionBitsToShift);
+        //    UnsafeBuffer termBuffer = _termBuffers[activeIndex];
+        //    int capacity = termBuffer.Capacity;
+        //    int limit = Math.Min(termOffset + blockLengthLimit, capacity);
 
-            int resultingOffset = TermBlockScanner.Scan(termBuffer, termOffset, limit);
+        //    int resultingOffset = TermBlockScanner.Scan(termBuffer, termOffset, limit);
 
-            int bytesConsumed = resultingOffset - termOffset;
-            if (resultingOffset > termOffset)
-            {
-                try
-                {
-                    long offset = ((long)capacity * activeIndex) + termOffset;
-                    int termId = termBuffer.GetInt(termOffset + DataHeaderFlyweight.TERM_ID_FIELD_OFFSET);
+        //    int bytesConsumed = resultingOffset - termOffset;
+        //    if (resultingOffset > termOffset)
+        //    {
+        //        try
+        //        {
+        //            long offset = ((long)capacity * activeIndex) + termOffset;
+        //            int termId = termBuffer.GetInt(termOffset + DataHeaderFlyweight.TERM_ID_FIELD_OFFSET);
 
-                    fileBlockHandler.OnBlock(_logBuffers.FileChannel(), offset, bytesConsumed, _sessionId, termId);
-                }
-                catch (Exception t)
-                {
-                    _errorHandler.OnError(t);
-                }
+        //            fileBlockHandler.OnBlock(_logBuffers.FileChannel(), offset, bytesConsumed, _sessionId, termId);
+        //        }
+        //        catch (Exception t)
+        //        {
+        //            _errorHandler(t);
+        //        }
 
-                _subscriberPosition.SetOrdered(position + bytesConsumed);
-            }
+        //        _subscriberPosition.SetOrdered(position + bytesConsumed);
+        //    }
 
-            return bytesConsumed;
-        }
+        //    return bytesConsumed;
+        //}
 
         private void UpdatePosition(long positionBefore, int offsetBefore, int offsetAfter)
         {
@@ -365,17 +366,17 @@ namespace Adaptive.Aeron
                 _image = image;
             }
 
-            public virtual void TimeOfLastStateChange(long time)
+            public void TimeOfLastStateChange(long time)
             {
                 _timeOfLastStateChange = time;
             }
 
-            public virtual long TimeOfLastStateChange()
+            public long TimeOfLastStateChange()
             {
                 return _timeOfLastStateChange;
             }
 
-            public virtual void Delete()
+            public void Delete()
             {
                 _image._logBuffers.Dispose();
             }

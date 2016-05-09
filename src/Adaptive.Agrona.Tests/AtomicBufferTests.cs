@@ -40,7 +40,7 @@ namespace Adaptive.Agrona.Tests
 
         [Theory]
         [ExpectedException(typeof(IndexOutOfRangeException))]
-        public virtual void ShouldThrowExceptionForAboveCapacity(IAtomicBuffer buffer)
+        public void ShouldThrowExceptionForAboveCapacity(IAtomicBuffer buffer)
         {
             int index = BufferCapacity + 1;
             buffer.CheckLimit(index);
@@ -84,7 +84,7 @@ namespace Adaptive.Agrona.Tests
         //JAVA TO C# CONVERTER TODO TASK: Most Java annotations will not have direct .NET equivalent attributes:
         //ORIGINAL LINE: @Test(expected = IllegalStateException.class) public void shouldThrowExceptionWhenBufferNotAligned()
         [Test]
-        public virtual void ShouldThrowExceptionWhenBufferNotAligned()
+        public void ShouldThrowExceptionWhenBufferNotAligned()
         {
             // TODO
             //var byteBuffer = new UnsafeBuffer(new byte[1024]);
@@ -211,7 +211,7 @@ namespace Adaptive.Agrona.Tests
         }
 
         [Theory]
-        public virtual void ShouldGetIntVolatileFromNativeBuffer(IAtomicBuffer buffer)
+        public void ShouldGetIntVolatileFromNativeBuffer(IAtomicBuffer buffer)
         {
             Marshal.WriteInt32(buffer.BufferPointer, Index, IntValue);
 
@@ -219,7 +219,7 @@ namespace Adaptive.Agrona.Tests
         }
 
         [Theory]
-        public virtual void ShouldPutIntVolatileToNativeBuffer(IAtomicBuffer buffer)
+        public void ShouldPutIntVolatileToNativeBuffer(IAtomicBuffer buffer)
         {
             buffer.PutIntVolatile(Index, IntValue);
 
@@ -227,7 +227,7 @@ namespace Adaptive.Agrona.Tests
         }
 
         [Theory]
-        public virtual void ShouldPutIntOrderedToNativeBuffer(IAtomicBuffer buffer)
+        public void ShouldPutIntOrderedToNativeBuffer(IAtomicBuffer buffer)
         {
             buffer.PutIntOrdered(Index, IntValue);
 
@@ -235,7 +235,7 @@ namespace Adaptive.Agrona.Tests
         }
 
         [Theory]
-        public virtual void ShouldAddIntOrderedToNativeBuffer(IAtomicBuffer buffer)
+        public void ShouldAddIntOrderedToNativeBuffer(IAtomicBuffer buffer)
         {
             const int initialValue = 7;
             const int increment = 9;
@@ -368,7 +368,7 @@ namespace Adaptive.Agrona.Tests
         }
 
         [Theory]
-        public virtual void ShouldGetFloatFromNativeBuffer(IAtomicBuffer buffer)
+        public void ShouldGetFloatFromNativeBuffer(IAtomicBuffer buffer)
         {
             var asInt = BitConverter.ToInt32(BitConverter.GetBytes(FloatValue), 0);
 

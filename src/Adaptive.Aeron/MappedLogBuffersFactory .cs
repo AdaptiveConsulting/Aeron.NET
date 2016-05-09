@@ -5,7 +5,7 @@
     /// </summary>
     internal class MappedLogBuffersFactory : ILogBuffersFactory
     {
-        public virtual LogBuffers Map(string logFileName)
+        public LogBuffers Map(string logFileName)
         {
             return new LogBuffers(logFileName);
         }

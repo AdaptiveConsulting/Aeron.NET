@@ -14,7 +14,7 @@ namespace Adaptive.Aeron.Protocol
         /// <summary>
         /// Length of the Data Header
         /// </summary>
-        public const int HEADER_LENGTH = 32;
+        public new const int HEADER_LENGTH = 32;
 
         /// <summary>
         /// Begin Flag

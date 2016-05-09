@@ -53,7 +53,7 @@ namespace Adaptive.Agrona.Concurrent.Broadcast
         /// Get the capacity of the underlying broadcast buffer.
         /// </summary>
         /// <returns> the capacity of the underlying broadcast buffer. </returns>
-        public virtual int Capacity()
+        public int Capacity()
         {
             return _capacity;
         }
@@ -67,7 +67,7 @@ namespace Adaptive.Agrona.Concurrent.Broadcast
         /// </para>
         /// </summary>
         /// <returns> the capacity of the underlying broadcast buffer. </returns>
-        public virtual long LappedCount()
+        public long LappedCount()
         {
             return _lappedCount.Get();
         }
@@ -76,7 +76,7 @@ namespace Adaptive.Agrona.Concurrent.Broadcast
         /// Type of the message received.
         /// </summary>
         /// <returns> typeId of the message received. </returns>
-        public virtual int TypeId()
+        public int TypeId()
         {
             return _buffer.GetInt(RecordDescriptor.GetTypeOffset(_recordOffset));
         }
@@ -85,7 +85,7 @@ namespace Adaptive.Agrona.Concurrent.Broadcast
         /// The offset for the beginning of the next message in the transmission stream.
         /// </summary>
         /// <returns> offset for the beginning of the next message in the transmission stream. </returns>
-        public virtual int Offset()
+        public int Offset()
         {
             return RecordDescriptor.GetMsgOffset(_recordOffset);
         }
@@ -94,7 +94,7 @@ namespace Adaptive.Agrona.Concurrent.Broadcast
         /// The length of the next message in the transmission stream.
         /// </summary>
         /// <returns> length of the next message in the transmission stream. </returns>
-        public virtual int Length()
+        public int Length()
         {
             return _buffer.GetInt(RecordDescriptor.GetLengthOffset(_recordOffset)) - RecordDescriptor.HeaderLength;
         }
@@ -103,7 +103,7 @@ namespace Adaptive.Agrona.Concurrent.Broadcast
         /// The underlying buffer containing the broadcast message stream.
         /// </summary>
         /// <returns> the underlying buffer containing the broadcast message stream. </returns>
-        public virtual IMutableDirectBuffer Buffer()
+        public IMutableDirectBuffer Buffer()
         {
             return _buffer;
         }
@@ -117,7 +117,7 @@ namespace Adaptive.Agrona.Concurrent.Broadcast
         /// </summary>
         /// <returns> true if transmission is available with <seealso cref="Offset()"/>, <seealso cref="Length()"/> and <seealso cref="TypeId()"/>
         /// set for the next message to be consumed. If no transmission is available then false. </returns>
-        public virtual bool ReceiveNext()
+        public bool ReceiveNext()
         {
             var isAvailable = false;
             var buffer = _buffer;
@@ -162,7 +162,7 @@ namespace Adaptive.Agrona.Concurrent.Broadcast
         /// </para>
         /// </summary>
         /// <returns> true if still valid otherwise false. </returns>
-        public virtual bool Validate()
+        public bool Validate()
         {
             // TODO check equivalent semantics
             // Replaces UNSAFE.loadFence(); Needed to prevent older loads being moved ahead of the validate, see j.u.c.StampedLock.

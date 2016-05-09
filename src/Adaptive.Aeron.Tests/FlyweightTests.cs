@@ -31,7 +31,7 @@ namespace Adaptive.Aeron.Tests
         private readonly DataHeaderFlyweight decodeDataHeader = new DataHeaderFlyweight();
 
         [Test]
-        public virtual void ShouldWriteCorrectValuesForGenericHeaderFields()
+        public void ShouldWriteCorrectValuesForGenericHeaderFields()
         {
             encodeHeader.Wrap(aBuff);
 
@@ -52,7 +52,7 @@ namespace Adaptive.Aeron.Tests
         }
 
         [Test]
-        public virtual void ShouldReadWhatIsWrittenToGenericHeaderFields()
+        public void ShouldReadWhatIsWrittenToGenericHeaderFields()
         {
             encodeHeader.Wrap(aBuff);
 
@@ -68,7 +68,7 @@ namespace Adaptive.Aeron.Tests
         }
 
         [Test]
-        public virtual void ShouldWriteAndReadMultipleFramesCorrectly()
+        public void ShouldWriteAndReadMultipleFramesCorrectly()
         {
             encodeHeader.Wrap(aBuff);
 
@@ -97,7 +97,7 @@ namespace Adaptive.Aeron.Tests
         }
 
         [Test]
-        public virtual void ShouldReadAndWriteDataHeaderCorrectly()
+        public void ShouldReadAndWriteDataHeaderCorrectly()
         {
             encodeDataHeader.Wrap(aBuff);
 

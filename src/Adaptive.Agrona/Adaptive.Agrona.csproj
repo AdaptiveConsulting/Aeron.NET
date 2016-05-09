@@ -42,6 +42,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Concurrent\AtomicBoolean.cs" />
     <Compile Include="Concurrent\AtomicLong.cs" />
     <Compile Include="BitUtil.cs" />
     <Compile Include="BufferUtil.cs" />
@@ -70,6 +71,7 @@
     <Compile Include="Concurrent\SleepingIdleStrategy.cs" />
     <Compile Include="Concurrent\SpinWaitIdleStrategy.cs" />
     <Compile Include="Concurrent\Status\UnsafeBufferPosition.cs" />
+    <Compile Include="Concurrent\SystemNanoClock.cs" />
     <Compile Include="Concurrent\UnsafeBuffer.cs" />
     <Compile Include="Concurrent\IIdleStrategy.cs" />
     <Compile Include="Concurrent\MessageHandler.cs" />
@@ -92,6 +94,7 @@
     <Compile Include="Util\ByteUtil.cs" />
     <Compile Include="Util\IntUtil.cs" />
     <Compile Include="Util\MappedByteBuffer.cs" />
+    <Compile Include="Util\NanoUtil.cs" />
     <Compile Include="Util\UnixTimeConverter.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
