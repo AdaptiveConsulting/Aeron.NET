@@ -19,8 +19,8 @@ namespace Adaptive.Aeron.LogBuffer
 
         public HeaderWriter(UnsafeBuffer defaultHeader)
         {
-            _versionFlagsType = ((long)defaultHeader.GetInt(HeaderFlyweight.VERSION_FIELD_OFFSET)) << 32;
-            _sessionId = ((long)defaultHeader.GetInt(DataHeaderFlyweight.SESSION_ID_FIELD_OFFSET)) << 32;
+            _versionFlagsType = (long)defaultHeader.GetInt(HeaderFlyweight.VERSION_FIELD_OFFSET) << 32;
+            _sessionId = (long)defaultHeader.GetInt(DataHeaderFlyweight.SESSION_ID_FIELD_OFFSET) << 32;
             _streamId = defaultHeader.GetInt(DataHeaderFlyweight.STREAM_ID_FIELD_OFFSET) & 0xFFFFFFFFL;
         }
 

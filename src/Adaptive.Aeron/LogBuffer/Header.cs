@@ -148,7 +148,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// can be used for both flags.
         /// </summary>
         /// <returns> the flags for this frame. </returns>
-        public virtual byte Flags()
+        public byte Flags()
         {
             return _buffer.GetByte(_offset + HeaderFlyweight.FLAGS_FIELD_OFFSET);
         }

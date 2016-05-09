@@ -55,7 +55,7 @@ namespace Adaptive.Agrona.Concurrent.RingBuffer
         /// Get the capacity of the ring-buffer in bytes for exchange.
         /// </summary>
         /// <returns> the capacity of the ring-buffer in bytes for exchange. </returns>
-        public virtual int Capacity()
+        public int Capacity()
         {
             return _capacity;
         }
@@ -69,7 +69,7 @@ namespace Adaptive.Agrona.Concurrent.RingBuffer
         /// <param name="length"> of the encoded message in bytes. </param>
         /// <returns> true if written to the ring-buffer, or false if insufficient space exists. </returns>
         /// <exception cref="ArgumentException"> if the length is greater than <seealso cref="IRingBuffer.MaxMsgLength()"/> </exception>
-        public virtual bool Write(int msgTypeId, IDirectBuffer srcBuffer, int srcIndex, int length)
+        public bool Write(int msgTypeId, IDirectBuffer srcBuffer, int srcIndex, int length)
         {
             RecordDescriptor.CheckTypeId(msgTypeId);
             CheckMsgLength(length);
@@ -100,7 +100,7 @@ namespace Adaptive.Agrona.Concurrent.RingBuffer
         /// </summary>
         /// <param name="handler"> to be called for processing each message in turn. </param>
         /// <returns> the number of messages that have been processed. </returns>
-        public virtual int Read(MessageHandler handler)
+        public int Read(MessageHandler handler)
         {
             return Read(handler, int.MaxValue);
         }
@@ -111,7 +111,7 @@ namespace Adaptive.Agrona.Concurrent.RingBuffer
         /// <param name="handler"> to be called for processing each message in turn. </param>
         /// <param name="messageCountLimit"> the number of messages will be read in a single invocation. </param>
         /// <returns> the number of messages that have been processed. </returns>
-        public virtual int Read(MessageHandler handler, int messageCountLimit)
+        public int Read(MessageHandler handler, int messageCountLimit)
         {
             var messagesRead = 0;
             var buffer = _buffer;
@@ -164,7 +164,7 @@ namespace Adaptive.Agrona.Concurrent.RingBuffer
         /// The maximum message length in bytes supported by the underlying ring buffer.
         /// </summary>
         /// <returns> the maximum message length in bytes supported by the underlying ring buffer. </returns>
-        public virtual int MaxMsgLength()
+        public int MaxMsgLength()
         {
             return _maxMsgLength;
         }
@@ -175,7 +175,7 @@ namespace Adaptive.Agrona.Concurrent.RingBuffer
         /// This method should be thread safe.
         /// </summary>
         /// <returns> the next value in the correlation sequence. </returns>
-        public virtual long NextCorrelationId()
+        public long NextCorrelationId()
         {
             return _buffer.GetAndAddLong(_correlationIdCounterIndex, 1);
         }
@@ -184,7 +184,7 @@ namespace Adaptive.Agrona.Concurrent.RingBuffer
         /// Get the underlying buffer used by the RingBuffer for storage.
         /// </summary>
         /// <returns> the underlying buffer used by the RingBuffer for storage. </returns>
-        public virtual IAtomicBuffer Buffer()
+        public IAtomicBuffer Buffer()
         {
             return _buffer;
         }
@@ -195,7 +195,7 @@ namespace Adaptive.Agrona.Concurrent.RingBuffer
         /// <b>Note:</b> The value for time must be valid across processes.
         /// </summary>
         /// <param name="time"> of the last consumer heartbeat. </param>
-        public virtual void ConsumerHeartbeatTime(long time)
+        public void ConsumerHeartbeatTime(long time)
         {
             _buffer.PutLongOrdered(_consumerHeartbeatIndex, time);
         }
@@ -204,7 +204,7 @@ namespace Adaptive.Agrona.Concurrent.RingBuffer
         /// The time of the last consumer heartbeat.
         /// </summary>
         /// <returns> the time of the last consumer heartbeat. </returns>
-        public virtual long ConsumerHeartbeatTime()
+        public long ConsumerHeartbeatTime()
         {
             return _buffer.GetLongVolatile(_consumerHeartbeatIndex);
         }
@@ -214,7 +214,7 @@ namespace Adaptive.Agrona.Concurrent.RingBuffer
         /// This is the range they are working with but could still be in the act of working with.
         /// </summary>
         /// <returns> number of bytes produced by the producers in claimed space. </returns>
-        public virtual long ProducerPosition()
+        public long ProducerPosition()
         {
             return _buffer.GetLongVolatile(_tailPositionIndex);
         }
@@ -223,7 +223,7 @@ namespace Adaptive.Agrona.Concurrent.RingBuffer
         /// The position in bytes from start up for the consumers.  The figure includes the headers.
         /// </summary>
         /// <returns> the count of bytes consumed by the consumers. </returns>
-        public virtual long ConsumerPosition()
+        public long ConsumerPosition()
         {
             return _buffer.GetLongVolatile(_headPositionIndex);
         }
@@ -232,7 +232,7 @@ namespace Adaptive.Agrona.Concurrent.RingBuffer
         /// Size of the backlog of bytes in the buffer between producers and consumers. The figure includes the size of headers.
         /// </summary>
         /// <returns> size of the backlog of bytes in the buffer between producers and consumers. </returns>
-        public virtual int Size()
+        public int Size()
         {
             long headBefore;
             long tail;
@@ -255,7 +255,7 @@ namespace Adaptive.Agrona.Concurrent.RingBuffer
         /// If no action is required at the position then none will be taken.
         /// </summary>
         /// <returns> true of an unblocking action was taken otherwise false. </returns>
-        public virtual bool Unblock()
+        public bool Unblock()
         {
             var buffer = _buffer;
             var mask = _capacity - 1;

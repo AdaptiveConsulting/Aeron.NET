@@ -40,7 +40,7 @@ namespace Adaptive.Aeron.Command
         /// return client id field
         /// </summary>
         /// <returns> client id field </returns>
-        public virtual long ClientId()
+        public long ClientId()
         {
             return buffer.GetLong(offset + CLIENT_ID_FIELD_OFFSET);
         }
@@ -50,7 +50,7 @@ namespace Adaptive.Aeron.Command
         /// </summary>
         /// <param name="clientId"> field value </param>
         /// <returns> for fluent API </returns>
-        public virtual CorrelatedMessageFlyweight ClientId(long clientId)
+        public CorrelatedMessageFlyweight ClientId(long clientId)
         {
             buffer.PutLong(offset + CLIENT_ID_FIELD_OFFSET, clientId);
 
@@ -61,7 +61,7 @@ namespace Adaptive.Aeron.Command
         /// return correlation id field
         /// </summary>
         /// <returns> correlation id field </returns>
-        public virtual long CorrelationId()
+        public long CorrelationId()
         {
             return buffer.GetLong(offset + CORRELATION_ID_FIELD_OFFSET);
         }
@@ -71,7 +71,7 @@ namespace Adaptive.Aeron.Command
         /// </summary>
         /// <param name="correlationId"> field value </param>
         /// <returns> for fluent API </returns>
-        public virtual CorrelatedMessageFlyweight CorrelationId(long correlationId)
+        public CorrelatedMessageFlyweight CorrelationId(long correlationId)
         {
             buffer.PutLong(offset + CORRELATION_ID_FIELD_OFFSET, correlationId);
 

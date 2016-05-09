@@ -19,7 +19,7 @@ namespace Adaptive.Aeron.Exceptions
         /// Get the <seealso cref="ErrorCode"/> for the specific exception.
         /// </summary>
         /// <returns> the <seealso cref="ErrorCode"/> for the specific exception. </returns>
-        public virtual ErrorCode ErrorCode()
+        public ErrorCode ErrorCode()
         {
             return _code;
         }

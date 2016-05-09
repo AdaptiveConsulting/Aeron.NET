@@ -394,7 +394,7 @@ namespace Adaptive.Agrona.Concurrent
 
         // TODO Olivier: Martin told me this is not required for the client
 
-        //public virtual double GetDouble(int index, ByteOrder byteOrder)
+        //public double GetDouble(int index, ByteOrder byteOrder)
         //{
         //    if (SHOULD_BOUNDS_CHECK)
         //    {
@@ -412,7 +412,7 @@ namespace Adaptive.Agrona.Concurrent
         //    }
         //}
 
-        //public virtual void PutDouble(int index, double value, ByteOrder byteOrder)
+        //public void PutDouble(int index, double value, ByteOrder byteOrder)
         //{
         //    if (SHOULD_BOUNDS_CHECK)
         //    {

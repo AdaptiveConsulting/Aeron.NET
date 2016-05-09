@@ -26,14 +26,14 @@ namespace Adaptive.Agrona.Concurrent
 
         public T GetAndSet(T value)
         {
-            var thread = Volatile.Read(ref _value);
-            Volatile.Write(ref _value, value);
-            return thread;
+            return Interlocked.Exchange(ref _value, value);
         }
 
         public bool CompareAndSet(T compareValue, T newValue)
         {
-            return Interlocked.CompareExchange(ref _value, newValue, compareValue) == newValue;
+            var original = Interlocked.CompareExchange(ref _value, newValue, compareValue);
+
+            return original == compareValue;
         }
     }
 }
