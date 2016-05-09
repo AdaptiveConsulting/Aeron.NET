@@ -40,6 +40,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ActivePublications.cs" />
+    <Compile Include="ActiveSubscriptions.cs" />
     <Compile Include="BufferBuilder.cs" />
     <Compile Include="ClientConductor.cs" />
     <Compile Include="CncFileDescriptor.cs" />

@@ -158,7 +158,7 @@ namespace Adaptive.Aeron
         /// 
         /// Publications are reference counted and are only truly closed when the ref count reaches zero.
         /// </summary>
-        public void Close()
+        public void Dispose()
         {
             lock (clientConductor)
             {

@@ -81,12 +81,12 @@ namespace Adaptive.Aeron
         {
             lock (this)
             {
-                activePublications.Di();
-                activeSubscriptions.di();
+                activePublications.Dispose();
+                activeSubscriptions.Dispose();
 
                 Thread.Yield();
 
-                lingeringResources.ForEach(ManagedResource::delete);
+                lingeringResources.ForEach(mr => mr.Delete());
             }
         }
 
@@ -223,7 +223,7 @@ namespace Adaptive.Aeron
             return driverListener;
         }
 
-        internal virtual void LingerResource(ManagedResource managedResource)
+        internal virtual void LingerResource(IManagedResource managedResource)
         {
             managedResource.TimeOfLastStateChange(nanoClock.NanoTime());
             lingeringResources.Add(managedResource);
@@ -234,7 +234,7 @@ namespace Adaptive.Aeron
             return (epochClock.Time() <= (timeOfLastStatusMessage + publicationConnectionTimeoutMs));
         }
 
-        internal virtual UnavailableImageHandler UnavailableImageHandler()
+        internal virtual IUnavailableImageHandler UnavailableImageHandler()
         {
             return unavailableImageHandler;
         }
@@ -248,7 +248,7 @@ namespace Adaptive.Aeron
             {
                 driverActive = false;
 
-                string msg = string.Format("Driver has been inactive for over {0:D}ms", driverTimeoutMs);
+                string msg = $"Driver has been inactive for over {driverTimeoutMs:D}ms";
                 errorHandler.OnError(new DriverTimeoutException(msg));
             }
         }
@@ -309,7 +309,8 @@ namespace Adaptive.Aeron
             {
                 OnClose();
 
-                throw new ConductorServiceTimeoutException(string.Format("Timeout between service calls over {0:D}ns", interServiceTimeoutNs));
+                throw new ConductorServiceTimeoutException(
+                    $"Timeout between service calls over {interServiceTimeoutNs:D}ns");
             }
 
             timeOfLastWork = now;
@@ -325,9 +326,9 @@ namespace Adaptive.Aeron
 
             if (now > (timeOfLastCheckResources + RESOURCE_TIMEOUT))
             {
-                for (int i = lingeringResources.Size() - 1; i >= 0; i--)
+                for (int i = lingeringResources.Count - 1; i >= 0; i--)
                 {
-                    ManagedResource resource = lingeringResources.Get(i);
+                    var resource = lingeringResources[i];
                     if (now > (resource.TimeOfLastStateChange() + RESOURCE_LINGER))
                     {
                         lingeringResources.Remove(i);
@@ -341,8 +342,5 @@ namespace Adaptive.Aeron
 
             return result;
         }
-
-
-
     }
 }
