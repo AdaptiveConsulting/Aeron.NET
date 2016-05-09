@@ -32,6 +32,8 @@ namespace Adaptive.Aeron
 
         public DriverProxy(IRingBuffer toDriverCommandBuffer)
         {
+            if (toDriverCommandBuffer == null) throw new ArgumentNullException(nameof(toDriverCommandBuffer));
+
             _toDriverCommandBuffer = toDriverCommandBuffer;
 
             _publicationMessage.Wrap(_buffer, 0);

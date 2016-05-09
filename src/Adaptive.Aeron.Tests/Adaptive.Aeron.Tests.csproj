@@ -45,6 +45,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BufferBuilderTests.cs" />
+    <Compile Include="DriverProxyTests.cs" />
     <Compile Include="FlyweightTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
