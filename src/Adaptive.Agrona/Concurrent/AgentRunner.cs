@@ -12,18 +12,18 @@ namespace Adaptive.Agrona.Concurrent
     /// </summary>
     public class AgentRunner : IDisposable
     {
-        private static readonly Thread TOMBSTONE = new Thread();
+        private static readonly Thread Tombstone = null;
 
-        private volatile bool Running = true;
+        private volatile bool _running = true;
 
-        private readonly AtomicCounter ErrorCounter;
-        private readonly ErrorHandler ErrorHandler;
-        private readonly IIdleStrategy IdleStrategy;
-        private readonly IAgent Agent_Renamed;
-        private readonly AtomicReference<Thread> Thread = new AtomicReference<Thread>();
+        private readonly AtomicCounter _errorCounter;
+        private readonly ErrorHandler _errorHandler;
+        private readonly IIdleStrategy _idleStrategy;
+        private readonly IAgent _agent;
+        private readonly AtomicReference<Thread> _thread = new AtomicReference<Thread>();
 
         /// <summary>
-        /// Create an agent passing in <seealso cref="IdleStrategy"/>
+        /// Create an agent passing in <seealso cref="_idleStrategy"/>
         /// </summary>
         /// <param name="idleStrategy"> to use for Agent run loop </param>
         /// <param name="errorHandler"> to be called if an <seealso cref="Exception"/> is encountered </param>
@@ -36,10 +36,10 @@ namespace Adaptive.Agrona.Concurrent
             if (agent == null) throw new ArgumentNullException(nameof(agent));
 
 
-            IdleStrategy = idleStrategy;
-            ErrorHandler = errorHandler;
-            ErrorCounter = errorCounter;
-            Agent_Renamed = agent;
+            _idleStrategy = idleStrategy;
+            _errorHandler = errorHandler;
+            _errorCounter = errorCounter;
+            _agent = agent;
         }
 
         /// <summary>
@@ -61,7 +61,7 @@ namespace Adaptive.Agrona.Concurrent
         /// <returns> <seealso cref="IAgent"/> who's lifecycle is being managed. </returns>
         public IAgent Agent()
         {
-            return Agent_Renamed;
+            return _agent;
         }
 
         /// <summary>
@@ -72,14 +72,14 @@ namespace Adaptive.Agrona.Concurrent
         /// </summary>
         public void Run()
         {
-            if (!Thread.compareAndSet(null, Thread.CurrentThread))
+            if (!_thread.CompareAndSet(null, Thread.CurrentThread))
             {
                 return;
             }
 
-            var idleStrategy = IdleStrategy;
-            var agent = Agent_Renamed;
-            while (Running)
+            var idleStrategy = _idleStrategy;
+            var agent = _agent;
+            while (_running)
             {
                 try
                 {
@@ -87,20 +87,12 @@ namespace Adaptive.Agrona.Concurrent
                 }
                 catch (ThreadInterruptedException)
                 {
-                    Thread.interrupted();
-                }
-                catch (va.nio.channels.ClosedByInterruptException)
-                {
-                    // Deliberately blank, if this exception is thrown then your interrupted status will be set.
                 }
                 catch (Exception ex)
                 {
-                    if (null != ErrorCounter)
-                    {
-                        ErrorCounter.Increment();
-                    }
+                    _errorCounter?.Increment();
 
-                    this.ErrorHandler(ex);
+                    _errorHandler(ex);
                 }
             }
         }
@@ -114,10 +106,10 @@ namespace Adaptive.Agrona.Concurrent
         /// </summary>
         public void Dispose()
         {
-            Running = false;
+            _running = false;
 
-            Thread thread = Thread.getAndSet(TOMBSTONE);
-            if (TOMBSTONE != thread)
+            var thread = _thread.GetAndSet(Tombstone);
+            if (Tombstone != thread)
             {
                 if (null != thread)
                 {
@@ -138,13 +130,12 @@ namespace Adaptive.Agrona.Concurrent
                         }
                         catch (ThreadInterruptedException)
                         {
-                            Thread.CurrentThread.Interrupt();
                             return;
                         }
                     }
                 }
 
-                Agent_Renamed.OnClose();
+                _agent.OnClose();
             }
         }
     }

@@ -51,6 +51,7 @@
     <Compile Include="Collections\CollectionUtil.cs" />
     <Compile Include="Collections\IntObjConsumer.cs" />
     <Compile Include="Concurrent\AgentRunner.cs" />
+    <Compile Include="Concurrent\AtomicReference.cs" />
     <Compile Include="Concurrent\Broadcast\BroadcastBufferDescriptor.cs" />
     <Compile Include="Concurrent\Broadcast\BroadcastReceiver.cs" />
     <Compile Include="Concurrent\Broadcast\CopyBroadcastReceiver.cs" />
@@ -68,6 +69,7 @@
     <Compile Include="Concurrent\NoOpIdleStrategy.cs" />
     <Compile Include="Concurrent\SleepingIdleStrategy.cs" />
     <Compile Include="Concurrent\SpinWaitIdleStrategy.cs" />
+    <Compile Include="Concurrent\Status\UnsafeBufferPosition.cs" />
     <Compile Include="Concurrent\UnsafeBuffer.cs" />
     <Compile Include="Concurrent\IIdleStrategy.cs" />
     <Compile Include="Concurrent\MessageHandler.cs" />

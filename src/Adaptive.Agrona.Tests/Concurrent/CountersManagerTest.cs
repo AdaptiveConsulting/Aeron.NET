@@ -48,9 +48,7 @@ namespace Adaptive.Agrona.Tests.Concurrent
         {
             var counterId = Manager.Allocate("abc");
             OtherManager.ForEach(Consumer);
-
-
-
+            
             verify(Consumer).accept(counterId, "abc");
         }
 

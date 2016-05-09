@@ -67,45 +67,45 @@ namespace Adaptive.Agrona.Concurrent.Status
         /// <summary>
         /// Length of a meta data record in bytes.
         /// </summary>
-        public static readonly int METADATA_LENGTH = BitUtil.CacheLineLength*4;
+        public static readonly int METADATA_LENGTH = BitUtil.CACHE_LINE_LENGTH*4;
 
         /// <summary>
         /// Offset in the record at which the type id field is stored.
         /// </summary>
-        public static readonly int TYPE_ID_OFFSET = BitUtil.SizeOfInt;
+        public static readonly int TYPE_ID_OFFSET = BitUtil.SIZE_OF_INT;
 
         /// <summary>
         /// Offset in the record at which the key is stored.
         /// </summary>
-        public static readonly int KEY_OFFSET = TYPE_ID_OFFSET + BitUtil.SizeOfInt;
+        public static readonly int KEY_OFFSET = TYPE_ID_OFFSET + BitUtil.SIZE_OF_INT;
 
         /// <summary>
         /// Offset in the record at which the label is stored.
         /// </summary>
-        public static readonly int LABEL_OFFSET = BitUtil.CacheLineLength*2;
+        public static readonly int LABEL_OFFSET = BitUtil.CACHE_LINE_LENGTH * 2;
 
         /// <summary>
         /// Length of a counter label length including length prefix.
         /// </summary>
-        public static readonly int FULL_LABEL_LENGTH = BitUtil.CacheLineLength*2;
+        public static readonly int FULL_LABEL_LENGTH = BitUtil.CACHE_LINE_LENGTH * 2;
 
         /// <summary>
         /// Maximum length of a label not including its length prefix.
         /// </summary>
-        public static readonly int MAX_LABEL_LENGTH = FULL_LABEL_LENGTH - BitUtil.SizeOfInt;
+        public static readonly int MAX_LABEL_LENGTH = FULL_LABEL_LENGTH - BitUtil.SIZE_OF_INT;
 
         /// <summary>
         /// Maximum length a key can be.
         /// </summary>
-        public static readonly int MAX_KEY_LENGTH = (BitUtil.CacheLineLength*2) - (BitUtil.SizeOfInt*2);
+        public static readonly int MAX_KEY_LENGTH = (BitUtil.CACHE_LINE_LENGTH * 2) - (BitUtil.SIZE_OF_INT * 2);
 
         /// <summary>
         /// Length of the space allocated to a counter that includes padding to avoid false sharing.
         /// </summary>
-        public static readonly int COUNTER_LENGTH = BitUtil.CacheLineLength*2;
+        public static readonly int COUNTER_LENGTH = BitUtil.CACHE_LINE_LENGTH * 2;
 
-        protected internal readonly IAtomicBuffer MetaDataBuffer_Renamed;
-        protected internal readonly IAtomicBuffer ValuesBuffer_Renamed;
+        protected readonly IAtomicBuffer MetaDataBuffer_Renamed;
+        protected readonly IAtomicBuffer ValuesBuffer_Renamed;
 
         /// <summary>
         /// Construct a reader over buffers containing the values and associated metadata.

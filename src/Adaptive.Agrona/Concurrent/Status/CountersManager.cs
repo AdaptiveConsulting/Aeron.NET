@@ -83,7 +83,7 @@ namespace Adaptive.Agrona.Concurrent.Status
         /// </summary>
         /// <param name="label"> to describe the counter. </param>
         /// <returns> the id allocated for the counter. </returns>
-        public virtual int Allocate(string label)
+        public int Allocate(string label)
         {
             return Allocate(label, DEFAULT_TYPE_ID, DEFAULT_KEY_FUNC);
         }
@@ -98,7 +98,7 @@ namespace Adaptive.Agrona.Concurrent.Status
         /// <param name="typeId">  for the type of counter. </param>
         /// <param name="keyFunc"> for setting the key value for the counter. </param>
         /// <returns> the id allocated for the counter. </returns>
-        public virtual int Allocate(string label, int typeId, Action<IMutableDirectBuffer> keyFunc)
+        public int Allocate(string label, int typeId, Action<IMutableDirectBuffer> keyFunc)
         {
             var counterId = NextCounterId();
             if ((CounterOffset(counterId) + COUNTER_LENGTH) > ValuesBuffer_Renamed.Capacity)
@@ -126,7 +126,7 @@ namespace Adaptive.Agrona.Concurrent.Status
         /// </summary>
         /// <param name="label"> to describe the counter. </param>
         /// <returns> a newly allocated <seealso cref="AtomicCounter"/> </returns>
-        public virtual AtomicCounter NewCounter(string label)
+        public AtomicCounter NewCounter(string label)
         {
             return new AtomicCounter(ValuesBuffer_Renamed, Allocate(label), this);
         }
@@ -139,7 +139,7 @@ namespace Adaptive.Agrona.Concurrent.Status
         /// <param name="keyFunc"> for setting the key value for the counter.
         /// </param>
         /// <returns> a newly allocated <seealso cref="AtomicCounter"/> </returns>
-        public virtual AtomicCounter NewCounter(string label, int typeId, Action<IMutableDirectBuffer> keyFunc)
+        public AtomicCounter NewCounter(string label, int typeId, Action<IMutableDirectBuffer> keyFunc)
         {
             return new AtomicCounter(ValuesBuffer_Renamed, Allocate(label, typeId, keyFunc), this);
         }
@@ -148,7 +148,7 @@ namespace Adaptive.Agrona.Concurrent.Status
         /// Free the counter identified by counterId.
         /// </summary>
         /// <param name="counterId"> the counter to freed </param>
-        public virtual void Free(int counterId)
+        public void Free(int counterId)
         {
             MetaDataBuffer_Renamed.PutIntOrdered(MetaDataOffset(counterId), RECORD_RECLAIMED);
             _freeList.Enqueue(counterId);
@@ -159,7 +159,7 @@ namespace Adaptive.Agrona.Concurrent.Status
         /// </summary>
         /// <param name="counterId"> to be set. </param>
         /// <param name="value">     to set for the counter. </param>
-        public virtual void SetCounterValue(int counterId, long value)
+        public void SetCounterValue(int counterId, long value)
         {
             ValuesBuffer_Renamed.PutLongOrdered(CounterOffset(counterId), value);
         }

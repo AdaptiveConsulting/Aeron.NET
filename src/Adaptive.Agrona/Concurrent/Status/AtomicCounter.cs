@@ -3,22 +3,22 @@
 namespace Adaptive.Agrona.Concurrent.Status
 {
     /// <summary>
-    /// Atomic counter that is backed by an <seealso cref="AtomicBuffer"/> that can be read across threads and processes.
+    /// Atomic counter that is backed by an <seealso cref="IAtomicBuffer"/> that can be read across threads and processes.
     /// </summary>
     public class AtomicCounter : IDisposable
     {
-        private readonly int CounterId;
-        private readonly int Offset;
-        private readonly IAtomicBuffer Buffer;
-        private readonly CountersManager CountersManager;
+        private readonly int _counterId;
+        private readonly int _offset;
+        private readonly IAtomicBuffer _buffer;
+        private readonly CountersManager _countersManager;
 
         internal AtomicCounter(IAtomicBuffer buffer, int counterId, CountersManager countersManager)
         {
-            Buffer = buffer;
-            CounterId = counterId;
-            CountersManager = countersManager;
-            Offset = CountersManager.CounterOffset(counterId);
-            buffer.PutLong(Offset, 0);
+            _buffer = buffer;
+            _counterId = counterId;
+            _countersManager = countersManager;
+            _offset = CountersReader.CounterOffset(counterId);
+            buffer.PutLong(_offset, 0);
         }
 
         /// <summary>
@@ -27,7 +27,7 @@ namespace Adaptive.Agrona.Concurrent.Status
         /// <returns> the previous value of the counter </returns>
         public long Increment()
         {
-            return Buffer.GetAndAddLong(Offset, 1);
+            return _buffer.GetAndAddLong(_offset, 1);
         }
 
         /// <summary>
@@ -36,7 +36,7 @@ namespace Adaptive.Agrona.Concurrent.Status
         /// <returns> the previous value of the counter </returns>
         public long OrderedIncrement()
         {
-            return Buffer.AddLongOrdered(Offset, 1);
+            return _buffer.AddLongOrdered(_offset, 1);
         }
 
         /// <summary>
@@ -45,7 +45,7 @@ namespace Adaptive.Agrona.Concurrent.Status
         /// <param name="value"> to be set with volatile semantics. </param>
         public void Set(long value)
         {
-            Buffer.PutLongVolatile(Offset, value);
+            _buffer.PutLongVolatile(_offset, value);
         }
 
         /// <summary>
@@ -54,7 +54,7 @@ namespace Adaptive.Agrona.Concurrent.Status
         /// <param name="value"> to be set with ordered semantics. </param>
         public long Ordered
         {
-            set { Buffer.PutLongOrdered(Offset, value); }
+            set { _buffer.PutLongOrdered(_offset, value); }
         }
 
         /// <summary>
@@ -64,7 +64,7 @@ namespace Adaptive.Agrona.Concurrent.Status
         /// <returns> the previous value of the counter </returns>
         public long Add(long increment)
         {
-            return Buffer.GetAndAddLong(Offset, increment);
+            return _buffer.GetAndAddLong(_offset, increment);
         }
 
         /// <summary>
@@ -74,7 +74,7 @@ namespace Adaptive.Agrona.Concurrent.Status
         /// <returns> the previous value of the counter </returns>
         public long AddOrdered(long increment)
         {
-            return Buffer.AddLongOrdered(Offset, increment);
+            return _buffer.AddLongOrdered(_offset, increment);
         }
 
         /// <summary>
@@ -83,24 +83,21 @@ namespace Adaptive.Agrona.Concurrent.Status
         /// <returns> the latest value for the counter. </returns>
         public long Get()
         {
-            return Buffer.GetLongVolatile(Offset);
+            return _buffer.GetLongVolatile(_offset);
         }
 
         /// <summary>
         /// Get the value of the counter using weak ordering semantics. This is the same a standard read of a field.
         /// </summary>
         /// <returns> the  value for the counter. </returns>
-        public long Weak
-        {
-            get { return Buffer.GetLong(Offset); }
-        }
+        public long Weak => _buffer.GetLong(_offset);
 
         /// <summary>
         /// Free the counter slot for reuse.
         /// </summary>
         public void Dispose()
         {
-            CountersManager.Free(CounterId);
+            _countersManager.Free(_counterId);
         }
     }
 }
