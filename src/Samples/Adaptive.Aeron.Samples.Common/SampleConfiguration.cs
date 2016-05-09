@@ -1,4 +1,4 @@
-namespace Adaptive.Aeron.Samples.Ping
+namespace Adaptive.Aeron.Samples.Common
 {
     /// <summary>
     /// Configuration used for samples all in one place.

@@ -13,6 +13,11 @@ namespace Adaptive.Aeron.LogBuffer
         private int _offset = 0;
         private IDirectBuffer _buffer;
 
+        public Header()
+        {
+            
+        }
+
         /// <summary>
         /// Construct a header that references a buffer for the log.
         /// </summary>

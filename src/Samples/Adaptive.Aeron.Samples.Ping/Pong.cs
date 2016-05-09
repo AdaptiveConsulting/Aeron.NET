@@ -3,7 +3,7 @@ using System.Diagnostics;
 using System.Threading;
 using Adaptive.Aeron;
 using Adaptive.Aeron.LogBuffer;
-using Adaptive.Aeron.Samples.Ping;
+using Adaptive.Aeron.Samples.Common;
 using Adaptive.Agrona;
 using Adaptive.Agrona.Concurrent;
 

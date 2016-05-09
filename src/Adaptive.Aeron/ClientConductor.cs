@@ -14,7 +14,7 @@ namespace Adaptive.Aeron
     /// Client conductor takes responses and notifications from media driver and acts on them.
     /// As well as passes commands to the media driver.
     /// </summary>
-    internal class ClientConductor : IAgent, IDriverListener
+    public class ClientConductor : IAgent, IDriverListener
     {
         private const long NO_CORRELATION_ID = -1;
         private static readonly long RESOURCE_TIMEOUT_NS = NanoUtil.FromSeconds(1);
@@ -44,6 +44,11 @@ namespace Adaptive.Aeron
         private readonly UnavailableImageHandler _unavailableImageHandler;
 
         private RegistrationException _driverException;
+
+        internal ClientConductor()
+        {
+            
+        }
 
         internal ClientConductor(
             IEpochClock epochClock,
@@ -165,7 +170,7 @@ namespace Adaptive.Aeron
             }
         }
 
-        internal void ReleaseSubscription(Subscription subscription)
+        internal virtual void ReleaseSubscription(Subscription subscription)
         {
             lock (this)
             {

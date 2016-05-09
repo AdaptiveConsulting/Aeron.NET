@@ -46,7 +46,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DelegateFragmentHandler.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="RateReporter.cs" />
     <Compile Include="SampleConfiguration.cs" />
     <Compile Include="SamplesUtil.cs" />
   </ItemGroup>

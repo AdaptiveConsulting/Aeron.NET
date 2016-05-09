@@ -52,6 +52,7 @@
     <Compile Include="FlyweightTests.cs" />
     <Compile Include="FragmentAssemblerTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SubscriptionTest.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

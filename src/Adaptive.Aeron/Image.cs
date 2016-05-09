@@ -28,6 +28,11 @@ namespace Adaptive.Aeron
         private readonly string _sourceIdentity;
         private readonly Subscription _subscription;
 
+        internal Image()
+        {
+
+        }
+
         /// <summary>
         /// Construct a new image over a log to represent a stream of messages from a <seealso cref="Publication"/>.
         /// </summary>
@@ -156,7 +161,7 @@ namespace Adaptive.Aeron
         /// <param name="fragmentLimit">   for the number of fragments to be consumed during one polling operation. </param>
         /// <returns> the number of fragments that have been consumed. </returns>
         /// <seealso cref="FragmentAssembler" />
-        public int Poll(IFragmentHandler fragmentHandler, int fragmentLimit)
+        public virtual int Poll(IFragmentHandler fragmentHandler, int fragmentLimit)
         {
             if (_isClosed)
             {
