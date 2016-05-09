@@ -34,6 +34,10 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="HdrHistogram, Version=1.0.0.0, Culture=neutral, PublicKeyToken=6f45871cdfcff67a, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\HdrHistogram.1.0.120-prerelease\lib\net45\HdrHistogram.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -44,11 +48,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Pong.cs" />
+    <Compile Include="Ping.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Adaptive.Aeron\Adaptive.Aeron.csproj">

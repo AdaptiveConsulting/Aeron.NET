@@ -23,6 +23,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Adaptive.Aeron.Samples.Ping
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Adaptive.Aeron.Samples.Common", "Samples\Adaptive.Aeron.Samples.Common\Adaptive.Aeron.Samples.Common.csproj", "{A8A90B16-DDEA-4A3E-A89A-7F7FB2D18416}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Adaptive.Aeron.Samples.Pong", "Adaptive.Aeron.Samples.Pong\Adaptive.Aeron.Samples.Pong.csproj", "{0E28B408-8146-4E33-A4D5-E0470D5B6382}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -57,6 +59,10 @@ Global
 		{A8A90B16-DDEA-4A3E-A89A-7F7FB2D18416}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A8A90B16-DDEA-4A3E-A89A-7F7FB2D18416}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A8A90B16-DDEA-4A3E-A89A-7F7FB2D18416}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0E28B408-8146-4E33-A4D5-E0470D5B6382}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0E28B408-8146-4E33-A4D5-E0470D5B6382}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0E28B408-8146-4E33-A4D5-E0470D5B6382}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0E28B408-8146-4E33-A4D5-E0470D5B6382}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -69,5 +75,6 @@ Global
 		{5181C0F3-516E-410B-A997-058AAE5537D7} = {4AF9D788-C727-4DA4-962F-0EB4D394ABEE}
 		{FD5EA93A-CCCC-458B-A0DF-4E5568F15AD6} = {05C2D2D4-06B2-4A7F-A30A-19B5B2F7C631}
 		{A8A90B16-DDEA-4A3E-A89A-7F7FB2D18416} = {05C2D2D4-06B2-4A7F-A30A-19B5B2F7C631}
+		{0E28B408-8146-4E33-A4D5-E0470D5B6382} = {05C2D2D4-06B2-4A7F-A30A-19B5B2F7C631}
 	EndGlobalSection
 EndGlobal

@@ -170,7 +170,7 @@ namespace Adaptive.Aeron
             }
         }
 
-        internal virtual void ReleaseSubscription(Subscription subscription)
+        internal void ReleaseSubscription(Subscription subscription)
         {
             lock (this)
             {
@@ -198,7 +198,13 @@ namespace Adaptive.Aeron
             {
                 if (!subscription.HasImage(sessionId))
                 {
-                    long positionId = subscriberPositionMap[subscription.RegistrationId()];
+
+                    long positionId = Adaptive.Aeron.DriverListenerAdapter.MISSING_REGISTRATION_ID;
+                    if (subscriberPositionMap.ContainsKey(subscription.RegistrationId()))
+                    {
+                        positionId = subscriberPositionMap[subscription.RegistrationId()];
+                    }
+                    
                     if (Adaptive.Aeron.DriverListenerAdapter.MISSING_REGISTRATION_ID != positionId)
                     {
                         var image = new Image(subscription, sessionId, new UnsafeBufferPosition(_counterValuesBuffer, (int)positionId), _logBuffersFactory.Map(logFileName), _errorHandler, sourceIdentity, correlationId);
