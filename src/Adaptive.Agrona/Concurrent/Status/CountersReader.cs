@@ -82,12 +82,12 @@ namespace Adaptive.Agrona.Concurrent.Status
         /// <summary>
         /// Offset in the record at which the label is stored.
         /// </summary>
-        public static readonly int LABEL_OFFSET = BitUtil.CACHE_LINE_LENGTH * 2;
+        public static readonly int LABEL_OFFSET = BitUtil.CACHE_LINE_LENGTH*2;
 
         /// <summary>
         /// Length of a counter label length including length prefix.
         /// </summary>
-        public static readonly int FULL_LABEL_LENGTH = BitUtil.CACHE_LINE_LENGTH * 2;
+        public static readonly int FULL_LABEL_LENGTH = BitUtil.CACHE_LINE_LENGTH*2;
 
         /// <summary>
         /// Maximum length of a label not including its length prefix.
@@ -97,15 +97,12 @@ namespace Adaptive.Agrona.Concurrent.Status
         /// <summary>
         /// Maximum length a key can be.
         /// </summary>
-        public static readonly int MAX_KEY_LENGTH = (BitUtil.CACHE_LINE_LENGTH * 2) - (BitUtil.SIZE_OF_INT * 2);
+        public static readonly int MAX_KEY_LENGTH = (BitUtil.CACHE_LINE_LENGTH*2) - (BitUtil.SIZE_OF_INT*2);
 
         /// <summary>
         /// Length of the space allocated to a counter that includes padding to avoid false sharing.
         /// </summary>
-        public static readonly int COUNTER_LENGTH = BitUtil.CACHE_LINE_LENGTH * 2;
-
-        protected readonly IAtomicBuffer MetaDataBuffer_Renamed;
-        protected readonly IAtomicBuffer ValuesBuffer_Renamed;
+        public static readonly int COUNTER_LENGTH = BitUtil.CACHE_LINE_LENGTH*2;
 
         /// <summary>
         /// Construct a reader over buffers containing the values and associated metadata.
@@ -114,27 +111,21 @@ namespace Adaptive.Agrona.Concurrent.Status
         /// <param name="valuesBuffer">   containing the counter values. </param>
         public CountersReader(IAtomicBuffer metaDataBuffer, IAtomicBuffer valuesBuffer)
         {
-            ValuesBuffer_Renamed = valuesBuffer;
-            MetaDataBuffer_Renamed = metaDataBuffer;
+            ValuesBuffer = valuesBuffer;
+            MetaDataBuffer = metaDataBuffer;
         }
 
         /// <summary>
         /// Get the buffer containing the metadata for the counters.
         /// </summary>
         /// <returns> the buffer containing the metadata for the counters. </returns>
-        public IAtomicBuffer MetaDataBuffer()
-        {
-            return MetaDataBuffer_Renamed;
-        }
+        public IAtomicBuffer MetaDataBuffer { get; }
 
         /// <summary>
         /// Get the buffer containing the values for the counters.
         /// </summary>
         /// <returns> the buffer containing the values for the counters. </returns>
-        public IAtomicBuffer ValuesBuffer()
-        {
-            return ValuesBuffer_Renamed;
-        }
+        public IAtomicBuffer ValuesBuffer { get; }
 
         /// <summary>
         /// The offset in the counter buffer for a given counterId.
@@ -160,20 +151,20 @@ namespace Adaptive.Agrona.Concurrent.Status
         /// Iterate over all labels in the label buffer.
         /// </summary>
         /// <param name="consumer"> function to be called for each label. </param>
-        public virtual void ForEach(IntObjConsumer<string> consumer)
+        public void ForEach(IntObjConsumer<string> consumer)
         {
             var counterId = 0;
 
-            for (int i = 0, capacity = MetaDataBuffer_Renamed.Capacity; i < capacity; i += METADATA_LENGTH)
+            for (int i = 0, capacity = MetaDataBuffer.Capacity; i < capacity; i += METADATA_LENGTH)
             {
-                var recordStatus = MetaDataBuffer_Renamed.GetIntVolatile(i);
+                var recordStatus = MetaDataBuffer.GetIntVolatile(i);
                 if (RECORD_UNUSED == recordStatus)
                 {
                     break;
                 }
                 else if (RECORD_ALLOCATED == recordStatus)
                 {
-                    var label = MetaDataBuffer_Renamed.GetStringUtf8(i + LABEL_OFFSET);
+                    var label = MetaDataBuffer.GetStringUtf8(i + LABEL_OFFSET);
                     consumer(counterId, label);
                 }
 
@@ -188,19 +179,19 @@ namespace Adaptive.Agrona.Concurrent.Status
         public void ForEach(MetaData metaData)
         {
             var counterId = 0;
-
-            for (int i = 0, capacity = MetaDataBuffer_Renamed.Capacity; i < capacity; i += METADATA_LENGTH)
+            
+            for (int i = 0, capacity = MetaDataBuffer.Capacity; i < capacity; i += METADATA_LENGTH)
             {
-                var recordStatus = MetaDataBuffer_Renamed.GetIntVolatile(i);
+                var recordStatus = MetaDataBuffer.GetIntVolatile(i);
                 if (RECORD_UNUSED == recordStatus)
                 {
                     break;
                 }
-                else if (RECORD_ALLOCATED == recordStatus)
+                if (RECORD_ALLOCATED == recordStatus)
                 {
-                    var typeId = MetaDataBuffer_Renamed.GetInt(i + TYPE_ID_OFFSET);
-                    var label = MetaDataBuffer_Renamed.GetStringUtf8(i + LABEL_OFFSET);
-                    IDirectBuffer keyBuffer = new UnsafeBuffer(MetaDataBuffer_Renamed, i + KEY_OFFSET, MAX_KEY_LENGTH);
+                    var typeId = MetaDataBuffer.GetInt(i + TYPE_ID_OFFSET);
+                    var label = MetaDataBuffer.GetStringUtf8(i + LABEL_OFFSET);
+                    IDirectBuffer keyBuffer = new UnsafeBuffer(MetaDataBuffer, i + KEY_OFFSET, MAX_KEY_LENGTH);
 
                     metaData(counterId, typeId, keyBuffer, label);
                 }
@@ -216,7 +207,7 @@ namespace Adaptive.Agrona.Concurrent.Status
         /// <returns> the current value of the counter. </returns>
         public long GetCounterValue(int counterId)
         {
-            return ValuesBuffer_Renamed.GetLongVolatile(CounterOffset(counterId));
+            return ValuesBuffer.GetLongVolatile(CounterOffset(counterId));
         }
 
         /// <summary>
