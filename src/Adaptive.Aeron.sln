@@ -29,6 +29,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Adaptive.Aeron.Samples.Simp
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Adaptive.Aeron.Samples.Pong", "Samples\Adaptive.Aeron.Samples.Pong\Adaptive.Aeron.Samples.Pong.csproj", "{0E28B408-8146-4E33-A4D5-E0470D5B6382}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Adaptive.Aeron.Samples.StreamingPublisher", "Samples\Adaptive.Aeron.Samples.StreamingPublisher\Adaptive.Aeron.Samples.StreamingPublisher.csproj", "{94553688-F17D-448E-8414-8FB097846BAC}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -75,6 +77,10 @@ Global
 		{0E28B408-8146-4E33-A4D5-E0470D5B6382}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0E28B408-8146-4E33-A4D5-E0470D5B6382}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0E28B408-8146-4E33-A4D5-E0470D5B6382}.Release|Any CPU.Build.0 = Release|Any CPU
+		{94553688-F17D-448E-8414-8FB097846BAC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{94553688-F17D-448E-8414-8FB097846BAC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{94553688-F17D-448E-8414-8FB097846BAC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{94553688-F17D-448E-8414-8FB097846BAC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -90,5 +96,6 @@ Global
 		{0867F246-E29C-442C-A2ED-5B12A6A46638} = {05C2D2D4-06B2-4A7F-A30A-19B5B2F7C631}
 		{38ECAB95-2E6E-4224-B84D-A73753BDB044} = {05C2D2D4-06B2-4A7F-A30A-19B5B2F7C631}
 		{0E28B408-8146-4E33-A4D5-E0470D5B6382} = {05C2D2D4-06B2-4A7F-A30A-19B5B2F7C631}
+		{94553688-F17D-448E-8414-8FB097846BAC} = {05C2D2D4-06B2-4A7F-A30A-19B5B2F7C631}
 	EndGlobalSection
 EndGlobal
