@@ -12,6 +12,11 @@ namespace Adaptive.Agrona.Concurrent.Broadcast
         private readonly BroadcastReceiver _receiver;
         private readonly IMutableDirectBuffer _scratchBuffer;
 
+        public CopyBroadcastReceiver()
+        {
+            
+        }
+
         /// <summary>
         /// Wrap a <seealso cref="BroadcastReceiver"/> to simplify the API for receiving messages.
         /// </summary>
@@ -34,7 +39,7 @@ namespace Adaptive.Agrona.Concurrent.Broadcast
         /// </summary>
         /// <param name="handler"> to be called for each message received. </param>
         /// <returns> the number of messages that have been received. </returns>
-        public int Receive(MessageHandler handler)
+        public virtual int Receive(MessageHandler handler)
         {
             var messagesReceived = 0;
             var receiver = _receiver;
