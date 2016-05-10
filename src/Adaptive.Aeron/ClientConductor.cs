@@ -23,7 +23,7 @@ namespace Adaptive.Aeron
         private readonly long _keepAliveIntervalNs;
         private readonly long _driverTimeoutMs;
         private readonly long _driverTimeoutNs;
-        private readonly long _interServiceTimeoutNs; 
+        private readonly long _interServiceTimeoutNs;
         private readonly long _publicationConnectionTimeoutMs;
         private long _timeOfLastKeepalive;
         private long _timeOfLastCheckResources;
@@ -47,22 +47,21 @@ namespace Adaptive.Aeron
 
         internal ClientConductor()
         {
-            
         }
 
         internal ClientConductor(
             IEpochClock epochClock,
             INanoClock nanoClock,
-            CopyBroadcastReceiver broadcastReceiver, 
-            ILogBuffersFactory logBuffersFactory, 
-            UnsafeBuffer counterValuesBuffer, 
-            DriverProxy driverProxy, 
-            ErrorHandler errorHandler, 
-            AvailableImageHandler availableImageHandler, 
-            UnavailableImageHandler unavailableImageHandler, 
-            long keepAliveIntervalNs, 
-            long driverTimeoutMs, 
-            long interServiceTimeoutNs, 
+            CopyBroadcastReceiver broadcastReceiver,
+            ILogBuffersFactory logBuffersFactory,
+            UnsafeBuffer counterValuesBuffer,
+            DriverProxy driverProxy,
+            ErrorHandler errorHandler,
+            AvailableImageHandler availableImageHandler,
+            UnavailableImageHandler unavailableImageHandler,
+            long keepAliveIntervalNs,
+            long driverTimeoutMs,
+            long interServiceTimeoutNs,
             long publicationConnectionTimeoutMs)
         {
             _epochClock = epochClock;
@@ -117,11 +116,11 @@ namespace Adaptive.Aeron
             {
                 VerifyDriverIsActive();
 
-                Publication publication = _activePublications.Get(channel, streamId);
+                var publication = _activePublications.Get(channel, streamId);
                 if (publication == null)
                 {
-                    long correlationId = _driverProxy.AddPublication(channel, streamId);
-                    long timeout = _nanoClock.NanoTime() + _driverTimeoutNs;
+                    var correlationId = _driverProxy.AddPublication(channel, streamId);
+                    var timeout = _nanoClock.NanoTime() + _driverTimeoutNs;
 
                     DoWorkUntil(correlationId, timeout, channel);
 
@@ -142,9 +141,9 @@ namespace Adaptive.Aeron
 
                 if (publication == _activePublications.Remove(publication.Channel(), publication.StreamId()))
                 {
-                    long correlationId = _driverProxy.RemovePublication(publication.RegistrationId());
+                    var correlationId = _driverProxy.RemovePublication(publication.RegistrationId());
 
-                    long timeout = _nanoClock.NanoTime() + _driverTimeoutNs;
+                    var timeout = _nanoClock.NanoTime() + _driverTimeoutNs;
 
                     LingerResource(publication.ManagedResource());
                     DoWorkUntil(correlationId, timeout, publication.Channel());
@@ -158,10 +157,10 @@ namespace Adaptive.Aeron
             {
                 VerifyDriverIsActive();
 
-                long correlationId = _driverProxy.AddSubscription(channel, streamId);
-                long timeout = _nanoClock.NanoTime() + _driverTimeoutNs;
+                var correlationId = _driverProxy.AddSubscription(channel, streamId);
+                var timeout = _nanoClock.NanoTime() + _driverTimeoutNs;
 
-                Subscription subscription = new Subscription(this, channel, streamId, correlationId);
+                var subscription = new Subscription(this, channel, streamId, correlationId);
                 _activeSubscriptions.Add(subscription);
 
                 DoWorkUntil(correlationId, timeout, channel);
@@ -176,8 +175,8 @@ namespace Adaptive.Aeron
             {
                 VerifyDriverIsActive();
 
-                long correlationId = _driverProxy.RemoveSubscription(subscription.RegistrationId());
-                long timeout = _nanoClock.NanoTime() + _driverTimeoutNs;
+                var correlationId = _driverProxy.RemoveSubscription(subscription.RegistrationId());
+                var timeout = _nanoClock.NanoTime() + _driverTimeoutNs;
 
                 DoWorkUntil(correlationId, timeout, subscription.Channel());
 
@@ -187,7 +186,7 @@ namespace Adaptive.Aeron
 
         public void OnNewPublication(string channel, int streamId, int sessionId, int publicationLimitId, string logFileName, long correlationId)
         {
-            Publication publication = new Publication(this, channel, streamId, sessionId, new UnsafeBufferPosition(_counterValuesBuffer, publicationLimitId), _logBuffersFactory.Map(logFileName), correlationId);
+            var publication = new Publication(this, channel, streamId, sessionId, new UnsafeBufferPosition(_counterValuesBuffer, publicationLimitId), _logBuffersFactory.Map(logFileName), correlationId);
 
             _activePublications.Put(channel, streamId, publication);
         }
@@ -198,16 +197,11 @@ namespace Adaptive.Aeron
             {
                 if (!subscription.HasImage(sessionId))
                 {
+                    long positionId;
 
-                    long positionId = Adaptive.Aeron.DriverListenerAdapter.MISSING_REGISTRATION_ID;
-                    if (subscriberPositionMap.ContainsKey(subscription.RegistrationId()))
+                    if (subscriberPositionMap.TryGetValue(subscription.RegistrationId(), out positionId))
                     {
-                        positionId = subscriberPositionMap[subscription.RegistrationId()];
-                    }
-                    
-                    if (Adaptive.Aeron.DriverListenerAdapter.MISSING_REGISTRATION_ID != positionId)
-                    {
-                        var image = new Image(subscription, sessionId, new UnsafeBufferPosition(_counterValuesBuffer, (int)positionId), _logBuffersFactory.Map(logFileName), _errorHandler, sourceIdentity, correlationId);
+                        var image = new Image(subscription, sessionId, new UnsafeBufferPosition(_counterValuesBuffer, (int) positionId), _logBuffersFactory.Map(logFileName), _errorHandler, sourceIdentity, correlationId);
                         subscription.AddImage(image);
                         _availableImageHandler(image);
                     }
@@ -255,8 +249,8 @@ namespace Adaptive.Aeron
 
         private void CheckDriverHeartbeat()
         {
-            long now = _epochClock.Time();
-            long currentDriverKeepaliveTime = _driverProxy.TimeOfLastDriverKeepalive();
+            var now = _epochClock.Time();
+            var currentDriverKeepaliveTime = _driverProxy.TimeOfLastDriverKeepalive();
 
             if (_driverActive && (now > (currentDriverKeepaliveTime + _driverTimeoutMs)))
             {
@@ -277,7 +271,7 @@ namespace Adaptive.Aeron
 
         private int DoWork(long correlationId, string expectedChannel)
         {
-            int workCount = 0;
+            var workCount = 0;
 
             try
             {
@@ -316,8 +310,8 @@ namespace Adaptive.Aeron
 
         private int OnCheckTimeouts()
         {
-            long now = _nanoClock.NanoTime();
-            int result = 0;
+            var now = _nanoClock.NanoTime();
+            var result = 0;
 
             if (now > (_timeOfLastWork + _interServiceTimeoutNs))
             {
@@ -339,7 +333,7 @@ namespace Adaptive.Aeron
 
             if (now > (_timeOfLastCheckResources + RESOURCE_TIMEOUT_NS))
             {
-                for (int i = _lingeringResources.Count - 1; i >= 0; i--)
+                for (var i = _lingeringResources.Count - 1; i >= 0; i--)
                 {
                     var resource = _lingeringResources[i];
                     if (now > (resource.TimeOfLastStateChange() + RESOURCE_LINGER_NS))
