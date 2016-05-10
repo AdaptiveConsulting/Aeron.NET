@@ -24,5 +24,10 @@ namespace Adaptive.Agrona.Concurrent
         {
             Volatile.Write(ref _long, newValue);
         }
+
+        public void Set(long value)
+        {
+            Volatile.Write(ref _long, value);
+        }
     }
 }

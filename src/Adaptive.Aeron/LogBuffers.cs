@@ -17,7 +17,12 @@ namespace Adaptive.Aeron
         private readonly int _termLength;
         private readonly UnsafeBuffer[] _atomicBuffers = new UnsafeBuffer[(LogBufferDescriptor.PARTITION_COUNT * 2) + 1];
         private readonly MappedByteBuffer[] _mappedByteBuffers;
-        
+
+        internal LogBuffers()
+        {
+            
+        }
+
         public LogBuffers(string logFileName)
         {
             var fileInfo = new FileInfo(logFileName);
@@ -78,7 +83,7 @@ namespace Adaptive.Aeron
             }
         }
 
-        public UnsafeBuffer[] AtomicBuffers()
+        public virtual UnsafeBuffer[] AtomicBuffers()
         {
             return _atomicBuffers;
         }
@@ -91,7 +96,7 @@ namespace Adaptive.Aeron
             }
         }
 
-        public int TermLength()
+        public virtual int TermLength()
         {
             return _termLength;
         }
