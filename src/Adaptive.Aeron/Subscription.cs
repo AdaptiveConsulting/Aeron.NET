@@ -10,7 +10,7 @@ namespace Adaptive.Aeron
     /// a given channel and streamId pair.
     /// <para>
     /// Subscribers are created via an <seealso cref="Aeron"/> object, and received messages are delivered
-    /// to the <seealso cref="IFragmentHandler"/>.
+    /// to the <seealso cref="FragmentHandler"/>.
     /// </para>
     /// <para>
     /// By default fragmented messages are not reassembled before delivery. If an application must
@@ -246,7 +246,7 @@ namespace Adaptive.Aeron
         /// This method is idempotent.
         /// </para>
         /// </summary>
-        public void Dispose()
+        public virtual void Dispose()
         {
             lock (clientConductor)
             {

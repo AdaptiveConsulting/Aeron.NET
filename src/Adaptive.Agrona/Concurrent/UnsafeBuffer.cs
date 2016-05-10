@@ -41,6 +41,11 @@ namespace Adaptive.Agrona.Concurrent
             Wrap(buffer);
         }
 
+        public UnsafeBuffer()
+        {
+            
+        }
+
         /// <summary>
         /// Attach a view to a byte[] for providing direct access.
         /// </summary>

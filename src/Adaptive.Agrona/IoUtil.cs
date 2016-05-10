@@ -13,14 +13,16 @@ namespace Adaptive.Agrona
         /// <param name="path">         of the file to map </param>
         /// <param name="descriptionLabel"> to be associated for any exceptions </param>
         /// <returns> <seealso cref="MappedByteBuffer"/> for the file </returns>
-        public static MappedByteBuffer MapExistingFile(string path, string descriptionLabel)
+        public static MappedByteBuffer MapExistingFile(string path, string descriptionLabel = "")
         {
             CheckFileExists(path, descriptionLabel);
 
-            var mmf = MemoryMappedFile.CreateFromFile(path, FileMode.Open);
+            var f = new FileStream(path, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite);
+            var mmf = MemoryMappedFile.CreateFromFile(f, Guid.NewGuid().ToString(), 0, MemoryMappedFileAccess.ReadWrite, new MemoryMappedFileSecurity(), HandleInheritability.None, false);
 
             return new MappedByteBuffer(mmf);
         }
+
 
         /// <summary>
         /// Unmap a <seealso cref="MappedByteBuffer"/> without waiting for the next GC cycle.
@@ -51,13 +53,7 @@ namespace Adaptive.Agrona
         /// <returns> tmp directory for the runtime </returns>
         public static string TmpDirName()
         {
-            string tmpDirName = Path.GetTempPath();
-            if (!tmpDirName.EndsWith("/", StringComparison.Ordinal))
-            {
-                tmpDirName += "/";
-            }
-
-            return tmpDirName;
+            return Path.GetTempPath();
         }
     }
 }

@@ -14,7 +14,7 @@ namespace Adaptive.Aeron
     /// Client conductor takes responses and notifications from media driver and acts on them.
     /// As well as passes commands to the media driver.
     /// </summary>
-    internal class ClientConductor : IAgent, IDriverListener
+    public class ClientConductor : IAgent, IDriverListener
     {
         private const long NO_CORRELATION_ID = -1;
         private static readonly long RESOURCE_TIMEOUT_NS = NanoUtil.FromSeconds(1);
@@ -44,6 +44,11 @@ namespace Adaptive.Aeron
         private readonly UnavailableImageHandler _unavailableImageHandler;
 
         private RegistrationException _driverException;
+
+        internal ClientConductor()
+        {
+            
+        }
 
         internal ClientConductor(
             IEpochClock epochClock,
@@ -129,7 +134,7 @@ namespace Adaptive.Aeron
             }
         }
 
-        internal void ReleasePublication(Publication publication)
+        internal virtual void ReleasePublication(Publication publication)
         {
             lock (this)
             {
@@ -165,7 +170,7 @@ namespace Adaptive.Aeron
             }
         }
 
-        internal void ReleaseSubscription(Subscription subscription)
+        internal virtual void ReleaseSubscription(Subscription subscription)
         {
             lock (this)
             {
@@ -193,7 +198,13 @@ namespace Adaptive.Aeron
             {
                 if (!subscription.HasImage(sessionId))
                 {
-                    long positionId = subscriberPositionMap[subscription.RegistrationId()];
+
+                    long positionId = Adaptive.Aeron.DriverListenerAdapter.MISSING_REGISTRATION_ID;
+                    if (subscriberPositionMap.ContainsKey(subscription.RegistrationId()))
+                    {
+                        positionId = subscriberPositionMap[subscription.RegistrationId()];
+                    }
+                    
                     if (Adaptive.Aeron.DriverListenerAdapter.MISSING_REGISTRATION_ID != positionId)
                     {
                         var image = new Image(subscription, sessionId, new UnsafeBufferPosition(_counterValuesBuffer, (int)positionId), _logBuffersFactory.Map(logFileName), _errorHandler, sourceIdentity, correlationId);
@@ -232,9 +243,9 @@ namespace Adaptive.Aeron
             _lingeringResources.Add(managedResource);
         }
 
-        internal bool IsPublicationConnected(long timeOfLastStatusMessage)
+        internal virtual bool IsPublicationConnected(long timeOfLastStatusMessage)
         {
-            return (_epochClock.Time() <= (timeOfLastStatusMessage + _publicationConnectionTimeoutMs));
+            return _epochClock.Time() <= timeOfLastStatusMessage + _publicationConnectionTimeoutMs;
         }
 
         internal UnavailableImageHandler UnavailableImageHandler()
@@ -312,8 +323,7 @@ namespace Adaptive.Aeron
             {
                 OnClose();
 
-                throw new ConductorServiceTimeoutException(
-                    $"Timeout between service calls over {_interServiceTimeoutNs:D}ns");
+                throw new ConductorServiceTimeoutException($"Timeout between service calls over {_interServiceTimeoutNs:D}ns");
             }
 
             _timeOfLastWork = now;

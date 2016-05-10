@@ -48,10 +48,14 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BufferBuilderTests.cs" />
+    <Compile Include="ClientConductorTest.cs" />
     <Compile Include="DriverProxyTests.cs" />
     <Compile Include="FlyweightTests.cs" />
     <Compile Include="FragmentAssemblerTest.cs" />
+    <Compile Include="ImageTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="PublicationTest.cs" />
+    <Compile Include="SubscriptionTest.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -60,6 +64,10 @@
     <ProjectReference Include="..\Adaptive.Aeron\Adaptive.Aeron.csproj">
       <Project>{CE06A485-98F5-4FEF-A756-D0EF4DDA8309}</Project>
       <Name>Adaptive.Aeron</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Adaptive.Agrona.Tests\Adaptive.Agrona.Tests.csproj">
+      <Project>{482D0D31-2B94-43D7-8D0A-F4EB5CB0800B}</Project>
+      <Name>Adaptive.Agrona.Tests</Name>
     </ProjectReference>
     <ProjectReference Include="..\Adaptive.Agrona\Adaptive.Agrona.csproj">
       <Project>{4D9DF40E-0726-47DD-8D70-34EB23429B59}</Project>

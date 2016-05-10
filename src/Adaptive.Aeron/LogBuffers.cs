@@ -18,6 +18,11 @@ namespace Adaptive.Aeron
         private readonly UnsafeBuffer[] _atomicBuffers = new UnsafeBuffer[(LogBufferDescriptor.PARTITION_COUNT * 2) + 1];
         private readonly MappedByteBuffer[] _mappedByteBuffers;
 
+        internal LogBuffers()
+        {
+            
+        }
+
         public LogBuffers(string logFileName)
         {
             var fileInfo = new FileInfo(logFileName);
@@ -32,9 +37,8 @@ namespace Adaptive.Aeron
             // if log length exceeds MAX_INT we need multiple mapped buffers, (see FileChannel.map doc).
             if (logLength < int.MaxValue)
             {
-                var memoryMappedFile = MemoryMappedFile.CreateFromFile(logFileName, FileMode.Open);
-                var mappedBuffer = new MappedByteBuffer(memoryMappedFile);
-
+                var mappedBuffer = IoUtil.MapExistingFile(logFileName);
+                
                 _mappedByteBuffers = new[] { mappedBuffer };
 
                 int metaDataSectionOffset = termLength * LogBufferDescriptor.PARTITION_COUNT;
@@ -79,12 +83,12 @@ namespace Adaptive.Aeron
             }
         }
 
-        public UnsafeBuffer[] AtomicBuffers()
+        public virtual UnsafeBuffer[] AtomicBuffers()
         {
             return _atomicBuffers;
         }
 
-        public void Dispose()
+        public virtual void Dispose()
         {
             foreach (MappedByteBuffer buffer in _mappedByteBuffers)
             {
@@ -92,7 +96,7 @@ namespace Adaptive.Aeron
             }
         }
 
-        public int TermLength()
+        public virtual int TermLength()
         {
             return _termLength;
         }

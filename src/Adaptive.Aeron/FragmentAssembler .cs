@@ -6,7 +6,7 @@ using Adaptive.Agrona;
 namespace Adaptive.Aeron
 {
     /// <summary>
-    /// A <seealso cref="IFragmentHandler"/> that sits in a chain-of-responsibility pattern that reassembles fragmented messages
+    /// A <seealso cref="FragmentHandler"/> that sits in a chain-of-responsibility pattern that reassembles fragmented messages
     /// so that the next handler in the chain only sees whole messages.
     /// <para>
     /// Unfragmented messages are delegated without copy. Fragmented messages are copied to a temporary
@@ -47,7 +47,7 @@ namespace Adaptive.Aeron
         }
 
         /// <summary>
-        /// The implementation of <seealso cref="IFragmentHandler"/> that reassembles and forwards whole messages.
+        /// The implementation of <seealso cref="FragmentHandler"/> that reassembles and forwards whole messages.
         /// </summary>
         /// <param name="buffer"> containing the data. </param>
         /// <param name="offset"> at which the data begins. </param>
