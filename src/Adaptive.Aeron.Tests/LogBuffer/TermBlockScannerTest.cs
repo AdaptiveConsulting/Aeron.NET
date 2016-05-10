@@ -6,6 +6,7 @@ using NUnit.Framework;
 
 namespace Adaptive.Aeron.Tests.LogBuffer
 {
+    [TestFixture]
     public class TermBlockScannerTest
     {
         private UnsafeBuffer _termBuffer;

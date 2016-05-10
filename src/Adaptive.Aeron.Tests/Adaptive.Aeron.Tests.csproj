@@ -55,6 +55,7 @@
     <Compile Include="ImageTest.cs" />
     <Compile Include="LogBuffer\TermAppenderTest.cs" />
     <Compile Include="LogBuffer\TermBlockScannerTest.cs" />
+    <Compile Include="LogBuffer\TermReaderTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="PublicationTest.cs" />
     <Compile Include="SubscriptionTest.cs" />
