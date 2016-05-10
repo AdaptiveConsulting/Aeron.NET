@@ -33,7 +33,7 @@ namespace Adaptive.Aeron.Samples.StreamingPublisher
             }
             
             var context = new Aeron.Context();
-            var reporter = new RateReporter((int) NanoUtil.FromSeconds(1), PrintRate);
+            var reporter = new RateReporter(1000, PrintRate);
 
             _reporterThread = new Thread(_ => reporter.Run());
             _reporterThread.Start();
