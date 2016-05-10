@@ -43,7 +43,7 @@ namespace Adaptive.Agrona.Concurrent
 
         public UnsafeBuffer()
         {
-            
+            _capacity = -1; // this is only used in the test, by the mock infrastructure
         }
 
         /// <summary>
@@ -98,7 +98,7 @@ namespace Adaptive.Agrona.Concurrent
             Wrap(address, offset, length);
         }
 
-        public void Wrap(byte[] buffer)
+        public virtual void Wrap(byte[] buffer)
         {
             if (buffer == null) throw new ArgumentNullException(nameof(buffer));
 
@@ -112,7 +112,7 @@ namespace Adaptive.Agrona.Concurrent
             _capacity = buffer.Length;
         }
 
-        public void Wrap(byte[] buffer, int offset, int length)
+        public virtual void Wrap(byte[] buffer, int offset, int length)
         {
             if (buffer == null) throw new ArgumentNullException(nameof(buffer));
 
@@ -139,7 +139,7 @@ namespace Adaptive.Agrona.Concurrent
             _capacity = length;
         }
 
-        public void Wrap(IDirectBuffer buffer)
+        public virtual void Wrap(IDirectBuffer buffer)
         {
             FreeGcHandle();
             _needToFreeGcHandle = false;
@@ -148,7 +148,7 @@ namespace Adaptive.Agrona.Concurrent
             _capacity = buffer.Capacity;
         }
 
-        public void Wrap(IDirectBuffer buffer, int offset, int length)
+        public virtual void Wrap(IDirectBuffer buffer, int offset, int length)
         {
 #if SHOULD_BOUNDS_CHECK
             int bufferCapacity = buffer.Capacity;
@@ -169,10 +169,10 @@ namespace Adaptive.Agrona.Concurrent
             _needToFreeGcHandle = false;
 
             _pBuffer = (byte*)buffer.BufferPointer.ToPointer() + offset;
-            _capacity = buffer.Capacity;
+            _capacity = length;
         }
 
-        public void Wrap(IntPtr pointer, int length)
+        public virtual void Wrap(IntPtr pointer, int length)
         {
             FreeGcHandle();
 
@@ -182,7 +182,7 @@ namespace Adaptive.Agrona.Concurrent
             _capacity = length;
         }
 
-        public void Wrap(IntPtr pointer, int offset, int length)
+        public virtual void Wrap(IntPtr pointer, int offset, int length)
         {
             FreeGcHandle();
 
@@ -192,11 +192,11 @@ namespace Adaptive.Agrona.Concurrent
             _capacity = length;
         }
 
-        public IntPtr BufferPointer => new IntPtr(_pBuffer);
+        public virtual IntPtr BufferPointer => new IntPtr(_pBuffer);
 
-        public int Capacity => _capacity;
+        public virtual int Capacity => _capacity;
 
-        public void SetMemory(int index, int length, byte value)
+        public virtual void SetMemory(int index, int length, byte value)
         {
             BoundsCheck0(index, length);
 
@@ -208,7 +208,7 @@ namespace Adaptive.Agrona.Concurrent
             }
         }
 
-        public void CheckLimit(int limit)
+        public virtual void CheckLimit(int limit)
         {
             if (limit > _capacity)
             {
@@ -216,9 +216,9 @@ namespace Adaptive.Agrona.Concurrent
             }
         }
 
-        public bool IsExpandable => false;
+        public virtual bool IsExpandable => false;
 
-        public void VerifyAlignment()
+        public virtual void VerifyAlignment()
         {
             return;
 
@@ -244,41 +244,41 @@ namespace Adaptive.Agrona.Concurrent
         //    *(long*)(_pBuffer + index) = value;
         //}
 
-        public long GetLong(int index)
+        public virtual long GetLong(int index)
         {
             BoundsCheck0(index, BitUtil.SIZE_OF_LONG);
 
             return *(long*)(_pBuffer + index);
         }
 
-        public void PutLong(int index, long value)
+        public virtual void PutLong(int index, long value)
         {
             BoundsCheck0(index, BitUtil.SIZE_OF_LONG);
             *(long*)(_pBuffer + index) = value;
         }
 
-        public long GetLongVolatile(int index)
+        public virtual long GetLongVolatile(int index)
         {
             BoundsCheck0(index, BitUtil.SIZE_OF_LONG);
 
             return Volatile.Read(ref *(long*) (_pBuffer + index));
         }
 
-        public void PutLongVolatile(int index, long value)
+        public virtual void PutLongVolatile(int index, long value)
         {
             BoundsCheck0(index, BitUtil.SIZE_OF_LONG);
             
             Interlocked.Exchange(ref *(long*) (_pBuffer + index), value);
         }
 
-        public void PutLongOrdered(int index, long value)
+        public virtual void PutLongOrdered(int index, long value)
         {
             BoundsCheck0(index, BitUtil.SIZE_OF_LONG);
 
             Volatile.Write(ref *(long*) (_pBuffer + index), value);
         }
 
-        public long AddLongOrdered(int index, long increment)
+        public virtual long AddLongOrdered(int index, long increment)
         {
             BoundsCheck0(index, BitUtil.SIZE_OF_LONG);
 
@@ -288,7 +288,7 @@ namespace Adaptive.Agrona.Concurrent
             return value;
         }
 
-        public bool CompareAndSetLong(int index, long expectedValue, long updateValue)
+        public virtual bool CompareAndSetLong(int index, long expectedValue, long updateValue)
         {
             BoundsCheck0(index, BitUtil.SIZE_OF_LONG);
 
@@ -297,13 +297,13 @@ namespace Adaptive.Agrona.Concurrent
             return original == expectedValue;
         }
 
-        public long GetAndSetLong(int index, long value)
+        public virtual long GetAndSetLong(int index, long value)
         {
             // Note ODE: does not seem to be used in the codebase
             throw new NotImplementedException();
         }
 
-        public long GetAndAddLong(int index, long delta)
+        public virtual long GetAndAddLong(int index, long delta)
         {
             BoundsCheck0(index, BitUtil.SIZE_OF_LONG);
 
@@ -328,41 +328,41 @@ namespace Adaptive.Agrona.Concurrent
         //    *(int*)(_pBuffer + index) = value;
         //}
 
-        public int GetInt(int index)
+        public virtual int GetInt(int index)
         {
             BoundsCheck0(index, BitUtil.SIZE_OF_INT);
 
             return *(int*)(_pBuffer + index);
         }
 
-        public void PutInt(int index, int value)
+        public virtual void PutInt(int index, int value)
         {
             BoundsCheck0(index, BitUtil.SIZE_OF_INT);
             *(int*)(_pBuffer + index) = value;
         }
 
-        public int GetIntVolatile(int index)
+        public virtual int GetIntVolatile(int index)
         {
             BoundsCheck0(index, BitUtil.SIZE_OF_INT);
 
             return Volatile.Read(ref *(int*)(_pBuffer + index));
         }
 
-        public void PutIntVolatile(int index, int value)
+        public virtual void PutIntVolatile(int index, int value)
         {
             BoundsCheck0(index, BitUtil.SIZE_OF_INT);
 
             Interlocked.Exchange(ref *(int*)(_pBuffer + index), value);
         }
 
-        public void PutIntOrdered(int index, int value)
+        public virtual void PutIntOrdered(int index, int value)
         {
             BoundsCheck0(index, BitUtil.SIZE_OF_INT);
 
             Volatile.Write(ref *(int*)(_pBuffer + index), value);
         }
 
-        public int AddIntOrdered(int index, int increment)
+        public virtual int AddIntOrdered(int index, int increment)
         {
             BoundsCheck0(index, BitUtil.SIZE_OF_INT);
 
@@ -372,7 +372,7 @@ namespace Adaptive.Agrona.Concurrent
             return value;
         }
 
-        public bool CompareAndSetInt(int index, int expectedValue, int updateValue)
+        public virtual bool CompareAndSetInt(int index, int expectedValue, int updateValue)
         {
             BoundsCheck0(index, BitUtil.SIZE_OF_INT);
 
@@ -381,14 +381,14 @@ namespace Adaptive.Agrona.Concurrent
             return original == expectedValue;
         }
 
-        public int GetAndSetInt(int index, int value)
+        public virtual int GetAndSetInt(int index, int value)
         {
             // Note ODE: does not seem to be used in the codebase
             throw new NotImplementedException();
         }
 
 
-        public int GetAndAddInt(int index, int delta)
+        public virtual int GetAndAddInt(int index, int delta)
         {
             BoundsCheck0(index, BitUtil.SIZE_OF_INT);
 
@@ -435,14 +435,14 @@ namespace Adaptive.Agrona.Concurrent
         //    }
         //}
 
-        public double GetDouble(int index)
+        public virtual double GetDouble(int index)
         {
             BoundsCheck0(index, BitUtil.SIZE_OF_DOUBLE);
 
             return *(double*)(_pBuffer + index);
         }
 
-        public void PutDouble(int index, double value)
+        public virtual void PutDouble(int index, double value)
         {
             BoundsCheck0(index, BitUtil.SIZE_OF_DOUBLE);
 
@@ -451,14 +451,14 @@ namespace Adaptive.Agrona.Concurrent
 
         ///////////////////////////////////////////////////////////////////////////
 
-        public float GetFloat(int index)
+        public virtual float GetFloat(int index)
         {
             BoundsCheck0(index, BitUtil.SIZE_OF_FLOAT);
 
             return *(float*)(_pBuffer + index);
         }
 
-        public void PutFloat(int index, float value)
+        public virtual void PutFloat(int index, float value)
         {
             BoundsCheck0(index, BitUtil.SIZE_OF_FLOAT);
 
@@ -467,28 +467,28 @@ namespace Adaptive.Agrona.Concurrent
 
         ///////////////////////////////////////////////////////////////////////////
 
-        public short GetShort(int index)
+        public virtual short GetShort(int index)
         {
             BoundsCheck0(index, BitUtil.SIZE_OF_SHORT);
 
             return *(short*)(_pBuffer + index);
         }
 
-        public void PutShort(int index, short value)
+        public virtual void PutShort(int index, short value)
         {
             BoundsCheck0(index, BitUtil.SIZE_OF_SHORT);
 
             *(short*)(_pBuffer + index) = value;
         }
 
-        public short GetShortVolatile(int index)
+        public virtual short GetShortVolatile(int index)
         {
             BoundsCheck0(index, BitUtil.SIZE_OF_SHORT);
 
             return Volatile.Read(ref *(short*)(_pBuffer + index));
         }
 
-        public void PutShortVolatile(int index, short value)
+        public virtual void PutShortVolatile(int index, short value)
         {
             BoundsCheck0(index, BitUtil.SIZE_OF_SHORT);
 
@@ -497,28 +497,28 @@ namespace Adaptive.Agrona.Concurrent
 
         ///////////////////////////////////////////////////////////////////////////
 
-        public byte GetByte(int index)
+        public virtual byte GetByte(int index)
         {
             BoundsCheck(index);
 
             return *(_pBuffer + index);
         }
 
-        public void PutByte(int index, byte value)
+        public virtual void PutByte(int index, byte value)
         {
             BoundsCheck(index);
 
             *(_pBuffer + index) = value;
         }
 
-        public byte GetByteVolatile(int index)
+        public virtual byte GetByteVolatile(int index)
         {
             BoundsCheck(index);
 
             return Volatile.Read(ref *(_pBuffer + index));
         }
 
-        public void PutByteVolatile(int index, byte value)
+        public virtual void PutByteVolatile(int index, byte value)
         {
             BoundsCheck(index);
 
@@ -527,12 +527,12 @@ namespace Adaptive.Agrona.Concurrent
 
         ///////////////////////////////////////////////////////////////////////////
 
-        public void GetBytes(int index, byte[] dst)
+        public virtual void GetBytes(int index, byte[] dst)
         {
             GetBytes(index, dst, 0, dst.Length);
         }
 
-        public void GetBytes(int index, byte[] dst, int offset, int length)
+        public virtual void GetBytes(int index, byte[] dst, int offset, int length)
         {
             BoundsCheck0(index, length);
             BufferUtil.BoundsCheck(dst, offset, length);
@@ -544,17 +544,17 @@ namespace Adaptive.Agrona.Concurrent
             }
         }
 
-        public void GetBytes(int index, IMutableDirectBuffer dstBuffer, int dstIndex, int length)
+        public virtual void GetBytes(int index, IMutableDirectBuffer dstBuffer, int dstIndex, int length)
         {
             dstBuffer.PutBytes(dstIndex, this, index, length);
         }
 
-        public void PutBytes(int index, byte[] src)
+        public virtual void PutBytes(int index, byte[] src)
         {
             PutBytes(index, src, 0, src.Length);
         }
 
-        public void PutBytes(int index, byte[] src, int offset, int length)
+        public virtual void PutBytes(int index, byte[] src, int offset, int length)
         {
             BoundsCheck0(index, length);
             BufferUtil.BoundsCheck(src, offset, length);
@@ -566,7 +566,7 @@ namespace Adaptive.Agrona.Concurrent
             }
         }
 
-        public void PutBytes(int index, IDirectBuffer srcBuffer, int srcIndex, int length)
+        public virtual void PutBytes(int index, IDirectBuffer srcBuffer, int srcIndex, int length)
         {
             BoundsCheck0(index, length);
             srcBuffer.BoundsCheck(srcIndex, length);
@@ -578,14 +578,14 @@ namespace Adaptive.Agrona.Concurrent
 
         ///////////////////////////////////////////////////////////////////////////
        
-        public char GetChar(int index)
+        public virtual char GetChar(int index)
         {
             BoundsCheck0(index, BitUtil.SIZE_OF_CHAR);
 
             return *(char*)(_pBuffer + index);
         }
 
-        public void PutChar(int index, char value)
+        public virtual void PutChar(int index, char value)
         {
             BoundsCheck0(index, BitUtil.SIZE_OF_CHAR);
 
@@ -608,14 +608,14 @@ namespace Adaptive.Agrona.Concurrent
 
         ///////////////////////////////////////////////////////////////////////////
 
-        public string GetStringUtf8(int index)
+        public virtual string GetStringUtf8(int index)
         {
             int length = GetInt(index);
 
             return GetStringUtf8(index, length);
         }
 
-        public string GetStringUtf8(int index, int length)
+        public virtual string GetStringUtf8(int index, int length)
         {
             var stringInBytes = new byte[length];
             GetBytes(index + BitUtil.SIZE_OF_INT, stringInBytes);
@@ -623,12 +623,12 @@ namespace Adaptive.Agrona.Concurrent
             return Encoding.UTF8.GetString(stringInBytes);
         }
 
-        public int PutStringUtf8(int index, string value)
+        public virtual int PutStringUtf8(int index, string value)
         {
             return PutStringUtf8(index, value, int.MaxValue);
         }
 
-        public int PutStringUtf8(int index, string value, int maxEncodedSize)
+        public virtual int PutStringUtf8(int index, string value, int maxEncodedSize)
         {
             var bytes = value == null
                 ? BufferUtil.NullBytes 
@@ -644,7 +644,7 @@ namespace Adaptive.Agrona.Concurrent
             return BitUtil.SIZE_OF_INT + bytes.Length;
         }
 
-        public string GetStringWithoutLengthUtf8(int index, int length)
+        public virtual string GetStringWithoutLengthUtf8(int index, int length)
         {
             var stringInBytes = new byte[length];
             GetBytes(index, stringInBytes);
@@ -652,7 +652,7 @@ namespace Adaptive.Agrona.Concurrent
             return Encoding.UTF8.GetString(stringInBytes);
         }
 
-        public int PutStringWithoutLengthUtf8(int index, string value)
+        public virtual int PutStringWithoutLengthUtf8(int index, string value)
         {
             var bytes = value == null
                 ? BufferUtil.NullBytes
@@ -685,14 +685,14 @@ namespace Adaptive.Agrona.Concurrent
 #endif
         }
 
-        public void BoundsCheck(int index, int length)
+        public virtual void BoundsCheck(int index, int length)
         {
             BoundsCheck0(index, length);
         }
 
         ///////////////////////////////////////////////////////////////////////////
 
-        public int CompareTo(IDirectBuffer that)
+        public virtual int CompareTo(IDirectBuffer that)
         {
             int thisCapacity = this.Capacity;
             int thatCapacity = that.Capacity;
@@ -722,7 +722,7 @@ namespace Adaptive.Agrona.Concurrent
         /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
         /// </summary>
         /// <filterpriority>2</filterpriority>
-        public void Dispose()
+        public virtual void Dispose()
         {
             Dispose(true);
             GC.SuppressFinalize(this);
