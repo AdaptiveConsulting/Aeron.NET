@@ -252,7 +252,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// <returns> the termId in which the append operation took place. </returns>
         public static int TermId(long result)
         {
-            return (int) (result >> 32);
+            return (int)((long)((ulong)result >> 32));
         }
 
         private long HandleEndOfLogCondition(UnsafeBuffer termBuffer, long termOffset, HeaderWriter header,
