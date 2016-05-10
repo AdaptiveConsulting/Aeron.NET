@@ -323,8 +323,7 @@ namespace Adaptive.Aeron
             {
                 OnClose();
 
-                throw new ConductorServiceTimeoutException(
-                    $"Timeout between service calls over {_interServiceTimeoutNs:D}ns");
+                throw new ConductorServiceTimeoutException($"Timeout between service calls over {_interServiceTimeoutNs:D}ns");
             }
 
             _timeOfLastWork = now;

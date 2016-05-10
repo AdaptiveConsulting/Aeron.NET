@@ -4,14 +4,14 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{0E28B408-8146-4E33-A4D5-E0470D5B6382}</ProjectGuid>
+    <ProjectGuid>{38ECAB95-2E6E-4224-B84D-A73753BDB044}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Adaptive.Aeron.Samples.Pong</RootNamespace>
-    <AssemblyName>Adaptive.Aeron.Samples.Pong</AssemblyName>
+    <RootNamespace>Adaptive.Aeron.Samples.SimpleSubscriber</RootNamespace>
+    <AssemblyName>Adaptive.Aeron.Samples.SimpleSubscriber</AssemblyName>
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
-    <TargetFrameworkProfile />
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -43,22 +43,19 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SimpleSubscriber.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="App.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Adaptive.Aeron\Adaptive.Aeron.csproj">
+    <ProjectReference Include="..\..\Adaptive.Aeron\Adaptive.Aeron.csproj">
       <Project>{ce06a485-98f5-4fef-a756-d0ef4dda8309}</Project>
       <Name>Adaptive.Aeron</Name>
     </ProjectReference>
-    <ProjectReference Include="..\Adaptive.Agrona\Adaptive.Agrona.csproj">
+    <ProjectReference Include="..\..\Adaptive.Agrona\Adaptive.Agrona.csproj">
       <Project>{4d9df40e-0726-47dd-8d70-34eb23429b59}</Project>
       <Name>Adaptive.Agrona</Name>
     </ProjectReference>
-    <ProjectReference Include="..\Samples\Adaptive.Aeron.Samples.Common\Adaptive.Aeron.Samples.Common.csproj">
+    <ProjectReference Include="..\Adaptive.Aeron.Samples.Common\Adaptive.Aeron.Samples.Common.csproj">
       <Project>{a8a90b16-ddea-4a3e-a89a-7f7fb2d18416}</Project>
       <Name>Adaptive.Aeron.Samples.Common</Name>
     </ProjectReference>

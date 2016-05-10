@@ -37,7 +37,7 @@ namespace Adaptive.Aeron
             // if log length exceeds MAX_INT we need multiple mapped buffers, (see FileChannel.map doc).
             if (logLength < int.MaxValue)
             {
-                var mappedBuffer = IoUtil.OpenExisting(logFileName);
+                var mappedBuffer = IoUtil.MapExistingFile(logFileName);
                 
                 _mappedByteBuffers = new[] { mappedBuffer };
 

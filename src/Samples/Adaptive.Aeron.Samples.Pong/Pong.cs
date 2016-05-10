@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Adaptive.Aeron.LogBuffer;
 using Adaptive.Aeron.Samples.Common;
 using Adaptive.Agrona;

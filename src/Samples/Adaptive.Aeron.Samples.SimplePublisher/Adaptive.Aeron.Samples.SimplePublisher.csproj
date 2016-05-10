@@ -4,15 +4,14 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{FD5EA93A-CCCC-458B-A0DF-4E5568F15AD6}</ProjectGuid>
+    <ProjectGuid>{0867F246-E29C-442C-A2ED-5B12A6A46638}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Adaptive.Aeron.Samples.Ping</RootNamespace>
-    <AssemblyName>Adaptive.Aeron.Samples.Ping</AssemblyName>
+    <RootNamespace>Adaptive.Aeron.Samples.SimplePublisher</RootNamespace>
+    <AssemblyName>Adaptive.Aeron.Samples.SimplePublisher</AssemblyName>
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
-    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -34,10 +33,6 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="HdrHistogram, Version=1.0.0.0, Culture=neutral, PublicKeyToken=6f45871cdfcff67a, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\HdrHistogram.1.0.120-prerelease\lib\net45\HdrHistogram.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -48,11 +43,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Ping.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="packages.config" />
+    <Compile Include="SimplePublisher.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Adaptive.Aeron\Adaptive.Aeron.csproj">
@@ -60,7 +52,7 @@
       <Name>Adaptive.Aeron</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\Adaptive.Agrona\Adaptive.Agrona.csproj">
-      <Project>{4D9DF40E-0726-47DD-8D70-34EB23429B59}</Project>
+      <Project>{4d9df40e-0726-47dd-8d70-34eb23429b59}</Project>
       <Name>Adaptive.Agrona</Name>
     </ProjectReference>
     <ProjectReference Include="..\Adaptive.Aeron.Samples.Common\Adaptive.Aeron.Samples.Common.csproj">
