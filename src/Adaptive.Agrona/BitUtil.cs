@@ -54,8 +54,6 @@ namespace Adaptive.Agrona
         /// </summary>
         public const int CACHE_LINE_LENGTH = 64;
 
-        // TODO use Char instead of Byte?
-
         private static readonly byte[] HexDigitTable = {
             (byte) '0', (byte) '1', (byte) '2', (byte) '3', (byte) '4', (byte) '5', (byte) '6', (byte) '7',
             (byte) '8', (byte) '9', (byte) 'a', (byte) 'b', (byte) 'c', (byte) 'd', (byte) 'e', (byte) 'f'
@@ -260,29 +258,7 @@ namespace Adaptive.Agrona
 
             return current - 1;
         }
-
-        // Note olivier probably not needed in the .NET port`
-
-        ///// <summary>
-        ///// Calculate the shift value to scale a number based on how refs are compressed or not.
-        ///// </summary>
-        ///// <param name="scale"> of the number reported by Unsafe. </param>
-        ///// <returns> how many times the number needs to be shifted to the left. </returns>
-        //public static int CalculateShiftForScale(int scale)
-        //{
-        //    if (4 == scale)
-        //    {
-        //        return 2;
-        //    }
-        //    if (8 == scale)
-        //    {
-        //        return 3;
-        //    }
-        //    throw new ArgumentException("Unknown pointer size");
-        //}
-
-
-
+        
         /// <summary>
         /// Generate a randomized integer over [<seealso cref="int.MinValue"/>, <seealso cref="int.MaxValue"/>] suitable for
         /// use as an Aeron Id.

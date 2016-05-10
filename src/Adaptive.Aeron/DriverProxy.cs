@@ -16,8 +16,6 @@ namespace Adaptive.Aeron
         /// Maximum capacity of the write buffer </summary>
         public const int MSG_BUFFER_CAPACITY = 4096;
 
-        // TODO should we use off-heap buffers instead of managed arrays? The java implementation uses direct ByteBuffers
-
         private readonly long _clientId;
         private readonly UnsafeBuffer _buffer = new UnsafeBuffer(new byte[MSG_BUFFER_CAPACITY]);
         private readonly PublicationMessageFlyweight _publicationMessage = new PublicationMessageFlyweight();
