@@ -81,8 +81,6 @@ namespace Adaptive.Agrona.Tests
             }
         }
 
-        //JAVA TO C# CONVERTER TODO TASK: Most Java annotations will not have direct .NET equivalent attributes:
-        //ORIGINAL LINE: @Test(expected = IllegalStateException.class) public void shouldThrowExceptionWhenBufferNotAligned()
         [Test]
         public void ShouldThrowExceptionWhenBufferNotAligned()
         {
@@ -114,8 +112,6 @@ namespace Adaptive.Agrona.Tests
 
             Assert.That(buffer.GetLong(Index), Is.EqualTo(LongValue));
         }
-
-        // TODO remove unsafe
 
         [Theory]
         public void ShouldPutLongToNativeBuffer(IAtomicBuffer buffer)

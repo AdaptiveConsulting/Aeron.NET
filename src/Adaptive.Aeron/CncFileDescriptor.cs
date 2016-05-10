@@ -137,8 +137,6 @@ namespace Adaptive.Aeron
             cncMetaDataBuffer.PutInt(ErrorLogBufferLengthOffset(0), errorLogBufferLength);
         }
 
-        // TODO find the best replacement for ByteBuffer..
-
         public static UnsafeBuffer CreateMetaDataBuffer(MappedByteBuffer buffer)
         {
             return new UnsafeBuffer(buffer.Pointer, 0, BitUtil.SIZE_OF_INT + META_DATA_LENGTH);

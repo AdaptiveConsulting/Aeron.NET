@@ -171,7 +171,6 @@ namespace Adaptive.Aeron
 
                     if (null == _idleStrategy)
                     {
-                        // TODO PERF review best strategy to use here
                         _idleStrategy = new SleepingIdleStrategy(IDLE_SLEEP_MS);
                     }
 

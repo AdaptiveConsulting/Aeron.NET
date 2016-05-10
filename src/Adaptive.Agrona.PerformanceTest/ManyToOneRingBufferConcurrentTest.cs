@@ -107,7 +107,6 @@ namespace Adaptive.Agrona.PerformanceTest
                 var readCount = _ringBuffer.Read(handler);
                 if (0 == readCount)
                 {
-                    // TODO I think Thread.Yield in .NET and Java have a different meaning, to check
                     Thread.Yield();
                 }
 

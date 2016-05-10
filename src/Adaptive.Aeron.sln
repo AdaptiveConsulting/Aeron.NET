@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
-VisualStudioVersion = 14.0.25123.0
+VisualStudioVersion = 14.0.24720.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Adaptive.Aeron", "Adaptive.Aeron\Adaptive.Aeron.csproj", "{CE06A485-98F5-4FEF-A756-D0EF4DDA8309}"
 EndProject
@@ -34,6 +34,11 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Adaptive.Aeron.Samples.BasicPublisher", "Samples\Adaptive.Aeron.Samples.BasicPublisher\Adaptive.Aeron.Samples.BasicPublisher.csproj", "{CFADFB8A-B997-417D-8892-5FBD91DB8D88}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Adaptive.Aeron.Samples.BasicSubscriber", "Samples\Adaptive.Aeron.Samples.BasicSubscriber\Adaptive.Aeron.Samples.BasicSubscriber.csproj", "{02BC7AAB-BA72-4791-B1B2-148F83424410}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{28132BE7-0096-4501-840F-A7DB39AC1E01}"
+	ProjectSection(SolutionItems) = preProject
+		TODO.txt = TODO.txt
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
