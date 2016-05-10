@@ -17,6 +17,10 @@ namespace Adaptive.Aeron.LogBuffer
         private readonly long _sessionId;
         private readonly long _streamId;
 
+        public HeaderWriter()
+        {
+        }
+
         public HeaderWriter(UnsafeBuffer defaultHeader)
         {
             _versionFlagsType = (long)defaultHeader.GetInt(HeaderFlyweight.VERSION_FIELD_OFFSET) << 32;
@@ -31,7 +35,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// <param name="offset">     at which the header should be written. </param>
         /// <param name="length">     of the fragment including the header. </param>
         /// <param name="termId">     of the current term buffer. </param>
-        public void Write(UnsafeBuffer termBuffer, int offset, int length, int termId)
+        public virtual void Write(UnsafeBuffer termBuffer, int offset, int length, int termId)
         {
             var lengthVersionFlagsType = _versionFlagsType | (-length & 0xFFFFFFFFL);
             var termOffsetSessionId = _sessionId | offset;

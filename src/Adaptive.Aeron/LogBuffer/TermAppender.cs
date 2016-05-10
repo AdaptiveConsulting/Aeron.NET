@@ -30,8 +30,8 @@ namespace Adaptive.Aeron.LogBuffer
         /// </summary>
         public const int FAILED = -2;
 
-        private readonly UnsafeBuffer termBuffer;
-        private readonly UnsafeBuffer metaDataBuffer;
+        private readonly UnsafeBuffer _termBuffer;
+        private readonly UnsafeBuffer _metaDataBuffer;
 
         /// <summary>
         /// Construct a view over a term buffer and state buffer for appending frames.
@@ -40,8 +40,8 @@ namespace Adaptive.Aeron.LogBuffer
         /// <param name="metaDataBuffer"> for where the state of writers is stored manage concurrency. </param>
         public TermAppender(UnsafeBuffer termBuffer, UnsafeBuffer metaDataBuffer)
         {
-            this.termBuffer = termBuffer;
-            this.metaDataBuffer = metaDataBuffer;
+            this._termBuffer = termBuffer;
+            this._metaDataBuffer = metaDataBuffer;
         }
 
         /// <summary>
@@ -50,7 +50,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// <returns> the log of messages for a term. </returns>
         public UnsafeBuffer TermBuffer()
         {
-            return termBuffer;
+            return _termBuffer;
         }
 
         /// <summary>
@@ -59,7 +59,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// <returns> the meta data describing the term. </returns>
         public UnsafeBuffer MetaDataBuffer()
         {
-            return metaDataBuffer;
+            return _metaDataBuffer;
         }
 
         /// <summary>
@@ -68,7 +68,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// <returns> the current tail value. </returns>
         public long RawTailVolatile()
         {
-            return metaDataBuffer.GetLongVolatile(LogBufferDescriptor.TERM_TAIL_COUNTER_OFFSET);
+            return _metaDataBuffer.GetLongVolatile(LogBufferDescriptor.TERM_TAIL_COUNTER_OFFSET);
         }
 
         /// <summary>
@@ -77,7 +77,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// <param name="termId"> for the tail counter </param>
         public void TailTermId(int termId)
         {
-            metaDataBuffer.PutLong(LogBufferDescriptor.TERM_TAIL_COUNTER_OFFSET, ((long) termId) << 32);
+            _metaDataBuffer.PutLong(LogBufferDescriptor.TERM_TAIL_COUNTER_OFFSET, ((long) termId) << 32);
         }
 
         /// <summary>
@@ -86,7 +86,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// <param name="status"> to be set for the log buffer. </param>
         public void StatusOrdered(int status)
         {
-            metaDataBuffer.PutIntOrdered(LogBufferDescriptor.TERM_STATUS_OFFSET, status);
+            _metaDataBuffer.PutIntOrdered(LogBufferDescriptor.TERM_STATUS_OFFSET, status);
         }
 
         /// <summary>
@@ -104,7 +104,7 @@ namespace Adaptive.Aeron.LogBuffer
             long rawTail = GetAndAddRawTail(alignedLength);
             long termOffset = rawTail & 0xFFFFFFFFL;
 
-            UnsafeBuffer termBuffer = this.termBuffer;
+            UnsafeBuffer termBuffer = this._termBuffer;
             int termLength = termBuffer.Capacity;
 
             long resultingOffset = termOffset + alignedLength;
@@ -131,14 +131,14 @@ namespace Adaptive.Aeron.LogBuffer
         /// <param name="length">    of the message in the source buffer. </param>
         /// <returns> the resulting offset of the term after the append on success otherwise <seealso cref="#TRIPPED"/> or <seealso cref="#FAILED"/>
         /// packed with the termId if a padding record was inserted at the end. </returns>
-        public long AppendUnfragmentedMessage(HeaderWriter header, IDirectBuffer srcBuffer, int srcOffset, int length)
+        public virtual long AppendUnfragmentedMessage(HeaderWriter header, IDirectBuffer srcBuffer, int srcOffset, int length)
         {
             int frameLength = length + DataHeaderFlyweight.HEADER_LENGTH;
             int alignedLength = BitUtil.Align(frameLength, FrameDescriptor.FRAME_ALIGNMENT);
             long rawTail = GetAndAddRawTail(alignedLength);
             long termOffset = rawTail & 0xFFFFFFFFL;
 
-            UnsafeBuffer termBuffer = this.termBuffer;
+            UnsafeBuffer termBuffer = this._termBuffer;
             int termLength = termBuffer.Capacity;
 
             long resultingOffset = termOffset + alignedLength;
@@ -183,7 +183,7 @@ namespace Adaptive.Aeron.LogBuffer
             int termId = TermId(rawTail);
             long termOffset = rawTail & 0xFFFFFFFFL;
 
-            UnsafeBuffer termBuffer = this.termBuffer;
+            UnsafeBuffer termBuffer = this._termBuffer;
             int termLength = termBuffer.Capacity;
 
             long resultingOffset = termOffset + requiredLength;
@@ -279,7 +279,7 @@ namespace Adaptive.Aeron.LogBuffer
 
         private long GetAndAddRawTail(int alignedLength)
         {
-            return metaDataBuffer.GetAndAddLong(LogBufferDescriptor.TERM_TAIL_COUNTER_OFFSET, alignedLength);
+            return _metaDataBuffer.GetAndAddLong(LogBufferDescriptor.TERM_TAIL_COUNTER_OFFSET, alignedLength);
         }
     }
 }
