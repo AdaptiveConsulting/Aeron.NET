@@ -88,7 +88,7 @@ namespace Adaptive.Aeron
             return _atomicBuffers;
         }
 
-        public void Dispose()
+        public virtual void Dispose()
         {
             foreach (MappedByteBuffer buffer in _mappedByteBuffers)
             {

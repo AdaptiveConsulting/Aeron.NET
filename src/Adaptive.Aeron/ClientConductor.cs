@@ -134,7 +134,7 @@ namespace Adaptive.Aeron
             }
         }
 
-        internal void ReleasePublication(Publication publication)
+        internal virtual void ReleasePublication(Publication publication)
         {
             lock (this)
             {
@@ -243,9 +243,9 @@ namespace Adaptive.Aeron
             _lingeringResources.Add(managedResource);
         }
 
-        internal bool IsPublicationConnected(long timeOfLastStatusMessage)
+        internal virtual bool IsPublicationConnected(long timeOfLastStatusMessage)
         {
-            return (_epochClock.Time() <= (timeOfLastStatusMessage + _publicationConnectionTimeoutMs));
+            return _epochClock.Time() <= timeOfLastStatusMessage + _publicationConnectionTimeoutMs;
         }
 
         internal UnavailableImageHandler UnavailableImageHandler()
