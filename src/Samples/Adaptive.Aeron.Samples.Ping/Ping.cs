@@ -5,6 +5,7 @@ using Adaptive.Aeron.LogBuffer;
 using Adaptive.Aeron.Samples.Common;
 using Adaptive.Agrona;
 using Adaptive.Agrona.Concurrent;
+using Adaptive.Agrona.Util;
 using HdrHistogram;
 
 namespace Adaptive.Aeron.Samples.Ping
@@ -22,9 +23,9 @@ namespace Adaptive.Aeron.Samples.Ping
         private static int FRAGMENT_COUNT_LIMIT = SampleConfiguration.FRAGMENT_COUNT_LIMIT;
 
         private static UnsafeBuffer ATOMIC_BUFFER = new UnsafeBuffer(new byte[MESSAGE_LENGTH]);
-        private static LongHistogram HISTOGRAM = new LongHistogram(10000000000, 3);
+        private static LongHistogram HISTOGRAM = new LongHistogram(NanoUtil.FromSeconds(10), 3);
         private static CountdownEvent LATCH = new CountdownEvent(1);
-        private static IIdleStrategy POLLING_IDLE_STRATEGY = new SpinWaitIdleStrategy();
+        private static IIdleStrategy POLLING_IDLE_STRATEGY = new BusySpinIdleStrategy();
 
         public static void Main(String[] args)
         {
@@ -59,7 +60,7 @@ namespace Adaptive.Aeron.Samples.Ping
                         RoundTripMessages(fragmentHandler, publication, subscription, NUMBER_OF_MESSAGES);
                         Console.WriteLine("Histogram of RTT latencies in microseconds.");
 
-                        HISTOGRAM.OutputPercentileDistribution(Console.Out);
+                        HISTOGRAM.OutputPercentileDistribution(Console.Out, outputValueUnitScalingRatio: 1000);
                     } while (Console.Read() == 'y');
                 }
             }
@@ -89,7 +90,9 @@ namespace Adaptive.Aeron.Samples.Ping
             var pingTimestamp = buffer.GetLong(offset);
             var rttNs = Stopwatch.GetTimestamp() - pingTimestamp;
 
-            HISTOGRAM.RecordValue(rttNs/Stopwatch.Frequency*1000000000);
+            var b = (rttNs*1000000000d/Stopwatch.Frequency);
+            
+            HISTOGRAM.RecordValue((long)b);
         }
 
         private static void availablePongImageHandler(Image image)

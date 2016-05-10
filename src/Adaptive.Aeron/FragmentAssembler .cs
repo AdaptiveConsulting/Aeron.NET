@@ -76,7 +76,9 @@ namespace Adaptive.Aeron
                 }
                 else
                 {
-                    BufferBuilder builder = _builderBySessionIdMap[header.SessionId()];
+                    
+                    BufferBuilder builder;
+                    _builderBySessionIdMap.TryGetValue(header.SessionId(), out builder);
                     if (null != builder && builder.Limit() != 0)
                     {
                         builder.Append(buffer, offset, length);
