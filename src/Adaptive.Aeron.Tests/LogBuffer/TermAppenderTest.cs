@@ -39,7 +39,7 @@ namespace Adaptive.Aeron.Tests.LogBuffer
         }
 
         [Test]
-        public virtual void ShouldPackResult()
+        public void ShouldPackResult()
         {
             const int termId = 7;
             const int termOffset = -1;

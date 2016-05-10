@@ -6,7 +6,7 @@ using Adaptive.Agrona;
 namespace Adaptive.Aeron
 {
     /// <summary>
-    /// A <seealso cref="FragmentHandler"/> that sits in a chain-of-responsibility pattern that reassembles fragmented messages
+    /// A <seealso cref="IFragmentHandler"/> that sits in a chain-of-responsibility pattern that reassembles fragmented messages
     /// so that the next handler in the chain only sees whole messages.
     /// <para>
     /// Unfragmented messages are delegated without copy. Fragmented messages are copied to a temporary
@@ -17,7 +17,7 @@ namespace Adaptive.Aeron
     /// </para>
     /// <para>
     /// Session based buffers will be allocated and grown as necessary based on the length of messages to be assembled.
-    /// When sessions go inactive see <seealso cref="IUnavailableImageHandler"/>, it is possible to free the buffer by calling
+    /// When sessions go inactive see <seealso cref="UnavailableImageHandler"/>, it is possible to free the buffer by calling
     /// <seealso cref="FreeSessionBuffer(int)"/>.
     /// </para>
     /// </summary>
