@@ -12,14 +12,14 @@ namespace Adaptive.Aeron.Tests.LogBuffer
         private UnsafeBuffer _termBuffer;
 
         [SetUp]
-        public virtual void SetUp()
+        public void SetUp()
         {
             _termBuffer = A.Fake<UnsafeBuffer>();
             A.CallTo(() => _termBuffer.Capacity).Returns(LogBufferDescriptor.TERM_MIN_LENGTH);
         }
 
         [Test]
-        public virtual void ShouldScanEmptyBuffer()
+        public void ShouldScanEmptyBuffer()
         {
             const int offset = 0;
             int limit = _termBuffer.Capacity;
@@ -30,7 +30,7 @@ namespace Adaptive.Aeron.Tests.LogBuffer
         }
 
         [Test]
-        public virtual void ShouldReadFirstMessage()
+        public void ShouldReadFirstMessage()
         {
             const int offset = 0;
             int limit = _termBuffer.Capacity;
@@ -46,7 +46,7 @@ namespace Adaptive.Aeron.Tests.LogBuffer
         }
 
         [Test]
-        public virtual void ShouldReadBlockOfTwoMessages()
+        public void ShouldReadBlockOfTwoMessages()
         {
             const int offset = 0;
             int limit = _termBuffer.Capacity;
@@ -64,7 +64,7 @@ namespace Adaptive.Aeron.Tests.LogBuffer
         }
 
         [Test]
-        public virtual void ShouldReadBlockOfThreeMessagesThatFillBuffer()
+        public void ShouldReadBlockOfThreeMessagesThatFillBuffer()
         {
             const int offset = 0;
             int limit = _termBuffer.Capacity;
@@ -85,7 +85,7 @@ namespace Adaptive.Aeron.Tests.LogBuffer
         }
 
         [Test]
-        public virtual void ShouldReadBlockOfTwoMessagesBecauseOfLimit()
+        public void ShouldReadBlockOfTwoMessagesBecauseOfLimit()
         {
             const int offset = 0;
             const int messageLength = 50;
@@ -105,7 +105,7 @@ namespace Adaptive.Aeron.Tests.LogBuffer
         }
 
         [Test]
-        public virtual void ShouldFailToReadFirstMessageBecauseOfLimit()
+        public void ShouldFailToReadFirstMessageBecauseOfLimit()
         {
             const int offset = 0;
             const int messageLength = 50;
@@ -121,7 +121,7 @@ namespace Adaptive.Aeron.Tests.LogBuffer
         }
 
         [Test]
-        public virtual void ShouldReadOneMessageOnLimit()
+        public void ShouldReadOneMessageOnLimit()
         {
             const int offset = 0;
             const int messageLength = 50;

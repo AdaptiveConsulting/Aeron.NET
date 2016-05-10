@@ -20,7 +20,7 @@ namespace Adaptive.Aeron.Tests.LogBuffer
         private IFragmentHandler handler;
 
         [SetUp]
-        public virtual void SetUp()
+        public void SetUp()
         {
             header = new Header(INITIAL_TERM_ID, TERM_BUFFER_CAPACITY);
             termBuffer = A.Fake<UnsafeBuffer>();
@@ -31,7 +31,7 @@ namespace Adaptive.Aeron.Tests.LogBuffer
         }
 
         [Test]
-        public virtual void ShouldPackPaddingAndOffsetIntoResultingStatus()
+        public void ShouldPackPaddingAndOffsetIntoResultingStatus()
         {
             const int offset = 77;
             const int fragmentsRead = 999;
@@ -43,7 +43,7 @@ namespace Adaptive.Aeron.Tests.LogBuffer
         }
 
         [Test]
-        public virtual void ShouldReadFirstMessage()
+        public void ShouldReadFirstMessage()
         {
             const int msgLength = 1;
             int frameLength = HEADER_LENGTH + msgLength;
@@ -62,7 +62,7 @@ namespace Adaptive.Aeron.Tests.LogBuffer
         }
 
         [Test]
-        public virtual void ShouldNotReadPastTail()
+        public void ShouldNotReadPastTail()
         {
             const int termOffset = 0;
 
@@ -75,7 +75,7 @@ namespace Adaptive.Aeron.Tests.LogBuffer
         }
 
         [Test]
-        public virtual void ShouldReadOneLimitedMessage()
+        public void ShouldReadOneLimitedMessage()
         {
             const int msgLength = 1;
             int frameLength = HEADER_LENGTH + msgLength;
@@ -94,7 +94,7 @@ namespace Adaptive.Aeron.Tests.LogBuffer
         }
 
         [Test]
-        public virtual void ShouldReadMultipleMessages()
+        public void ShouldReadMultipleMessages()
         {
             const int msgLength = 1;
             int frameLength = HEADER_LENGTH + msgLength;
@@ -116,7 +116,7 @@ namespace Adaptive.Aeron.Tests.LogBuffer
         }
 
         [Test]
-        public virtual void ShouldReadLastMessage()
+        public void ShouldReadLastMessage()
         {
             const int msgLength = 1;
             int frameLength = HEADER_LENGTH + msgLength;
@@ -135,7 +135,7 @@ namespace Adaptive.Aeron.Tests.LogBuffer
         }
 
         [Test]
-        public virtual void ShouldNotReadLastMessageWhenPadding()
+        public void ShouldNotReadLastMessageWhenPadding()
         {
             const int msgLength = 1;
             int frameLength = HEADER_LENGTH + msgLength;
