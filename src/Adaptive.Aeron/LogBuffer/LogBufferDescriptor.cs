@@ -411,7 +411,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// <returns> the term id according to the position </returns>
         public static int ComputeTermIdFromPosition(long position, int positionBitsToShift, int initialTermId)
         {
-            return (int)(position >> positionBitsToShift) + initialTermId;
+            return ((int)((long)((ulong)position >> positionBitsToShift)) + initialTermId);
         }
 
         /// <summary>
@@ -522,7 +522,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// <returns> the termId from a packed raw tail value. </returns>
         public static int TermId(long rawTail)
         {
-            return (int)(rawTail >> 32);
+            return (int)((long)((ulong)rawTail >> 32));
         }
 
         /// <summary>

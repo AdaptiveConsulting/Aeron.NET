@@ -102,8 +102,7 @@ namespace Adaptive.Aeron.LogBuffer
         {
             long rawTail = _metaDataBuffer.GetLong(LogBufferDescriptor.TERM_TAIL_COUNTER_OFFSET);
 
-            return (int)(rawTail >> 32);
+            return (int)((long)((ulong)rawTail >> 32));
         }
-
     }
 }
