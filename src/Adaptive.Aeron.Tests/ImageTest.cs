@@ -40,8 +40,8 @@ namespace Adaptive.Aeron.Tests
         private ErrorHandler ErrorHandler;
         private Subscription Subscription;
 
-        private UnsafeBuffer[] AtomicBuffers = new UnsafeBuffer[(LogBufferDescriptor.PARTITION_COUNT*2) + 1];
-        private UnsafeBuffer[] TermBuffers = new UnsafeBuffer[LogBufferDescriptor.PARTITION_COUNT];
+        private UnsafeBuffer[] AtomicBuffers;
+        private UnsafeBuffer[] TermBuffers;
 
         [SetUp]
         public virtual void SetUp()
@@ -54,6 +54,9 @@ namespace Adaptive.Aeron.Tests
             LogBuffers = A.Fake<LogBuffers>();
             ErrorHandler = A.Fake<ErrorHandler>();
             Subscription = A.Fake<Subscription>();
+
+            AtomicBuffers = new UnsafeBuffer[(LogBufferDescriptor.PARTITION_COUNT * 2) + 1];
+            TermBuffers = new UnsafeBuffer[LogBufferDescriptor.PARTITION_COUNT];
 
             DataHeader.Wrap(RcvBuffer);
 

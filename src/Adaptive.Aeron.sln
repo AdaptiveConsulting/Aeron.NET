@@ -31,6 +31,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Adaptive.Aeron.Samples.Pong
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Adaptive.Aeron.Samples.StreamingPublisher", "Samples\Adaptive.Aeron.Samples.StreamingPublisher\Adaptive.Aeron.Samples.StreamingPublisher.csproj", "{94553688-F17D-448E-8414-8FB097846BAC}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Adaptive.Aeron.Samples.BasicPublisher", "Samples\Adaptive.Aeron.Samples.BasicPublisher\Adaptive.Aeron.Samples.BasicPublisher.csproj", "{CFADFB8A-B997-417D-8892-5FBD91DB8D88}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Adaptive.Aeron.Samples.BasicSubscriber", "Samples\Adaptive.Aeron.Samples.BasicSubscriber\Adaptive.Aeron.Samples.BasicSubscriber.csproj", "{02BC7AAB-BA72-4791-B1B2-148F83424410}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -81,6 +85,14 @@ Global
 		{94553688-F17D-448E-8414-8FB097846BAC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{94553688-F17D-448E-8414-8FB097846BAC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{94553688-F17D-448E-8414-8FB097846BAC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CFADFB8A-B997-417D-8892-5FBD91DB8D88}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CFADFB8A-B997-417D-8892-5FBD91DB8D88}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CFADFB8A-B997-417D-8892-5FBD91DB8D88}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CFADFB8A-B997-417D-8892-5FBD91DB8D88}.Release|Any CPU.Build.0 = Release|Any CPU
+		{02BC7AAB-BA72-4791-B1B2-148F83424410}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{02BC7AAB-BA72-4791-B1B2-148F83424410}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{02BC7AAB-BA72-4791-B1B2-148F83424410}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{02BC7AAB-BA72-4791-B1B2-148F83424410}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -97,5 +109,7 @@ Global
 		{38ECAB95-2E6E-4224-B84D-A73753BDB044} = {05C2D2D4-06B2-4A7F-A30A-19B5B2F7C631}
 		{0E28B408-8146-4E33-A4D5-E0470D5B6382} = {05C2D2D4-06B2-4A7F-A30A-19B5B2F7C631}
 		{94553688-F17D-448E-8414-8FB097846BAC} = {05C2D2D4-06B2-4A7F-A30A-19B5B2F7C631}
+		{CFADFB8A-B997-417D-8892-5FBD91DB8D88} = {05C2D2D4-06B2-4A7F-A30A-19B5B2F7C631}
+		{02BC7AAB-BA72-4791-B1B2-148F83424410} = {05C2D2D4-06B2-4A7F-A30A-19B5B2F7C631}
 	EndGlobalSection
 EndGlobal

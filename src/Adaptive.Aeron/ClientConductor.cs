@@ -170,7 +170,7 @@ namespace Adaptive.Aeron
             }
         }
 
-        internal void ReleaseSubscription(Subscription subscription)
+        internal virtual void ReleaseSubscription(Subscription subscription)
         {
             lock (this)
             {
