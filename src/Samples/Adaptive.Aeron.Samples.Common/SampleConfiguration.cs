@@ -5,9 +5,9 @@ namespace Adaptive.Aeron.Samples.Common
     /// </summary>
     public class SampleConfiguration
     {
-        public static readonly string CHANNEL = "aeron:udp?endpoint=localhost:40123";
-        public static readonly string PING_CHANNEL = "aeron:udp?endpoint=localhost:40123";
-        public static readonly string PONG_CHANNEL = "aeron:udp?endpoint=localhost:40124";
+        public static readonly string CHANNEL = "aeron:ipc";
+        public static readonly string PING_CHANNEL = "aeron:ipc";
+        public static readonly string PONG_CHANNEL = "aeron:ipc";
         public static readonly int STREAM_ID = 10;
         public static readonly int PING_STREAM_ID = 10;
         public static readonly int PONG_STREAM_ID = 10;

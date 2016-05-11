@@ -45,7 +45,7 @@ namespace Adaptive.Aeron.Samples.Common
         }
 
         /// <summary>
-        /// Return a reusable, parameterized <seealso cref="FragmentHandler"/> that prints to stdout
+        /// Return a reusable, parameterized <seealso cref="IFragmentHandler"/> that prints to stdout
         /// </summary>
         /// <param name="streamId"> to show when printing </param>
         /// <returns> subscription data handler function that prints the message contents </returns>
@@ -61,11 +61,11 @@ namespace Adaptive.Aeron.Samples.Common
         }
 
         /// <summary>
-        /// Return a reusable, parameteried <seealso cref="FragmentHandler"/> that calls into a
+        /// Return a reusable, parameteried <seealso cref="IFragmentHandler"/> that calls into a
         /// <seealso cref="RateReporter"/>.
         /// </summary>
         /// <param name="reporter"> for the rate </param>
-        /// <returns> <seealso cref="FragmentHandler"/> that records the rate information </returns>
+        /// <returns> <seealso cref="IFragmentHandler"/> that records the rate information </returns>
         public static IFragmentHandler RateReporterHandler(RateReporter reporter)
         {
             return new DelegateFragmentHandler((buffer, offset, length, header) => reporter.OnMessage(1, length));

@@ -3,7 +3,6 @@ using System.Threading;
 using Adaptive.Aeron.Samples.Common;
 using Adaptive.Agrona;
 using Adaptive.Agrona.Concurrent;
-using Adaptive.Agrona.Util;
 
 namespace Adaptive.Aeron.Samples.StreamingPublisher
 {
@@ -93,36 +92,6 @@ namespace Adaptive.Aeron.Samples.StreamingPublisher
             if (PrintingActive)
             {
                 Console.Write("{0:g02} msgs/sec, {1:g02} bytes/sec, totals {2:D} messages {3:D} MB\n", messagesPerSec, bytesPerSec, totalFragments, totalBytes/(1024*1024));
-            }
-        }
-    }
-
-    internal class IntSupplier
-    {
-        private Random _random;
-        private readonly int _max;
-        private bool _isRandom;
-
-        public IntSupplier(bool random, int max)
-        {
-            _isRandom = random;
-            _max = max;
-            _random = new Random();
-        }
-
-        public int AsInt
-        {
-            get
-            {
-                if (_isRandom)
-                {
-                    lock (_random)
-                    {
-                        return _random.Next(BitUtil.SIZE_OF_LONG, _max);
-                    }
-                }
-
-                return _max;
             }
         }
     }
