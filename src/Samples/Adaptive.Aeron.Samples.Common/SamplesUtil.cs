@@ -93,7 +93,7 @@ namespace Adaptive.Aeron.Samples.Common
         /// <param name="totalBytes">     being reported </param>
         public static void PrintRate(double messagesPerSec, double bytesPerSec, long totalMessages, long totalBytes)
         {
-            Console.WriteLine($"{messagesPerSec:g02} msgs/sec, {bytesPerSec:g02} bytes/sec, totals {totalMessages:D} messages {totalBytes/(1024*1024):D} MB");
+            Console.WriteLine($"{messagesPerSec:g02} msgs/sec, {bytesPerSec:g02} bytes/sec, totals {totalMessages:D} messages {totalBytes/(1024*1024):D} MB, GC0 {GC.CollectionCount(0)}, GC1 {GC.CollectionCount(1)}, GC2 {GC.CollectionCount(2)}");
         }
 
         /// <summary>

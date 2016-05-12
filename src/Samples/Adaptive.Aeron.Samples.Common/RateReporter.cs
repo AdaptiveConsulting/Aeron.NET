@@ -49,14 +49,15 @@ namespace Adaptive.Aeron.Samples.Common
 
                 var currentTotalMessages = _totalMessages;
                 var currentTotalBytes = _totalBytes;
-                var timeSpanNs = _stopwatch.ElapsedMilliseconds;
-                var messagesPerSec = (currentTotalMessages - _lastTotalMessages)*_reportIntervalMs/(double) timeSpanNs;
-                var bytesPerSec = (currentTotalBytes - _lastTotalBytes)*_reportIntervalMs/(double) timeSpanNs;
+                var timespanMs = _stopwatch.ElapsedMilliseconds;
+                var messagesPerSec = (currentTotalMessages - _lastTotalMessages)*_reportIntervalMs/(double) timespanMs;
+                var bytesPerSec = (currentTotalBytes - _lastTotalBytes)*_reportIntervalMs/(double) timespanMs;
 
                 _reportingFunc(messagesPerSec, bytesPerSec, currentTotalMessages, currentTotalBytes);
 
                 _lastTotalBytes = currentTotalBytes;
                 _lastTotalMessages = currentTotalMessages;
+                _stopwatch.Restart();
             } while (!_halt);
         }
 
