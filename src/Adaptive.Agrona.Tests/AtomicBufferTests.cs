@@ -67,7 +67,6 @@ namespace Adaptive.Agrona.Tests
         }
 
         [Test]
-        [Ignore("Not yet implemented")]
         public void ShouldVerifyBufferAlignment()
         {
             var buffer = new UnsafeBuffer(new byte[1024]);
@@ -82,14 +81,11 @@ namespace Adaptive.Agrona.Tests
         }
 
         [Test]
+        [ExpectedException(typeof(InvalidOperationException))]
         public void ShouldThrowExceptionWhenBufferNotAligned()
         {
-            // TODO
-            //var byteBuffer = new UnsafeBuffer(new byte[1024]);
-            //byteBuffer.Position(1);
-            //UnsafeBuffer buffer = new UnsafeBuffer(byteBuffer.Slice());
-
-            //buffer.VerifyAlignment();
+            var buffer = new UnsafeBuffer(new byte[1024], 1, 1023);
+            buffer.VerifyAlignment();
         }
 
         [Theory]
