@@ -24,7 +24,7 @@ namespace Adaptive.Agrona.Concurrent
         /// <summary>
         /// Buffer alignment to ensure atomic word accesses.
         /// </summary>
-        public static readonly int Alignment = BitUtil.SIZE_OF_LONG;
+        public const int ALIGNMENT = BitUtil.SIZE_OF_LONG;
 
         private byte* _pBuffer;
         private bool _disposed;
@@ -221,10 +221,10 @@ namespace Adaptive.Agrona.Concurrent
         public virtual void VerifyAlignment()
         {
             var address = new IntPtr(_pBuffer).ToInt64();
-            if (0 != (address & (Alignment - 1)))
+            if (0 != (address & (ALIGNMENT - 1)))
             {
                 throw new InvalidOperationException(
-                    $"AtomicBuffer is not correctly aligned: addressOffset={address:D} in not divisible by {Alignment:D}");
+                    $"AtomicBuffer is not correctly aligned: addressOffset={address:D} in not divisible by {ALIGNMENT:D}");
             }
         }
 
