@@ -67,7 +67,6 @@ namespace Adaptive.Agrona.Tests
         }
 
         [Test]
-        [Ignore("Not yet implemented")]
         public void ShouldVerifyBufferAlignment()
         {
             var buffer = new UnsafeBuffer(new byte[1024]);
