@@ -54,8 +54,8 @@
     <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="HdrHistogram, Version=1.0.0.0, Culture=neutral, PublicKeyToken=6f45871cdfcff67a, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\HdrHistogram.1.0.120-prerelease\lib\net45\HdrHistogram.dll</HintPath>
+    <Reference Include="HdrHistogram, Version=1.0.0.0, Culture=neutral, PublicKeyToken=56a8eed952212876, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\HdrHistogram.1.7.0\lib\net45\HdrHistogram.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="System" />
@@ -72,9 +72,6 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\..\Adaptive.Aeron\Adaptive.Aeron.csproj">
       <Project>{ce06a485-98f5-4fef-a756-d0ef4dda8309}</Project>
       <Name>Adaptive.Aeron</Name>
@@ -87,6 +84,9 @@
       <Project>{a8a90b16-ddea-4a3e-a89a-7f7fb2d18416}</Project>
       <Name>Adaptive.Aeron.Samples.Common</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
