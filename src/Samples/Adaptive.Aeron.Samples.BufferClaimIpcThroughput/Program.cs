@@ -6,9 +6,9 @@ using Adaptive.Aeron.Samples.Common;
 using Adaptive.Agrona;
 using Adaptive.Agrona.Concurrent;
 
-namespace Adaptive.Aeron.Samples.IpcThroughput
+namespace Adaptive.Aeron.Samples.BufferClaimIpcThroughput
 {
-    public class EmbeddedIpcThroughput
+    public class EmbeddedBufferClaimIpcThroughput
     {
         public const int BURST_LENGTH = 1000000;
         public static readonly int MESSAGE_LENGTH = SampleConfiguration.MESSAGE_LENGTH;
@@ -40,7 +40,7 @@ namespace Adaptive.Aeron.Samples.IpcThroughput
             }
         }
 
-        public class RateReporter
+        public sealed class RateReporter
         {
             internal readonly AtomicBoolean Running;
             internal readonly Subscriber Subscriber;
@@ -55,7 +55,7 @@ namespace Adaptive.Aeron.Samples.IpcThroughput
 
             public void Run()
             {
-                var lastTotalBytes = Subscriber.TotalBytes();
+                long lastTotalBytes = Subscriber.TotalBytes();
 
                 while (Running.Get())
                 {
@@ -64,7 +64,7 @@ namespace Adaptive.Aeron.Samples.IpcThroughput
                     var newTotalBytes = Subscriber.TotalBytes();
                     var duration = _stopwatch.ElapsedMilliseconds;
                     var bytesTransferred = newTotalBytes - lastTotalBytes;
-                    Console.WriteLine($"Duration {duration}ms - {bytesTransferred/MESSAGE_LENGTH} messages - {bytesTransferred} bytes");
+                    Console.WriteLine($"Duration {duration}ms - {bytesTransferred / MESSAGE_LENGTH} messages - {bytesTransferred} bytes");
 
                     _stopwatch.Restart();
                     lastTotalBytes = newTotalBytes;
@@ -86,7 +86,7 @@ namespace Adaptive.Aeron.Samples.IpcThroughput
             public void Run()
             {
                 var publication = Publication;
-                var buffer = new UnsafeBuffer(new byte[publication.MaxMessageLength()]);
+                var bufferClaim = new BufferClaim();
                 long backPressureCount = 0;
                 long totalMessageCount = 0;
 
@@ -94,7 +94,7 @@ namespace Adaptive.Aeron.Samples.IpcThroughput
                 {
                     for (var i = 0; i < BURST_LENGTH; i++)
                     {
-                        while (publication.Offer(buffer, 0, MESSAGE_LENGTH) <= 0)
+                        while (publication.TryClaim(MESSAGE_LENGTH, bufferClaim) <= 0)
                         {
                             ++backPressureCount;
                             if (!Running.Get())
@@ -103,20 +103,27 @@ namespace Adaptive.Aeron.Samples.IpcThroughput
                             }
                         }
 
+                        var offset = bufferClaim.Offset();
+                        bufferClaim.Buffer().PutInt(offset, i); // Example field write
+                                                                // Real app would write whatever fields are required via a flyweight like SBE
+
+                        bufferClaim.Commit();
+
                         ++totalMessageCount;
                     }
                 }
 
-                var backPressureRatio = backPressureCount/(double) totalMessageCount;
+                
+                var backPressureRatio = backPressureCount / (double)totalMessageCount;
                 Console.WriteLine($"Publisher back pressure ratio: {backPressureRatio}");
-                }
             }
+        }
 
-        public class Subscriber : IFragmentHandler
+        public sealed class Subscriber : IFragmentHandler
         {
+
             internal readonly AtomicBoolean Running;
             internal readonly Subscription Subscription;
-            
             private readonly AtomicLong _totalBytes = new AtomicLong();
 
             public Subscriber(AtomicBoolean running, Subscription subscription)
@@ -162,7 +169,7 @@ namespace Adaptive.Aeron.Samples.IpcThroughput
 
             public void OnFragment(IDirectBuffer buffer, int offset, int length, Header header)
             {
-                _totalBytes.Set(_totalBytes.Get() + length); // TODO java UNSAFE.putOrderedLong(this, TOTAL_BYTES_OFFSET, totalBytes + length);
+                _totalBytes.Add(length);
             }
         }
     }
