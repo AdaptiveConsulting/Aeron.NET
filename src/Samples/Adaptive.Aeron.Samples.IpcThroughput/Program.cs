@@ -8,7 +8,7 @@ using Adaptive.Agrona.Concurrent;
 
 namespace Adaptive.Aeron.Samples.IpcThroughput
 {
-    public class EmbeddedIpcThroughput
+    public class IpcThroughput
     {
         public const int BURST_LENGTH = 1000000;
         public static readonly int MESSAGE_LENGTH = SampleConfiguration.MESSAGE_LENGTH;
