@@ -16,7 +16,7 @@ namespace Adaptive.Aeron.Samples.StreamingPublisher
         private static readonly int MESSAGE_LENGTH = SampleConfiguration.MESSAGE_LENGTH;
         private static readonly long NUMBER_OF_MESSAGES = SampleConfiguration.NUMBER_OF_MESSAGES;
         private static readonly long LINGER_TIMEOUT_MS = SampleConfiguration.LINGER_TIMEOUT_MS;
-        private static readonly bool RANDOM_MESSAGE_LENGTH = false;
+        private static readonly bool RANDOM_MESSAGE_LENGTH = SampleConfiguration.RANDOM_MESSAGE_LENGTH;
         private static readonly UnsafeBuffer ATOMIC_BUFFER = new UnsafeBuffer(new byte[MESSAGE_LENGTH]);
         private static readonly IIdleStrategy OFFER_IDLE_STRATEGY = new BusySpinIdleStrategy();
         private static readonly IntSupplier LENGTH_GENERATOR = new IntSupplier(RANDOM_MESSAGE_LENGTH, MESSAGE_LENGTH);

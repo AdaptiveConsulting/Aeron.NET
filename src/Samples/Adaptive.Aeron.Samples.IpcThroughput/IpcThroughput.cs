@@ -13,7 +13,7 @@ namespace Adaptive.Aeron.Samples.IpcThroughput
         public const int BURST_LENGTH = 1000000;
         public static readonly int MESSAGE_LENGTH = SampleConfiguration.MESSAGE_LENGTH;
         public static readonly int MESSAGE_COUNT_LIMIT = SampleConfiguration.FRAGMENT_COUNT_LIMIT;
-        public static readonly string CHANNEL = CommonContext.IPC_CHANNEL;
+        public static readonly string CHANNEL = Aeron.Context.IPC_CHANNEL;
         public static readonly int STREAM_ID = SampleConfiguration.STREAM_ID;
 
         public static void Main(string[] args)
@@ -109,14 +109,14 @@ namespace Adaptive.Aeron.Samples.IpcThroughput
 
                 var backPressureRatio = backPressureCount/(double) totalMessageCount;
                 Console.WriteLine($"Publisher back pressure ratio: {backPressureRatio}");
-                }
             }
+        }
 
         public class Subscriber : IFragmentHandler
         {
             internal readonly AtomicBoolean Running;
             internal readonly Subscription Subscription;
-            
+
             private readonly AtomicLong _totalBytes = new AtomicLong();
 
             public Subscriber(AtomicBoolean running, Subscription subscription)
@@ -156,7 +156,7 @@ namespace Adaptive.Aeron.Samples.IpcThroughput
                     }
                 }
 
-                var failureRatio = failedPolls / (double)(successfulPolls + failedPolls);
+                var failureRatio = failedPolls/(double) (successfulPolls + failedPolls);
                 Console.WriteLine($"Subscriber poll failure ratio: {failureRatio}");
             }
 
