@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Threading;
 using Adaptive.Aeron.Exceptions;
 using Adaptive.Agrona;
@@ -28,7 +29,7 @@ namespace Adaptive.Aeron
         /// </para>
         /// </summary>
         /// <seealso cref="Context.ErrorHandler(ErrorHandler)" />
-        public static readonly ErrorHandler DEFAULT_ERROR_HANDLER = (throwable) =>
+        public static readonly ErrorHandler DefaultErrorHandler = (throwable) =>
         {
             Console.WriteLine(throwable);
 
@@ -43,10 +44,10 @@ namespace Adaptive.Aeron
             }
         };
 
-        private static readonly int IDLE_SLEEP_MS = 4;
+        private const int IDLE_SLEEP_MS = 4;
         private static readonly long KEEPALIVE_INTERVAL_NS = NanoUtil.FromMilliseconds(500);
         private static readonly long INTER_SERVICE_TIMEOUT_NS = NanoUtil.FromSeconds(10);
-        private static readonly long PUBLICATION_CONNECTION_TIMEOUT_MS = 5*1000;
+        private const long PUBLICATION_CONNECTION_TIMEOUT_MS = 5000;
 
         private readonly ClientConductor _conductor;
         private readonly AgentRunner _conductorRunner;
@@ -54,11 +55,8 @@ namespace Adaptive.Aeron
 
         internal Aeron(Context ctx)
         {
-            ctx.Conclude();
-            _ctx = ctx;
-
+            _ctx = ctx.Conclude();
             _conductor = ctx.CreateClientConductor();
-
             _conductorRunner = ctx.CreateConductorRunner(_conductor);
         }
 
@@ -72,7 +70,7 @@ namespace Adaptive.Aeron
         /// <returns> the new <seealso cref="Aeron"/> instance connected to the Media Driver. </returns>
         public static Aeron Connect()
         {
-            return (new Aeron(new Context())).Start();
+            return new Aeron(new Context()).Start();
         }
 
         /// <summary>
@@ -86,7 +84,7 @@ namespace Adaptive.Aeron
         /// <returns> the new <seealso cref="Aeron"/> instance connected to the Media Driver. </returns>
         public static Aeron Connect(Context ctx)
         {
-            return (new Aeron(ctx)).Start();
+            return new Aeron(ctx).Start();
         }
 
         /// <summary>
@@ -137,7 +135,7 @@ namespace Adaptive.Aeron
         /// It can also set up error handling as well as application callbacks for image information from the
         /// Media Driver.
         /// </summary>
-        public class Context : CommonContext
+        public class Context : IDisposable
         {
             private readonly AtomicBoolean _isClosed = new AtomicBoolean(false);
             private IEpochClock _epochClock;
@@ -154,18 +152,49 @@ namespace Adaptive.Aeron
             private long _keepAliveInterval = KEEPALIVE_INTERVAL_NS;
             private long _interServiceTimeout = INTER_SERVICE_TIMEOUT_NS;
             private long _publicationConnectionTimeout = PUBLICATION_CONNECTION_TIMEOUT_MS;
+            private FileInfo _cncFile;
+            private string _aeronDirectoryName;
+            private long _driverTimeoutMs = DEFAULT_DRIVER_TIMEOUT_MS;
+            private UnsafeBuffer _countersMetaDataBuffer;
+            private UnsafeBuffer _countersValuesBuffer;
 
             /// <summary>
-            /// This is called automatically by <seealso cref="Aeron.Connect()"/> and its overloads.
+            /// The top level Aeron directory used for communication between a Media Driver and client.
+            /// </summary>
+            public const string AERON_DIR_PROP_NAME = "aeron.dir";
+
+            /// <summary>
+            /// The value of the top level Aeron directory unless overridden by <seealso cref="AeronDirectoryName()"/>
+            /// </summary>
+            public static readonly string AERON_DIR_PROP_DEFAULT = Path.Combine(IoUtil.TmpDirName(), "aeron-" + Environment.UserName);
+
+            /// <summary>
+            /// URI used for IPC <seealso cref="Publication"/>s and  <seealso cref="Subscription"/>s
+            /// </summary>
+            public const string IPC_CHANNEL = "aeron:ipc";
+
+            /// <summary>
+            /// Timeout in which the driver is expected to respond.
+            /// </summary>
+            public const long DEFAULT_DRIVER_TIMEOUT_MS = 10000;
+
+            public Context()
+            {
+                _aeronDirectoryName = Config.GetProperty(AERON_DIR_PROP_NAME, AERON_DIR_PROP_DEFAULT);
+            }
+
+            /// <summary>
+            /// This is called automatically by <seealso cref="Connect()"/> and its overloads.
             /// There is no need to call it from a client application. It is responsible for providing default
             /// values for options that are not individually changed through field setters.
             /// </summary>
             /// <returns> this Aeron.Context for method chaining. </returns>
-            public new Context Conclude()
+            public Context Conclude()
             {
-                base.Conclude();
                 try
                 {
+                    _cncFile = new FileInfo(Path.Combine(_aeronDirectoryName, CncFileDescriptor.CNC_FILE));
+
                     if (null == _epochClock)
                     {
                         _epochClock = new SystemEpochClock();
@@ -231,17 +260,17 @@ namespace Adaptive.Aeron
 
                     if (null == _errorHandler)
                     {
-                        _errorHandler = DEFAULT_ERROR_HANDLER;
+                        _errorHandler = DefaultErrorHandler;
                     }
 
                     if (null == _availableImageHandler)
                     {
-                        _availableImageHandler = (image) => { };
+                        _availableImageHandler = image => { };
                     }
 
                     if (null == _unavailableImageHandler)
                     {
-                        _unavailableImageHandler = (image) => { };
+                        _unavailableImageHandler = image => { };
                     }
                 }
                 catch (
@@ -260,13 +289,23 @@ namespace Adaptive.Aeron
             }
 
             /// <summary>
+            /// Get the command and control file.
+            /// </summary>
+            /// <returns> The command and control file. </returns>
+            public FileInfo CncFile()
+            {
+                return _cncFile;
+            }
+
+
+            /// <summary>
             /// Set the <seealso cref="EpochClock"/> to be used for tracking wall clock time when interacting with the driver.
             /// </summary>
             /// <param name="clock"> <seealso cref="EpochClock"/> to be used for tracking wall clock time when interacting with the driver. </param>
             /// <returns> this Aeron.Context for method chaining </returns>
             public Context EpochClock(IEpochClock clock)
             {
-                this._epochClock = clock;
+                _epochClock = clock;
                 return this;
             }
 
@@ -277,7 +316,7 @@ namespace Adaptive.Aeron
             /// <returns> this Aeron.Context for method chaining </returns>
             public Context NanoClock(INanoClock clock)
             {
-                this._nanoClock = clock;
+                _nanoClock = clock;
                 return this;
             }
 
@@ -288,7 +327,7 @@ namespace Adaptive.Aeron
             /// <returns> this Aeron.Context for method chaining. </returns>
             public Context IdleStrategy(IIdleStrategy idleStrategy)
             {
-                this._idleStrategy = idleStrategy;
+                _idleStrategy = idleStrategy;
                 return this;
             }
 
@@ -299,7 +338,7 @@ namespace Adaptive.Aeron
             /// <returns> this Aeron.Context for method chaining. </returns>
             public Context ToClientBuffer(CopyBroadcastReceiver toClientBuffer)
             {
-                this._toClientBuffer = toClientBuffer;
+                _toClientBuffer = toClientBuffer;
                 return this;
             }
 
@@ -310,7 +349,7 @@ namespace Adaptive.Aeron
             /// <returns> this Aeron.Context for method chaining. </returns>
             public Context ToDriverBuffer(IRingBuffer toDriverBuffer)
             {
-                this._toDriverBuffer = toDriverBuffer;
+                _toDriverBuffer = toDriverBuffer;
                 return this;
             }
 
@@ -321,13 +360,13 @@ namespace Adaptive.Aeron
             /// <returns> this Aeron.Context for method chaining. </returns>
             public Context BufferManager(ILogBuffersFactory logBuffersFactory)
             {
-                this._logBuffersFactory = logBuffersFactory;
+                _logBuffersFactory = logBuffersFactory;
                 return this;
             }
 
             /// <summary>
             /// Handle Aeron exceptions in a callback method. The default behavior is defined by
-            /// <seealso cref="Aeron.DEFAULT_ERROR_HANDLER"/>.
+            /// <seealso cref="DefaultErrorHandler"/>.
             /// </summary>
             /// <param name="errorHandler"> Method to handle objects of type Throwable. </param>
             /// <returns> this Aeron.Context for method chaining. </returns>
@@ -335,7 +374,7 @@ namespace Adaptive.Aeron
             /// <seealso cref="RegistrationException" />
             public Context ErrorHandler(ErrorHandler errorHandler)
             {
-                this._errorHandler = errorHandler;
+                _errorHandler = errorHandler;
                 return this;
             }
 
@@ -346,7 +385,7 @@ namespace Adaptive.Aeron
             /// <returns> this Aeron.Context for method chaining. </returns>
             public Context AvailableImageHandler(AvailableImageHandler handler)
             {
-                this._availableImageHandler = handler;
+                _availableImageHandler = handler;
                 return this;
             }
 
@@ -357,9 +396,52 @@ namespace Adaptive.Aeron
             /// <returns> this Aeron.Context for method chaining. </returns>
             public Context UnavailableImageHandler(UnavailableImageHandler handler)
             {
-                this._unavailableImageHandler = handler;
+                _unavailableImageHandler = handler;
                 return this;
             }
+
+
+            /// <summary>
+            /// Get the buffer containing the counter meta data.
+            /// </summary>
+            /// <returns> The buffer storing the counter meta data. </returns>
+            public UnsafeBuffer CountersMetaDataBuffer()
+            {
+                return _countersMetaDataBuffer;
+            }
+
+            /// <summary>
+            /// Set the buffer containing the counter meta data.
+            /// </summary>
+            /// <param name="countersMetaDataBuffer"> The new counter meta data buffer. </param>
+            /// <returns> this Object for method chaining. </returns>
+            public Context CountersMetaDataBuffer(UnsafeBuffer countersMetaDataBuffer)
+            {
+                _countersMetaDataBuffer = countersMetaDataBuffer;
+                return this;
+            }
+
+
+            /// <summary>
+            /// Get the buffer containing the counters.
+            /// </summary>
+            /// <returns> The buffer storing the counters. </returns>
+            public UnsafeBuffer CountersValuesBuffer()
+            {
+                return _countersValuesBuffer;
+            }
+
+            /// <summary>
+            /// Set the buffer containing the counters
+            /// </summary>
+            /// <param name="countersValuesBuffer"> The new counters buffer. </param>
+            /// <returns> this Object for method chaining. </returns>
+            public Context CountersValuesBuffer(UnsafeBuffer countersValuesBuffer)
+            {
+                _countersValuesBuffer = countersValuesBuffer;
+                return this;
+            }
+
 
             /// <summary>
             /// Set the interval in nanoseconds for which the client will perform keep-alive operations.
@@ -386,12 +468,12 @@ namespace Adaptive.Aeron
             /// Media Driver is unavailable. When this happens a
             /// <seealso cref="DriverTimeoutException"/> will be generated for the error handler.
             /// </summary>
-            /// <param name="value"> Number of milliseconds. </param>
+            /// <param name="driverTimeoutMs"> Number of milliseconds. </param>
             /// <returns> this Aeron.Context for method chaining. </returns>
             /// <seealso cref="ErrorHandler" />
-            public new Context DriverTimeoutMs(long value)
+            public Context DriverTimeoutMs(long driverTimeoutMs)
             {
-                base.DriverTimeoutMs(value);
+                _driverTimeoutMs = driverTimeoutMs;
                 return this;
             }
 
@@ -409,10 +491,25 @@ namespace Adaptive.Aeron
                 return _interServiceTimeout;
             }
 
-            /// <seealso cref="CommonContext.AeronDirectoryName(String)" />
-            public new Context AeronDirectoryName(string dirName)
+            /// <summary>
+            /// Get the top level Aeron directory used for communication between the client and Media Driver, and
+            /// the location of the data buffers.
+            /// </summary>
+            /// <returns> The top level Aeron directory. </returns>
+            public string AeronDirectoryName()
             {
-                base.AeronDirectoryName(dirName);
+                return _aeronDirectoryName;
+            }
+
+            /// <summary>
+            /// Set the top level Aeron directory used for communication between the client and Media Driver, and the location
+            /// of the data buffers.
+            /// </summary>
+            /// <param name="dirName"> New top level Aeron directory. </param>
+            /// <returns> this Object for method chaining. </returns>
+            public Context AeronDirectoryName(string dirName)
+            {
+                _aeronDirectoryName = dirName;
                 return this;
             }
 
@@ -441,13 +538,11 @@ namespace Adaptive.Aeron
             /// <summary>
             /// Clean up all resources that the client uses to communicate with the Media Driver.
             /// </summary>
-            public override void Dispose()
+            public void Dispose()
             {
                 if (_isClosed.CompareAndSet(false, true))
                 {
                     IoUtil.Unmap(_cncByteBuffer);
-
-                    base.Dispose();
                 }
             }
 

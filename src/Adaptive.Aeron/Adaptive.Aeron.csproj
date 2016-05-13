@@ -73,7 +73,7 @@
     <Compile Include="Command\PublicationMessageFlyweight .cs" />
     <Compile Include="Command\RemoveMessageFlyweight .cs" />
     <Compile Include="Command\SubscriptionMessageFlyweight .cs" />
-    <Compile Include="CommonContext.cs" />
+    <Compile Include="Config.cs" />
     <Compile Include="ControlledFragmentAssembler .cs" />
     <Compile Include="DriverListenerAdapter .cs" />
     <Compile Include="DriverProxy.cs" />

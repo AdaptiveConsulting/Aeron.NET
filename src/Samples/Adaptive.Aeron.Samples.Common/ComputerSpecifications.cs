@@ -12,10 +12,6 @@ namespace Adaptive.Aeron.Samples.Common
     /// </summary>
     public class ComputerSpecifications
     {
-        public readonly string Name;
-        public readonly string Manufacturer;
-        public readonly string Model;
-
         public readonly string OperatingSystem;
         public readonly string OperatingSystemVersion;
         public readonly int OperatingSystemServicePack;
@@ -38,10 +34,7 @@ namespace Adaptive.Aeron.Samples.Common
 
             foreach (var mo in searcher.Get())
             {
-                Name = (string) mo["Caption"];
-                Manufacturer = (string) mo["Manufacturer"];
-                Model = (string) mo["Model"];
-                MemoryMBytes = (int) (((ulong) mo["TotalPhysicalMemory"])/(1024*1024));
+                MemoryMBytes = (int) ((ulong) mo["TotalPhysicalMemory"]/(1024*1024));
             }
 
             NumberOfLogicalProcessors = Environment.ProcessorCount;
@@ -86,18 +79,18 @@ namespace Adaptive.Aeron.Samples.Common
             Configuration = RuntimeInformation.GetConfiguration();
         }
 
-        public string Configuration { get; set; }
+        public string Configuration { get; }
 
 
         private static string GetArchitecture() => IntPtr.Size == 4 ? "32-bit" : "64-bit";
 
-        public bool HasRyuJit { get; set; }
+        public bool HasRyuJit { get; }
 
-        public bool HasAttachedDebugger { get; set; }
+        public bool HasAttachedDebugger { get; }
 
-        public object Architecture { get; set; }
+        public object Architecture { get; }
 
-        public string ClrVersion { get; set; }
+        public string ClrVersion { get; }
 
         private string GetDebuggerFlag() => HasAttachedDebugger ? " [AttachedDebugger]" : "";
 
@@ -126,6 +119,17 @@ namespace Adaptive.Aeron.Samples.Common
             builder.AppendLine();
             builder.AppendLine($"Memory: {MemoryMBytes}MB, L1Cache: {L1KBytes}KB, L2Cache: {L2KBytes}KB, L3Cache: {L3KBytes}KB");
             builder.AppendLine($".NET Runtime: CLR={ClrVersion}, Arch={Architecture} {Configuration}{GetDebuggerFlag()}{GetJitFlag()}");
+
+            if (Config.Params.Count > 0)
+            {
+                builder.AppendLine();
+                builder.AppendLine("Flags");
+                foreach (var kvp in Config.Params)
+                {
+                    builder.AppendLine($"- {kvp.Key}={kvp.Value}");
+                }
+            }
+
             return builder.ToString();
         }
     }
