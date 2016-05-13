@@ -39,7 +39,7 @@ namespace Adaptive.Aeron.Samples.Throughput
 
                 do
                 {
-                    Console.WriteLine("%nStreaming {0:G} messages of size {1:G} bytes to {2} on stream Id {3}", NUMBER_OF_MESSAGES, MESSAGE_LENGTH, CHANNEL, STREAM_ID);
+                    Console.WriteLine("Streaming {0:G} messages of size {1:G} bytes to {2} on stream Id {3}", NUMBER_OF_MESSAGES, MESSAGE_LENGTH, CHANNEL, STREAM_ID);
 
                     PrintingActive = true;
 
@@ -56,7 +56,7 @@ namespace Adaptive.Aeron.Samples.Throughput
                         }
                     }
 
-                    Console.WriteLine("Done streaming. backPressureRatio=" + ((double) backPressureCount/NUMBER_OF_MESSAGES));
+                    Console.WriteLine("Done streaming. backPressureRatio=" + (double) backPressureCount/NUMBER_OF_MESSAGES);
 
                     if (0 < LINGER_TIMEOUT_MS)
                     {

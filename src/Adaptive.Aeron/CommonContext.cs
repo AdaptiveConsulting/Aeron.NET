@@ -290,13 +290,18 @@ namespace Adaptive.Aeron
                         var distinctErrorCount = ErrorLogReader.Read(
                             buffer,
                             (observationCount, firstObservationTimestamp, lastObservationTimestamp, encodedException)
-                                => stream.Write("***\n{0} observations from {1} to {2} for:\n {3}\n",
+                                =>
+                            {
+                                stream.WriteLine("***{0}{1} observations from {2} to {3} for: {0} {4}",
+                                    Environment.NewLine,
                                     observationCount,
                                     UnixTimeConverter.FromUnixTimeMillis(firstObservationTimestamp).ToString("yyyy-MM-dd HH:mm:ss.SSSZ"),
                                     UnixTimeConverter.FromUnixTimeMillis(lastObservationTimestamp).ToString("yyyy-MM-dd HH:mm:ss.SSSZ"),
-                                    encodedException));
+                                    encodedException);
+                            });
 
-                        stream.Write("\n{0} distinct errors observed.\n", distinctErrorCount);
+
+                        stream.WriteLine("{0}{1} distinct errors observed.", Environment.NewLine, distinctErrorCount);
 
                         result = distinctErrorCount;
                     }
