@@ -27,7 +27,7 @@ namespace Adaptive.Aeron.Samples.Ping
         private static CountdownEvent LATCH = new CountdownEvent(1);
         private static IIdleStrategy POLLING_IDLE_STRATEGY = new BusySpinIdleStrategy();
 
-        public static void Main(String[] args)
+        public static void Main(string[] args)
         {
             if (args == null) throw new ArgumentNullException(nameof(args));
             var ctx = new Aeron.Context().AvailableImageHandler(availablePongImageHandler);
@@ -98,7 +98,7 @@ namespace Adaptive.Aeron.Samples.Ping
         private static void availablePongImageHandler(Image image)
         {
             var subscription = image.Subscription();
-            Console.WriteLine("Available image: channel={0} streamId={1} session={2}", subscription.Channel(), subscription.StreamId(), image.SessionId());
+            Console.WriteLine($"Available image: channel={subscription.Channel()} streamId={subscription.StreamId()} session={image.SessionId()}");
 
             if (PONG_STREAM_ID == subscription.StreamId() && PONG_CHANNEL.Equals(subscription.Channel()))
             {
