@@ -32,10 +32,14 @@ namespace Adaptive.Aeron
         public void Remove(Subscription subscription)
         {
             int streamId = subscription.StreamId();
-            var subscriptions = _subscriptionsByStreamIdMap[streamId];
-            if (subscriptions.Remove(subscription) && subscriptions.Count == 0)
+
+            List<Subscription> subscriptions;
+            if (_subscriptionsByStreamIdMap.TryGetValue(streamId, out subscriptions))
             {
-                _subscriptionsByStreamIdMap.Remove(streamId);
+                if (subscriptions.Remove(subscription) && subscriptions.Count == 0)
+                {
+                    _subscriptionsByStreamIdMap.Remove(streamId);
+                }
             }
         }
 
