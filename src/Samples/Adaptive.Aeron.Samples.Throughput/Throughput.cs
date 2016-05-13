@@ -9,8 +9,8 @@ namespace Adaptive.Aeron.Samples.Throughput
     {
         private static readonly string CHANNEL = SampleConfiguration.CHANNEL;
         private static readonly int STREAM_ID = SampleConfiguration.STREAM_ID;
-        private static readonly int MESSAGE_LENGTH = 32;
-        private static readonly long NUMBER_OF_MESSAGES = 100000000;
+        private static readonly int MESSAGE_LENGTH = SampleConfiguration.MESSAGE_LENGTH;
+        private static readonly long NUMBER_OF_MESSAGES = SampleConfiguration.NUMBER_OF_MESSAGES;
         private static readonly long LINGER_TIMEOUT_MS = SampleConfiguration.LINGER_TIMEOUT_MS;
         private static readonly int FRAGMENT_COUNT_LIMIT = SampleConfiguration.FRAGMENT_COUNT_LIMIT;
 
@@ -39,7 +39,7 @@ namespace Adaptive.Aeron.Samples.Throughput
 
                 do
                 {
-                    Console.WriteLine("%nStreaming {0:G} messages of size {1:G} bytes to {2} on stream Id {3}", NUMBER_OF_MESSAGES, MESSAGE_LENGTH, CHANNEL, STREAM_ID);
+                    Console.WriteLine("Streaming {0:G} messages of size {1:G} bytes to {2} on stream Id {3}", NUMBER_OF_MESSAGES, MESSAGE_LENGTH, CHANNEL, STREAM_ID);
 
                     PrintingActive = true;
 
@@ -56,7 +56,7 @@ namespace Adaptive.Aeron.Samples.Throughput
                         }
                     }
 
-                    Console.WriteLine("Done streaming. backPressureRatio=" + ((double) backPressureCount/NUMBER_OF_MESSAGES));
+                    Console.WriteLine("Done streaming. backPressureRatio=" + (double) backPressureCount/NUMBER_OF_MESSAGES);
 
                     if (0 < LINGER_TIMEOUT_MS)
                     {

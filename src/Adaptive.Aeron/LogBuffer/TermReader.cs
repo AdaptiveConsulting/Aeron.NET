@@ -70,7 +70,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// <returns> a long with both ints packed into it. </returns>
         public static long Pack(int offset, int fragmentsRead)
         {
-            return ((long)offset << 32) | fragmentsRead;
+            return ((long)offset << 32) | (uint)fragmentsRead;
         }
 
         /// <summary>

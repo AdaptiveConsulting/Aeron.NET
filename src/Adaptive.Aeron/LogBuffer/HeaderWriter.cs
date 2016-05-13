@@ -38,8 +38,8 @@ namespace Adaptive.Aeron.LogBuffer
         public virtual void Write(UnsafeBuffer termBuffer, int offset, int length, int termId)
         {
             var lengthVersionFlagsType = _versionFlagsType | (-length & 0xFFFFFFFFL);
-            var termOffsetSessionId = _sessionId | offset;
-            var streamAndTermIds = _streamId | (((long)termId) << 32);
+            var termOffsetSessionId = _sessionId | (uint)offset;
+            var streamAndTermIds = _streamId | ((long)termId << 32);
 
             //TODO why not just putlongvolatile?
             termBuffer.PutLongOrdered(offset + HeaderFlyweight.FRAME_LENGTH_FIELD_OFFSET, lengthVersionFlagsType);

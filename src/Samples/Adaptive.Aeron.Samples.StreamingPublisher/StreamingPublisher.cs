@@ -49,7 +49,7 @@ namespace Adaptive.Aeron.Samples.StreamingPublisher
                 {
                     _printingActive = true;
 
-                    Console.Write("\nStreaming {0} messages of {1} size {2} bytes to {3} on stream Id {4}\n", NUMBER_OF_MESSAGES, (RANDOM_MESSAGE_LENGTH) ? " random" : "", MESSAGE_LENGTH, CHANNEL, STREAM_ID);
+                    Console.WriteLine("Streaming {0} messages of {1} size {2} bytes to {3} on stream Id {4}", NUMBER_OF_MESSAGES, RANDOM_MESSAGE_LENGTH ? " random" : "", MESSAGE_LENGTH, CHANNEL, STREAM_ID);
 
                     long backPressureCount = 0;
 
@@ -71,7 +71,7 @@ namespace Adaptive.Aeron.Samples.StreamingPublisher
                         reporter.OnMessage(1, length);
                     }
 
-                    Console.WriteLine("Done streaming. Back pressure ratio " + ((double) backPressureCount/NUMBER_OF_MESSAGES));
+                    Console.WriteLine("Done streaming. Back pressure ratio " + (double) backPressureCount/NUMBER_OF_MESSAGES);
 
                     if (0 < LINGER_TIMEOUT_MS)
                     {
@@ -93,7 +93,7 @@ namespace Adaptive.Aeron.Samples.StreamingPublisher
         {
             if (_printingActive)
             {
-                Console.Write($"{messagesPerSec:g02} msgs/sec, {bytesPerSec:g02} bytes/sec, totals {totalFragments:D} messages {totalBytes/(1024*1024):D} MB, GC0 {GC.CollectionCount(0)}, GC1 {GC.CollectionCount(1)}, GC2 {GC.CollectionCount(2)}\n");
+                Console.WriteLine($"{messagesPerSec:g02} msgs/sec, {bytesPerSec:g02} bytes/sec, totals {totalFragments:D} messages {totalBytes/(1024*1024):D} MB, GC0 {GC.CollectionCount(0)}, GC1 {GC.CollectionCount(1)}, GC2 {GC.CollectionCount(2)}");
             }
         }
     }

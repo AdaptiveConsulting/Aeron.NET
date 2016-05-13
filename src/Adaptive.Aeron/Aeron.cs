@@ -31,10 +31,14 @@ namespace Adaptive.Aeron
         public static readonly ErrorHandler DEFAULT_ERROR_HANDLER = (throwable) =>
         {
             Console.WriteLine(throwable);
-            
+
             if (throwable is DriverTimeoutException)
             {
-                Console.WriteLine("\n***\n*** Timeout from the Media Driver - is it currently running? Exiting.\n***\n");
+                Console.WriteLine("***");
+                Console.WriteLine("***");
+                Console.WriteLine("Timeout from the Media Driver - is it currently running? Exiting.");
+                Console.WriteLine("***");
+                Console.WriteLine("***");
                 Environment.Exit(-1);
             }
         };
@@ -118,8 +122,10 @@ namespace Adaptive.Aeron
 
         private Aeron Start()
         {
-            var thread = new Thread(_conductorRunner.Run);
-            thread.Name = "aeron-client-conductor";
+            var thread = new Thread(_conductorRunner.Run)
+            {
+                Name = "aeron-client-conductor"
+            };
             thread.Start();
 
             return this;
@@ -158,7 +164,8 @@ namespace Adaptive.Aeron
             public new Context Conclude()
             {
                 base.Conclude();
-                
+                try
+                {
                     if (null == _epochClock)
                     {
                         _epochClock = new SystemEpochClock();
@@ -179,7 +186,7 @@ namespace Adaptive.Aeron
                         _cncByteBuffer = IoUtil.MapExistingFile(CncFile().FullName, CncFileDescriptor.CNC_FILE);
                         _cncMetaDataBuffer = CncFileDescriptor.CreateMetaDataBuffer(_cncByteBuffer);
 
-                        int cncVersion = _cncMetaDataBuffer.GetInt(CncFileDescriptor.CncVersionOffset(0));
+                        var cncVersion = _cncMetaDataBuffer.GetInt(CncFileDescriptor.CncVersionOffset(0));
 
                         if (CncFileDescriptor.CNC_VERSION != cncVersion)
                         {
@@ -190,7 +197,7 @@ namespace Adaptive.Aeron
 
                     if (null == _toClientBuffer)
                     {
-                        BroadcastReceiver receiver =
+                        var receiver =
                             new BroadcastReceiver(CncFileDescriptor.CreateToClientsBuffer(_cncByteBuffer,
                                 _cncMetaDataBuffer));
                         _toClientBuffer = new CopyBroadcastReceiver(receiver);
@@ -229,24 +236,25 @@ namespace Adaptive.Aeron
 
                     if (null == _availableImageHandler)
                     {
-                        _availableImageHandler = (image) =>
-                        {
-                        };
+                        _availableImageHandler = (image) => { };
                     }
 
                     if (null == _unavailableImageHandler)
                     {
-                        _unavailableImageHandler = (image) =>
-                        {
-                        };
+                        _unavailableImageHandler = (image) => { };
                     }
-                
-                //catch (Exception ex)
-                //{
-                //    Console.WriteLine("\n***\n*** Failed to connect to the Media Driver - is it currently running?\n***\n");
-                    
-                //    throw new InvalidOperationException("Could not initialise communication buffers", ex);
-                //}
+                }
+                catch (
+                    Exception ex)
+                {
+                    Console.WriteLine("***");
+                    Console.WriteLine("***");
+                    Console.WriteLine("Failed to connect to the Media Driver - is it currently running?");
+                    Console.WriteLine("***");
+                    Console.WriteLine("***");
+
+                    throw new InvalidOperationException("Could not initialise communication buffers", ex);
+                }
 
                 return this;
             }
