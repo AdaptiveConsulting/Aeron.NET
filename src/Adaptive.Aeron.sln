@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
-VisualStudioVersion = 14.0.24720.0
+VisualStudioVersion = 14.0.25123.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Adaptive.Aeron", "Adaptive.Aeron\Adaptive.Aeron.csproj", "{CE06A485-98F5-4FEF-A756-D0EF4DDA8309}"
 EndProject
@@ -41,6 +41,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Adaptive.Aeron.Samples.RateSubscriber", "Samples\Adaptive.Aeron.Samples.RateSubscriber\Adaptive.Aeron.Samples.RateSubscriber.csproj", "{C1EF6CC8-D2DF-4A96-9CD6-7AFF1DCE753B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Adaptive.Aeron.Samples.Throughput", "Samples\Adaptive.Aeron.Samples.Throughput\Adaptive.Aeron.Samples.Throughput.csproj", "{A341691D-F451-46B8-9A2A-4A3411EDD999}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -162,6 +164,14 @@ Global
 		{C1EF6CC8-D2DF-4A96-9CD6-7AFF1DCE753B}.Release|Any CPU.Build.0 = Release|Any CPU
 		{C1EF6CC8-D2DF-4A96-9CD6-7AFF1DCE753B}.Release|x64.ActiveCfg = Release|x64
 		{C1EF6CC8-D2DF-4A96-9CD6-7AFF1DCE753B}.Release|x64.Build.0 = Release|x64
+		{A341691D-F451-46B8-9A2A-4A3411EDD999}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A341691D-F451-46B8-9A2A-4A3411EDD999}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A341691D-F451-46B8-9A2A-4A3411EDD999}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{A341691D-F451-46B8-9A2A-4A3411EDD999}.Debug|x64.Build.0 = Debug|Any CPU
+		{A341691D-F451-46B8-9A2A-4A3411EDD999}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A341691D-F451-46B8-9A2A-4A3411EDD999}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A341691D-F451-46B8-9A2A-4A3411EDD999}.Release|x64.ActiveCfg = Release|x64
+		{A341691D-F451-46B8-9A2A-4A3411EDD999}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -181,5 +191,6 @@ Global
 		{CFADFB8A-B997-417D-8892-5FBD91DB8D88} = {05C2D2D4-06B2-4A7F-A30A-19B5B2F7C631}
 		{02BC7AAB-BA72-4791-B1B2-148F83424410} = {05C2D2D4-06B2-4A7F-A30A-19B5B2F7C631}
 		{C1EF6CC8-D2DF-4A96-9CD6-7AFF1DCE753B} = {05C2D2D4-06B2-4A7F-A30A-19B5B2F7C631}
+		{A341691D-F451-46B8-9A2A-4A3411EDD999} = {05C2D2D4-06B2-4A7F-A30A-19B5B2F7C631}
 	EndGlobalSection
 EndGlobal
