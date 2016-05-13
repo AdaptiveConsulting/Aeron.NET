@@ -3,7 +3,6 @@ using System.Threading;
 using Adaptive.Aeron.Samples.Common;
 using Adaptive.Agrona;
 using Adaptive.Agrona.Concurrent;
-using Adaptive.Agrona.Util;
 
 namespace Adaptive.Aeron.Samples.StreamingPublisher
 {
@@ -19,11 +18,11 @@ namespace Adaptive.Aeron.Samples.StreamingPublisher
         private static readonly long LINGER_TIMEOUT_MS = SampleConfiguration.LINGER_TIMEOUT_MS;
         private static readonly bool RANDOM_MESSAGE_LENGTH = false;
         private static readonly UnsafeBuffer ATOMIC_BUFFER = new UnsafeBuffer(new byte[MESSAGE_LENGTH]);
-        private static readonly BusySpinIdleStrategy OFFER_IDLE_STRATEGY = new BusySpinIdleStrategy();
+        private static readonly IIdleStrategy OFFER_IDLE_STRATEGY = new BusySpinIdleStrategy();
         private static readonly IntSupplier LENGTH_GENERATOR = new IntSupplier(RANDOM_MESSAGE_LENGTH, MESSAGE_LENGTH);
         private static Thread _reporterThread;
 
-        private static volatile bool PrintingActive = true;
+        private static volatile bool _printingActive = true;
 
         public static void Main(string[] args)
         {
@@ -32,8 +31,10 @@ namespace Adaptive.Aeron.Samples.StreamingPublisher
                 throw new ArgumentException($"Message length must be at least {BitUtil.SIZE_OF_LONG:D} bytes");
             }
             
+            ComputerSpecifications.Dump();
+
             var context = new Aeron.Context();
-            var reporter = new RateReporter((int) NanoUtil.FromSeconds(1), PrintRate);
+            var reporter = new RateReporter(1000, PrintRate);
 
             _reporterThread = new Thread(_ => reporter.Run());
             _reporterThread.Start();
@@ -46,7 +47,7 @@ namespace Adaptive.Aeron.Samples.StreamingPublisher
             {
                 do
                 {
-                    PrintingActive = true;
+                    _printingActive = true;
 
                     Console.Write("\nStreaming {0} messages of {1} size {2} bytes to {3} on stream Id {4}\n", NUMBER_OF_MESSAGES, (RANDOM_MESSAGE_LENGTH) ? " random" : "", MESSAGE_LENGTH, CHANNEL, STREAM_ID);
 
@@ -78,7 +79,7 @@ namespace Adaptive.Aeron.Samples.StreamingPublisher
                         Thread.Sleep((int) LINGER_TIMEOUT_MS);
                     }
 
-                    PrintingActive = false;
+                    _printingActive = false;
 
                     Console.WriteLine("Execute again?");
                 } while (Console.Read() == 'y');
@@ -90,39 +91,9 @@ namespace Adaptive.Aeron.Samples.StreamingPublisher
 
         public static void PrintRate(double messagesPerSec, double bytesPerSec, long totalFragments, long totalBytes)
         {
-            if (PrintingActive)
+            if (_printingActive)
             {
-                Console.Write("{0:g02} msgs/sec, {1:g02} bytes/sec, totals {2:D} messages {3:D} MB\n", messagesPerSec, bytesPerSec, totalFragments, totalBytes/(1024*1024));
-            }
-        }
-    }
-
-    internal class IntSupplier
-    {
-        private Random _random;
-        private readonly int _max;
-        private bool _isRandom;
-
-        public IntSupplier(bool random, int max)
-        {
-            _isRandom = random;
-            _max = max;
-            _random = new Random();
-        }
-
-        public int AsInt
-        {
-            get
-            {
-                if (_isRandom)
-                {
-                    lock (_random)
-                    {
-                        return _random.Next(BitUtil.SIZE_OF_LONG, _max);
-                    }
-                }
-
-                return _max;
+                Console.Write($"{messagesPerSec:g02} msgs/sec, {bytesPerSec:g02} bytes/sec, totals {totalFragments:D} messages {totalBytes/(1024*1024):D} MB, GC0 {GC.CollectionCount(0)}, GC1 {GC.CollectionCount(1)}, GC2 {GC.CollectionCount(2)}\n");
             }
         }
     }

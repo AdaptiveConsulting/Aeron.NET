@@ -19,7 +19,7 @@ namespace Adaptive.Agrona.Concurrent
                 return;
             }
 
-            Idle();
+            Thread.SpinWait(1);
         }
 
         public void Idle()

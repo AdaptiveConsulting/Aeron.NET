@@ -15,15 +15,15 @@ namespace Adaptive.Aeron.Samples.Common
         /// </summary>
         public delegate void Reporter(double messagesPerSec, double bytesPerSec, long totalMessages, long totalBytes);
 
-        private readonly int ReportIntervalMS;
-        private readonly Reporter ReportingFunc;
+        private readonly int _reportIntervalMs;
+        private readonly Reporter _reportingFunc;
 
-        private volatile bool Halt_Renamed = false;
-        private long TotalBytes;
-        private long TotalMessages;
-        private long LastTotalBytes;
+        private volatile bool _halt;
+        private long _totalBytes;
+        private long _totalMessages;
+        private long _lastTotalBytes;
         private readonly Stopwatch _stopwatch;
-        private long LastTotalMessages;
+        private long _lastTotalMessages;
 
 
         /// <summary>
@@ -33,39 +33,40 @@ namespace Adaptive.Aeron.Samples.Common
         /// <param name="reportingFunc"> to call for reporting rates </param>
         public RateReporter(int reportInterval, Reporter reportingFunc)
         {
-            ReportIntervalMS = reportInterval;
-            ReportingFunc = reportingFunc;
+            _reportIntervalMs = reportInterval;
+            _reportingFunc = reportingFunc;
             _stopwatch = Stopwatch.StartNew();
         }
 
         /// <summary>
         /// Run loop for the rate reporter
         /// </summary>
-        public virtual void Run()
+        public void Run()
         {
             do
             {
-                Thread.Sleep(ReportIntervalMS); // == Park?
+                Thread.Sleep(_reportIntervalMs); // == Park?
 
-                var currentTotalMessages = TotalMessages;
-                var currentTotalBytes = TotalBytes;
-                var timeSpanNs = _stopwatch.ElapsedMilliseconds;
-                var messagesPerSec = (currentTotalMessages - LastTotalMessages)*ReportIntervalMS/(double) timeSpanNs;
-                var bytesPerSec = (currentTotalBytes - LastTotalBytes)*ReportIntervalMS/(double) timeSpanNs;
+                var currentTotalMessages = _totalMessages;
+                var currentTotalBytes = _totalBytes;
+                var timespanMs = _stopwatch.ElapsedMilliseconds;
+                var messagesPerSec = (currentTotalMessages - _lastTotalMessages)*_reportIntervalMs/(double) timespanMs;
+                var bytesPerSec = (currentTotalBytes - _lastTotalBytes)*_reportIntervalMs/(double) timespanMs;
 
-                ReportingFunc(messagesPerSec, bytesPerSec, currentTotalMessages, currentTotalBytes);
+                _reportingFunc(messagesPerSec, bytesPerSec, currentTotalMessages, currentTotalBytes);
 
-                LastTotalBytes = currentTotalBytes;
-                LastTotalMessages = currentTotalMessages;
-            } while (!Halt_Renamed);
+                _lastTotalBytes = currentTotalBytes;
+                _lastTotalMessages = currentTotalMessages;
+                _stopwatch.Restart();
+            } while (!_halt);
         }
 
         /// <summary>
         /// Signal the run loop to exit. Does not block.
         /// </summary>
-        public virtual void Halt()
+        public void Halt()
         {
-            Halt_Renamed = true;
+            _halt = true;
         }
 
         /// <summary>
@@ -73,10 +74,10 @@ namespace Adaptive.Aeron.Samples.Common
         /// </summary>
         /// <param name="messages"> received, sent, etc. </param>
         /// <param name="bytes"> received, sent, etc. </param>
-        public virtual void OnMessage(long messages, long bytes)
+        public void OnMessage(long messages, long bytes)
         {
-            TotalBytes += bytes;
-            TotalMessages += messages;
+            _totalBytes += bytes;
+            _totalMessages += messages;
         }
     }
 }
