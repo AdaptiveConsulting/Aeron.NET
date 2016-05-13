@@ -67,9 +67,6 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="App.config" />
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\..\Adaptive.Aeron\Adaptive.Aeron.csproj">
       <Project>{ce06a485-98f5-4fef-a756-d0ef4dda8309}</Project>
       <Name>Adaptive.Aeron</Name>

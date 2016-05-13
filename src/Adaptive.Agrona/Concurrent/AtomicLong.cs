@@ -29,5 +29,10 @@ namespace Adaptive.Agrona.Concurrent
         {
             Volatile.Write(ref _long, value);
         }
+
+        public void Add(long add)
+        {
+            Interlocked.Add(ref _long, add);
+        }
     }
 }
