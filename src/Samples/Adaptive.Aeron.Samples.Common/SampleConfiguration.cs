@@ -12,7 +12,7 @@ namespace Adaptive.Aeron.Samples.Common
         public static readonly int PING_STREAM_ID = 10;
         public static readonly int PONG_STREAM_ID = 10;
         public static readonly int FRAGMENT_COUNT_LIMIT = 256;
-        public static readonly int MESSAGE_LENGTH = 256;
+        public static readonly int MESSAGE_LENGTH = 32;
         public static readonly int NUMBER_OF_MESSAGES = 1000000;
         public static readonly int WARMUP_NUMBER_OF_MESSAGES = 10000;
         public static readonly int WARMUP_NUMBER_OF_ITERATIONS = 5;
