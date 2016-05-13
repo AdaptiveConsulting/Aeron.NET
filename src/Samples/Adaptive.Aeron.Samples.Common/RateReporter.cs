@@ -29,11 +29,11 @@ namespace Adaptive.Aeron.Samples.Common
         /// <summary>
         /// Create a rate reporter with the given report interval in nanoseconds and the reporting function.
         /// </summary>
-        /// <param name="reportInterval"> in nanoseconds </param>
+        /// <param name="reportIntervalMs"> in nanoseconds </param>
         /// <param name="reportingFunc"> to call for reporting rates </param>
-        public RateReporter(int reportInterval, Reporter reportingFunc)
+        public RateReporter(int reportIntervalMs, Reporter reportingFunc)
         {
-            _reportIntervalMs = reportInterval;
+            _reportIntervalMs = reportIntervalMs;
             _reportingFunc = reportingFunc;
             _stopwatch = Stopwatch.StartNew();
         }
