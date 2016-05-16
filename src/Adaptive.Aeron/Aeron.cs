@@ -29,7 +29,7 @@ namespace Adaptive.Aeron
         /// </para>
         /// </summary>
         /// <seealso cref="Context.ErrorHandler(ErrorHandler)" />
-        public static readonly ErrorHandler DefaultErrorHandler = (throwable) =>
+        public static readonly ErrorHandler DEFAULT_ERROR_HANDLER = (throwable) =>
         {
             Console.WriteLine(throwable);
 
@@ -44,10 +44,10 @@ namespace Adaptive.Aeron
             }
         };
 
-        private const int IDLE_SLEEP_MS = 4;
-        private static readonly long KEEPALIVE_INTERVAL_NS = NanoUtil.FromMilliseconds(500);
-        private static readonly long INTER_SERVICE_TIMEOUT_NS = NanoUtil.FromSeconds(10);
-        private const long PUBLICATION_CONNECTION_TIMEOUT_MS = 5000;
+        private const int IdleSleepMs = 4;
+        private static readonly long KeepaliveIntervalNs = NanoUtil.FromMilliseconds(500);
+        private static readonly long InterServiceTimeoutNs = NanoUtil.FromSeconds(10);
+        private const long PublicationConnectionTimeoutMs = 5000;
 
         private readonly ClientConductor _conductor;
         private readonly AgentRunner _conductorRunner;
@@ -149,9 +149,9 @@ namespace Adaptive.Aeron
             private ErrorHandler _errorHandler;
             private AvailableImageHandler _availableImageHandler;
             private UnavailableImageHandler _unavailableImageHandler;
-            private long _keepAliveInterval = KEEPALIVE_INTERVAL_NS;
-            private long _interServiceTimeout = INTER_SERVICE_TIMEOUT_NS;
-            private long _publicationConnectionTimeout = PUBLICATION_CONNECTION_TIMEOUT_MS;
+            private long _keepAliveInterval = KeepaliveIntervalNs;
+            private long _interServiceTimeout = InterServiceTimeoutNs;
+            private long _publicationConnectionTimeout = PublicationConnectionTimeoutMs;
             private FileInfo _cncFile;
             private string _aeronDirectoryName;
             private long _driverTimeoutMs = DEFAULT_DRIVER_TIMEOUT_MS;
@@ -207,7 +207,7 @@ namespace Adaptive.Aeron
 
                     if (null == _idleStrategy)
                     {
-                        _idleStrategy = new SleepingIdleStrategy(IDLE_SLEEP_MS);
+                        _idleStrategy = new SleepingIdleStrategy(IdleSleepMs);
                     }
 
                     if (CncFile() != null)
@@ -260,7 +260,7 @@ namespace Adaptive.Aeron
 
                     if (null == _errorHandler)
                     {
-                        _errorHandler = DefaultErrorHandler;
+                        _errorHandler = DEFAULT_ERROR_HANDLER;
                     }
 
                     if (null == _availableImageHandler)
@@ -366,7 +366,7 @@ namespace Adaptive.Aeron
 
             /// <summary>
             /// Handle Aeron exceptions in a callback method. The default behavior is defined by
-            /// <seealso cref="DefaultErrorHandler"/>.
+            /// <seealso cref="Aeron.DEFAULT_ERROR_HANDLER"/>.
             /// </summary>
             /// <param name="errorHandler"> Method to handle objects of type Throwable. </param>
             /// <returns> this Aeron.Context for method chaining. </returns>
