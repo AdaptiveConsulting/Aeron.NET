@@ -15,7 +15,7 @@ namespace Adaptive.Aeron.Tests.LogBuffer
         private const int INITIAL_TERM_ID = 7;
 
         private Header header;
-        private UnsafeBuffer termBuffer;
+        private IAtomicBuffer termBuffer;
         private ErrorHandler errorHandler;
         private FragmentHandler handler;
 
@@ -23,7 +23,7 @@ namespace Adaptive.Aeron.Tests.LogBuffer
         public void SetUp()
         {
             header = new Header(INITIAL_TERM_ID, TERM_BUFFER_CAPACITY);
-            termBuffer = A.Fake<UnsafeBuffer>();
+            termBuffer = A.Fake<IAtomicBuffer>();
             errorHandler = A.Fake<ErrorHandler>();
             handler = A.Fake<FragmentHandler>();
 
