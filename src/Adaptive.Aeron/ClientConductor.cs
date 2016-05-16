@@ -139,14 +139,14 @@ namespace Adaptive.Aeron
             {
                 VerifyDriverIsActive();
 
-                if (publication == _activePublications.Remove(publication.Channel(), publication.StreamId()))
+                if (publication == _activePublications.Remove(publication.Channel, publication.StreamId))
                 {
                     var correlationId = _driverProxy.RemovePublication(publication.RegistrationId());
 
                     var timeout = _nanoClock.NanoTime() + _driverTimeoutNs;
 
                     LingerResource(publication.ManagedResource());
-                    DoWorkUntil(correlationId, timeout, publication.Channel());
+                    DoWorkUntil(correlationId, timeout, publication.Channel);
                 }
             }
         }

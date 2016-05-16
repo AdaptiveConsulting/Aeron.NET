@@ -86,7 +86,7 @@ namespace Adaptive.Aeron.Samples.IpcThroughput
             public void Run()
             {
                 var publication = Publication;
-                var buffer = new UnsafeBuffer(new byte[publication.MaxMessageLength()]);
+                var buffer = new UnsafeBuffer(new byte[publication.MaxMessageLength]);
                 long backPressureCount = 0;
                 long totalMessageCount = 0;
 

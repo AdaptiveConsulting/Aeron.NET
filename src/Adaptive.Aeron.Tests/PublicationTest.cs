@@ -8,140 +8,140 @@ namespace Adaptive.Aeron.Tests
 {
     public class PublicationTest
     {
-        private const string CHANNEL = "udp://localhost:40124";
-        private const int STREAM_ID_1 = 2;
-        private const int SESSION_ID_1 = 13;
-        private const int TERM_ID_1 = 1;
-        private const int CORRELATION_ID = 2000;
-        private const int SEND_BUFFER_CAPACITY = 1024;
+        private const string Channel = "udp://localhost:40124";
+        private const int StreamID1 = 2;
+        private const int SessionID1 = 13;
+        private const int TermID1 = 1;
+        private const int CorrelationID = 2000;
+        private const int SendBufferCapacity = 1024;
 
-        private byte[] SendBuffer;
-        private UnsafeBuffer AtomicSendBuffer;
-        private UnsafeBuffer LogMetaDataBuffer;
-        private UnsafeBuffer[] TermBuffers;
-        private UnsafeBuffer[] TermMetaDataBuffers;
-        private UnsafeBuffer[] Buffers;
+        private byte[] _sendBuffer;
+        private UnsafeBuffer _atomicSendBuffer;
+        private UnsafeBuffer _logMetaDataBuffer;
+        private UnsafeBuffer[] _termBuffers;
+        private UnsafeBuffer[] _termMetaDataBuffers;
+        private UnsafeBuffer[] _buffers;
 
-        private ClientConductor Conductor;
-        private LogBuffers LogBuffers;
-        private IReadablePosition PublicationLimit;
-        private Publication Publication;
+        private ClientConductor _conductor;
+        private LogBuffers _logBuffers;
+        private IReadablePosition _publicationLimit;
+        private Publication _publication;
 
         [SetUp]
-        public virtual void SetUp()
+        public void SetUp()
         {
-            SendBuffer = new byte[SEND_BUFFER_CAPACITY];
-            AtomicSendBuffer = new UnsafeBuffer(SendBuffer);
-            LogMetaDataBuffer = new UnsafeBuffer(new byte[LogBufferDescriptor.LOG_META_DATA_LENGTH]);
-            TermBuffers = new UnsafeBuffer[LogBufferDescriptor.PARTITION_COUNT];
-            TermMetaDataBuffers = new UnsafeBuffer[LogBufferDescriptor.PARTITION_COUNT];
-            Buffers = new UnsafeBuffer[LogBufferDescriptor.PARTITION_COUNT*2 + 1];
+            _sendBuffer = new byte[SendBufferCapacity];
+            _atomicSendBuffer = new UnsafeBuffer(_sendBuffer);
+            _logMetaDataBuffer = new UnsafeBuffer(new byte[LogBufferDescriptor.LOG_META_DATA_LENGTH]);
+            _termBuffers = new UnsafeBuffer[LogBufferDescriptor.PARTITION_COUNT];
+            _termMetaDataBuffers = new UnsafeBuffer[LogBufferDescriptor.PARTITION_COUNT];
+            _buffers = new UnsafeBuffer[LogBufferDescriptor.PARTITION_COUNT*2 + 1];
 
-            Conductor = A.Fake<ClientConductor>();
-            LogBuffers = A.Fake<LogBuffers>();
-            PublicationLimit = A.Fake<IReadablePosition>();
+            _conductor = A.Fake<ClientConductor>();
+            _logBuffers = A.Fake<LogBuffers>();
+            _publicationLimit = A.Fake<IReadablePosition>();
 
-            A.CallTo(() => PublicationLimit.Volatile).Returns(2*SEND_BUFFER_CAPACITY);
-            A.CallTo(() => LogBuffers.AtomicBuffers()).Returns(Buffers);
-            A.CallTo(() => LogBuffers.TermLength()).Returns(LogBufferDescriptor.TERM_MIN_LENGTH);
-            
-            LogBufferDescriptor.InitialTermId(LogMetaDataBuffer, TERM_ID_1);
-            LogBufferDescriptor.TimeOfLastStatusMessage(LogMetaDataBuffer, 0);
+            A.CallTo(() => _publicationLimit.Volatile).Returns(2*SendBufferCapacity);
+            A.CallTo(() => _logBuffers.AtomicBuffers()).Returns(_buffers);
+            A.CallTo(() => _logBuffers.TermLength()).Returns(LogBufferDescriptor.TERM_MIN_LENGTH);
+
+            LogBufferDescriptor.InitialTermId(_logMetaDataBuffer, TermID1);
+            LogBufferDescriptor.TimeOfLastStatusMessage(_logMetaDataBuffer, 0);
 
             for (var i = 0; i < LogBufferDescriptor.PARTITION_COUNT; i++)
             {
-                TermBuffers[i] = new UnsafeBuffer(new byte[LogBufferDescriptor.TERM_MIN_LENGTH]);
-                TermMetaDataBuffers[i] = new UnsafeBuffer(new byte[LogBufferDescriptor.TERM_META_DATA_LENGTH]);
+                _termBuffers[i] = new UnsafeBuffer(new byte[LogBufferDescriptor.TERM_MIN_LENGTH]);
+                _termMetaDataBuffers[i] = new UnsafeBuffer(new byte[LogBufferDescriptor.TERM_META_DATA_LENGTH]);
 
-                Buffers[i] = TermBuffers[i];
-                Buffers[i + LogBufferDescriptor.PARTITION_COUNT] = TermMetaDataBuffers[i];
+                _buffers[i] = _termBuffers[i];
+                _buffers[i + LogBufferDescriptor.PARTITION_COUNT] = _termMetaDataBuffers[i];
             }
-            Buffers[LogBufferDescriptor.LOG_META_DATA_SECTION_INDEX] = LogMetaDataBuffer;
+            _buffers[LogBufferDescriptor.LOG_META_DATA_SECTION_INDEX] = _logMetaDataBuffer;
 
-            Publication = new Publication(Conductor, CHANNEL, STREAM_ID_1, SESSION_ID_1, PublicationLimit, LogBuffers, CORRELATION_ID);
+            _publication = new Publication(_conductor, Channel, StreamID1, SessionID1, _publicationLimit, _logBuffers, CorrelationID);
 
-            Publication.IncRef();
+            _publication.IncRef();
 
-            LogBufferDescriptor.InitialiseTailWithTermId(TermMetaDataBuffers[0], TERM_ID_1);
+            LogBufferDescriptor.InitialiseTailWithTermId(_termMetaDataBuffers[0], TermID1);
         }
 
         [Test]
-        public virtual void ShouldEnsureThePublicationIsOpenBeforeReadingPosition()
+        public void ShouldEnsureThePublicationIsOpenBeforeReadingPosition()
         {
-            Publication.Dispose();
-            Assert.AreEqual(Publication.Position(), (Publication.CLOSED));
+            _publication.Dispose();
+            Assert.AreEqual(_publication.Position, Publication.CLOSED);
         }
 
         [Test]
-        public virtual void ShouldEnsureThePublicationIsOpenBeforeOffer()
+        public void ShouldEnsureThePublicationIsOpenBeforeOffer()
         {
-            Publication.Dispose();
-            Assert.True(Publication.Closed);
-            Assert.AreEqual(Publication.Offer(AtomicSendBuffer), Publication.CLOSED);
+            _publication.Dispose();
+            Assert.True(_publication.Closed);
+            Assert.AreEqual(_publication.Offer(_atomicSendBuffer), Publication.CLOSED);
         }
 
         [Test]
-        public virtual void ShouldEnsureThePublicationIsOpenBeforeClaim()
+        public void ShouldEnsureThePublicationIsOpenBeforeClaim()
         {
-            Publication.Dispose();
+            _publication.Dispose();
             var bufferClaim = new BufferClaim();
-            Assert.AreEqual(Publication.TryClaim(SEND_BUFFER_CAPACITY, bufferClaim), Publication.CLOSED);
+            Assert.AreEqual(_publication.TryClaim(SendBufferCapacity, bufferClaim), Publication.CLOSED);
         }
 
         [Test]
-        public virtual void ShouldReportThatPublicationHasNotBeenConnectedYet()
+        public void ShouldReportThatPublicationHasNotBeenConnectedYet()
         {
-            A.CallTo(() => PublicationLimit.Volatile).Returns(0);
-            A.CallTo(() => Conductor.IsPublicationConnected(A<long>._)).Returns(false);
-            
-            Assert.False(Publication.Connected);
+            A.CallTo(() => _publicationLimit.Volatile).Returns(0);
+            A.CallTo(() => _conductor.IsPublicationConnected(A<long>._)).Returns(false);
+
+            Assert.False(_publication.Connected);
         }
 
         [Test]
-        public virtual void ShouldReportThatPublicationHasBeenConnectedYet()
+        public void ShouldReportThatPublicationHasBeenConnectedYet()
         {
-            A.CallTo(() => Conductor.IsPublicationConnected(A<long>._)).Returns(true);
-            Assert.True(Publication.Connected);
+            A.CallTo(() => _conductor.IsPublicationConnected(A<long>._)).Returns(true);
+            Assert.True(_publication.Connected);
         }
 
         [Test]
-        public virtual void ShouldReportInitialPosition()
+        public void ShouldReportInitialPosition()
         {
-            Assert.AreEqual(Publication.Position(), 0L);
+            Assert.AreEqual(_publication.Position, 0L);
         }
 
         [Test]
-        public virtual void ShouldReportMaxMessageLength()
+        public void ShouldReportMaxMessageLength()
         {
-            Assert.AreEqual(Publication.MaxMessageLength(), FrameDescriptor.ComputeMaxMessageLength(LogBufferDescriptor.TERM_MIN_LENGTH));
+            Assert.AreEqual(_publication.MaxMessageLength, FrameDescriptor.ComputeMaxMessageLength(LogBufferDescriptor.TERM_MIN_LENGTH));
         }
 
         [Test]
-        public virtual void ShouldNotUnmapBuffersBeforeLastRelease()
+        public void ShouldNotUnmapBuffersBeforeLastRelease()
         {
-            Publication.IncRef();
-            Publication.Dispose();
+            _publication.IncRef();
+            _publication.Dispose();
 
-            A.CallTo(()=>LogBuffers.Dispose()).MustNotHaveHappened();
+            A.CallTo(() => _logBuffers.Dispose()).MustNotHaveHappened();
         }
 
         [Test]
-        public virtual void ShouldUnmapBuffersWithMultipleReferences()
+        public void ShouldUnmapBuffersWithMultipleReferences()
         {
-            Publication.IncRef();
-            Publication.Dispose();
+            _publication.IncRef();
+            _publication.Dispose();
 
-            Publication.Dispose();
-            A.CallTo(() => Conductor.ReleasePublication(Publication)).MustHaveHappened(Repeated.Exactly.Once);
+            _publication.Dispose();
+            A.CallTo(() => _conductor.ReleasePublication(_publication)).MustHaveHappened(Repeated.Exactly.Once);
         }
 
         [Test]
-        public virtual void ShouldReleaseResourcesIdempotently()
+        public void ShouldReleaseResourcesIdempotently()
         {
-            Publication.Dispose();
-            Publication.Dispose();
+            _publication.Dispose();
+            _publication.Dispose();
 
-            A.CallTo(() => Conductor.ReleasePublication(Publication)).MustHaveHappened(Repeated.Exactly.Once);
+            A.CallTo(() => _conductor.ReleasePublication(_publication)).MustHaveHappened(Repeated.Exactly.Once);
         }
     }
 }
