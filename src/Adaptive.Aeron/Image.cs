@@ -128,7 +128,7 @@ namespace Adaptive.Aeron
 
         /// <summary>
         /// Poll for new messages in a stream. If new messages are found beyond the last consumed position then they
-        /// will be delivered to the <seealso cref="IFragmentHandler"/> up to a limited number of fragments as specified.
+        /// will be delivered to the <seealso cref="FragmentHandler"/> up to a limited number of fragments as specified.
         /// 
         /// To assemble messages that span multiple fragments then use <seealso cref="FragmentAssembler"/>.
         /// </summary>
@@ -136,7 +136,7 @@ namespace Adaptive.Aeron
         /// <param name="fragmentLimit">   for the number of fragments to be consumed during one polling operation. </param>
         /// <returns> the number of fragments that have been consumed. </returns>
         /// <seealso cref="FragmentAssembler" />
-        public virtual int Poll(IFragmentHandler fragmentHandler, int fragmentLimit)
+        public virtual int Poll(FragmentHandler fragmentHandler, int fragmentLimit)
         {
             if (_isClosed)
             {

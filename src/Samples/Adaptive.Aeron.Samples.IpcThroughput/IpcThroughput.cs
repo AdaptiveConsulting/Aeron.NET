@@ -112,7 +112,7 @@ namespace Adaptive.Aeron.Samples.IpcThroughput
             }
         }
 
-        public class Subscriber : IFragmentHandler
+        public class Subscriber
         {
             internal readonly AtomicBoolean Running;
             internal readonly Subscription Subscription;
@@ -145,7 +145,7 @@ namespace Adaptive.Aeron.Samples.IpcThroughput
 
                 while (Running.Get())
                 {
-                    var fragmentsRead = image.Poll(this, MESSAGE_COUNT_LIMIT);
+                    var fragmentsRead = image.Poll(OnFragment, MESSAGE_COUNT_LIMIT);
                     if (0 == fragmentsRead)
                     {
                         ++failedPolls;

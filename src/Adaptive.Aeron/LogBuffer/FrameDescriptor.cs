@@ -216,7 +216,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// <param name="buffer">      containing the frame. </param>
         /// <param name="termOffset">  at which a frame begins. </param>
         /// <param name="frameLength"> field to be set for the frame. </param>
-        public static void FrameLengthOrdered(UnsafeBuffer buffer, int termOffset, int frameLength)
+        public static void FrameLengthOrdered(IAtomicBuffer buffer, int termOffset, int frameLength)
         {
             //if (ByteOrder.NativeOrder() != LITTLE_ENDIAN)
             //{
@@ -232,7 +232,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// <param name="buffer">     containing the frame. </param>
         /// <param name="termOffset"> at which a frame begins. </param>
         /// <param name="type">       type value for the frame. </param>
-        public static void FrameType(UnsafeBuffer buffer, int termOffset, int type)
+        public static void FrameType(IAtomicBuffer buffer, int termOffset, int type)
         {
             buffer.PutShort(TypeOffset(termOffset), (short) type);
         }
@@ -243,7 +243,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// <param name="buffer">     containing the frame. </param>
         /// <param name="termOffset"> at which a frame begins. </param>
         /// <param name="flags">      value for the frame. </param>
-        public static void FrameFlags(UnsafeBuffer buffer, int termOffset, byte flags)
+        public static void FrameFlags(IAtomicBuffer buffer, int termOffset, byte flags)
         {
             buffer.PutByte(FlagsOffset(termOffset), flags);
         }

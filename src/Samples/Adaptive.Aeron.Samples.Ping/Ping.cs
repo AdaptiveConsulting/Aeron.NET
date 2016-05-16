@@ -31,7 +31,7 @@ namespace Adaptive.Aeron.Samples.Ping
         {
             if (args == null) throw new ArgumentNullException(nameof(args));
             var ctx = new Aeron.Context().AvailableImageHandler(availablePongImageHandler);
-            IFragmentHandler fragmentHandler = new FragmentAssembler(new DelegateFragmentHandler(pongHandler));
+            var fragmentAssembler = new FragmentAssembler(pongHandler);
             Console.WriteLine("Publishing Ping at " + PING_CHANNEL + " on stream Id " + PING_STREAM_ID);
             Console.WriteLine("Subscribing Pong at " + PONG_CHANNEL + " on stream Id " + PONG_STREAM_ID);
             Console.WriteLine("Message length of " + MESSAGE_LENGTH + " bytes");
@@ -47,7 +47,7 @@ namespace Adaptive.Aeron.Samples.Ping
 
                     for (var i = 0; i < WARMUP_NUMBER_OF_ITERATIONS; i++)
                     {
-                        RoundTripMessages(fragmentHandler, publication, subscription, WARMUP_NUMBER_OF_MESSAGES);
+                        RoundTripMessages(fragmentAssembler.OnFragment, publication, subscription, WARMUP_NUMBER_OF_MESSAGES);
                     }
 
                     Thread.Sleep(100);
@@ -57,7 +57,7 @@ namespace Adaptive.Aeron.Samples.Ping
                         HISTOGRAM.Reset();
                         Console.WriteLine("Pinging " + NUMBER_OF_MESSAGES + " messages");
 
-                        RoundTripMessages(fragmentHandler, publication, subscription, NUMBER_OF_MESSAGES);
+                        RoundTripMessages(fragmentAssembler.OnFragment, publication, subscription, NUMBER_OF_MESSAGES);
                         Console.WriteLine("Histogram of RTT latencies in microseconds.");
 
                         HISTOGRAM.OutputPercentileDistribution(Console.Out, outputValueUnitScalingRatio: 1000);
@@ -68,7 +68,7 @@ namespace Adaptive.Aeron.Samples.Ping
 
 
         private static void RoundTripMessages(
-            IFragmentHandler fragmentHandler, Publication publication, Subscription subscription, int count)
+            FragmentHandler fragmentHandler, Publication publication, Subscription subscription, int count)
         {
             for (var i = 0; i < count; i++)
             {

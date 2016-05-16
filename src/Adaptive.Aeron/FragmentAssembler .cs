@@ -6,7 +6,7 @@ using Adaptive.Agrona;
 namespace Adaptive.Aeron
 {
     /// <summary>
-    /// A <seealso cref="IFragmentHandler"/> that sits in a chain-of-responsibility pattern that reassembles fragmented messages
+    /// A <seealso cref="FragmentHandler"/> that sits in a chain-of-responsibility pattern that reassembles fragmented messages
     /// so that the next handler in the chain only sees whole messages.
     /// <para>
     /// Unfragmented messages are delegated without copy. Fragmented messages are copied to a temporary
@@ -21,9 +21,9 @@ namespace Adaptive.Aeron
     /// <seealso cref="FreeSessionBuffer(int)"/>.
     /// </para>
     /// </summary>
-    public class FragmentAssembler : IFragmentHandler
+    public class FragmentAssembler
     {
-        private readonly IFragmentHandler _delegate;
+        private readonly FragmentHandler _delegate;
         private readonly Dictionary<int, BufferBuilder> _builderBySessionIdMap = new Dictionary<int, BufferBuilder>();
         private readonly Func<int, BufferBuilder> _builderFunc;
 
@@ -31,7 +31,7 @@ namespace Adaptive.Aeron
         /// Construct an adapter to reassemble message fragments and _delegate on only whole messages.
         /// </summary>
         /// <param name="fragmentHandler"> onto which whole messages are forwarded. </param>
-        public FragmentAssembler(IFragmentHandler fragmentHandler) : this(fragmentHandler, BufferBuilder.INITIAL_CAPACITY)
+        public FragmentAssembler(FragmentHandler fragmentHandler) : this(fragmentHandler, BufferBuilder.INITIAL_CAPACITY)
         {
         }
 
@@ -40,10 +40,10 @@ namespace Adaptive.Aeron
         /// </summary>
         /// <param name="fragmentHandler">            onto which whole messages are forwarded. </param>
         /// <param name="initialBufferLength"> to be used for each session. </param>
-        public FragmentAssembler(IFragmentHandler fragmentHandler, int initialBufferLength)
+        public FragmentAssembler(FragmentHandler fragmentHandler, int initialBufferLength)
         {
             _delegate = fragmentHandler;
-            _builderFunc = (ignore) => new BufferBuilder(initialBufferLength);
+            _builderFunc = ignore => new BufferBuilder(initialBufferLength);
         }
 
         /// <summary>
@@ -59,7 +59,7 @@ namespace Adaptive.Aeron
 
             if ((flags & FrameDescriptor.UNFRAGMENTED) == FrameDescriptor.UNFRAGMENTED)
             {
-                _delegate.OnFragment(buffer, offset, length, header);
+                _delegate(buffer, offset, length, header);
             }
             else
             {
@@ -86,7 +86,7 @@ namespace Adaptive.Aeron
                         if ((flags & FrameDescriptor.END_FRAG_FLAG) == FrameDescriptor.END_FRAG_FLAG)
                         {
                             int msgLength = builder.Limit();
-                            _delegate.OnFragment(builder.Buffer(), 0, msgLength, header);
+                            _delegate(builder.Buffer(), 0, msgLength, header);
                             builder.Reset();
                         }
                     }

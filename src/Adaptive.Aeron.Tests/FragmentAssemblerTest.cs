@@ -12,7 +12,7 @@ namespace Adaptive.Aeron.Tests
         private const int SESSION_ID = 777;
         private const int INITIAL_TERM_ID = 3;
 
-        private IFragmentHandler delegateFragmentHandler;
+        private FragmentHandler delegateFragmentHandler;
         private IDirectBuffer termBuffer;
         private Header header;
         private FragmentAssembler adapter;
@@ -20,7 +20,7 @@ namespace Adaptive.Aeron.Tests
         [SetUp]
         public void SetUp()
         {
-            delegateFragmentHandler = A.Fake<IFragmentHandler>();
+            delegateFragmentHandler = A.Fake<FragmentHandler>();
             termBuffer = A.Fake<IDirectBuffer>();
             adapter = new FragmentAssembler(delegateFragmentHandler);
             header = A.Fake<Header>(x => x.Wrapping(new Header(INITIAL_TERM_ID, LogBufferDescriptor.TERM_MIN_LENGTH)));
@@ -41,14 +41,14 @@ namespace Adaptive.Aeron.Tests
 
             adapter.OnFragment(srcBuffer, offset, length, header);
 
-            A.CallTo(() => delegateFragmentHandler.OnFragment(srcBuffer, offset, length, header))
+            A.CallTo(() => delegateFragmentHandler(srcBuffer, offset, length, header))
                 .MustHaveHappened(Repeated.Exactly.Once);
         }
 
         [Test]
         public virtual void ShouldAssembleTwoPartMessage()
         {
-            A.CallTo(() => header.Flags).ReturnsNextFromSequence(FrameDescriptor.BEGIN_FRAG_FLAG, FrameDescriptor.END_FRAG_FLAG, FrameDescriptor.END_FRAG_FLAG); 
+            A.CallTo(() => header.Flags).ReturnsNextFromSequence(FrameDescriptor.BEGIN_FRAG_FLAG, FrameDescriptor.END_FRAG_FLAG, FrameDescriptor.END_FRAG_FLAG);
             // Need to add this twice because FakeItEasy doesn't fall back to the implementation
 
             var srcBuffer = new UnsafeBuffer(new byte[1024]);
@@ -75,7 +75,7 @@ namespace Adaptive.Aeron.Tests
 
             Func<Header, bool> headerAssertion = capturedHeader => capturedHeader.SessionId == SESSION_ID &&
                                                                    capturedHeader.Flags == FrameDescriptor.END_FRAG_FLAG;
-            A.CallTo(() => delegateFragmentHandler.OnFragment(
+            A.CallTo(() => delegateFragmentHandler(
                 A<UnsafeBuffer>.That.Matches(bufferAssertion, "buffer"),
                 offset,
                 length*2,
@@ -118,7 +118,7 @@ namespace Adaptive.Aeron.Tests
             Func<Header, bool> headerAssertion = capturedHeader => capturedHeader.SessionId == SESSION_ID &&
                                                                    capturedHeader.Flags == FrameDescriptor.END_FRAG_FLAG;
 
-            A.CallTo(() => delegateFragmentHandler.OnFragment(
+            A.CallTo(() => delegateFragmentHandler(
                 A<UnsafeBuffer>.That.Matches(bufferAssertion, "buffer"),
                 offset,
                 length*4,
@@ -157,7 +157,7 @@ namespace Adaptive.Aeron.Tests
 
             adapter.OnFragment(srcBuffer, offset, length, header);
 
-            A.CallTo(() => delegateFragmentHandler.OnFragment(A<IDirectBuffer>._, A<int>._, A<int>._, A<Header>._)).MustNotHaveHappened();
+            A.CallTo(() => delegateFragmentHandler(A<IDirectBuffer>._, A<int>._, A<int>._, A<Header>._)).MustNotHaveHappened();
         }
 
         [Test]
@@ -171,8 +171,7 @@ namespace Adaptive.Aeron.Tests
             adapter.OnFragment(srcBuffer, offset, length, header);
             adapter.OnFragment(srcBuffer, offset, length, header);
 
-            A.CallTo(() => delegateFragmentHandler.OnFragment(A<IDirectBuffer>._, A<int>._, A<int>._, A<Header>._)).MustNotHaveHappened();
+            A.CallTo(() => delegateFragmentHandler(A<IDirectBuffer>._, A<int>._, A<int>._, A<Header>._)).MustNotHaveHappened();
         }
     }
 }
-

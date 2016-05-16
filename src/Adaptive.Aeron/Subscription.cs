@@ -10,7 +10,7 @@ namespace Adaptive.Aeron
     /// a given channel and streamId pair.
     /// <para>
     /// Subscribers are created via an <seealso cref="Aeron"/> object, and received messages are delivered
-    /// to the <seealso cref="IFragmentHandler"/>.
+    /// to the <seealso cref="FragmentHandler"/>.
     /// </para>
     /// <para>
     /// By default fragmented messages are not reassembled before delivery. If an application must
@@ -75,7 +75,7 @@ namespace Adaptive.Aeron
         /// <param name="fragmentHandler"> callback for handling each message fragment as it is read. </param>
         /// <param name="fragmentLimit">   number of message fragments to limit for the poll operation across multiple <seealso cref="Image"/>s. </param>
         /// <returns> the number of fragments received </returns>
-        public int Poll(IFragmentHandler fragmentHandler, int fragmentLimit)
+        public int Poll(FragmentHandler fragmentHandler, int fragmentLimit)
         {
             var images = _images;
             var length = images.Length;

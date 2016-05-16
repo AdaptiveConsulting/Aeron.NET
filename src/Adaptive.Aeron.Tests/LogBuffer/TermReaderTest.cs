@@ -17,7 +17,7 @@ namespace Adaptive.Aeron.Tests.LogBuffer
         private Header header;
         private UnsafeBuffer termBuffer;
         private ErrorHandler errorHandler;
-        private IFragmentHandler handler;
+        private FragmentHandler handler;
 
         [SetUp]
         public void SetUp()
@@ -25,7 +25,7 @@ namespace Adaptive.Aeron.Tests.LogBuffer
             header = new Header(INITIAL_TERM_ID, TERM_BUFFER_CAPACITY);
             termBuffer = A.Fake<UnsafeBuffer>();
             errorHandler = A.Fake<ErrorHandler>();
-            handler = A.Fake<IFragmentHandler>();
+            handler = A.Fake<FragmentHandler>();
 
             A.CallTo(() => termBuffer.Capacity).Returns(TERM_BUFFER_CAPACITY);
         }
@@ -58,7 +58,7 @@ namespace Adaptive.Aeron.Tests.LogBuffer
             Assert.That(TermReader.FragmentsRead(readOutcome), Is.EqualTo(1));
 
             A.CallTo(() => termBuffer.GetIntVolatile(0)).MustHaveHappened();
-            A.CallTo(() => handler.OnFragment(termBuffer, HEADER_LENGTH, msgLength, A<Header>._)).MustHaveHappened();
+            A.CallTo(() => handler(termBuffer, HEADER_LENGTH, msgLength, A<Header>._)).MustHaveHappened();
         }
 
         [Test]
@@ -71,7 +71,7 @@ namespace Adaptive.Aeron.Tests.LogBuffer
             Assert.That(TermReader.Offset(readOutcome), Is.EqualTo(termOffset));
 
             A.CallTo(() => termBuffer.GetIntVolatile(0)).MustHaveHappened();
-            A.CallTo(() => handler.OnFragment(A<IDirectBuffer>._, A<int>._, A<int>._, A<Header>._)).MustNotHaveHappened();
+            A.CallTo(() => handler(A<IDirectBuffer>._, A<int>._, A<int>._, A<Header>._)).MustNotHaveHappened();
         }
 
         [Test]
@@ -90,7 +90,7 @@ namespace Adaptive.Aeron.Tests.LogBuffer
             Assert.That(TermReader.FragmentsRead(readOutcome), Is.EqualTo(1));
 
             A.CallTo(() => termBuffer.GetIntVolatile(0)).MustHaveHappened()
-                .Then(A.CallTo(() => handler.OnFragment(termBuffer, HEADER_LENGTH, msgLength, A<Header>._)).MustHaveHappened());
+                .Then(A.CallTo(() => handler(termBuffer, HEADER_LENGTH, msgLength, A<Header>._)).MustHaveHappened());
         }
 
         [Test]
@@ -110,9 +110,9 @@ namespace Adaptive.Aeron.Tests.LogBuffer
             Assert.That(TermReader.Offset(readOutcome), Is.EqualTo(alignedFrameLength * 2));
 
             A.CallTo(() => termBuffer.GetIntVolatile(0)).MustHaveHappened()
-                .Then(A.CallTo(() => handler.OnFragment(termBuffer, HEADER_LENGTH, msgLength, A<Header>._)).MustHaveHappened())
+                .Then(A.CallTo(() => handler(termBuffer, HEADER_LENGTH, msgLength, A<Header>._)).MustHaveHappened())
                 .Then(A.CallTo(() => termBuffer.GetIntVolatile(alignedFrameLength)).MustHaveHappened())
-                .Then(A.CallTo(() => handler.OnFragment(termBuffer, alignedFrameLength + HEADER_LENGTH, msgLength, A<Header>._)).MustHaveHappened());
+                .Then(A.CallTo(() => handler(termBuffer, alignedFrameLength + HEADER_LENGTH, msgLength, A<Header>._)).MustHaveHappened());
         }
 
         [Test]
@@ -131,7 +131,7 @@ namespace Adaptive.Aeron.Tests.LogBuffer
             Assert.That(TermReader.Offset(readOutcome), Is.EqualTo(TERM_BUFFER_CAPACITY));
 
             A.CallTo(() => termBuffer.GetIntVolatile(frameOffset)).MustHaveHappened()
-                .Then(A.CallTo(() => handler.OnFragment(termBuffer, frameOffset + HEADER_LENGTH, msgLength, A<Header>._)).MustHaveHappened());
+                .Then(A.CallTo(() => handler(termBuffer, frameOffset + HEADER_LENGTH, msgLength, A<Header>._)).MustHaveHappened());
         }
 
         [Test]
@@ -150,7 +150,7 @@ namespace Adaptive.Aeron.Tests.LogBuffer
             Assert.That(TermReader.Offset(readOutcome), Is.EqualTo(TERM_BUFFER_CAPACITY));
 
             A.CallTo(() => termBuffer.GetIntVolatile(frameOffset)).MustHaveHappened();
-            A.CallTo(() => handler.OnFragment(A<IDirectBuffer>._, A<int>._, A<int>._, A<Header>._)).MustNotHaveHappened();
+            A.CallTo(() => handler(A<IDirectBuffer>._, A<int>._, A<int>._, A<Header>._)).MustNotHaveHappened();
         }
     }
 }
