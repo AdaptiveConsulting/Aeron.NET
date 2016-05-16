@@ -38,7 +38,7 @@ namespace Adaptive.Aeron.Samples.SimpleSubscriber
                 var data = new byte[length];
                 buffer.GetBytes(offset, data);
 
-                Console.WriteLine($"Received message ({Encoding.UTF8.GetString(data)}) to stream {streamId:D} from session {header.SessionId():x} term id {header.TermId():x} term offset {header.TermOffset():D} ({length:D}@{offset:D})");
+                Console.WriteLine($"Received message ({Encoding.UTF8.GetString(data)}) to stream {streamId:D} from session {header.SessionId:x} term id {header.TermId:x} term offset {header.TermOffset:D} ({length:D}@{offset:D})");
 
                 // Received the intended message, time to exit the program
                 running.Set(false);

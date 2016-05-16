@@ -45,8 +45,8 @@ namespace Adaptive.Aeron.LogBuffer
 
                     if (!FrameDescriptor.IsPaddingFrame(termBuffer, termOffset))
                     {
-                        header.Buffer(termBuffer);
-                        header.Offset(termOffset);
+                        header.Buffer = termBuffer;
+                        header.Offset = termOffset;
 
                         handler.OnFragment(termBuffer, termOffset + DataHeaderFlyweight.HEADER_LENGTH, frameLength - DataHeaderFlyweight.HEADER_LENGTH, header);
 

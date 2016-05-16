@@ -25,7 +25,7 @@ namespace Adaptive.Aeron.Tests
             adapter = new FragmentAssembler(delegateFragmentHandler);
             header = A.Fake<Header>(x => x.Wrapping(new Header(INITIAL_TERM_ID, LogBufferDescriptor.TERM_MIN_LENGTH)));
 
-            header.Buffer(termBuffer);
+            header.Buffer = termBuffer;
 
             A.CallTo(() => termBuffer.GetInt(A<int>._)).Returns(SESSION_ID);
         }
@@ -33,7 +33,7 @@ namespace Adaptive.Aeron.Tests
         [Test]
         public virtual void ShouldPassThroughUnfragmentedMessage()
         {
-            A.CallTo(() => header.Flags()).Returns(FrameDescriptor.UNFRAGMENTED);
+            A.CallTo(() => header.Flags).Returns(FrameDescriptor.UNFRAGMENTED);
 
             var srcBuffer = new UnsafeBuffer(new byte[128]);
             const int offset = 8;
@@ -48,7 +48,7 @@ namespace Adaptive.Aeron.Tests
         [Test]
         public virtual void ShouldAssembleTwoPartMessage()
         {
-            A.CallTo(() => header.Flags()).ReturnsNextFromSequence(FrameDescriptor.BEGIN_FRAG_FLAG, FrameDescriptor.END_FRAG_FLAG, FrameDescriptor.END_FRAG_FLAG); 
+            A.CallTo(() => header.Flags).ReturnsNextFromSequence(FrameDescriptor.BEGIN_FRAG_FLAG, FrameDescriptor.END_FRAG_FLAG, FrameDescriptor.END_FRAG_FLAG); 
             // Need to add this twice because FakeItEasy doesn't fall back to the implementation
 
             var srcBuffer = new UnsafeBuffer(new byte[1024]);
@@ -73,8 +73,8 @@ namespace Adaptive.Aeron.Tests
                 return true;
             };
 
-            Func<Header, bool> headerAssertion = capturedHeader => capturedHeader.SessionId() == SESSION_ID &&
-                                                                   capturedHeader.Flags() == FrameDescriptor.END_FRAG_FLAG;
+            Func<Header, bool> headerAssertion = capturedHeader => capturedHeader.SessionId == SESSION_ID &&
+                                                                   capturedHeader.Flags == FrameDescriptor.END_FRAG_FLAG;
             A.CallTo(() => delegateFragmentHandler.OnFragment(
                 A<UnsafeBuffer>.That.Matches(bufferAssertion, "buffer"),
                 offset,
@@ -86,7 +86,7 @@ namespace Adaptive.Aeron.Tests
         [Test]
         public virtual void ShouldAssembleFourPartMessage()
         {
-            A.CallTo(() => header.Flags()).ReturnsNextFromSequence<byte>(FrameDescriptor.BEGIN_FRAG_FLAG, 0, 0, FrameDescriptor.END_FRAG_FLAG, FrameDescriptor.END_FRAG_FLAG);
+            A.CallTo(() => header.Flags).ReturnsNextFromSequence<byte>(FrameDescriptor.BEGIN_FRAG_FLAG, 0, 0, FrameDescriptor.END_FRAG_FLAG, FrameDescriptor.END_FRAG_FLAG);
 
             var srcBuffer = new UnsafeBuffer(new byte[1024]);
             const int offset = 0;
@@ -115,8 +115,8 @@ namespace Adaptive.Aeron.Tests
                 return true;
             };
 
-            Func<Header, bool> headerAssertion = capturedHeader => capturedHeader.SessionId() == SESSION_ID &&
-                                                                   capturedHeader.Flags() == FrameDescriptor.END_FRAG_FLAG;
+            Func<Header, bool> headerAssertion = capturedHeader => capturedHeader.SessionId == SESSION_ID &&
+                                                                   capturedHeader.Flags == FrameDescriptor.END_FRAG_FLAG;
 
             A.CallTo(() => delegateFragmentHandler.OnFragment(
                 A<UnsafeBuffer>.That.Matches(bufferAssertion, "buffer"),
@@ -129,7 +129,7 @@ namespace Adaptive.Aeron.Tests
         [Test]
         public virtual void ShouldFreeSessionBuffer()
         {
-            A.CallTo(() => header.Flags()).ReturnsNextFromSequence(FrameDescriptor.BEGIN_FRAG_FLAG, FrameDescriptor.END_FRAG_FLAG);
+            A.CallTo(() => header.Flags).ReturnsNextFromSequence(FrameDescriptor.BEGIN_FRAG_FLAG, FrameDescriptor.END_FRAG_FLAG);
 
             var srcBuffer = new UnsafeBuffer(new byte[1024]);
             const int offset = 0;
@@ -150,7 +150,7 @@ namespace Adaptive.Aeron.Tests
         [Test]
         public virtual void ShouldDoNotingIfEndArrivesWithoutBegin()
         {
-            A.CallTo(() => header.Flags()).Returns(FrameDescriptor.END_FRAG_FLAG);
+            A.CallTo(() => header.Flags).Returns(FrameDescriptor.END_FRAG_FLAG);
             var srcBuffer = new UnsafeBuffer(new byte[1024]);
             const int offset = 0;
             var length = srcBuffer.Capacity/2;
@@ -163,7 +163,7 @@ namespace Adaptive.Aeron.Tests
         [Test]
         public virtual void ShouldDoNotingIfMidArrivesWithoutBegin()
         {
-            A.CallTo(() => header.Flags()).Returns(FrameDescriptor.END_FRAG_FLAG);
+            A.CallTo(() => header.Flags).Returns(FrameDescriptor.END_FRAG_FLAG);
             var srcBuffer = new UnsafeBuffer(new byte[1024]);
             const int offset = 0;
             var length = srcBuffer.Capacity/2;

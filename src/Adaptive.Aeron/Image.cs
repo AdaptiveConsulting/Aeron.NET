@@ -194,8 +194,8 @@ namespace Adaptive.Aeron
 
                     if (!FrameDescriptor.IsPaddingFrame(termBuffer, frameOffset))
                     {
-                        _header.Buffer(termBuffer);
-                        _header.Offset(frameOffset);
+                        _header.Buffer = termBuffer;
+                        _header.Offset = frameOffset;
 
                         var action = fragmentHandler.OnFragment(termBuffer, frameOffset + DataHeaderFlyweight.HEADER_LENGTH, length - DataHeaderFlyweight.HEADER_LENGTH, _header);
 

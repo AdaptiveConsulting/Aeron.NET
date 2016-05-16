@@ -123,7 +123,7 @@ namespace Adaptive.Aeron
         /// Has the <seealso cref="Publication"/> seen an active Subscriber recently?
         /// </summary>
         /// <returns> true if this <seealso cref="Publication"/> has seen an active subscriber otherwise false. </returns>
-        public bool Connected => !_isClosed && _clientConductor.IsPublicationConnected(LogBufferDescriptor.TimeOfLastStatusMessage(_logMetaDataBuffer));
+        public bool IsConnected => !_isClosed && _clientConductor.IsPublicationConnected(LogBufferDescriptor.TimeOfLastStatusMessage(_logMetaDataBuffer));
 
         /// <summary>
         /// Release resources used by this Publication when there are no more references.
@@ -145,7 +145,7 @@ namespace Adaptive.Aeron
         /// Has this object been closed and should no longer be used?
         /// </summary>
         /// <returns> true if it has been closed otherwise false. </returns>
-        public bool Closed => _isClosed;
+        public bool IsClosed => _isClosed;
 
         /// <summary>
         /// Release resources and forcibly close the Publication regardless of reference count.

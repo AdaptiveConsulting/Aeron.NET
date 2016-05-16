@@ -36,6 +36,11 @@ namespace Adaptive.Aeron
         private volatile Image[] _images = EmptyArray;
         private readonly ClientConductor _clientConductor;
 
+        internal Subscription()
+        {
+            
+        }
+
         internal Subscription(ClientConductor conductor, string channel, int streamId, long registrationId)
         {
             _clientConductor = conductor;

@@ -103,8 +103,8 @@ namespace Adaptive.Aeron.Samples.BufferClaimIpcThroughput
                             }
                         }
 
-                        var offset = bufferClaim.Offset();
-                        bufferClaim.Buffer().PutInt(offset, i); // Example field write
+                        var offset = bufferClaim.Offset;
+                        bufferClaim.Buffer.PutInt(offset, i); // Example field write
                                                                 // Real app would write whatever fields are required via a flyweight like SBE
 
                         bufferClaim.Commit();
@@ -121,7 +121,6 @@ namespace Adaptive.Aeron.Samples.BufferClaimIpcThroughput
 
         public sealed class Subscriber : IFragmentHandler
         {
-
             internal readonly AtomicBoolean Running;
             internal readonly Subscription Subscription;
             private readonly AtomicLong _totalBytes = new AtomicLong();

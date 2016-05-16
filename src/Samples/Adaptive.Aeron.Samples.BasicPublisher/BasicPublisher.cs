@@ -77,7 +77,7 @@ namespace Adaptive.Aeron.Samples.BasicPublisher
                         Console.WriteLine("yay!");
                     }
 
-                    if (!publication.Connected)
+                    if (!publication.IsConnected)
                     {
                         Console.WriteLine("No active subscribers detected");
                     }

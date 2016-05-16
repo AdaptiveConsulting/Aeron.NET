@@ -55,7 +55,7 @@ namespace Adaptive.Aeron
         /// <param name="header"> representing the meta data for the data. </param>
         public void OnFragment(IDirectBuffer buffer, int offset, int length, Header header)
         {
-            byte flags = header.Flags();
+            byte flags = header.Flags;
 
             if ((flags & FrameDescriptor.UNFRAGMENTED) == FrameDescriptor.UNFRAGMENTED)
             {
@@ -66,10 +66,10 @@ namespace Adaptive.Aeron
                 if ((flags & FrameDescriptor.BEGIN_FRAG_FLAG) == FrameDescriptor.BEGIN_FRAG_FLAG)
                 {
                     BufferBuilder builder;
-                    if (!_builderBySessionIdMap.TryGetValue(header.SessionId(), out builder))
+                    if (!_builderBySessionIdMap.TryGetValue(header.SessionId, out builder))
                     {
-                        builder = _builderFunc(header.SessionId());
-                        _builderBySessionIdMap[header.SessionId()] = builder;
+                        builder = _builderFunc(header.SessionId);
+                        _builderBySessionIdMap[header.SessionId] = builder;
                     }
 
                     builder.Reset().Append(buffer, offset, length);
@@ -78,7 +78,7 @@ namespace Adaptive.Aeron
                 {
                     
                     BufferBuilder builder;
-                    _builderBySessionIdMap.TryGetValue(header.SessionId(), out builder);
+                    _builderBySessionIdMap.TryGetValue(header.SessionId, out builder);
                     if (null != builder && builder.Limit() != 0)
                     {
                         builder.Append(buffer, offset, length);

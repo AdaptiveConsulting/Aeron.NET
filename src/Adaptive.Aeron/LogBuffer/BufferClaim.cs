@@ -34,28 +34,21 @@ namespace Adaptive.Aeron.LogBuffer
         /// The referenced buffer to be used.
         /// </summary>
         /// <returns> the referenced buffer to be used.. </returns>
-        public IMutableDirectBuffer Buffer()
-        {
-            return _buffer;
-        }
+        public IMutableDirectBuffer Buffer => _buffer;
 
         /// <summary>
         /// The offset in the buffer at which the claimed range begins.
         /// </summary>
         /// <returns> offset in the buffer at which the range begins. </returns>
-        public int Offset()
-        {
-            return DataHeaderFlyweight.HEADER_LENGTH;
-        }
+        public int Offset => DataHeaderFlyweight.HEADER_LENGTH;
+
 
         /// <summary>
         /// The length of the claimed range in the buffer.
         /// </summary>
         /// <returns> length of the range in the buffer. </returns>
-        public int Length()
-        {
-            return _buffer.Capacity - DataHeaderFlyweight.HEADER_LENGTH;
-        }
+        public int Length => _buffer.Capacity - DataHeaderFlyweight.HEADER_LENGTH;
+
 
         /// <summary>
         /// Get the value stored in the reserve space at the end of a data frame header.
@@ -88,7 +81,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// </summary>
         public void Commit()
         {
-            int frameLength = _buffer.Capacity;
+            var frameLength = _buffer.Capacity;
 
             _buffer.PutIntOrdered(HeaderFlyweight.FRAME_LENGTH_FIELD_OFFSET, frameLength);
         }
@@ -98,9 +91,9 @@ namespace Adaptive.Aeron.LogBuffer
         /// </summary>
         public void Abort()
         {
-            int frameLength = _buffer.Capacity;
+            var frameLength = _buffer.Capacity;
 
-            _buffer.PutShort(HeaderFlyweight.TYPE_FIELD_OFFSET, (short)HeaderFlyweight.HDR_TYPE_PAD);
+            _buffer.PutShort(HeaderFlyweight.TYPE_FIELD_OFFSET, (short) HeaderFlyweight.HDR_TYPE_PAD);
             _buffer.PutIntOrdered(HeaderFlyweight.FRAME_LENGTH_FIELD_OFFSET, frameLength);
         }
     }

@@ -38,7 +38,7 @@ namespace Adaptive.Aeron.Tests
             ImageTwoMock = A.Fake<Image>();
             Header = A.Fake<Header>();
 
-            A.CallTo(() => Header.Flags()).Returns(FLAGS);
+            A.CallTo(() => Header.Flags).Returns(FLAGS);
 
             Subscription = new Subscription(Conductor, CHANNEL, STREAM_ID_1, SUBSCRIPTION_CORRELATION_ID);
             A.CallTo(() => Conductor.ReleaseSubscription(Subscription));

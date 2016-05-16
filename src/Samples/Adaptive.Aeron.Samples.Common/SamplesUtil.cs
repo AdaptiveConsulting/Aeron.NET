@@ -56,7 +56,7 @@ namespace Adaptive.Aeron.Samples.Common
                 var data = new byte[length];
                 buffer.GetBytes(offset, data);
 
-                Console.WriteLine($"Message to stream {streamId:D} from session {header.SessionId():D} ({length:D}@{offset:D}) <<{Encoding.UTF8.GetString(data)}>>");
+                Console.WriteLine($"Message to stream {streamId:D} from session {header.SessionId:D} ({length:D}@{offset:D}) <<{Encoding.UTF8.GetString(data)}>>");
             });
         }
 

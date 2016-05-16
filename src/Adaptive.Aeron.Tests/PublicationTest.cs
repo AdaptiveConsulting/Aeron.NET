@@ -76,7 +76,7 @@ namespace Adaptive.Aeron.Tests
         public void ShouldEnsureThePublicationIsOpenBeforeOffer()
         {
             _publication.Dispose();
-            Assert.True(_publication.Closed);
+            Assert.True(_publication.IsClosed);
             Assert.AreEqual(_publication.Offer(_atomicSendBuffer), Publication.CLOSED);
         }
 
@@ -94,14 +94,14 @@ namespace Adaptive.Aeron.Tests
             A.CallTo(() => _publicationLimit.Volatile).Returns(0);
             A.CallTo(() => _conductor.IsPublicationConnected(A<long>._)).Returns(false);
 
-            Assert.False(_publication.Connected);
+            Assert.False(_publication.IsConnected);
         }
 
         [Test]
         public void ShouldReportThatPublicationHasBeenConnectedYet()
         {
             A.CallTo(() => _conductor.IsPublicationConnected(A<long>._)).Returns(true);
-            Assert.True(_publication.Connected);
+            Assert.True(_publication.IsConnected);
         }
 
         [Test]

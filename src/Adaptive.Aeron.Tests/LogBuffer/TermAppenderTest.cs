@@ -159,8 +159,8 @@ namespace Adaptive.Aeron.Tests.LogBuffer
             
             Assert.That(_termAppender.Claim(_headerWriter, msgLength, bufferClaim), Is.EqualTo((long)alignedFrameLength));
 
-            Assert.That(bufferClaim.Offset(), Is.EqualTo(tail + headerLength));
-            Assert.That(bufferClaim.Length(), Is.EqualTo(msgLength));
+            Assert.That(bufferClaim.Offset, Is.EqualTo(tail + headerLength));
+            Assert.That(bufferClaim.Length, Is.EqualTo(msgLength));
 
             // Map flyweight or encode to buffer directly then call commit() when done
             bufferClaim.Commit();
