@@ -42,7 +42,6 @@ namespace Adaptive.Aeron
         /// </summary>
         public const long CLOSED = -4;
 
-        private readonly long _registrationId;
         private int _refCount;
         private readonly int _maxPayloadLength;
         private readonly int _positionBitsToShift;
@@ -74,7 +73,7 @@ namespace Adaptive.Aeron
             SessionId = sessionId;
             InitialTermId = LogBufferDescriptor.InitialTermId(logMetaDataBuffer);
             _logMetaDataBuffer = logMetaDataBuffer;
-            _registrationId = registrationId;
+            RegistrationId = registrationId;
             _positionLimit = positionLimit;
             _logBuffers = logBuffers;
             _positionBitsToShift = IntUtil.NumberOfTrailingZeros(termLength);
@@ -329,12 +328,10 @@ namespace Adaptive.Aeron
         /// Return the registration id used to register this Publication with the media driver.
         /// </summary>
         /// <returns> registration id </returns>
-        public long RegistrationId()
-        {
-            return _registrationId;
-        }
+        public long RegistrationId { get; }
 
-        /// <seealso cref="Publication.Dispose()" />
+
+        /// <seealso cref="Dispose()" />
         internal void IncRef()
         {
             lock (_clientConductor)

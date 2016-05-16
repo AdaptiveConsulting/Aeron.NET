@@ -97,10 +97,10 @@ namespace Adaptive.Aeron.Samples.Ping
 
         private static void availablePongImageHandler(Image image)
         {
-            var subscription = image.Subscription();
-            Console.WriteLine($"Available image: channel={subscription.Channel()} streamId={subscription.StreamId()} session={image.SessionId()}");
+            var subscription = image.Subscription;
+            Console.WriteLine($"Available image: channel={subscription.Channel} streamId={subscription.StreamId} session={image.SessionId}");
 
-            if (PONG_STREAM_ID == subscription.StreamId() && PONG_CHANNEL.Equals(subscription.Channel()))
+            if (PONG_STREAM_ID == subscription.StreamId && PONG_CHANNEL.Equals(subscription.Channel))
             {
                 LATCH.Signal();
             }

@@ -196,7 +196,7 @@ namespace Adaptive.Aeron.Tests
 
             Assert.AreEqual(fragmentsRead,
                 0);
-            Assert.AreEqual(image.Position(), initialPosition);
+            Assert.AreEqual(image.Position, initialPosition);
 
             A.CallTo(() => MockControlledFragmentHandler.OnFragment(A<IDirectBuffer>._, DataHeaderFlyweight.HEADER_LENGTH, DATA.Length, A<Header>._)).MustHaveHappened();
         }

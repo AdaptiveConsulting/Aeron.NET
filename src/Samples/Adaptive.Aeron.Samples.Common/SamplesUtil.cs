@@ -102,8 +102,8 @@ namespace Adaptive.Aeron.Samples.Common
         /// <param name="image"> that has been created </param>
         public static void PrintAvailableImage(Image image)
         {
-            var subscription = image.Subscription();
-            Console.WriteLine($"Available image on {subscription.Channel()} streamId={subscription.StreamId():D} sessionId={image.SessionId():D} from {image.SourceIdentity()}");
+            var subscription = image.Subscription;
+            Console.WriteLine($"Available image on {subscription.Channel} streamId={subscription.StreamId:D} sessionId={image.SessionId:D} from {image.SourceIdentity}");
         }
 
         /// <summary>
@@ -112,8 +112,8 @@ namespace Adaptive.Aeron.Samples.Common
         /// <param name="image"> that has gone inactive </param>
         public static void PrintUnavailableImage(Image image)
         {
-            var subscription = image.Subscription();
-            Console.WriteLine($"Unavailable image on {subscription.Channel()} streamId={subscription.StreamId():D} sessionId={image.SessionId():D}");
+            var subscription = image.Subscription;
+            Console.WriteLine($"Unavailable image on {subscription.Channel} streamId={subscription.StreamId:D} sessionId={image.SessionId:D}");
         }
     }
 }

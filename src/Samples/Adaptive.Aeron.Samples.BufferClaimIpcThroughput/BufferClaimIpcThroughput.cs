@@ -139,13 +139,13 @@ namespace Adaptive.Aeron.Samples.BufferClaimIpcThroughput
 
             public void Run()
             {
-                while (Subscription.ImageCount() == 0)
+                while (Subscription.ImageCount == 0)
                 {
                     // wait for an image to be ready
                     Thread.Yield();
                 }
 
-                var image = Subscription.Images()[0];
+                var image = Subscription.Images[0];
 
                 long failedPolls = 0;
                 long successfulPolls = 0;

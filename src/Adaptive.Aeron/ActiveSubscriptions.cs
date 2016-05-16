@@ -20,10 +20,10 @@ namespace Adaptive.Aeron
         public void Add(Subscription subscription)
         {
             List<Subscription> subscriptions;
-            if (!_subscriptionsByStreamIdMap.TryGetValue(subscription.StreamId(), out subscriptions))
+            if (!_subscriptionsByStreamIdMap.TryGetValue(subscription.StreamId, out subscriptions))
             {
                 subscriptions = new List<Subscription>();
-                _subscriptionsByStreamIdMap[subscription.StreamId()] = subscriptions;
+                _subscriptionsByStreamIdMap[subscription.StreamId] = subscriptions;
             }
             
             subscriptions.Add(subscription);
@@ -31,7 +31,7 @@ namespace Adaptive.Aeron
 
         public void Remove(Subscription subscription)
         {
-            int streamId = subscription.StreamId();
+            int streamId = subscription.StreamId;
 
             List<Subscription> subscriptions;
             if (_subscriptionsByStreamIdMap.TryGetValue(streamId, out subscriptions))
