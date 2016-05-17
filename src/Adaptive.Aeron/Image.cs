@@ -14,8 +14,6 @@ namespace Adaptive.Aeron
     /// </summary>
     public class Image
     {
-        private readonly long _correlationId;
-        private readonly int _sessionId;
         private readonly int _termLengthMask;
         private readonly int _positionBitsToShift;
         private volatile bool _isClosed;
@@ -25,12 +23,9 @@ namespace Adaptive.Aeron
         private readonly Header _header;
         private readonly ErrorHandler _errorHandler;
         private readonly LogBuffers _logBuffers;
-        private readonly string _sourceIdentity;
-        private readonly Subscription _subscription;
 
         internal Image()
         {
-
         }
 
         /// <summary>
@@ -45,18 +40,18 @@ namespace Adaptive.Aeron
         /// <param name="correlationId">      of the request to the media driver. </param>
         public Image(Subscription subscription, int sessionId, IPosition subscriberPosition, LogBuffers logBuffers, ErrorHandler errorHandler, string sourceIdentity, long correlationId)
         {
-            _subscription = subscription;
-            _sessionId = sessionId;
+            Subscription = subscription;
+            SessionId = sessionId;
             _subscriberPosition = subscriberPosition;
             _logBuffers = logBuffers;
             _errorHandler = errorHandler;
-            _sourceIdentity = sourceIdentity;
-            _correlationId = correlationId;
+            SourceIdentity = sourceIdentity;
+            CorrelationId = correlationId;
 
-            UnsafeBuffer[] buffers = logBuffers.AtomicBuffers();
+            var buffers = logBuffers.AtomicBuffers();
             Array.Copy(buffers, 0, _termBuffers, 0, LogBufferDescriptor.PARTITION_COUNT);
 
-            int termLength = logBuffers.TermLength();
+            var termLength = logBuffers.TermLength();
             _termLengthMask = termLength - 1;
             _positionBitsToShift = IntUtil.NumberOfTrailingZeros(termLength);
             _header = new Header(LogBufferDescriptor.InitialTermId(buffers[LogBufferDescriptor.LOG_META_DATA_SECTION_INDEX]), _positionBitsToShift);
@@ -66,80 +61,60 @@ namespace Adaptive.Aeron
         /// Get the length in bytes for each term partition in the log buffer.
         /// </summary>
         /// <returns> the length in bytes for each term partition in the log buffer. </returns>
-        public int TermBufferLength()
-        {
-            return _logBuffers.TermLength();
-        }
+        public int TermBufferLength => _logBuffers.TermLength();
 
         /// <summary>
         /// The sessionId for the steam of messages.
         /// </summary>
         /// <returns> the sessionId for the steam of messages. </returns>
-        public int SessionId()
-        {
-            return _sessionId;
-        }
+        public int SessionId { get; }
 
         /// <summary>
         /// The source identity of the sending publisher as an abstract concept appropriate for the media.
         /// </summary>
         /// <returns> source identity of the sending publisher as an abstract concept appropriate for the media. </returns>
-        public string SourceIdentity()
-        {
-            return _sourceIdentity;
-        }
+        public string SourceIdentity { get; }
+
 
         /// <summary>
         /// The initial term at which the stream started for this session.
         /// </summary>
         /// <returns> the initial term id. </returns>
-        public int InitialTermId()
-        {
-            return _header.InitialTermId();
-        }
+        public int InitialTermId => _header.InitialTermId();
 
         /// <summary>
         /// The correlationId for identification of the image with the media driver.
         /// </summary>
         /// <returns> the correlationId for identification of the image with the media driver. </returns>
-        public long CorrelationId()
-        {
-            return _correlationId;
-        }
+        public long CorrelationId { get; }
 
         /// <summary>
         /// Get the <seealso cref="Subscription"/> to which this <seealso cref="Image"/> belongs.
         /// </summary>
         /// <returns> the <seealso cref="Subscription"/> to which this <seealso cref="Image"/> belongs. </returns>
-        public Subscription Subscription()
-        {
-            return _subscription;
-        }
+        public Subscription Subscription { get; }
 
         /// <summary>
         /// Has this object been closed and should no longer be used?
         /// </summary>
         /// <returns> true if it has been closed otherwise false. </returns>
-        public bool Closed
-        {
-            get
-            {
-                return _isClosed;
-            }
-        }
+        public bool Closed => _isClosed;
 
         /// <summary>
         /// The position this <seealso cref="Image"/> has been consumed to by the subscriber.
         /// </summary>
         /// <returns> the position this <seealso cref="Image"/> has been consumed to by the subscriber. </returns>
-        public long Position()
+        public long Position
         {
-            if (_isClosed)
+            get
             {
-                return 0;
-            }
+                if (_isClosed)
+                {
+                    return 0;
+                }
 
-            return _subscriberPosition.Get();
+                return _subscriberPosition.Get();
+            }
         }
 
         ///// <summary>
@@ -161,18 +136,18 @@ namespace Adaptive.Aeron
         /// <param name="fragmentLimit">   for the number of fragments to be consumed during one polling operation. </param>
         /// <returns> the number of fragments that have been consumed. </returns>
         /// <seealso cref="FragmentAssembler" />
-        public virtual int Poll(IFragmentHandler fragmentHandler, int fragmentLimit)
+        public virtual int Poll(FragmentHandler fragmentHandler, int fragmentLimit)
         {
             if (_isClosed)
             {
                 return 0;
             }
 
-            long position = _subscriberPosition.Get();
-            int termOffset = (int)position & _termLengthMask;
-            UnsafeBuffer termBuffer = ActiveTermBuffer(position);
+            var position = _subscriberPosition.Get();
+            var termOffset = (int) position & _termLengthMask;
+            var termBuffer = ActiveTermBuffer(position);
 
-            long outcome = TermReader.Read(termBuffer, termOffset, fragmentHandler, fragmentLimit, _header, _errorHandler);
+            var outcome = TermReader.Read(termBuffer, termOffset, fragmentHandler, fragmentLimit, _header, _errorHandler);
 
             UpdatePosition(position, termOffset, TermReader.Offset(outcome));
 
@@ -196,31 +171,30 @@ namespace Adaptive.Aeron
                 return 0;
             }
 
-            long position = _subscriberPosition.Get();
-            int termOffset = (int)position & _termLengthMask;
-            int offset = termOffset;
-            int fragmentsRead = 0;
-            UnsafeBuffer termBuffer = ActiveTermBuffer(position);
+            var position = _subscriberPosition.Get();
+            var termOffset = (int) position & _termLengthMask;
+            var offset = termOffset;
+            var fragmentsRead = 0;
+            var termBuffer = ActiveTermBuffer(position);
 
             try
             {
-                int capacity = termBuffer.Capacity;
+                var capacity = termBuffer.Capacity;
                 do
                 {
-                    int length = FrameDescriptor.FrameLengthVolatile(termBuffer, offset);
+                    var length = FrameDescriptor.FrameLengthVolatile(termBuffer, offset);
                     if (length <= 0)
                     {
                         break;
                     }
 
-                    int frameOffset = offset;
-                    int alignedLength = BitUtil.Align(length, FrameDescriptor.FRAME_ALIGNMENT);
+                    var frameOffset = offset;
+                    var alignedLength = BitUtil.Align(length, FrameDescriptor.FRAME_ALIGNMENT);
                     offset += alignedLength;
 
                     if (!FrameDescriptor.IsPaddingFrame(termBuffer, frameOffset))
                     {
-                        _header.Buffer(termBuffer);
-                        _header.Offset(frameOffset);
+                        _header.SetBuffer(termBuffer, frameOffset);
 
                         var action = fragmentHandler.OnFragment(termBuffer, frameOffset + DataHeaderFlyweight.HEADER_LENGTH, length - DataHeaderFlyweight.HEADER_LENGTH, _header);
 
@@ -269,21 +243,21 @@ namespace Adaptive.Aeron
                 return 0;
             }
 
-            long position = _subscriberPosition.Get();
-            int termOffset = (int)position & _termLengthMask;
-            UnsafeBuffer termBuffer = ActiveTermBuffer(position);
-            int limit = Math.Min(termOffset + blockLengthLimit, termBuffer.Capacity);
+            var position = _subscriberPosition.Get();
+            var termOffset = (int) position & _termLengthMask;
+            var termBuffer = ActiveTermBuffer(position);
+            var limit = Math.Min(termOffset + blockLengthLimit, termBuffer.Capacity);
 
-            int resultingOffset = TermBlockScanner.Scan(termBuffer, termOffset, limit);
+            var resultingOffset = TermBlockScanner.Scan(termBuffer, termOffset, limit);
 
-            int bytesConsumed = resultingOffset - termOffset;
+            var bytesConsumed = resultingOffset - termOffset;
             if (resultingOffset > termOffset)
             {
                 try
                 {
-                    int termId = termBuffer.GetInt(termOffset + DataHeaderFlyweight.TERM_ID_FIELD_OFFSET);
+                    var termId = termBuffer.GetInt(termOffset + DataHeaderFlyweight.TERM_ID_FIELD_OFFSET);
 
-                    blockHandler.OnBlock(termBuffer, termOffset, bytesConsumed, _sessionId, termId);
+                    blockHandler.OnBlock(termBuffer, termOffset, bytesConsumed, SessionId, termId);
                 }
                 catch (Exception t)
                 {
@@ -343,7 +317,7 @@ namespace Adaptive.Aeron
 
         private void UpdatePosition(long positionBefore, int offsetBefore, int offsetAfter)
         {
-            long position = positionBefore + (offsetAfter - offsetBefore);
+            var position = positionBefore + (offsetAfter - offsetBefore);
             if (position > positionBefore)
             {
                 _subscriberPosition.SetOrdered(position);
@@ -363,7 +337,7 @@ namespace Adaptive.Aeron
 
         private class ImageManagedResource : IManagedResource
         {
-            private long _timeOfLastStateChange = 0;
+            private long _timeOfLastStateChange;
             private readonly Image _image;
 
             public ImageManagedResource(Image image)

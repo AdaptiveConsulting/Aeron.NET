@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.IO.MemoryMappedFiles;
 using Adaptive.Aeron.LogBuffer;
 using Adaptive.Agrona;
 using Adaptive.Agrona.Concurrent;
@@ -15,20 +14,19 @@ namespace Adaptive.Aeron
     public class LogBuffers : IDisposable
     {
         private readonly int _termLength;
-        private readonly UnsafeBuffer[] _atomicBuffers = new UnsafeBuffer[(LogBufferDescriptor.PARTITION_COUNT * 2) + 1];
+        private readonly UnsafeBuffer[] _atomicBuffers = new UnsafeBuffer[LogBufferDescriptor.PARTITION_COUNT*2 + 1];
         private readonly MappedByteBuffer[] _mappedByteBuffers;
 
         internal LogBuffers()
         {
-            
         }
 
         public LogBuffers(string logFileName)
         {
             var fileInfo = new FileInfo(logFileName);
 
-            long logLength = fileInfo.Length;
-            int termLength = LogBufferDescriptor.ComputeTermLength(logLength);
+            var logLength = fileInfo.Length;
+            var termLength = LogBufferDescriptor.ComputeTermLength(logLength);
 
             LogBufferDescriptor.CheckTermLength(termLength);
 
@@ -38,46 +36,46 @@ namespace Adaptive.Aeron
             if (logLength < int.MaxValue)
             {
                 var mappedBuffer = IoUtil.MapExistingFile(logFileName);
-                
-                _mappedByteBuffers = new[] { mappedBuffer };
 
-                int metaDataSectionOffset = termLength * LogBufferDescriptor.PARTITION_COUNT;
+                _mappedByteBuffers = new[] {mappedBuffer};
 
-                for (int i = 0; i < LogBufferDescriptor.PARTITION_COUNT; i++)
+                var metaDataSectionOffset = termLength*LogBufferDescriptor.PARTITION_COUNT;
+
+                for (var i = 0; i < LogBufferDescriptor.PARTITION_COUNT; i++)
                 {
-                    int metaDataOffset = metaDataSectionOffset + (i * LogBufferDescriptor.TERM_META_DATA_LENGTH);
+                    var metaDataOffset = metaDataSectionOffset + (i*LogBufferDescriptor.TERM_META_DATA_LENGTH);
 
-                    _atomicBuffers[i] = new UnsafeBuffer(mappedBuffer.Pointer, i * termLength, termLength);
-                    _atomicBuffers[i + LogBufferDescriptor.PARTITION_COUNT] = new UnsafeBuffer(mappedBuffer.Pointer, metaDataOffset,  LogBufferDescriptor.TERM_META_DATA_LENGTH);
+                    _atomicBuffers[i] = new UnsafeBuffer(mappedBuffer.Pointer, i*termLength, termLength);
+                    _atomicBuffers[i + LogBufferDescriptor.PARTITION_COUNT] = new UnsafeBuffer(mappedBuffer.Pointer, metaDataOffset, LogBufferDescriptor.TERM_META_DATA_LENGTH);
                 }
 
-                _atomicBuffers[_atomicBuffers.Length - 1] = new UnsafeBuffer(mappedBuffer.Pointer, (int)(logLength - LogBufferDescriptor.LOG_META_DATA_LENGTH), LogBufferDescriptor.LOG_META_DATA_LENGTH);
+                _atomicBuffers[_atomicBuffers.Length - 1] = new UnsafeBuffer(mappedBuffer.Pointer, (int) (logLength - LogBufferDescriptor.LOG_META_DATA_LENGTH), LogBufferDescriptor.LOG_META_DATA_LENGTH);
             }
             else
             {
                 _mappedByteBuffers = new MappedByteBuffer[LogBufferDescriptor.PARTITION_COUNT + 1];
-                long metaDataSectionOffset = termLength * (long)LogBufferDescriptor.PARTITION_COUNT;
-                int metaDataSectionLength = (int)(logLength - metaDataSectionOffset);
+                var metaDataSectionOffset = termLength*(long) LogBufferDescriptor.PARTITION_COUNT;
+                var metaDataSectionLength = (int) (logLength - metaDataSectionOffset);
 
-                var memoryMappedFile = MemoryMappedFile.CreateFromFile(logFileName, FileMode.Open);
+                var memoryMappedFile = IoUtil.OpenMemoryMappedFile(logFileName);
                 var metaDataMappedBuffer = new MappedByteBuffer(memoryMappedFile, metaDataSectionOffset, metaDataSectionLength);
 
                 _mappedByteBuffers[_mappedByteBuffers.Length - 1] = metaDataMappedBuffer;
 
-                for (int i = 0; i < LogBufferDescriptor.PARTITION_COUNT; i++)
+                for (var i = 0; i < LogBufferDescriptor.PARTITION_COUNT; i++)
                 {
-                    _mappedByteBuffers[i] = new MappedByteBuffer(memoryMappedFile, termLength * (long)i, termLength);
+                    _mappedByteBuffers[i] = new MappedByteBuffer(memoryMappedFile, termLength*(long) i, termLength);
 
                     _atomicBuffers[i] = new UnsafeBuffer(_mappedByteBuffers[i].Pointer, termLength);
-                    _atomicBuffers[i + LogBufferDescriptor.PARTITION_COUNT] = new UnsafeBuffer(metaDataMappedBuffer.Pointer, i * LogBufferDescriptor.TERM_META_DATA_LENGTH, LogBufferDescriptor.TERM_META_DATA_LENGTH);
+                    _atomicBuffers[i + LogBufferDescriptor.PARTITION_COUNT] = new UnsafeBuffer(metaDataMappedBuffer.Pointer, i*LogBufferDescriptor.TERM_META_DATA_LENGTH, LogBufferDescriptor.TERM_META_DATA_LENGTH);
                 }
 
                 _atomicBuffers[_atomicBuffers.Length - 1] = new UnsafeBuffer(metaDataMappedBuffer.Pointer, metaDataSectionLength - LogBufferDescriptor.LOG_META_DATA_LENGTH, LogBufferDescriptor.LOG_META_DATA_LENGTH);
             }
 
-            // TODO try/catch and dispose memory mapped files
-
-            foreach (UnsafeBuffer buffer in _atomicBuffers)
+            // TODO try/catch
+            
+            foreach (var buffer in _atomicBuffers)
             {
                 buffer.VerifyAlignment();
             }
@@ -90,7 +88,7 @@ namespace Adaptive.Aeron
 
         public virtual void Dispose()
         {
-            foreach (MappedByteBuffer buffer in _mappedByteBuffers)
+            foreach (var buffer in _mappedByteBuffers)
             {
                 IoUtil.Unmap(buffer);
             }

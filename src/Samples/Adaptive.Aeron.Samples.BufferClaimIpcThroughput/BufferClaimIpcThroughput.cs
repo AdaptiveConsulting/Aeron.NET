@@ -103,8 +103,8 @@ namespace Adaptive.Aeron.Samples.BufferClaimIpcThroughput
                             }
                         }
 
-                        var offset = bufferClaim.Offset();
-                        bufferClaim.Buffer().PutInt(offset, i); // Example field write
+                        var offset = bufferClaim.Offset;
+                        bufferClaim.Buffer.PutInt(offset, i); // Example field write
                                                                 // Real app would write whatever fields are required via a flyweight like SBE
 
                         bufferClaim.Commit();
@@ -119,9 +119,8 @@ namespace Adaptive.Aeron.Samples.BufferClaimIpcThroughput
             }
         }
 
-        public sealed class Subscriber : IFragmentHandler
+        public sealed class Subscriber
         {
-
             internal readonly AtomicBoolean Running;
             internal readonly Subscription Subscription;
             private readonly AtomicLong _totalBytes = new AtomicLong();
@@ -139,20 +138,20 @@ namespace Adaptive.Aeron.Samples.BufferClaimIpcThroughput
 
             public void Run()
             {
-                while (Subscription.ImageCount() == 0)
+                while (Subscription.ImageCount == 0)
                 {
                     // wait for an image to be ready
                     Thread.Yield();
                 }
 
-                var image = Subscription.Images()[0];
+                var image = Subscription.Images[0];
 
                 long failedPolls = 0;
                 long successfulPolls = 0;
 
                 while (Running.Get())
                 {
-                    var fragmentsRead = image.Poll(this, MESSAGE_COUNT_LIMIT);
+                    var fragmentsRead = image.Poll(OnFragment, MESSAGE_COUNT_LIMIT);
                     if (0 == fragmentsRead)
                     {
                         ++failedPolls;

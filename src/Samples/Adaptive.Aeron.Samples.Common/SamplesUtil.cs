@@ -18,7 +18,7 @@ namespace Adaptive.Aeron.Samples.Common
         /// <param name="limit">           passed to <seealso cref="Subscription#poll(FragmentHandler, int)"/> </param>
         /// <param name="running">         indication for loop </param>
         /// <returns> loop function </returns>
-        public static Action<Subscription> SubscriberLoop(IFragmentHandler fragmentHandler, int limit, AtomicBoolean running)
+        public static Action<Subscription> SubscriberLoop(FragmentHandler fragmentHandler, int limit, AtomicBoolean running)
         {
             IIdleStrategy idleStrategy = new BusySpinIdleStrategy();
 
@@ -33,7 +33,7 @@ namespace Adaptive.Aeron.Samples.Common
         /// <param name="running">         indication for loop </param>
         /// <param name="idleStrategy">    to use for loop </param>
         /// <returns> loop function </returns>
-        public static Action<Subscription> SubscriberLoop(IFragmentHandler fragmentHandler, int limit, AtomicBoolean running, IIdleStrategy idleStrategy)
+        public static Action<Subscription> SubscriberLoop(FragmentHandler fragmentHandler, int limit, AtomicBoolean running, IIdleStrategy idleStrategy)
         {
             return subscription =>
             {
@@ -45,30 +45,30 @@ namespace Adaptive.Aeron.Samples.Common
         }
 
         /// <summary>
-        /// Return a reusable, parameterized <seealso cref="IFragmentHandler"/> that prints to stdout
+        /// Return a reusable, parameterized <seealso cref="FragmentHandler"/> that prints to stdout
         /// </summary>
         /// <param name="streamId"> to show when printing </param>
         /// <returns> subscription data handler function that prints the message contents </returns>
-        public static IFragmentHandler PrintStringMessage(int streamId)
+        public static FragmentHandler PrintStringMessage(int streamId)
         {
-            return new DelegateFragmentHandler((buffer, offset, length, header) =>
+            return (buffer, offset, length, header) =>
             {
                 var data = new byte[length];
                 buffer.GetBytes(offset, data);
 
-                Console.WriteLine($"Message to stream {streamId:D} from session {header.SessionId():D} ({length:D}@{offset:D}) <<{Encoding.UTF8.GetString(data)}>>");
-            });
+                Console.WriteLine($"Message to stream {streamId:D} from session {header.SessionId:D} ({length:D}@{offset:D}) <<{Encoding.UTF8.GetString(data)}>>");
+            };
         }
 
         /// <summary>
-        /// Return a reusable, parameteried <seealso cref="IFragmentHandler"/> that calls into a
+        /// Return a reusable, parameteried <seealso cref="FragmentHandler"/> that calls into a
         /// <seealso cref="RateReporter"/>.
         /// </summary>
         /// <param name="reporter"> for the rate </param>
-        /// <returns> <seealso cref="IFragmentHandler"/> that records the rate information </returns>
-        public static IFragmentHandler RateReporterHandler(RateReporter reporter)
+        /// <returns> <seealso cref="FragmentHandler"/> that records the rate information </returns>
+        public static FragmentHandler RateReporterHandler(RateReporter reporter)
         {
-            return new DelegateFragmentHandler((buffer, offset, length, header) => reporter.OnMessage(1, length));
+            return (buffer, offset, length, header) => reporter.OnMessage(1, length);
         }
 
         /// <summary>
@@ -102,8 +102,8 @@ namespace Adaptive.Aeron.Samples.Common
         /// <param name="image"> that has been created </param>
         public static void PrintAvailableImage(Image image)
         {
-            var subscription = image.Subscription();
-            Console.WriteLine($"Available image on {subscription.Channel()} streamId={subscription.StreamId():D} sessionId={image.SessionId():D} from {image.SourceIdentity()}");
+            var subscription = image.Subscription;
+            Console.WriteLine($"Available image on {subscription.Channel} streamId={subscription.StreamId:D} sessionId={image.SessionId:D} from {image.SourceIdentity}");
         }
 
         /// <summary>
@@ -112,8 +112,8 @@ namespace Adaptive.Aeron.Samples.Common
         /// <param name="image"> that has gone inactive </param>
         public static void PrintUnavailableImage(Image image)
         {
-            var subscription = image.Subscription();
-            Console.WriteLine($"Unavailable image on {subscription.Channel()} streamId={subscription.StreamId():D} sessionId={image.SessionId():D}");
+            var subscription = image.Subscription;
+            Console.WriteLine($"Unavailable image on {subscription.Channel} streamId={subscription.StreamId:D} sessionId={image.SessionId:D}");
         }
     }
 }

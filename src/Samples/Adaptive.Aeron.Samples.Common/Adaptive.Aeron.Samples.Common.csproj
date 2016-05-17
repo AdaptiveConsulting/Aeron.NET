@@ -68,7 +68,6 @@
   <ItemGroup>
     <Compile Include="RuntimeInformation.cs" />
     <Compile Include="ComputerSpecifications.cs" />
-    <Compile Include="DelegateFragmentHandler.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RateReporter.cs" />
     <Compile Include="SampleConfiguration.cs" />

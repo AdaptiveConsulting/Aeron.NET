@@ -5,6 +5,10 @@ using Adaptive.Agrona.Concurrent.Broadcast;
 
 namespace Adaptive.Aeron
 {
+    /// <summary>
+    /// Analogue of the <see cref="DriverProxy"/> on the client side
+    /// </summary>
+
     internal class DriverListenerAdapter
     {
         public const long MISSING_REGISTRATION_ID = -1L;

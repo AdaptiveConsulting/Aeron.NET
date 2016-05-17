@@ -85,6 +85,7 @@
     <Compile Include="Concurrent\IAgent.cs" />
     <Compile Include="Concurrent\IAtomicBuffer.cs" />
     <Compile Include="Concurrent\Status\AtomicCounter.cs" />
+    <Compile Include="Concurrent\Status\AtomicLongPosition.cs" />
     <Compile Include="Concurrent\Status\CountersManager.cs" />
     <Compile Include="Concurrent\Status\CountersReader.cs" />
     <Compile Include="Concurrent\NoOpIdleStrategy.cs" />

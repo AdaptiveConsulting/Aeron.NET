@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Threading;
-using Adaptive.Aeron.LogBuffer;
 using Adaptive.Aeron.Samples.Common;
 using Adaptive.Agrona.Concurrent;
 
@@ -12,7 +11,7 @@ namespace Adaptive.Aeron.Samples.RateSubscriber
     public class RateSubscriber
     {
         private static readonly int STREAM_ID = SampleConfiguration.STREAM_ID;
-        private static readonly string CHANNEL = SampleConfiguration.CHANNEL;
+        private static readonly string CHANNEL = Aeron.Context.IPC_CHANNEL;
         private static readonly int FRAGMENT_COUNT_LIMIT = SampleConfiguration.FRAGMENT_COUNT_LIMIT;
 
         public static void Main(string[] args)
@@ -25,11 +24,11 @@ namespace Adaptive.Aeron.Samples.RateSubscriber
 
 
             var reporter = new RateReporter(1000, SamplesUtil.PrintRate);
-            IFragmentHandler rateReporterHandler = new FragmentAssembler(SamplesUtil.RateReporterHandler(reporter));
+            var fragmentAssembler = new FragmentAssembler(SamplesUtil.RateReporterHandler(reporter));
             var running = new AtomicBoolean(true);
-            
-            Thread t = new Thread(subscription => SamplesUtil.SubscriberLoop(rateReporterHandler, FRAGMENT_COUNT_LIMIT, running)((Subscription) subscription)); ;
-            Thread report = new Thread(reporter.Run);
+
+            var t = new Thread(subscription => SamplesUtil.SubscriberLoop(fragmentAssembler.OnFragment, FRAGMENT_COUNT_LIMIT, running)((Subscription) subscription));
+            var report = new Thread(reporter.Run);
 
 
             using (var aeron = Aeron.Connect(ctx))

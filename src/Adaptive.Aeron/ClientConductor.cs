@@ -16,9 +16,9 @@ namespace Adaptive.Aeron
     /// </summary>
     public class ClientConductor : IAgent, IDriverListener
     {
-        private const long NO_CORRELATION_ID = -1;
-        private static readonly long RESOURCE_TIMEOUT_NS = NanoUtil.FromSeconds(1);
-        private static readonly long RESOURCE_LINGER_NS = NanoUtil.FromSeconds(5);
+        private const long NoCorrelationID = -1;
+        private static readonly long ResourceTimeoutNs = NanoUtil.FromSeconds(1);
+        private static readonly long ResourceLingerNs = NanoUtil.FromSeconds(5);
 
         private readonly long _keepAliveIntervalNs;
         private readonly long _driverTimeoutMs;
@@ -101,7 +101,7 @@ namespace Adaptive.Aeron
         {
             lock (this)
             {
-                return DoWork(NO_CORRELATION_ID, null);
+                return DoWork(NoCorrelationID, null);
             }
         }
 
@@ -139,14 +139,14 @@ namespace Adaptive.Aeron
             {
                 VerifyDriverIsActive();
 
-                if (publication == _activePublications.Remove(publication.Channel(), publication.StreamId()))
+                if (publication == _activePublications.Remove(publication.Channel, publication.StreamId))
                 {
-                    var correlationId = _driverProxy.RemovePublication(publication.RegistrationId());
+                    var correlationId = _driverProxy.RemovePublication(publication.RegistrationId);
 
                     var timeout = _nanoClock.NanoTime() + _driverTimeoutNs;
 
                     LingerResource(publication.ManagedResource());
-                    DoWorkUntil(correlationId, timeout, publication.Channel());
+                    DoWorkUntil(correlationId, timeout, publication.Channel);
                 }
             }
         }
@@ -175,10 +175,10 @@ namespace Adaptive.Aeron
             {
                 VerifyDriverIsActive();
 
-                var correlationId = _driverProxy.RemoveSubscription(subscription.RegistrationId());
+                var correlationId = _driverProxy.RemoveSubscription(subscription.RegistrationId);
                 var timeout = _nanoClock.NanoTime() + _driverTimeoutNs;
 
-                DoWorkUntil(correlationId, timeout, subscription.Channel());
+                DoWorkUntil(correlationId, timeout, subscription.Channel);
 
                 _activeSubscriptions.Remove(subscription);
             }
@@ -199,7 +199,7 @@ namespace Adaptive.Aeron
                 {
                     long positionId;
 
-                    if (subscriberPositionMap.TryGetValue(subscription.RegistrationId(), out positionId))
+                    if (subscriberPositionMap.TryGetValue(subscription.RegistrationId, out positionId))
                     {
                         var image = new Image(subscription, sessionId, new UnsafeBufferPosition(_counterValuesBuffer, (int) positionId), _logBuffersFactory.Map(logFileName), _errorHandler, sourceIdentity, correlationId);
                         subscription.AddImage(image);
@@ -331,12 +331,12 @@ namespace Adaptive.Aeron
                 result++;
             }
 
-            if (now > (_timeOfLastCheckResources + RESOURCE_TIMEOUT_NS))
+            if (now > _timeOfLastCheckResources + ResourceTimeoutNs)
             {
                 for (var i = _lingeringResources.Count - 1; i >= 0; i--)
                 {
                     var resource = _lingeringResources[i];
-                    if (now > (resource.TimeOfLastStateChange() + RESOURCE_LINGER_NS))
+                    if (now > (resource.TimeOfLastStateChange() + ResourceLingerNs))
                     {
                         _lingeringResources.RemoveAt(i);
                         resource.Delete();

@@ -11,12 +11,12 @@ namespace Adaptive.Aeron.Tests.LogBuffer
     {
         private static readonly int TERM_BUFFER_CAPACITY = LogBufferDescriptor.TERM_MIN_LENGTH;
 
-        private UnsafeBuffer _termBuffer;
+        private IAtomicBuffer _termBuffer;
 
         [SetUp]
         public void SetUp()
         {
-            _termBuffer = A.Fake<UnsafeBuffer>();
+            _termBuffer = A.Fake<IAtomicBuffer>();
             A.CallTo(() => _termBuffer.Capacity).Returns(TERM_BUFFER_CAPACITY);
         }
 

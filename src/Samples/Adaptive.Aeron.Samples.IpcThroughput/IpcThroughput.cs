@@ -86,7 +86,7 @@ namespace Adaptive.Aeron.Samples.IpcThroughput
             public void Run()
             {
                 var publication = Publication;
-                var buffer = new UnsafeBuffer(new byte[publication.MaxMessageLength()]);
+                var buffer = new UnsafeBuffer(new byte[publication.MaxMessageLength]);
                 long backPressureCount = 0;
                 long totalMessageCount = 0;
 
@@ -112,7 +112,7 @@ namespace Adaptive.Aeron.Samples.IpcThroughput
             }
         }
 
-        public class Subscriber : IFragmentHandler
+        public class Subscriber
         {
             internal readonly AtomicBoolean Running;
             internal readonly Subscription Subscription;
@@ -132,20 +132,20 @@ namespace Adaptive.Aeron.Samples.IpcThroughput
 
             public void Run()
             {
-                while (Subscription.ImageCount() == 0)
+                while (Subscription.ImageCount == 0)
                 {
                     // wait for an image to be ready
                     Thread.Yield();
                 }
 
-                var image = Subscription.Images()[0];
+                var image = Subscription.Images[0];
 
                 long failedPolls = 0;
                 long successfulPolls = 0;
 
                 while (Running.Get())
                 {
-                    var fragmentsRead = image.Poll(this, MESSAGE_COUNT_LIMIT);
+                    var fragmentsRead = image.Poll(OnFragment, MESSAGE_COUNT_LIMIT);
                     if (0 == fragmentsRead)
                     {
                         ++failedPolls;
@@ -162,7 +162,7 @@ namespace Adaptive.Aeron.Samples.IpcThroughput
 
             public void OnFragment(IDirectBuffer buffer, int offset, int length, Header header)
             {
-                _totalBytes.Set(_totalBytes.Get() + length); // TODO java UNSAFE.putOrderedLong(this, TOTAL_BYTES_OFFSET, totalBytes + length);
+                _totalBytes.Set(_totalBytes.Get() + length);
             }
         }
     }

@@ -45,7 +45,7 @@ namespace Adaptive.Aeron.Samples.Pong
             using (var pongPublication = aeron.AddPublication(PONG_CHANNEL, PONG_STREAM_ID))
             using (var pingSubscription = aeron.AddSubscription(PING_CHANNEL, PING_STREAM_ID))
             {
-                IFragmentHandler dataHandler = new DelegateFragmentHandler((buffer, offset, length, header) => PingHandler(pongPublication, buffer, offset, length));
+                FragmentHandler dataHandler = (buffer, offset, length, header) => PingHandler(pongPublication, buffer, offset, length);
 
                 while (running.Get())
                 {

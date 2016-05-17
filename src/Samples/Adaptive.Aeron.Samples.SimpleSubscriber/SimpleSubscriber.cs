@@ -33,16 +33,16 @@ namespace Adaptive.Aeron.Samples.SimpleSubscriber
             Console.CancelKeyPress += (s, e) => running.Set(false);
 
             // dataHandler method is called for every new datagram received
-            IFragmentHandler fragmentHandler = new DelegateFragmentHandler((buffer, offset, length, header) =>
+            FragmentHandler fragmentHandler = (buffer, offset, length, header) =>
             {
                 var data = new byte[length];
                 buffer.GetBytes(offset, data);
 
-                Console.WriteLine($"Received message ({Encoding.UTF8.GetString(data)}) to stream {streamId:D} from session {header.SessionId():x} term id {header.TermId():x} term offset {header.TermOffset():D} ({length:D}@{offset:D})");
+                Console.WriteLine($"Received message ({Encoding.UTF8.GetString(data)}) to stream {streamId:D} from session {header.SessionId:x} term id {header.TermId:x} term offset {header.TermOffset:D} ({length:D}@{offset:D})");
 
                 // Received the intended message, time to exit the program
                 running.Set(false);
-            });
+            };
 
             // Create a context, needed for client connection to media driver
             // A separate media driver process need to run prior to running this application
