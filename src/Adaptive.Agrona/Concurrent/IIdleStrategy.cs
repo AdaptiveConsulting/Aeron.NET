@@ -16,13 +16,6 @@
     /// being inlined by setting the compilation symbol IDLESTRATEGY_NOINLINE.
     /// 
     /// </summary>
-    /// 
-    /// TODO JPW Implementers should mark add the attribute to the Idle methods
-    /// TODO haven't found any reference on this for .net, need to validate that this guarantees a safe point poll.
-    /// 
-    /// #if IDLESTRATEGY_NOINLINE
-    /// [MethodImpl(MethodImplOptions.NoInlining)]
-    /// #endif
     public interface IIdleStrategy
 	{
         /// <summary>
