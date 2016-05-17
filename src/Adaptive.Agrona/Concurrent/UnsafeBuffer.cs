@@ -162,9 +162,7 @@ namespace Adaptive.Agrona.Concurrent
                 throw new ArgumentException("offset=" + offset + " length=" + length + " not valid for buffer.capacity()=" + bufferCapacity);
             }
 #endif
-
-            // TODO decide how we want to handle pinning
-
+            
             FreeGcHandle();
             _needToFreeGcHandle = false;
 
