@@ -22,16 +22,14 @@ namespace Adaptive.Agrona.Tests
         private const long LongValue = int.MaxValue + 5L;
         private const double DoubleValue = int.MaxValue + 7.0d;
 
-        [Datapoint]
-        public static readonly IAtomicBuffer ByteArrayBacked = new UnsafeBuffer(new byte[BufferCapacity], 0, BufferCapacity);
+        [Datapoint] public readonly IAtomicBuffer ByteArrayBacked = new UnsafeBuffer(new byte[BufferCapacity], 0, BufferCapacity);
 
-        [Datapoint]
-        public static readonly IAtomicBuffer UnmanagedBacked = new UnsafeBuffer(Marshal.AllocHGlobal(BufferCapacity), BufferCapacity);
+        [Datapoint] public static readonly IAtomicBuffer UnmanagedBacked = new UnsafeBuffer(Marshal.AllocHGlobal(BufferCapacity), BufferCapacity);
 
-        //[Datapoint]
-        //public static readonly IAtomicBuffer MemoryMappedFileBacked 
-        //    = new UnsafeBuffer(new MappedByteBuffer(MemoryMappedFile.CreateNew("testmap", BufferCapacity)).Pointer, BufferCapacity);
-        
+        private static readonly MappedByteBuffer MappedByteBuffer = new MappedByteBuffer(MemoryMappedFile.CreateNew("testmap", BufferCapacity));
+
+        [Datapoint] public static readonly IAtomicBuffer MemoryMappedFileBacked = new UnsafeBuffer(MappedByteBuffer.Pointer, BufferCapacity);
+
         [Theory]
         public void ShouldGetCapacity(IAtomicBuffer buffer)
         {
@@ -42,7 +40,7 @@ namespace Adaptive.Agrona.Tests
         [ExpectedException(typeof(IndexOutOfRangeException))]
         public void ShouldThrowExceptionForAboveCapacity(IAtomicBuffer buffer)
         {
-            int index = BufferCapacity + 1;
+            var index = BufferCapacity + 1;
             buffer.CheckLimit(index);
         }
 
@@ -92,10 +90,10 @@ namespace Adaptive.Agrona.Tests
         public void ShouldCopyMemory(IAtomicBuffer buffer)
         {
             var testBytes = Encoding.UTF8.GetBytes("xxxxxxxxxxx");
-            
-            buffer.SetMemory(0, testBytes.Length, (byte)'x');
 
-            for (int i = 0; i < testBytes.Length; i++)
+            buffer.SetMemory(0, testBytes.Length, (byte) 'x');
+
+            for (var i = 0; i < testBytes.Length; i++)
             {
                 Assert.That(Marshal.ReadByte(buffer.BufferPointer, i), Is.EqualTo(testBytes[i]));
             }
@@ -144,7 +142,7 @@ namespace Adaptive.Agrona.Tests
         [Theory]
         public void ShouldAddLongOrderedToNativeBuffer(IAtomicBuffer buffer)
         {
-            long initialValue = int.MaxValue + 7L;
+            var initialValue = int.MaxValue + 7L;
             const long increment = 9L;
             buffer.PutLongOrdered(Index, initialValue);
             buffer.AddLongOrdered(Index, increment);
@@ -162,25 +160,12 @@ namespace Adaptive.Agrona.Tests
         }
 
         [Theory]
-        [Ignore("Not yet implemented")]
-        public void ShouldGetAndSetLongToNativeBuffer(IAtomicBuffer buffer)
-        {
-            Marshal.WriteInt64(buffer.BufferPointer, Index, LongValue);
-
-            const long afterValue = 1;
-            long beforeValue = buffer.GetAndSetLong(Index, afterValue);
-
-            Assert.That(beforeValue, Is.EqualTo(LongValue));
-            Assert.That(Marshal.ReadInt64(buffer.BufferPointer, Index), Is.EqualTo(afterValue));
-        }
-
-        [Theory]
         public void ShouldGetAndAddLongToNativeBuffer(IAtomicBuffer buffer)
         {
             Marshal.WriteInt64(buffer.BufferPointer, Index, LongValue);
 
             const long delta = 1;
-            long beforeValue = buffer.GetAndAddLong(Index, delta);
+            var beforeValue = buffer.GetAndAddLong(Index, delta);
 
             Assert.That(beforeValue, Is.EqualTo(LongValue));
             Assert.That(Marshal.ReadInt64(buffer.BufferPointer, Index), Is.EqualTo(LongValue + delta));
@@ -248,25 +233,12 @@ namespace Adaptive.Agrona.Tests
         }
 
         [Theory]
-        [Ignore("Not yet implemented")]
-        public void ShouldGetAndSetIntToNativeBuffer(IAtomicBuffer buffer)
-        {
-            Marshal.WriteInt32(buffer.BufferPointer, Index, IntValue);
-
-            const int afterValue = 1;
-            int beforeValue = buffer.GetAndSetInt(Index, afterValue);
-
-            Assert.That(beforeValue, Is.EqualTo(IntValue));
-            Assert.That(Marshal.ReadInt32(buffer.BufferPointer, Index), Is.EqualTo(afterValue));
-        }
-
-        [Theory]
         public void ShouldGetAndAddIntToNativeBuffer(IAtomicBuffer buffer)
         {
             Marshal.WriteInt32(buffer.BufferPointer, Index, IntValue);
 
             const int delta = 1;
-            int beforeValue = buffer.GetAndAddInt(Index, delta);
+            var beforeValue = buffer.GetAndAddInt(Index, delta);
 
             Assert.That(beforeValue, Is.EqualTo(IntValue));
             Assert.That(Marshal.ReadInt32(buffer.BufferPointer, Index), Is.EqualTo(IntValue + delta));
@@ -318,24 +290,6 @@ namespace Adaptive.Agrona.Tests
             buffer.PutChar(Index, CharValue);
 
             Assert.That(Marshal.ReadInt16(buffer.BufferPointer, Index), Is.EqualTo(CharValue));
-        }
-
-        [Theory]
-        [Ignore("Not implemented yet")]
-        public void ShouldGetCharVolatileFromNativeBuffer(IAtomicBuffer buffer)
-        {
-            //duplicateBuffer.PutChar(INDEX, CHAR_VALUE);
-
-            //Assert.That(buffer.GetCharVolatile(INDEX), Is.EqualTo(CHAR_VALUE));
-        }
-
-        [Theory]
-        [Ignore("Not implemented yet")]
-        public void ShouldPutCharVolatileToNativeBuffer(IAtomicBuffer buffer)
-        {
-            //buffer.PutCharVolatile(INDEX, CHAR_VALUE);
-
-            //Assert.That(duplicateBuffer.GetChar(INDEX), Is.EqualTo(CHAR_VALUE));
         }
 
         [Theory]
@@ -415,10 +369,10 @@ namespace Adaptive.Agrona.Tests
         [Theory]
         public void ShouldGetByteArrayFromBuffer(IAtomicBuffer buffer)
         {
-            byte[] testArray = { (byte)'H', (byte)'e', (byte)'l', (byte)'l', (byte)'o' };
+            byte[] testArray = {(byte) 'H', (byte) 'e', (byte) 'l', (byte) 'l', (byte) 'o'};
 
-            int i = Index;
-            foreach (byte v in testArray)
+            var i = Index;
+            foreach (var v in testArray)
             {
                 buffer.PutByte(i, v);
                 i += BitUtil.SIZE_OF_BYTE;
@@ -434,11 +388,11 @@ namespace Adaptive.Agrona.Tests
         public void ShouldGetBytesFromBuffer(IAtomicBuffer buffer)
         {
             var testBytes = Encoding.UTF8.GetBytes("Hello World");
-            for (int i = 0; i < testBytes.Length; i++)
+            for (var i = 0; i < testBytes.Length; i++)
             {
-                Marshal.WriteByte(buffer.BufferPointer, Index+i, testBytes[i]);
+                Marshal.WriteByte(buffer.BufferPointer, Index + i, testBytes[i]);
             }
-            
+
             var buff = new byte[testBytes.Length];
             buffer.GetBytes(Index, buff);
 
@@ -452,7 +406,7 @@ namespace Adaptive.Agrona.Tests
             buffer.PutBytes(Index, testBytes);
 
             var buff = new byte[testBytes.Length];
-            for (int i = 0; i < testBytes.Length; i++)
+            for (var i = 0; i < testBytes.Length; i++)
             {
                 buff[i] = Marshal.ReadByte(buffer.BufferPointer, Index + i);
             }
@@ -469,7 +423,7 @@ namespace Adaptive.Agrona.Tests
             buffer.PutBytes(Index, srcUnsafeBuffer, 0, testBytes.Length);
 
             var buff = new byte[testBytes.Length];
-            for (int i = 0; i < testBytes.Length; i++)
+            for (var i = 0; i < testBytes.Length; i++)
             {
                 buff[i] = Marshal.ReadByte(buffer.BufferPointer, Index + i);
             }
@@ -486,7 +440,7 @@ namespace Adaptive.Agrona.Tests
             srcUnsafeBuffer.GetBytes(0, buffer, Index, testBytes.Length);
 
             var buff = new byte[testBytes.Length];
-            for (int i = 0; i < testBytes.Length; i++)
+            for (var i = 0; i < testBytes.Length; i++)
             {
                 buff[i] = Marshal.ReadByte(buffer.BufferPointer, Index + i);
             }
