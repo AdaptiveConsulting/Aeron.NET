@@ -2,7 +2,6 @@
 
 namespace Adaptive.Agrona.Concurrent
 {
-    // TODO JPW needs some more research
     public class AtomicLong
     {
         private long _long;
@@ -13,7 +12,7 @@ namespace Adaptive.Agrona.Concurrent
         /// <returns> the current value.</returns>
         public long Get()
         {
-            return Volatile.Read(ref _long);
+            return Interlocked.Read(ref _long);
         }
 
         /// <summary>
@@ -22,12 +21,12 @@ namespace Adaptive.Agrona.Concurrent
         /// <param name="newValue"> the new value.</param>
         public void LazySet(long newValue)
         {
-            Volatile.Write(ref _long, newValue);
+            Interlocked.Exchange(ref _long, newValue);
         }
 
         public void Set(long value)
         {
-            Volatile.Write(ref _long, value);
+            Interlocked.Exchange(ref _long, value);
         }
 
         public void Add(long add)
