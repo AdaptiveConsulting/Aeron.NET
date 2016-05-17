@@ -212,7 +212,7 @@ namespace Adaptive.Aeron
 
                     if (CncFile() != null)
                     {
-                        _cncByteBuffer = IoUtil.MapExistingFile(CncFile().FullName, CncFileDescriptor.CNC_FILE);
+                        _cncByteBuffer = IoUtil.MapExistingFile(CncFile().FullName);
                         _cncMetaDataBuffer = CncFileDescriptor.CreateMetaDataBuffer(_cncByteBuffer);
 
                         var cncVersion = _cncMetaDataBuffer.GetInt(CncFileDescriptor.CncVersionOffset(0));
