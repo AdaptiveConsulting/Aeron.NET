@@ -53,16 +53,22 @@ namespace Adaptive.Aeron.LogBuffer
         {
             _initialTermId = initialTermId;
         }
+        
+        public void SetBuffer(IDirectBuffer buffer, int offset)
+        {
+            Buffer = buffer;
+            Offset = offset;
+        }
 
         /// <summary>
         /// The offset at which the frame begins.
         /// </summary>
-        public int Offset { get; set; }
+        public int Offset { get; private set; }
         
         /// <summary>
         /// The <seealso cref="IDirectBuffer"/> containing the header.
         /// </summary>
-        public IDirectBuffer Buffer { get; set; }
+        public IDirectBuffer Buffer { get; private set; }
 
         /// <summary>
         /// The total length of the frame including the header.

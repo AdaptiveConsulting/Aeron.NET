@@ -25,7 +25,7 @@ namespace Adaptive.Aeron.Tests
             adapter = new FragmentAssembler(delegateFragmentHandler);
             header = A.Fake<Header>(x => x.Wrapping(new Header(INITIAL_TERM_ID, LogBufferDescriptor.TERM_MIN_LENGTH)));
 
-            header.Buffer = termBuffer;
+            header.SetBuffer(termBuffer, 0);
 
             A.CallTo(() => termBuffer.GetInt(A<int>._)).Returns(SESSION_ID);
         }

@@ -61,7 +61,7 @@ namespace Adaptive.Aeron
         /// Get the length in bytes for each term partition in the log buffer.
         /// </summary>
         /// <returns> the length in bytes for each term partition in the log buffer. </returns>
-        public int TermBufferLength=> _logBuffers.TermLength();
+        public int TermBufferLength => _logBuffers.TermLength();
 
         /// <summary>
         /// The sessionId for the steam of messages.
@@ -194,8 +194,7 @@ namespace Adaptive.Aeron
 
                     if (!FrameDescriptor.IsPaddingFrame(termBuffer, frameOffset))
                     {
-                        _header.Buffer = termBuffer;
-                        _header.Offset = frameOffset;
+                        _header.SetBuffer(termBuffer, frameOffset);
 
                         var action = fragmentHandler.OnFragment(termBuffer, frameOffset + DataHeaderFlyweight.HEADER_LENGTH, length - DataHeaderFlyweight.HEADER_LENGTH, _header);
 
