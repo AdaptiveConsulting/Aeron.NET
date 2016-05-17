@@ -11,10 +11,10 @@ namespace Adaptive.Aeron
     {
         public const int INITIAL_CAPACITY = 4096;
 
-        private readonly IMutableDirectBuffer _mutableDirectBuffer;
+        private readonly UnsafeBuffer _mutableDirectBuffer;
 
         private byte[] _buffer;
-        private int _limit = 0;
+        private int _limit;
         private int _capacity;
 
         /// <summary>
@@ -71,7 +71,7 @@ namespace Adaptive.Aeron
         /// The <seealso cref="IMutableDirectBuffer"/> that encapsulates the internal buffer.
         /// </summary>
         /// <returns> the <seealso cref="IMutableDirectBuffer"/> that encapsulates the internal buffer. </returns>
-        public IMutableDirectBuffer Buffer()
+        public UnsafeBuffer Buffer()
         {
             return _mutableDirectBuffer;
         }

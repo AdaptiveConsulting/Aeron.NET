@@ -143,8 +143,6 @@ namespace Adaptive.Aeron
             private IIdleStrategy _idleStrategy;
             private CopyBroadcastReceiver _toClientBuffer;
             private IRingBuffer _toDriverBuffer;
-            private MappedByteBuffer _cncByteBuffer;
-            private IDirectBuffer _cncMetaDataBuffer;
             private ILogBuffersFactory _logBuffersFactory;
             private ErrorHandler _errorHandler;
             private AvailableImageHandler _availableImageHandler;
@@ -155,6 +153,8 @@ namespace Adaptive.Aeron
             private FileInfo _cncFile;
             private string _aeronDirectoryName;
             private long _driverTimeoutMs = DEFAULT_DRIVER_TIMEOUT_MS;
+            private MappedByteBuffer _cncByteBuffer;
+            private UnsafeBuffer _cncMetaDataBuffer;
             private UnsafeBuffer _countersMetaDataBuffer;
             private UnsafeBuffer _countersValuesBuffer;
 
@@ -195,17 +195,17 @@ namespace Adaptive.Aeron
                 {
                     _cncFile = new FileInfo(Path.Combine(_aeronDirectoryName, CncFileDescriptor.CNC_FILE));
 
-                    if (null == _epochClock)
+                    if (_epochClock == null)
                     {
                         _epochClock = new SystemEpochClock();
                     }
 
-                    if (null == _nanoClock)
+                    if (_nanoClock == null)
                     {
                         _nanoClock = new SystemNanoClock();
                     }
 
-                    if (null == _idleStrategy)
+                    if (_idleStrategy == null)
                     {
                         _idleStrategy = new SleepingIdleStrategy(IdleSleepMs);
                     }
@@ -224,7 +224,7 @@ namespace Adaptive.Aeron
                         }
                     }
 
-                    if (null == _toClientBuffer)
+                    if (_toClientBuffer == null)
                     {
                         var receiver =
                             new BroadcastReceiver(CncFileDescriptor.CreateToClientsBuffer(_cncByteBuffer,
@@ -232,7 +232,7 @@ namespace Adaptive.Aeron
                         _toClientBuffer = new CopyBroadcastReceiver(receiver);
                     }
 
-                    if (null == _toDriverBuffer)
+                    if (_toDriverBuffer == null)
                     {
                         _toDriverBuffer =
                             new ManyToOneRingBuffer(CncFileDescriptor.CreateToDriverBuffer(_cncByteBuffer,
@@ -253,22 +253,22 @@ namespace Adaptive.Aeron
 
                     _interServiceTimeout = CncFileDescriptor.ClientLivenessTimeout(_cncMetaDataBuffer);
 
-                    if (null == _logBuffersFactory)
+                    if (_logBuffersFactory == null)
                     {
                         _logBuffersFactory = new MappedLogBuffersFactory();
                     }
 
-                    if (null == _errorHandler)
+                    if (_errorHandler == null)
                     {
                         _errorHandler = DEFAULT_ERROR_HANDLER;
                     }
 
-                    if (null == _availableImageHandler)
+                    if (_availableImageHandler == null)
                     {
                         _availableImageHandler = image => { };
                     }
 
-                    if (null == _unavailableImageHandler)
+                    if (_unavailableImageHandler == null)
                     {
                         _unavailableImageHandler = image => { };
                     }
@@ -542,7 +542,10 @@ namespace Adaptive.Aeron
             {
                 if (_isClosed.CompareAndSet(false, true))
                 {
-                    IoUtil.Unmap(_cncByteBuffer);
+                    _cncMetaDataBuffer?.Dispose();
+                    _countersMetaDataBuffer?.Dispose();
+                    _countersValuesBuffer?.Dispose();
+                    _cncByteBuffer?.Dispose();
                 }
             }
 

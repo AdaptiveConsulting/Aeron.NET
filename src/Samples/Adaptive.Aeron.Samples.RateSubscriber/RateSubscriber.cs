@@ -10,29 +10,27 @@ namespace Adaptive.Aeron.Samples.RateSubscriber
     /// </summary>
     public class RateSubscriber
     {
-        private static readonly int STREAM_ID = SampleConfiguration.STREAM_ID;
-        private static readonly string CHANNEL = Aeron.Context.IPC_CHANNEL;
-        private static readonly int FRAGMENT_COUNT_LIMIT = SampleConfiguration.FRAGMENT_COUNT_LIMIT;
+        private static readonly int StreamID = SampleConfiguration.STREAM_ID;
+        private static readonly string Channel = Aeron.Context.IPC_CHANNEL;
+        private static readonly int FragmentCountLimit = SampleConfiguration.FRAGMENT_COUNT_LIMIT;
 
-        public static void Main(string[] args)
+        public static void Main()
         {
-            Console.WriteLine("Subscribing to " + CHANNEL + " on stream Id " + STREAM_ID);
+            Console.WriteLine("Subscribing to " + Channel + " on stream Id " + StreamID);
 
             var ctx = new Aeron.Context()
                 .AvailableImageHandler(SamplesUtil.PrintUnavailableImage)
                 .UnavailableImageHandler(SamplesUtil.PrintUnavailableImage);
 
-
             var reporter = new RateReporter(1000, SamplesUtil.PrintRate);
             var fragmentAssembler = new FragmentAssembler(SamplesUtil.RateReporterHandler(reporter));
             var running = new AtomicBoolean(true);
 
-            var t = new Thread(subscription => SamplesUtil.SubscriberLoop(fragmentAssembler.OnFragment, FRAGMENT_COUNT_LIMIT, running)((Subscription) subscription));
+            var t = new Thread(subscription => SamplesUtil.SubscriberLoop(fragmentAssembler.OnFragment, FragmentCountLimit, running)((Subscription) subscription));
             var report = new Thread(reporter.Run);
 
-
             using (var aeron = Aeron.Connect(ctx))
-            using (var subscription = aeron.AddSubscription(CHANNEL, STREAM_ID))
+            using (var subscription = aeron.AddSubscription(Channel, StreamID))
             {
                 t.Start(subscription);
                 report.Start();
@@ -40,14 +38,10 @@ namespace Adaptive.Aeron.Samples.RateSubscriber
                 Console.ReadLine();
                 Console.WriteLine("Shutting down...");
                 running.Set(false);
-            }
+                reporter.Halt();
 
-            reporter.Halt();
-
-
-            if (!t.Join(5000))
-            {
-                Console.WriteLine("Warning: not all tasks completed promptly");
+                t.Join();
+                report.Join();
             }
         }
     }

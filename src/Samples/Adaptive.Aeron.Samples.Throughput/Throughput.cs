@@ -7,20 +7,22 @@ namespace Adaptive.Aeron.Samples.Throughput
 {
     public class Throughput
     {
-        private static readonly string CHANNEL = SampleConfiguration.CHANNEL;
-        private static readonly int STREAM_ID = SampleConfiguration.STREAM_ID;
-        private static readonly int MESSAGE_LENGTH = SampleConfiguration.MESSAGE_LENGTH;
-        private static readonly long NUMBER_OF_MESSAGES = SampleConfiguration.NUMBER_OF_MESSAGES;
-        private static readonly long LINGER_TIMEOUT_MS = SampleConfiguration.LINGER_TIMEOUT_MS;
-        private static readonly int FRAGMENT_COUNT_LIMIT = SampleConfiguration.FRAGMENT_COUNT_LIMIT;
+        private static readonly string Channel = SampleConfiguration.CHANNEL;
+        private static readonly int StreamID = SampleConfiguration.STREAM_ID;
+        private static readonly int MessageLength = SampleConfiguration.MESSAGE_LENGTH;
+        private static readonly long NumberOfMessages = SampleConfiguration.NUMBER_OF_MESSAGES;
+        private static readonly long LingerTimeoutMs = SampleConfiguration.LINGER_TIMEOUT_MS;
+        private static readonly int FragmentCountLimit = SampleConfiguration.FRAGMENT_COUNT_LIMIT;
 
-        private static readonly UnsafeBuffer ATOMIC_BUFFER = new UnsafeBuffer(new byte[MESSAGE_LENGTH]);
-        private static readonly BusySpinIdleStrategy OFFER_IDLE_STRATEGY = new BusySpinIdleStrategy();
+        private static readonly BusySpinIdleStrategy OfferIdleStrategy = new BusySpinIdleStrategy();
 
-        private static volatile bool PrintingActive = true;
+        private static volatile bool _printingActive = true;
 
-        public static void Main(string[] args)
+        public static void Main()
         {
+            ComputerSpecifications.Dump();
+
+
             var reporter = new RateReporter(1000, PrintRate);
             var rateReporterHandler = SamplesUtil.RateReporterHandler(reporter);
             var context = new Aeron.Context();
@@ -28,43 +30,44 @@ namespace Adaptive.Aeron.Samples.Throughput
             var running = new AtomicBoolean(true);
 
             var reportThread = new Thread(reporter.Run);
-            var subscribeThread = new Thread(subscription => SamplesUtil.SubscriberLoop(rateReporterHandler, FRAGMENT_COUNT_LIMIT, running)((Subscription) subscription));
+            var subscribeThread = new Thread(subscription => SamplesUtil.SubscriberLoop(rateReporterHandler, FragmentCountLimit, running)((Subscription) subscription));
 
             using (var aeron = Aeron.Connect(context))
-            using (var publication = aeron.AddPublication(CHANNEL, STREAM_ID))
-            using (var subscription = aeron.AddSubscription(CHANNEL, STREAM_ID))
+            using (var publication = aeron.AddPublication(Channel, StreamID))
+            using (var subscription = aeron.AddSubscription(Channel, StreamID))
+            using (var buffer = new UnsafeBuffer(new byte[MessageLength]))
             {
                 reportThread.Start();
                 subscribeThread.Start(subscription);
 
                 do
                 {
-                    Console.WriteLine("Streaming {0:G} messages of size {1:G} bytes to {2} on stream Id {3}", NUMBER_OF_MESSAGES, MESSAGE_LENGTH, CHANNEL, STREAM_ID);
+                    Console.WriteLine("Streaming {0:G} messages of size {1:G} bytes to {2} on stream Id {3}", NumberOfMessages, MessageLength, Channel, StreamID);
 
-                    PrintingActive = true;
+                    _printingActive = true;
 
                     long backPressureCount = 0;
-                    for (long i = 0; i < NUMBER_OF_MESSAGES; i++)
+                    for (long i = 0; i < NumberOfMessages; i++)
                     {
-                        ATOMIC_BUFFER.PutLong(0, i);
+                        buffer.PutLong(0, i);
 
-                        OFFER_IDLE_STRATEGY.Reset();
-                        while (publication.Offer(ATOMIC_BUFFER, 0, ATOMIC_BUFFER.Capacity) < 0)
+                        OfferIdleStrategy.Reset();
+                        while (publication.Offer(buffer, 0, buffer.Capacity) < 0)
                         {
-                            OFFER_IDLE_STRATEGY.Idle();
+                            OfferIdleStrategy.Idle();
                             backPressureCount++;
                         }
                     }
 
-                    Console.WriteLine("Done streaming. backPressureRatio=" + (double) backPressureCount/NUMBER_OF_MESSAGES);
+                    Console.WriteLine("Done streaming. backPressureRatio=" + (double) backPressureCount/NumberOfMessages);
 
-                    if (0 < LINGER_TIMEOUT_MS)
+                    if (0 < LingerTimeoutMs)
                     {
-                        Console.WriteLine("Lingering for " + LINGER_TIMEOUT_MS + " milliseconds...");
-                        Thread.Sleep((int) LINGER_TIMEOUT_MS);
+                        Console.WriteLine("Lingering for " + LingerTimeoutMs + " milliseconds...");
+                        Thread.Sleep((int) LingerTimeoutMs);
                     }
 
-                    PrintingActive = false;
+                    _printingActive = false;
                 } while (Console.ReadLine() != "x");
 
                 reporter.Halt();
@@ -79,7 +82,7 @@ namespace Adaptive.Aeron.Samples.Throughput
 
         public static void PrintRate(double messagesPerSec, double bytesPerSec, long totalFragments, long totalBytes)
         {
-            if (PrintingActive)
+            if (_printingActive)
             {
                 Console.WriteLine("{0:#,0} msgs/sec, {1} bytes/sec, totals {2} messages {3} MB", messagesPerSec, bytesPerSec, totalFragments, totalBytes/(1024*1024));
             }

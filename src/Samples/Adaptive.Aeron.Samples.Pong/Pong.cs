@@ -14,42 +14,37 @@ namespace Adaptive.Aeron.Samples.Pong
     /// </summary>
     public class Pong
     {
-        private static readonly int PING_STREAM_ID = SampleConfiguration.PING_STREAM_ID;
-        private static readonly int PONG_STREAM_ID = SampleConfiguration.PONG_STREAM_ID;
-        private static readonly string PING_CHANNEL = SampleConfiguration.PING_CHANNEL;
-        private static readonly string PONG_CHANNEL = SampleConfiguration.PONG_CHANNEL;
-        private static readonly int FRAME_COUNT_LIMIT = SampleConfiguration.FRAGMENT_COUNT_LIMIT;
-        private static readonly bool INFO_FLAG = SampleConfiguration.INFO_FLAG;
+        private static readonly int PingStreamID = SampleConfiguration.PING_STREAM_ID;
+        private static readonly int PongStreamID = SampleConfiguration.PONG_STREAM_ID;
+        private static readonly string PingChannel = SampleConfiguration.PING_CHANNEL;
+        private static readonly string PongChannel = SampleConfiguration.PONG_CHANNEL;
+        private static readonly int FrameCountLimit = SampleConfiguration.FRAGMENT_COUNT_LIMIT;
 
-        private static readonly IIdleStrategy PING_HANDLER_IDLE_STRATEGY = new BusySpinIdleStrategy();
+        private static readonly IIdleStrategy PingHandlerIdleStrategy = new BusySpinIdleStrategy();
 
-        public static void Main(string[] args)
+        public static void Main()
         {
-            var ctx = new Aeron.Context();
-
-            if (INFO_FLAG)
-            {
-                ctx.AvailableImageHandler(SamplesUtil.PrintAvailableImage);
-                ctx.UnavailableImageHandler(SamplesUtil.PrintUnavailableImage);
-            }
-
+            var ctx = new Aeron.Context()
+                .AvailableImageHandler(SamplesUtil.PrintUnavailableImage)
+                .UnavailableImageHandler(SamplesUtil.PrintUnavailableImage);
+            
             IIdleStrategy idleStrategy = new BusySpinIdleStrategy();
 
-            Console.WriteLine("Subscribing Ping at " + PING_CHANNEL + " on stream Id " + PING_STREAM_ID);
-            Console.WriteLine("Publishing Pong at " + PONG_CHANNEL + " on stream Id " + PONG_STREAM_ID);
+            Console.WriteLine("Subscribing Ping at " + PingChannel + " on stream Id " + PingStreamID);
+            Console.WriteLine("Publishing Pong at " + PongChannel + " on stream Id " + PongStreamID);
 
             var running = new AtomicBoolean(true);
             Console.CancelKeyPress += (_, e) => running.Set(false);
 
             using (var aeron = Aeron.Connect(ctx))
-            using (var pongPublication = aeron.AddPublication(PONG_CHANNEL, PONG_STREAM_ID))
-            using (var pingSubscription = aeron.AddSubscription(PING_CHANNEL, PING_STREAM_ID))
+            using (var pongPublication = aeron.AddPublication(PongChannel, PongStreamID))
+            using (var pingSubscription = aeron.AddSubscription(PingChannel, PingStreamID))
             {
                 FragmentHandler dataHandler = (buffer, offset, length, header) => PingHandler(pongPublication, buffer, offset, length);
 
                 while (running.Get())
                 {
-                    idleStrategy.Idle(pingSubscription.Poll(dataHandler, FRAME_COUNT_LIMIT));
+                    idleStrategy.Idle(pingSubscription.Poll(dataHandler, FrameCountLimit));
                 }
 
                 Console.WriteLine("Shutting down...");
@@ -63,11 +58,11 @@ namespace Adaptive.Aeron.Samples.Pong
                 return;
             }
 
-            PING_HANDLER_IDLE_STRATEGY.Reset();
+            PingHandlerIdleStrategy.Reset();
 
             while (pongPublication.Offer(buffer, offset, length) < 0L)
             {
-                PING_HANDLER_IDLE_STRATEGY.Idle();
+                PingHandlerIdleStrategy.Idle();
             }
         }
     }

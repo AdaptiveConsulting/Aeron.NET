@@ -17,20 +17,20 @@ namespace Adaptive.Aeron.Samples.BasicSubscriber
     /// </summary>
     public class BasicSubscriber
     {
-        private static readonly int STREAM_ID = SampleConfiguration.STREAM_ID;
-        private static readonly string CHANNEL = SampleConfiguration.CHANNEL;
-        private static readonly int FRAGMENT_COUNT_LIMIT = SampleConfiguration.FRAGMENT_COUNT_LIMIT;
+        private static readonly int StreamID = SampleConfiguration.STREAM_ID;
+        private static readonly string Channel = SampleConfiguration.CHANNEL;
+        private static readonly int FragmentCountLimit = SampleConfiguration.FRAGMENT_COUNT_LIMIT;
 
-        public static void Main(string[] args)
+        public static void Main()
         {
-            Console.WriteLine("Subscribing to " + CHANNEL + " on stream Id " + STREAM_ID);
+            Console.WriteLine("Subscribing to " + Channel + " on stream Id " + StreamID);
 
             var ctx = new Aeron.Context()
                 .AvailableImageHandler(SamplesUtil.PrintAvailableImage)
                 .UnavailableImageHandler(SamplesUtil.PrintUnavailableImage);
 
 
-            var fragmentHandler = SamplesUtil.PrintStringMessage(STREAM_ID);
+            var fragmentHandler = SamplesUtil.PrintStringMessage(StreamID);
             var running = new AtomicBoolean(true);
 
             // Register a SIGINT handler for graceful shutdown.
@@ -42,13 +42,11 @@ namespace Adaptive.Aeron.Samples.BasicSubscriber
             // The Aeron and Subscription classes implement "AutoCloseable" and will automatically
             // clean up resources when this try block is finished
             using (var aeron = Aeron.Connect(ctx))
-            using (var subscription = aeron.AddSubscription(CHANNEL, STREAM_ID))
+            using (var subscription = aeron.AddSubscription(Channel, StreamID))
             {
-                SamplesUtil.SubscriberLoop(fragmentHandler, FRAGMENT_COUNT_LIMIT, running)(subscription);
+                SamplesUtil.SubscriberLoop(fragmentHandler, FragmentCountLimit, running)(subscription);
                 Console.WriteLine("Shutting down...");
             }
-
-            Console.WriteLine();
         }
     }
 }
