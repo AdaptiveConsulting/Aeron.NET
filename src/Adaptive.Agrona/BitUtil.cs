@@ -258,19 +258,6 @@ namespace Adaptive.Agrona
 
             return current - 1;
         }
-        
-        /// <summary>
-        /// Generate a randomized integer over [<seealso cref="int.MinValue"/>, <seealso cref="int.MaxValue"/>] suitable for
-        /// use as an Aeron Id.
-        /// </summary>
-        /// <returns> randomized integer suitable as an Id. </returns>
-        public static int GenerateRandomisedId()
-        {
-            // Note Olivier: I've not ported that yet as it uses a standard Java class under the hood which does not have a .NET equivalent.
-            // we can port later, when required.
-            throw new NotImplementedException();
-            //return ThreadLocalRandom.Current().Next();
-        }
 
         /// <summary>
         /// Is an address aligned on a boundary.
