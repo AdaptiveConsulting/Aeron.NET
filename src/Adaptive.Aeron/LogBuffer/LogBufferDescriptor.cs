@@ -37,7 +37,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// <summary>
         /// Minimum buffer length for a log term
         /// </summary>
-        public const int TERM_MIN_LENGTH = 64*1024; // TODO: make a sensible default
+        public const int TERM_MIN_LENGTH = 64*1024;
 
         // ********************************
         // *** Term Meta Data Constants ***
@@ -70,22 +70,22 @@ namespace Adaptive.Aeron.LogBuffer
 
         static LogBufferDescriptor()
         {
-            int offset = (BitUtil.CACHE_LINE_LENGTH*2);
+            var offset = BitUtil.CACHE_LINE_LENGTH*2;
             TERM_TAIL_COUNTER_OFFSET = offset;
 
-            offset += (BitUtil.CACHE_LINE_LENGTH * 2);
+            offset += (BitUtil.CACHE_LINE_LENGTH*2);
             TERM_STATUS_OFFSET = offset;
 
-            offset += (BitUtil.CACHE_LINE_LENGTH * 2);
+            offset += (BitUtil.CACHE_LINE_LENGTH*2);
             TERM_META_DATA_LENGTH = offset;
 
             offset = 0;
             LOG_ACTIVE_PARTITION_INDEX_OFFSET = offset;
 
-            offset += (BitUtil.CACHE_LINE_LENGTH * 2);
+            offset += (BitUtil.CACHE_LINE_LENGTH*2);
             LOG_TIME_OF_LAST_SM_OFFSET = offset;
 
-            offset += (BitUtil.CACHE_LINE_LENGTH * 2);
+            offset += (BitUtil.CACHE_LINE_LENGTH*2);
             LOG_CORRELATION_ID_OFFSET = offset;
             LOG_INITIAL_TERM_ID_OFFSET = LOG_CORRELATION_ID_OFFSET + BitUtil.SIZE_OF_LONG;
             LOG_DEFAULT_FRAME_HEADER_LENGTH_OFFSET = LOG_INITIAL_TERM_ID_OFFSET + BitUtil.SIZE_OF_INT;
@@ -144,7 +144,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// <summary>
         /// Offset at which the default frame headers begin.
         /// </summary>
-        public static readonly int LOG_DEFAULT_FRAME_HEADER_MAX_LENGTH = BitUtil.CACHE_LINE_LENGTH * 2;
+        public static readonly int LOG_DEFAULT_FRAME_HEADER_MAX_LENGTH = BitUtil.CACHE_LINE_LENGTH*2;
 
 
         /// <summary>
@@ -211,7 +211,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// <exception cref="InvalidOperationException"> if the buffer is not as expected. </exception>
         public static void CheckMetaDataBuffer(UnsafeBuffer buffer)
         {
-            int capacity = buffer.Capacity;
+            var capacity = buffer.Capacity;
             if (capacity < TERM_META_DATA_LENGTH)
             {
                 string s = $"Meta data buffer capacity less than min length of {TERM_META_DATA_LENGTH:D}, capacity={capacity:D}";
@@ -328,7 +328,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// <returns> the next partition index </returns>
         public static int NextPartitionIndex(int currentIndex)
         {
-            return (currentIndex + 1) % PARTITION_COUNT;
+            return (currentIndex + 1)%PARTITION_COUNT;
         }
 
         /// <summary>
@@ -338,7 +338,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// <returns> the previous partition index </returns>
         public static int PreviousPartitionIndex(int currentIndex)
         {
-            return (currentIndex + (PARTITION_COUNT - 1)) % PARTITION_COUNT;
+            return (currentIndex + (PARTITION_COUNT - 1))%PARTITION_COUNT;
         }
 
         /// <summary>
@@ -349,7 +349,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// <returns> the index of which buffer should be used </returns>
         public static int IndexByTerm(int initialTermId, int activeTermId)
         {
-            return (activeTermId - initialTermId) % PARTITION_COUNT;
+            return (activeTermId - initialTermId)%PARTITION_COUNT;
         }
 
         /// <summary>
@@ -359,7 +359,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// <returns> the partition index for the term count. </returns>
         public static int IndexByTermCount(int termCount)
         {
-            return termCount % PARTITION_COUNT;
+            return termCount%PARTITION_COUNT;
         }
 
         /// <summary>
@@ -370,7 +370,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// <returns> the partition index for the position </returns>
         public static int IndexByPosition(long position, int positionBitsToShift)
         {
-            return (int)(((long)((ulong)position >> positionBitsToShift)) % PARTITION_COUNT);
+            return (int) (((long) ((ulong) position >> positionBitsToShift))%PARTITION_COUNT);
         }
 
         /// <summary>
@@ -411,7 +411,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// <returns> the term id according to the position </returns>
         public static int ComputeTermIdFromPosition(long position, int positionBitsToShift, int initialTermId)
         {
-            return ((int)((long)((ulong)position >> positionBitsToShift)) + initialTermId);
+            return ((int) ((long) ((ulong) position >> positionBitsToShift)) + initialTermId);
         }
 
         /// <summary>
@@ -422,9 +422,9 @@ namespace Adaptive.Aeron.LogBuffer
         /// <returns> the offset within the term that represents the position </returns>
         public static int ComputeTermOffsetFromPosition(long position, int positionBitsToShift)
         {
-            long mask = (1L << positionBitsToShift) - 1L;
+            var mask = (1L << positionBitsToShift) - 1L;
 
-            return (int)(position & mask);
+            return (int) (position & mask);
         }
 
         /// <summary>
@@ -434,7 +434,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// <returns> the total length of the log file. </returns>
         public static long ComputeLogLength(int termLength)
         {
-            return (termLength * PARTITION_COUNT) + (TERM_META_DATA_LENGTH * PARTITION_COUNT) + LOG_META_DATA_LENGTH;
+            return (termLength*PARTITION_COUNT) + (TERM_META_DATA_LENGTH*PARTITION_COUNT) + LOG_META_DATA_LENGTH;
         }
 
         /// <summary>
@@ -444,9 +444,9 @@ namespace Adaptive.Aeron.LogBuffer
         /// <returns> length of an individual term buffer in the log. </returns>
         public static int ComputeTermLength(long logLength)
         {
-            long metaDataSectionLength = (TERM_META_DATA_LENGTH * (long)PARTITION_COUNT) + LOG_META_DATA_LENGTH;
+            var metaDataSectionLength = TERM_META_DATA_LENGTH*(long) PARTITION_COUNT + LOG_META_DATA_LENGTH;
 
-            return (int)((logLength - metaDataSectionLength) / PARTITION_COUNT);
+            return (int) ((logLength - metaDataSectionLength)/PARTITION_COUNT);
         }
 
         /// <summary>
@@ -454,7 +454,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// </summary>
         /// <param name="logMetaDataBuffer"> into which the default headers should be stored. </param>
         /// <param name="defaultHeader">     to be stored. </param>
-        /// <exception cref="ArgumentException"> if the default header is larger than <seealso cref="#LOG_DEFAULT_FRAME_HEADER_MAX_LENGTH"/> </exception>
+        /// <exception cref="ArgumentException"> if the default header is larger than <seealso cref="LOG_DEFAULT_FRAME_HEADER_MAX_LENGTH"/> </exception>
         public static void StoreDefaultFrameHeader(UnsafeBuffer logMetaDataBuffer, IDirectBuffer defaultHeader)
         {
             if (defaultHeader.Capacity != DataHeaderFlyweight.HEADER_LENGTH)
@@ -497,8 +497,8 @@ namespace Adaptive.Aeron.LogBuffer
         /// <param name="newTermId">         to be used in the default headers. </param>
         public static void RotateLog(LogBufferPartition[] logPartitions, UnsafeBuffer logMetaDataBuffer, int activeIndex, int newTermId)
         {
-            int nextIndex = NextPartitionIndex(activeIndex);
-            int nextNextIndex = NextPartitionIndex(nextIndex);
+            var nextIndex = NextPartitionIndex(activeIndex);
+            var nextNextIndex = NextPartitionIndex(nextIndex);
 
             logPartitions[nextIndex].TermId(newTermId);
             logPartitions[nextNextIndex].StatusOrdered(NEEDS_CLEANING);
@@ -512,7 +512,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// <param name="initialTermId"> to be set. </param>
         public static void InitialiseTailWithTermId(UnsafeBuffer termMetaData, int initialTermId)
         {
-            termMetaData.PutLong(TERM_TAIL_COUNTER_OFFSET, ((long)initialTermId) << 32);
+            termMetaData.PutLong(TERM_TAIL_COUNTER_OFFSET, ((long) initialTermId) << 32);
         }
 
         /// <summary>
@@ -522,7 +522,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// <returns> the termId from a packed raw tail value. </returns>
         public static int TermId(long rawTail)
         {
-            return (int)((long)((ulong)rawTail >> 32));
+            return (int) ((long) ((ulong) rawTail >> 32));
         }
 
         /// <summary>
@@ -533,9 +533,9 @@ namespace Adaptive.Aeron.LogBuffer
         /// <returns> the termOffset value. </returns>
         public static int TermOffset(long rawTail, long termLength)
         {
-            long tail = rawTail & 0xFFFFFFFFL;
+            var tail = rawTail & 0xFFFFFFFFL;
 
-            return (int)Math.Min(tail, termLength);
+            return (int) Math.Min(tail, termLength);
         }
     }
 }

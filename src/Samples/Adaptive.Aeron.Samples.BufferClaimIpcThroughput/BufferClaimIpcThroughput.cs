@@ -10,20 +10,21 @@ namespace Adaptive.Aeron.Samples.BufferClaimIpcThroughput
 {
     public class BufferClaimIpcThroughput
     {
-        public const int BURST_LENGTH = 1000000;
-        public static readonly int MESSAGE_LENGTH = SampleConfiguration.MESSAGE_LENGTH;
-        public static readonly int MESSAGE_COUNT_LIMIT = SampleConfiguration.FRAGMENT_COUNT_LIMIT;
-        public static readonly string CHANNEL = Aeron.Context.IPC_CHANNEL;
-        public static readonly int STREAM_ID = SampleConfiguration.STREAM_ID;
+        private const int BurstLength = 1000000;
+        private static readonly int MessageLength = SampleConfiguration.MESSAGE_LENGTH;
+        private static readonly int MessageCountLimit = SampleConfiguration.FRAGMENT_COUNT_LIMIT;
+        private static readonly string Channel = Aeron.Context.IPC_CHANNEL;
+        private static readonly int StreamID = SampleConfiguration.STREAM_ID;
 
         public static void Main()
         {
-            var running = new AtomicBoolean(true);
-            Console.CancelKeyPress += (_, e) => running.Set(false);
+            ComputerSpecifications.Dump();
 
+            var running = new AtomicBoolean(true);
+            
             using (var aeron = Aeron.Connect())
-            using (var publication = aeron.AddPublication(CHANNEL, STREAM_ID))
-            using (var subscription = aeron.AddSubscription(CHANNEL, STREAM_ID))
+            using (var publication = aeron.AddPublication(Channel, StreamID))
+            using (var subscription = aeron.AddSubscription(Channel, StreamID))
             {
                 var subscriber = new Subscriber(running, subscription);
                 var subscriberThread = new Thread(subscriber.Run) {Name = "subscriber"};
@@ -34,6 +35,11 @@ namespace Adaptive.Aeron.Samples.BufferClaimIpcThroughput
                 subscriberThread.Start();
                 publisherThread.Start();
 
+                Console.WriteLine("Press any key to stop...");
+                Console.Read();
+
+                running.Set(false);
+                
                 subscriberThread.Join();
                 publisherThread.Join();
                 rateReporterThread.Join();
@@ -55,7 +61,7 @@ namespace Adaptive.Aeron.Samples.BufferClaimIpcThroughput
 
             public void Run()
             {
-                long lastTotalBytes = Subscriber.TotalBytes();
+                var lastTotalBytes = Subscriber.TotalBytes();
 
                 while (Running.Get())
                 {
@@ -64,7 +70,7 @@ namespace Adaptive.Aeron.Samples.BufferClaimIpcThroughput
                     var newTotalBytes = Subscriber.TotalBytes();
                     var duration = _stopwatch.ElapsedMilliseconds;
                     var bytesTransferred = newTotalBytes - lastTotalBytes;
-                    Console.WriteLine($"Duration {duration}ms - {bytesTransferred / MESSAGE_LENGTH} messages - {bytesTransferred} bytes");
+                    Console.WriteLine($"Duration {duration:N0}ms - {bytesTransferred/MessageLength:N0} messages - {bytesTransferred:N0} bytes");
 
                     _stopwatch.Restart();
                     lastTotalBytes = newTotalBytes;
@@ -92,9 +98,9 @@ namespace Adaptive.Aeron.Samples.BufferClaimIpcThroughput
 
                 while (Running.Get())
                 {
-                    for (var i = 0; i < BURST_LENGTH; i++)
+                    for (var i = 0; i < BurstLength; i++)
                     {
-                        while (publication.TryClaim(MESSAGE_LENGTH, bufferClaim) <= 0)
+                        while (publication.TryClaim(MessageLength, bufferClaim) <= 0)
                         {
                             ++backPressureCount;
                             if (!Running.Get())
@@ -105,7 +111,7 @@ namespace Adaptive.Aeron.Samples.BufferClaimIpcThroughput
 
                         var offset = bufferClaim.Offset;
                         bufferClaim.Buffer.PutInt(offset, i); // Example field write
-                                                                // Real app would write whatever fields are required via a flyweight like SBE
+                        // Real app would write whatever fields are required via a flyweight like SBE
 
                         bufferClaim.Commit();
 
@@ -113,8 +119,8 @@ namespace Adaptive.Aeron.Samples.BufferClaimIpcThroughput
                     }
                 }
 
-                
-                var backPressureRatio = backPressureCount / (double)totalMessageCount;
+
+                var backPressureRatio = backPressureCount/(double) totalMessageCount;
                 Console.WriteLine($"Publisher back pressure ratio: {backPressureRatio}");
             }
         }
@@ -151,7 +157,7 @@ namespace Adaptive.Aeron.Samples.BufferClaimIpcThroughput
 
                 while (Running.Get())
                 {
-                    var fragmentsRead = image.Poll(OnFragment, MESSAGE_COUNT_LIMIT);
+                    var fragmentsRead = image.Poll(OnFragment, MessageCountLimit);
                     if (0 == fragmentsRead)
                     {
                         ++failedPolls;
@@ -162,7 +168,7 @@ namespace Adaptive.Aeron.Samples.BufferClaimIpcThroughput
                     }
                 }
 
-                var failureRatio = failedPolls / (double)(successfulPolls + failedPolls);
+                var failureRatio = failedPolls/(double) (successfulPolls + failedPolls);
                 Console.WriteLine($"Subscriber poll failure ratio: {failureRatio}");
             }
 

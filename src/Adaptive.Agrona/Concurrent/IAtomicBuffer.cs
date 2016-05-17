@@ -51,14 +51,6 @@ namespace Adaptive.Agrona.Concurrent
         bool CompareAndSetLong(int index, long expectedValue, long updateValue);
 
         /// <summary>
-        /// Atomically exchange a value at a location returning the previous contents.
-        /// </summary>
-        /// <param name="index"> in bytes for where to put. </param>
-        /// <param name="value"> for at a given index </param>
-        /// <returns> previous value at the index </returns>
-        long GetAndSetLong(int index, long value);
-
-        /// <summary>
         /// Atomically add a delta to a value at a location returning the previous contents.
         /// To decrement a negative delta can be provided.
         /// </summary>
@@ -105,14 +97,6 @@ namespace Adaptive.Agrona.Concurrent
         bool CompareAndSetInt(int index, int expectedValue, int updateValue);
 
         /// <summary>
-        /// Atomically exchange a value at a location returning the previous contents.
-        /// </summary>
-        /// <param name="index"> in bytes for where to put. </param>
-        /// <param name="value"> for at a given index </param>
-        /// <returns> previous value </returns>
-        int GetAndSetInt(int index, int value);
-
-        /// <summary>
         /// Atomically add a delta to a value at a location returning the previous contents.
         /// To decrement a negative delta can be provided.
         /// </summary>
@@ -134,20 +118,6 @@ namespace Adaptive.Agrona.Concurrent
         /// <param name="index"> in bytes for where to put. </param>
         /// <param name="value"> for at a given index </param>
         void PutShortVolatile(int index, short value);
-
-        ///// <summary>
-        ///// Get the value at a given index with volatile semantics.
-        ///// </summary>
-        ///// <param name="index"> in bytes from which to get. </param>
-        ///// <returns> the value for at a given index </returns>
-        //char GetCharVolatile(int index);
-
-        ///// <summary>
-        ///// Put a value to a given index with volatile semantics.
-        ///// </summary>
-        ///// <param name="index"> in bytes for where to put. </param>
-        ///// <param name="value"> for at a given index </param>
-        //void PutCharVolatile(int index, char value);
 
         /// <summary>
         /// Get the value at a given index with volatile semantics.

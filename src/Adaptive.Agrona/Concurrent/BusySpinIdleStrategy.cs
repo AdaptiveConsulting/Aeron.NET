@@ -19,13 +19,12 @@ namespace Adaptive.Agrona.Concurrent
                 return;
             }
 
-            Thread.SpinWait(1);
+            Thread.SpinWait(0);
         }
 
         public void Idle()
         {
-            // TODO PERF how many ticks should we use? There is no parameter in java
-            Thread.SpinWait(1);
+            Thread.SpinWait(0);
         }
 
         public void Reset()

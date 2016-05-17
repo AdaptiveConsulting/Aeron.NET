@@ -10,20 +10,21 @@ namespace Adaptive.Aeron.Samples.IpcThroughput
 {
     public class IpcThroughput
     {
-        public const int BURST_LENGTH = 1000000;
-        public static readonly int MESSAGE_LENGTH = SampleConfiguration.MESSAGE_LENGTH;
-        public static readonly int MESSAGE_COUNT_LIMIT = SampleConfiguration.FRAGMENT_COUNT_LIMIT;
-        public static readonly string CHANNEL = Aeron.Context.IPC_CHANNEL;
-        public static readonly int STREAM_ID = SampleConfiguration.STREAM_ID;
+        private const int BurstLength = 1000000;
+        private static readonly int MessageLength = SampleConfiguration.MESSAGE_LENGTH;
+        private static readonly int MessageCountLimit = SampleConfiguration.FRAGMENT_COUNT_LIMIT;
+        private static readonly string Channel = Aeron.Context.IPC_CHANNEL;
+        private static readonly int StreamID = SampleConfiguration.STREAM_ID;
 
-        public static void Main(string[] args)
+        public static void Main()
         {
+            ComputerSpecifications.Dump();
+
             var running = new AtomicBoolean(true);
-            Console.CancelKeyPress += (_, e) => running.Set(false);
 
             using (var aeron = Aeron.Connect())
-            using (var publication = aeron.AddPublication(CHANNEL, STREAM_ID))
-            using (var subscription = aeron.AddSubscription(CHANNEL, STREAM_ID))
+            using (var publication = aeron.AddPublication(Channel, StreamID))
+            using (var subscription = aeron.AddSubscription(Channel, StreamID))
             {
                 var subscriber = new Subscriber(running, subscription);
                 var subscriberThread = new Thread(subscriber.Run) {Name = "subscriber"};
@@ -33,6 +34,11 @@ namespace Adaptive.Aeron.Samples.IpcThroughput
                 rateReporterThread.Start();
                 subscriberThread.Start();
                 publisherThread.Start();
+
+                Console.WriteLine("Press any key to stop...");
+                Console.Read();
+
+                running.Set(false);
 
                 subscriberThread.Join();
                 publisherThread.Join();
@@ -64,7 +70,7 @@ namespace Adaptive.Aeron.Samples.IpcThroughput
                     var newTotalBytes = Subscriber.TotalBytes();
                     var duration = _stopwatch.ElapsedMilliseconds;
                     var bytesTransferred = newTotalBytes - lastTotalBytes;
-                    Console.WriteLine($"Duration {duration}ms - {bytesTransferred/MESSAGE_LENGTH} messages - {bytesTransferred} bytes");
+                    Console.WriteLine($"Duration {duration:N0}ms - {bytesTransferred/MessageLength:N0} messages - {bytesTransferred:N0} bytes");
 
                     _stopwatch.Restart();
                     lastTotalBytes = newTotalBytes;
@@ -86,29 +92,31 @@ namespace Adaptive.Aeron.Samples.IpcThroughput
             public void Run()
             {
                 var publication = Publication;
-                var buffer = new UnsafeBuffer(new byte[publication.MaxMessageLength]);
-                long backPressureCount = 0;
-                long totalMessageCount = 0;
-
-                while (Running.Get())
+                using (var buffer = new UnsafeBuffer(new byte[publication.MaxMessageLength]))
                 {
-                    for (var i = 0; i < BURST_LENGTH; i++)
+                    long backPressureCount = 0;
+                    long totalMessageCount = 0;
+
+                    while (Running.Get())
                     {
-                        while (publication.Offer(buffer, 0, MESSAGE_LENGTH) <= 0)
+                        for (var i = 0; i < BurstLength; i++)
                         {
-                            ++backPressureCount;
-                            if (!Running.Get())
+                            while (publication.Offer(buffer, 0, MessageLength) <= 0)
                             {
-                                break;
+                                ++backPressureCount;
+                                if (!Running.Get())
+                                {
+                                    break;
+                                }
                             }
+
+                            ++totalMessageCount;
                         }
-
-                        ++totalMessageCount;
                     }
-                }
 
-                var backPressureRatio = backPressureCount/(double) totalMessageCount;
-                Console.WriteLine($"Publisher back pressure ratio: {backPressureRatio}");
+                    var backPressureRatio = backPressureCount/(double) totalMessageCount;
+                    Console.WriteLine($"Publisher back pressure ratio: {backPressureRatio}");
+                }
             }
         }
 
@@ -145,7 +153,7 @@ namespace Adaptive.Aeron.Samples.IpcThroughput
 
                 while (Running.Get())
                 {
-                    var fragmentsRead = image.Poll(OnFragment, MESSAGE_COUNT_LIMIT);
+                    var fragmentsRead = image.Poll(OnFragment, MessageCountLimit);
                     if (0 == fragmentsRead)
                     {
                         ++failedPolls;

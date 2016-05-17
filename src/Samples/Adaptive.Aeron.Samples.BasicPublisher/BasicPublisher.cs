@@ -19,34 +19,36 @@ namespace Adaptive.Aeron.Samples.BasicPublisher
     /// </summary>
     public class BasicPublisher
     {
-        private static readonly int STREAM_ID = SampleConfiguration.STREAM_ID;
-        private static readonly string CHANNEL = SampleConfiguration.CHANNEL;
-        private static readonly long NUMBER_OF_MESSAGES = SampleConfiguration.NUMBER_OF_MESSAGES;
-        private static readonly long LINGER_TIMEOUT_MS = SampleConfiguration.LINGER_TIMEOUT_MS;
-        private static readonly UnsafeBuffer BUFFER = new UnsafeBuffer(new byte[256]);
+        private static readonly int StreamID = SampleConfiguration.STREAM_ID;
+        private static readonly string Channel = SampleConfiguration.CHANNEL;
+        private static readonly long NumberOfMessages = SampleConfiguration.NUMBER_OF_MESSAGES;
+        private static readonly long LingerTimeoutMs = SampleConfiguration.LINGER_TIMEOUT_MS;
 
-        public static void Main(string[] args)
+        public static void Main()
         {
-            Console.WriteLine("Publishing to " + CHANNEL + " on stream Id " + STREAM_ID);
+            Console.WriteLine("Publishing to " + Channel + " on stream Id " + StreamID);
 
             var ctx = new Aeron.Context();
-            
+
             // Connect a new Aeron instance to the media driver and create a publication on
             // the given channel and stream ID.
             // The Aeron and Publication classes implement "AutoCloseable" and will automatically
             // clean up resources when this try block is finished
             using (var aeron = Aeron.Connect(ctx))
-            using (var publication = aeron.AddPublication(CHANNEL, STREAM_ID))
+            using (var publication = aeron.AddPublication(Channel, StreamID))
+            using (var buffer = new UnsafeBuffer(new byte[256]))
             {
-                for (var i = 0; i < NUMBER_OF_MESSAGES; i++)
+                Thread.Sleep(100);
+
+                for (var i = 0; i < NumberOfMessages; i++)
                 {
                     var message = "Hello World! " + i;
                     var messageBytes = Encoding.UTF8.GetBytes(message);
-                    BUFFER.PutBytes(0, messageBytes);
+                    buffer.PutBytes(0, messageBytes);
 
-                    Console.WriteLine("offering " + i + "/" + NUMBER_OF_MESSAGES);
+                    Console.WriteLine("offering " + i + "/" + NumberOfMessages);
 
-                    var result = publication.Offer(BUFFER, 0, messageBytes.Length);
+                    var result = publication.Offer(buffer, 0, messageBytes.Length);
 
                     if (result < 0L)
                     {
@@ -81,16 +83,14 @@ namespace Adaptive.Aeron.Samples.BasicPublisher
                     {
                         Console.WriteLine("No active subscribers detected");
                     }
-
-                    Thread.Sleep(100);
                 }
 
                 Console.WriteLine("Done sending.");
 
-                if (0 < LINGER_TIMEOUT_MS)
+                if (0 < LingerTimeoutMs)
                 {
-                    Console.WriteLine("Lingering for " + LINGER_TIMEOUT_MS + " milliseconds...");
-                    Thread.Sleep((int) LINGER_TIMEOUT_MS);
+                    Console.WriteLine("Lingering for " + LingerTimeoutMs + " milliseconds...");
+                    Thread.Sleep((int) LingerTimeoutMs);
                 }
             }
         }

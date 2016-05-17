@@ -11,7 +11,7 @@ namespace Adaptive.Aeron.Samples.SimplePublisher
     /// </summary>
     public class SimplePublisher
     {
-        public static void Main(string[] args)
+        public static void Main()
         {
             // Allocate enough buffer size to hold maximum message length
             // The UnsafeBuffer class is part of the Agrona library and is used for efficient buffer management
@@ -46,25 +46,23 @@ namespace Adaptive.Aeron.Samples.SimplePublisher
 
                 if (result < 0L)
                 {
-                    if (result == Publication.BACK_PRESSURED)
+                    switch (result)
                     {
-                        Console.WriteLine(" Offer failed due to back pressure");
-                    }
-                    else if (result == Publication.NOT_CONNECTED)
-                    {
-                        Console.WriteLine(" Offer failed because publisher is not yet connected to subscriber");
-                    }
-                    else if (result == Publication.ADMIN_ACTION)
-                    {
-                        Console.WriteLine("Offer failed because of an administration action in the system");
-                    }
-                    else if (result == Publication.CLOSED)
-                    {
-                        Console.WriteLine("Offer failed publication is closed");
-                    }
-                    else
-                    {
-                        Console.WriteLine(" Offer failed due to unknown reason");
+                        case Publication.BACK_PRESSURED:
+                            Console.WriteLine(" Offer failed due to back pressure");
+                            break;
+                        case Publication.NOT_CONNECTED:
+                            Console.WriteLine(" Offer failed because publisher is not yet connected to subscriber");
+                            break;
+                        case Publication.ADMIN_ACTION:
+                            Console.WriteLine("Offer failed because of an administration action in the system");
+                            break;
+                        case Publication.CLOSED:
+                            Console.WriteLine("Offer failed publication is closed");
+                            break;
+                        default:
+                            Console.WriteLine(" Offer failed due to unknown reason");
+                            break;
                     }
                 }
                 else

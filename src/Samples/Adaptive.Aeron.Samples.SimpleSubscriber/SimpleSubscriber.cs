@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Text;
 using Adaptive.Aeron.LogBuffer;
-using Adaptive.Aeron.Samples.Common;
 using Adaptive.Agrona.Concurrent;
 
 namespace Adaptive.Aeron.Samples.SimpleSubscriber
@@ -10,11 +9,11 @@ namespace Adaptive.Aeron.Samples.SimpleSubscriber
     /// A very simple Aeron subscriber application which can receive small non-fragmented messages
     /// on a fixed channel and stream ID. The DataHandler method 'printStringMessage' is called when data
     /// is received. This application doesn't handle large fragmented messages. For an example of
-    /// fragmented message reception, see <seealso cref="MultipleSubscribersWithFragmentAssembly"/>.
+    /// fragmented message reception.
     /// </summary>
     public class SimpleSubscriber
     {
-        public static void Main(string[] args)
+        public static void Main()
         {
             // Maximum number of message fragments to receive during a single 'poll' operation
             const int fragmentLimitCount = 10;

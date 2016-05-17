@@ -162,9 +162,7 @@ namespace Adaptive.Agrona.Concurrent
                 throw new ArgumentException("offset=" + offset + " length=" + length + " not valid for buffer.capacity()=" + bufferCapacity);
             }
 #endif
-
-            // TODO decide how we want to handle pinning
-
+            
             FreeGcHandle();
             _needToFreeGcHandle = false;
 
@@ -298,13 +296,7 @@ namespace Adaptive.Agrona.Concurrent
 
             return original == expectedValue;
         }
-
-        public long GetAndSetLong(int index, long value)
-        {
-            // Note ODE: does not seem to be used in the codebase
-            throw new NotImplementedException();
-        }
-
+        
         public long GetAndAddLong(int index, long delta)
         {
             BoundsCheck0(index, BitUtil.SIZE_OF_LONG);
@@ -382,13 +374,6 @@ namespace Adaptive.Agrona.Concurrent
 
             return original == expectedValue;
         }
-
-        public int GetAndSetInt(int index, int value)
-        {
-            // Note ODE: does not seem to be used in the codebase
-            throw new NotImplementedException();
-        }
-
 
         public int GetAndAddInt(int index, int delta)
         {

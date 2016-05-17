@@ -171,7 +171,7 @@ namespace Adaptive.Aeron.Protocol
         /// <returns> byte array containing the header </returns>
 	    public static UnsafeBuffer CreateDefaultHeader(int sessionId, int streamId, int termId)
         {
-            UnsafeBuffer buffer = new UnsafeBuffer(new byte[HEADER_LENGTH]);
+            var buffer = new UnsafeBuffer(new byte[HEADER_LENGTH]);
 
             buffer.PutByte(VERSION_FIELD_OFFSET, CURRENT_VERSION);
             buffer.PutByte(FLAGS_FIELD_OFFSET, (byte)BEGIN_AND_END_FLAGS);
@@ -187,7 +187,7 @@ namespace Adaptive.Aeron.Protocol
         public override string ToString()
         {
             var sb = new StringBuilder();
-            string formattedFlags = $"{Convert.ToString(Flags(), 2),8}".Replace(' ', '0');
+            var formattedFlags = $"{Convert.ToString(Flags(), 2),8}".Replace(' ', '0');
 
             sb.Append("Data Header{")
                 .Append("frame_length=").Append(FrameLength())

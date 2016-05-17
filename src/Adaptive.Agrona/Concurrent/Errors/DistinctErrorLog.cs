@@ -99,7 +99,7 @@ namespace Adaptive.Agrona.Concurrent.Errors
             var existingObservations = _distinctObservations;
             var existingObservation = Find(existingObservations, observation);
 
-            if (null == existingObservation)
+            if (existingObservation == null)
             {
                 lock (_newObservationLock)
                 {
@@ -153,11 +153,11 @@ namespace Adaptive.Agrona.Concurrent.Errors
                 lhs = lhs.InnerException;
                 rhs = rhs.InnerException;
 
-                if (null == lhs && null == rhs)
+                if (lhs == null && rhs == null)
                 {
                     return true;
                 }
-                if (null != lhs && null != rhs)
+                if (lhs != null && rhs != null)
                 {
                     continue;
                 }
@@ -175,7 +175,7 @@ namespace Adaptive.Agrona.Concurrent.Errors
                 existingObservation = Find(_distinctObservations, observation);
             }
 
-            if (null == existingObservation)
+            if (existingObservation == null)
             {
                 byte[] encodedError = Encoding.UTF8.GetBytes(observation.ToString());
 

@@ -35,11 +35,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Adaptive.Aeron.Samples.Basi
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Adaptive.Aeron.Samples.BasicSubscriber", "Samples\Adaptive.Aeron.Samples.BasicSubscriber\Adaptive.Aeron.Samples.BasicSubscriber.csproj", "{02BC7AAB-BA72-4791-B1B2-148F83424410}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{28132BE7-0096-4501-840F-A7DB39AC1E01}"
-	ProjectSection(SolutionItems) = preProject
-		TODO.txt = TODO.txt
-	EndProjectSection
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Adaptive.Aeron.Samples.RateSubscriber", "Samples\Adaptive.Aeron.Samples.RateSubscriber\Adaptive.Aeron.Samples.RateSubscriber.csproj", "{C1EF6CC8-D2DF-4A96-9CD6-7AFF1DCE753B}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Adaptive.Aeron.Samples.Throughput", "Samples\Adaptive.Aeron.Samples.Throughput\Adaptive.Aeron.Samples.Throughput.csproj", "{A341691D-F451-46B8-9A2A-4A3411EDD999}"

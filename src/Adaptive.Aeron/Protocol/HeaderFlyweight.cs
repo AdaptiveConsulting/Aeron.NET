@@ -62,7 +62,7 @@ namespace Adaptive.Aeron.Protocol
         {
         }
 
-        public HeaderFlyweight(UnsafeBuffer buffer) : base(buffer)
+        public HeaderFlyweight(IDirectBuffer buffer) : base(buffer)
         {
         }
 
