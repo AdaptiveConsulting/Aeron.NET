@@ -70,7 +70,7 @@ namespace Adaptive.Aeron.Samples.IpcThroughput
                     var newTotalBytes = Subscriber.TotalBytes();
                     var duration = _stopwatch.ElapsedMilliseconds;
                     var bytesTransferred = newTotalBytes - lastTotalBytes;
-                    Console.WriteLine($"Duration {duration:N0}ms - {bytesTransferred/MessageLength:N0} messages - {bytesTransferred:N0} bytes");
+                    Console.WriteLine($"Duration {duration:N0}ms - {bytesTransferred/MessageLength:N0} messages - {bytesTransferred:N0} bytes, GC0 {GC.CollectionCount(0)}, GC1 {GC.CollectionCount(1)}, GC2 {GC.CollectionCount(2)}");
 
                     _stopwatch.Restart();
                     lastTotalBytes = newTotalBytes;
@@ -151,6 +151,7 @@ namespace Adaptive.Aeron.Samples.IpcThroughput
                 long failedPolls = 0;
                 long successfulPolls = 0;
 
+                
                 while (Running.Get())
                 {
                     var fragmentsRead = image.Poll(OnFragment, MessageCountLimit);

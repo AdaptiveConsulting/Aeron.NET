@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Text;
+using System.Threading;
 using Adaptive.Agrona.Concurrent;
 
 namespace Adaptive.Aeron.Samples.SimplePublisher
@@ -36,6 +37,8 @@ namespace Adaptive.Aeron.Samples.SimplePublisher
             using (var aeron = Aeron.Connect(ctx))
             using (var publication = aeron.AddPublication(channel, streamId))
             {
+                Thread.Sleep(100);
+
                 const string message = "Hello World! ";
                 var messageBytes = Encoding.UTF8.GetBytes(message);
                 buffer.PutBytes(0, messageBytes);
@@ -71,6 +74,7 @@ namespace Adaptive.Aeron.Samples.SimplePublisher
                 }
 
                 Console.WriteLine("Done sending.");
+                Console.WriteLine("Press any key...");
                 Console.ReadLine();
             }
         }
