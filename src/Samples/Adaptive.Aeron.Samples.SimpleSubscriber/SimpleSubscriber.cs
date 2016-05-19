@@ -69,7 +69,8 @@ namespace Adaptive.Aeron.Samples.SimpleSubscriber
                     idleStrategy.Idle(fragmentsRead);
                 }
 
-                Console.WriteLine("Shutting down...");
+                Console.WriteLine("Press any key...");
+                Console.ReadLine();
             }
         }
     }
