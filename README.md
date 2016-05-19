@@ -1,7 +1,7 @@
 # Aeron.NET
 [![NuGet](https://img.shields.io/nuget/v/Adaptive.Aeron.svg?maxAge=2592000)](https://www.nuget.org/packages/Adaptive.Aeron/)
 
-A .NET port of the [Aeron Client](https://github.com/real-logic/Agrona).
+A .NET port of the [Aeron Client](https://github.com/real-logic/Aeron).
 
 Aeron is an efficient reliable UDP unicast, UDP multicast, and IPC message transport.
 
@@ -11,7 +11,7 @@ Aeron is designed not to perform any allocations after the initial set-up, this 
 ### Getting Started
 Aeron comes in two parts: the media driver and the client.
 
-![Architecture Overview](Overview.png?raw=true "Overview")
+![Architecture Overview](images/Overview.png?raw=true "Overview")
 
 #### Media Driver
 The driver runs in its own process and communicates with the client directly via shared memory. It sends and receives messages across the network to other drivers or routes messages to other clients on the same host.
@@ -139,13 +139,15 @@ Histogram of RTT latencies in microseconds.
 
 Which you can upload to http://hdrhistogram.github.io/HdrHistogram/plotFiles.html to create a nice chart:
 
-![Latency Histogram](Histogram.png?raw=true "Latency Histogram")
+![Latency Histogram](images/Histogram.png?raw=true "Latency Histogram")
 
 ### Building from Source
 You will need [Visual Studio 2015](https://www.visualstudio.com/en-us/downloads/download-visual-studio-vs.aspx) installed. 
 
 1. Open `src/Adaptive.Aeron.sln`. 
 2. Click `Build -> Build Solution`.
+
+Note: For best performance, build in x64 release mode and run without the debugger attached.
 
 ### More Information
 The best place for more information is the [Aeron Wiki](https://github.com/real-logic/Aeron/wiki)
