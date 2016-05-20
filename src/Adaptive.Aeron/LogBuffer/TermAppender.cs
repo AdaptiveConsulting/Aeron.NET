@@ -154,7 +154,8 @@ namespace Adaptive.Aeron.LogBuffer {
                 resultingOffset = termOffset + alignedLength;
 
                 if (resultingOffset > termLength) {
-                    _metaDataBuffer.PutLongOrdered(LogBufferDescriptor.TERM_TAIL_COUNTER_OFFSET, rawTail + alignedLength);
+                    // NB: avoid method call, write directly: _metaDataBuffer.PutLongOrdered(LogBufferDescriptor.TERM_TAIL_COUNTER_OFFSET, rawTail + alignedLength);
+                    Volatile.Write(ref *(long*)(_metaDataBuffer.BufferPointer + LogBufferDescriptor.TERM_TAIL_COUNTER_OFFSET), rawTail + alignedLength);
                     resultingOffset = HandleEndOfLogCondition(termBuffer, termOffset, header, termLength, TermId(rawTail));
                     break;
                 }
@@ -163,7 +164,9 @@ namespace Adaptive.Aeron.LogBuffer {
                 if (0 ==
                     Interlocked.CompareExchange(
                         ref *(int*)(new IntPtr(_termBuffer.BufferPointer.ToInt64() + termOffset)), -length, 0)) {
-                    _metaDataBuffer.PutLongOrdered(LogBufferDescriptor.TERM_TAIL_COUNTER_OFFSET, rawTail + alignedLength);
+                    // if a writer dies here, another writer will unblock below
+                    // NB: avoid method call, write directly: _metaDataBuffer.PutLongOrdered(LogBufferDescriptor.TERM_TAIL_COUNTER_OFFSET, rawTail + alignedLength);
+                    Volatile.Write(ref *(long*) (_metaDataBuffer.BufferPointer + LogBufferDescriptor.TERM_TAIL_COUNTER_OFFSET), rawTail + alignedLength);
                     int offset = (int)termOffset;
                     header.Write(termBuffer, offset, frameLength, TermId(rawTail));
                     termBuffer.PutBytes(offset + DataHeaderFlyweight.HEADER_LENGTH, srcBuffer, srcOffset, length);
@@ -180,7 +183,10 @@ namespace Adaptive.Aeron.LogBuffer {
                     // we should spin in case another writer has written -length but not yet incremented tail
                     spinCounter++;
                     if (spinCounter > 100) {
+                        // no-one is progressing, need to unblock
+                        // NB: avoid method call in _termBuffer.PutIntOrdered((int)termOffset, 0), write directly;
                         Volatile.Write(ref *(int*)(new IntPtr(_termBuffer.BufferPointer.ToInt64() + termOffset)), 0);
+                        
                     }
                 }
             }
