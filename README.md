@@ -1,5 +1,5 @@
 # Aeron.NET
-[![NuGet](https://img.shields.io/nuget/v/Adaptive.Aeron.svg?maxAge=2592000)](https://www.nuget.org/packages/Adaptive.Aeron/)
+[![NuGet](https://img.shields.io/nuget/v/Aeron.Client.svg?maxAge=2592000)](https://www.nuget.org/packages/Aeron.Client/)
 
 A .NET port of the [Aeron Client](https://github.com/real-logic/Aeron).
 
@@ -16,48 +16,57 @@ Aeron comes in two parts: the media driver and the client.
 #### Media Driver
 The driver runs in its own process and communicates with the client directly via shared memory. It sends and receives messages across the network to other drivers or routes messages to other clients on the same host.
 
-To run the media driver, you will need [Java 8 JRE](http://www.oracle.com/technetwork/java/javase/downloads/jre8-downloads-2133155.html) installed. Then run:
+To run the media driver, you will need [Java 8 JRE](http://www.oracle.com/technetwork/java/javase/downloads/jre8-downloads-2133155.html) installed. 
 
-    scripts/start-media-driver.bat
+There is a nuget package that contains the driver:
 
+    PM> Install-Package Aeron.Driver
+
+It will create a directory in your project with a bat file to launch the driver.
+
+Or if you've got the source, run:
+
+    driver/start-media-driver.bat
 
 #### Client  
 The client can be [built from source](#building-from-source) or installed from nuget:
-https://www.nuget.org/packages/Adaptive.Aeron/
+https://www.nuget.org/packages/Aeron.Client/
 
-    PM> Install-Package Adaptive.Aeron
+    PM> Install-Package Aeron.Client
 
 ### Usage
+The full example is [here](src/Samples/Adaptive.Aeron.Samples.HelloWorld/HelloWorld.cs).
 
 #### Publisher
 Used to send messages to a specified channel & stream.
 ```csharp
+const string channel = "aeron:ipc";
+const int streamId = 42;
+
+UnsafeBuffer buffer = new UnsafeBuffer(new byte[256]);
+
 using(Aeron aeron = Aeron.Connect())
-using(Publication publication = aeron.AddPublisher("aeron:ipc", 1)) 
-using(UnsafeBuffer buffer = new UnsafeBuffer(new byte[256]) {
-  byte[] message = Encoding.UTF8.GetBytes("Hello World!");
-  buffer.PutBytes(0, message);
-  publisher.Offer(buffer, 0, message.Length);
+using(Publication publisher = aeron.AddPublication(channel, streamId)) {
+  int messageLength = buffer.PutStringWithoutLengthUtf8(0, "Hello World!");
+  publisher.Offer(buffer, 0, messageLength);
 }
 ```
 #### Fragment Handler
-A fragment handler is used for processing data that is has been received. The buffer will either contain a whole message or a fragment of a message to be reassembled.
+A fragment handler is a delegate used for processing data that is has been received. The buffer will either contain a whole message or a fragment of a message to be reassembled.
 ```csharp
-FragmentHandler messageHandler = (buffer, offset, length, header) => {
-  var data = new byte[length];
-  buffer.GetBytes(offset, data);
-  Console.WriteLine(Encoding.UTF8.GetString(data));
-};
+static void PrintMessage(IDirectBuffer buffer, int offset, int length, Header header)
+{
+  var message = buffer.GetStringWithoutLengthUtf8(offset, length);
+  Console.WriteLine($"Message Received: '{message}'");
+}
 ```
 
 #### Subscriber
 A subscriber is used to register interest in messages from a publisher on a specific channel & stream. It uses a fragment handler to process the received messages.
 ```csharp
-using(Aeron aeron = Aeron.Connect())
-using(Subscription subscription = aeron.AddSubscription("aeron:ipc", 1)) 
-using(UnsafeBuffer buffer = new UnsafeBuffer(new byte[256]) {
-  while(running) {  
-      var fragmentsRead = subscription.Poll(fragmentHandler, fragmentLimitCount);
+using(Subscription subscriber = aeron.AddSubscription(channel, streamId)) {
+  while(subscriber.Poll(PrintMessage, 1) == 0) {  
+      Thread.Sleep(10);
   }
 }
 ```
@@ -69,21 +78,18 @@ Before running the samples, they need to be built (you will need [Visual Studio 
     scripts/build.bat
 
 #### Hello World
-This samples sends a hello world message, make sure the driver is running. Start by running the subscriber, this causes the media driver to listen on endpoint `udp://localhost:40123` for publications on channel 10 and prints any messages it receives. Make sure the [media driver](#media-driver) is running and run the following batch script to launch the subscriber:
+This samples sends and receives a hello world message. Make sure the [media driver](#media-driver) is running and run the following batch script:
 
-    scripts/subsciber.bat
-    
-To send the message run the publisher.
-
-    scripts/publisher.bat
+    scripts/hello-world.bat
     
 You should see something like:
 
 ```
-Subscribing to udp://localhost:40123 on stream Id 10
-Received message (Hello World! ) to stream 10 from session 68fa30b2 term id 1804bb00 term offset 0 (13@32)
-Press any key...
+Received message (Hello World!) to stream 42 from session 42d2f651 term id de97c9e0 term offset 0 (11@32)
+Press any key to continue...
 ```
+
+The source code is [here](src/Samples/Adaptive.Aeron.Samples.HelloWorld/HelloWorld.cs).
 
 #### Throughput
 This sample shows the overall throughput of the client and driver. It sends messages via `aeron:ipc` which is designed for interprocess communication. Make sure the [media driver](#media-driver) is running and run the sample:
@@ -98,6 +104,8 @@ Duration 1,000ms - 14,031,801 messages - 449,017,632 bytes
 Duration 1,001ms - 15,054,055 messages - 481,729,760 bytes
 Duration 1,000ms - 14,678,982 messages - 469,727,424 bytes
 ```
+
+The source code is [here](src/Samples/Adaptive.Aeron.Samples.IpcThroughput/IpcThroughput.cs).
     
 #### Ping/Pong
 This sample show the latencies for a batch of messages.  Make sure the [media driver](#media-driver) is running and start `pong` which listens for messages and will reply back to each message:
@@ -140,6 +148,8 @@ Histogram of RTT latencies in microseconds.
 Which you can upload to http://hdrhistogram.github.io/HdrHistogram/plotFiles.html to create a nice chart:
 
 ![Latency Histogram](images/Histogram.png?raw=true "Latency Histogram")
+
+The source code is [here](src/Samples/Adaptive.Aeron.Samples.Ping/Ping.cs) and [here](src/Samples/Adaptive.Aeron.Samples.Pong/Pong.cs).
 
 ### Building from Source
 You will need [Visual Studio 2015](https://www.visualstudio.com/en-us/downloads/download-visual-studio-vs.aspx) installed. 
