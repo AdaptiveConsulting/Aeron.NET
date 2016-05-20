@@ -96,32 +96,34 @@ namespace Adaptive.Aeron.LogBuffer {
 
             IAtomicBuffer termBuffer = _termBuffer;
             int termLength = termBuffer.Capacity;
-            long offsetAfterClaim;
+            long resultingOffset;
             while (true) {
-                var currentTail = RawTailVolatile();
-                var currentOffset = currentTail & 0xFFFFFFFFL;
-                offsetAfterClaim = currentOffset + alignedLength;
-                if (offsetAfterClaim > termLength) {
-                    GetAndAddRawTail(alignedLength);
-                    offsetAfterClaim = HandleEndOfLogCondition(termBuffer, currentOffset, header, termLength, TermId(currentTail));
+                var rawTail = RawTailVolatile();
+                var termOffset = rawTail & 0xFFFFFFFFL;
+                resultingOffset = termOffset + alignedLength;
+
+                if (resultingOffset > termLength) {
+                    _metaDataBuffer.PutLongOrdered(LogBufferDescriptor.TERM_TAIL_COUNTER_OFFSET, rawTail + alignedLength);
+                    resultingOffset = HandleEndOfLogCondition(termBuffer, termOffset, header, termLength, TermId(rawTail));
                     break;
                 }
 
                 // true if we are the first to claim space at current offset
                 if (0 ==
                     Interlocked.CompareExchange(
-                        ref *(int*)(new IntPtr(_termBuffer.BufferPointer.ToInt64() + currentOffset)), -length, 0)) {
-                    if (GetAndAddRawTail(alignedLength) != currentTail) throw new ApplicationException("TODO: Something wrong...");
-                    int offset = (int)currentOffset;
-                    header.Write(termBuffer, offset, frameLength, TermId(currentTail));
+                        ref *(int*)(new IntPtr(_termBuffer.BufferPointer.ToInt64() + termOffset)), -length, 0)) {
+                    _metaDataBuffer.PutLongOrdered(LogBufferDescriptor.TERM_TAIL_COUNTER_OFFSET, rawTail + alignedLength);
+                    int offset = (int)termOffset;
+                    header.Write(termBuffer, offset, frameLength, TermId(rawTail));
                     bufferClaim.Wrap(termBuffer, offset, frameLength);
                     break;
                 }
+
                 // spin, will re-read (volatile) current tail and try again
                 // single writer will always succeed on first try
             }
 
-            return offsetAfterClaim;
+            return resultingOffset;
         }
 
         /// <summary>
@@ -139,25 +141,25 @@ namespace Adaptive.Aeron.LogBuffer {
 
             IAtomicBuffer termBuffer = _termBuffer;
             int termLength = termBuffer.Capacity;
-            long offsetAfterClaim;
+            long resultingOffset;
             while (true) {
-                var currentTail = RawTailVolatile();
-                var currentOffset = currentTail & 0xFFFFFFFFL;
-                offsetAfterClaim = currentOffset + alignedLength;
+                var rawTail = RawTailVolatile();
+                var termOffset = rawTail & 0xFFFFFFFFL;
+                resultingOffset = termOffset + alignedLength;
 
-                if (offsetAfterClaim > termLength) {
-                    _metaDataBuffer.PutLongOrdered(LogBufferDescriptor.TERM_TAIL_COUNTER_OFFSET, currentTail + alignedLength);
-                    offsetAfterClaim = HandleEndOfLogCondition(termBuffer, currentOffset, header, termLength, TermId(currentTail));
+                if (resultingOffset > termLength) {
+                    _metaDataBuffer.PutLongOrdered(LogBufferDescriptor.TERM_TAIL_COUNTER_OFFSET, rawTail + alignedLength);
+                    resultingOffset = HandleEndOfLogCondition(termBuffer, termOffset, header, termLength, TermId(rawTail));
                     break;
                 }
 
                 // true if we are the first to claim space at current offset
                 if (0 ==
                     Interlocked.CompareExchange(
-                        ref *(int*)(new IntPtr(_termBuffer.BufferPointer.ToInt64() + currentOffset)), -length, 0)) {
-                    _metaDataBuffer.PutLongOrdered(LogBufferDescriptor.TERM_TAIL_COUNTER_OFFSET, currentTail + alignedLength);
-                    int offset = (int)currentOffset;
-                    header.Write(termBuffer, offset, frameLength, TermId(currentTail));
+                        ref *(int*)(new IntPtr(_termBuffer.BufferPointer.ToInt64() + termOffset)), -length, 0)) {
+                    _metaDataBuffer.PutLongOrdered(LogBufferDescriptor.TERM_TAIL_COUNTER_OFFSET, rawTail + alignedLength);
+                    int offset = (int)termOffset;
+                    header.Write(termBuffer, offset, frameLength, TermId(rawTail));
                     termBuffer.PutBytes(offset + DataHeaderFlyweight.HEADER_LENGTH, srcBuffer, srcOffset, length);
                     FrameDescriptor.FrameLengthOrdered(termBuffer, offset, frameLength);
                     break;
@@ -167,7 +169,7 @@ namespace Adaptive.Aeron.LogBuffer {
                 // single writer will always succeed on first try
             }
 
-            return offsetAfterClaim;
+            return resultingOffset;
         }
 
 
