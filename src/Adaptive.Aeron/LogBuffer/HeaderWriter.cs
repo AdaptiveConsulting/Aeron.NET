@@ -13,7 +13,7 @@ namespace Adaptive.Aeron.LogBuffer
     /// </summary>
     public class HeaderWriter
     {
-        private readonly long _versionFlagsType;
+        private readonly int _versionFlagsType;
         private readonly long _sessionId;
         private readonly long _streamId;
 
@@ -23,7 +23,7 @@ namespace Adaptive.Aeron.LogBuffer
 
         public HeaderWriter(IDirectBuffer defaultHeader)
         {
-            _versionFlagsType = (long)defaultHeader.GetInt(HeaderFlyweight.VERSION_FIELD_OFFSET) << 32;
+            _versionFlagsType = defaultHeader.GetInt(HeaderFlyweight.VERSION_FIELD_OFFSET);
             _sessionId = (long)defaultHeader.GetInt(DataHeaderFlyweight.SESSION_ID_FIELD_OFFSET) << 32;
             _streamId = defaultHeader.GetInt(DataHeaderFlyweight.STREAM_ID_FIELD_OFFSET) & 0xFFFFFFFFL;
         }
@@ -37,11 +37,10 @@ namespace Adaptive.Aeron.LogBuffer
         /// <param name="termId">     of the current term buffer. </param>
         public virtual void Write(IAtomicBuffer termBuffer, int offset, int length, int termId)
         {
-            var lengthVersionFlagsType = _versionFlagsType | (-length & 0xFFFFFFFFL);
             var termOffsetSessionId = _sessionId | (uint)offset;
             var streamAndTermIds = _streamId | ((long)termId << 32);
 
-            termBuffer.PutLong(offset + HeaderFlyweight.FRAME_LENGTH_FIELD_OFFSET, lengthVersionFlagsType);
+            termBuffer.PutInt(offset + HeaderFlyweight.VERSION_FIELD_OFFSET, _versionFlagsType);
             termBuffer.PutLong(offset + DataHeaderFlyweight.TERM_OFFSET_FIELD_OFFSET, termOffsetSessionId);
             termBuffer.PutLong(offset + DataHeaderFlyweight.STREAM_ID_FIELD_OFFSET, streamAndTermIds);
         }

@@ -102,6 +102,7 @@ namespace Adaptive.Aeron.LogBuffer {
                 var currentOffset = currentTail & 0xFFFFFFFFL;
                 offsetAfterClaim = currentOffset + alignedLength;
                 if (offsetAfterClaim > termLength) {
+                    GetAndAddRawTail(alignedLength);
                     offsetAfterClaim = HandleEndOfLogCondition(termBuffer, currentOffset, header, termLength, TermId(currentTail));
                     break;
                 }
@@ -109,9 +110,8 @@ namespace Adaptive.Aeron.LogBuffer {
                 // true if we are the first to claim space at current offset
                 if (0 ==
                     Interlocked.CompareExchange(
-                        ref *(int*)(new IntPtr(_termBuffer.BufferPointer.ToInt64() + currentOffset)), -length, 0)) 
-                {
-                    if(GetAndAddRawTail(alignedLength) != currentTail) throw new ApplicationException("TODO: Something wrong...");
+                        ref *(int*)(new IntPtr(_termBuffer.BufferPointer.ToInt64() + currentOffset)), -length, 0)) {
+                    if (GetAndAddRawTail(alignedLength) != currentTail) throw new ApplicationException("TODO: Something wrong...");
                     int offset = (int)currentOffset;
                     header.Write(termBuffer, offset, frameLength, TermId(currentTail));
                     bufferClaim.Wrap(termBuffer, offset, frameLength);
@@ -144,10 +144,9 @@ namespace Adaptive.Aeron.LogBuffer {
                 var currentTail = RawTailVolatile();
                 var currentOffset = currentTail & 0xFFFFFFFFL;
                 offsetAfterClaim = currentOffset + alignedLength;
-                if (offsetAfterClaim > termLength)
-                {
-                    GetAndAddRawTail(alignedLength);
-                    //if (GetAndAddRawTail(alignedLength) != currentTail) throw new ApplicationException("TODO: Something wrong...");
+
+                if (offsetAfterClaim > termLength) {
+                    _metaDataBuffer.PutLongOrdered(LogBufferDescriptor.TERM_TAIL_COUNTER_OFFSET, currentTail + alignedLength);
                     offsetAfterClaim = HandleEndOfLogCondition(termBuffer, currentOffset, header, termLength, TermId(currentTail));
                     break;
                 }
@@ -155,10 +154,8 @@ namespace Adaptive.Aeron.LogBuffer {
                 // true if we are the first to claim space at current offset
                 if (0 ==
                     Interlocked.CompareExchange(
-                        ref *(int*)(new IntPtr(_termBuffer.BufferPointer.ToInt64() + currentOffset)), -length, 0))
-                {
-                    GetAndAddRawTail(alignedLength);
-                    //if (GetAndAddRawTail(alignedLength) != currentTail) throw new ApplicationException("TODO: Something wrong...");
+                        ref *(int*)(new IntPtr(_termBuffer.BufferPointer.ToInt64() + currentOffset)), -length, 0)) {
+                    _metaDataBuffer.PutLongOrdered(LogBufferDescriptor.TERM_TAIL_COUNTER_OFFSET, currentTail + alignedLength);
                     int offset = (int)currentOffset;
                     header.Write(termBuffer, offset, frameLength, TermId(currentTail));
                     termBuffer.PutBytes(offset + DataHeaderFlyweight.HEADER_LENGTH, srcBuffer, srcOffset, length);
@@ -168,32 +165,9 @@ namespace Adaptive.Aeron.LogBuffer {
 
                 // spin, will re-read (volatile) current tail and try again
                 // single writer will always succeed on first try
-                throw new ApplicationException();
             }
 
             return offsetAfterClaim;
-
-
-
-            //int frameLength = length + DataHeaderFlyweight.HEADER_LENGTH;
-            //int alignedLength = BitUtil.Align(frameLength, FrameDescriptor.FRAME_ALIGNMENT);
-            //long rawTail = GetAndAddRawTail(alignedLength);
-            //long termOffset = rawTail & 0xFFFFFFFFL;
-
-            //IAtomicBuffer termBuffer = _termBuffer;
-            //int termLength = termBuffer.Capacity;
-
-            //long resultingOffset = termOffset + alignedLength;
-            //if (resultingOffset > termLength) {
-            //    resultingOffset = HandleEndOfLogCondition(termBuffer, termOffset, header, termLength, TermId(rawTail));
-            //} else {
-            //    int offset = (int)termOffset;
-            //    header.Write(termBuffer, offset, frameLength, TermId(rawTail));
-            //    termBuffer.PutBytes(offset + DataHeaderFlyweight.HEADER_LENGTH, srcBuffer, srcOffset, length);
-            //    FrameDescriptor.FrameLengthOrdered(termBuffer, offset, frameLength);
-            //}
-
-            //return resultingOffset;
         }
 
 
