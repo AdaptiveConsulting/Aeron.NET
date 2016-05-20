@@ -1,17 +1,18 @@
 <?xml version="1.0"?>
 <package >
   <metadata>
-    <id>Aeron.NET</id>
-    <version>0.9.0.0</version>
-    <title>Aeron.NET</title>
-    <authors>Adaptive Fiancial Consulting Ltd.</authors>
-    <owners>$author$</owners>
+    <id>Aeron.Client</id>
+    <version>0.9.7.0</version>
+    <title>Aeron Client</title>
+    <authors>Adaptive Financial Consulting Ltd.</authors>
+    <owners>Adaptive Financial Consulting Ltd.</owners>
     <licenseUrl>https://github.com/AdaptiveConsulting/Aeron/blob/master/LICENSE</licenseUrl>
-    <projectUrl>https://github.com/AdaptiveConsulting/Aeron</projectUrl>
+    <projectUrl>https://github.com/AdaptiveConsulting/Aeron/</projectUrl>
+    <iconUrl>https://raw.githubusercontent.com/AdaptiveConsulting/Aeron.NET/master/images/adaptive.png</iconUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>Efficient reliable UDP unicast, UDP multicast, and IPC transport protocol.</description>
     <releaseNotes>Initial Release.</releaseNotes>
     <copyright>Copyright 2016</copyright>
-    <tags>aeron messaging networking transport udp ipc</tags>
+    <tags>aeron client messaging networking transport udp ipc</tags>
   </metadata>
 </package>

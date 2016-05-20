@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>Aeron.Driver</id>
+    <version>0.9.7.0</version>
+    <title>Aeron Driver</title>
+    <authors>Adaptive Financial Consulting Ltd.</authors>
+    <owners>Adaptive Financial Consulting Ltd.</owners>
+    <licenseUrl>https://github.com/AdaptiveConsulting/Aeron.NET/blob/master/LICENSE</licenseUrl>
+    <projectUrl>https://github.com/AdaptiveConsulting/Aeron.NET/</projectUrl>
+    <iconUrl>https://raw.githubusercontent.com/AdaptiveConsulting/Aeron.NET/master/images/adaptive.png</iconUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>Aeron Media Driver for use with Aeron.Client.</description>
+    <releaseNotes>Initial Release.</releaseNotes>
+    <copyright>Copyright 2016</copyright>
+    <tags>aeron driver messaging networking transport udp ipc</tags>
+  </metadata>
+  <files>
+    <file src="media-driver.jar" target="content\driver\media-driver.jar"/>
+    <file src="start-media-driver.bat" target="content\driver\start-media-driver.bat"/>
+    <file src="readme.txt" target=""/>
+  </files>
+</package>

@@ -5,11 +5,11 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("Adaptive.Aeron")]
+[assembly: AssemblyTitle("Adaptive.Aeron.Samples.HelloWorld")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("Adaptive.Aeron")]
+[assembly: AssemblyProduct("Adaptive.Aeron.Samples.HelloWorld")]
 [assembly: AssemblyCopyright("Copyright ©  2016")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
@@ -20,7 +20,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("ce06a485-98f5-4fef-a756-d0ef4dda8309")]
+[assembly: Guid("bff17a2d-52a5-47db-adbf-ee068c5e68eb")]
 
 // Version information for an assembly consists of the following four values:
 //
@@ -32,8 +32,5 @@ using System.Runtime.InteropServices;
 // You can specify all the values or you can default the Build and Revision Numbers 
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("0.9.7.0")]
-[assembly: AssemblyFileVersion("0.9.7.0")]
-
-[assembly: InternalsVisibleTo("Adaptive.Aeron.Tests")]
-[assembly: InternalsVisibleTo("DynamicProxyGenAssembly2")]
+[assembly: AssemblyVersion("1.0.0.0")]
+[assembly: AssemblyFileVersion("1.0.0.0")]
