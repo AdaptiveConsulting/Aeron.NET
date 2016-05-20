@@ -1,5 +1,6 @@
 ﻿using System.Runtime.Remoting.Messaging;
 using Adaptive.Agrona;
+using Adaptive.Agrona.Concurrent;
 
 namespace Adaptive.Aeron.LogBuffer
 {
@@ -18,6 +19,6 @@ namespace Adaptive.Aeron.LogBuffer
         /// <param name="length"> of the data in bytes. </param>
         /// <param name="header"> representing the meta data for the data. </param>
         /// <returns> The action to be taken with regard to the stream position after the callback. </returns>
-        ControlledFragmentHandlerAction OnFragment(IDirectBuffer buffer, int offset, int length, Header header);
+        ControlledFragmentHandlerAction OnFragment(UnsafeBuffer buffer, int offset, int length, Header header);
     }
 }

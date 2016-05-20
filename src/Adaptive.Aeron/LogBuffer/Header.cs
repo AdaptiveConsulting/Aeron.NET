@@ -1,5 +1,6 @@
 ﻿using Adaptive.Aeron.Protocol;
 using Adaptive.Agrona;
+using Adaptive.Agrona.Concurrent;
 
 namespace Adaptive.Aeron.LogBuffer
 {
@@ -54,7 +55,7 @@ namespace Adaptive.Aeron.LogBuffer
             _initialTermId = initialTermId;
         }
         
-        public void SetBuffer(IDirectBuffer buffer, int offset)
+        public void SetBuffer(UnsafeBuffer buffer, int offset)
         {
             Buffer = buffer;
             Offset = offset;
@@ -66,9 +67,9 @@ namespace Adaptive.Aeron.LogBuffer
         public int Offset { get; private set; }
         
         /// <summary>
-        /// The <seealso cref="IDirectBuffer"/> containing the header.
+        /// The <seealso cref="UnsafeBuffer"/> containing the header.
         /// </summary>
-        public IDirectBuffer Buffer { get; private set; }
+        public UnsafeBuffer Buffer { get; private set; }
 
         /// <summary>
         /// The total length of the frame including the header.

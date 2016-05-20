@@ -106,7 +106,7 @@ namespace Adaptive.Aeron
         /// <param name="srcOffset"> in the source buffer from which to copy. </param>
         /// <param name="length"> in bytes to copy from the source buffer. </param>
         /// <returns> the builder for fluent API usage. </returns>
-        public BufferBuilder Append(IDirectBuffer srcBuffer, int srcOffset, int length)
+        public BufferBuilder Append(UnsafeBuffer srcBuffer, int srcOffset, int length)
         {
             EnsureCapacity(length);
 

@@ -205,7 +205,7 @@ namespace Adaptive.Aeron
         /// <param name="buffer"> containing message. </param>
         /// <returns> The new stream position, otherwise <seealso cref="NOT_CONNECTED"/>, <seealso cref="BACK_PRESSURED"/>,
         /// <seealso cref="ADMIN_ACTION"/> or <seealso cref="CLOSED"/>. </returns>
-        public long Offer(IDirectBuffer buffer)
+        public long Offer(UnsafeBuffer buffer)
         {
             return Offer(buffer, 0, buffer.Capacity);
         }
@@ -218,7 +218,7 @@ namespace Adaptive.Aeron
         /// <param name="length"> in bytes of the encoded message. </param>
         /// <returns> The new stream position, otherwise a negative error value <seealso cref="NOT_CONNECTED"/>, <seealso cref="BACK_PRESSURED"/>,
         /// <seealso cref="ADMIN_ACTION"/> or <seealso cref="CLOSED"/>. </returns>
-        public long Offer(IDirectBuffer buffer, int offset, int length)
+        public long Offer(UnsafeBuffer buffer, int offset, int length)
         {
             var newPosition = CLOSED;
             if (!_isClosed)

@@ -69,7 +69,7 @@ namespace Adaptive.Aeron.Samples.Ping
         }
 
 
-        private static void RoundTripMessages(IMutableDirectBuffer buffer,
+        private static void RoundTripMessages(UnsafeBuffer buffer,
             FragmentHandler fragmentHandler, Publication publication, Subscription subscription, int count)
         {
             for (var i = 0; i < count; i++)

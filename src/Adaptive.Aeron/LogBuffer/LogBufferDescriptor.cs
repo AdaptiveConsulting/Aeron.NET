@@ -455,7 +455,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// <param name="logMetaDataBuffer"> into which the default headers should be stored. </param>
         /// <param name="defaultHeader">     to be stored. </param>
         /// <exception cref="ArgumentException"> if the default header is larger than <seealso cref="LOG_DEFAULT_FRAME_HEADER_MAX_LENGTH"/> </exception>
-        public static void StoreDefaultFrameHeader(UnsafeBuffer logMetaDataBuffer, IDirectBuffer defaultHeader)
+        public static void StoreDefaultFrameHeader(UnsafeBuffer logMetaDataBuffer, UnsafeBuffer defaultHeader)
         {
             if (defaultHeader.Capacity != DataHeaderFlyweight.HEADER_LENGTH)
             {

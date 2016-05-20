@@ -39,8 +39,12 @@ namespace Adaptive.Aeron.LogBuffer {
         /// </summary>
         /// <param name="termBuffer">     for where messages are stored. </param>
         /// <param name="metaDataBuffer"> for where the state of writers is stored manage concurrency. </param>
+<<<<<<< HEAD
+        public TermAppender(UnsafeBuffer termBuffer, UnsafeBuffer metaDataBuffer) {
+=======
         public TermAppender(UnsafeBuffer termBuffer, UnsafeBuffer metaDataBuffer)
         {
+>>>>>>> 264ce63... Replace interfaces with concrete UnsafeBuffer
             this._termBuffer = termBuffer;
             this._metaDataBuffer = metaDataBuffer;
         }
@@ -49,8 +53,12 @@ namespace Adaptive.Aeron.LogBuffer {
         /// The log of messages for a term.
         /// </summary>
         /// <returns> the log of messages for a term. </returns>
+<<<<<<< HEAD
+        public UnsafeBuffer TermBuffer() {
+=======
         public UnsafeBuffer TermBuffer()
         {
+>>>>>>> 264ce63... Replace interfaces with concrete UnsafeBuffer
             return _termBuffer;
         }
 
@@ -58,8 +66,12 @@ namespace Adaptive.Aeron.LogBuffer {
         /// The meta data describing the term.
         /// </summary>
         /// <returns> the meta data describing the term. </returns>
+<<<<<<< HEAD
+        public UnsafeBuffer MetaDataBuffer() {
+=======
         public UnsafeBuffer MetaDataBuffer()
         {
+>>>>>>> 264ce63... Replace interfaces with concrete UnsafeBuffer
             return _metaDataBuffer;
         }
 
@@ -67,8 +79,7 @@ namespace Adaptive.Aeron.LogBuffer {
         /// Get the raw value current tail value in a volatile memory ordering fashion.
         /// </summary>
         /// <returns> the current tail value. </returns>
-        public long RawTailVolatile() 
-        {
+        public long RawTailVolatile() {
             return _metaDataBuffer.GetLongVolatile(LogBufferDescriptor.TERM_TAIL_COUNTER_OFFSET);
         }
 
@@ -84,8 +95,7 @@ namespace Adaptive.Aeron.LogBuffer {
         /// Set the status of the log buffer with StoreStore memory ordering semantics.
         /// </summary>
         /// <param name="status"> to be set for the log buffer. </param>
-        public void StatusOrdered(int status) 
-        {
+        public void StatusOrdered(int status) {
             _metaDataBuffer.PutIntOrdered(LogBufferDescriptor.TERM_STATUS_OFFSET, status);
         }
 
@@ -97,8 +107,7 @@ namespace Adaptive.Aeron.LogBuffer {
         /// <param name="bufferClaim"> to be updated with the claimed region. </param>
         /// <returns> the resulting offset of the term after the append on success otherwise <seealso cref="#TRIPPED"/> or <seealso cref="#FAILED"/>
         /// packed with the termId if a padding record was inserted at the end. </returns>
-        public unsafe long Claim(HeaderWriter header, int length, BufferClaim bufferClaim) 
-        {
+        public unsafe long Claim(HeaderWriter header, int length, BufferClaim bufferClaim) {
             int frameLength = length + DataHeaderFlyweight.HEADER_LENGTH;
             int alignedLength = BitUtil.Align(frameLength, FrameDescriptor.FRAME_ALIGNMENT);
 
@@ -143,8 +152,13 @@ namespace Adaptive.Aeron.LogBuffer {
         /// <param name="length">    of the message in the source buffer. </param>
         /// <returns> the resulting offset of the term after the append on success otherwise <seealso cref="#TRIPPED"/> or <seealso cref="#FAILED"/>
         /// packed with the termId if a padding record was inserted at the end. </returns>
+<<<<<<< HEAD
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public unsafe long AppendUnfragmentedMessage(HeaderWriter header, IDirectBuffer srcBuffer, int srcOffset, int length) {
+=======
+        public virtual long AppendUnfragmentedMessage(HeaderWriter header, UnsafeBuffer srcBuffer, int srcOffset, int length)
+        {
+>>>>>>> 264ce63... Replace interfaces with concrete UnsafeBuffer
             int frameLength = length + DataHeaderFlyweight.HEADER_LENGTH;
             int alignedLength = BitUtil.Align(frameLength, FrameDescriptor.FRAME_ALIGNMENT);
 
@@ -212,10 +226,18 @@ namespace Adaptive.Aeron.LogBuffer {
         /// <param name="maxPayloadLength"> that the message will be fragmented into. </param>
         /// <returns> the resulting offset of the term after the append on success otherwise <seealso cref="#TRIPPED"/> or <seealso cref="#FAILED"/>
         /// packed with the termId if a padding record was inserted at the end. </returns>
-        public long AppendFragmentedMessage(HeaderWriter header, UnsafeBuffer srcBuffer, int srcOffset, int length,
+<<<<<<< HEAD
+        public long AppendFragmentedMessage(HeaderWriter header, IDirectBuffer srcBuffer, int srcOffset, int length,
             int maxPayloadLength) {
             int numMaxPayloads = length / maxPayloadLength;
             int remainingPayload = length % maxPayloadLength;
+=======
+        public long AppendFragmentedMessage(HeaderWriter header, UnsafeBuffer srcBuffer, int srcOffset, int length,
+            int maxPayloadLength)
+        {
+            int numMaxPayloads = length/maxPayloadLength;
+            int remainingPayload = length%maxPayloadLength;
+>>>>>>> 264ce63... Replace interfaces with concrete UnsafeBuffer
             int lastFrameLength = remainingPayload > 0
                 ? BitUtil.Align(remainingPayload + DataHeaderFlyweight.HEADER_LENGTH, FrameDescriptor.FRAME_ALIGNMENT)
                 : 0;

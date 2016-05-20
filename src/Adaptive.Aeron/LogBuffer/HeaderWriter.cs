@@ -21,7 +21,7 @@ namespace Adaptive.Aeron.LogBuffer
         {
         }
 
-        public HeaderWriter(IDirectBuffer defaultHeader)
+        public HeaderWriter(UnsafeBuffer defaultHeader)
         {
             _versionFlagsType = defaultHeader.GetInt(HeaderFlyweight.VERSION_FIELD_OFFSET);
             _sessionId = (long)defaultHeader.GetInt(DataHeaderFlyweight.SESSION_ID_FIELD_OFFSET) << 32;
@@ -35,7 +35,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// <param name="offset">     at which the header should be written. </param>
         /// <param name="length">     of the fragment including the header. </param>
         /// <param name="termId">     of the current term buffer. </param>
-        public virtual void Write(UnsafeBuffer termBuffer, int offset, int length, int termId)
+        public void Write(UnsafeBuffer termBuffer, int offset, int length, int termId)
         {
             var termOffsetSessionId = _sessionId | (uint)offset;
             var streamAndTermIds = _streamId | ((long)termId << 32);

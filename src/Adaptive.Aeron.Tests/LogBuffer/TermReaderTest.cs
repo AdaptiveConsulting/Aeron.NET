@@ -71,7 +71,7 @@ namespace Adaptive.Aeron.Tests.LogBuffer
             Assert.That(TermReader.Offset(readOutcome), Is.EqualTo(termOffset));
 
             A.CallTo(() => termBuffer.GetIntVolatile(0)).MustHaveHappened();
-            A.CallTo(() => handler(A<IDirectBuffer>._, A<int>._, A<int>._, A<Header>._)).MustNotHaveHappened();
+            A.CallTo(() => handler(A<UnsafeBuffer>._, A<int>._, A<int>._, A<Header>._)).MustNotHaveHappened();
         }
 
         [Test]
@@ -150,7 +150,7 @@ namespace Adaptive.Aeron.Tests.LogBuffer
             Assert.That(TermReader.Offset(readOutcome), Is.EqualTo(TERM_BUFFER_CAPACITY));
 
             A.CallTo(() => termBuffer.GetIntVolatile(frameOffset)).MustHaveHappened();
-            A.CallTo(() => handler(A<IDirectBuffer>._, A<int>._, A<int>._, A<Header>._)).MustNotHaveHappened();
+            A.CallTo(() => handler(A<UnsafeBuffer>._, A<int>._, A<int>._, A<Header>._)).MustNotHaveHappened();
         }
     }
 }

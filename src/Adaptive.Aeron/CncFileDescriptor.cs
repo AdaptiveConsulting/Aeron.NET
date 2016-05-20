@@ -142,40 +142,40 @@ namespace Adaptive.Aeron
             return new UnsafeBuffer(buffer.Pointer, 0, BitUtil.SIZE_OF_INT + META_DATA_LENGTH);
         }
 
-        public static UnsafeBuffer CreateToDriverBuffer(MappedByteBuffer buffer, IDirectBuffer metaDataBuffer)
+        public static UnsafeBuffer CreateToDriverBuffer(MappedByteBuffer buffer, UnsafeBuffer metaDataBuffer)
         {
             return new UnsafeBuffer(buffer.Pointer, END_OF_METADATA_OFFSET, metaDataBuffer.GetInt(ToDriverBufferLengthOffset(0)));
         }
 
-        public static UnsafeBuffer CreateToClientsBuffer(MappedByteBuffer buffer, IDirectBuffer metaDataBuffer)
+        public static UnsafeBuffer CreateToClientsBuffer(MappedByteBuffer buffer, UnsafeBuffer metaDataBuffer)
         {
             var offset = END_OF_METADATA_OFFSET + metaDataBuffer.GetInt(ToDriverBufferLengthOffset(0));
 
             return new UnsafeBuffer(buffer.Pointer, offset, metaDataBuffer.GetInt(ToClientsBufferLengthOffset(0)));
         }
 
-        public static UnsafeBuffer CreateCountersMetaDataBuffer(MappedByteBuffer buffer, IDirectBuffer metaDataBuffer)
+        public static UnsafeBuffer CreateCountersMetaDataBuffer(MappedByteBuffer buffer, UnsafeBuffer metaDataBuffer)
         {
             var offset = END_OF_METADATA_OFFSET + metaDataBuffer.GetInt(ToDriverBufferLengthOffset(0)) + metaDataBuffer.GetInt(ToClientsBufferLengthOffset(0));
 
             return new UnsafeBuffer(buffer.Pointer, offset, metaDataBuffer.GetInt(CountersMetaDataBufferLengthOffset(0)));
         }
 
-        public static UnsafeBuffer CreateCountersValuesBuffer(MappedByteBuffer buffer, IDirectBuffer metaDataBuffer)
+        public static UnsafeBuffer CreateCountersValuesBuffer(MappedByteBuffer buffer, UnsafeBuffer metaDataBuffer)
         {
             var offset = END_OF_METADATA_OFFSET + metaDataBuffer.GetInt(ToDriverBufferLengthOffset(0)) + metaDataBuffer.GetInt(ToClientsBufferLengthOffset(0)) + metaDataBuffer.GetInt(CountersMetaDataBufferLengthOffset(0));
 
             return new UnsafeBuffer(buffer.Pointer, offset, metaDataBuffer.GetInt(CountersValuesBufferLengthOffset(0)));
         }
 
-        public static UnsafeBuffer CreateErrorLogBuffer(MappedByteBuffer buffer, IDirectBuffer metaDataBuffer)
+        public static UnsafeBuffer CreateErrorLogBuffer(MappedByteBuffer buffer, UnsafeBuffer metaDataBuffer)
         {
             var offset = END_OF_METADATA_OFFSET + metaDataBuffer.GetInt(ToDriverBufferLengthOffset(0)) + metaDataBuffer.GetInt(ToClientsBufferLengthOffset(0)) + metaDataBuffer.GetInt(CountersMetaDataBufferLengthOffset(0)) + metaDataBuffer.GetInt(CountersValuesBufferLengthOffset(0));
 
             return new UnsafeBuffer(buffer.Pointer, offset, metaDataBuffer.GetInt(ErrorLogBufferLengthOffset(0)));
         }
 
-        public static long ClientLivenessTimeout(IDirectBuffer metaDataBuffer)
+        public static long ClientLivenessTimeout(UnsafeBuffer metaDataBuffer)
         {
             return metaDataBuffer.GetLong(ClientLivenessTimeoutOffset(0));
         }

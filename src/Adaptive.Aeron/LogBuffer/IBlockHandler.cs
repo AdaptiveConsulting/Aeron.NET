@@ -1,4 +1,5 @@
 ﻿using Adaptive.Agrona;
+using Adaptive.Agrona.Concurrent;
 
 namespace Adaptive.Aeron.LogBuffer
 {
@@ -16,6 +17,6 @@ namespace Adaptive.Aeron.LogBuffer
         ///                  <seealso cref="FrameDescriptor.FRAME_ALIGNMENT"/>. </param>
         /// <param name="sessionId"> of the stream containing this block of message fragments. </param>
         /// <param name="termId">    of the stream containing this block of message fragments. </param>
-        void OnBlock(IDirectBuffer buffer, int offset, int length, int sessionId, int termId);
+        void OnBlock(UnsafeBuffer buffer, int offset, int length, int sessionId, int termId);
     }
 }
