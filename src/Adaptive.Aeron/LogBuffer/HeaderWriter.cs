@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System.Runtime.CompilerServices;
+using System.Threading;
 using Adaptive.Aeron.Protocol;
 using Adaptive.Agrona;
 using Adaptive.Agrona.Concurrent;
@@ -11,7 +12,7 @@ namespace Adaptive.Aeron.LogBuffer
     /// This class is designed to be thread safe to be used across multiple producers and makes the header
     /// visible in the correct order for consumers.
     /// </summary>
-    public class HeaderWriter
+    public sealed class HeaderWriter
     {
         private readonly int _versionFlagsType;
         private readonly long _sessionId;
@@ -35,14 +36,15 @@ namespace Adaptive.Aeron.LogBuffer
         /// <param name="offset">     at which the header should be written. </param>
         /// <param name="length">     of the fragment including the header. </param>
         /// <param name="termId">     of the current term buffer. </param>
-        public void Write(UnsafeBuffer termBuffer, int offset, int length, int termId)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public unsafe void Write(UnsafeBuffer termBuffer, int offset, int length, int termId)
         {
             var termOffsetSessionId = _sessionId | (uint)offset;
             var streamAndTermIds = _streamId | ((long)termId << 32);
 
-            termBuffer.PutInt(offset + HeaderFlyweight.VERSION_FIELD_OFFSET, _versionFlagsType);
-            termBuffer.PutLong(offset + DataHeaderFlyweight.TERM_OFFSET_FIELD_OFFSET, termOffsetSessionId);
-            termBuffer.PutLong(offset + DataHeaderFlyweight.STREAM_ID_FIELD_OFFSET, streamAndTermIds);
+            *(int*)(termBuffer.BufferPointer + offset + HeaderFlyweight.VERSION_FIELD_OFFSET) = _versionFlagsType;
+            *(long*)(termBuffer.BufferPointer + offset + DataHeaderFlyweight.TERM_OFFSET_FIELD_OFFSET) = termOffsetSessionId;
+            *(long*)(termBuffer.BufferPointer + offset + DataHeaderFlyweight.STREAM_ID_FIELD_OFFSET) = streamAndTermIds;
         }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
@@ -553,6 +554,7 @@ namespace Adaptive.Agrona.Concurrent
             }
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void PutBytes(int index, IDirectBuffer srcBuffer, int srcIndex, int length)
         {
             BoundsCheck0(index, length);

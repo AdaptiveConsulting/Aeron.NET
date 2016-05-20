@@ -152,7 +152,7 @@ namespace Adaptive.Aeron.LogBuffer {
             int termLength = termBuffer.Capacity;
             long resultingOffset;
             var spinCounter = 0;
-            var rawTail = RawTailVolatile();
+            var rawTail = Volatile.Read(ref *(long*) (_metaDataBuffer.BufferPointer + LogBufferDescriptor.TERM_TAIL_COUNTER_OFFSET));
 
             while (true) {
                 
@@ -183,7 +183,7 @@ namespace Adaptive.Aeron.LogBuffer {
                 // spin, will re-read (volatile) current tail and try again
                 // single writer will always succeed on first try
                 var previousRawTail = rawTail;
-                rawTail = RawTailVolatile();
+                rawTail = Volatile.Read(ref *(long*)(_metaDataBuffer.BufferPointer + LogBufferDescriptor.TERM_TAIL_COUNTER_OFFSET));
                 if (previousRawTail == rawTail) {
                     // incrementing tail happens right next to interlocked -length write
                     // we should spin in case another writer has written -length but not yet incremented tail
