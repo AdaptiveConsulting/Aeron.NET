@@ -70,7 +70,7 @@ namespace Adaptive.Aeron.Samples.IpcThroughput
                     var newTotalBytes = Subscriber.TotalBytes();
                     var duration = _stopwatch.ElapsedMilliseconds;
                     var bytesTransferred = newTotalBytes - lastTotalBytes;
-                    Console.WriteLine($"Duration {duration:N0}ms - {bytesTransferred/MessageLength:N0} messages - {bytesTransferred:N0} bytes, GC0 {GC.CollectionCount(0)}, GC1 {GC.CollectionCount(1)}, GC2 {GC.CollectionCount(2)}");
+                    Trace.WriteLine($"Duration {duration:N0}ms - {bytesTransferred/MessageLength:N0} messages - {bytesTransferred:N0} bytes, GC0 {GC.CollectionCount(0)}, GC1 {GC.CollectionCount(1)}, GC2 {GC.CollectionCount(2)}");
 
                     _stopwatch.Restart();
                     lastTotalBytes = newTotalBytes;
@@ -115,7 +115,7 @@ namespace Adaptive.Aeron.Samples.IpcThroughput
                     }
 
                     var backPressureRatio = backPressureCount/(double) totalMessageCount;
-                    Console.WriteLine($"Publisher back pressure ratio: {backPressureRatio}");
+                    Trace.WriteLine($"Publisher back pressure ratio: {backPressureRatio}");
                 }
             }
         }
@@ -166,7 +166,7 @@ namespace Adaptive.Aeron.Samples.IpcThroughput
                 }
 
                 var failureRatio = failedPolls/(double) (successfulPolls + failedPolls);
-                Console.WriteLine($"Subscriber poll failure ratio: {failureRatio}");
+                Trace.WriteLine($"Subscriber poll failure ratio: {failureRatio}");
             }
 
             public void OnFragment(IDirectBuffer buffer, int offset, int length, Header header)

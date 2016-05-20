@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using Adaptive.Aeron.Protocol;
 using Adaptive.Agrona;
@@ -135,6 +137,7 @@ namespace Adaptive.Aeron.LogBuffer {
         /// <param name="length">    of the message in the source buffer. </param>
         /// <returns> the resulting offset of the term after the append on success otherwise <seealso cref="#TRIPPED"/> or <seealso cref="#FAILED"/>
         /// packed with the termId if a padding record was inserted at the end. </returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public unsafe long AppendUnfragmentedMessage(HeaderWriter header, IDirectBuffer srcBuffer, int srcOffset, int length) {
             int frameLength = length + DataHeaderFlyweight.HEADER_LENGTH;
             int alignedLength = BitUtil.Align(frameLength, FrameDescriptor.FRAME_ALIGNMENT);
@@ -142,8 +145,11 @@ namespace Adaptive.Aeron.LogBuffer {
             IAtomicBuffer termBuffer = _termBuffer;
             int termLength = termBuffer.Capacity;
             long resultingOffset;
+            var spinCounter = 0;
+            var rawTail = RawTailVolatile();
+
             while (true) {
-                var rawTail = RawTailVolatile();
+                
                 var termOffset = rawTail & 0xFFFFFFFFL;
                 resultingOffset = termOffset + alignedLength;
 
@@ -167,6 +173,16 @@ namespace Adaptive.Aeron.LogBuffer {
 
                 // spin, will re-read (volatile) current tail and try again
                 // single writer will always succeed on first try
+                var previousRawTail = rawTail;
+                rawTail = RawTailVolatile();
+                if (previousRawTail == rawTail) {
+                    // incrementing tail happens right next to interlocked -length write
+                    // we should spin in case another writer has written -length but not yet incremented tail
+                    spinCounter++;
+                    if (spinCounter > 100) {
+                        Volatile.Write(ref *(int*)(new IntPtr(_termBuffer.BufferPointer.ToInt64() + termOffset)), 0);
+                    }
+                }
             }
 
             return resultingOffset;
