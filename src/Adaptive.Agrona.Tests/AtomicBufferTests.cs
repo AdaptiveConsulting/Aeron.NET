@@ -22,23 +22,23 @@ namespace Adaptive.Agrona.Tests
         private const long LongValue = int.MaxValue + 5L;
         private const double DoubleValue = int.MaxValue + 7.0d;
 
-        [Datapoint] public readonly IAtomicBuffer ByteArrayBacked = new UnsafeBuffer(new byte[BufferCapacity], 0, BufferCapacity);
+        [Datapoint] public readonly UnsafeBuffer ByteArrayBacked = new UnsafeBuffer(new byte[BufferCapacity], 0, BufferCapacity);
 
-        [Datapoint] public static readonly IAtomicBuffer UnmanagedBacked = new UnsafeBuffer(Marshal.AllocHGlobal(BufferCapacity), BufferCapacity);
+        [Datapoint] public static readonly UnsafeBuffer UnmanagedBacked = new UnsafeBuffer(Marshal.AllocHGlobal(BufferCapacity), BufferCapacity);
 
         private static readonly MappedByteBuffer MappedByteBuffer = new MappedByteBuffer(MemoryMappedFile.CreateNew("testmap", BufferCapacity));
 
-        [Datapoint] public static readonly IAtomicBuffer MemoryMappedFileBacked = new UnsafeBuffer(MappedByteBuffer.Pointer, BufferCapacity);
+        [Datapoint] public static readonly UnsafeBuffer MemoryMappedFileBacked = new UnsafeBuffer(MappedByteBuffer.Pointer, BufferCapacity);
 
         [Theory]
-        public void ShouldGetCapacity(IAtomicBuffer buffer)
+        public void ShouldGetCapacity(UnsafeBuffer buffer)
         {
             Assert.That(buffer.Capacity, Is.EqualTo(BufferCapacity));
         }
 
         [Theory]
         [ExpectedException(typeof(IndexOutOfRangeException))]
-        public void ShouldThrowExceptionForAboveCapacity(IAtomicBuffer buffer)
+        public void ShouldThrowExceptionForAboveCapacity(UnsafeBuffer buffer)
         {
             var index = BufferCapacity + 1;
             buffer.CheckLimit(index);
@@ -47,7 +47,7 @@ namespace Adaptive.Agrona.Tests
 #if DEBUG
         [Theory]
         [ExpectedException(typeof(IndexOutOfRangeException))]
-        public void ShouldThrowExceptionWhenOutOfBounds(IAtomicBuffer buffer)
+        public void ShouldThrowExceptionWhenOutOfBounds(UnsafeBuffer buffer)
         {
             const int index = BufferCapacity;
             buffer.GetByte(index);
@@ -89,7 +89,7 @@ namespace Adaptive.Agrona.Tests
         }
 
         [Theory]
-        public void ShouldCopyMemory(IAtomicBuffer buffer)
+        public void ShouldCopyMemory(UnsafeBuffer buffer)
         {
             var testBytes = Encoding.UTF8.GetBytes("xxxxxxxxxxx");
 
@@ -102,7 +102,7 @@ namespace Adaptive.Agrona.Tests
         }
 
         [Theory]
-        public void ShouldGetLongFromNativeBuffer(IAtomicBuffer buffer)
+        public void ShouldGetLongFromNativeBuffer(UnsafeBuffer buffer)
         {
             Marshal.WriteInt64(buffer.BufferPointer, Index, LongValue);
 
@@ -110,7 +110,7 @@ namespace Adaptive.Agrona.Tests
         }
 
         [Theory]
-        public void ShouldPutLongToNativeBuffer(IAtomicBuffer buffer)
+        public void ShouldPutLongToNativeBuffer(UnsafeBuffer buffer)
         {
             buffer.PutLong(Index, LongValue);
 
@@ -118,7 +118,7 @@ namespace Adaptive.Agrona.Tests
         }
 
         [Theory]
-        public void ShouldGetLongVolatileFromNativeBuffer(IAtomicBuffer buffer)
+        public void ShouldGetLongVolatileFromNativeBuffer(UnsafeBuffer buffer)
         {
             Marshal.WriteInt64(buffer.BufferPointer, Index, LongValue);
 
@@ -126,7 +126,7 @@ namespace Adaptive.Agrona.Tests
         }
 
         [Theory]
-        public void ShouldPutLongVolatileToNativeBuffer(IAtomicBuffer buffer)
+        public void ShouldPutLongVolatileToNativeBuffer(UnsafeBuffer buffer)
         {
             buffer.PutLongVolatile(Index, LongValue);
 
@@ -134,7 +134,7 @@ namespace Adaptive.Agrona.Tests
         }
 
         [Theory]
-        public void ShouldPutLongOrderedToNativeBuffer(IAtomicBuffer buffer)
+        public void ShouldPutLongOrderedToNativeBuffer(UnsafeBuffer buffer)
         {
             buffer.PutLongOrdered(Index, LongValue);
 
@@ -142,7 +142,7 @@ namespace Adaptive.Agrona.Tests
         }
 
         [Theory]
-        public void ShouldAddLongOrderedToNativeBuffer(IAtomicBuffer buffer)
+        public void ShouldAddLongOrderedToNativeBuffer(UnsafeBuffer buffer)
         {
             var initialValue = int.MaxValue + 7L;
             const long increment = 9L;
@@ -153,7 +153,7 @@ namespace Adaptive.Agrona.Tests
         }
 
         [Theory]
-        public void ShouldCompareAndSetLongToNativeBuffer(IAtomicBuffer buffer)
+        public void ShouldCompareAndSetLongToNativeBuffer(UnsafeBuffer buffer)
         {
             Marshal.WriteInt64(buffer.BufferPointer, Index, LongValue);
 
@@ -162,7 +162,7 @@ namespace Adaptive.Agrona.Tests
         }
 
         [Theory]
-        public void ShouldGetAndAddLongToNativeBuffer(IAtomicBuffer buffer)
+        public void ShouldGetAndAddLongToNativeBuffer(UnsafeBuffer buffer)
         {
             Marshal.WriteInt64(buffer.BufferPointer, Index, LongValue);
 
@@ -174,7 +174,7 @@ namespace Adaptive.Agrona.Tests
         }
 
         [Theory]
-        public void ShouldGetIntFromNativeBuffer(IAtomicBuffer buffer)
+        public void ShouldGetIntFromNativeBuffer(UnsafeBuffer buffer)
         {
             Marshal.WriteInt32(buffer.BufferPointer, Index, IntValue);
 
@@ -182,7 +182,7 @@ namespace Adaptive.Agrona.Tests
         }
 
         [Theory]
-        public void ShouldPutIntToNativeBuffer(IAtomicBuffer buffer)
+        public void ShouldPutIntToNativeBuffer(UnsafeBuffer buffer)
         {
             buffer.PutInt(Index, IntValue);
 
@@ -190,7 +190,7 @@ namespace Adaptive.Agrona.Tests
         }
 
         [Theory]
-        public void ShouldGetIntVolatileFromNativeBuffer(IAtomicBuffer buffer)
+        public void ShouldGetIntVolatileFromNativeBuffer(UnsafeBuffer buffer)
         {
             Marshal.WriteInt32(buffer.BufferPointer, Index, IntValue);
 
@@ -198,7 +198,7 @@ namespace Adaptive.Agrona.Tests
         }
 
         [Theory]
-        public void ShouldPutIntVolatileToNativeBuffer(IAtomicBuffer buffer)
+        public void ShouldPutIntVolatileToNativeBuffer(UnsafeBuffer buffer)
         {
             buffer.PutIntVolatile(Index, IntValue);
 
@@ -206,7 +206,7 @@ namespace Adaptive.Agrona.Tests
         }
 
         [Theory]
-        public void ShouldPutIntOrderedToNativeBuffer(IAtomicBuffer buffer)
+        public void ShouldPutIntOrderedToNativeBuffer(UnsafeBuffer buffer)
         {
             buffer.PutIntOrdered(Index, IntValue);
 
@@ -214,7 +214,7 @@ namespace Adaptive.Agrona.Tests
         }
 
         [Theory]
-        public void ShouldAddIntOrderedToNativeBuffer(IAtomicBuffer buffer)
+        public void ShouldAddIntOrderedToNativeBuffer(UnsafeBuffer buffer)
         {
             const int initialValue = 7;
             const int increment = 9;
@@ -225,7 +225,7 @@ namespace Adaptive.Agrona.Tests
         }
 
         [Theory]
-        public void ShouldCompareAndSetIntToNativeBuffer(IAtomicBuffer buffer)
+        public void ShouldCompareAndSetIntToNativeBuffer(UnsafeBuffer buffer)
         {
             Marshal.WriteInt32(buffer.BufferPointer, Index, IntValue);
 
@@ -235,7 +235,7 @@ namespace Adaptive.Agrona.Tests
         }
 
         [Theory]
-        public void ShouldGetAndAddIntToNativeBuffer(IAtomicBuffer buffer)
+        public void ShouldGetAndAddIntToNativeBuffer(UnsafeBuffer buffer)
         {
             Marshal.WriteInt32(buffer.BufferPointer, Index, IntValue);
 
@@ -247,7 +247,7 @@ namespace Adaptive.Agrona.Tests
         }
 
         [Theory]
-        public void ShouldGetShortFromNativeBuffer(IAtomicBuffer buffer)
+        public void ShouldGetShortFromNativeBuffer(UnsafeBuffer buffer)
         {
             Marshal.WriteInt16(buffer.BufferPointer, Index, ShortValue);
 
@@ -255,7 +255,7 @@ namespace Adaptive.Agrona.Tests
         }
 
         [Theory]
-        public void ShouldPutShortToNativeBuffer(IAtomicBuffer buffer)
+        public void ShouldPutShortToNativeBuffer(UnsafeBuffer buffer)
         {
             buffer.PutShort(Index, ShortValue);
 
@@ -263,7 +263,7 @@ namespace Adaptive.Agrona.Tests
         }
 
         [Theory]
-        public void ShouldGetShortVolatileFromNativeBuffer(IAtomicBuffer buffer)
+        public void ShouldGetShortVolatileFromNativeBuffer(UnsafeBuffer buffer)
         {
             Marshal.WriteInt16(buffer.BufferPointer, Index, ShortValue);
 
@@ -271,7 +271,7 @@ namespace Adaptive.Agrona.Tests
         }
 
         [Theory]
-        public void ShouldPutShortVolatileToNativeBuffer(IAtomicBuffer buffer)
+        public void ShouldPutShortVolatileToNativeBuffer(UnsafeBuffer buffer)
         {
             buffer.PutShortVolatile(Index, ShortValue);
 
@@ -279,7 +279,7 @@ namespace Adaptive.Agrona.Tests
         }
 
         [Theory]
-        public void ShouldGetCharFromNativeBuffer(IAtomicBuffer buffer)
+        public void ShouldGetCharFromNativeBuffer(UnsafeBuffer buffer)
         {
             Marshal.WriteInt16(buffer.BufferPointer, Index, CharValue);
 
@@ -287,7 +287,7 @@ namespace Adaptive.Agrona.Tests
         }
 
         [Theory]
-        public void ShouldPutCharToNativeBuffer(IAtomicBuffer buffer)
+        public void ShouldPutCharToNativeBuffer(UnsafeBuffer buffer)
         {
             buffer.PutChar(Index, CharValue);
 
@@ -295,7 +295,7 @@ namespace Adaptive.Agrona.Tests
         }
 
         [Theory]
-        public void ShouldGetDoubleFromNativeBuffer(IAtomicBuffer buffer)
+        public void ShouldGetDoubleFromNativeBuffer(UnsafeBuffer buffer)
         {
             var asLong = BitConverter.ToInt64(BitConverter.GetBytes(DoubleValue), 0);
 
@@ -305,7 +305,7 @@ namespace Adaptive.Agrona.Tests
         }
 
         [Theory]
-        public void ShouldPutDoubleToNativeBuffer(IAtomicBuffer buffer)
+        public void ShouldPutDoubleToNativeBuffer(UnsafeBuffer buffer)
         {
             buffer.PutDouble(Index, DoubleValue);
 
@@ -316,7 +316,7 @@ namespace Adaptive.Agrona.Tests
         }
 
         [Theory]
-        public void ShouldGetFloatFromNativeBuffer(IAtomicBuffer buffer)
+        public void ShouldGetFloatFromNativeBuffer(UnsafeBuffer buffer)
         {
             var asInt = BitConverter.ToInt32(BitConverter.GetBytes(FloatValue), 0);
 
@@ -326,7 +326,7 @@ namespace Adaptive.Agrona.Tests
         }
 
         [Theory]
-        public void ShouldPutFloatToNativeBuffer(IAtomicBuffer buffer)
+        public void ShouldPutFloatToNativeBuffer(UnsafeBuffer buffer)
         {
             buffer.PutFloat(Index, FloatValue);
 
@@ -337,7 +337,7 @@ namespace Adaptive.Agrona.Tests
         }
 
         [Theory]
-        public void ShouldGetByteFromBuffer(IAtomicBuffer buffer)
+        public void ShouldGetByteFromBuffer(UnsafeBuffer buffer)
         {
             Marshal.WriteByte(buffer.BufferPointer, Index, ByteValue);
 
@@ -345,7 +345,7 @@ namespace Adaptive.Agrona.Tests
         }
 
         [Theory]
-        public void ShouldPutByteToBuffer(IAtomicBuffer buffer)
+        public void ShouldPutByteToBuffer(UnsafeBuffer buffer)
         {
             buffer.PutByte(Index, ByteValue);
 
@@ -353,7 +353,7 @@ namespace Adaptive.Agrona.Tests
         }
 
         [Theory]
-        public void ShouldGetByteVolatileFromBuffer(IAtomicBuffer buffer)
+        public void ShouldGetByteVolatileFromBuffer(UnsafeBuffer buffer)
         {
             Marshal.WriteByte(buffer.BufferPointer, Index, ByteValue);
 
@@ -361,7 +361,7 @@ namespace Adaptive.Agrona.Tests
         }
 
         [Theory]
-        public void ShouldPutByteVolatileToBuffer(IAtomicBuffer buffer)
+        public void ShouldPutByteVolatileToBuffer(UnsafeBuffer buffer)
         {
             buffer.PutByteVolatile(Index, ByteValue);
 
@@ -369,7 +369,7 @@ namespace Adaptive.Agrona.Tests
         }
 
         [Theory]
-        public void ShouldGetByteArrayFromBuffer(IAtomicBuffer buffer)
+        public void ShouldGetByteArrayFromBuffer(UnsafeBuffer buffer)
         {
             byte[] testArray = {(byte) 'H', (byte) 'e', (byte) 'l', (byte) 'l', (byte) 'o'};
 
@@ -387,7 +387,7 @@ namespace Adaptive.Agrona.Tests
         }
 
         [Theory]
-        public void ShouldGetBytesFromBuffer(IAtomicBuffer buffer)
+        public void ShouldGetBytesFromBuffer(UnsafeBuffer buffer)
         {
             var testBytes = Encoding.UTF8.GetBytes("Hello World");
             for (var i = 0; i < testBytes.Length; i++)
@@ -402,7 +402,7 @@ namespace Adaptive.Agrona.Tests
         }
 
         [Theory]
-        public void ShouldPutBytesToBuffer(IAtomicBuffer buffer)
+        public void ShouldPutBytesToBuffer(UnsafeBuffer buffer)
         {
             var testBytes = Encoding.UTF8.GetBytes("Hello World");
             buffer.PutBytes(Index, testBytes);
@@ -417,7 +417,7 @@ namespace Adaptive.Agrona.Tests
         }
 
         [Theory]
-        public void ShouldPutBytesToAtomicBufferFromAtomicBuffer(IAtomicBuffer buffer)
+        public void ShouldPutBytesToAtomicBufferFromAtomicBuffer(UnsafeBuffer buffer)
         {
             var testBytes = Encoding.UTF8.GetBytes("Hello World");
             var srcUnsafeBuffer = new UnsafeBuffer(testBytes);
@@ -434,7 +434,7 @@ namespace Adaptive.Agrona.Tests
         }
 
         [Theory]
-        public void ShouldGetBytesIntoAtomicBufferFromAtomicBuffer(IAtomicBuffer buffer)
+        public void ShouldGetBytesIntoAtomicBufferFromAtomicBuffer(UnsafeBuffer buffer)
         {
             var testBytes = Encoding.UTF8.GetBytes("Hello World");
             var srcUnsafeBuffer = new UnsafeBuffer(testBytes);

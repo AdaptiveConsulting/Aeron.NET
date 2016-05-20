@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using Adaptive.Aeron.Command;
 using Adaptive.Agrona;
+using Adaptive.Agrona.Concurrent;
 using Adaptive.Agrona.Concurrent.Broadcast;
 
 namespace Adaptive.Aeron
@@ -47,7 +48,7 @@ namespace Adaptive.Aeron
             return _lastReceivedCorrelationId;
         }
 
-        public void OnMessage(int msgTypeId, IMutableDirectBuffer buffer, int index, int length)
+        public void OnMessage(int msgTypeId, UnsafeBuffer buffer, int index, int length)
         {
             switch (msgTypeId)
             {

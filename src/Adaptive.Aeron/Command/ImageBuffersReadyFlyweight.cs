@@ -1,4 +1,5 @@
 ﻿using Adaptive.Agrona;
+using Adaptive.Agrona.Concurrent;
 
 namespace Adaptive.Aeron.Command
 {
@@ -68,7 +69,7 @@ namespace Adaptive.Aeron.Command
             SUBSCRIBER_POSITION_BLOCK_LENGTH = BitUtil.SIZE_OF_LONG + BitUtil.SIZE_OF_INT;
         }
 
-        private IMutableDirectBuffer _buffer;
+        private UnsafeBuffer _buffer;
         private int _offset;
 
         /// <summary>
@@ -77,7 +78,7 @@ namespace Adaptive.Aeron.Command
         /// <param name="buffer"> to wrap </param>
         /// <param name="offset"> at which the message begins. </param>
         /// <returns> for fluent API </returns>
-        public ImageBuffersReadyFlyweight Wrap(IMutableDirectBuffer buffer, int offset)
+        public ImageBuffersReadyFlyweight Wrap(UnsafeBuffer buffer, int offset)
         {
             this._buffer = buffer;
             this._offset = offset;

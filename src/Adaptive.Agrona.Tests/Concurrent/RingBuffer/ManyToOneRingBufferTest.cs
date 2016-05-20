@@ -16,13 +16,13 @@ namespace Adaptive.Agrona.Tests.Concurrent.RingBuffer
         private static readonly int HeadCounterIndex = Capacity + RingBufferDescriptor.HeadPositionOffset;
         private static readonly int HeadCounterCacheIndex = Capacity + RingBufferDescriptor.HeadCachePositionOffset;
 
-        private IAtomicBuffer _buffer;
+        private UnsafeBuffer _buffer;
         private ManyToOneRingBuffer _ringBuffer;
 
         [SetUp]
         public void SetUp()
         {
-            _buffer = A.Fake<IAtomicBuffer>();
+            _buffer = A.Fake<UnsafeBuffer>();
 
             A.CallTo(() => _buffer.Capacity).Returns(TotalBufferLength);
 

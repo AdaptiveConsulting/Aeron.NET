@@ -31,15 +31,15 @@ namespace Adaptive.Aeron.LogBuffer {
         /// </summary>
         public const int FAILED = -2;
 
-        private readonly IAtomicBuffer _termBuffer;
-        private readonly IAtomicBuffer _metaDataBuffer;
+        private readonly UnsafeBuffer _termBuffer;
+        private readonly UnsafeBuffer _metaDataBuffer;
 
         /// <summary>
         /// Construct a view over a term buffer and state buffer for appending frames.
         /// </summary>
         /// <param name="termBuffer">     for where messages are stored. </param>
         /// <param name="metaDataBuffer"> for where the state of writers is stored manage concurrency. </param>
-        public TermAppender(IAtomicBuffer termBuffer, IAtomicBuffer metaDataBuffer) {
+        public TermAppender(UnsafeBuffer termBuffer, UnsafeBuffer metaDataBuffer) {
             this._termBuffer = termBuffer;
             this._metaDataBuffer = metaDataBuffer;
         }
@@ -48,7 +48,7 @@ namespace Adaptive.Aeron.LogBuffer {
         /// The log of messages for a term.
         /// </summary>
         /// <returns> the log of messages for a term. </returns>
-        public IAtomicBuffer TermBuffer() {
+        public UnsafeBuffer TermBuffer() {
             return _termBuffer;
         }
 
@@ -56,7 +56,7 @@ namespace Adaptive.Aeron.LogBuffer {
         /// The meta data describing the term.
         /// </summary>
         /// <returns> the meta data describing the term. </returns>
-        public IAtomicBuffer MetaDataBuffer() {
+        public UnsafeBuffer MetaDataBuffer() {
             return _metaDataBuffer;
         }
 
@@ -96,7 +96,7 @@ namespace Adaptive.Aeron.LogBuffer {
             int frameLength = length + DataHeaderFlyweight.HEADER_LENGTH;
             int alignedLength = BitUtil.Align(frameLength, FrameDescriptor.FRAME_ALIGNMENT);
 
-            IAtomicBuffer termBuffer = _termBuffer;
+            UnsafeBuffer termBuffer = _termBuffer;
             int termLength = termBuffer.Capacity;
             long resultingOffset;
             while (true) {
@@ -142,7 +142,7 @@ namespace Adaptive.Aeron.LogBuffer {
             int frameLength = length + DataHeaderFlyweight.HEADER_LENGTH;
             int alignedLength = BitUtil.Align(frameLength, FrameDescriptor.FRAME_ALIGNMENT);
 
-            IAtomicBuffer termBuffer = _termBuffer;
+            UnsafeBuffer termBuffer = _termBuffer;
             int termLength = termBuffer.Capacity;
             long resultingOffset;
             var spinCounter = 0;
@@ -219,7 +219,7 @@ namespace Adaptive.Aeron.LogBuffer {
             int termId = TermId(rawTail);
             long termOffset = rawTail & 0xFFFFFFFFL;
 
-            IAtomicBuffer termBuffer = _termBuffer;
+            UnsafeBuffer termBuffer = _termBuffer;
             int termLength = termBuffer.Capacity;
 
             long resultingOffset = termOffset + requiredLength;
@@ -283,7 +283,7 @@ namespace Adaptive.Aeron.LogBuffer {
             return (int)((long)((ulong)result >> 32));
         }
 
-        private long HandleEndOfLogCondition(IAtomicBuffer termBuffer, long termOffset, HeaderWriter header,
+        private long HandleEndOfLogCondition(UnsafeBuffer termBuffer, long termOffset, HeaderWriter header,
             int termLength, int termId) {
             int resultingOffset = FAILED;
 

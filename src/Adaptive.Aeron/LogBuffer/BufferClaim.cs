@@ -25,7 +25,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// <param name="buf"> to be wrapped. </param>
         /// <param name="offset"> at which the claimed region begins including space for the header. </param>
         /// <param name="length"> length of the underlying claimed region including space for the header. </param>
-        public void Wrap(IAtomicBuffer buf, int offset, int length)
+        public void Wrap(UnsafeBuffer buf, int offset, int length)
         {
             _buffer.Wrap(buf, offset, length);
         }
@@ -34,7 +34,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// The referenced buffer to be used.
         /// </summary>
         /// <returns> the referenced buffer to be used.. </returns>
-        public IMutableDirectBuffer Buffer => _buffer;
+        public UnsafeBuffer Buffer => _buffer;
 
         /// <summary>
         /// The offset in the buffer at which the claimed range begins.

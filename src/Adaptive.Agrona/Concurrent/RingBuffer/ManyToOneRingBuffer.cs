@@ -25,7 +25,7 @@ namespace Adaptive.Agrona.Concurrent.RingBuffer
         private readonly int _headPositionIndex;
         private readonly int _correlationIdCounterIndex;
         private readonly int _consumerHeartbeatIndex;
-        private readonly IAtomicBuffer _buffer;
+        private readonly UnsafeBuffer _buffer;
 
         /// <summary>
         /// Construct a new <seealso cref="RingBuffer"/> based on an underlying <seealso cref="IAtomicBuffer"/>.
@@ -35,7 +35,7 @@ namespace Adaptive.Agrona.Concurrent.RingBuffer
         /// <param name="buffer"> via which events will be exchanged. </param>
         /// <exception cref="InvalidOperationException"> if the buffer capacity is not a power of 2
         /// plus <seealso cref="RingBufferDescriptor.TrailerLength"/> in capacity. </exception>
-        public ManyToOneRingBuffer(IAtomicBuffer buffer)
+        public ManyToOneRingBuffer(UnsafeBuffer buffer)
         {
             _buffer = buffer;
             RingBufferDescriptor.CheckCapacity(buffer.Capacity);

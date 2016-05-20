@@ -35,7 +35,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// <param name="offset">     at which the header should be written. </param>
         /// <param name="length">     of the fragment including the header. </param>
         /// <param name="termId">     of the current term buffer. </param>
-        public virtual void Write(IAtomicBuffer termBuffer, int offset, int length, int termId)
+        public virtual void Write(UnsafeBuffer termBuffer, int offset, int length, int termId)
         {
             var termOffsetSessionId = _sessionId | (uint)offset;
             var streamAndTermIds = _streamId | ((long)termId << 32);

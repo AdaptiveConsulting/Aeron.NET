@@ -1,4 +1,5 @@
 ﻿using Adaptive.Agrona;
+using Adaptive.Agrona.Concurrent;
 
 namespace Adaptive.Aeron.Command
 {
@@ -32,7 +33,7 @@ namespace Adaptive.Aeron.Command
         private static readonly int PUBLICATION_LIMIT_COUNTER_ID_OFFSET = STREAM_ID_FIELD_OFFSET + BitUtil.SIZE_OF_INT;
         private static readonly int LOGFILE_FIELD_OFFSET = PUBLICATION_LIMIT_COUNTER_ID_OFFSET + BitUtil.SIZE_OF_INT;
 
-        private IMutableDirectBuffer _buffer;
+        private UnsafeBuffer _buffer;
         private int _offset;
 
         /// <summary>
@@ -41,7 +42,7 @@ namespace Adaptive.Aeron.Command
         /// <param name="buffer"> to wrap </param>
         /// <param name="offset"> at which the message begins. </param>
         /// <returns> for fluent API </returns>
-        public PublicationBuffersReadyFlyweight Wrap(IMutableDirectBuffer buffer, int offset)
+        public PublicationBuffersReadyFlyweight Wrap(UnsafeBuffer buffer, int offset)
         {
             this._buffer = buffer;
             this._offset = offset;

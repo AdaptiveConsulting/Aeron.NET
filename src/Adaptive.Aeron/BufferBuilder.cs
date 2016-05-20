@@ -68,9 +68,9 @@ namespace Adaptive.Aeron
         }
 
         /// <summary>
-        /// The <seealso cref="IMutableDirectBuffer"/> that encapsulates the internal buffer.
+        /// The <seealso cref="UnsafeBuffer"/> that encapsulates the internal buffer.
         /// </summary>
-        /// <returns> the <seealso cref="IMutableDirectBuffer"/> that encapsulates the internal buffer. </returns>
+        /// <returns> the <seealso cref="UnsafeBuffer"/> that encapsulates the internal buffer. </returns>
         public UnsafeBuffer Buffer()
         {
             return _mutableDirectBuffer;

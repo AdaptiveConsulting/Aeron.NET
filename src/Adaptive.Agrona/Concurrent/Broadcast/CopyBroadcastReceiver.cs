@@ -10,7 +10,7 @@ namespace Adaptive.Agrona.Concurrent.Broadcast
         private const int ScratchBufferSize = 4096;
 
         private readonly BroadcastReceiver _receiver;
-        private readonly IMutableDirectBuffer _scratchBuffer;
+        private readonly UnsafeBuffer _scratchBuffer;
 
         public CopyBroadcastReceiver()
         {

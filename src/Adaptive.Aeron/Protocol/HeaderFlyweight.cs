@@ -16,7 +16,7 @@ namespace Adaptive.Aeron.Protocol
     /// |                       Depends on Type                        ...
     /// 
     /// </summary>
-    public class HeaderFlyweight : UnsafeBuffer
+    public sealed class HeaderFlyweight : UnsafeBuffer
     {
         public static readonly byte[] EMPTY_BUFFER = new byte[0];
 

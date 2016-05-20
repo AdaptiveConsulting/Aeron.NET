@@ -9,12 +9,12 @@ namespace Adaptive.Aeron.Tests.LogBuffer
     [TestFixture]
     public class TermBlockScannerTest
     {
-        private IAtomicBuffer _termBuffer;
+        private UnsafeBuffer _termBuffer;
 
         [SetUp]
         public void SetUp()
         {
-            _termBuffer = A.Fake<IAtomicBuffer>();
+            _termBuffer = A.Fake<UnsafeBuffer>();
             A.CallTo(() => _termBuffer.Capacity).Returns(LogBufferDescriptor.TERM_MIN_LENGTH);
         }
 

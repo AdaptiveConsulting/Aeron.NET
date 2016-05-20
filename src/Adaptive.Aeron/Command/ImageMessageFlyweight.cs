@@ -1,4 +1,5 @@
 ﻿using Adaptive.Agrona;
+using Adaptive.Agrona.Concurrent;
 
 namespace Adaptive.Aeron.Command
 {
@@ -27,7 +28,7 @@ namespace Adaptive.Aeron.Command
         private const int STREAM_ID_FIELD_OFFSET = 8;
         private const int CHANNEL_OFFSET = 12;
 
-        private IMutableDirectBuffer buffer;
+        private UnsafeBuffer buffer;
         private int offset;
         private int lengthOfChannel;
 
@@ -37,7 +38,7 @@ namespace Adaptive.Aeron.Command
         /// <param name="buffer"> to wrap </param>
         /// <param name="offset"> at which the message begins. </param>
         /// <returns> for fluent API </returns>
-        public ImageMessageFlyweight Wrap(IMutableDirectBuffer buffer, int offset)
+        public ImageMessageFlyweight Wrap(UnsafeBuffer buffer, int offset)
         {
             this.buffer = buffer;
             this.offset = offset;

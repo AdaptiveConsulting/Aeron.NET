@@ -15,7 +15,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// <param name="offset">     at which the scan should begin. </param>
         /// <param name="limit">      at which the scan should stop. </param>
         /// <returns> the offset at which the scan terminated. </returns>
-        public static int Scan(IAtomicBuffer termBuffer, int offset, int limit)
+        public static int Scan(UnsafeBuffer termBuffer, int offset, int limit)
         {
             do
             {

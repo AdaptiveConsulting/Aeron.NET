@@ -1,4 +1,5 @@
 ﻿using Adaptive.Agrona;
+using Adaptive.Agrona.Concurrent;
 
 namespace Adaptive.Aeron.Command
 {
@@ -27,7 +28,7 @@ namespace Adaptive.Aeron.Command
         private static readonly int ERROR_CODE_OFFSET = OFFENDING_COMMAND_CORRELATION_ID_OFFSET + BitUtil.SIZE_OF_LONG;
         private static readonly int ERROR_MESSAGE_OFFSET = ERROR_CODE_OFFSET + BitUtil.SIZE_OF_INT;
 
-        private IMutableDirectBuffer _buffer;
+        private UnsafeBuffer _buffer;
         private int _offset;
 
         /// <summary>
@@ -36,7 +37,7 @@ namespace Adaptive.Aeron.Command
         /// <param name="buffer"> to wrap </param>
         /// <param name="offset"> at which the message begins. </param>
         /// <returns> for fluent API </returns>
-        public ErrorResponseFlyweight Wrap(IMutableDirectBuffer buffer, int offset)
+        public ErrorResponseFlyweight Wrap(UnsafeBuffer buffer, int offset)
         {
             this._buffer = buffer;
             this._offset = offset;

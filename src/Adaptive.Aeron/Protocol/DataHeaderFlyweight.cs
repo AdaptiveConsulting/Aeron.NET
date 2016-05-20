@@ -9,7 +9,7 @@ namespace Adaptive.Aeron.Protocol
     /// 
     /// <a href="https://github.com/real-logic/Aeron/wiki/Protocol-Specification#data-frame">Data Frame</a>
     /// </summary>
-    public class DataHeaderFlyweight : HeaderFlyweight
+    public sealed class DataHeaderFlyweight : HeaderFlyweight
     {
         /// <summary>
         /// Length of the Data Header

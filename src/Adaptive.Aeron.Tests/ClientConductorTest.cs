@@ -136,8 +136,8 @@ namespace Adaptive.Aeron.Tests
             atomicBuffersSession1[LogBufferDescriptor.LOG_META_DATA_SECTION_INDEX] = new UnsafeBuffer(new byte[TERM_BUFFER_LENGTH]);
             atomicBuffersSession2[LogBufferDescriptor.LOG_META_DATA_SECTION_INDEX] = new UnsafeBuffer(new byte[TERM_BUFFER_LENGTH]);
 
-            IMutableDirectBuffer header1 = DataHeaderFlyweight.CreateDefaultHeader(SESSION_ID_1, STREAM_ID_1, 0);
-            IMutableDirectBuffer header2 = DataHeaderFlyweight.CreateDefaultHeader(SESSION_ID_2, STREAM_ID_2, 0);
+            UnsafeBuffer header1 = DataHeaderFlyweight.CreateDefaultHeader(SESSION_ID_1, STREAM_ID_1, 0);
+            UnsafeBuffer header2 = DataHeaderFlyweight.CreateDefaultHeader(SESSION_ID_2, STREAM_ID_2, 0);
 
             LogBufferDescriptor.StoreDefaultFrameHeader(atomicBuffersSession1[LogBufferDescriptor.LOG_META_DATA_SECTION_INDEX], header1);
             LogBufferDescriptor.StoreDefaultFrameHeader(atomicBuffersSession2[LogBufferDescriptor.LOG_META_DATA_SECTION_INDEX], header2);
@@ -463,7 +463,7 @@ namespace Adaptive.Aeron.Tests
             A.CallTo(() => MockClientErrorHandler(A<ConductorServiceTimeoutException>._)).MustHaveHappened();
         }
 
-        private void WhenReceiveBroadcastOnMessage(int msgTypeId, IMutableDirectBuffer buffer, Func<IMutableDirectBuffer, int> filler)
+        private void WhenReceiveBroadcastOnMessage(int msgTypeId, UnsafeBuffer buffer, Func<UnsafeBuffer, int> filler)
         {
             A.CallTo(() => MockToClientReceiver.Receive(A<MessageHandler>._)).Invokes(() =>
             {

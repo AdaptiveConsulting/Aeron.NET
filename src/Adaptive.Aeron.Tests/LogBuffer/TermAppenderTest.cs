@@ -17,8 +17,8 @@ namespace Adaptive.Aeron.Tests.LogBuffer
         private static UnsafeBuffer _defaultHeader;
         private const int TermID = 7;
 
-         private IAtomicBuffer _termBuffer;
-        private IAtomicBuffer _metaDataBuffer;
+         private UnsafeBuffer _termBuffer;
+        private UnsafeBuffer _metaDataBuffer;
         private HeaderWriter _headerWriter;
         private TermAppender _termAppender;
 
@@ -27,8 +27,8 @@ namespace Adaptive.Aeron.Tests.LogBuffer
         {
             _defaultHeader = new UnsafeBuffer(new byte[DataHeaderFlyweight.HEADER_LENGTH]);
 
-            _termBuffer = A.Fake<IAtomicBuffer>(x => x.Wrapping(new UnsafeBuffer(new byte[TermBufferLength])));
-            _metaDataBuffer = A.Fake<IAtomicBuffer>();
+            _termBuffer = A.Fake<UnsafeBuffer>(x => x.Wrapping(new UnsafeBuffer(new byte[TermBufferLength])));
+            _metaDataBuffer = A.Fake<UnsafeBuffer>();
             _headerWriter = A.Fake<HeaderWriter>(x => x.Wrapping(new HeaderWriter(DataHeaderFlyweight.CreateDefaultHeader(0, 0, TermID))));
 
             A.CallTo(() => _termBuffer.Capacity).Returns(TermBufferLength);

@@ -1,4 +1,5 @@
 ﻿using Adaptive.Agrona;
+using Adaptive.Agrona.Concurrent;
 
 namespace Adaptive.Aeron.Command
 {
@@ -19,7 +20,7 @@ namespace Adaptive.Aeron.Command
         public static readonly int CORRELATION_ID_FIELD_OFFSET = CLIENT_ID_FIELD_OFFSET + BitUtil.SIZE_OF_LONG;
         public static readonly int LENGTH = 2 * BitUtil.SIZE_OF_LONG;
 
-        protected internal IMutableDirectBuffer buffer;
+        protected internal UnsafeBuffer buffer;
         protected internal int offset;
 
         /// <summary>
@@ -28,7 +29,7 @@ namespace Adaptive.Aeron.Command
         /// <param name="buffer"> to wrap </param>
         /// <param name="offset"> at which the message begins. </param>
         /// <returns> for fluent API </returns>
-        public CorrelatedMessageFlyweight Wrap(IMutableDirectBuffer buffer, int offset)
+        public CorrelatedMessageFlyweight Wrap(UnsafeBuffer buffer, int offset)
         {
             this.buffer = buffer;
             this.offset = offset;
