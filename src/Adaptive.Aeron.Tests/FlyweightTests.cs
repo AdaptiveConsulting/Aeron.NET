@@ -101,19 +101,19 @@ namespace Adaptive.Aeron.Tests
         {
             encodeDataHeader.Wrap(aBuff);
 
-            encodeDataHeader.Version(1);
-            encodeDataHeader.Flags(DataHeaderFlyweight.BEGIN_AND_END_FLAGS);
-            encodeDataHeader.HeaderType(HeaderFlyweight.HDR_TYPE_DATA);
-            encodeDataHeader.FrameLength(DataHeaderFlyweight.HEADER_LENGTH);
+            encodeDataHeader.Header.Version(1);
+            encodeDataHeader.Header.Flags(DataHeaderFlyweight.BEGIN_AND_END_FLAGS);
+            encodeDataHeader.Header.HeaderType(HeaderFlyweight.HDR_TYPE_DATA);
+            encodeDataHeader.Header.FrameLength(DataHeaderFlyweight.HEADER_LENGTH);
             encodeDataHeader.SessionId(12345);
             encodeDataHeader.StreamId(0x44332211);
             encodeDataHeader.TermId(99887766);
 
             decodeDataHeader.Wrap(aBuff);
-            Assert.That(decodeDataHeader.Version(), Is.EqualTo((short)1));
-            Assert.That(decodeDataHeader.Flags(), Is.EqualTo(DataHeaderFlyweight.BEGIN_AND_END_FLAGS));
-            Assert.That(decodeDataHeader.HeaderType(), Is.EqualTo(HeaderFlyweight.HDR_TYPE_DATA));
-            Assert.That(decodeDataHeader.FrameLength(), Is.EqualTo(DataHeaderFlyweight.HEADER_LENGTH));
+            Assert.That(decodeDataHeader.Header.Version(), Is.EqualTo((short)1));
+            Assert.That(decodeDataHeader.Header.Flags(), Is.EqualTo(DataHeaderFlyweight.BEGIN_AND_END_FLAGS));
+            Assert.That(decodeDataHeader.Header.HeaderType(), Is.EqualTo(HeaderFlyweight.HDR_TYPE_DATA));
+            Assert.That(decodeDataHeader.Header.FrameLength(), Is.EqualTo(DataHeaderFlyweight.HEADER_LENGTH));
             Assert.That(decodeDataHeader.SessionId(), Is.EqualTo(12345));
             Assert.That(decodeDataHeader.StreamId(), Is.EqualTo(0x44332211));
             Assert.That(decodeDataHeader.TermId(), Is.EqualTo(99887766));

@@ -276,7 +276,7 @@ namespace Adaptive.Aeron.Tests
 
         private void InsertDataFrame(int activeTermId, int termOffset)
         {
-            DataHeader.TermId(INITIAL_TERM_ID).StreamId(STREAM_ID).SessionId(SESSION_ID).TermOffset(termOffset).FrameLength(DATA.Length + DataHeaderFlyweight.HEADER_LENGTH).HeaderType(HeaderFlyweight.HDR_TYPE_DATA).Flags(DataHeaderFlyweight.BEGIN_AND_END_FLAGS).Version(HeaderFlyweight.CURRENT_VERSION);
+            DataHeader.TermId(INITIAL_TERM_ID).StreamId(STREAM_ID).SessionId(SESSION_ID).TermOffset(termOffset).Header.FrameLength(DATA.Length + DataHeaderFlyweight.HEADER_LENGTH).HeaderType(HeaderFlyweight.HDR_TYPE_DATA).Flags(DataHeaderFlyweight.BEGIN_AND_END_FLAGS).Version(HeaderFlyweight.CURRENT_VERSION);
 
             RcvBuffer.PutBytes(DataHeader.DataOffset(), DATA);
 

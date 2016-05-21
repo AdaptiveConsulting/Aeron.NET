@@ -18,9 +18,6 @@ namespace Adaptive.Aeron.LogBuffer
         private readonly long _sessionId;
         private readonly long _streamId;
 
-        public HeaderWriter()
-        {
-        }
 
         public HeaderWriter(UnsafeBuffer defaultHeader)
         {

@@ -16,8 +16,9 @@ namespace Adaptive.Aeron.Protocol
     /// |                       Depends on Type                        ...
     /// 
     /// </summary>
-    public class HeaderFlyweight : UnsafeBuffer
+    public struct HeaderFlyweight
     {
+        private UnsafeBuffer _buffer;
         public static readonly byte[] EMPTY_BUFFER = new byte[0];
 
         /// <summary>
@@ -58,13 +59,20 @@ namespace Adaptive.Aeron.Protocol
         public const int TYPE_FIELD_OFFSET = 6;
         public static readonly int HEADER_LENGTH = TYPE_FIELD_OFFSET + BitUtil.SIZE_OF_SHORT;
 
-        public HeaderFlyweight() : base(EMPTY_BUFFER)
+
+        public HeaderFlyweight(UnsafeBuffer buffer)
         {
+            _buffer = buffer;
         }
 
-        public HeaderFlyweight(UnsafeBuffer buffer) : base(buffer)
-        {
+        public void Wrap(UnsafeBuffer buffer) {
+            _buffer = buffer;
         }
+
+        public void Wrap(UnsafeBuffer buffer, int offset, int length) {
+            _buffer = new UnsafeBuffer(buffer, offset, length);
+        }
+
 
         /// <summary>
         /// return version field value
@@ -72,7 +80,7 @@ namespace Adaptive.Aeron.Protocol
         /// <returns> ver field value </returns>
         public short Version()
         {
-            return (short) (GetByte(VERSION_FIELD_OFFSET) & 0xFF);
+            return (short) (_buffer.GetByte(VERSION_FIELD_OFFSET) & 0xFF);
         }
 
         /// <summary>
@@ -82,7 +90,7 @@ namespace Adaptive.Aeron.Protocol
         /// <returns> flyweight </returns>
         public HeaderFlyweight Version(short version)
         {
-            PutByte(VERSION_FIELD_OFFSET, (byte) version);
+            _buffer.PutByte(VERSION_FIELD_OFFSET, (byte) version);
 
             return this;
         }
@@ -93,7 +101,7 @@ namespace Adaptive.Aeron.Protocol
         /// <returns> flags field value </returns>
         public short Flags()
         {
-            return (short) (GetByte(FLAGS_FIELD_OFFSET) & 0xFF);
+            return (short) (_buffer.GetByte(FLAGS_FIELD_OFFSET) & 0xFF);
         }
 
         /// <summary>
@@ -103,7 +111,7 @@ namespace Adaptive.Aeron.Protocol
         /// <returns> flyweight </returns>
         public HeaderFlyweight Flags(short flags)
         {
-            PutByte(FLAGS_FIELD_OFFSET, (byte) flags);
+            _buffer.PutByte(FLAGS_FIELD_OFFSET, (byte) flags);
 
             return this;
         }
@@ -114,7 +122,7 @@ namespace Adaptive.Aeron.Protocol
         /// <returns> type field value </returns>
         public int HeaderType()
         {
-            return GetShort(TYPE_FIELD_OFFSET) & 0xFFFF;
+            return _buffer.GetShort(TYPE_FIELD_OFFSET) & 0xFFFF;
         }
 
         /// <summary>
@@ -124,7 +132,7 @@ namespace Adaptive.Aeron.Protocol
         /// <returns> flyweight </returns>
         public HeaderFlyweight HeaderType(int type)
         {
-            PutShort(TYPE_FIELD_OFFSET, (short) type);
+            _buffer.PutShort(TYPE_FIELD_OFFSET, (short) type);
 
             return this;
         }
@@ -135,7 +143,7 @@ namespace Adaptive.Aeron.Protocol
         /// <returns> frame length field </returns>
         public int FrameLength()
         {
-            return GetInt(FRAME_LENGTH_FIELD_OFFSET);
+            return _buffer.GetInt(FRAME_LENGTH_FIELD_OFFSET);
         }
 
         /// <summary>
@@ -145,7 +153,7 @@ namespace Adaptive.Aeron.Protocol
         /// <returns> flyweight </returns>
         public HeaderFlyweight FrameLength(int length)
         {
-            PutInt(FRAME_LENGTH_FIELD_OFFSET, length);
+            _buffer.PutInt(FRAME_LENGTH_FIELD_OFFSET, length);
 
             return this;
         }

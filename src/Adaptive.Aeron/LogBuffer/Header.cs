@@ -7,7 +7,7 @@ namespace Adaptive.Aeron.LogBuffer
     /// <summary>
     /// Represents the header of the data frame for accessing meta data fields.
     /// </summary>
-    public class Header
+    public sealed class Header
     {
         private readonly int _positionBitsToShift;
         private int _initialTermId;
@@ -113,7 +113,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// can be used for both flags.
         /// </summary>
         /// <returns> the flags for this frame. </returns>
-        public virtual byte Flags => Buffer.GetByte(Offset + HeaderFlyweight.FLAGS_FIELD_OFFSET);
+        public byte Flags => Buffer.GetByte(Offset + HeaderFlyweight.FLAGS_FIELD_OFFSET);
 
         /// <summary>
         /// Get the value stored in the reserve space at the end of a data frame header.

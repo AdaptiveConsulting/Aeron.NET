@@ -20,7 +20,7 @@ namespace Adaptive.Agrona.Concurrent
     /// 
     /// Note: The wrap methods on this class are not thread safe. Concurrent access should only happen after a successful wrap.
     /// </summary>
-    public unsafe class UnsafeBuffer : IAtomicBuffer, IDisposable
+    public unsafe sealed class UnsafeBuffer : IAtomicBuffer, IDisposable
     {
         /// <summary>
         /// Buffer alignment to ensure atomic word accesses.
