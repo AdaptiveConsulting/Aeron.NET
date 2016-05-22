@@ -23,6 +23,7 @@ namespace Adaptive.Aeron
         private readonly ImageMessageFlyweight _imageMessage = new ImageMessageFlyweight();
         private readonly IDriverListener _listener;
         private readonly IDictionary<long, long> _subscriberPositionMap = new Dictionary<long, long>();
+        private readonly MessageHandler _onMessageHandler;
 
         private long _activeCorrelationId;
         private long _lastReceivedCorrelationId;
@@ -32,6 +33,7 @@ namespace Adaptive.Aeron
         {
             _broadcastReceiver = broadcastReceiver;
             _listener = listener;
+            _onMessageHandler = OnMessage;
         }
 
         public int PollMessage(long activeCorrelationId, string expectedChannel)
@@ -40,7 +42,7 @@ namespace Adaptive.Aeron
             _lastReceivedCorrelationId = -1;
             _expectedChannel = expectedChannel;
 
-            return _broadcastReceiver.Receive(OnMessage);
+            return _broadcastReceiver.Receive(_onMessageHandler);
         }
 
         public long LastReceivedCorrelationId()

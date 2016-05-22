@@ -126,11 +126,13 @@ namespace Adaptive.Aeron.Samples.IpcThroughput
             internal readonly Subscription Subscription;
 
             private readonly AtomicLong _totalBytes = new AtomicLong();
+            private readonly FragmentHandler _onFragmentHandler;
 
             public Subscriber(AtomicBoolean running, Subscription subscription)
             {
                 Running = running;
                 Subscription = subscription;
+                _onFragmentHandler = OnFragment;
             }
 
             public long TotalBytes()
@@ -154,7 +156,7 @@ namespace Adaptive.Aeron.Samples.IpcThroughput
                 
                 while (Running.Get())
                 {
-                    var fragmentsRead = image.Poll(OnFragment, MessageCountLimit);
+                    var fragmentsRead = image.Poll(_onFragmentHandler, MessageCountLimit);
                     if (0 == fragmentsRead)
                     {
                         ++failedPolls;
