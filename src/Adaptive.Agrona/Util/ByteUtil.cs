@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Reflection.Emit;
+using System.Runtime.CompilerServices;
 
 namespace Adaptive.Agrona.Util
 {
@@ -8,6 +9,7 @@ namespace Adaptive.Agrona.Util
     /// </summary>
     public unsafe class ByteUtil
     {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void MemoryCopy(byte* destination, byte* source, uint length)
         {
             var src = (byte*)source;

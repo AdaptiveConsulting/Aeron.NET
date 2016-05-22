@@ -562,7 +562,22 @@ namespace Adaptive.Agrona.Concurrent
 
             var destination = _pBuffer + index;
             var source = (byte*)srcBuffer.BufferPointer.ToPointer() + srcIndex;
-            ByteUtil.MemoryCopy(destination, source, (uint)length);
+            var len = length;
+            var pos = 0;
+            var len8 = len - 8;
+            while (pos <= len8) {
+                *(long*)(destination + pos) = *(long*)(source + pos);
+                pos += 8;
+            }
+            var len4 = len - 4;
+            while (pos <= len4) {
+                *(int*)(destination + pos) = *(int*)(source + pos);
+                pos += 4;
+            }
+            while (pos < len) {
+                *(byte*)(destination + pos) = *(byte*)(source + pos);
+                pos++;
+            }
         }
 
        
