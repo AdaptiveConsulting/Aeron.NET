@@ -147,20 +147,20 @@ namespace Adaptive.Aeron.LogBuffer {
         public long AppendUnfragmentedMessage(HeaderWriter header, UnsafeBuffer srcBuffer, int srcOffset, int length) {
 
             int frameLength = length + DataHeaderFlyweight.HEADER_LENGTH;
-            int alignedLength = (frameLength + (FrameDescriptor.FRAME_ALIGNMENT - 1)) & ~(FrameDescriptor.FRAME_ALIGNMENT - 1); // BitUtil.Align(frameLength, FrameDescriptor.FRAME_ALIGNMENT);
+            int alignedLength = BitUtil.Align(frameLength, FrameDescriptor.FRAME_ALIGNMENT);
             long rawTail = Interlocked.Add(ref *(long*)(_metaDataBufferPointer + LogBufferDescriptor.TERM_TAIL_COUNTER_OFFSET), alignedLength) - alignedLength;
             long termOffset = rawTail & 0xFFFFFFFFL;
 
             var termBuffer = _termBuffer;
             int termLength = _capacity;
-
+            var termId = TermId(rawTail);
             long resultingOffset = termOffset + alignedLength;
             if (resultingOffset > termLength) {
-                resultingOffset = HandleEndOfLogCondition(termBuffer, termOffset, header, termLength, TermId(rawTail));
+                resultingOffset = HandleEndOfLogCondition(termBuffer, termOffset, header, termLength, termId);
             } else {
-                Volatile.Write(ref *(int*)(new IntPtr(_termBufferPointer.ToInt64() + termOffset)), -length);
                 int offset = (int)termOffset;
-                header.Write(termBuffer, offset, frameLength, (int)((long)((ulong)rawTail >> 32))); //  last argument is manually inlined TermId(rawTail)
+                Volatile.Write(ref *(int*)(_termBufferPointer + offset), -length);
+                header.Write(termBuffer, offset, frameLength, termId);
                 termBuffer.PutBytes(offset + DataHeaderFlyweight.HEADER_LENGTH, srcBuffer, srcOffset, length);
                 termBuffer.PutIntOrdered(offset, frameLength);
             }
