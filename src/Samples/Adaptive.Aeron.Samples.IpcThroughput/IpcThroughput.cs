@@ -120,19 +120,17 @@ namespace Adaptive.Aeron.Samples.IpcThroughput
             }
         }
 
-        public class Subscriber
+        public sealed class Subscriber
         {
             internal readonly AtomicBoolean Running;
             internal readonly Subscription Subscription;
 
             private readonly AtomicLong _totalBytes = new AtomicLong();
-            private readonly FragmentHandler _onFragmentHandler;
 
             public Subscriber(AtomicBoolean running, Subscription subscription)
             {
                 Running = running;
                 Subscription = subscription;
-                _onFragmentHandler = OnFragment;
             }
 
             public long TotalBytes()
@@ -153,10 +151,12 @@ namespace Adaptive.Aeron.Samples.IpcThroughput
                 long failedPolls = 0;
                 long successfulPolls = 0;
 
-                
+                // NB using OnFragment directly allocates a lot of temp objects in GC0,
+                // however it is 10+% faster than using cached onFragmentHandler
+                FragmentHandler onFragmentHandler = OnFragment;
                 while (Running.Get())
                 {
-                    var fragmentsRead = image.Poll(_onFragmentHandler, MessageCountLimit);
+                    var fragmentsRead = image.Poll(OnFragment, MessageCountLimit);
                     if (0 == fragmentsRead)
                     {
                         ++failedPolls;
