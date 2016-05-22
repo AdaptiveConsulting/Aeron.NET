@@ -1,39 +1,34 @@
-﻿using System.Reflection.Emit;
+﻿using System;
+using System.Reflection.Emit;
 
 namespace Adaptive.Agrona.Util
 {
     /// <summary>
     /// Utility to copy blocks of memory
-    /// Uses the IL instruction Cpblk which is not available in C#
     /// </summary>
     public unsafe class ByteUtil
     {
-        // TODO PERF Olivier: write some benchmarks, is this the way to go?
-
-        public delegate void MemoryCopyDelegate(void* destination, void* source, uint length);
-
-        public static readonly MemoryCopyDelegate MemoryCopy;
-
-        static ByteUtil()
+        public static void MemoryCopy(byte* destination, byte* source, uint length)
         {
-            var dynamicMethod = new DynamicMethod
-            (
-                "MemoryCopy",
-                typeof(void),
-                new[] { typeof(void*), typeof(void*), typeof(uint) },
-                typeof(ByteUtil)
-            );
-
-            var ilGenerator = dynamicMethod.GetILGenerator();
-
-            ilGenerator.Emit(OpCodes.Ldarg_0);
-            ilGenerator.Emit(OpCodes.Ldarg_1);
-            ilGenerator.Emit(OpCodes.Ldarg_2);
-
-            ilGenerator.Emit(OpCodes.Cpblk);
-            ilGenerator.Emit(OpCodes.Ret);
-
-            MemoryCopy = (MemoryCopyDelegate)dynamicMethod.CreateDelegate(typeof(MemoryCopyDelegate));
+            var src = (byte*)source;
+            var dst = (byte*) destination;
+            var len = length;
+            var pos = 0;
+            var len8 = len - 8;
+            while (pos <= len8) {
+                *(long*)(dst + pos) = *(long*)(src + pos);
+                pos += 8;
+            }
+            var len4 = len - 4;
+            while (pos <= len4) {
+                *(int*)(dst + pos) = *(int*)(src + pos);
+                pos += 4;
+            }
+            while (pos < len) {
+                *(byte*)(dst + pos) = *(byte*)(src + pos);
+                pos++;
+            }
         }
+        
     }
 }

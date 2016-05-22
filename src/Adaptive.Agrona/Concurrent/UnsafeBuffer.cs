@@ -525,8 +525,8 @@ namespace Adaptive.Agrona.Concurrent
             BoundsCheck0(index, length);
             BufferUtil.BoundsCheck(dst, offset, length);
 
-            void* source = _pBuffer + index;
-            fixed (void* destination = &dst[offset])
+            var source = _pBuffer + index;
+            fixed (byte* destination = &dst[offset])
             {
                 ByteUtil.MemoryCopy(destination, source, (uint) length);
             }
@@ -547,8 +547,8 @@ namespace Adaptive.Agrona.Concurrent
             BoundsCheck0(index, length);
             BufferUtil.BoundsCheck(src, offset, length);
 
-            void* destination = _pBuffer + index;
-            fixed (void* source = &src[offset])
+            var destination = _pBuffer + index;
+            fixed (byte* source = &src[offset])
             {
                 ByteUtil.MemoryCopy(destination, source, (uint)length);
             }
@@ -560,37 +560,12 @@ namespace Adaptive.Agrona.Concurrent
             BoundsCheck0(index, length);
             srcBuffer.BoundsCheck(srcIndex, length);
 
-            void* destination = _pBuffer + index;
-            void* source = (byte*)srcBuffer.BufferPointer.ToPointer() + srcIndex;
+            var destination = _pBuffer + index;
+            var source = (byte*)srcBuffer.BufferPointer.ToPointer() + srcIndex;
             ByteUtil.MemoryCopy(destination, source, (uint)length);
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void PutBytes2(int index, IDirectBuffer srcBuffer, int srcIndex, int length)
-        {
-            BoundsCheck0(index, length);
-            srcBuffer.BoundsCheck(srcIndex, length);
-
-            var destination = (IntPtr)(_pBuffer + index);
-            var source = (IntPtr)srcBuffer.BufferPointer.ToPointer() + srcIndex;
-            var len = length;
-            var pos = 0;
-            var len8 = len - 8;
-            while (pos <= len8) {
-                *(long*)(destination + pos) = *(long*)(source + pos);
-                pos += 8;
-            }
-            var len4 = len - 4;
-            while (pos <= len4) {
-                *(int*)(destination + pos) = *(int*)(source + pos);
-                pos += 4;
-            }
-            while (pos < len) {
-                *(byte*)(destination + pos) = *(byte*)(source + pos);
-                pos++;
-            }
-        }
-
+       
         ///////////////////////////////////////////////////////////////////////////
        
         public char GetChar(int index)
