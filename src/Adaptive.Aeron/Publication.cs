@@ -20,7 +20,7 @@ namespace Adaptive.Aeron
     /// </para>
     /// </summary>
     /// <seealso cref="Aeron.AddPublication(string, int)" />
-    public class Publication : IDisposable
+    public sealed class Publication : IDisposable
     {
         /// <summary>
         /// The publication is not yet connected to a subscriber.

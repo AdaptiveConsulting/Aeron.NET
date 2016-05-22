@@ -182,7 +182,7 @@ namespace Adaptive.Aeron.LogBuffer {
                     Volatile.Write(ref *(long*) (_metaDataBuffer.BufferPointer + LogBufferDescriptor.TERM_TAIL_COUNTER_OFFSET), rawTail + alignedLength);
                     int offset = (int)termOffset;
                     header.Write(termBuffer, offset, frameLength, TermId(rawTail));
-                    termBuffer.PutBytes(offset + DataHeaderFlyweight.HEADER_LENGTH, srcBuffer, srcOffset, length);
+                    termBuffer.PutBytes2(offset + DataHeaderFlyweight.HEADER_LENGTH, srcBuffer, srcOffset, length);
                     FrameDescriptor.FrameLengthOrdered(termBuffer, offset, frameLength);
                     break;
                 }

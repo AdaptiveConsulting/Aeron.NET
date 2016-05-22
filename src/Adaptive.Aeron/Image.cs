@@ -12,7 +12,7 @@ namespace Adaptive.Aeron
     /// Represents a replicated publication <seealso cref="Image"/> from a publisher to a <seealso cref="Subscription"/>.
     /// Each <seealso cref="Image"/> identifies a source publisher by session id.
     /// </summary>
-    public class Image
+    public sealed class Image
     {
         private readonly int _termLengthMask;
         private readonly int _positionBitsToShift;
@@ -136,7 +136,7 @@ namespace Adaptive.Aeron
         /// <param name="fragmentLimit">   for the number of fragments to be consumed during one polling operation. </param>
         /// <returns> the number of fragments that have been consumed. </returns>
         /// <seealso cref="FragmentAssembler" />
-        public virtual int Poll(FragmentHandler fragmentHandler, int fragmentLimit)
+        public int Poll(FragmentHandler fragmentHandler, int fragmentLimit)
         {
             if (_isClosed)
             {
