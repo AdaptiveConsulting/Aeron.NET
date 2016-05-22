@@ -554,6 +554,9 @@ namespace Adaptive.Agrona.Concurrent
             }
         }
 
+
+        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void PutBytes(int index, IDirectBuffer srcBuffer, int srcIndex, int length)
         {
@@ -562,19 +565,44 @@ namespace Adaptive.Agrona.Concurrent
 
             var destination = _pBuffer + index;
             var source = (byte*)srcBuffer.BufferPointer.ToPointer() + srcIndex;
-            var len = length;
+
+            // NB Manual inlining slightly improves throughput here
+            // //ByteUtil.MemoryCopy(destination, source, (uint)length);
+            // //return;
+
             var pos = 0;
-            var len8 = len - 8;
-            while (pos <= len8) {
+            int nextPos;
+            nextPos = pos + 64;
+            while (nextPos <= length) {
+                *(ByteUtil.CopyChunk64*)(destination + pos) = *(ByteUtil.CopyChunk64*)(source + pos);
+                pos = nextPos;
+                nextPos += 64;
+            }
+            nextPos = pos + 32;
+            while (nextPos <= length) {
+                *(ByteUtil.CopyChunk32*)(destination + pos) = *(ByteUtil.CopyChunk32*)(source + pos);
+                pos = nextPos;
+                nextPos += 32;
+            }
+            nextPos = pos + 16;
+            while (nextPos <= length) {
+                *(decimal*)(destination + pos) = *(decimal*)(source + pos);
+                pos = nextPos;
+                nextPos += 16;
+            }
+            nextPos = pos + 8;
+            while (nextPos <= length) {
                 *(long*)(destination + pos) = *(long*)(source + pos);
-                pos += 8;
+                pos = nextPos;
+                nextPos += 8;
             }
-            var len4 = len - 4;
-            while (pos <= len4) {
+            nextPos = pos + 4;
+            while (nextPos <= length) {
                 *(int*)(destination + pos) = *(int*)(source + pos);
-                pos += 4;
+                pos = nextPos;
+                nextPos += 4;
             }
-            while (pos < len) {
+            while (pos < length) {
                 *(byte*)(destination + pos) = *(byte*)(source + pos);
                 pos++;
             }
