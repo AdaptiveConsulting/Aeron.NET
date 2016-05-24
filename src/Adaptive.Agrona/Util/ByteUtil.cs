@@ -20,44 +20,46 @@ namespace Adaptive.Agrona.Util
             private fixed byte _bytes[32];
         }
 
+        [StructLayout(LayoutKind.Sequential, Pack = 16, Size = 16)]
+        internal struct CopyChunk16 {
+            private fixed byte _bytes[16];
+        }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void MemoryCopy(byte* destination, byte* source, uint length)
         {
             var pos = 0;
-            int nextPos;
-            nextPos = pos + 64;
-            while (nextPos <= length) {
-                *(CopyChunk64*)(destination + pos) = *(CopyChunk64*)(source + pos);
-                pos = nextPos;
-                nextPos += 64;
-            }
-            nextPos = pos + 32;
-            while (nextPos <= length) {
-                *(CopyChunk32*)(destination + pos) = *(CopyChunk32*)(source + pos);
-                pos = nextPos;
-                nextPos += 32;
-            }
-            nextPos = pos + 16;
-            while (nextPos <= length) {
-                *(decimal*)(destination + pos) = *(decimal*)(source + pos);
-                pos = nextPos;
-                nextPos += 16;
-            }
-            nextPos = pos + 8;
-            while (nextPos <= length) {
-                *(long*)(destination + pos) = *(long*)(source + pos);
-                pos = nextPos;
-                nextPos += 8;
-            }
-            nextPos = pos + 4;
-            while (nextPos <= length) {
-                *(int*)(destination + pos) = *(int*)(source + pos);
-                pos = nextPos;
-                nextPos += 4;
-            }
             while (pos < length) {
-                *(byte*)(destination + pos) = *(byte*)(source + pos);
-                pos++;
+                int remaining = (int)length - pos;
+                if (remaining >= 64) {
+                    *(CopyChunk64*)(destination + pos) = *(CopyChunk64*)(source + pos);
+                    pos += 64;
+                    continue;
+                }
+                if (remaining >= 32) {
+                    *(CopyChunk32*)(destination + pos) = *(CopyChunk32*)(source + pos);
+                    pos += 32;
+                    continue;
+                }
+                if (remaining >= 16) {
+                    *(CopyChunk16*)(destination + pos) = *(CopyChunk16*)(source + pos);
+                    pos += 16;
+                    continue;
+                }
+                if (remaining >= 8) {
+                    *(long*)(destination + pos) = *(long*)(source + pos);
+                    pos += 8;
+                    continue;
+                }
+                if (remaining >= 4) {
+                    *(int*)(destination + pos) = *(int*)(source + pos);
+                    pos += 4;
+                    continue;
+                }
+                if (remaining >= 1) {
+                    *(byte*)(destination + pos) = *(byte*)(source + pos);
+                    pos++;
+                }
             }
         }
         
