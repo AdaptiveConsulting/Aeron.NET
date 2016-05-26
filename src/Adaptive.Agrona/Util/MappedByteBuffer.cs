@@ -46,10 +46,12 @@ namespace Adaptive.Agrona.Util
         {
             if (_disposed)
                 return;
-
-            _view.SafeMemoryMappedViewHandle.ReleasePointer();
-            _view.Dispose();
-            _memoryMappedFile.Dispose();
+            if (_view != null)
+            {
+                _view.SafeMemoryMappedViewHandle.ReleasePointer();
+                _view.Dispose();
+            }
+            _memoryMappedFile?.Dispose();
 
             _disposed = true;
         }
