@@ -183,7 +183,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// <returns> true if the frame is a padding frame otherwise false. </returns>
         public static bool IsPaddingFrame(UnsafeBuffer buffer, int termOffset)
         {
-            return buffer.GetShort(TypeOffset(termOffset)) == PADDING_FRAME_TYPE;
+            return buffer.GetShort(termOffset + HeaderFlyweight.TYPE_FIELD_OFFSET) == HeaderFlyweight.HDR_TYPE_PAD;
         }
 
         /// <summary>

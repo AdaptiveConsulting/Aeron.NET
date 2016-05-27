@@ -43,7 +43,7 @@ namespace Adaptive.Aeron.LogBuffer
                     int termOffset = offset;
                     offset += BitUtil.Align(frameLength, FrameDescriptor.FRAME_ALIGNMENT);
 
-                    if (!FrameDescriptor.IsPaddingFrame(termBuffer, termOffset))
+                    if (termBuffer.GetShort(termOffset + HeaderFlyweight.TYPE_FIELD_OFFSET) != HeaderFlyweight.HDR_TYPE_PAD)
                     {
                         header.SetBuffer(termBuffer, termOffset);
 

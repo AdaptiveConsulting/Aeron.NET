@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 using Adaptive.Aeron.LogBuffer;
 using Adaptive.Aeron.Protocol;
 using Adaptive.Agrona;
@@ -136,6 +137,7 @@ namespace Adaptive.Aeron
         /// <param name="fragmentLimit">   for the number of fragments to be consumed during one polling operation. </param>
         /// <returns> the number of fragments that have been consumed. </returns>
         /// <seealso cref="FragmentAssembler" />
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int Poll(FragmentHandler fragmentHandler, int fragmentLimit)
         {
             if (_isClosed)
@@ -191,8 +193,8 @@ namespace Adaptive.Aeron
                     var frameOffset = offset;
                     var alignedLength = BitUtil.Align(length, FrameDescriptor.FRAME_ALIGNMENT);
                     offset += alignedLength;
-
-                    if (!FrameDescriptor.IsPaddingFrame(termBuffer, frameOffset))
+                    
+                    if (termBuffer.GetShort(frameOffset + HeaderFlyweight.TYPE_FIELD_OFFSET) != HeaderFlyweight.HDR_TYPE_PAD)
                     {
                         _header.SetBuffer(termBuffer, frameOffset);
 
@@ -314,7 +316,7 @@ namespace Adaptive.Aeron
 
         //    return bytesConsumed;
         //}
-
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void UpdatePosition(long positionBefore, int offsetBefore, int offsetAfter)
         {
             var position = positionBefore + (offsetAfter - offsetBefore);

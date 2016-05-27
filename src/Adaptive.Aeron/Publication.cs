@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 using Adaptive.Aeron.LogBuffer;
 using Adaptive.Aeron.Protocol;
 using Adaptive.Agrona;
@@ -218,6 +219,7 @@ namespace Adaptive.Aeron
         /// <param name="length"> in bytes of the encoded message. </param>
         /// <returns> The new stream position, otherwise a negative error value <seealso cref="NOT_CONNECTED"/>, <seealso cref="BACK_PRESSURED"/>,
         /// <seealso cref="ADMIN_ACTION"/> or <seealso cref="CLOSED"/>. </returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public long Offer(UnsafeBuffer buffer, int offset, int length)
         {
             var newPosition = CLOSED;
@@ -340,6 +342,7 @@ namespace Adaptive.Aeron
             }
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private long NewPosition(int index, int currentTail, long position, long result)
         {
             var newPosition = ADMIN_ACTION;
