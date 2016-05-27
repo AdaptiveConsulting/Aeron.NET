@@ -194,7 +194,7 @@ namespace Adaptive.Aeron
                     var alignedLength = BitUtil.Align(length, FrameDescriptor.FRAME_ALIGNMENT);
                     offset += alignedLength;
                     
-                    if (termBuffer.GetShort(frameOffset + HeaderFlyweight.TYPE_FIELD_OFFSET) != HeaderFlyweight.HDR_TYPE_PAD)
+                    if (!FrameDescriptor.IsPaddingFrame(termBuffer, frameOffset))
                     {
                         _header.SetBuffer(termBuffer, frameOffset);
 
