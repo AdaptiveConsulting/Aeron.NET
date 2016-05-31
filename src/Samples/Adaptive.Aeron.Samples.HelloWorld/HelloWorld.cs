@@ -39,7 +39,7 @@ namespace Adaptive.Aeron.Samples.HelloWorld
             finally
             {
                 Console.WriteLine("Press any key to continue...");
-                Console.ReadLine();
+                Console.ReadKey();
             }
         }
 
