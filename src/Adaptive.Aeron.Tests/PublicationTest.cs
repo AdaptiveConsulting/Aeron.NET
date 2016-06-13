@@ -8,7 +8,7 @@ namespace Adaptive.Aeron.Tests
 {
     public class PublicationTest
     {
-        private const string Channel = "udp://localhost:40124";
+        private const string Channel = "aeron:udp?endpoint=localhost:40124";
         private const int StreamID1 = 2;
         private const int SessionID1 = 13;
         private const int TermID1 = 1;

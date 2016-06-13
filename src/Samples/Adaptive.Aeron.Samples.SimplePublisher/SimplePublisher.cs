@@ -21,7 +21,7 @@ namespace Adaptive.Aeron.Samples.SimplePublisher
             var buffer = new UnsafeBuffer(BufferUtil.AllocateDirectAligned(512, BitUtil.CACHE_LINE_LENGTH));
 
             // The channel (an endpoint identifier) to send the message to
-            const string channel = "udp://localhost:40123";
+            const string channel = "aeron:udp?endpoint=localhost:40123";
 
             // A unique identifier for a stream within a channel. Stream ID 0 is reserved
             // for internal use and should not be used by applications.

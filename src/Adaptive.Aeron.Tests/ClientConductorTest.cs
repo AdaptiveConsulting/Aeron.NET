@@ -23,7 +23,7 @@ namespace Adaptive.Aeron.Tests
         protected internal const int SESSION_ID_2 = 15;
 
         private const int COUNTER_BUFFER_LENGTH = 1024;
-        private const string CHANNEL = "udp://localhost:40124";
+        private const string CHANNEL = "aeron:udp?endpoint=localhost:40124";
         private const int STREAM_ID_1 = 2;
         private const int STREAM_ID_2 = 4;
         private const int SEND_BUFFER_CAPACITY = 1024;

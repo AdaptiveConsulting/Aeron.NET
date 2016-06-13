@@ -19,7 +19,7 @@ namespace Adaptive.Aeron.Samples.SimpleSubscriber
             const int fragmentLimitCount = 10;
 
             // The channel (an endpoint identifier) to receive messages from
-            const string channel = "udp://localhost:40123";
+            const string channel = "aeron:udp?endpoint=localhost:40123";
 
             // A unique identifier for a stream within a channel. Stream ID 0 is reserved
             // for internal use and should not be used by applications.

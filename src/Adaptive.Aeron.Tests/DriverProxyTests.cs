@@ -15,7 +15,7 @@ namespace Adaptive.Aeron.Tests
             conductor = new DriverProxy(conductorBuffer);
         }
         
-        public const string CHANNEL = "udp://localhost:40123@localhost:40124";
+        public const string CHANNEL = "aeron:udp?interface=localhost:40123|endpoint=localhost:40124";
 
         private const int STREAM_ID = 1;
         private const long CORRELATION_ID = 3;
