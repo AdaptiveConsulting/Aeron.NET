@@ -106,6 +106,7 @@
     <Compile Include="Protocol\DataHeaderFlyweight.cs" />
     <Compile Include="Protocol\HeaderFlyweight.cs" />
     <Compile Include="Publication.cs" />
+    <Compile Include="ReservedValueSupplier.cs" />
     <Compile Include="Subscription.cs" />
     <Compile Include="LogBuffer\TermRebuilder.cs" />
   </ItemGroup>

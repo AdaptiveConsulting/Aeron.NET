@@ -218,7 +218,7 @@ namespace Adaptive.Aeron
         /// <param name="length"> in bytes of the encoded message. </param>
         /// <returns> The new stream position, otherwise a negative error value <seealso cref="NOT_CONNECTED"/>, <seealso cref="BACK_PRESSURED"/>,
         /// <seealso cref="ADMIN_ACTION"/> or <seealso cref="CLOSED"/>. </returns>
-        public long Offer(IDirectBuffer buffer, int offset, int length)
+        public long Offer(IDirectBuffer buffer, int offset, int length, ReservedValueSupplier reservedValueSupplier = null)
         {
             var newPosition = CLOSED;
             if (!_isClosed)
@@ -235,12 +235,12 @@ namespace Adaptive.Aeron
                     long result;
                     if (length <= _maxPayloadLength)
                     {
-                        result = termAppender.AppendUnfragmentedMessage(_headerWriter, buffer, offset, length);
+                        result = termAppender.AppendUnfragmentedMessage(_headerWriter, buffer, offset, length, reservedValueSupplier);
                     }
                     else
                     {
                         CheckForMaxMessageLength(length);
-                        result = termAppender.AppendFragmentedMessage(_headerWriter, buffer, offset, length, _maxPayloadLength);
+                        result = termAppender.AppendFragmentedMessage(_headerWriter, buffer, offset, length, _maxPayloadLength, reservedValueSupplier);
                     }
 
                     newPosition = NewPosition(partitionIndex, (int) termOffset, position, result);
