@@ -171,15 +171,15 @@ namespace Adaptive.Aeron
         ///// 
         ///// </para>
         ///// </summary>
-        ///// <param name="fileBlockHandler"> to receive a block of fragments from each <seealso cref="Image"/>. </param>
+        ///// <param name="rawBlockHandler"> to receive a block of fragments from each <seealso cref="Image"/>. </param>
         ///// <param name="blockLengthLimit"> for each <seealso cref="Image"/> polled. </param>
         ///// <returns> the number of bytes consumed. </returns>
-        //public long FilePoll(IFileBlockHandler fileBlockHandler, int blockLengthLimit)
+        //public long RawPoll(IRawBlockHandler rawBlockHandler, int blockLengthLimit)
         //{
         //    long bytesConsumed = 0;
         //    foreach (Image image in images)
         //    {
-        //        bytesConsumed += image.FilePoll(fileBlockHandler, blockLengthLimit);
+        //        bytesConsumed += image.FilePoll(rawBlockHandler, blockLengthLimit);
         //    }
 
         //    return bytesConsumed;

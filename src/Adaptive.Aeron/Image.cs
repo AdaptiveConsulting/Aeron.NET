@@ -273,12 +273,12 @@ namespace Adaptive.Aeron
         // TODO
         ///// <summary>
         ///// Poll for new messages in a stream. If new messages are found beyond the last consumed position then they
-        ///// will be delivered to the <seealso cref="IFileBlockHandler"/> up to a limited number of bytes.
+        ///// will be delivered to the <seealso cref="IRawBlockHandler"/> up to a limited number of bytes.
         ///// </summary>
         ///// <param name="fileBlockHandler"> to which block is delivered. </param>
         ///// <param name="blockLengthLimit"> up to which a block may be in length. </param>
         ///// <returns> the number of bytes that have been consumed. </returns>
-        //public int FilePoll(IFileBlockHandler fileBlockHandler, int blockLengthLimit)
+        //public int RawPoll(IRawBlockHandler rawBlockHandler, int blockLengthLimit)
         //{
         //    if (_isClosed)
         //    {
@@ -294,25 +294,25 @@ namespace Adaptive.Aeron
 
         //    int resultingOffset = TermBlockScanner.Scan(termBuffer, termOffset, limit);
 
-        //    int bytesConsumed = resultingOffset - termOffset;
+        //    int length = resultingOffset - termOffset;
         //    if (resultingOffset > termOffset)
         //    {
         //        try
         //        {
-        //            long offset = ((long)capacity * activeIndex) + termOffset;
+        //            long fileOffset = ((long)capacity * activeIndex) + termOffset;
         //            int termId = termBuffer.GetInt(termOffset + DataHeaderFlyweight.TERM_ID_FIELD_OFFSET);
 
-        //            fileBlockHandler.OnBlock(_logBuffers.FileChannel(), offset, bytesConsumed, _sessionId, termId);
+        //            rawBlockHandler.OnBlock(_logBuffers.FileChannel(), fileOffset, termBuffer, termOffset, length, _sessionId, termId);
         //        }
         //        catch (Exception t)
         //        {
         //            _errorHandler(t);
         //        }
 
-        //        _subscriberPosition.SetOrdered(position + bytesConsumed);
+        //        _subscriberPosition.SetOrdered(position + length);
         //    }
 
-        //    return bytesConsumed;
+        //    return length;
         //}
 
         private void UpdatePosition(long positionBefore, int offsetBefore, int offsetAfter)
