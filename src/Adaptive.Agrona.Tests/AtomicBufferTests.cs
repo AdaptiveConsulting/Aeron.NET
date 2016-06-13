@@ -23,6 +23,7 @@ namespace Adaptive.Agrona.Tests
         private const double DoubleValue = int.MaxValue + 7.0d;
 
         [Datapoint] public readonly IAtomicBuffer ByteArrayBacked = new UnsafeBuffer(new byte[BufferCapacity], 0, BufferCapacity);
+        [Datapoint] public readonly IAtomicBuffer AlignedByteArrayBacked = new UnsafeBuffer(BufferUtil.AllocateDirectAligned(BufferCapacity, BitUtil.CACHE_LINE_LENGTH));
 
         [Datapoint] public static readonly IAtomicBuffer UnmanagedBacked = new UnsafeBuffer(Marshal.AllocHGlobal(BufferCapacity), BufferCapacity);
 

@@ -27,5 +27,10 @@ namespace Adaptive.Agrona
             }
 #endif
         }
+        
+        public static ByteBuffer AllocateDirectAligned(int capacity, int alignment)
+        {
+            return new ByteBuffer(capacity, alignment);
+        }
     }
 }

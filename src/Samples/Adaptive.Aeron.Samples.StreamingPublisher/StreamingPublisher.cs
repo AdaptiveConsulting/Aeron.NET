@@ -3,6 +3,7 @@ using System.Threading;
 using Adaptive.Aeron.Samples.Common;
 using Adaptive.Agrona;
 using Adaptive.Agrona.Concurrent;
+using Adaptive.Agrona.Util;
 
 namespace Adaptive.Aeron.Samples.StreamingPublisher
 {
@@ -43,7 +44,8 @@ namespace Adaptive.Aeron.Samples.StreamingPublisher
             // clean up resources when this try block is finished.
             using (var aeron = Aeron.Connect(context))
             using (var publication = aeron.AddPublication(Channel, StreamID))
-            using (var buffer = new UnsafeBuffer(new byte[MessageLength]))
+            using (var byteBuffer = BufferUtil.AllocateDirectAligned(MessageLength, BitUtil.CACHE_LINE_LENGTH))
+            using (var buffer = new UnsafeBuffer(byteBuffer))
             {
                 do
                 {

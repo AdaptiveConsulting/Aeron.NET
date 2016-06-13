@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Text;
 using System.Threading;
+using Adaptive.Agrona;
 using Adaptive.Agrona.Concurrent;
+using Adaptive.Agrona.Util;
 
 namespace Adaptive.Aeron.Samples.SimplePublisher
 {
@@ -16,7 +18,7 @@ namespace Adaptive.Aeron.Samples.SimplePublisher
         {
             // Allocate enough buffer size to hold maximum message length
             // The UnsafeBuffer class is part of the Agrona library and is used for efficient buffer management
-            var buffer = new UnsafeBuffer(new byte[512]);
+            var buffer = new UnsafeBuffer(BufferUtil.AllocateDirectAligned(512, BitUtil.CACHE_LINE_LENGTH));
 
             // The channel (an endpoint identifier) to send the message to
             const string channel = "udp://localhost:40123";
@@ -55,7 +57,7 @@ namespace Adaptive.Aeron.Samples.SimplePublisher
                             Console.WriteLine(" Offer failed due to back pressure");
                             break;
                         case Publication.NOT_CONNECTED:
-                            Console.WriteLine(" Offer failed because publisher is not yet connected to subscriber");
+                            Console.WriteLine(" Offer failed because publisher is not connected to subscriber");
                             break;
                         case Publication.ADMIN_ACTION:
                             Console.WriteLine("Offer failed because of an administration action in the system");

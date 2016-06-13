@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading;
 using Adaptive.Aeron.Samples.Common;
+using Adaptive.Agrona;
 using Adaptive.Agrona.Concurrent;
 
 namespace Adaptive.Aeron.Samples.Throughput
@@ -35,7 +36,8 @@ namespace Adaptive.Aeron.Samples.Throughput
             using (var aeron = Aeron.Connect(context))
             using (var publication = aeron.AddPublication(Channel, StreamID))
             using (var subscription = aeron.AddSubscription(Channel, StreamID))
-            using (var buffer = new UnsafeBuffer(new byte[MessageLength]))
+            using (var byteBuffer = BufferUtil.AllocateDirectAligned(MessageLength, BitUtil.CACHE_LINE_LENGTH))
+            using (var buffer = new UnsafeBuffer(byteBuffer))
             {
                 reportThread.Start();
                 subscribeThread.Start(subscription);
@@ -59,12 +61,12 @@ namespace Adaptive.Aeron.Samples.Throughput
                         }
                     }
 
-                    Console.WriteLine("Done streaming. backPressureRatio=" + (double) backPressureCount/NumberOfMessages);
+                    Console.WriteLine("Done streaming. backPressureRatio=" + (double)backPressureCount / NumberOfMessages);
 
                     if (0 < LingerTimeoutMs)
                     {
                         Console.WriteLine("Lingering for " + LingerTimeoutMs + " milliseconds...");
-                        Thread.Sleep((int) LingerTimeoutMs);
+                        Thread.Sleep((int)LingerTimeoutMs);
                     }
 
                     _printingActive = false;

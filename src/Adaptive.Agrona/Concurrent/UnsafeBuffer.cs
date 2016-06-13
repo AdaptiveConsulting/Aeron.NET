@@ -30,7 +30,6 @@ namespace Adaptive.Agrona.Concurrent
         private bool _disposed;
         private GCHandle _pinnedGcHandle;
         private bool _needToFreeGcHandle;
-        private int _capacity;
 
         /// <summary>
         /// Attach a view to a byte[] for providing direct access.
@@ -43,7 +42,7 @@ namespace Adaptive.Agrona.Concurrent
 
         public UnsafeBuffer()
         {
-            _capacity = -1; // this is only used in the test, by the mock infrastructure
+            Capacity = -1; // this is only used in the test, by the mock infrastructure
         }
 
         /// <summary>
@@ -56,6 +55,16 @@ namespace Adaptive.Agrona.Concurrent
         {
             Wrap(buffer, offset, length);
         }
+
+        /// <summary>
+        /// Attach a view to a bytebuffer for providing direct access.
+        /// </summary>
+        /// <param name="buffer"> to which the view is attached. </param>
+        public UnsafeBuffer(ByteBuffer buffer)
+        {
+            Wrap(buffer);
+        }
+
 
         /// <summary>
         /// Attach a view to an existing <seealso cref="IDirectBuffer"/>
@@ -108,8 +117,8 @@ namespace Adaptive.Agrona.Concurrent
             _pinnedGcHandle = GCHandle.Alloc(buffer, GCHandleType.Pinned);
             _needToFreeGcHandle = true;
 
-            _pBuffer = (byte*)_pinnedGcHandle.AddrOfPinnedObject().ToPointer();
-            _capacity = buffer.Length;
+            _pBuffer = (byte*) _pinnedGcHandle.AddrOfPinnedObject().ToPointer();
+            Capacity = buffer.Length;
         }
 
         public void Wrap(byte[] buffer, int offset, int length)
@@ -135,8 +144,8 @@ namespace Adaptive.Agrona.Concurrent
             _pinnedGcHandle = GCHandle.Alloc(buffer, GCHandleType.Pinned);
             _needToFreeGcHandle = true;
 
-            _pBuffer = (byte*)_pinnedGcHandle.AddrOfPinnedObject().ToPointer() + offset;
-            _capacity = length;
+            _pBuffer = (byte*) _pinnedGcHandle.AddrOfPinnedObject().ToPointer() + offset;
+            Capacity = length;
         }
 
         public void Wrap(IDirectBuffer buffer)
@@ -144,8 +153,17 @@ namespace Adaptive.Agrona.Concurrent
             FreeGcHandle();
             _needToFreeGcHandle = false;
 
-            _pBuffer = (byte*)buffer.BufferPointer.ToPointer();
-            _capacity = buffer.Capacity;
+            _pBuffer = (byte*) buffer.BufferPointer.ToPointer();
+            Capacity = buffer.Capacity;
+        }
+
+        public void Wrap(ByteBuffer buffer)
+        {
+            FreeGcHandle();
+            _needToFreeGcHandle = false;
+
+            _pBuffer = (byte*) buffer.BufferPointer.ToPointer();
+            Capacity = buffer.Capacity;
         }
 
         public void Wrap(IDirectBuffer buffer, int offset, int length)
@@ -162,12 +180,12 @@ namespace Adaptive.Agrona.Concurrent
                 throw new ArgumentException("offset=" + offset + " length=" + length + " not valid for buffer.capacity()=" + bufferCapacity);
             }
 #endif
-            
+
             FreeGcHandle();
             _needToFreeGcHandle = false;
 
-            _pBuffer = (byte*)buffer.BufferPointer.ToPointer() + offset;
-            _capacity = length;
+            _pBuffer = (byte*) buffer.BufferPointer.ToPointer() + offset;
+            Capacity = length;
         }
 
         public void Wrap(IntPtr pointer, int length)
@@ -176,8 +194,8 @@ namespace Adaptive.Agrona.Concurrent
 
             _needToFreeGcHandle = false;
 
-            _pBuffer = (byte*)pointer.ToPointer();
-            _capacity = length;
+            _pBuffer = (byte*) pointer.ToPointer();
+            Capacity = length;
         }
 
         public void Wrap(IntPtr pointer, int offset, int length)
@@ -186,13 +204,13 @@ namespace Adaptive.Agrona.Concurrent
 
             _needToFreeGcHandle = false;
 
-            _pBuffer = (byte*)pointer.ToPointer() + offset;
-            _capacity = length;
+            _pBuffer = (byte*) pointer.ToPointer() + offset;
+            Capacity = length;
         }
 
         public IntPtr BufferPointer => new IntPtr(_pBuffer);
 
-        public int Capacity => _capacity;
+        public int Capacity { get; private set; }
 
         public void SetMemory(int index, int length, byte value)
         {
@@ -200,7 +218,7 @@ namespace Adaptive.Agrona.Concurrent
 
             // TODO PERF Naive implementation, we should not write byte by byte, this is slow
             //UNSAFE.SetMemory(byteArray, addressOffset + index, length, value);
-            for (int i = index; i < index + length; i++)
+            for (var i = index; i < index + length; i++)
             {
                 _pBuffer[i] = value;
             }
@@ -208,9 +226,9 @@ namespace Adaptive.Agrona.Concurrent
 
         public void CheckLimit(int limit)
         {
-            if (limit > _capacity)
+            if (limit > Capacity)
             {
-                throw new IndexOutOfRangeException($"limit={limit:D} is beyond capacity={_capacity:D}");
+                throw new IndexOutOfRangeException($"limit={limit:D} is beyond capacity={Capacity:D}");
             }
         }
 
@@ -248,13 +266,13 @@ namespace Adaptive.Agrona.Concurrent
         {
             BoundsCheck0(index, BitUtil.SIZE_OF_LONG);
 
-            return *(long*)(_pBuffer + index);
+            return *(long*) (_pBuffer + index);
         }
 
         public void PutLong(int index, long value)
         {
             BoundsCheck0(index, BitUtil.SIZE_OF_LONG);
-            *(long*)(_pBuffer + index) = value;
+            *(long*) (_pBuffer + index) = value;
         }
 
         public long GetLongVolatile(int index)
@@ -267,7 +285,7 @@ namespace Adaptive.Agrona.Concurrent
         public void PutLongVolatile(int index, long value)
         {
             BoundsCheck0(index, BitUtil.SIZE_OF_LONG);
-            
+
             Interlocked.Exchange(ref *(long*) (_pBuffer + index), value);
         }
 
@@ -296,12 +314,12 @@ namespace Adaptive.Agrona.Concurrent
 
             return original == expectedValue;
         }
-        
+
         public long GetAndAddLong(int index, long delta)
         {
             BoundsCheck0(index, BitUtil.SIZE_OF_LONG);
 
-            return Interlocked.Add(ref *(long*)(_pBuffer + index), delta) - delta;
+            return Interlocked.Add(ref *(long*) (_pBuffer + index), delta) - delta;
         }
 
         ///////////////////////////////////////////////////////////////////////////
@@ -326,34 +344,34 @@ namespace Adaptive.Agrona.Concurrent
         {
             BoundsCheck0(index, BitUtil.SIZE_OF_INT);
 
-            return *(int*)(_pBuffer + index);
+            return *(int*) (_pBuffer + index);
         }
 
         public void PutInt(int index, int value)
         {
             BoundsCheck0(index, BitUtil.SIZE_OF_INT);
-            *(int*)(_pBuffer + index) = value;
+            *(int*) (_pBuffer + index) = value;
         }
 
         public int GetIntVolatile(int index)
         {
             BoundsCheck0(index, BitUtil.SIZE_OF_INT);
 
-            return Volatile.Read(ref *(int*)(_pBuffer + index));
+            return Volatile.Read(ref *(int*) (_pBuffer + index));
         }
 
         public void PutIntVolatile(int index, int value)
         {
             BoundsCheck0(index, BitUtil.SIZE_OF_INT);
 
-            Interlocked.Exchange(ref *(int*)(_pBuffer + index), value);
+            Interlocked.Exchange(ref *(int*) (_pBuffer + index), value);
         }
 
         public void PutIntOrdered(int index, int value)
         {
             BoundsCheck0(index, BitUtil.SIZE_OF_INT);
 
-            Volatile.Write(ref *(int*)(_pBuffer + index), value);
+            Volatile.Write(ref *(int*) (_pBuffer + index), value);
         }
 
         public int AddIntOrdered(int index, int increment)
@@ -370,7 +388,7 @@ namespace Adaptive.Agrona.Concurrent
         {
             BoundsCheck0(index, BitUtil.SIZE_OF_INT);
 
-            var original = Interlocked.CompareExchange(ref *(int*)(_pBuffer + index), updateValue, expectedValue);
+            var original = Interlocked.CompareExchange(ref *(int*) (_pBuffer + index), updateValue, expectedValue);
 
             return original == expectedValue;
         }
@@ -379,7 +397,7 @@ namespace Adaptive.Agrona.Concurrent
         {
             BoundsCheck0(index, BitUtil.SIZE_OF_INT);
 
-            return Interlocked.Add(ref *(int*)(_pBuffer + index), delta) - delta;
+            return Interlocked.Add(ref *(int*) (_pBuffer + index), delta) - delta;
         }
 
         ///////////////////////////////////////////////////////////////////////////
@@ -426,14 +444,14 @@ namespace Adaptive.Agrona.Concurrent
         {
             BoundsCheck0(index, BitUtil.SIZE_OF_DOUBLE);
 
-            return *(double*)(_pBuffer + index);
+            return *(double*) (_pBuffer + index);
         }
 
         public void PutDouble(int index, double value)
         {
             BoundsCheck0(index, BitUtil.SIZE_OF_DOUBLE);
 
-            *(double*)(_pBuffer + index) = value;
+            *(double*) (_pBuffer + index) = value;
         }
 
         ///////////////////////////////////////////////////////////////////////////
@@ -442,14 +460,14 @@ namespace Adaptive.Agrona.Concurrent
         {
             BoundsCheck0(index, BitUtil.SIZE_OF_FLOAT);
 
-            return *(float*)(_pBuffer + index);
+            return *(float*) (_pBuffer + index);
         }
 
         public void PutFloat(int index, float value)
         {
             BoundsCheck0(index, BitUtil.SIZE_OF_FLOAT);
 
-            *(float*)(_pBuffer + index) = value;
+            *(float*) (_pBuffer + index) = value;
         }
 
         ///////////////////////////////////////////////////////////////////////////
@@ -458,28 +476,28 @@ namespace Adaptive.Agrona.Concurrent
         {
             BoundsCheck0(index, BitUtil.SIZE_OF_SHORT);
 
-            return *(short*)(_pBuffer + index);
+            return *(short*) (_pBuffer + index);
         }
 
         public void PutShort(int index, short value)
         {
             BoundsCheck0(index, BitUtil.SIZE_OF_SHORT);
 
-            *(short*)(_pBuffer + index) = value;
+            *(short*) (_pBuffer + index) = value;
         }
 
         public short GetShortVolatile(int index)
         {
             BoundsCheck0(index, BitUtil.SIZE_OF_SHORT);
 
-            return Volatile.Read(ref *(short*)(_pBuffer + index));
+            return Volatile.Read(ref *(short*) (_pBuffer + index));
         }
 
         public void PutShortVolatile(int index, short value)
         {
             BoundsCheck0(index, BitUtil.SIZE_OF_SHORT);
 
-            Volatile.Write(ref (*(short*)(_pBuffer + index)), value);
+            Volatile.Write(ref (*(short*) (_pBuffer + index)), value);
         }
 
         ///////////////////////////////////////////////////////////////////////////
@@ -549,7 +567,7 @@ namespace Adaptive.Agrona.Concurrent
             void* destination = _pBuffer + index;
             fixed (void* source = &src[offset])
             {
-                ByteUtil.MemoryCopy(destination, source, (uint)length);
+                ByteUtil.MemoryCopy(destination, source, (uint) length);
             }
         }
 
@@ -559,24 +577,24 @@ namespace Adaptive.Agrona.Concurrent
             srcBuffer.BoundsCheck(srcIndex, length);
 
             void* destination = _pBuffer + index;
-            void* source = (byte*)srcBuffer.BufferPointer.ToPointer() + srcIndex;
-            ByteUtil.MemoryCopy(destination, source, (uint)length);
+            void* source = (byte*) srcBuffer.BufferPointer.ToPointer() + srcIndex;
+            ByteUtil.MemoryCopy(destination, source, (uint) length);
         }
 
         ///////////////////////////////////////////////////////////////////////////
-       
+
         public char GetChar(int index)
         {
             BoundsCheck0(index, BitUtil.SIZE_OF_CHAR);
 
-            return *(char*)(_pBuffer + index);
+            return *(char*) (_pBuffer + index);
         }
 
         public void PutChar(int index, char value)
         {
             BoundsCheck0(index, BitUtil.SIZE_OF_CHAR);
 
-            *(char*)(_pBuffer + index) = value;
+            *(char*) (_pBuffer + index) = value;
         }
 
         //public char GetCharVolatile(int index)
@@ -597,7 +615,7 @@ namespace Adaptive.Agrona.Concurrent
 
         public string GetStringUtf8(int index)
         {
-            int length = GetInt(index);
+            var length = GetInt(index);
 
             return GetStringUtf8(index, length);
         }
@@ -606,7 +624,7 @@ namespace Adaptive.Agrona.Concurrent
         {
             var stringInBytes = new byte[length];
             GetBytes(index + BitUtil.SIZE_OF_INT, stringInBytes);
-            
+
             return Encoding.UTF8.GetString(stringInBytes);
         }
 
@@ -618,7 +636,7 @@ namespace Adaptive.Agrona.Concurrent
         public int PutStringUtf8(int index, string value, int maxEncodedSize)
         {
             var bytes = value == null
-                ? BufferUtil.NullBytes 
+                ? BufferUtil.NullBytes
                 : Encoding.UTF8.GetBytes(value);
             if (bytes.Length > maxEncodedSize)
             {
@@ -681,16 +699,16 @@ namespace Adaptive.Agrona.Concurrent
 
         public int CompareTo(IDirectBuffer that)
         {
-            int thisCapacity = this.Capacity;
-            int thatCapacity = that.Capacity;
+            var thisCapacity = this.Capacity;
+            var thatCapacity = that.Capacity;
 
             var thisPointer = this._pBuffer;
-            var thatPointer = (byte*)that.BufferPointer.ToPointer();
-            
+            var thatPointer = (byte*) that.BufferPointer.ToPointer();
+
             for (int i = 0, length = Math.Min(thisCapacity, thatCapacity); i < length; i++)
             {
-                int cmp = thisPointer[i] - thatPointer[i];
-                
+                var cmp = thisPointer[i] - thatPointer[i];
+
                 if (0 != cmp)
                 {
                     return cmp;
