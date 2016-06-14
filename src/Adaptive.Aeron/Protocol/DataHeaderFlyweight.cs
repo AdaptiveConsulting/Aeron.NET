@@ -146,7 +146,7 @@ namespace Adaptive.Aeron.Protocol
         /// </summary>
         /// <param name="reservedValue"> to be stored </param>
         /// <returns> flyweight </returns>
-        public DataHeaderFlyweight ReservedValue(int reservedValue)
+        public DataHeaderFlyweight ReservedValue(long reservedValue)
         {
             PutLong(RESERVED_VALUE_OFFSET, reservedValue);
 

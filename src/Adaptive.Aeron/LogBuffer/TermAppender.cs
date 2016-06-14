@@ -129,9 +129,10 @@ namespace Adaptive.Aeron.LogBuffer
         /// <param name="srcBuffer"> containing the message. </param>
         /// <param name="srcOffset"> at which the message begins. </param>
         /// <param name="length">    of the message in the source buffer. </param>
-        /// <returns> the resulting offset of the term after the append on success otherwise <seealso cref="#TRIPPED"/> or <seealso cref="#FAILED"/>
+        /// <param name="reservedValueSupplier"><see cref="ReservedValueSupplier"/> for the frame</param>
+        /// <returns> the resulting offset of the term after the append on success otherwise <seealso cref="TRIPPED"/> or <seealso cref="FAILED"/>
         /// packed with the termId if a padding record was inserted at the end. </returns>
-        public virtual long AppendUnfragmentedMessage(HeaderWriter header, IDirectBuffer srcBuffer, int srcOffset, int length)
+        public virtual long AppendUnfragmentedMessage(HeaderWriter header, IDirectBuffer srcBuffer, int srcOffset, int length, ReservedValueSupplier reservedValueSupplier)
         {
             int frameLength = length + DataHeaderFlyweight.HEADER_LENGTH;
             int alignedLength = BitUtil.Align(frameLength, FrameDescriptor.FRAME_ALIGNMENT);
@@ -151,6 +152,13 @@ namespace Adaptive.Aeron.LogBuffer
                 int offset = (int) termOffset;
                 header.Write(termBuffer, offset, frameLength, TermId(rawTail));
                 termBuffer.PutBytes(offset + DataHeaderFlyweight.HEADER_LENGTH, srcBuffer, srcOffset, length);
+
+                if (null != reservedValueSupplier)
+                {
+                    long reservedValue = reservedValueSupplier(termBuffer, offset, frameLength);
+                    termBuffer.PutLong(offset + DataHeaderFlyweight.RESERVED_VALUE_OFFSET, reservedValue);
+                }
+
                 FrameDescriptor.FrameLengthOrdered(termBuffer, offset, frameLength);
             }
 
@@ -167,10 +175,11 @@ namespace Adaptive.Aeron.LogBuffer
         /// <param name="srcOffset">        at which the message begins. </param>
         /// <param name="length">           of the message in the source buffer. </param>
         /// <param name="maxPayloadLength"> that the message will be fragmented into. </param>
+        /// /// <param name="reservedValueSupplier"><see cref="ReservedValueSupplier"/> for the frame</param>
         /// <returns> the resulting offset of the term after the append on success otherwise <seealso cref="#TRIPPED"/> or <seealso cref="#FAILED"/>
         /// packed with the termId if a padding record was inserted at the end. </returns>
         public long AppendFragmentedMessage(HeaderWriter header, IDirectBuffer srcBuffer, int srcOffset, int length,
-            int maxPayloadLength)
+            int maxPayloadLength, ReservedValueSupplier reservedValueSupplier)
         {
             int numMaxPayloads = length/maxPayloadLength;
             int remainingPayload = length%maxPayloadLength;
@@ -212,6 +221,13 @@ namespace Adaptive.Aeron.LogBuffer
                     }
 
                     FrameDescriptor.FrameFlags(termBuffer, offset, flags);
+
+                    if (null != reservedValueSupplier)
+                    {
+                        long reservedValue = reservedValueSupplier(termBuffer, offset, frameLength);
+                        termBuffer.PutLong(offset + DataHeaderFlyweight.RESERVED_VALUE_OFFSET, reservedValue);
+                    }
+
                     FrameDescriptor.FrameLengthOrdered(termBuffer, offset, frameLength);
 
                     flags = 0;

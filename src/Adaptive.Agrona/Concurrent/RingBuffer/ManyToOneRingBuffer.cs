@@ -117,15 +117,14 @@ namespace Adaptive.Agrona.Concurrent.RingBuffer
             var buffer = _buffer;
             var head = buffer.GetLong(_headPositionIndex);
 
-            var bytesRead = 0;
-
             var capacity = _capacity;
             var headIndex = (int) head & (capacity - 1);
-            var contiguousBlockLength = capacity - headIndex;
+            var maxBlockLength = capacity - headIndex;
+            var bytesRead = 0;
 
             try
             {
-                while ((bytesRead < contiguousBlockLength) && (messagesRead < messageCountLimit))
+                while ((bytesRead < maxBlockLength) && (messagesRead < messageCountLimit))
                 {
                     var recordIndex = headIndex + bytesRead;
                     var header = buffer.GetLongVolatile(recordIndex);

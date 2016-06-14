@@ -92,7 +92,8 @@ namespace Adaptive.Aeron.Samples.IpcThroughput
             public void Run()
             {
                 var publication = Publication;
-                using (var buffer = new UnsafeBuffer(new byte[publication.MaxMessageLength]))
+                using (var byteBuffer = BufferUtil.AllocateDirectAligned(publication.MaxMessageLength, BitUtil.CACHE_LINE_LENGTH))
+                using (var buffer = new UnsafeBuffer(byteBuffer))
                 {
                     long backPressureCount = 0;
                     long totalMessageCount = 0;
@@ -151,7 +152,7 @@ namespace Adaptive.Aeron.Samples.IpcThroughput
                 long failedPolls = 0;
                 long successfulPolls = 0;
 
-                
+
                 while (Running.Get())
                 {
                     var fragmentsRead = image.Poll(OnFragment, MessageCountLimit);

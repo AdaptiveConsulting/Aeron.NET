@@ -43,7 +43,8 @@ namespace Adaptive.Aeron.Samples.Ping
 
                 using (var publication = aeron.AddPublication(PingChannel, PingStreamID))
                 using (var subscription = aeron.AddSubscription(PongChannel, PongStreamID))
-                using (var atomicBuffer = new UnsafeBuffer(new byte[MessageLength]))
+                using (var byteBuffer = BufferUtil.AllocateDirectAligned(MessageLength, BitUtil.CACHE_LINE_LENGTH))
+                using (var atomicBuffer = new UnsafeBuffer(byteBuffer))
                 {
                     Latch.Wait();
 

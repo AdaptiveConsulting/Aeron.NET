@@ -11,7 +11,7 @@ namespace Adaptive.Aeron.Tests
 {
     public class SubscriptionTest
     {
-        private const string CHANNEL = "udp://localhost:40124";
+        private const string CHANNEL = "aeron:udp?endpoint=localhost:40124";
         private const int STREAM_ID_1 = 2;
         private const long SUBSCRIPTION_CORRELATION_ID = 100;
         private const int READ_BUFFER_CAPACITY = 1024;
