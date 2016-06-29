@@ -189,12 +189,11 @@ namespace Adaptive.Aeron.Protocol
             var sb = new StringBuilder();
             var formattedFlags = $"{Convert.ToString(Flags(), 2),8}".Replace(' ', '0');
 
-            sb.Append("Data Header{")
+            sb.Append("DATA Header{")
                 .Append("frame_length=").Append(FrameLength())
                 .Append(" version=").Append(Version())
                 .Append(" flags=").Append(formattedFlags)
                 .Append(" type=").Append(HeaderType())
-                .Append(" frame_length=").Append(FrameLength())
                 .Append(" term_offset=").Append(TermOffset())
                 .Append(" session_id=").Append(SessionId())
                 .Append(" stream_id=").Append(StreamId())
