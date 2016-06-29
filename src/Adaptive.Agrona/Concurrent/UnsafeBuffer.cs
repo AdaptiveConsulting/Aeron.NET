@@ -672,9 +672,9 @@ namespace Adaptive.Agrona.Concurrent
         private void BoundsCheck(int index)
         {
 #if SHOULD_BOUNDS_CHECK
-            if (index < 0 || index >= _capacity)
+            if (index < 0 || index >= Capacity)
             {
-                throw new IndexOutOfRangeException($"index={index:D}, capacity={_capacity:D}");
+                throw new IndexOutOfRangeException($"index={index:D}, capacity={Capacity:D}");
             }
 #endif
         }
@@ -683,9 +683,9 @@ namespace Adaptive.Agrona.Concurrent
         {
 #if SHOULD_BOUNDS_CHECK
             long resultingPosition = index + (long)length;
-            if (index < 0 || resultingPosition > _capacity)
+            if (index < 0 || resultingPosition > Capacity)
             {
-                throw new IndexOutOfRangeException($"index={index:D}, length={length:D}, capacity={_capacity:D}");
+                throw new IndexOutOfRangeException($"index={index:D}, length={length:D}, capacity={Capacity:D}");
             }
 #endif
         }
