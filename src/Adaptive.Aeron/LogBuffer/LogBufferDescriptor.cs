@@ -193,22 +193,7 @@ namespace Adaptive.Aeron.LogBuffer
                 throw new InvalidOperationException(s);
             }
         }
-
-        /// <summary>
-        /// Check that meta data buffer is of sufficient length.
-        /// </summary>
-        /// <param name="buffer"> to be checked. </param>
-        /// <exception cref="InvalidOperationException"> if the buffer is not as expected. </exception>
-        public static void CheckMetaDataBuffer(UnsafeBuffer buffer)
-        {
-            var capacity = buffer.Capacity;
-            if (capacity < TERM_META_DATA_LENGTH)
-            {
-                string s = $"Meta data buffer capacity less than min length of {TERM_META_DATA_LENGTH:D}, capacity={capacity:D}";
-                throw new InvalidOperationException(s);
-            }
-        }
-
+        
         /// <summary>
         /// Get the value of the initial Term id used for this log.
         /// </summary>
