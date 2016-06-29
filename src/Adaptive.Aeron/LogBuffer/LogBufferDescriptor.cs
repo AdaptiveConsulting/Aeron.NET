@@ -42,17 +42,7 @@ namespace Adaptive.Aeron.LogBuffer
         // ********************************
         // *** Term Meta Data Constants ***
         // ********************************
-
-        /// <summary>
-        /// A term is currently clean or in use.
-        /// </summary>
-        public const int CLEAN = 0;
-
-        /// <summary>
-        /// A term is dirty and requires cleaning.
-        /// </summary>
-        public const int NEEDS_CLEANING = 1;
-
+        
         /// <summary>
         /// Offset within the term meta data where the tail value is stored.
         /// </summary>
@@ -330,17 +320,7 @@ namespace Adaptive.Aeron.LogBuffer
         {
             return (currentIndex + 1)%PARTITION_COUNT;
         }
-
-        /// <summary>
-        /// Rotate to the previous partition in sequence for the term id.
-        /// </summary>
-        /// <param name="currentIndex"> partition index </param>
-        /// <returns> the previous partition index </returns>
-        public static int PreviousPartitionIndex(int currentIndex)
-        {
-            return (currentIndex + (PARTITION_COUNT - 1))%PARTITION_COUNT;
-        }
-
+        
         /// <summary>
         /// Determine the partition index to be used given the initial term and active term ids.
         /// </summary>
@@ -357,9 +337,9 @@ namespace Adaptive.Aeron.LogBuffer
         /// </summary>
         /// <param name="termCount"> for the number of terms that have passed. </param>
         /// <returns> the partition index for the term count. </returns>
-        public static int IndexByTermCount(int termCount)
+        public static int IndexByTermCount(long termCount)
         {
-            return termCount%PARTITION_COUNT;
+            return (int)(termCount%PARTITION_COUNT);
         }
 
         /// <summary>
@@ -498,10 +478,7 @@ namespace Adaptive.Aeron.LogBuffer
         public static void RotateLog(LogBufferPartition[] logPartitions, UnsafeBuffer logMetaDataBuffer, int activeIndex, int newTermId)
         {
             var nextIndex = NextPartitionIndex(activeIndex);
-            var nextNextIndex = NextPartitionIndex(nextIndex);
-
             logPartitions[nextIndex].TermId(newTermId);
-            logPartitions[nextNextIndex].StatusOrdered(NEEDS_CLEANING);
             ActivePartitionIndex(logMetaDataBuffer, nextIndex);
         }
 

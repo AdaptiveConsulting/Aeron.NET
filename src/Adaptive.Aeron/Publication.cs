@@ -351,10 +351,8 @@ namespace Adaptive.Aeron
             else if (termOffset == TermAppender.TRIPPED)
             {
                 var nextIndex = LogBufferDescriptor.NextPartitionIndex(index);
-                var nextNextIndex = LogBufferDescriptor.NextPartitionIndex(nextIndex);
-
+                
                 _termAppenders[nextIndex].TailTermId(TermAppender.TermId(result) + 1);
-                _termAppenders[nextNextIndex].StatusOrdered(LogBufferDescriptor.NEEDS_CLEANING);
                 LogBufferDescriptor.ActivePartitionIndex(_logMetaDataBuffer, nextIndex);
             }
 

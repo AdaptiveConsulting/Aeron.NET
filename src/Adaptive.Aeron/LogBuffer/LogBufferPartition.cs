@@ -36,34 +36,7 @@ namespace Adaptive.Aeron.LogBuffer
         {
             return _metaDataBuffer;
         }
-
-        /// <summary>
-        /// Clean down the buffers for reuse by zeroing them out.
-        /// </summary>
-        public void Clean()
-        {
-            _termBuffer.SetMemory(0, _termBuffer.Capacity, 0);
-            _metaDataBuffer.PutInt(LogBufferDescriptor.TERM_STATUS_OFFSET, LogBufferDescriptor.CLEAN);
-        }
-
-        /// <summary>
-        /// What is the current status of the buffer.
-        /// </summary>
-        /// <returns> the status of buffer as described in <seealso cref="LogBufferDescriptor"/> </returns>
-        public int Status()
-        {
-            return _metaDataBuffer.GetIntVolatile(LogBufferDescriptor.TERM_STATUS_OFFSET);
-        }
-
-        /// <summary>
-        /// Set the status of the log buffer with StoreStore memory ordering semantics.
-        /// </summary>
-        /// <param name="status"> to be set for the log buffer. </param>
-        public void StatusOrdered(int status)
-        {
-            _metaDataBuffer.PutIntOrdered(LogBufferDescriptor.TERM_STATUS_OFFSET, status);
-        }
-
+        
         /// <summary>
         /// Get the current tail value in a volatile memory ordering fashion. If raw tail is greater than
         /// <seealso cref="TermBuffer()"/>.<seealso cref="IDirectBuffer.Capacity"/> then capacity will be returned.
