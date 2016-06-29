@@ -102,7 +102,7 @@ namespace Adaptive.Aeron.Tests
             A.CallTo(() => DriverProxy.AddSubscription(A<string>._, A<int>._)).Returns(CORRELATION_ID);
             A.CallTo(() => DriverProxy.RemoveSubscription(CORRELATION_ID)).Returns(CLOSE_CORRELATION_ID);
 
-            Conductor = new ClientConductor(EpochClock, NanoClock, MockToClientReceiver, LogBuffersFactory, CounterValuesBuffer, DriverProxy, MockClientErrorHandler, MockAvailableImageHandler, MockUnavailableImageHandler, KEEP_ALIVE_INTERVAL, AWAIT_TIMEOUT, NanoUtil.FromMilliseconds(INTER_SERVICE_TIMEOUT_MS), PUBLICATION_CONNECTION_TIMEOUT_MS);
+            Conductor = new ClientConductor(EpochClock, NanoClock, MockToClientReceiver, LogBuffersFactory, CounterValuesBuffer, DriverProxy, MockClientErrorHandler, MockAvailableImageHandler, MockUnavailableImageHandler, MapMode.ReadOnly, KEEP_ALIVE_INTERVAL, AWAIT_TIMEOUT, NanoUtil.FromMilliseconds(INTER_SERVICE_TIMEOUT_MS), PUBLICATION_CONNECTION_TIMEOUT_MS);
 
             PublicationReady.Wrap(PublicationReadyBuffer, 0);
             CorrelatedMessage.Wrap(CorrelatedMessageBuffer, 0);
@@ -145,8 +145,8 @@ namespace Adaptive.Aeron.Tests
             var logBuffersSession1 = A.Fake<LogBuffers>();
             var logBuffersSession2 = A.Fake<LogBuffers>();
 
-            A.CallTo(() => LogBuffersFactory.Map(SESSION_ID_1 + "-log")).Returns(logBuffersSession1);
-            A.CallTo(() => LogBuffersFactory.Map(SESSION_ID_2 + "-log")).Returns(logBuffersSession2);
+            A.CallTo(() => LogBuffersFactory.Map(SESSION_ID_1 + "-log", A<MapMode>._)).Returns(logBuffersSession1);
+            A.CallTo(() => LogBuffersFactory.Map(SESSION_ID_2 + "-log", A<MapMode>._)).Returns(logBuffersSession2);
             A.CallTo(() => logBuffersSession1.AtomicBuffers()).Returns(atomicBuffersSession1);
             A.CallTo(() => logBuffersSession2.AtomicBuffers()).Returns(atomicBuffersSession2);
         }
@@ -172,7 +172,7 @@ namespace Adaptive.Aeron.Tests
 
             Conductor.AddPublication(CHANNEL, STREAM_ID_1);
 
-            A.CallTo(() => LogBuffersFactory.Map(SESSION_ID_1 + "-log")).MustHaveHappened();
+            A.CallTo(() => LogBuffersFactory.Map(SESSION_ID_1 + "-log", MapMode.ReadWrite)).MustHaveHappened();
         }
 
 
@@ -324,7 +324,7 @@ namespace Adaptive.Aeron.Tests
             var publication = Conductor.AddPublication(CHANNEL, STREAM_ID_1);
             Conductor.DoWork();
 
-            A.CallTo(() => LogBuffersFactory.Map(A<string>._)).MustHaveHappened(Repeated.Exactly.Once);
+            A.CallTo(() => LogBuffersFactory.Map(A<string>._, A<MapMode>._)).MustHaveHappened(Repeated.Exactly.Once);
             Assert.AreEqual(publication.RegistrationId, CORRELATION_ID);
         }
 
@@ -403,7 +403,7 @@ namespace Adaptive.Aeron.Tests
 
             Conductor.OnAvailableImage(STREAM_ID_1, SESSION_ID_1, SubscriberPositionMap, SESSION_ID_1 + "-log", SOURCE_INFO, CORRELATION_ID);
 
-            A.CallTo(() => LogBuffersFactory.Map(SESSION_ID_1 + "-log")).MustHaveHappened();
+            A.CallTo(() => LogBuffersFactory.Map(SESSION_ID_1 + "-log", A<MapMode>._)).MustHaveHappened();
         }
 
         [Test]
@@ -437,7 +437,7 @@ namespace Adaptive.Aeron.Tests
         {
             Conductor.OnAvailableImage(STREAM_ID_2, SESSION_ID_2, SubscriberPositionMap, SESSION_ID_2 + "-log", SOURCE_INFO, CORRELATION_ID_2);
 
-            A.CallTo(() => LogBuffersFactory.Map(A<string>._)).MustNotHaveHappened();
+            A.CallTo(() => LogBuffersFactory.Map(A<string>._, A<MapMode>._)).MustNotHaveHappened();
             A.CallTo(() => MockAvailableImageHandler(A<Image>._)).MustNotHaveHappened();
         }
 
@@ -446,7 +446,7 @@ namespace Adaptive.Aeron.Tests
         {
             Conductor.OnUnavailableImage(STREAM_ID_2, CORRELATION_ID_2);
 
-            A.CallTo(() => LogBuffersFactory.Map(A<string>._)).MustNotHaveHappened();
+            A.CallTo(() => LogBuffersFactory.Map(A<string>._, A<MapMode>._)).MustNotHaveHappened();
             A.CallTo(() => MockAvailableImageHandler(A<Image>._)).MustNotHaveHappened();
         }
 

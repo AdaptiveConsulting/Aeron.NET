@@ -31,6 +31,7 @@ namespace Adaptive.Aeron
         private volatile bool _driverActive = true;
 
         private readonly IEpochClock _epochClock;
+        private readonly MapMode _imageMapMode;
         private readonly INanoClock _nanoClock;
         private readonly DriverListenerAdapter _driverListener;
         private readonly ILogBuffersFactory _logBuffersFactory;
@@ -59,6 +60,7 @@ namespace Adaptive.Aeron
             ErrorHandler errorHandler,
             AvailableImageHandler availableImageHandler,
             UnavailableImageHandler unavailableImageHandler,
+            MapMode imageMapMode,
             long keepAliveIntervalNs,
             long driverTimeoutMs,
             long interServiceTimeoutNs,
@@ -75,6 +77,7 @@ namespace Adaptive.Aeron
             _logBuffersFactory = logBuffersFactory;
             _availableImageHandler = availableImageHandler;
             _unavailableImageHandler = unavailableImageHandler;
+            _imageMapMode = imageMapMode;
             _keepAliveIntervalNs = keepAliveIntervalNs;
             _driverTimeoutMs = driverTimeoutMs;
             _driverTimeoutNs = NanoUtil.FromMilliseconds(driverTimeoutMs);
@@ -186,7 +189,7 @@ namespace Adaptive.Aeron
 
         public void OnNewPublication(string channel, int streamId, int sessionId, int publicationLimitId, string logFileName, long correlationId)
         {
-            var publication = new Publication(this, channel, streamId, sessionId, new UnsafeBufferPosition(_counterValuesBuffer, publicationLimitId), _logBuffersFactory.Map(logFileName), correlationId);
+            var publication = new Publication(this, channel, streamId, sessionId, new UnsafeBufferPosition(_counterValuesBuffer, publicationLimitId), _logBuffersFactory.Map(logFileName, MapMode.ReadWrite), correlationId);
 
             _activePublications.Put(channel, streamId, publication);
         }
@@ -201,7 +204,7 @@ namespace Adaptive.Aeron
 
                     if (subscriberPositionMap.TryGetValue(subscription.RegistrationId, out positionId))
                     {
-                        var image = new Image(subscription, sessionId, new UnsafeBufferPosition(_counterValuesBuffer, (int) positionId), _logBuffersFactory.Map(logFileName), _errorHandler, sourceIdentity, correlationId);
+                        var image = new Image(subscription, sessionId, new UnsafeBufferPosition(_counterValuesBuffer, (int) positionId), _logBuffersFactory.Map(logFileName, _imageMapMode), _errorHandler, sourceIdentity, correlationId);
                         subscription.AddImage(image);
                         _availableImageHandler(image);
                     }

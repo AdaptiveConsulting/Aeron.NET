@@ -21,7 +21,7 @@ namespace Adaptive.Aeron
         {
         }
 
-        public LogBuffers(string logFileName)
+        public LogBuffers(string logFileName, MapMode mapMode)
         {
             var fileInfo = new FileInfo(logFileName);
 
@@ -35,7 +35,7 @@ namespace Adaptive.Aeron
             // if log length exceeds MAX_INT we need multiple mapped buffers, (see FileChannel.map doc).
             if (logLength < int.MaxValue)
             {
-                var mappedBuffer = IoUtil.MapExistingFile(logFileName);
+                var mappedBuffer = IoUtil.MapExistingFile(logFileName, mapMode);
 
                 _mappedByteBuffers = new[] {mappedBuffer};
 
@@ -57,7 +57,7 @@ namespace Adaptive.Aeron
                 var metaDataSectionOffset = termLength*(long) LogBufferDescriptor.PARTITION_COUNT;
                 var metaDataSectionLength = (int) (logLength - metaDataSectionOffset);
 
-                var memoryMappedFile = IoUtil.OpenMemoryMappedFile(logFileName);
+                var memoryMappedFile = IoUtil.OpenMemoryMappedFile(logFileName, mapMode);
                 var metaDataMappedBuffer = new MappedByteBuffer(memoryMappedFile, metaDataSectionOffset, metaDataSectionLength);
 
                 _mappedByteBuffers[_mappedByteBuffers.Length - 1] = metaDataMappedBuffer;

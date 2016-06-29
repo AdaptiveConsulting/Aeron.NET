@@ -157,6 +157,7 @@ namespace Adaptive.Aeron
             private UnsafeBuffer _cncMetaDataBuffer;
             private UnsafeBuffer _countersMetaDataBuffer;
             private UnsafeBuffer _countersValuesBuffer;
+            private MapMode _imageMapMode = MapMode.ReadOnly;
 
             /// <summary>
             /// The top level Aeron directory used for communication between a Media Driver and client.
@@ -212,7 +213,7 @@ namespace Adaptive.Aeron
 
                     if (CncFile() != null)
                     {
-                        _cncByteBuffer = IoUtil.MapExistingFile(CncFile().FullName);
+                        _cncByteBuffer = IoUtil.MapExistingFile(CncFile().FullName, MapMode.ReadWrite);
                         _cncMetaDataBuffer = CncFileDescriptor.CreateMetaDataBuffer(_cncByteBuffer);
 
                         var cncVersion = _cncMetaDataBuffer.GetInt(CncFileDescriptor.CncVersionOffset(0));
@@ -526,6 +527,17 @@ namespace Adaptive.Aeron
             }
 
             /// <summary>
+            /// The file memory mapping mode for <see cref="Image"/>s
+            /// </summary>
+            /// <param name="imageMapMode"> file memory mapping mode for <see cref="Image"/>s</param>
+            /// <returns> this for a fluent API</returns>
+            public Context ImageMapMode(MapMode imageMapMode)
+            {
+                _imageMapMode = imageMapMode;
+                return this;
+            }
+
+            /// <summary>
             /// Return the timeout, in milliseconds, that this client will use to determine if a <seealso cref="Publication"/>
             /// has active subscribers or not.
             /// </summary>
@@ -548,12 +560,12 @@ namespace Adaptive.Aeron
                     _cncByteBuffer?.Dispose();
                 }
             }
-
+            
             internal ClientConductor CreateClientConductor()
             {
                 return new ClientConductor(_epochClock, _nanoClock, _toClientBuffer, _logBuffersFactory,
                     _countersValuesBuffer, new DriverProxy(_toDriverBuffer), _errorHandler,
-                    _availableImageHandler, _unavailableImageHandler, _keepAliveInterval, _driverTimeoutMs,
+                    _availableImageHandler, _unavailableImageHandler, _imageMapMode, _keepAliveInterval, _driverTimeoutMs,
                     _interServiceTimeout, _publicationConnectionTimeout);
             }
 
