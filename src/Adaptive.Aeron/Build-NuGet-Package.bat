@@ -1,1 +1,1 @@
-nuget pack Adaptive.Aeron.csproj -IncludeReferencedProjects -Prop Configuration=Release
+..\..\scripts\nuget pack Adaptive.Aeron.csproj -IncludeReferencedProjects -Prop Configuration=Release
