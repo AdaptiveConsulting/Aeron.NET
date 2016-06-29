@@ -146,10 +146,10 @@ namespace Adaptive.Agrona
         /// <summary>
         /// Encode a String as UTF-8 bytes to the buffer with a length prefix.
         /// </summary>
-        /// <param name="offset"> at which the String should be encoded. </param>
+        /// <param name="index"> at which the String should be encoded. </param>
         /// <param name="value">  of the String to be encoded. </param>
         /// <returns> the number of bytes put to the buffer. </returns>
-        int PutStringUtf8(int offset, string value);
+        int PutStringUtf8(int index, string value);
 
         ///// <summary>
         ///// Encode a String as UTF-8 bytes to the buffer with a length prefix.
