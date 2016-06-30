@@ -1,5 +1,5 @@
 # Aeron.NET
-[![NuGet](https://img.shields.io/nuget/v/Aeron.Client.svg?maxAge=2592000)](https://www.nuget.org/packages/Aeron.Client/)
+[![NuGet](https://img.shields.io/nuget/v/Aeron.Client.svg)](https://www.nuget.org/packages/Aeron.Client/)
 
 A .NET port of the [Aeron Client](https://github.com/real-logic/Aeron).
 
