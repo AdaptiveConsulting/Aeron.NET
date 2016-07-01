@@ -31,15 +31,15 @@ namespace Adaptive.Aeron.LogBuffer
         /// </summary>
         public const int FAILED = -2;
 
-        private readonly IAtomicBuffer _termBuffer;
-        private readonly IAtomicBuffer _metaDataBuffer;
+        private readonly UnsafeBuffer _termBuffer;
+        private readonly UnsafeBuffer _metaDataBuffer;
 
         /// <summary>
         /// Construct a view over a term buffer and state buffer for appending frames.
         /// </summary>
         /// <param name="termBuffer">     for where messages are stored. </param>
         /// <param name="metaDataBuffer"> for where the state of writers is stored manage concurrency. </param>
-        public TermAppender(IAtomicBuffer termBuffer, IAtomicBuffer metaDataBuffer)
+        public TermAppender(UnsafeBuffer termBuffer, UnsafeBuffer metaDataBuffer)
         {
             this._termBuffer = termBuffer;
             this._metaDataBuffer = metaDataBuffer;
@@ -111,7 +111,7 @@ namespace Adaptive.Aeron.LogBuffer
             long rawTail = GetAndAddRawTail(alignedLength);
             long termOffset = rawTail & 0xFFFFFFFFL;
 
-            IAtomicBuffer termBuffer = _termBuffer;
+            UnsafeBuffer termBuffer = _termBuffer;
             int termLength = termBuffer.Capacity;
 
             long resultingOffset = termOffset + alignedLength;
@@ -141,9 +141,9 @@ namespace Adaptive.Aeron.LogBuffer
         /// packed with the termId if a padding record was inserted at the end. </returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #if DEBUG
-        public virtual long AppendUnfragmentedMessage(HeaderWriter header, IDirectBuffer srcBuffer, int srcOffset, int length, ReservedValueSupplier reservedValueSupplier)
+        public virtual long AppendUnfragmentedMessage(HeaderWriter header, UnsafeBuffer srcBuffer, int srcOffset, int length, ReservedValueSupplier reservedValueSupplier)
 #else
-        public  long AppendUnfragmentedMessage(HeaderWriter header, IDirectBuffer srcBuffer, int srcOffset, int length, ReservedValueSupplier reservedValueSupplier)
+        public long AppendUnfragmentedMessage(HeaderWriter header, UnsafeBuffer srcBuffer, int srcOffset, int length, ReservedValueSupplier reservedValueSupplier)
 #endif
         {
             int frameLength = length + DataHeaderFlyweight.HEADER_LENGTH;
@@ -151,7 +151,7 @@ namespace Adaptive.Aeron.LogBuffer
             long rawTail = GetAndAddRawTail(alignedLength);
             long termOffset = rawTail & 0xFFFFFFFFL;
 
-            IAtomicBuffer termBuffer = _termBuffer;
+            UnsafeBuffer termBuffer = _termBuffer;
             int termLength = termBuffer.Capacity;
 
             long resultingOffset = termOffset + alignedLength;
@@ -191,7 +191,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// <returns> the resulting offset of the term after the append on success otherwise <seealso cref="#TRIPPED"/> or <seealso cref="#FAILED"/>
         /// packed with the termId if a padding record was inserted at the end. </returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public long AppendFragmentedMessage(HeaderWriter header, IDirectBuffer srcBuffer, int srcOffset, int length,
+        public long AppendFragmentedMessage(HeaderWriter header, UnsafeBuffer srcBuffer, int srcOffset, int length,
             int maxPayloadLength, ReservedValueSupplier reservedValueSupplier)
         {
             int numMaxPayloads = length/maxPayloadLength;
@@ -205,7 +205,7 @@ namespace Adaptive.Aeron.LogBuffer
             int termId = TermId(rawTail);
             long termOffset = rawTail & 0xFFFFFFFFL;
 
-            IAtomicBuffer termBuffer = _termBuffer;
+            UnsafeBuffer termBuffer = _termBuffer;
             int termLength = termBuffer.Capacity;
 
             long resultingOffset = termOffset + requiredLength;
@@ -288,7 +288,7 @@ namespace Adaptive.Aeron.LogBuffer
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private long HandleEndOfLogCondition(IAtomicBuffer termBuffer, long termOffset, HeaderWriter header,
+        private long HandleEndOfLogCondition(UnsafeBuffer termBuffer, long termOffset, HeaderWriter header,
             int termLength, int termId)
         {
             int resultingOffset = FAILED;

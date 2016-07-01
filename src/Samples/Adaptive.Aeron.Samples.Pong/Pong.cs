@@ -51,7 +51,7 @@ namespace Adaptive.Aeron.Samples.Pong
             }
         }
 
-        public static void PingHandler(Publication pongPublication, IDirectBuffer buffer, int offset, int length)
+        public static void PingHandler(Publication pongPublication, UnsafeBuffer buffer, int offset, int length)
         {
             if (pongPublication.Offer(buffer, offset, length) > 0L)
             {

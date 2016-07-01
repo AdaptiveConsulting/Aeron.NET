@@ -27,7 +27,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// <param name="errorHandler">   to be notified if an error occurs during the callback. </param>
         /// <returns> the number of fragments read </returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static long Read(IAtomicBuffer termBuffer, int offset, FragmentHandler handler, int fragmentsLimit, Header header, ErrorHandler errorHandler)
+        public static long Read(UnsafeBuffer termBuffer, int offset, FragmentHandler handler, int fragmentsLimit, Header header, ErrorHandler errorHandler)
         {
             int fragmentsRead = 0;
             int capacity = termBuffer.Capacity;
