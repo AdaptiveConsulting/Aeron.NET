@@ -43,11 +43,9 @@ namespace Adaptive.Aeron.LogBuffer
             var termOffsetSessionId = _sessionId | (uint)offset;
             var streamAndTermIds = _streamId | ((long)termId << 32);
 
-            //TODO why not just putlongvolatile?
             termBuffer.PutLongOrdered(offset + HeaderFlyweight.FRAME_LENGTH_FIELD_OFFSET, lengthVersionFlagsType);
-            Thread.MemoryBarrier();
 
-            termBuffer.PutLong(offset + DataHeaderFlyweight.TERM_OFFSET_FIELD_OFFSET, termOffsetSessionId);
+            termBuffer.PutLongOrdered(offset + DataHeaderFlyweight.TERM_OFFSET_FIELD_OFFSET, termOffsetSessionId);
             termBuffer.PutLong(offset + DataHeaderFlyweight.STREAM_ID_FIELD_OFFSET, streamAndTermIds);
         }
     }
