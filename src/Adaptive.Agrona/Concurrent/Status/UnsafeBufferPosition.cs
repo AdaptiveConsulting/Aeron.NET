@@ -1,4 +1,6 @@
-﻿namespace Adaptive.Agrona.Concurrent.Status
+﻿using System.Runtime.CompilerServices;
+
+namespace Adaptive.Agrona.Concurrent.Status
 {
     /// <summary>
     /// Reports a position by recording it in an <seealso cref="UnsafeBuffer"/>.
@@ -33,11 +35,13 @@
             _offset = CountersReader.CounterOffset(counterId);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int Id()
         {
             return _counterId;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public long Get()
         {
             return _buffer.GetLong(_offset);
@@ -45,16 +49,19 @@
 
         public long Volatile => _buffer.GetLongVolatile(_offset);
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Set(long value)
         {
             _buffer.PutLong(_offset, value);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void SetOrdered(long value)
         {
             _buffer.PutLongOrdered(_offset, value);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool ProposeMax(long proposedValue)
         {
             var buffer = _buffer;
@@ -70,6 +77,7 @@
             return updated;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool ProposeMaxOrdered(long proposedValue)
         {
             var buffer = _buffer;

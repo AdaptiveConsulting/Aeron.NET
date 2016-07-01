@@ -1,4 +1,6 @@
-﻿namespace Adaptive.Agrona.Util
+﻿using System.Runtime.CompilerServices;
+
+namespace Adaptive.Agrona.Util
 {
     public static class IntUtil
     {
@@ -15,6 +17,7 @@
         ///     specified {@code int} value, or 32 if the value is equal
         ///     to zero.
         /// @since 1.5 </returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int NumberOfTrailingZeros(int i)
         {
             // HD, Figure 5-14
@@ -76,6 +79,7 @@
         ///     of the specified {@code int} value, or 32 if the value
         ///     is equal to zero.
         /// </returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int NumberOfLeadingZeros(int i)
         {
             // HD, Figure 5-6

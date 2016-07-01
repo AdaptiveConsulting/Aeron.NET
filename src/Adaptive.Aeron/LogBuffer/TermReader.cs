@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 using Adaptive.Aeron.Protocol;
 using Adaptive.Agrona;
 using Adaptive.Agrona.Concurrent;
@@ -25,6 +26,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// <param name="header">         to be used for mapping over the header for a given fragment. </param>
         /// <param name="errorHandler">   to be notified if an error occurs during the callback. </param>
         /// <returns> the number of fragments read </returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static long Read(IAtomicBuffer termBuffer, int offset, FragmentHandler handler, int fragmentsLimit, Header header, ErrorHandler errorHandler)
         {
             int fragmentsRead = 0;
@@ -67,6 +69,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// <param name="offset">        value to be packed. </param>
         /// <param name="fragmentsRead"> value to be packed. </param>
         /// <returns> a long with both ints packed into it. </returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static long Pack(int offset, int fragmentsRead)
         {
             return ((long)offset << 32) | (uint)fragmentsRead;
@@ -77,6 +80,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// </summary>
         /// <param name="readOutcome"> into which the fragments read value has been packed. </param>
         /// <returns> the number of fragments that have been read. </returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int FragmentsRead(long readOutcome)
         {
             return (int)readOutcome;
@@ -87,6 +91,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// </summary>
         /// <param name="readOutcome"> into which the offset value has been packed. </param>
         /// <returns> the offset up to which the term has progressed. </returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int Offset(long readOutcome)
         {
             return (int)((long)((ulong)readOutcome >> 32));

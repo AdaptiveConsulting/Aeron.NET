@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System.Runtime.CompilerServices;
+using System.Threading;
 using Adaptive.Aeron.Protocol;
 using Adaptive.Agrona;
 using Adaptive.Agrona.Concurrent;
@@ -35,6 +36,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// <param name="offset">     at which the header should be written. </param>
         /// <param name="length">     of the fragment including the header. </param>
         /// <param name="termId">     of the current term buffer. </param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public virtual void Write(IAtomicBuffer termBuffer, int offset, int length, int termId)
         {
             var lengthVersionFlagsType = _versionFlagsType | (-length & 0xFFFFFFFFL);

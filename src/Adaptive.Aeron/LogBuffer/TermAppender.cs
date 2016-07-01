@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 using Adaptive.Aeron.Protocol;
 using Adaptive.Agrona;
 using Adaptive.Agrona.Concurrent;
@@ -48,6 +49,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// The log of messages for a term.
         /// </summary>
         /// <returns> the log of messages for a term. </returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IAtomicBuffer TermBuffer()
         {
             return _termBuffer;
@@ -57,6 +59,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// The meta data describing the term.
         /// </summary>
         /// <returns> the meta data describing the term. </returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IAtomicBuffer MetaDataBuffer()
         {
             return _metaDataBuffer;
@@ -66,6 +69,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// Get the raw value current tail value in a volatile memory ordering fashion.
         /// </summary>
         /// <returns> the current tail value. </returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public long RawTailVolatile()
         {
             return _metaDataBuffer.GetLongVolatile(LogBufferDescriptor.TERM_TAIL_COUNTER_OFFSET);
@@ -75,6 +79,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// Set the value for the tail counter.
         /// </summary>
         /// <param name="termId"> for the tail counter </param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void TailTermId(int termId)
         {
             _metaDataBuffer.PutLong(LogBufferDescriptor.TERM_TAIL_COUNTER_OFFSET, ((long) termId) << 32);
@@ -84,6 +89,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// Set the status of the log buffer with StoreStore memory ordering semantics.
         /// </summary>
         /// <param name="status"> to be set for the log buffer. </param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void StatusOrdered(int status)
         {
             _metaDataBuffer.PutIntOrdered(LogBufferDescriptor.TERM_STATUS_OFFSET, status);
@@ -97,6 +103,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// <param name="bufferClaim"> to be updated with the claimed region. </param>
         /// <returns> the resulting offset of the term after the append on success otherwise <seealso cref="#TRIPPED"/> or <seealso cref="#FAILED"/>
         /// packed with the termId if a padding record was inserted at the end. </returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public long Claim(HeaderWriter header, int length, BufferClaim bufferClaim)
         {
             int frameLength = length + DataHeaderFlyweight.HEADER_LENGTH;
@@ -132,6 +139,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// <param name="reservedValueSupplier"><see cref="ReservedValueSupplier"/> for the frame</param>
         /// <returns> the resulting offset of the term after the append on success otherwise <seealso cref="TRIPPED"/> or <seealso cref="FAILED"/>
         /// packed with the termId if a padding record was inserted at the end. </returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public virtual long AppendUnfragmentedMessage(HeaderWriter header, IDirectBuffer srcBuffer, int srcOffset, int length, ReservedValueSupplier reservedValueSupplier)
         {
             int frameLength = length + DataHeaderFlyweight.HEADER_LENGTH;
@@ -178,6 +186,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// /// <param name="reservedValueSupplier"><see cref="ReservedValueSupplier"/> for the frame</param>
         /// <returns> the resulting offset of the term after the append on success otherwise <seealso cref="#TRIPPED"/> or <seealso cref="#FAILED"/>
         /// packed with the termId if a padding record was inserted at the end. </returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public long AppendFragmentedMessage(HeaderWriter header, IDirectBuffer srcBuffer, int srcOffset, int length,
             int maxPayloadLength, ReservedValueSupplier reservedValueSupplier)
         {
@@ -246,6 +255,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// <param name="termId">     value to be packed. </param>
         /// <param name="termOffset"> value to be packed. </param>
         /// <returns> a long with both ints packed into it. </returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static long Pack(int termId, int termOffset)
         {
             return ((long) termId << 32) | (termOffset & 0xFFFFFFFFL);
@@ -256,6 +266,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// </summary>
         /// <param name="result"> into which the termOffset value has been packed. </param>
         /// <returns> the termOffset after the append </returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int TermOffset(long result)
         {
             return (int) result;
@@ -266,11 +277,13 @@ namespace Adaptive.Aeron.LogBuffer
         /// </summary>
         /// <param name="result"> into which the termId value has been packed. </param>
         /// <returns> the termId in which the append operation took place. </returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int TermId(long result)
         {
             return (int)((long)((ulong)result >> 32));
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private long HandleEndOfLogCondition(IAtomicBuffer termBuffer, long termOffset, HeaderWriter header,
             int termLength, int termId)
         {
@@ -293,6 +306,7 @@ namespace Adaptive.Aeron.LogBuffer
             return Pack(termId, resultingOffset);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private long GetAndAddRawTail(int alignedLength)
         {
             return _metaDataBuffer.GetAndAddLong(LogBufferDescriptor.TERM_TAIL_COUNTER_OFFSET, alignedLength);

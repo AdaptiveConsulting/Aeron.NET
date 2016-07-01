@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 using Adaptive.Aeron.LogBuffer;
 using Adaptive.Aeron.Protocol;
 using Adaptive.Agrona;
@@ -205,6 +206,7 @@ namespace Adaptive.Aeron
         /// <param name="buffer"> containing message. </param>
         /// <returns> The new stream position, otherwise <seealso cref="NOT_CONNECTED"/>, <seealso cref="BACK_PRESSURED"/>,
         /// <seealso cref="ADMIN_ACTION"/> or <seealso cref="CLOSED"/>. </returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public long Offer(IDirectBuffer buffer)
         {
             return Offer(buffer, 0, buffer.Capacity);
@@ -218,6 +220,7 @@ namespace Adaptive.Aeron
         /// <param name="length"> in bytes of the encoded message. </param>
         /// <returns> The new stream position, otherwise a negative error value <seealso cref="NOT_CONNECTED"/>, <seealso cref="BACK_PRESSURED"/>,
         /// <seealso cref="ADMIN_ACTION"/> or <seealso cref="CLOSED"/>. </returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public long Offer(IDirectBuffer buffer, int offset, int length, ReservedValueSupplier reservedValueSupplier = null)
         {
             var newPosition = CLOSED;
@@ -292,6 +295,7 @@ namespace Adaptive.Aeron
         /// <exception cref="ArgumentException"> if the length is greater than max payload length within an MTU. </exception>
         /// <seealso cref="BufferClaim.Commit()" />
         /// <seealso cref="BufferClaim.Abort()" />
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public long TryClaim(int length, BufferClaim bufferClaim)
         {
             var newPosition = CLOSED;
@@ -332,6 +336,7 @@ namespace Adaptive.Aeron
 
 
         /// <seealso cref="Dispose()" />
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal void IncRef()
         {
             lock (_clientConductor)
@@ -340,6 +345,7 @@ namespace Adaptive.Aeron
             }
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private long NewPosition(int index, int currentTail, long position, long result)
         {
             var newPosition = ADMIN_ACTION;
@@ -359,6 +365,7 @@ namespace Adaptive.Aeron
             return newPosition;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void CheckForMaxPayloadLength(int length)
         {
             if (length > _maxPayloadLength)
@@ -368,6 +375,7 @@ namespace Adaptive.Aeron
             }
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void CheckForMaxMessageLength(int length)
         {
             if (length > MaxMessageLength)
@@ -377,6 +385,7 @@ namespace Adaptive.Aeron
             }
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal IManagedResource ManagedResource()
         {
             return new PublicationManagedResource(this);

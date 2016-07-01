@@ -1,4 +1,5 @@
-﻿using Adaptive.Aeron.Protocol;
+﻿using System.Runtime.CompilerServices;
+using Adaptive.Aeron.Protocol;
 using Adaptive.Agrona;
 
 namespace Adaptive.Aeron.LogBuffer
@@ -20,6 +21,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// </summary>
         /// <param name="initialTermId">       this stream started at. </param>
         /// <param name="positionBitsToShift"> for calculating positions. </param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Header(int initialTermId, int positionBitsToShift)
         {
             _initialTermId = initialTermId;
@@ -30,6 +32,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// Get the current position to which the image has advanced on reading this message.
         /// </summary>
         /// <returns> the current position to which the image has advanced on reading this message. </returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public long Position()
         {
             var resultingOffset = BitUtil.Align(TermOffset + FrameLength, FrameDescriptor.FRAME_ALIGNMENT);
@@ -40,6 +43,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// Get the initial term id this stream started at.
         /// </summary>
         /// <returns> the initial term id this stream started at. </returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int InitialTermId()
         {
             return _initialTermId;
@@ -49,11 +53,13 @@ namespace Adaptive.Aeron.LogBuffer
         /// Set the initial term id this stream started at.
         /// </summary>
         /// <param name="initialTermId"> this stream started at. </param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void InitialTermId(int initialTermId)
         {
             _initialTermId = initialTermId;
         }
-        
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void SetBuffer(IDirectBuffer buffer, int offset)
         {
             Buffer = buffer;

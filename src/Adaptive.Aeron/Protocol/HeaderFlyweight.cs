@@ -1,4 +1,5 @@
-﻿using Adaptive.Agrona;
+﻿using System.Runtime.CompilerServices;
+using Adaptive.Agrona;
 using Adaptive.Agrona.Concurrent;
 
 namespace Adaptive.Aeron.Protocol
@@ -70,6 +71,7 @@ namespace Adaptive.Aeron.Protocol
         /// return version field value
         /// </summary>
         /// <returns> ver field value </returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public short Version()
         {
             return (short) (GetByte(VERSION_FIELD_OFFSET) & 0xFF);
@@ -80,6 +82,7 @@ namespace Adaptive.Aeron.Protocol
         /// </summary>
         /// <param name="version"> field value </param>
         /// <returns> flyweight </returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public HeaderFlyweight Version(short version)
         {
             PutByte(VERSION_FIELD_OFFSET, (byte) version);
@@ -91,6 +94,7 @@ namespace Adaptive.Aeron.Protocol
         /// return flags field value
         /// </summary>
         /// <returns> flags field value </returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public short Flags()
         {
             return (short) (GetByte(FLAGS_FIELD_OFFSET) & 0xFF);
@@ -101,6 +105,7 @@ namespace Adaptive.Aeron.Protocol
         /// </summary>
         /// <param name="flags"> field value </param>
         /// <returns> flyweight </returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public HeaderFlyweight Flags(short flags)
         {
             PutByte(FLAGS_FIELD_OFFSET, (byte) flags);
@@ -112,6 +117,7 @@ namespace Adaptive.Aeron.Protocol
         /// return header type field
         /// </summary>
         /// <returns> type field value </returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int HeaderType()
         {
             return GetShort(TYPE_FIELD_OFFSET) & 0xFFFF;
@@ -122,6 +128,7 @@ namespace Adaptive.Aeron.Protocol
         /// </summary>
         /// <param name="type"> field value </param>
         /// <returns> flyweight </returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public HeaderFlyweight HeaderType(int type)
         {
             PutShort(TYPE_FIELD_OFFSET, (short) type);
@@ -133,6 +140,7 @@ namespace Adaptive.Aeron.Protocol
         /// return frame length field
         /// </summary>
         /// <returns> frame length field </returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int FrameLength()
         {
             return GetInt(FRAME_LENGTH_FIELD_OFFSET);
@@ -143,6 +151,7 @@ namespace Adaptive.Aeron.Protocol
         /// </summary>
         /// <param name="length"> field value </param>
         /// <returns> flyweight </returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public HeaderFlyweight FrameLength(int length)
         {
             PutInt(FRAME_LENGTH_FIELD_OFFSET, length);
