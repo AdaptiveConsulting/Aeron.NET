@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
@@ -212,6 +213,7 @@ namespace Adaptive.Agrona.Concurrent
 
         public int Capacity { get; private set; }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void SetMemory(int index, int length, byte value)
         {
             BoundsCheck0(index, length);
@@ -224,6 +226,7 @@ namespace Adaptive.Agrona.Concurrent
             }
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void CheckLimit(int limit)
         {
             if (limit > Capacity)
@@ -234,6 +237,7 @@ namespace Adaptive.Agrona.Concurrent
 
         public bool IsExpandable => false;
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void VerifyAlignment()
         {
             var address = new IntPtr(_pBuffer).ToInt64();
@@ -262,6 +266,7 @@ namespace Adaptive.Agrona.Concurrent
         //    *(long*)(_pBuffer + index) = value;
         //}
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public long GetLong(int index)
         {
             BoundsCheck0(index, BitUtil.SIZE_OF_LONG);
@@ -269,12 +274,14 @@ namespace Adaptive.Agrona.Concurrent
             return *(long*) (_pBuffer + index);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void PutLong(int index, long value)
         {
             BoundsCheck0(index, BitUtil.SIZE_OF_LONG);
             *(long*) (_pBuffer + index) = value;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public long GetLongVolatile(int index)
         {
             BoundsCheck0(index, BitUtil.SIZE_OF_LONG);
@@ -282,6 +289,7 @@ namespace Adaptive.Agrona.Concurrent
             return Volatile.Read(ref *(long*) (_pBuffer + index));
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void PutLongVolatile(int index, long value)
         {
             BoundsCheck0(index, BitUtil.SIZE_OF_LONG);
@@ -289,6 +297,7 @@ namespace Adaptive.Agrona.Concurrent
             Interlocked.Exchange(ref *(long*) (_pBuffer + index), value);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void PutLongOrdered(int index, long value)
         {
             BoundsCheck0(index, BitUtil.SIZE_OF_LONG);
@@ -296,6 +305,7 @@ namespace Adaptive.Agrona.Concurrent
             Volatile.Write(ref *(long*) (_pBuffer + index), value);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public long AddLongOrdered(int index, long increment)
         {
             BoundsCheck0(index, BitUtil.SIZE_OF_LONG);
@@ -306,6 +316,7 @@ namespace Adaptive.Agrona.Concurrent
             return value;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool CompareAndSetLong(int index, long expectedValue, long updateValue)
         {
             BoundsCheck0(index, BitUtil.SIZE_OF_LONG);
@@ -315,6 +326,7 @@ namespace Adaptive.Agrona.Concurrent
             return original == expectedValue;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public long GetAndAddLong(int index, long delta)
         {
             BoundsCheck0(index, BitUtil.SIZE_OF_LONG);
@@ -340,6 +352,7 @@ namespace Adaptive.Agrona.Concurrent
         //    *(int*)(_pBuffer + index) = value;
         //}
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int GetInt(int index)
         {
             BoundsCheck0(index, BitUtil.SIZE_OF_INT);
@@ -347,12 +360,14 @@ namespace Adaptive.Agrona.Concurrent
             return *(int*) (_pBuffer + index);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void PutInt(int index, int value)
         {
             BoundsCheck0(index, BitUtil.SIZE_OF_INT);
             *(int*) (_pBuffer + index) = value;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int GetIntVolatile(int index)
         {
             BoundsCheck0(index, BitUtil.SIZE_OF_INT);
@@ -360,6 +375,7 @@ namespace Adaptive.Agrona.Concurrent
             return Volatile.Read(ref *(int*) (_pBuffer + index));
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void PutIntVolatile(int index, int value)
         {
             BoundsCheck0(index, BitUtil.SIZE_OF_INT);
@@ -367,6 +383,7 @@ namespace Adaptive.Agrona.Concurrent
             Interlocked.Exchange(ref *(int*) (_pBuffer + index), value);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void PutIntOrdered(int index, int value)
         {
             BoundsCheck0(index, BitUtil.SIZE_OF_INT);
@@ -374,6 +391,7 @@ namespace Adaptive.Agrona.Concurrent
             Volatile.Write(ref *(int*) (_pBuffer + index), value);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int AddIntOrdered(int index, int increment)
         {
             BoundsCheck0(index, BitUtil.SIZE_OF_INT);
@@ -384,6 +402,7 @@ namespace Adaptive.Agrona.Concurrent
             return value;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool CompareAndSetInt(int index, int expectedValue, int updateValue)
         {
             BoundsCheck0(index, BitUtil.SIZE_OF_INT);
@@ -393,6 +412,7 @@ namespace Adaptive.Agrona.Concurrent
             return original == expectedValue;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int GetAndAddInt(int index, int delta)
         {
             BoundsCheck0(index, BitUtil.SIZE_OF_INT);
@@ -440,6 +460,7 @@ namespace Adaptive.Agrona.Concurrent
         //    }
         //}
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public double GetDouble(int index)
         {
             BoundsCheck0(index, BitUtil.SIZE_OF_DOUBLE);
@@ -447,6 +468,7 @@ namespace Adaptive.Agrona.Concurrent
             return *(double*) (_pBuffer + index);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void PutDouble(int index, double value)
         {
             BoundsCheck0(index, BitUtil.SIZE_OF_DOUBLE);
@@ -456,6 +478,7 @@ namespace Adaptive.Agrona.Concurrent
 
         ///////////////////////////////////////////////////////////////////////////
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public float GetFloat(int index)
         {
             BoundsCheck0(index, BitUtil.SIZE_OF_FLOAT);
@@ -463,6 +486,7 @@ namespace Adaptive.Agrona.Concurrent
             return *(float*) (_pBuffer + index);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void PutFloat(int index, float value)
         {
             BoundsCheck0(index, BitUtil.SIZE_OF_FLOAT);
@@ -472,6 +496,7 @@ namespace Adaptive.Agrona.Concurrent
 
         ///////////////////////////////////////////////////////////////////////////
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public short GetShort(int index)
         {
             BoundsCheck0(index, BitUtil.SIZE_OF_SHORT);
@@ -479,6 +504,7 @@ namespace Adaptive.Agrona.Concurrent
             return *(short*) (_pBuffer + index);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void PutShort(int index, short value)
         {
             BoundsCheck0(index, BitUtil.SIZE_OF_SHORT);
@@ -486,6 +512,7 @@ namespace Adaptive.Agrona.Concurrent
             *(short*) (_pBuffer + index) = value;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public short GetShortVolatile(int index)
         {
             BoundsCheck0(index, BitUtil.SIZE_OF_SHORT);
@@ -493,6 +520,7 @@ namespace Adaptive.Agrona.Concurrent
             return Volatile.Read(ref *(short*) (_pBuffer + index));
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void PutShortVolatile(int index, short value)
         {
             BoundsCheck0(index, BitUtil.SIZE_OF_SHORT);
@@ -502,6 +530,7 @@ namespace Adaptive.Agrona.Concurrent
 
         ///////////////////////////////////////////////////////////////////////////
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public byte GetByte(int index)
         {
             BoundsCheck(index);
@@ -509,6 +538,7 @@ namespace Adaptive.Agrona.Concurrent
             return *(_pBuffer + index);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void PutByte(int index, byte value)
         {
             BoundsCheck(index);
@@ -516,6 +546,7 @@ namespace Adaptive.Agrona.Concurrent
             *(_pBuffer + index) = value;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public byte GetByteVolatile(int index)
         {
             BoundsCheck(index);
@@ -523,6 +554,7 @@ namespace Adaptive.Agrona.Concurrent
             return Volatile.Read(ref *(_pBuffer + index));
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void PutByteVolatile(int index, byte value)
         {
             BoundsCheck(index);
@@ -532,11 +564,13 @@ namespace Adaptive.Agrona.Concurrent
 
         ///////////////////////////////////////////////////////////////////////////
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void GetBytes(int index, byte[] dst)
         {
             GetBytes(index, dst, 0, dst.Length);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void GetBytes(int index, byte[] dst, int offset, int length)
         {
             BoundsCheck0(index, length);
@@ -549,16 +583,19 @@ namespace Adaptive.Agrona.Concurrent
             }
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void GetBytes(int index, IMutableDirectBuffer dstBuffer, int dstIndex, int length)
         {
             dstBuffer.PutBytes(dstIndex, this, index, length);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void PutBytes(int index, byte[] src)
         {
             PutBytes(index, src, 0, src.Length);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void PutBytes(int index, byte[] src, int offset, int length)
         {
             BoundsCheck0(index, length);
@@ -571,6 +608,7 @@ namespace Adaptive.Agrona.Concurrent
             }
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void PutBytes(int index, IDirectBuffer srcBuffer, int srcIndex, int length)
         {
             BoundsCheck0(index, length);
@@ -583,6 +621,7 @@ namespace Adaptive.Agrona.Concurrent
 
         ///////////////////////////////////////////////////////////////////////////
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public char GetChar(int index)
         {
             BoundsCheck0(index, BitUtil.SIZE_OF_CHAR);
@@ -590,6 +629,7 @@ namespace Adaptive.Agrona.Concurrent
             return *(char*) (_pBuffer + index);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void PutChar(int index, char value)
         {
             BoundsCheck0(index, BitUtil.SIZE_OF_CHAR);
@@ -613,6 +653,7 @@ namespace Adaptive.Agrona.Concurrent
 
         ///////////////////////////////////////////////////////////////////////////
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public string GetStringUtf8(int index)
         {
             var length = GetInt(index);
@@ -620,6 +661,7 @@ namespace Adaptive.Agrona.Concurrent
             return GetStringUtf8(index, length);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public string GetStringUtf8(int index, int length)
         {
             var stringInBytes = new byte[length];
@@ -628,11 +670,13 @@ namespace Adaptive.Agrona.Concurrent
             return Encoding.UTF8.GetString(stringInBytes);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int PutStringUtf8(int index, string value)
         {
             return PutStringUtf8(index, value, int.MaxValue);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int PutStringUtf8(int index, string value, int maxEncodedSize)
         {
             var bytes = value == null
@@ -649,6 +693,7 @@ namespace Adaptive.Agrona.Concurrent
             return BitUtil.SIZE_OF_INT + bytes.Length;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public string GetStringWithoutLengthUtf8(int index, int length)
         {
             var stringInBytes = new byte[length];
@@ -657,6 +702,7 @@ namespace Adaptive.Agrona.Concurrent
             return Encoding.UTF8.GetString(stringInBytes);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int PutStringWithoutLengthUtf8(int index, string value)
         {
             var bytes = value == null
@@ -669,6 +715,7 @@ namespace Adaptive.Agrona.Concurrent
 
         ///////////////////////////////////////////////////////////////////////////
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void BoundsCheck(int index)
         {
 #if SHOULD_BOUNDS_CHECK
@@ -679,6 +726,7 @@ namespace Adaptive.Agrona.Concurrent
 #endif
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void BoundsCheck0(int index, int length)
         {
 #if SHOULD_BOUNDS_CHECK
@@ -690,6 +738,7 @@ namespace Adaptive.Agrona.Concurrent
 #endif
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void BoundsCheck(int index, int length)
         {
             BoundsCheck0(index, length);
@@ -697,6 +746,7 @@ namespace Adaptive.Agrona.Concurrent
 
         ///////////////////////////////////////////////////////////////////////////
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int CompareTo(IDirectBuffer that)
         {
             var thisCapacity = this.Capacity;

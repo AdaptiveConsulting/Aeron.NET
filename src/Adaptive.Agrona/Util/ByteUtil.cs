@@ -1,4 +1,5 @@
 ﻿using System.Reflection.Emit;
+using System.Runtime.CompilerServices;
 
 namespace Adaptive.Agrona.Util
 {

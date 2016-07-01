@@ -1,4 +1,5 @@
-﻿using Adaptive.Aeron.Protocol;
+﻿using System.Runtime.CompilerServices;
+using Adaptive.Aeron.Protocol;
 using Adaptive.Agrona.Concurrent;
 
 namespace Adaptive.Aeron.LogBuffer
@@ -40,53 +41,54 @@ namespace Adaptive.Aeron.LogBuffer
         /// <summary>
         /// Beginning fragment of a frame.
         /// </summary>
-        public static readonly byte BEGIN_FRAG_FLAG = 128;
+        public const byte BEGIN_FRAG_FLAG = 128;
 
         /// <summary>
         /// End fragment of a frame.
         /// </summary>
-        public static readonly byte END_FRAG_FLAG = 64;
+        public const byte END_FRAG_FLAG = 64;
 
         /// <summary>
         /// End fragment of a frame.
         /// </summary>
-        public static readonly byte UNFRAGMENTED = 192; // BEGIN_FRAG_FLAG | END_FRAG_FLAG;
+        public const byte UNFRAGMENTED = 192; // BEGIN_FRAG_FLAG | END_FRAG_FLAG;
 
         /// <summary>
         /// Offset within a frame at which the version field begins
         /// </summary>
-        public static readonly int VERSION_OFFSET = HeaderFlyweight.VERSION_FIELD_OFFSET;
+        public const int VERSION_OFFSET = HeaderFlyweight.VERSION_FIELD_OFFSET;
 
         /// <summary>
         /// Offset within a frame at which the flags field begins
         /// </summary>
-        public static readonly int FLAGS_OFFSET = HeaderFlyweight.FLAGS_FIELD_OFFSET;
+        public const int FLAGS_OFFSET = HeaderFlyweight.FLAGS_FIELD_OFFSET;
 
         /// <summary>
         /// Offset within a frame at which the type field begins
         /// </summary>
-        public static readonly int TYPE_OFFSET = HeaderFlyweight.TYPE_FIELD_OFFSET;
+        public const int TYPE_OFFSET = HeaderFlyweight.TYPE_FIELD_OFFSET;
 
         /// <summary>
         /// Offset within a frame at which the term offset field begins
         /// </summary>
-        public static readonly int TERM_OFFSET = DataHeaderFlyweight.TERM_OFFSET_FIELD_OFFSET;
+        public const int TERM_OFFSET = DataHeaderFlyweight.TERM_OFFSET_FIELD_OFFSET;
 
         /// <summary>
         /// Offset within a frame at which the term id field begins
         /// </summary>
-        public static readonly int TERM_ID_OFFSET = DataHeaderFlyweight.TERM_ID_FIELD_OFFSET;
+        public const int TERM_ID_OFFSET = DataHeaderFlyweight.TERM_ID_FIELD_OFFSET;
 
         /// <summary>
         /// Padding frame type to indicate the message should be ignored.
         /// </summary>
-        public static readonly int PADDING_FRAME_TYPE = HeaderFlyweight.HDR_TYPE_PAD;
+        public const int PADDING_FRAME_TYPE = HeaderFlyweight.HDR_TYPE_PAD;
 
         /// <summary>
         /// Compute the maximum supported message length for a buffer of given capacity.
         /// </summary>
         /// <param name="capacity"> of the log buffer. </param>
         /// <returns> the maximum supported length for a message. </returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int ComputeMaxMessageLength(int capacity)
         {
             return capacity/8;
@@ -97,6 +99,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// </summary>
         /// <param name="termOffset"> at which the frame begins. </param>
         /// <returns> the offset at which the length field begins. </returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int LengthOffset(int termOffset)
         {
             return termOffset;
@@ -107,6 +110,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// </summary>
         /// <param name="termOffset"> at which the frame begins. </param>
         /// <returns> the offset at which the version field begins. </returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int VersionOffset(int termOffset)
         {
             return termOffset + VERSION_OFFSET;
@@ -117,6 +121,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// </summary>
         /// <param name="termOffset"> at which the frame begins. </param>
         /// <returns> the offset at which the flags field begins. </returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int FlagsOffset(int termOffset)
         {
             return termOffset + FLAGS_OFFSET;
@@ -127,6 +132,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// </summary>
         /// <param name="termOffset"> at which the frame begins. </param>
         /// <returns> the offset at which the type field begins. </returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int TypeOffset(int termOffset)
         {
             return termOffset + TYPE_OFFSET;
@@ -137,6 +143,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// </summary>
         /// <param name="termOffset"> at which the frame begins. </param>
         /// <returns> the offset at which the term offset field begins. </returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int TermOffsetOffset(int termOffset)
         {
             return termOffset + TERM_OFFSET;
@@ -147,6 +154,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// </summary>
         /// <param name="termOffset"> at which the frame begins. </param>
         /// <returns> the offset at which the term id field begins. </returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int TermIdOffset(int termOffset)
         {
             return termOffset + TERM_ID_OFFSET;
@@ -158,6 +166,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// <param name="buffer">     containing the frame. </param>
         /// <param name="termOffset"> at which a frame begins. </param>
         /// <returns> the value of the frame type header. </returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int FrameVersion(IAtomicBuffer buffer, int termOffset)
         {
             return buffer.GetByte(VersionOffset(termOffset));
@@ -169,6 +178,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// <param name="buffer">     containing the frame. </param>
         /// <param name="termOffset"> at which a frame begins. </param>
         /// <returns> the value of the frame type header. </returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int FrameType(IAtomicBuffer buffer, int termOffset)
         {
             //return buffer.GetShort(TypeOffset(termOffset), LITTLE_ENDIAN) & 0xFFFF;
@@ -181,6 +191,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// <param name="buffer">     containing the frame. </param>
         /// <param name="termOffset"> at which a frame begins. </param>
         /// <returns> true if the frame is a padding frame otherwise false. </returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool IsPaddingFrame(IAtomicBuffer buffer, int termOffset)
         {
             return buffer.GetShort(TypeOffset(termOffset)) == PADDING_FRAME_TYPE;
@@ -192,6 +203,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// <param name="buffer">     containing the frame. </param>
         /// <param name="termOffset"> at which a frame begins. </param>
         /// <returns> the value for the frame length. </returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int FrameLength(IAtomicBuffer buffer, int termOffset)
         {
             return buffer.GetInt(termOffset);
@@ -203,6 +215,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// <param name="buffer">     containing the frame. </param>
         /// <param name="termOffset"> at which a frame begins. </param>
         /// <returns> the value for the frame length. </returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int FrameLengthVolatile(IAtomicBuffer buffer, int termOffset)
         {
             int frameLength = buffer.GetIntVolatile(termOffset);
@@ -216,6 +229,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// <param name="buffer">      containing the frame. </param>
         /// <param name="termOffset">  at which a frame begins. </param>
         /// <param name="frameLength"> field to be set for the frame. </param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void FrameLengthOrdered(IAtomicBuffer buffer, int termOffset, int frameLength)
         {
             //if (ByteOrder.NativeOrder() != LITTLE_ENDIAN)
@@ -232,6 +246,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// <param name="buffer">     containing the frame. </param>
         /// <param name="termOffset"> at which a frame begins. </param>
         /// <param name="type">       type value for the frame. </param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void FrameType(IAtomicBuffer buffer, int termOffset, int type)
         {
             buffer.PutShort(TypeOffset(termOffset), (short) type);
@@ -243,6 +258,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// <param name="buffer">     containing the frame. </param>
         /// <param name="termOffset"> at which a frame begins. </param>
         /// <param name="flags">      value for the frame. </param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void FrameFlags(IAtomicBuffer buffer, int termOffset, byte flags)
         {
             buffer.PutByte(FlagsOffset(termOffset), flags);
@@ -253,6 +269,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// </summary>
         /// <param name="buffer">     containing the frame. </param>
         /// <param name="termOffset"> at which a frame begins. </param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void FrameTermOffset(UnsafeBuffer buffer, int termOffset)
         {
             buffer.PutInt(TermOffsetOffset(termOffset), termOffset);
@@ -264,6 +281,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// <param name="buffer">     containing the frame. </param>
         /// <param name="termOffset"> at which a frame begins. </param>
         /// <param name="termId">     value for the frame. </param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void FrameTermId(UnsafeBuffer buffer, int termOffset, int termId)
         {
             buffer.PutInt(TermIdOffset(termOffset), termId);
