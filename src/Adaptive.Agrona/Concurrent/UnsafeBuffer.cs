@@ -576,8 +576,8 @@ namespace Adaptive.Agrona.Concurrent
             BoundsCheck0(index, length);
             BufferUtil.BoundsCheck(dst, offset, length);
 
-            void* source = _pBuffer + index;
-            fixed (void* destination = &dst[offset])
+            byte* source = _pBuffer + index;
+            fixed (byte* destination = &dst[offset])
             {
                 ByteUtil.MemoryCopy(destination, source, (uint) length);
             }
@@ -601,8 +601,8 @@ namespace Adaptive.Agrona.Concurrent
             BoundsCheck0(index, length);
             BufferUtil.BoundsCheck(src, offset, length);
 
-            void* destination = _pBuffer + index;
-            fixed (void* source = &src[offset])
+            byte* destination = _pBuffer + index;
+            fixed (byte* source = &src[offset])
             {
                 ByteUtil.MemoryCopy(destination, source, (uint) length);
             }
@@ -614,8 +614,8 @@ namespace Adaptive.Agrona.Concurrent
             BoundsCheck0(index, length);
             srcBuffer.BoundsCheck(srcIndex, length);
 
-            void* destination = _pBuffer + index;
-            void* source = (byte*) srcBuffer.BufferPointer.ToPointer() + srcIndex;
+            byte* destination = _pBuffer + index;
+            byte* source = (byte*) srcBuffer.BufferPointer.ToPointer() + srcIndex;
             ByteUtil.MemoryCopy(destination, source, (uint) length);
         }
 

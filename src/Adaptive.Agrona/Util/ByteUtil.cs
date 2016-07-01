@@ -1,40 +1,67 @@
-﻿using System.Reflection.Emit;
+﻿using System;
+using System.Reflection;
+using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+using Altar;
+namespace Adaptive.Agrona.Util {
 
-namespace Adaptive.Agrona.Util
-{
     /// <summary>
     /// Utility to copy blocks of memory
-    /// Uses the IL instruction Cpblk which is not available in C#
     /// </summary>
-    public unsafe class ByteUtil
-    {
-        // TODO PERF Olivier: write some benchmarks, is this the way to go?
+    public unsafe class ByteUtil {
 
-        public delegate void MemoryCopyDelegate(void* destination, void* source, uint length);
+        // frames are 32-bytes aligned, without CopyChunk64 throughput is better
 
-        public static readonly MemoryCopyDelegate MemoryCopy;
+        //[StructLayout(LayoutKind.Sequential, Pack = 64, Size = 64)]
+        //internal struct CopyChunk64 {
+        //    private fixed byte _bytes[64];
+        //}
 
-        static ByteUtil()
+        [StructLayout(LayoutKind.Sequential, Pack = 32, Size = 32)]
+        internal struct CopyChunk32
         {
-            var dynamicMethod = new DynamicMethod
-            (
-                "MemoryCopy",
-                typeof(void),
-                new[] { typeof(void*), typeof(void*), typeof(uint) },
-                typeof(ByteUtil)
-            );
-
-            var ilGenerator = dynamicMethod.GetILGenerator();
-
-            ilGenerator.Emit(OpCodes.Ldarg_0);
-            ilGenerator.Emit(OpCodes.Ldarg_1);
-            ilGenerator.Emit(OpCodes.Ldarg_2);
-
-            ilGenerator.Emit(OpCodes.Cpblk);
-            ilGenerator.Emit(OpCodes.Ret);
-
-            MemoryCopy = (MemoryCopyDelegate)dynamicMethod.CreateDelegate(typeof(MemoryCopyDelegate));
+            private readonly long _l1;
+            private readonly long _l2;
+            private readonly long _l3;
+            private readonly long _l4;
         }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void MemoryCopy(byte* destination, byte* source, uint length) {
+            var pos = 0;
+            int nextPos;
+            // whithout this perf is better
+            //nextPos = pos + 64;
+            //while (nextPos <= length) {
+            //    *(CopyChunk64*)(destination + pos) = *(CopyChunk64*)(source + pos);
+            //    pos = nextPos;
+            //    nextPos += 64;
+            //}
+            nextPos = pos + 32;
+            while (nextPos <= length) {
+                *(CopyChunk32*)(destination + pos) = *(CopyChunk32*)(source + pos);
+                pos = nextPos;
+                nextPos += 32;
+            }
+            nextPos = pos + 8;
+            while (nextPos <= length) {
+                *(long*)(destination + pos) = *(long*)(source + pos);
+                pos = nextPos;
+                nextPos += 8;
+            }
+            // whithout this perf is better
+            //nextPos = pos + 4;
+            //while (nextPos <= length) {
+            //    *(int*)(destination + pos) = *(int*)(source + pos);
+            //    pos = nextPos;
+            //    nextPos += 4;
+            //}
+            while (pos < length) {
+                *(byte*)(destination + pos) = *(byte*)(source + pos);
+                pos++;
+            }
+        }
+
     }
 }
