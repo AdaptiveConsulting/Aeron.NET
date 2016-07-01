@@ -48,7 +48,11 @@ namespace Adaptive.Aeron
             return _toDriverCommandBuffer.ConsumerHeartbeatTime();
         }
 
+#if DEBUG
         public virtual long AddPublication(string channel, int streamId)
+#else
+        public long AddPublication(string channel, int streamId)
+#endif
         {
             long correlationId = _toDriverCommandBuffer.NextCorrelationId();
 
@@ -64,7 +68,11 @@ namespace Adaptive.Aeron
             return correlationId;
         }
 
+#if DEBUG
         public virtual long RemovePublication(long registrationId)
+#else
+        public long RemovePublication(long registrationId)
+#endif
         {
             long correlationId = _toDriverCommandBuffer.NextCorrelationId();
             _removeMessage.CorrelationId(correlationId);
@@ -78,7 +86,11 @@ namespace Adaptive.Aeron
             return correlationId;
         }
 
+#if DEBUG
         public virtual long AddSubscription(string channel, int streamId)
+#else
+        public long AddSubscription(string channel, int streamId)
+#endif
         {
             const long registrationId = -1;
             long correlationId = _toDriverCommandBuffer.NextCorrelationId();
@@ -95,7 +107,11 @@ namespace Adaptive.Aeron
             return correlationId;
         }
 
+#if DEBUG
         public virtual long RemoveSubscription(long registrationId)
+#else
+        public long RemoveSubscription(long registrationId)
+#endif
         {
             long correlationId = _toDriverCommandBuffer.NextCorrelationId();
             _removeMessage.CorrelationId(correlationId);

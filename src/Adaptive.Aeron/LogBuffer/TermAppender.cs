@@ -140,7 +140,11 @@ namespace Adaptive.Aeron.LogBuffer
         /// <returns> the resulting offset of the term after the append on success otherwise <seealso cref="TRIPPED"/> or <seealso cref="FAILED"/>
         /// packed with the termId if a padding record was inserted at the end. </returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#if DEBUG
         public virtual long AppendUnfragmentedMessage(HeaderWriter header, IDirectBuffer srcBuffer, int srcOffset, int length, ReservedValueSupplier reservedValueSupplier)
+#else
+        public  long AppendUnfragmentedMessage(HeaderWriter header, IDirectBuffer srcBuffer, int srcOffset, int length, ReservedValueSupplier reservedValueSupplier)
+#endif
         {
             int frameLength = length + DataHeaderFlyweight.HEADER_LENGTH;
             int alignedLength = BitUtil.Align(frameLength, FrameDescriptor.FRAME_ALIGNMENT);

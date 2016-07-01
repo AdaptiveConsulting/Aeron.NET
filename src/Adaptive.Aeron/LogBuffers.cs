@@ -81,12 +81,20 @@ namespace Adaptive.Aeron
             }
         }
 
+#if DEBUG
         public virtual UnsafeBuffer[] AtomicBuffers()
+#else
+        public UnsafeBuffer[] AtomicBuffers()
+#endif
         {
             return _atomicBuffers;
         }
 
+#if DEBUG
         public virtual void Dispose()
+#else
+        public void Dispose()
+#endif
         {
             foreach (var buffer in _mappedByteBuffers)
             {
@@ -94,7 +102,11 @@ namespace Adaptive.Aeron
             }
         }
 
+#if DEBUG
         public virtual int TermLength()
+#else
+        public int TermLength()
+#endif
         {
             return _termLength;
         }

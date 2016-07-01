@@ -236,7 +236,11 @@ namespace Adaptive.Aeron
         /// This method is idempotent.
         /// </para>
         /// </summary>
+#if DEBUG
         public virtual void Dispose()
+#else
+        public  void Dispose()
+#endif
         {
             lock (_clientConductor)
             {

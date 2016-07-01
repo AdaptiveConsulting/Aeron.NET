@@ -44,7 +44,7 @@ namespace Adaptive.Aeron.Tests
         private UnsafeBuffer[] TermBuffers;
 
         [SetUp]
-        public virtual void SetUp()
+        public void SetUp()
         {
             RcvBuffer = new UnsafeBuffer(new byte[ALIGNED_FRAME_LENGTH]);
             DataHeader = new DataHeaderFlyweight();
@@ -75,7 +75,7 @@ namespace Adaptive.Aeron.Tests
         }
 
         [Test]
-        public virtual void ShouldHandleClosedImage()
+        public void ShouldHandleClosedImage()
         {
             var image = CreateImage();
 
@@ -86,7 +86,7 @@ namespace Adaptive.Aeron.Tests
         }
 
         [Test]
-        public virtual void ShouldReportCorrectPositionOnReception()
+        public void ShouldReportCorrectPositionOnReception()
         {
             var initialPosition = LogBufferDescriptor.ComputePosition(INITIAL_TERM_ID, 0, POSITION_BITS_TO_SHIFT, INITIAL_TERM_ID);
             Position.SetOrdered(initialPosition);
@@ -105,7 +105,7 @@ namespace Adaptive.Aeron.Tests
         }
 
         [Test]
-        public virtual void ShouldReportCorrectPositionOnReceptionWithNonZeroPositionInInitialTermId()
+        public void ShouldReportCorrectPositionOnReceptionWithNonZeroPositionInInitialTermId()
         {
             const int initialMessageIndex = 5;
             var initialTermOffset = OffsetForFrame(initialMessageIndex);
@@ -128,7 +128,7 @@ namespace Adaptive.Aeron.Tests
         }
 
         [Test]
-        public virtual void ShouldReportCorrectPositionOnReceptionWithNonZeroPositionInNonInitialTermId()
+        public void ShouldReportCorrectPositionOnReceptionWithNonZeroPositionInNonInitialTermId()
         {
             var activeTermId = INITIAL_TERM_ID + 1;
             const int initialMessageIndex = 5;
@@ -151,7 +151,7 @@ namespace Adaptive.Aeron.Tests
         }
 
         [Test]
-        public virtual void ShouldPollNoFragmentsToControlledFragmentHandler()
+        public void ShouldPollNoFragmentsToControlledFragmentHandler()
         {
             var image = CreateImage();
             var fragmentsRead = image.ControlledPoll(MockControlledFragmentHandler, int.MaxValue);
@@ -163,7 +163,7 @@ namespace Adaptive.Aeron.Tests
         }
 
         [Test]
-        public virtual void ShouldPollOneFragmentToControlledFragmentHandlerOnContinue()
+        public void ShouldPollOneFragmentToControlledFragmentHandlerOnContinue()
         {
             var initialPosition = LogBufferDescriptor.ComputePosition(INITIAL_TERM_ID, 0, POSITION_BITS_TO_SHIFT, INITIAL_TERM_ID);
             Position.SetOrdered(initialPosition);
@@ -182,7 +182,7 @@ namespace Adaptive.Aeron.Tests
         }
 
         [Test]
-        public virtual void ShouldNotPollOneFragmentToControlledFragmentHandlerOnAbort()
+        public void ShouldNotPollOneFragmentToControlledFragmentHandlerOnAbort()
         {
             var initialPosition = LogBufferDescriptor.ComputePosition(INITIAL_TERM_ID, 0, POSITION_BITS_TO_SHIFT, INITIAL_TERM_ID);
             Position.SetOrdered(initialPosition);
@@ -202,7 +202,7 @@ namespace Adaptive.Aeron.Tests
         }
 
         [Test]
-        public virtual void ShouldPollOneFragmentToControlledFragmentHandlerOnBreak()
+        public void ShouldPollOneFragmentToControlledFragmentHandlerOnBreak()
         {
             var initialPosition = LogBufferDescriptor.ComputePosition(INITIAL_TERM_ID, 0, POSITION_BITS_TO_SHIFT, INITIAL_TERM_ID);
             Position.SetOrdered(initialPosition);
@@ -223,7 +223,7 @@ namespace Adaptive.Aeron.Tests
         }
 
         [Test]
-        public virtual void ShouldPollFragmentsToControlledFragmentHandlerOnCommit()
+        public void ShouldPollFragmentsToControlledFragmentHandlerOnCommit()
         {
             var initialPosition = LogBufferDescriptor.ComputePosition(INITIAL_TERM_ID, 0, POSITION_BITS_TO_SHIFT, INITIAL_TERM_ID);
             Position.SetOrdered(initialPosition);
@@ -247,7 +247,7 @@ namespace Adaptive.Aeron.Tests
 
 
         [Test]
-        public virtual void ShouldPollFragmentsToControlledFragmentHandlerOnContinue()
+        public void ShouldPollFragmentsToControlledFragmentHandlerOnContinue()
         {
             var initialPosition = LogBufferDescriptor.ComputePosition(INITIAL_TERM_ID, 0, POSITION_BITS_TO_SHIFT, INITIAL_TERM_ID);
             Position.SetOrdered(initialPosition);

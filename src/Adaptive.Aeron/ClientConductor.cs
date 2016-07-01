@@ -136,7 +136,11 @@ namespace Adaptive.Aeron
             }
         }
 
+#if DEBUG
         internal virtual void ReleasePublication(Publication publication)
+#else
+        internal void ReleasePublication(Publication publication)
+#endif
         {
             lock (this)
             {
@@ -172,7 +176,11 @@ namespace Adaptive.Aeron
             }
         }
 
+#if DEBUG
         internal virtual void ReleaseSubscription(Subscription subscription)
+#else
+        internal void ReleaseSubscription(Subscription subscription)
+#endif
         {
             lock (this)
             {
@@ -240,7 +248,11 @@ namespace Adaptive.Aeron
             _lingeringResources.Add(managedResource);
         }
 
+#if DEBUG
         internal virtual bool IsPublicationConnected(long timeOfLastStatusMessage)
+#else
+        internal bool IsPublicationConnected(long timeOfLastStatusMessage)
+#endif
         {
             return _epochClock.Time() <= timeOfLastStatusMessage + _publicationConnectionTimeoutMs;
         }
