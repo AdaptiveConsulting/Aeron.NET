@@ -207,100 +207,75 @@ namespace Adaptive.Aeron
             /// <returns> this Aeron.Context for method chaining. </returns>
             public Context Conclude()
             {
-                try
+                _cncFile = new FileInfo(Path.Combine(_aeronDirectoryName, CncFileDescriptor.CNC_FILE));
+
+                if (_epochClock == null)
                 {
-                    _cncFile = new FileInfo(Path.Combine(_aeronDirectoryName, CncFileDescriptor.CNC_FILE));
-
-                    if (_epochClock == null)
-                    {
-                        _epochClock = new SystemEpochClock();
-                    }
-
-                    if (_nanoClock == null)
-                    {
-                        _nanoClock = new SystemNanoClock();
-                    }
-
-                    if (_idleStrategy == null)
-                    {
-                        _idleStrategy = new SleepingIdleStrategy(IdleSleepMs);
-                    }
-
-                    if (CncFile() != null)
-                    {
-                        ConnectToDriver();
-                    }
-
-                    if (_toClientBuffer == null)
-                    {
-                        var receiver =
-                            new BroadcastReceiver(CncFileDescriptor.CreateToClientsBuffer(_cncByteBuffer,
-                                _cncMetaDataBuffer));
-                        _toClientBuffer = new CopyBroadcastReceiver(receiver);
-                    }
-
-                    if (_toDriverBuffer == null)
-                    {
-                        _toDriverBuffer =
-                            new ManyToOneRingBuffer(CncFileDescriptor.CreateToDriverBuffer(_cncByteBuffer,
-                                _cncMetaDataBuffer));
-                    }
-
-                    if (CountersMetaDataBuffer() == null)
-                    {
-                        CountersMetaDataBuffer(CncFileDescriptor.CreateCountersMetaDataBuffer(_cncByteBuffer,
-                            _cncMetaDataBuffer));
-                    }
-
-                    if (CountersValuesBuffer() == null)
-                    {
-                        CountersValuesBuffer(CncFileDescriptor.CreateCountersValuesBuffer(_cncByteBuffer,
-                            _cncMetaDataBuffer));
-                    }
-
-                    _interServiceTimeout = CncFileDescriptor.ClientLivenessTimeout(_cncMetaDataBuffer);
-
-                    if (_logBuffersFactory == null)
-                    {
-                        _logBuffersFactory = new MappedLogBuffersFactory();
-                    }
-
-                    if (_errorHandler == null)
-                    {
-                        _errorHandler = DEFAULT_ERROR_HANDLER;
-                    }
-
-                    if (_availableImageHandler == null)
-                    {
-                        _availableImageHandler = image => { };
-                    }
-
-                    if (_unavailableImageHandler == null)
-                    {
-                        _unavailableImageHandler = image => { };
-                    }
-                }
-                catch (DriverTimeoutException ex)
-                {
-                    Console.WriteLine("***");
-                    Console.WriteLine("***");
-                    Console.WriteLine("Failed to connect to the Media Driver - is it currently running?");
-                    Console.WriteLine("***");
-                    Console.WriteLine("***");
-
-                    throw ex;
+                    _epochClock = new SystemEpochClock();
                 }
 
-                catch (
-                    Exception ex)
+                if (_nanoClock == null)
                 {
-                    Console.WriteLine("***");
-                    Console.WriteLine("***");
-                    Console.WriteLine("Failed to connect to the Media Driver - is it currently running?");
-                    Console.WriteLine("***");
-                    Console.WriteLine("***");
+                    _nanoClock = new SystemNanoClock();
+                }
 
-                    throw new InvalidOperationException("Could not initialise communication buffers", ex);
+                if (_idleStrategy == null)
+                {
+                    _idleStrategy = new SleepingIdleStrategy(IdleSleepMs);
+                }
+
+                if (CncFile() != null)
+                {
+                    ConnectToDriver();
+                }
+
+                if (_toClientBuffer == null)
+                {
+                    var receiver =
+                        new BroadcastReceiver(CncFileDescriptor.CreateToClientsBuffer(_cncByteBuffer,
+                            _cncMetaDataBuffer));
+                    _toClientBuffer = new CopyBroadcastReceiver(receiver);
+                }
+
+                if (_toDriverBuffer == null)
+                {
+                    _toDriverBuffer =
+                        new ManyToOneRingBuffer(CncFileDescriptor.CreateToDriverBuffer(_cncByteBuffer,
+                            _cncMetaDataBuffer));
+                }
+
+                if (CountersMetaDataBuffer() == null)
+                {
+                    CountersMetaDataBuffer(CncFileDescriptor.CreateCountersMetaDataBuffer(_cncByteBuffer,
+                        _cncMetaDataBuffer));
+                }
+
+                if (CountersValuesBuffer() == null)
+                {
+                    CountersValuesBuffer(CncFileDescriptor.CreateCountersValuesBuffer(_cncByteBuffer,
+                        _cncMetaDataBuffer));
+                }
+
+                _interServiceTimeout = CncFileDescriptor.ClientLivenessTimeout(_cncMetaDataBuffer);
+
+                if (_logBuffersFactory == null)
+                {
+                    _logBuffersFactory = new MappedLogBuffersFactory();
+                }
+
+                if (_errorHandler == null)
+                {
+                    _errorHandler = DEFAULT_ERROR_HANDLER;
+                }
+
+                if (_availableImageHandler == null)
+                {
+                    _availableImageHandler = image => { };
+                }
+
+                if (_unavailableImageHandler == null)
+                {
+                    _unavailableImageHandler = image => { };
                 }
 
                 return this;
@@ -593,12 +568,22 @@ namespace Adaptive.Aeron
 
             private void ConnectToDriver()
             {
+                var startMs = _epochClock.Time();
+
+                while (!_cncFile.Exists)
+                {
+                    if (_epochClock.Time() > startMs + _driverTimeoutMs)
+                    {
+                        throw new DriverTimeoutException("CnC file is created by not initialised.");
+                    }
+
+                    Thread.Yield();
+                }
+                
                 _cncByteBuffer = IoUtil.MapExistingFile(CncFile().FullName, MapMode.ReadWrite);
                 _cncMetaDataBuffer = CncFileDescriptor.CreateMetaDataBuffer(_cncByteBuffer);
-
-                var startMs = _epochClock.Time();
+                
                 int cncVersion;
-
                 while (0 == (cncVersion = _cncMetaDataBuffer.GetInt(CncFileDescriptor.CncVersionOffset(0))))
                 {
                     if (_epochClock.Time() > startMs + _driverTimeoutMs)
