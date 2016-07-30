@@ -228,16 +228,7 @@ namespace Adaptive.Aeron
 
                     if (CncFile() != null)
                     {
-                        _cncByteBuffer = IoUtil.MapExistingFile(CncFile().FullName, MapMode.ReadWrite);
-                        _cncMetaDataBuffer = CncFileDescriptor.CreateMetaDataBuffer(_cncByteBuffer);
-
-                        var cncVersion = _cncMetaDataBuffer.GetInt(CncFileDescriptor.CncVersionOffset(0));
-
-                        if (CncFileDescriptor.CNC_VERSION != cncVersion)
-                        {
-                            throw new InvalidOperationException(
-                                "aeron cnc file version not understood: version=" + cncVersion);
-                        }
+                        ConnectToDriver();
                     }
 
                     if (_toClientBuffer == null)
@@ -289,6 +280,17 @@ namespace Adaptive.Aeron
                         _unavailableImageHandler = image => { };
                     }
                 }
+                catch (DriverTimeoutException ex)
+                {
+                    Console.WriteLine("***");
+                    Console.WriteLine("***");
+                    Console.WriteLine("Failed to connect to the Media Driver - is it currently running?");
+                    Console.WriteLine("***");
+                    Console.WriteLine("***");
+
+                    throw ex;
+                }
+
                 catch (
                     Exception ex)
                 {
@@ -587,6 +589,31 @@ namespace Adaptive.Aeron
             internal AgentRunner CreateConductorRunner(ClientConductor clientConductor)
             {
                 return new AgentRunner(_idleStrategy, _errorHandler, null, clientConductor);
+            }
+
+            private void ConnectToDriver()
+            {
+                _cncByteBuffer = IoUtil.MapExistingFile(CncFile().FullName, MapMode.ReadWrite);
+                _cncMetaDataBuffer = CncFileDescriptor.CreateMetaDataBuffer(_cncByteBuffer);
+
+                var startMs = _epochClock.Time();
+                int cncVersion;
+
+                while (0 == (cncVersion = _cncMetaDataBuffer.GetInt(CncFileDescriptor.CncVersionOffset(0))))
+                {
+                    if (_epochClock.Time() > startMs + _driverTimeoutMs)
+                    {
+                        throw new DriverTimeoutException("CnC file is created by not initialised.");
+                    }
+
+                    Thread.Yield();
+                }
+                
+                if (CncFileDescriptor.CNC_VERSION != cncVersion)
+                {
+                    throw new InvalidOperationException(
+                        "aeron cnc file version not understood: version=" + cncVersion);
+                }
             }
         }
     }
