@@ -47,7 +47,7 @@ namespace Adaptive.Aeron
         /*
          * Duration in nanoseconds for which the client conductor will sleep between duty cycles.
          */
-        private const int IdleSleepMs = 4;
+        private const int IdleSleepMs = 10;
 
         /*
          * Default interval between sending keepalive control messages to the driver.
