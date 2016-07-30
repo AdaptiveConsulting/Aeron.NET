@@ -44,9 +44,24 @@ namespace Adaptive.Aeron
             }
         };
 
+        /*
+         * Duration in nanoseconds for which the client conductor will sleep between duty cycles.
+         */
         private const int IdleSleepMs = 4;
+
+        /*
+         * Default interval between sending keepalive control messages to the driver.
+         */
         private static readonly long KeepaliveIntervalNs = NanoUtil.FromMilliseconds(500);
+
+        /*
+         * Default interval that if exceeded between duty cycles the conductor will consider itself a zombie and suicide.
+         */
         private static readonly long InterServiceTimeoutNs = NanoUtil.FromSeconds(10);
+
+        /*
+         * Timeout after which if no status messages have been receiver then a publication is considered not connected.
+         */
         private const long PublicationConnectionTimeoutMs = 5000;
 
         private readonly ClientConductor _conductor;
