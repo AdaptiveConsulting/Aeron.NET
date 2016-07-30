@@ -84,17 +84,7 @@ namespace Adaptive.Aeron.LogBuffer
         {
             _metaDataBuffer.PutLong(LogBufferDescriptor.TERM_TAIL_COUNTER_OFFSET, ((long) termId) << 32);
         }
-
-        /// <summary>
-        /// Set the status of the log buffer with StoreStore memory ordering semantics.
-        /// </summary>
-        /// <param name="status"> to be set for the log buffer. </param>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void StatusOrdered(int status)
-        {
-            _metaDataBuffer.PutIntOrdered(LogBufferDescriptor.TERM_STATUS_OFFSET, status);
-        }
-
+        
         /// <summary>
         /// Claim length of a the term buffer for writing in the message with zero copy semantics.
         /// </summary>
