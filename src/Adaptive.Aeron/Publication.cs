@@ -44,7 +44,6 @@ namespace Adaptive.Aeron
         public const long CLOSED = -4;
 
         private int _refCount;
-        private readonly int _maxPayloadLength;
         private readonly int _positionBitsToShift;
         private volatile bool _isClosed;
 
@@ -66,7 +65,7 @@ namespace Adaptive.Aeron
             }
 
             var termLength = logBuffers.TermLength();
-            _maxPayloadLength = LogBufferDescriptor.MtuLength(logMetaDataBuffer) - DataHeaderFlyweight.HEADER_LENGTH;
+            MaxPayloadLength = LogBufferDescriptor.MtuLength(logMetaDataBuffer) - DataHeaderFlyweight.HEADER_LENGTH;
             MaxMessageLength = FrameDescriptor.ComputeMaxMessageLength(termLength);
             _clientConductor = clientConductor;
             Channel = channel;
@@ -115,10 +114,20 @@ namespace Adaptive.Aeron
         public int InitialTermId { get; }
 
         /// <summary>
-        /// Maximum message length supported in bytes.
+        /// Maximum message length supported in bytes. Messages may be made of of multiple fragments if greater than
+        /// MTU length.
         /// </summary>
         /// <returns> maximum message length supported in bytes. </returns>
         public int MaxMessageLength { get; }
+
+        /// <summary>
+        /// Maximum length of a message payload that fits within a message fragment.
+        /// 
+        /// This is he MTU length minus the message fragment header length.
+        /// 
+        /// <returns>maximum message fragment payload length.</returns>
+        /// </summary>
+        public int MaxPayloadLength { get; }
 
         /// <summary>
         /// Has the <seealso cref="Publication"/> seen an active Subscriber recently?
@@ -236,14 +245,14 @@ namespace Adaptive.Aeron
                 if (position < limit)
                 {
                     long result;
-                    if (length <= _maxPayloadLength)
+                    if (length <= MaxPayloadLength)
                     {
                         result = termAppender.AppendUnfragmentedMessage(_headerWriter, buffer, offset, length, reservedValueSupplier);
                     }
                     else
                     {
                         CheckForMaxMessageLength(length);
-                        result = termAppender.AppendFragmentedMessage(_headerWriter, buffer, offset, length, _maxPayloadLength, reservedValueSupplier);
+                        result = termAppender.AppendFragmentedMessage(_headerWriter, buffer, offset, length, MaxPayloadLength, reservedValueSupplier);
                     }
 
                     newPosition = NewPosition(partitionIndex, (int) termOffset, position, result);
@@ -368,10 +377,10 @@ namespace Adaptive.Aeron
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void CheckForMaxPayloadLength(int length)
         {
-            if (length > _maxPayloadLength)
+            if (length > MaxPayloadLength)
             {
                 throw new ArgumentException(
-                    $"Claim exceeds maxPayloadLength of {_maxPayloadLength:D}, length={length:D}");
+                    $"Claim exceeds maxPayloadLength of {MaxPayloadLength:D}, length={length:D}");
             }
         }
 
