@@ -196,7 +196,7 @@ namespace Adaptive.Aeron
         /// </summary>
         /// <param name="sessionId"> associated with the Image. </param>
         /// <returns> Image associated with the given sessionId or null if no Image exist. </returns>
-        public Image GetImage(int sessionId)
+        public Image ImageBySessionId(int sessionId)
         {
             Image result = null;
 
