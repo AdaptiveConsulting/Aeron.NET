@@ -308,13 +308,13 @@ namespace Adaptive.Aeron
             return removedImage;
         }
 
-        internal bool HasImage(int sessionId)
+        internal bool HasImage(long correlationId)
         {
             var hasImage = false;
 
             foreach (var image in _images)
             {
-                if (sessionId == image.SessionId)
+                if (correlationId == image.CorrelationId)
                 {
                     hasImage = true;
                     break;

@@ -424,7 +424,6 @@ namespace Adaptive.Aeron.Tests
             A.CallTo(() => MockUnavailableImageHandler(A<Image>._)).MustHaveHappened();
 
             Assert.True(subscription.HasNoImages);
-            Assert.False(subscription.HasImage(SESSION_ID_1));
         }
 
         [Test]

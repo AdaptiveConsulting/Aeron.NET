@@ -201,7 +201,7 @@ namespace Adaptive.Aeron
         {
             _activeSubscriptions.ForEach(streamId, (subscription) =>
             {
-                if (!subscription.HasImage(sessionId))
+                if (!subscription.HasImage(correlationId))
                 {
                     long positionId;
 
