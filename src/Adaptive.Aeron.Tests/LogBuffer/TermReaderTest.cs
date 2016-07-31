@@ -15,7 +15,7 @@ namespace Adaptive.Aeron.Tests.LogBuffer
         private const int INITIAL_TERM_ID = 7;
 
         private Header header;
-        private IAtomicBuffer termBuffer;
+        private UnsafeBuffer termBuffer;
         private ErrorHandler errorHandler;
         private FragmentHandler handler;
 
@@ -23,7 +23,7 @@ namespace Adaptive.Aeron.Tests.LogBuffer
         public void SetUp()
         {
             header = new Header(INITIAL_TERM_ID, TERM_BUFFER_CAPACITY);
-            termBuffer = A.Fake<IAtomicBuffer>();
+            termBuffer = A.Fake<UnsafeBuffer>();
             errorHandler = A.Fake<ErrorHandler>();
             handler = A.Fake<FragmentHandler>();
 
@@ -71,7 +71,7 @@ namespace Adaptive.Aeron.Tests.LogBuffer
             Assert.That(TermReader.Offset(readOutcome), Is.EqualTo(termOffset));
 
             A.CallTo(() => termBuffer.GetIntVolatile(0)).MustHaveHappened();
-            A.CallTo(() => handler(A<IDirectBuffer>._, A<int>._, A<int>._, A<Header>._)).MustNotHaveHappened();
+            A.CallTo(() => handler(A<UnsafeBuffer>._, A<int>._, A<int>._, A<Header>._)).MustNotHaveHappened();
         }
 
         [Test]
@@ -150,7 +150,7 @@ namespace Adaptive.Aeron.Tests.LogBuffer
             Assert.That(TermReader.Offset(readOutcome), Is.EqualTo(TERM_BUFFER_CAPACITY));
 
             A.CallTo(() => termBuffer.GetIntVolatile(frameOffset)).MustHaveHappened();
-            A.CallTo(() => handler(A<IDirectBuffer>._, A<int>._, A<int>._, A<Header>._)).MustNotHaveHappened();
+            A.CallTo(() => handler(A<UnsafeBuffer>._, A<int>._, A<int>._, A<Header>._)).MustNotHaveHappened();
         }
     }
 }

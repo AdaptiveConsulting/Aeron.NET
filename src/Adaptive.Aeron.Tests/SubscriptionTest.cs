@@ -45,20 +45,20 @@ namespace Adaptive.Aeron.Tests
         }
 
         [Test]
-        public virtual void ShouldEnsureTheSubscriptionIsOpenWhenPolling()
+        public void ShouldEnsureTheSubscriptionIsOpenWhenPolling()
         {
             Subscription.Dispose();
             Assert.True(Subscription.Closed);
         }
 
         [Test]
-        public virtual void ShouldReadNothingWhenNoImages()
+        public void ShouldReadNothingWhenNoImages()
         {
             Assert.AreEqual(Subscription.Poll(FragmentHandler, 1), 0);
         }
 
         [Test]
-        public virtual void ShouldReadNothingWhenThereIsNoData()
+        public void ShouldReadNothingWhenThereIsNoData()
         {
             Subscription.AddImage(ImageOneMock);
 
@@ -69,7 +69,7 @@ namespace Adaptive.Aeron.Tests
         }
 
         [Test]
-        public virtual void ShouldReadData()
+        public void ShouldReadData()
         {
             Subscription.AddImage(ImageOneMock);
 
@@ -86,7 +86,7 @@ namespace Adaptive.Aeron.Tests
         }
 
         [Test]
-        public virtual void ShouldReadDataFromMultipleSources()
+        public void ShouldReadDataFromMultipleSources()
         {
             Subscription.AddImage(ImageOneMock);
             Subscription.AddImage(ImageTwoMock);

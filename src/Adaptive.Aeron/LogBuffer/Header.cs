@@ -118,7 +118,11 @@ namespace Adaptive.Aeron.LogBuffer
         /// can be used for both flags.
         /// </summary>
         /// <returns> the flags for this frame. </returns>
+#if DEBUG
         public virtual byte Flags => Buffer.GetByte(Offset + HeaderFlyweight.FLAGS_FIELD_OFFSET);
+#else
+        public byte Flags => Buffer.GetByte(Offset + HeaderFlyweight.FLAGS_FIELD_OFFSET);
+#endif
 
         /// <summary>
         /// Get the value stored in the reserve space at the end of a data frame header.

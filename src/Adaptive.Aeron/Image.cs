@@ -136,7 +136,11 @@ namespace Adaptive.Aeron
         /// <param name="fragmentLimit">   for the number of fragments to be consumed during one polling operation. </param>
         /// <returns> the number of fragments that have been consumed. </returns>
         /// <seealso cref="FragmentAssembler" />
+#if DEBUG
         public virtual int Poll(FragmentHandler fragmentHandler, int fragmentLimit)
+#else
+        public int Poll(FragmentHandler fragmentHandler, int fragmentLimit)
+#endif
         {
             if (_isClosed)
             {

@@ -66,7 +66,7 @@ namespace Adaptive.Aeron.Tests
 
 
         [SetUp]
-        public virtual void SetUp()
+        public void SetUp()
         {
             MockClientErrorHandler = A.Fake<ErrorHandler>(options => options.Wrapping(throwable =>
             {
@@ -156,7 +156,7 @@ namespace Adaptive.Aeron.Tests
         // --------------------------------
 
         [Test]
-        public virtual void AddPublicationShouldNotifyMediaDriver()
+        public void AddPublicationShouldNotifyMediaDriver()
         {
             WhenReceiveBroadcastOnMessage(ControlProtocolEvents.ON_PUBLICATION_READY, PublicationReadyBuffer, (buffer) => PublicationReady.Length());
 
@@ -166,7 +166,7 @@ namespace Adaptive.Aeron.Tests
         }
 
         [Test]
-        public virtual void AddPublicationShouldMapLogFile()
+        public void AddPublicationShouldMapLogFile()
         {
             WhenReceiveBroadcastOnMessage(ControlProtocolEvents.ON_PUBLICATION_READY, PublicationReadyBuffer, (buffer) => PublicationReady.Length());
 
@@ -178,13 +178,13 @@ namespace Adaptive.Aeron.Tests
 
         [Test]
         [ExpectedException(typeof(DriverTimeoutException))]
-        public virtual void AddPublicationShouldTimeoutWithoutReadyMessage()
+        public void AddPublicationShouldTimeoutWithoutReadyMessage()
         {
             Conductor.AddPublication(CHANNEL, STREAM_ID_1);
         }
 
         [Test]
-        public virtual void ConductorShouldCachePublicationInstances()
+        public void ConductorShouldCachePublicationInstances()
         {
             WhenReceiveBroadcastOnMessage(ControlProtocolEvents.ON_PUBLICATION_READY, PublicationReadyBuffer, (buffer) => PublicationReady.Length());
 
@@ -195,7 +195,7 @@ namespace Adaptive.Aeron.Tests
         }
 
         [Test]
-        public virtual void ClosingPublicationShouldNotifyMediaDriver()
+        public void ClosingPublicationShouldNotifyMediaDriver()
         {
             WhenReceiveBroadcastOnMessage(ControlProtocolEvents.ON_PUBLICATION_READY, PublicationReadyBuffer, (buffer) => PublicationReady.Length());
 
@@ -209,7 +209,7 @@ namespace Adaptive.Aeron.Tests
         }
 
         [Test]
-        public virtual void ClosingPublicationShouldPurgeCache()
+        public void ClosingPublicationShouldPurgeCache()
         {
             WhenReceiveBroadcastOnMessage(ControlProtocolEvents.ON_PUBLICATION_READY, PublicationReadyBuffer, (buffer) => PublicationReady.Length());
 
@@ -228,7 +228,7 @@ namespace Adaptive.Aeron.Tests
 
         [Test]
         [ExpectedException(typeof(RegistrationException))]
-        public virtual void ShouldFailToClosePublicationOnMediaDriverError()
+        public void ShouldFailToClosePublicationOnMediaDriverError()
         {
             WhenReceiveBroadcastOnMessage(ControlProtocolEvents.ON_PUBLICATION_READY, PublicationReadyBuffer, (buffer) => PublicationReady.Length());
 
@@ -248,7 +248,7 @@ namespace Adaptive.Aeron.Tests
 
         [Test]
         [ExpectedException(typeof(RegistrationException))]
-        public virtual void ShouldFailToAddPublicationOnMediaDriverError()
+        public void ShouldFailToAddPublicationOnMediaDriverError()
         {
             WhenReceiveBroadcastOnMessage(ControlProtocolEvents.ON_ERROR, ErrorMessageBuffer, (buffer) =>
             {
@@ -262,7 +262,7 @@ namespace Adaptive.Aeron.Tests
         }
 
         [Test]
-        public virtual void PublicationOnlyRemovedOnLastClose()
+        public void PublicationOnlyRemovedOnLastClose()
         {
             WhenReceiveBroadcastOnMessage(ControlProtocolEvents.ON_PUBLICATION_READY, PublicationReadyBuffer, (buffer) => PublicationReady.Length());
 
@@ -281,7 +281,7 @@ namespace Adaptive.Aeron.Tests
 
 
         [Test]
-        public virtual void ClosingPublicationDoesNotRemoveOtherPublications()
+        public void ClosingPublicationDoesNotRemoveOtherPublications()
         {
             WhenReceiveBroadcastOnMessage(ControlProtocolEvents.ON_PUBLICATION_READY, PublicationReadyBuffer, (buffer) => PublicationReady.Length());
 
@@ -307,7 +307,7 @@ namespace Adaptive.Aeron.Tests
         }
 
         [Test]
-        public virtual void ShouldNotMapBuffersForUnknownCorrelationId()
+        public void ShouldNotMapBuffersForUnknownCorrelationId()
         {
             WhenReceiveBroadcastOnMessage(ControlProtocolEvents.ON_PUBLICATION_READY, PublicationReadyBuffer, (buffer) =>
             {
@@ -333,7 +333,7 @@ namespace Adaptive.Aeron.Tests
         // ---------------------------------
 
         [Test]
-        public virtual void AddSubscriptionShouldNotifyMediaDriver()
+        public void AddSubscriptionShouldNotifyMediaDriver()
         {
             WhenReceiveBroadcastOnMessage(ControlProtocolEvents.ON_OPERATION_SUCCESS, CorrelatedMessageBuffer, (buffer) =>
             {
@@ -347,7 +347,7 @@ namespace Adaptive.Aeron.Tests
         }
 
         [Test]
-        public virtual void ClosingSubscriptionShouldNotifyMediaDriver()
+        public void ClosingSubscriptionShouldNotifyMediaDriver()
         {
             WhenReceiveBroadcastOnMessage(ControlProtocolEvents.ON_OPERATION_SUCCESS, CorrelatedMessageBuffer, (buffer) =>
             {
@@ -370,14 +370,14 @@ namespace Adaptive.Aeron.Tests
 
         [Test]
         [ExpectedException(typeof(DriverTimeoutException))]
-        public virtual void AddSubscriptionShouldTimeoutWithoutOperationSuccessful()
+        public void AddSubscriptionShouldTimeoutWithoutOperationSuccessful()
         {
             Conductor.AddSubscription(CHANNEL, STREAM_ID_1);
         }
 
         [Test]
         [ExpectedException(typeof(RegistrationException))]
-        public virtual void ShouldFailToAddSubscriptionOnMediaDriverError()
+        public void ShouldFailToAddSubscriptionOnMediaDriverError()
         {
             WhenReceiveBroadcastOnMessage(ControlProtocolEvents.ON_ERROR, ErrorMessageBuffer, (buffer) =>
             {
@@ -391,7 +391,7 @@ namespace Adaptive.Aeron.Tests
         }
 
         [Test]
-        public virtual void ClientNotifiedOfNewImageShouldMapLogFile()
+        public void ClientNotifiedOfNewImageShouldMapLogFile()
         {
             WhenReceiveBroadcastOnMessage(ControlProtocolEvents.ON_OPERATION_SUCCESS, CorrelatedMessageBuffer, (buffer) =>
             {
@@ -407,7 +407,7 @@ namespace Adaptive.Aeron.Tests
         }
 
         [Test]
-        public virtual void ClientNotifiedOfNewAndInactiveImages()
+        public void ClientNotifiedOfNewAndInactiveImages()
         {
             WhenReceiveBroadcastOnMessage(ControlProtocolEvents.ON_OPERATION_SUCCESS, CorrelatedMessageBuffer, (buffer) =>
             {
@@ -433,7 +433,7 @@ namespace Adaptive.Aeron.Tests
         }
 
         [Test]
-        public virtual void ShouldIgnoreUnknownNewImage()
+        public void ShouldIgnoreUnknownNewImage()
         {
             Conductor.OnAvailableImage(STREAM_ID_2, SESSION_ID_2, SubscriberPositionMap, SESSION_ID_2 + "-log", SOURCE_INFO, CORRELATION_ID_2);
 
@@ -442,7 +442,7 @@ namespace Adaptive.Aeron.Tests
         }
 
         [Test]
-        public virtual void ShouldIgnoreUnknownInactiveImage()
+        public void ShouldIgnoreUnknownInactiveImage()
         {
             Conductor.OnUnavailableImage(STREAM_ID_2, CORRELATION_ID_2);
 
@@ -452,7 +452,7 @@ namespace Adaptive.Aeron.Tests
 
 
         [Test]
-        public virtual void ShouldTimeoutInterServiceIfTooLongBetweenDoWorkCalls()
+        public void ShouldTimeoutInterServiceIfTooLongBetweenDoWorkCalls()
         {
             SuppressPrintError = true;
 

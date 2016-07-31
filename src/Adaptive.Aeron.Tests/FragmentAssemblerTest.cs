@@ -31,7 +31,7 @@ namespace Adaptive.Aeron.Tests
         }
 
         [Test]
-        public virtual void ShouldPassThroughUnfragmentedMessage()
+        public void ShouldPassThroughUnfragmentedMessage()
         {
             A.CallTo(() => header.Flags).Returns(FrameDescriptor.UNFRAGMENTED);
 
@@ -46,7 +46,7 @@ namespace Adaptive.Aeron.Tests
         }
 
         [Test]
-        public virtual void ShouldAssembleTwoPartMessage()
+        public void ShouldAssembleTwoPartMessage()
         {
             A.CallTo(() => header.Flags).ReturnsNextFromSequence(FrameDescriptor.BEGIN_FRAG_FLAG, FrameDescriptor.END_FRAG_FLAG, FrameDescriptor.END_FRAG_FLAG);
             // Need to add this twice because FakeItEasy doesn't fall back to the implementation
@@ -84,7 +84,7 @@ namespace Adaptive.Aeron.Tests
         }
 
         [Test]
-        public virtual void ShouldAssembleFourPartMessage()
+        public void ShouldAssembleFourPartMessage()
         {
             A.CallTo(() => header.Flags).ReturnsNextFromSequence<byte>(FrameDescriptor.BEGIN_FRAG_FLAG, 0, 0, FrameDescriptor.END_FRAG_FLAG, FrameDescriptor.END_FRAG_FLAG);
 
@@ -127,7 +127,7 @@ namespace Adaptive.Aeron.Tests
         }
 
         [Test]
-        public virtual void ShouldFreeSessionBuffer()
+        public void ShouldFreeSessionBuffer()
         {
             A.CallTo(() => header.Flags).ReturnsNextFromSequence(FrameDescriptor.BEGIN_FRAG_FLAG, FrameDescriptor.END_FRAG_FLAG);
 
@@ -148,7 +148,7 @@ namespace Adaptive.Aeron.Tests
         }
 
         [Test]
-        public virtual void ShouldDoNotingIfEndArrivesWithoutBegin()
+        public void ShouldDoNotingIfEndArrivesWithoutBegin()
         {
             A.CallTo(() => header.Flags).Returns(FrameDescriptor.END_FRAG_FLAG);
             var srcBuffer = new UnsafeBuffer(new byte[1024]);
@@ -157,11 +157,11 @@ namespace Adaptive.Aeron.Tests
 
             adapter.OnFragment(srcBuffer, offset, length, header);
 
-            A.CallTo(() => delegateFragmentHandler(A<IDirectBuffer>._, A<int>._, A<int>._, A<Header>._)).MustNotHaveHappened();
+            A.CallTo(() => delegateFragmentHandler(A<UnsafeBuffer>._, A<int>._, A<int>._, A<Header>._)).MustNotHaveHappened();
         }
 
         [Test]
-        public virtual void ShouldDoNotingIfMidArrivesWithoutBegin()
+        public void ShouldDoNotingIfMidArrivesWithoutBegin()
         {
             A.CallTo(() => header.Flags).Returns(FrameDescriptor.END_FRAG_FLAG);
             var srcBuffer = new UnsafeBuffer(new byte[1024]);
@@ -171,7 +171,7 @@ namespace Adaptive.Aeron.Tests
             adapter.OnFragment(srcBuffer, offset, length, header);
             adapter.OnFragment(srcBuffer, offset, length, header);
 
-            A.CallTo(() => delegateFragmentHandler(A<IDirectBuffer>._, A<int>._, A<int>._, A<Header>._)).MustNotHaveHappened();
+            A.CallTo(() => delegateFragmentHandler(A<UnsafeBuffer>._, A<int>._, A<int>._, A<Header>._)).MustNotHaveHappened();
         }
     }
 }

@@ -207,7 +207,7 @@ namespace Adaptive.Aeron
         /// <returns> The new stream position, otherwise <seealso cref="NOT_CONNECTED"/>, <seealso cref="BACK_PRESSURED"/>,
         /// <seealso cref="ADMIN_ACTION"/> or <seealso cref="CLOSED"/>. </returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public long Offer(IDirectBuffer buffer)
+        public long Offer(UnsafeBuffer buffer)
         {
             return Offer(buffer, 0, buffer.Capacity);
         }
@@ -221,7 +221,7 @@ namespace Adaptive.Aeron
         /// <returns> The new stream position, otherwise a negative error value <seealso cref="NOT_CONNECTED"/>, <seealso cref="BACK_PRESSURED"/>,
         /// <seealso cref="ADMIN_ACTION"/> or <seealso cref="CLOSED"/>. </returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public long Offer(IDirectBuffer buffer, int offset, int length, ReservedValueSupplier reservedValueSupplier = null)
+        public long Offer(UnsafeBuffer buffer, int offset, int length, ReservedValueSupplier reservedValueSupplier = null)
         {
             var newPosition = CLOSED;
             if (!_isClosed)
