@@ -44,10 +44,10 @@ namespace Adaptive.Aeron.LogBuffer
             var offset = 0;
             TERM_TAIL_COUNTERS_OFFSET = offset;
 
-            offset += BitUtil.CACHE_LINE_LENGTH * 2;
+            offset += (BitUtil.SIZE_OF_LONG * PARTITION_COUNT);
             LOG_ACTIVE_PARTITION_INDEX_OFFSET = offset;
 
-            offset += (BitUtil.CACHE_LINE_LENGTH*2);
+            offset = (BitUtil.CACHE_LINE_LENGTH * 2);
             LOG_TIME_OF_LAST_SM_OFFSET = offset;
 
             offset += (BitUtil.CACHE_LINE_LENGTH*2);
