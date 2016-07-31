@@ -14,13 +14,12 @@ namespace Adaptive.Aeron.Tests
         private const int TermID1 = 1;
         private const int CorrelationID = 2000;
         private const int SendBufferCapacity = 1024;
+        private const int PartionIndex = 0;
 
         private byte[] _sendBuffer;
         private UnsafeBuffer _atomicSendBuffer;
         private UnsafeBuffer _logMetaDataBuffer;
         private UnsafeBuffer[] _termBuffers;
-        private UnsafeBuffer[] _termMetaDataBuffers;
-        private UnsafeBuffer[] _buffers;
 
         private ClientConductor _conductor;
         private LogBuffers _logBuffers;
@@ -34,16 +33,15 @@ namespace Adaptive.Aeron.Tests
             _atomicSendBuffer = new UnsafeBuffer(_sendBuffer);
             _logMetaDataBuffer = new UnsafeBuffer(new byte[LogBufferDescriptor.LOG_META_DATA_LENGTH]);
             _termBuffers = new UnsafeBuffer[LogBufferDescriptor.PARTITION_COUNT];
-            _termMetaDataBuffers = new UnsafeBuffer[LogBufferDescriptor.PARTITION_COUNT];
-            _buffers = new UnsafeBuffer[LogBufferDescriptor.PARTITION_COUNT*2 + 1];
 
             _conductor = A.Fake<ClientConductor>();
             _logBuffers = A.Fake<LogBuffers>();
             _publicationLimit = A.Fake<IReadablePosition>();
 
             A.CallTo(() => _publicationLimit.Volatile).Returns(2*SendBufferCapacity);
-            A.CallTo(() => _logBuffers.AtomicBuffers()).Returns(_buffers);
+            A.CallTo(() => _logBuffers.TermBuffers()).Returns(_termBuffers);
             A.CallTo(() => _logBuffers.TermLength()).Returns(LogBufferDescriptor.TERM_MIN_LENGTH);
+            A.CallTo(() => _logBuffers.MetaDataBuffer()).Returns(_logMetaDataBuffer);
 
             LogBufferDescriptor.InitialTermId(_logMetaDataBuffer, TermID1);
             LogBufferDescriptor.TimeOfLastStatusMessage(_logMetaDataBuffer, 0);
@@ -51,18 +49,13 @@ namespace Adaptive.Aeron.Tests
             for (var i = 0; i < LogBufferDescriptor.PARTITION_COUNT; i++)
             {
                 _termBuffers[i] = new UnsafeBuffer(new byte[LogBufferDescriptor.TERM_MIN_LENGTH]);
-                _termMetaDataBuffers[i] = new UnsafeBuffer(new byte[LogBufferDescriptor.TERM_META_DATA_LENGTH]);
-
-                _buffers[i] = _termBuffers[i];
-                _buffers[i + LogBufferDescriptor.PARTITION_COUNT] = _termMetaDataBuffers[i];
             }
-            _buffers[LogBufferDescriptor.LOG_META_DATA_SECTION_INDEX] = _logMetaDataBuffer;
 
             _publication = new Publication(_conductor, Channel, StreamID1, SessionID1, _publicationLimit, _logBuffers, CorrelationID);
 
             _publication.IncRef();
 
-            LogBufferDescriptor.InitialiseTailWithTermId(_termMetaDataBuffers[0], TermID1);
+            LogBufferDescriptor.InitialiseTailWithTermId(_logMetaDataBuffer, PartionIndex, TermID1);
         }
 
         [Test]

@@ -57,12 +57,12 @@ namespace Adaptive.Aeron
 
         internal Publication(ClientConductor clientConductor, string channel, int streamId, int sessionId, IReadablePosition positionLimit, LogBuffers logBuffers, long registrationId)
         {
-            var buffers = logBuffers.AtomicBuffers();
-            var logMetaDataBuffer = buffers[LogBufferDescriptor.LOG_META_DATA_SECTION_INDEX];
+            var buffers = logBuffers.TermBuffers();
+            var logMetaDataBuffer = logBuffers.MetaDataBuffer();
 
             for (var i = 0; i < LogBufferDescriptor.PARTITION_COUNT; i++)
             {
-                _termAppenders[i] = new TermAppender(buffers[i], buffers[i + LogBufferDescriptor.PARTITION_COUNT]);
+                _termAppenders[i] = new TermAppender(buffers[i], logMetaDataBuffer, i);
             }
 
             var termLength = logBuffers.TermLength();
@@ -174,7 +174,7 @@ namespace Adaptive.Aeron
                     return CLOSED;
                 }
 
-                var rawTail = _termAppenders[LogBufferDescriptor.ActivePartitionIndex(_logMetaDataBuffer)].RawTailVolatile();
+                var rawTail = LogBufferDescriptor.RawTailVolatile(_logMetaDataBuffer);
                 var termOffset = LogBufferDescriptor.TermOffset(rawTail, _logBuffers.TermLength());
 
                 return LogBufferDescriptor.ComputePosition(LogBufferDescriptor.TermId(rawTail), termOffset, _positionBitsToShift, InitialTermId);

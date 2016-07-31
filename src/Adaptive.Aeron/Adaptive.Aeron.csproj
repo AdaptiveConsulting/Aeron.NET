@@ -98,7 +98,6 @@
     <Compile Include="LogBuffer\IControlledFragmentHandler.cs" />
     <Compile Include="LogBuffer\FragmentHandler.cs" />
     <Compile Include="LogBuffer\LogBufferDescriptor.cs" />
-    <Compile Include="LogBuffer\LogBufferPartition.cs" />
     <Compile Include="LogBuffer\TermAppender.cs" />
     <Compile Include="LogBuffer\TermBlockScanner.cs" />
     <Compile Include="LogBuffer\TermReader.cs" />

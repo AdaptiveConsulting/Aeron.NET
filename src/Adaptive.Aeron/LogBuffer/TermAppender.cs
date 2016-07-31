@@ -31,6 +31,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// </summary>
         public const int FAILED = -2;
 
+        private readonly long tailAddressOffset;
         private readonly UnsafeBuffer _termBuffer;
         private readonly UnsafeBuffer _metaDataBuffer;
 
@@ -39,30 +40,14 @@ namespace Adaptive.Aeron.LogBuffer
         /// </summary>
         /// <param name="termBuffer">     for where messages are stored. </param>
         /// <param name="metaDataBuffer"> for where the state of writers is stored manage concurrency. </param>
-        public TermAppender(UnsafeBuffer termBuffer, UnsafeBuffer metaDataBuffer)
+        /// <param name="partitionIndex"> for this will be the active appender.</param>
+        public TermAppender(UnsafeBuffer termBuffer, UnsafeBuffer metaDataBuffer, int partitionIndex)
         {
-            this._termBuffer = termBuffer;
-            this._metaDataBuffer = metaDataBuffer;
-        }
-
-        /// <summary>
-        /// The log of messages for a term.
-        /// </summary>
-        /// <returns> the log of messages for a term. </returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public IAtomicBuffer TermBuffer()
-        {
-            return _termBuffer;
-        }
-
-        /// <summary>
-        /// The meta data describing the term.
-        /// </summary>
-        /// <returns> the meta data describing the term. </returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public IAtomicBuffer MetaDataBuffer()
-        {
-            return _metaDataBuffer;
+            var tailCounterOffset = LogBufferDescriptor.TERM_TAIL_COUNTERS_OFFSET + partitionIndex * BitUtil.SIZE_OF_LONG;
+            metaDataBuffer.BoundsCheck(tailCounterOffset, BitUtil.SIZE_OF_LONG);
+            _termBuffer = termBuffer;
+            _metaDataBuffer = metaDataBuffer;
+            tailAddressOffset = tailCounterOffset; // TODO divergence
         }
 
         /// <summary>
@@ -72,7 +57,7 @@ namespace Adaptive.Aeron.LogBuffer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public long RawTailVolatile()
         {
-            return _metaDataBuffer.GetLongVolatile(LogBufferDescriptor.TERM_TAIL_COUNTER_OFFSET);
+            return _metaDataBuffer.GetLongVolatile((int)tailAddressOffset);
         }
 
         /// <summary>
@@ -82,7 +67,7 @@ namespace Adaptive.Aeron.LogBuffer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void TailTermId(int termId)
         {
-            _metaDataBuffer.PutLong(LogBufferDescriptor.TERM_TAIL_COUNTER_OFFSET, ((long) termId) << 32);
+            _metaDataBuffer.PutLong((int)tailAddressOffset, ((long) termId) << 32);
         }
         
         /// <summary>
@@ -303,7 +288,7 @@ namespace Adaptive.Aeron.LogBuffer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private long GetAndAddRawTail(int alignedLength)
         {
-            return _metaDataBuffer.GetAndAddLong(LogBufferDescriptor.TERM_TAIL_COUNTER_OFFSET, alignedLength);
+            return _metaDataBuffer.GetAndAddLong((int)tailAddressOffset, alignedLength);
         }
     }
 }

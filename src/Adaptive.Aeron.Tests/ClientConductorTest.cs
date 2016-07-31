@@ -17,16 +17,15 @@ namespace Adaptive.Aeron.Tests
     public class ClientConductorTest
     {
         private static readonly int TERM_BUFFER_LENGTH = LogBufferDescriptor.TERM_MIN_LENGTH;
-        private static readonly int NUM_BUFFERS = (LogBufferDescriptor.PARTITION_COUNT*2) + 1;
 
         protected internal const int SESSION_ID_1 = 13;
         protected internal const int SESSION_ID_2 = 15;
 
-        private const int COUNTER_BUFFER_LENGTH = 1024;
         private const string CHANNEL = "aeron:udp?endpoint=localhost:40124";
         private const int STREAM_ID_1 = 2;
         private const int STREAM_ID_2 = 4;
         private const int SEND_BUFFER_CAPACITY = 1024;
+        private const int COUNTER_BUFFER_LENGTH = 1024;
 
         private const long CORRELATION_ID = 2000;
         private const long CORRELATION_ID_2 = 2002;
@@ -117,38 +116,34 @@ namespace Adaptive.Aeron.Tests
 
             CorrelatedMessage.CorrelationId(CLOSE_CORRELATION_ID);
 
-            var atomicBuffersSession1 = new UnsafeBuffer[NUM_BUFFERS];
-            var atomicBuffersSession2 = new UnsafeBuffer[NUM_BUFFERS];
+            var termBuffersSession1 = new UnsafeBuffer[LogBufferDescriptor.PARTITION_COUNT];
+            var termBuffersSession2 = new UnsafeBuffer[LogBufferDescriptor.PARTITION_COUNT];
 
             for (var i = 0; i < LogBufferDescriptor.PARTITION_COUNT; i++)
             {
-                var termBuffersSession1 = new UnsafeBuffer(new byte[TERM_BUFFER_LENGTH]);
-                var metaDataBuffersSession1 = new UnsafeBuffer(new byte[LogBufferDescriptor.TERM_META_DATA_LENGTH]);
-                var termBuffersSession2 = new UnsafeBuffer(new byte[TERM_BUFFER_LENGTH]);
-                var metaDataBuffersSession2 = new UnsafeBuffer(new byte[LogBufferDescriptor.TERM_META_DATA_LENGTH]);
-
-                atomicBuffersSession1[i] = termBuffersSession1;
-                atomicBuffersSession1[i + LogBufferDescriptor.PARTITION_COUNT] = metaDataBuffersSession1;
-                atomicBuffersSession2[i] = termBuffersSession2;
-                atomicBuffersSession2[i + LogBufferDescriptor.PARTITION_COUNT] = metaDataBuffersSession2;
+               termBuffersSession1[i] = new UnsafeBuffer(new byte[TERM_BUFFER_LENGTH]);
+               termBuffersSession2[i] = new UnsafeBuffer(new byte[TERM_BUFFER_LENGTH]);
             }
 
-            atomicBuffersSession1[LogBufferDescriptor.LOG_META_DATA_SECTION_INDEX] = new UnsafeBuffer(new byte[TERM_BUFFER_LENGTH]);
-            atomicBuffersSession2[LogBufferDescriptor.LOG_META_DATA_SECTION_INDEX] = new UnsafeBuffer(new byte[TERM_BUFFER_LENGTH]);
+            UnsafeBuffer logMetaDataSession1 = new UnsafeBuffer(new byte[TERM_BUFFER_LENGTH]);
+            UnsafeBuffer logMetaDataSession2 = new UnsafeBuffer(new byte[TERM_BUFFER_LENGTH]);
 
             IMutableDirectBuffer header1 = DataHeaderFlyweight.CreateDefaultHeader(SESSION_ID_1, STREAM_ID_1, 0);
             IMutableDirectBuffer header2 = DataHeaderFlyweight.CreateDefaultHeader(SESSION_ID_2, STREAM_ID_2, 0);
 
-            LogBufferDescriptor.StoreDefaultFrameHeader(atomicBuffersSession1[LogBufferDescriptor.LOG_META_DATA_SECTION_INDEX], header1);
-            LogBufferDescriptor.StoreDefaultFrameHeader(atomicBuffersSession2[LogBufferDescriptor.LOG_META_DATA_SECTION_INDEX], header2);
+            LogBufferDescriptor.StoreDefaultFrameHeader(logMetaDataSession1, header1);
+            LogBufferDescriptor.StoreDefaultFrameHeader(logMetaDataSession2, header2);
 
             var logBuffersSession1 = A.Fake<LogBuffers>();
             var logBuffersSession2 = A.Fake<LogBuffers>();
 
             A.CallTo(() => LogBuffersFactory.Map(SESSION_ID_1 + "-log", A<MapMode>._)).Returns(logBuffersSession1);
             A.CallTo(() => LogBuffersFactory.Map(SESSION_ID_2 + "-log", A<MapMode>._)).Returns(logBuffersSession2);
-            A.CallTo(() => logBuffersSession1.AtomicBuffers()).Returns(atomicBuffersSession1);
-            A.CallTo(() => logBuffersSession2.AtomicBuffers()).Returns(atomicBuffersSession2);
+            A.CallTo(() => logBuffersSession1.TermBuffers()).Returns(termBuffersSession1);
+            A.CallTo(() => logBuffersSession2.TermBuffers()).Returns(termBuffersSession2);
+
+            A.CallTo(() => logBuffersSession1.MetaDataBuffer()).Returns(logMetaDataSession1);
+            A.CallTo(() => logBuffersSession2.MetaDataBuffer()).Returns(logMetaDataSession2);
         }
 
         // --------------------------------

@@ -40,8 +40,8 @@ namespace Adaptive.Aeron.Tests
         private ErrorHandler ErrorHandler;
         private Subscription Subscription;
 
-        private UnsafeBuffer[] AtomicBuffers;
         private UnsafeBuffer[] TermBuffers;
+        private UnsafeBuffer logMetaDataBuffer;
 
         [SetUp]
         public void SetUp()
@@ -55,23 +55,20 @@ namespace Adaptive.Aeron.Tests
             ErrorHandler = A.Fake<ErrorHandler>();
             Subscription = A.Fake<Subscription>();
 
-            AtomicBuffers = new UnsafeBuffer[(LogBufferDescriptor.PARTITION_COUNT * 2) + 1];
             TermBuffers = new UnsafeBuffer[LogBufferDescriptor.PARTITION_COUNT];
 
             DataHeader.Wrap(RcvBuffer);
 
             for (var i = 0; i < LogBufferDescriptor.PARTITION_COUNT; i++)
             {
-                AtomicBuffers[i] = new UnsafeBuffer(new byte[TERM_BUFFER_LENGTH]);
-                TermBuffers[i] = AtomicBuffers[i];
-
-                AtomicBuffers[i + LogBufferDescriptor.PARTITION_COUNT] = new UnsafeBuffer(new byte[LogBufferDescriptor.TERM_META_DATA_LENGTH]);
+                TermBuffers[i] = new UnsafeBuffer(new byte[TERM_BUFFER_LENGTH]);
             }
 
-            AtomicBuffers[LogBufferDescriptor.LOG_META_DATA_SECTION_INDEX] = new UnsafeBuffer(new byte[LogBufferDescriptor.LOG_META_DATA_LENGTH]);
-
-            A.CallTo(() => LogBuffers.AtomicBuffers()).Returns(AtomicBuffers);
+            logMetaDataBuffer = new UnsafeBuffer(new byte[LogBufferDescriptor.LOG_META_DATA_LENGTH]);
+            
+            A.CallTo(() => LogBuffers.TermBuffers()).Returns(TermBuffers);
             A.CallTo(() => LogBuffers.TermLength()).Returns(TERM_BUFFER_LENGTH);
+            A.CallTo(() => LogBuffers.MetaDataBuffer()).Returns(logMetaDataBuffer);
         }
 
         [Test]
