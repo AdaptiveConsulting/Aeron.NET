@@ -296,14 +296,14 @@ namespace Adaptive.Aeron
             return workCount;
         }
 
-        private void AwaitResponse(long correlationId, string expectedChannel, bool slowOperation)
+        private void AwaitResponse(long correlationId, string expectedChannel, bool isSlowOperation)
         {
             _driverException = null;
             var timeout = _nanoClock.NanoTime() + _driverTimeoutNs;
 
             do
             {
-                if (slowOperation)
+                if (isSlowOperation)
                 {
                     Thread.Sleep(1);
                 }
