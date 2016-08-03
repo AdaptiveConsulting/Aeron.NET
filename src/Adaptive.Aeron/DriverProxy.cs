@@ -9,22 +9,19 @@ namespace Adaptive.Aeron
     /// Separates the concern of communicating with the client conductor away from the rest of the client.
     /// 
     /// Writes messages into the client conductor buffer.
+    /// 
+    /// Note: this class is not thread safe and is expecting to be called under the {@link ClientConductor} main lock.
     /// </summary>
     public class DriverProxy
     {
         /// <summary>
         /// Maximum capacity of the write buffer </summary>
-        public const int MSG_BUFFER_CAPACITY = 4096;
-
-        private readonly long _clientId;
+        public const int MSG_BUFFER_CAPACITY = 1024;
+        
         private readonly UnsafeBuffer _buffer = new UnsafeBuffer(new byte[MSG_BUFFER_CAPACITY]);
         private readonly PublicationMessageFlyweight _publicationMessage = new PublicationMessageFlyweight();
         private readonly SubscriptionMessageFlyweight _subscriptionMessage = new SubscriptionMessageFlyweight();
-
         private readonly RemoveMessageFlyweight _removeMessage = new RemoveMessageFlyweight();
-        // the heartbeats come from the client conductor thread, so keep the flyweights and buffer separate
-        private readonly UnsafeBuffer _keepaliveBuffer = new UnsafeBuffer(new byte[MSG_BUFFER_CAPACITY]);
-
         private readonly CorrelatedMessageFlyweight _correlatedMessage = new CorrelatedMessageFlyweight();
         private readonly IRingBuffer _toDriverCommandBuffer;
 
@@ -37,10 +34,11 @@ namespace Adaptive.Aeron
             _publicationMessage.Wrap(_buffer, 0);
             _subscriptionMessage.Wrap(_buffer, 0);
 
-            _correlatedMessage.Wrap(_keepaliveBuffer, 0);
+            _correlatedMessage.Wrap(_buffer, 0);
             _removeMessage.Wrap(_buffer, 0);
 
-            _clientId = toDriverCommandBuffer.NextCorrelationId();
+            var clientId = toDriverCommandBuffer.NextCorrelationId();
+            _correlatedMessage.ClientId(clientId);
         }
 
         public long TimeOfLastDriverKeepalive()
@@ -56,7 +54,7 @@ namespace Adaptive.Aeron
         {
             long correlationId = _toDriverCommandBuffer.NextCorrelationId();
 
-            _publicationMessage.ClientId(_clientId).CorrelationId(correlationId);
+            _publicationMessage.CorrelationId(correlationId);
 
             _publicationMessage.StreamId(streamId).Channel(channel);
 
@@ -75,8 +73,8 @@ namespace Adaptive.Aeron
 #endif
         {
             long correlationId = _toDriverCommandBuffer.NextCorrelationId();
-            _removeMessage.CorrelationId(correlationId);
-            _removeMessage.RegistrationId(registrationId);
+
+            _removeMessage.RegistrationId(registrationId).CorrelationId(correlationId);
 
             if (!_toDriverCommandBuffer.Write(ControlProtocolEvents.REMOVE_PUBLICATION, _buffer, 0, RemoveMessageFlyweight.Length()))
             {
@@ -95,7 +93,7 @@ namespace Adaptive.Aeron
             const long registrationId = -1;
             long correlationId = _toDriverCommandBuffer.NextCorrelationId();
 
-            _subscriptionMessage.ClientId(_clientId).CorrelationId(correlationId);
+            _subscriptionMessage.CorrelationId(correlationId);
 
             _subscriptionMessage.RegistrationCorrelationId(registrationId).StreamId(streamId).Channel(channel);
 
@@ -114,8 +112,8 @@ namespace Adaptive.Aeron
 #endif
         {
             long correlationId = _toDriverCommandBuffer.NextCorrelationId();
-            _removeMessage.CorrelationId(correlationId);
-            _removeMessage.RegistrationId(registrationId);
+
+            _removeMessage.RegistrationId(registrationId).CorrelationId(correlationId);
 
             if (!_toDriverCommandBuffer.Write(ControlProtocolEvents.REMOVE_SUBSCRIPTION, _buffer, 0, RemoveMessageFlyweight.Length()))
             {
@@ -127,9 +125,9 @@ namespace Adaptive.Aeron
 
         public void SendClientKeepalive()
         {
-            _correlatedMessage.ClientId(_clientId).CorrelationId(0);
+            _correlatedMessage.CorrelationId(0);
 
-            if (!_toDriverCommandBuffer.Write(ControlProtocolEvents.CLIENT_KEEPALIVE, _keepaliveBuffer, 0, CorrelatedMessageFlyweight.LENGTH))
+            if (!_toDriverCommandBuffer.Write(ControlProtocolEvents.CLIENT_KEEPALIVE, _buffer, 0, CorrelatedMessageFlyweight.LENGTH))
             {
                 throw new InvalidOperationException("could not write keepalive message");
             }

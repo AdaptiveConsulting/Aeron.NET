@@ -14,7 +14,8 @@ namespace Adaptive.Aeron
     public class LogBuffers : IDisposable
     {
         private readonly int _termLength;
-        private readonly UnsafeBuffer[] _atomicBuffers = new UnsafeBuffer[LogBufferDescriptor.PARTITION_COUNT*2 + 1];
+        private readonly UnsafeBuffer[] termBuffers = new UnsafeBuffer[LogBufferDescriptor.PARTITION_COUNT];
+        private readonly UnsafeBuffer logMetaDataBuffer;
         private readonly MappedByteBuffer[] _mappedByteBuffers;
 
         internal LogBuffers()
@@ -38,56 +39,56 @@ namespace Adaptive.Aeron
                 var mappedBuffer = IoUtil.MapExistingFile(logFileName, mapMode);
 
                 _mappedByteBuffers = new[] {mappedBuffer};
-
-                var metaDataSectionOffset = termLength*LogBufferDescriptor.PARTITION_COUNT;
-
+                
                 for (var i = 0; i < LogBufferDescriptor.PARTITION_COUNT; i++)
                 {
-                    var metaDataOffset = metaDataSectionOffset + (i*LogBufferDescriptor.TERM_META_DATA_LENGTH);
-
-                    _atomicBuffers[i] = new UnsafeBuffer(mappedBuffer.Pointer, i*termLength, termLength);
-                    _atomicBuffers[i + LogBufferDescriptor.PARTITION_COUNT] = new UnsafeBuffer(mappedBuffer.Pointer, metaDataOffset, LogBufferDescriptor.TERM_META_DATA_LENGTH);
+                    termBuffers[i] = new UnsafeBuffer(mappedBuffer.Pointer, i * termLength, termLength);
                 }
 
-                _atomicBuffers[_atomicBuffers.Length - 1] = new UnsafeBuffer(mappedBuffer.Pointer, (int) (logLength - LogBufferDescriptor.LOG_META_DATA_LENGTH), LogBufferDescriptor.LOG_META_DATA_LENGTH);
+                logMetaDataBuffer = new UnsafeBuffer(mappedBuffer.Pointer, (int)(logLength - LogBufferDescriptor.LOG_META_DATA_LENGTH), LogBufferDescriptor.LOG_META_DATA_LENGTH);
             }
             else
             {
                 _mappedByteBuffers = new MappedByteBuffer[LogBufferDescriptor.PARTITION_COUNT + 1];
-                var metaDataSectionOffset = termLength*(long) LogBufferDescriptor.PARTITION_COUNT;
-                var metaDataSectionLength = (int) (logLength - metaDataSectionOffset);
-
                 var memoryMappedFile = IoUtil.OpenMemoryMappedFile(logFileName, mapMode);
-                var metaDataMappedBuffer = new MappedByteBuffer(memoryMappedFile, metaDataSectionOffset, metaDataSectionLength);
-
-                _mappedByteBuffers[_mappedByteBuffers.Length - 1] = metaDataMappedBuffer;
-
+                
                 for (var i = 0; i < LogBufferDescriptor.PARTITION_COUNT; i++)
                 {
                     _mappedByteBuffers[i] = new MappedByteBuffer(memoryMappedFile, termLength*(long) i, termLength);
-
-                    _atomicBuffers[i] = new UnsafeBuffer(_mappedByteBuffers[i].Pointer, termLength);
-                    _atomicBuffers[i + LogBufferDescriptor.PARTITION_COUNT] = new UnsafeBuffer(metaDataMappedBuffer.Pointer, i*LogBufferDescriptor.TERM_META_DATA_LENGTH, LogBufferDescriptor.TERM_META_DATA_LENGTH);
+                    termBuffers[i] = new UnsafeBuffer(_mappedByteBuffers[i].Pointer, 0, termLength);
                 }
 
-                _atomicBuffers[_atomicBuffers.Length - 1] = new UnsafeBuffer(metaDataMappedBuffer.Pointer, metaDataSectionLength - LogBufferDescriptor.LOG_META_DATA_LENGTH, LogBufferDescriptor.LOG_META_DATA_LENGTH);
+                var metaDataMappedBuffer = new MappedByteBuffer(memoryMappedFile, logLength - LogBufferDescriptor.LOG_META_DATA_LENGTH, LogBufferDescriptor.LOG_META_DATA_LENGTH);
+                _mappedByteBuffers[_mappedByteBuffers.Length - 1] = metaDataMappedBuffer;
+                logMetaDataBuffer = new UnsafeBuffer(metaDataMappedBuffer.Pointer, 0, LogBufferDescriptor.LOG_META_DATA_LENGTH);
             }
 
             // TODO try/catch
             
-            foreach (var buffer in _atomicBuffers)
+            foreach (var buffer in termBuffers)
             {
                 buffer.VerifyAlignment();
             }
+
+            logMetaDataBuffer.VerifyAlignment();
         }
 
 #if DEBUG
-        public virtual UnsafeBuffer[] AtomicBuffers()
+        public virtual UnsafeBuffer[] TermBuffers()
 #else
-        public UnsafeBuffer[] AtomicBuffers()
+        public UnsafeBuffer[] TermBuffers()
 #endif
         {
-            return _atomicBuffers;
+            return termBuffers;
+        }
+
+#if DEBUG
+        public virtual UnsafeBuffer MetaDataBuffer()
+#else
+        public UnsafeBuffer MetaDataBuffer()
+#endif
+        {
+            return logMetaDataBuffer;
         }
 
 #if DEBUG

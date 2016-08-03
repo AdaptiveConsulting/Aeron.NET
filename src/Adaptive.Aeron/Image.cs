@@ -19,7 +19,7 @@ namespace Adaptive.Aeron
         private volatile bool _isClosed;
 
         private readonly IPosition _subscriberPosition;
-        private readonly UnsafeBuffer[] _termBuffers = new UnsafeBuffer[LogBufferDescriptor.PARTITION_COUNT];
+        private readonly UnsafeBuffer[] _termBuffers;
         private readonly Header _header;
         private readonly ErrorHandler _errorHandler;
         private readonly LogBuffers _logBuffers;
@@ -48,13 +48,12 @@ namespace Adaptive.Aeron
             SourceIdentity = sourceIdentity;
             CorrelationId = correlationId;
 
-            var buffers = logBuffers.AtomicBuffers();
-            Array.Copy(buffers, 0, _termBuffers, 0, LogBufferDescriptor.PARTITION_COUNT);
+            _termBuffers = logBuffers.TermBuffers();
 
             var termLength = logBuffers.TermLength();
             _termLengthMask = termLength - 1;
             _positionBitsToShift = IntUtil.NumberOfTrailingZeros(termLength);
-            _header = new Header(LogBufferDescriptor.InitialTermId(buffers[LogBufferDescriptor.LOG_META_DATA_SECTION_INDEX]), _positionBitsToShift);
+            _header = new Header(LogBufferDescriptor.InitialTermId(logBuffers.MetaDataBuffer()), _positionBitsToShift);
         }
 
         /// <summary>

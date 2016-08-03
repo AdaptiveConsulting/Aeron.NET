@@ -196,7 +196,7 @@ namespace Adaptive.Aeron
         /// </summary>
         /// <param name="sessionId"> associated with the Image. </param>
         /// <returns> Image associated with the given sessionId or null if no Image exist. </returns>
-        public Image GetImage(int sessionId)
+        public Image ImageBySessionId(int sessionId)
         {
             Image result = null;
 
@@ -308,13 +308,13 @@ namespace Adaptive.Aeron
             return removedImage;
         }
 
-        internal bool HasImage(int sessionId)
+        internal bool HasImage(long correlationId)
         {
             var hasImage = false;
 
             foreach (var image in _images)
             {
-                if (sessionId == image.SessionId)
+                if (correlationId == image.CorrelationId)
                 {
                     hasImage = true;
                     break;

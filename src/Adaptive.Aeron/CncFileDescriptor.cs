@@ -48,7 +48,7 @@ namespace Adaptive.Aeron
     {
         public const string CNC_FILE = "cnc.dat";
 
-        public const int CNC_VERSION = 4;
+        public const int CNC_VERSION = 5;
 
         public static readonly int CNC_VERSION_FIELD_OFFSET;
         public static readonly int CNC_METADATA_OFFSET;
@@ -128,13 +128,13 @@ namespace Adaptive.Aeron
 
         public static void FillMetaData(UnsafeBuffer cncMetaDataBuffer, int toDriverBufferLength, int toClientsBufferLength, int counterMetaDataBufferLength, int counterValuesBufferLength, long clientLivenessTimeout, int errorLogBufferLength)
         {
-            cncMetaDataBuffer.PutInt(CncVersionOffset(0), CNC_VERSION);
             cncMetaDataBuffer.PutInt(ToDriverBufferLengthOffset(0), toDriverBufferLength);
             cncMetaDataBuffer.PutInt(ToClientsBufferLengthOffset(0), toClientsBufferLength);
             cncMetaDataBuffer.PutInt(CountersMetaDataBufferLengthOffset(0), counterMetaDataBufferLength);
             cncMetaDataBuffer.PutInt(CountersValuesBufferLengthOffset(0), counterValuesBufferLength);
             cncMetaDataBuffer.PutLong(ClientLivenessTimeoutOffset(0), clientLivenessTimeout);
             cncMetaDataBuffer.PutInt(ErrorLogBufferLengthOffset(0), errorLogBufferLength);
+            cncMetaDataBuffer.PutIntVolatile(CncVersionOffset(0), CNC_VERSION);
         }
 
         public static UnsafeBuffer CreateMetaDataBuffer(MappedByteBuffer buffer)

@@ -123,9 +123,8 @@ namespace Adaptive.Aeron
                 if (publication == null)
                 {
                     var correlationId = _driverProxy.AddPublication(channel, streamId);
-                    var timeout = _nanoClock.NanoTime() + _driverTimeoutNs;
-
-                    DoWorkUntil(correlationId, timeout, channel);
+                    
+                    AwaitResponse(correlationId, channel, true);
 
                     publication = _activePublications.Get(channel, streamId);
                 }
@@ -149,11 +148,9 @@ namespace Adaptive.Aeron
                 if (publication == _activePublications.Remove(publication.Channel, publication.StreamId))
                 {
                     var correlationId = _driverProxy.RemovePublication(publication.RegistrationId);
-
-                    var timeout = _nanoClock.NanoTime() + _driverTimeoutNs;
-
+                    
                     LingerResource(publication.ManagedResource());
-                    DoWorkUntil(correlationId, timeout, publication.Channel);
+                    AwaitResponse(correlationId, publication.Channel, false);
                 }
             }
         }
@@ -165,12 +162,11 @@ namespace Adaptive.Aeron
                 VerifyDriverIsActive();
 
                 var correlationId = _driverProxy.AddSubscription(channel, streamId);
-                var timeout = _nanoClock.NanoTime() + _driverTimeoutNs;
-
+                
                 var subscription = new Subscription(this, channel, streamId, correlationId);
                 _activeSubscriptions.Add(subscription);
 
-                DoWorkUntil(correlationId, timeout, channel);
+                AwaitResponse(correlationId, channel, true);
 
                 return subscription;
             }
@@ -187,9 +183,8 @@ namespace Adaptive.Aeron
                 VerifyDriverIsActive();
 
                 var correlationId = _driverProxy.RemoveSubscription(subscription.RegistrationId);
-                var timeout = _nanoClock.NanoTime() + _driverTimeoutNs;
-
-                DoWorkUntil(correlationId, timeout, subscription.Channel);
+                
+                AwaitResponse(correlationId, subscription.Channel, false);
 
                 _activeSubscriptions.Remove(subscription);
             }
@@ -206,7 +201,7 @@ namespace Adaptive.Aeron
         {
             _activeSubscriptions.ForEach(streamId, (subscription) =>
             {
-                if (!subscription.HasImage(sessionId))
+                if (!subscription.HasImage(correlationId))
                 {
                     long positionId;
 
@@ -301,12 +296,22 @@ namespace Adaptive.Aeron
             return workCount;
         }
 
-        private void DoWorkUntil(long correlationId, long timeout, string expectedChannel)
+        private void AwaitResponse(long correlationId, string expectedChannel, bool isSlowOperation)
         {
             _driverException = null;
+            var timeout = _nanoClock.NanoTime() + _driverTimeoutNs;
 
             do
             {
+                if (isSlowOperation)
+                {
+                    Thread.Sleep(1);
+                }
+                else
+                {
+                    Thread.Yield();
+                }
+
                 DoWork(correlationId, expectedChannel);
 
                 if (_driverListener.LastReceivedCorrelationId() == correlationId)
