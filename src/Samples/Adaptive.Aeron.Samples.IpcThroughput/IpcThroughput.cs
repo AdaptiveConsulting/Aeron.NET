@@ -151,11 +151,11 @@ namespace Adaptive.Aeron.Samples.IpcThroughput
 
                 long failedPolls = 0;
                 long successfulPolls = 0;
-
-
+                FragmentHandler onFragment = OnFragment;
+                
                 while (Running.Get())
                 {
-                    var fragmentsRead = image.Poll(OnFragment, MessageCountLimit);
+                    var fragmentsRead = image.Poll(onFragment, MessageCountLimit);
                     if (0 == fragmentsRead)
                     {
                         ++failedPolls;
