@@ -4,20 +4,21 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using Adaptive.Agrona.Util;
+using DotNetCross.Memory;
 
 namespace Adaptive.Agrona.Concurrent
 {
     /// <summary>
     /// Supports regular, byte ordered, and atomic (memory ordered) access to an underlying buffer.
     /// The buffer can be a byte[] or an unmanaged buffer.
-    /// 
+    ///
     /// <seealso cref="ByteOrder"/> of a wrapped buffer is not applied to the <seealso cref="UnsafeBuffer"/>; <seealso cref="UnsafeBuffer"/>s are
     /// stateless and can be used concurrently. To control <seealso cref="ByteOrder"/> use the appropriate accessor method
     /// with the <seealso cref="ByteOrder"/> overload.
-    /// 
+    ///
     /// Note: This class has a natural ordering that is inconsistent with equals.
     /// Types my be different but equal on buffer contents.
-    /// 
+    ///
     /// Note: The wrap methods on this class are not thread safe. Concurrent access should only happen after a successful wrap.
     /// </summary>
     public unsafe class UnsafeBuffer : IAtomicBuffer, IDisposable
@@ -257,13 +258,7 @@ namespace Adaptive.Agrona.Concurrent
 #endif
         {
             BoundsCheck0(index, length);
-
-            // TODO PERF Naive implementation, we should not write byte by byte, this is slow
-            //UNSAFE.SetMemory(byteArray, addressOffset + index, length, value);
-            for (var i = index; i < index + length; i++)
-            {
-                _pBuffer[i] = value;
-            }
+            Unsafe.InitBlock(((byte*)_pBuffer) + index, value, (uint)length);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
