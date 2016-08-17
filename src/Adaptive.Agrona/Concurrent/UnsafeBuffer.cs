@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading;
 using Adaptive.Agrona.Util;
 
+
 namespace Adaptive.Agrona.Concurrent
 {
     /// <summary>
@@ -257,14 +258,7 @@ namespace Adaptive.Agrona.Concurrent
 #endif
         {
             BoundsCheck0(index, length);
-
-            // TODO PERF Naive implementation, we should not write byte by byte, this is slow
             Unsafe.InitBlock(((byte*)_pBuffer) + index, value, (uint)length);
-            //UNSAFE.SetMemory(byteArray, addressOffset + index, length, value);
-            for (var i = index; i < index + length; i++)
-            {
-                _pBuffer[i] = value;
-            }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
