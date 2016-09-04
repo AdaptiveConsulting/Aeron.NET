@@ -135,12 +135,7 @@ namespace Adaptive.Aeron
 
         private Aeron Start()
         {
-            var thread = new Thread(_conductorRunner.Run)
-            {
-                Name = "aeron-client-conductor"
-            };
-            thread.Start();
-
+            AgentRunner.StartOnThread(_conductorRunner);
             return this;
         }
 

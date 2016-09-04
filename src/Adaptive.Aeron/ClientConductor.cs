@@ -110,7 +110,7 @@ namespace Adaptive.Aeron
 
         public string RoleName()
         {
-            return "client-conductor";
+            return "aeron-client-conductor";
         }
 
         internal Publication AddPublication(string channel, int streamId)
