@@ -1,4 +1,4 @@
 #### Port
 Aeron.NET has been ported against Java version:
-- Agrona: f5ee102 
+- Agrona: 20598f7 
 - Aeron:  a57bdf5

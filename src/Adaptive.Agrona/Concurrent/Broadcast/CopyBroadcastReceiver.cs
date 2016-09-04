@@ -7,14 +7,35 @@ namespace Adaptive.Agrona.Concurrent.Broadcast
     /// </summary>
     public class CopyBroadcastReceiver
     {
+        /// <summary>
+        /// Default length for the scratch buffer for copying messages into.
+        /// </summary>
         private const int ScratchBufferSize = 4096;
 
         private readonly BroadcastReceiver _receiver;
-        private readonly IMutableDirectBuffer _scratchBuffer;
+        private readonly UnsafeBuffer _scratchBuffer;
 
         public CopyBroadcastReceiver()
         {
             
+        }
+
+        /// <summary>
+        /// Wrap a <seealso cref="BroadcastReceiver"/> to simplify the API for receiving messages.
+        /// </summary>
+        /// <param name="receiver"> to be wrapped. </param>
+        /// <param name="scratchBufferLength">  is the maximum length of a message to be copied when receiving.</param>
+        public CopyBroadcastReceiver(BroadcastReceiver receiver, int scratchBufferLength)
+        {
+            _receiver = receiver;
+            _scratchBuffer = new UnsafeBuffer(new byte[scratchBufferLength]);
+
+            while (receiver.ReceiveNext())
+            {
+                // If we're reconnecting to a broadcast buffer then we need to
+                // scan ourselves up to date, otherwise we risk "falling behind"
+                // the buffer due to the time taken to catchup.
+            }
         }
 
         /// <summary>
@@ -60,7 +81,7 @@ namespace Adaptive.Agrona.Concurrent.Broadcast
                 var capacity = _scratchBuffer.Capacity;
                 if (length > capacity)
                 {
-                    throw new InvalidOperationException($"Buffer required size {length:D} but only has {capacity:D}");
+                    throw new InvalidOperationException($"Buffer required length of {length:D} but only has {capacity:D}");
                 }
 
                 var msgTypeId = receiver.TypeId();
