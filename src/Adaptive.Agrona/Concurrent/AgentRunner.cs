@@ -46,13 +46,14 @@ namespace Adaptive.Agrona.Concurrent
         /// Start the given agent runner on a new thread.
         /// </summary>
         /// <param name="runner"> the agent runner to start </param>
-        public static void StartOnThread(AgentRunner runner)
+        public static Thread StartOnThread(AgentRunner runner)
         {
             var thread = new Thread(runner.Run)
             {
                 Name = runner.Agent().RoleName()
             };
             thread.Start();
+            return thread;
         }
 
         /// <summary>
