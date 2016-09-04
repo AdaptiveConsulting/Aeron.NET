@@ -135,7 +135,7 @@ namespace Adaptive.Aeron
 
         private Aeron Start()
         {
-            AgentRunner.StartOnThread(_conductorRunner);
+            AgentRunner.StartOnThread(_conductorRunner, _ctx.ThreadFactory());
             return this;
         }
 
@@ -168,6 +168,7 @@ namespace Adaptive.Aeron
             private UnsafeBuffer _countersMetaDataBuffer;
             private UnsafeBuffer _countersValuesBuffer;
             private MapMode _imageMapMode = MapMode.ReadOnly;
+            private IThreadFactory threadFactory = new DefaultThreadFactory();
 
             /// <summary>
             /// The top level Aeron directory used for communication between a Media Driver and client.
@@ -522,6 +523,26 @@ namespace Adaptive.Aeron
             {
                 _imageMapMode = imageMapMode;
                 return this;
+            }
+
+            /// <summary>
+            /// Specify the thread factory to use when starting the conductor thread.
+            /// </summary>
+            /// <param name="threadFactory"> thread factory to construct the thread.</param>
+            /// <returns> this for a fluent API.</returns>
+            public Context ThreadFactory(IThreadFactory threadFactory)
+            {
+                this.threadFactory = threadFactory;
+                return this;
+            }
+
+            /// <summary>
+            /// The thread factory to be use to construct the conductor thread
+            /// </summary>
+            /// <returns>the specified thread factory of <see cref="DefaultThreadFactory"/> if none is provided.</returns>
+            public IThreadFactory ThreadFactory()
+            {
+                return threadFactory;
             }
 
             /// <summary>
