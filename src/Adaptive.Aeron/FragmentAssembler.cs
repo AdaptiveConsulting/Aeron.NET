@@ -64,32 +64,37 @@ namespace Adaptive.Aeron
             }
             else
             {
-                if ((flags & FrameDescriptor.BEGIN_FRAG_FLAG) == FrameDescriptor.BEGIN_FRAG_FLAG)
-                {
-                    BufferBuilder builder;
-                    if (!_builderBySessionIdMap.TryGetValue(header.SessionId, out builder))
-                    {
-                        builder = _builderFunc(header.SessionId);
-                        _builderBySessionIdMap[header.SessionId] = builder;
-                    }
+                HandleFragment(buffer, offset, length, header, flags);
+            }
+        }
 
-                    builder.Reset().Append(buffer, offset, length);
+        private void HandleFragment(UnsafeBuffer buffer, int offset, int length, Header header, byte flags)
+        {
+            if ((flags & FrameDescriptor.BEGIN_FRAG_FLAG) == FrameDescriptor.BEGIN_FRAG_FLAG)
+            {
+                BufferBuilder builder;
+                if (!_builderBySessionIdMap.TryGetValue(header.SessionId, out builder))
+                {
+                    builder = _builderFunc(header.SessionId);
+                    _builderBySessionIdMap[header.SessionId] = builder;
                 }
-                else
-                {
-                    
-                    BufferBuilder builder;
-                    _builderBySessionIdMap.TryGetValue(header.SessionId, out builder);
-                    if (null != builder && builder.Limit() != 0)
-                    {
-                        builder.Append(buffer, offset, length);
 
-                        if ((flags & FrameDescriptor.END_FRAG_FLAG) == FrameDescriptor.END_FRAG_FLAG)
-                        {
-                            int msgLength = builder.Limit();
-                            _delegate(builder.Buffer(), 0, msgLength, header);
-                            builder.Reset();
-                        }
+                builder.Reset().Append(buffer, offset, length);
+            }
+            else
+            {
+
+                BufferBuilder builder;
+                _builderBySessionIdMap.TryGetValue(header.SessionId, out builder);
+                if (null != builder && builder.Limit() != 0)
+                {
+                    builder.Append(buffer, offset, length);
+
+                    if ((flags & FrameDescriptor.END_FRAG_FLAG) == FrameDescriptor.END_FRAG_FLAG)
+                    {
+                        int msgLength = builder.Limit();
+                        _delegate(builder.Buffer(), 0, msgLength, header);
+                        builder.Reset();
                     }
                 }
             }

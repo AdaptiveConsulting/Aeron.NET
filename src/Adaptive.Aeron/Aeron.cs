@@ -6,6 +6,7 @@ using Adaptive.Agrona;
 using Adaptive.Agrona.Concurrent;
 using Adaptive.Agrona.Concurrent.Broadcast;
 using Adaptive.Agrona.Concurrent.RingBuffer;
+using Adaptive.Agrona.Concurrent.Status;
 using Adaptive.Agrona.Util;
 
 namespace Adaptive.Aeron
@@ -133,14 +134,18 @@ namespace Adaptive.Aeron
             return _conductor.AddSubscription(channel, streamId);
         }
 
+        /// <summary>
+        /// Create and returns a <see cref="CountersReader"/> for the Aeron media driver counters.
+        /// </summary>
+        /// <returns> new <see cref="CountersReader"/> for the Aeron media driver in use.</returns>
+        public CountersReader CountersReader()
+        {
+            return new CountersReader(_ctx.CountersMetaDataBuffer(), _ctx.CountersValuesBuffer());
+        }
+
         private Aeron Start()
         {
-            var thread = new Thread(_conductorRunner.Run)
-            {
-                Name = "aeron-client-conductor"
-            };
-            thread.Start();
-
+            AgentRunner.StartOnThread(_conductorRunner, _ctx.ThreadFactory());
             return this;
         }
 
@@ -173,6 +178,7 @@ namespace Adaptive.Aeron
             private UnsafeBuffer _countersMetaDataBuffer;
             private UnsafeBuffer _countersValuesBuffer;
             private MapMode _imageMapMode = MapMode.ReadOnly;
+            private IThreadFactory threadFactory = new DefaultThreadFactory();
 
             /// <summary>
             /// The top level Aeron directory used for communication between a Media Driver and client.
@@ -527,6 +533,26 @@ namespace Adaptive.Aeron
             {
                 _imageMapMode = imageMapMode;
                 return this;
+            }
+
+            /// <summary>
+            /// Specify the thread factory to use when starting the conductor thread.
+            /// </summary>
+            /// <param name="threadFactory"> thread factory to construct the thread.</param>
+            /// <returns> this for a fluent API.</returns>
+            public Context ThreadFactory(IThreadFactory threadFactory)
+            {
+                this.threadFactory = threadFactory;
+                return this;
+            }
+
+            /// <summary>
+            /// The thread factory to be use to construct the conductor thread
+            /// </summary>
+            /// <returns>the specified thread factory of <see cref="DefaultThreadFactory"/> if none is provided.</returns>
+            public IThreadFactory ThreadFactory()
+            {
+                return threadFactory;
             }
 
             /// <summary>
