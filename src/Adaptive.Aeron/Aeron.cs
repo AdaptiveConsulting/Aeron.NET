@@ -6,6 +6,7 @@ using Adaptive.Agrona;
 using Adaptive.Agrona.Concurrent;
 using Adaptive.Agrona.Concurrent.Broadcast;
 using Adaptive.Agrona.Concurrent.RingBuffer;
+using Adaptive.Agrona.Concurrent.Status;
 using Adaptive.Agrona.Util;
 
 namespace Adaptive.Aeron
@@ -131,6 +132,15 @@ namespace Adaptive.Aeron
         public Subscription AddSubscription(string channel, int streamId)
         {
             return _conductor.AddSubscription(channel, streamId);
+        }
+
+        /// <summary>
+        /// Create and returns a <see cref="CountersReader"/> for the Aeron media driver counters.
+        /// </summary>
+        /// <returns> new <see cref="CountersReader"/> for the Aeron media driver in use.</returns>
+        public CountersReader CountersReader()
+        {
+            return new CountersReader(_ctx.CountersMetaDataBuffer(), _ctx.CountersValuesBuffer());
         }
 
         private Aeron Start()
