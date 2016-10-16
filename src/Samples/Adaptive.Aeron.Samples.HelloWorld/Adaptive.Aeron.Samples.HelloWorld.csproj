@@ -66,16 +66,6 @@
     <Compile Include="HelloWorld.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\Adaptive.Aeron\Adaptive.Aeron.csproj">
-      <Project>{ce06a485-98f5-4fef-a756-d0ef4dda8309}</Project>
-      <Name>Adaptive.Aeron</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\Adaptive.Agrona\Adaptive.Agrona.csproj">
-      <Project>{4d9df40e-0726-47dd-8d70-34eb23429b59}</Project>
-      <Name>Adaptive.Agrona</Name>
-    </ProjectReference>
-  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

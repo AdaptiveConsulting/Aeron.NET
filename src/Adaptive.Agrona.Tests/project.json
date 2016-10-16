@@ -1,0 +1,26 @@
+{
+	"dependencies": {
+		"Adaptive.Agrona": {"target": "project"},
+		"FakeItEasy": "2.3.1",
+		"NUnit":  "3.5.0",
+		"dotnet-test-nunit": "3.4.0-beta-1"
+	},
+
+	"testRunner": "nunit",
+
+	"buildOptions": {
+		"debugType": "portable",
+		"allowUnsafe": true
+	},
+
+	"frameworks": {
+		"net451": {
+			"frameworkAssemblies": {
+					"System.Runtime": ""
+			},
+			"dependencies": {
+				"Microsoft.NETCore.Platforms": "1.0.1-rc2-24027"
+			}
+		}
+	}
+}

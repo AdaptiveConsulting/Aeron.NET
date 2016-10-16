@@ -1,0 +1,22 @@
+{
+	"version": "1.0.0-alpha001",
+    "description": "Aeron - Efficient reliable UDP unicast, UDP multicast, and IPC message transport",
+    "packOptions": {
+        "summary": "Aeron",
+        "tags": [ "aeron", "high performance", "message transport" ],
+        "projectUrl": "https://github.com/AdaptiveConsulting/Aeron.NET",
+        "licenseUrl": "https://github.com/AdaptiveConsulting/Aeron.NET/blob/master/LICENSE",
+        "requireLicenseAcceptance": false,
+        "repository": {
+            "type": "git",
+            "url": "https://github.com/AdaptiveConsulting/Aeron.NET/blob/master/LICENSE"
+        }
+    },
+	"dependencies": {
+		"Adaptive.Agrona":  {"target": "project"}
+	},
+	"frameworks": {
+		"net45": {
+		}
+	}
+}

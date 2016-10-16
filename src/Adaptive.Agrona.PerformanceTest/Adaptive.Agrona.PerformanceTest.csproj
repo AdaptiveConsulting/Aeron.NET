@@ -72,13 +72,8 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Adaptive.Agrona\Adaptive.Agrona.csproj">
-      <Project>{4D9DF40E-0726-47DD-8D70-34EB23429B59}</Project>
-      <Name>Adaptive.Agrona</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <None Include="packages.config" />
+    <None Include="project.json" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
