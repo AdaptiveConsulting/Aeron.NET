@@ -1,10 +1,45 @@
 ﻿using System;
 using System.Collections.Generic;
 using Adaptive.Aeron.LogBuffer;
+using Adaptive.Agrona;
 using Adaptive.Agrona.Collections;
 
 namespace Adaptive.Aeron
 {
+    public class SubscriptionLhsPadding
+    {
+        protected CacheLinePadding _padding1;
+
+        // To prevent compiler removing unused padding fields
+        public override string ToString()
+        {
+            return $"{_padding1}";
+        }
+    }
+
+    public class SubscriptionFields : SubscriptionLhsPadding
+    {
+        protected static readonly Image[] EMPTY_ARRAY = new Image[0];
+
+        protected readonly long _registrationId;
+        protected int _roundRobinIndex = 0;
+        protected readonly int _streamId;
+        protected volatile bool _isClosed = false;
+
+        protected volatile Image[] _images = EMPTY_ARRAY;
+        protected readonly ClientConductor _clientConductor;
+        protected readonly string _channel;
+
+        protected internal SubscriptionFields(long registrationId, int streamId, ClientConductor clientConductor, string channel)
+        {
+            _registrationId = registrationId;
+            _streamId = streamId;
+            _clientConductor = clientConductor;
+            _channel = channel;
+        }
+    }
+
+
     /// <summary>
     /// Aeron Subscriber API for receiving a reconstructed <seealso cref="Image"/> for a stream of messages from publishers on
     /// a given channel and streamId pair.
@@ -26,40 +61,26 @@ namespace Adaptive.Aeron
     /// </para>
     /// </summary>
     /// <seealso cref="FragmentAssembler" />
-    public class Subscription : IDisposable
+    public class Subscription : SubscriptionFields, IDisposable
     {
-        private static readonly Image[] EmptyArray = new Image[0];
-
-        private int _roundRobinIndex;
-        private volatile bool _isClosed;
-
-        private volatile Image[] _images = EmptyArray;
-        private readonly ClientConductor _clientConductor;
-
-        internal Subscription()
-        {
-            
-        }
+        protected CacheLinePadding _padding2;
 
         internal Subscription(ClientConductor conductor, string channel, int streamId, long registrationId)
+            : base(registrationId, streamId, conductor, channel)
         {
-            _clientConductor = conductor;
-            Channel = channel;
-            StreamId = streamId;
-            RegistrationId = registrationId;
         }
 
         /// <summary>
         /// Media address for delivery to the channel.
         /// </summary>
         /// <returns> Media address for delivery to the channel. </returns>
-        public string Channel { get; }
+        public string Channel => _channel;
 
         /// <summary>
         /// Stream identity for scoping within the channel media address.
         /// </summary>
         /// <returns> Stream identity for scoping within the channel media address. </returns>
-        public int StreamId { get; }
+        public int StreamId => _streamId;
 
         /// <summary>
         /// Poll the <seealso cref="Image"/>s under the subscription for available message fragments.
@@ -256,7 +277,7 @@ namespace Adaptive.Aeron
                         _clientConductor.LingerResource(image.ManagedResource());
                     }
 
-                    _images = EmptyArray;
+                    _images = EMPTY_ARRAY;
                 }
             }
         }
@@ -271,7 +292,7 @@ namespace Adaptive.Aeron
         /// Return the registration id used to register this Publication with the media driver.
         /// </summary>
         /// <returns> registration id </returns>
-        public long RegistrationId { get; }
+        public long RegistrationId => _registrationId;
 
         internal void AddImage(Image image)
         {

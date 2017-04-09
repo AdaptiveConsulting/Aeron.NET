@@ -102,9 +102,18 @@ namespace Adaptive.Aeron
 
         public int DoWork()
         {
-            lock (this)
+            if (!Monitor.TryEnter(this))
+            {
+                return 0;
+            }
+
+            try
             {
                 return DoWork(NoCorrelationID, null);
+            }
+            finally
+            {
+                Monitor.Exit(this);
             }
         }
 
@@ -115,24 +124,18 @@ namespace Adaptive.Aeron
 
         internal Publication AddPublication(string channel, int streamId)
         {
-            lock (this)
+            VerifyDriverIsActive();
+
+            var publication = _activePublications.Get(channel, streamId);
+            if (publication == null)
             {
-                VerifyDriverIsActive();
-
-                var publication = _activePublications.Get(channel, streamId);
-                if (publication == null)
-                {
-                    var correlationId = _driverProxy.AddPublication(channel, streamId);
-                    
-                    AwaitResponse(correlationId, channel, true);
-
-                    publication = _activePublications.Get(channel, streamId);
-                }
-
-                publication.IncRef();
-
-                return publication;
+                AwaitResponse(_driverProxy.AddPublication(channel, streamId), channel);
+                publication = _activePublications.Get(channel, streamId);
             }
+
+            publication.IncRef();
+
+            return publication;
         }
 
 #if DEBUG
@@ -141,35 +144,27 @@ namespace Adaptive.Aeron
         internal void ReleasePublication(Publication publication)
 #endif
         {
-            lock (this)
-            {
-                VerifyDriverIsActive();
+            VerifyDriverIsActive();
 
-                if (publication == _activePublications.Remove(publication.Channel, publication.StreamId))
-                {
-                    var correlationId = _driverProxy.RemovePublication(publication.RegistrationId);
-                    
-                    LingerResource(publication.ManagedResource());
-                    AwaitResponse(correlationId, publication.Channel, false);
-                }
+            if (publication == _activePublications.Remove(publication.Channel, publication.StreamId))
+            {
+                LingerResource(publication.ManagedResource());
+                AwaitResponse(_driverProxy.RemovePublication(publication.RegistrationId), publication.Channel);
             }
         }
 
         internal Subscription AddSubscription(string channel, int streamId)
         {
-            lock (this)
-            {
-                VerifyDriverIsActive();
+            VerifyDriverIsActive();
 
-                var correlationId = _driverProxy.AddSubscription(channel, streamId);
+            var correlationId = _driverProxy.AddSubscription(channel, streamId);
                 
-                var subscription = new Subscription(this, channel, streamId, correlationId);
-                _activeSubscriptions.Add(subscription);
+            var subscription = new Subscription(this, channel, streamId, correlationId);
+            _activeSubscriptions.Add(subscription);
 
-                AwaitResponse(correlationId, channel, true);
+            AwaitResponse(correlationId, channel);
 
-                return subscription;
-            }
+            return subscription;
         }
 
 #if DEBUG
@@ -178,16 +173,11 @@ namespace Adaptive.Aeron
         internal void ReleaseSubscription(Subscription subscription)
 #endif
         {
-            lock (this)
-            {
-                VerifyDriverIsActive();
+            VerifyDriverIsActive();
 
-                var correlationId = _driverProxy.RemoveSubscription(subscription.RegistrationId);
-                
-                AwaitResponse(correlationId, subscription.Channel, false);
+            AwaitResponse(_driverProxy.RemoveSubscription(subscription.RegistrationId), subscription.Channel);
 
-                _activeSubscriptions.Remove(subscription);
-            }
+            _activeSubscriptions.Remove(subscription);
         }
 
         public void OnNewPublication(string channel, int streamId, int sessionId, int publicationLimitId, string logFileName, long correlationId)
@@ -296,21 +286,14 @@ namespace Adaptive.Aeron
             return workCount;
         }
 
-        private void AwaitResponse(long correlationId, string expectedChannel, bool isSlowOperation)
+        private void AwaitResponse(long correlationId, string expectedChannel)
         {
             _driverException = null;
             var timeout = _nanoClock.NanoTime() + _driverTimeoutNs;
 
             do
             {
-                if (isSlowOperation)
-                {
-                    Thread.Sleep(1);
-                }
-                else
-                {
-                    Thread.Yield();
-                }
+                LockSupport.ParkNanos(1);
 
                 DoWork(correlationId, expectedChannel);
 
@@ -325,7 +308,7 @@ namespace Adaptive.Aeron
                 }
             } while (_nanoClock.NanoTime() < timeout);
 
-            throw new DriverTimeoutException("No response from driver within timeout");
+            throw new DriverTimeoutException("No response within driver timeout");
         }
 
         private int OnCheckTimeouts()

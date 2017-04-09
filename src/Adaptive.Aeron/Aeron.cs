@@ -65,6 +65,7 @@ namespace Adaptive.Aeron
          */
         private const long PublicationConnectionTimeoutMs = 5000;
 
+        private bool _isClosed = false;
         private readonly ClientConductor _conductor;
         private readonly AgentRunner _conductorRunner;
         private readonly Context _ctx;
@@ -108,8 +109,15 @@ namespace Adaptive.Aeron
         /// </summary>
         public void Dispose()
         {
-            _conductorRunner.Dispose();
-            _ctx.Dispose();
+            lock (_conductor)
+            {
+                if (!_isClosed)
+                {
+                    _isClosed = true;
+                    _conductorRunner.Dispose();
+                    _ctx.Dispose();
+                }
+            }
         }
 
         /// <summary>
@@ -120,7 +128,14 @@ namespace Adaptive.Aeron
         /// <returns> the new Publication. </returns>
         public Publication AddPublication(string channel, int streamId)
         {
-            return _conductor.AddPublication(channel, streamId);
+            lock (_conductor)
+            {
+                if (_isClosed)
+                {
+                    throw new InvalidOperationException("Aeron client is closed");
+                }
+                return _conductor.AddPublication(channel, streamId);
+            }
         }
 
         /// <summary>
@@ -131,7 +146,14 @@ namespace Adaptive.Aeron
         /// <returns> the <seealso cref="Subscription"/> for the channel and streamId pair. </returns>
         public Subscription AddSubscription(string channel, int streamId)
         {
-            return _conductor.AddSubscription(channel, streamId);
+            lock (_conductor)
+            {
+                if (_isClosed)
+                {
+                    throw new InvalidOperationException("Aeron client is closed");
+                }
+                return _conductor.AddSubscription(channel, streamId);
+            }
         }
 
         /// <summary>
@@ -140,7 +162,14 @@ namespace Adaptive.Aeron
         /// <returns> new <see cref="CountersReader"/> for the Aeron media driver in use.</returns>
         public CountersReader CountersReader()
         {
-            return new CountersReader(_ctx.CountersMetaDataBuffer(), _ctx.CountersValuesBuffer());
+            lock (_conductor)
+            {
+                if (_isClosed)
+                {
+                    throw new InvalidOperationException("Aeron client is closed");
+                }
+                return new CountersReader(_ctx.CountersMetaDataBuffer(), _ctx.CountersValuesBuffer());
+            }
         }
 
         private Aeron Start()
@@ -157,7 +186,6 @@ namespace Adaptive.Aeron
         /// </summary>
         public class Context : IDisposable
         {
-            private readonly AtomicBoolean _isClosed = new AtomicBoolean(false);
             private IEpochClock _epochClock;
             private INanoClock _nanoClock;
             private IIdleStrategy _idleStrategy;
@@ -570,13 +598,10 @@ namespace Adaptive.Aeron
             /// </summary>
             public void Dispose()
             {
-                if (_isClosed.CompareAndSet(false, true))
-                {
-                    _cncMetaDataBuffer?.Dispose();
-                    _countersMetaDataBuffer?.Dispose();
-                    _countersValuesBuffer?.Dispose();
-                    _cncByteBuffer?.Dispose();
-                }
+                _cncMetaDataBuffer?.Dispose();
+                _countersMetaDataBuffer?.Dispose();
+                _countersValuesBuffer?.Dispose();
+                _cncByteBuffer?.Dispose();
             }
             
             internal ClientConductor CreateClientConductor()
@@ -603,7 +628,8 @@ namespace Adaptive.Aeron
                         throw new DriverTimeoutException("CnC file is created by not initialised.");
                     }
 
-                    Thread.Yield();
+                    LockSupport.ParkNanos(1);
+                    //TODO was Thread.Yield();
                 }
                 
                 _cncByteBuffer = IoUtil.MapExistingFile(CncFile().FullName, MapMode.ReadWrite);
@@ -617,9 +643,10 @@ namespace Adaptive.Aeron
                         throw new DriverTimeoutException("CnC file is created by not initialised.");
                     }
 
-                    Thread.Yield();
+                    LockSupport.ParkNanos(1);
+                    //TODO was Thread.Yield();
                 }
-                
+
                 if (CncFileDescriptor.CNC_VERSION != cncVersion)
                 {
                     throw new InvalidOperationException(

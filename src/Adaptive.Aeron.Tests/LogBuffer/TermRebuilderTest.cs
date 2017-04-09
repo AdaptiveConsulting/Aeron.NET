@@ -1,4 +1,5 @@
 ﻿using Adaptive.Aeron.LogBuffer;
+using Adaptive.Aeron.Protocol;
 using Adaptive.Agrona;
 using Adaptive.Agrona.Concurrent;
 using FakeItEasy;
@@ -28,13 +29,16 @@ namespace Adaptive.Aeron.Tests.LogBuffer
             const int srcOffset = 0;
             const int length = 256;
             packet.PutInt(srcOffset, length);
-            A.CallTo(() => _termBuffer.GetInt(0)).Returns(length);
 
             TermRebuilder.Insert(_termBuffer, termOffset, packet, length);
-
-            A.CallTo(() => _termBuffer.PutBytes(termOffset, packet, srcOffset, length)).MustHaveHappened()
-                .Then(A.CallTo(() => _termBuffer.PutIntOrdered(termOffset, length)).MustHaveHappened());
+            
+            A.CallTo(() => _termBuffer.PutBytes(termOffset + DataHeaderFlyweight.HEADER_LENGTH, packet, srcOffset + DataHeaderFlyweight.HEADER_LENGTH, length - DataHeaderFlyweight.HEADER_LENGTH)).MustHaveHappened()
+                .Then(A.CallTo(() => _termBuffer.PutLong(termOffset + 24, packet.GetLong(24))).MustHaveHappened())
+                .Then(A.CallTo(() => _termBuffer.PutLong(termOffset + 16, packet.GetLong(16))).MustHaveHappened())
+                .Then(A.CallTo(() => _termBuffer.PutLong(termOffset + 8, packet.GetLong(8))).MustHaveHappened())
+                .Then(A.CallTo(() => _termBuffer.PutLongOrdered(termOffset, packet.GetLong(0))).MustHaveHappened());
         }
+
 
         [Test]
         public void ShouldInsertLastFrameIntoBuffer()
@@ -47,12 +51,9 @@ namespace Adaptive.Aeron.Tests.LogBuffer
             packet.PutShort(FrameDescriptor.TypeOffset(srcOffset), (short)FrameDescriptor.PADDING_FRAME_TYPE);
             packet.PutInt(srcOffset, frameLength);
 
-            A.CallTo(() => _termBuffer.GetInt(tail)).Returns(frameLength);
-            A.CallTo(() => _termBuffer.GetShort(FrameDescriptor.TypeOffset(tail))).Returns((short)FrameDescriptor.PADDING_FRAME_TYPE);
-
             TermRebuilder.Insert(_termBuffer, termOffset, packet, frameLength);
 
-            A.CallTo(() => (_termBuffer).PutBytes(tail, packet, srcOffset, frameLength)).MustHaveHappened();
+            A.CallTo(() => _termBuffer.PutBytes(tail + DataHeaderFlyweight.HEADER_LENGTH, packet, srcOffset + DataHeaderFlyweight.HEADER_LENGTH, frameLength - DataHeaderFlyweight.HEADER_LENGTH)).MustHaveHappened();
         }
 
         [Test]
@@ -65,13 +66,9 @@ namespace Adaptive.Aeron.Tests.LogBuffer
             int termOffset = tail;
             UnsafeBuffer packet = new UnsafeBuffer(new byte[alignedFrameLength]);
 
-            A.CallTo(() => _termBuffer.GetInt(0)).Returns(frameLength);
-            A.CallTo(() => _termBuffer.GetInt(alignedFrameLength)).Returns(frameLength);
-            A.CallTo(() => _termBuffer.GetInt(alignedFrameLength * 2)).Returns(frameLength);
-
             TermRebuilder.Insert(_termBuffer, termOffset, packet, alignedFrameLength);
 
-            A.CallTo(() => (_termBuffer).PutBytes(tail, packet, srcOffset, alignedFrameLength)).MustHaveHappened();
+            A.CallTo(() => _termBuffer.PutBytes(tail + DataHeaderFlyweight.HEADER_LENGTH, packet, srcOffset + DataHeaderFlyweight.HEADER_LENGTH, alignedFrameLength - DataHeaderFlyweight.HEADER_LENGTH)).MustHaveHappened();
         }
 
         [Test]
@@ -83,12 +80,9 @@ namespace Adaptive.Aeron.Tests.LogBuffer
             UnsafeBuffer packet = new UnsafeBuffer(new byte[alignedFrameLength]);
             int termOffset = alignedFrameLength * 2;
 
-            A.CallTo(() => _termBuffer.GetInt(0)).Returns(0);
-            A.CallTo(() => _termBuffer.GetInt(alignedFrameLength)).Returns(frameLength);
-
             TermRebuilder.Insert(_termBuffer, termOffset, packet, alignedFrameLength);
 
-            A.CallTo(() => (_termBuffer).PutBytes(alignedFrameLength * 2, packet, srcOffset, alignedFrameLength)).MustHaveHappened();
+            A.CallTo(() => _termBuffer.PutBytes((alignedFrameLength * 2) + DataHeaderFlyweight.HEADER_LENGTH, packet, srcOffset + DataHeaderFlyweight.HEADER_LENGTH, alignedFrameLength - DataHeaderFlyweight.HEADER_LENGTH)).MustHaveHappened();
         }
 
         [Test]
@@ -99,13 +93,10 @@ namespace Adaptive.Aeron.Tests.LogBuffer
             const int srcOffset = 0;
             UnsafeBuffer packet = new UnsafeBuffer(new byte[alignedFrameLength]);
             int termOffset = alignedFrameLength * 2;
-
-            A.CallTo(() => _termBuffer.GetInt(0)).Returns(frameLength);
-            A.CallTo(() => _termBuffer.GetInt(alignedFrameLength)).Returns(0);
-
+            
             TermRebuilder.Insert(_termBuffer, termOffset, packet, alignedFrameLength);
 
-            A.CallTo(() => (_termBuffer).PutBytes(alignedFrameLength * 2, packet, srcOffset, alignedFrameLength)).MustHaveHappened();
+            A.CallTo(() => _termBuffer.PutBytes((alignedFrameLength * 2) + DataHeaderFlyweight.HEADER_LENGTH, packet, srcOffset + DataHeaderFlyweight.HEADER_LENGTH, alignedFrameLength - DataHeaderFlyweight.HEADER_LENGTH)).MustHaveHappened();
         }
     }
 }
