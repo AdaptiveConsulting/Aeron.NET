@@ -11,7 +11,8 @@ namespace Adaptive.Aeron
 {
     /// <summary>
     /// Aeron Publisher API for sending messages to subscribers of a given channel and streamId pair. Publishers
-    /// are created via an <seealso cref="Aeron"/> object, and messages are sent via an offer method or a claim and commit
+    /// are created via the <seealso cref="Aeron.AddPublication(String, int)"/> method, and messages are sent via one of the
+    /// <seealso cref="Offer(DirectBuffer)"/> methods, or a <seealso cref="TryClaim(int, BufferClaim)"/> and <seealso cref="BufferClaim.Commit"/>
     /// method combination.
     /// <para>
     /// The APIs used to send are all non-blocking.
@@ -348,10 +349,7 @@ namespace Adaptive.Aeron
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal void IncRef()
         {
-            lock (_clientConductor)
-            {
-                ++_refCount;
-            }
+            ++_refCount;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

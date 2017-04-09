@@ -1,5 +1,6 @@
 ﻿using System;
 using Adaptive.Aeron.Command;
+using Adaptive.Agrona;
 using Adaptive.Agrona.Concurrent;
 using Adaptive.Agrona.Concurrent.RingBuffer;
 
@@ -8,7 +9,7 @@ namespace Adaptive.Aeron
     /// <summary>
     /// Separates the concern of communicating with the client conductor away from the rest of the client.
     /// 
-    /// Writes messages into the client conductor buffer.
+    /// Writes commands into the client conductor buffer.
     /// 
     /// Note: this class is not thread safe and is expecting to be called under the {@link ClientConductor} main lock.
     /// </summary>
@@ -17,8 +18,8 @@ namespace Adaptive.Aeron
         /// <summary>
         /// Maximum capacity of the write buffer </summary>
         public const int MSG_BUFFER_CAPACITY = 1024;
-        
-        private readonly UnsafeBuffer _buffer = new UnsafeBuffer(new byte[MSG_BUFFER_CAPACITY]);
+
+        private readonly UnsafeBuffer _buffer = new UnsafeBuffer(BufferUtil.AllocateDirectAligned(MSG_BUFFER_CAPACITY,BitUtil.CACHE_LINE_LENGTH * 2));
         private readonly PublicationMessageFlyweight _publicationMessage = new PublicationMessageFlyweight();
         private readonly SubscriptionMessageFlyweight _subscriptionMessage = new SubscriptionMessageFlyweight();
         private readonly RemoveMessageFlyweight _removeMessage = new RemoveMessageFlyweight();
@@ -60,7 +61,7 @@ namespace Adaptive.Aeron
 
             if (!_toDriverCommandBuffer.Write(ControlProtocolEvents.ADD_PUBLICATION, _buffer, 0, _publicationMessage.Length()))
             {
-                throw new InvalidOperationException("could not write publication message");
+                throw new InvalidOperationException("Could not write add publication command");
             }
 
             return correlationId;
@@ -78,7 +79,7 @@ namespace Adaptive.Aeron
 
             if (!_toDriverCommandBuffer.Write(ControlProtocolEvents.REMOVE_PUBLICATION, _buffer, 0, RemoveMessageFlyweight.Length()))
             {
-                throw new InvalidOperationException("could not write publication remove message");
+                throw new InvalidOperationException("Could not write remove publication command");
             }
 
             return correlationId;
@@ -99,7 +100,7 @@ namespace Adaptive.Aeron
 
             if (!_toDriverCommandBuffer.Write(ControlProtocolEvents.ADD_SUBSCRIPTION, _buffer, 0, _subscriptionMessage.Length()))
             {
-                throw new InvalidOperationException("could not write subscription message");
+                throw new InvalidOperationException("Could not write add subscription command");
             }
 
             return correlationId;
@@ -117,7 +118,7 @@ namespace Adaptive.Aeron
 
             if (!_toDriverCommandBuffer.Write(ControlProtocolEvents.REMOVE_SUBSCRIPTION, _buffer, 0, RemoveMessageFlyweight.Length()))
             {
-                throw new InvalidOperationException("could not write subscription remove message");
+                throw new InvalidOperationException("Could not write remove subscription message");
             }
 
             return correlationId;
@@ -129,7 +130,7 @@ namespace Adaptive.Aeron
 
             if (!_toDriverCommandBuffer.Write(ControlProtocolEvents.CLIENT_KEEPALIVE, _buffer, 0, CorrelatedMessageFlyweight.LENGTH))
             {
-                throw new InvalidOperationException("could not write keepalive message");
+                throw new InvalidOperationException("Could not send client keepalive command");
             }
         }
     }

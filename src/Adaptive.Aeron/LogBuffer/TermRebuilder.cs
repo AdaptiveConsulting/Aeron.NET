@@ -1,10 +1,11 @@
-﻿using System.Threading;
+﻿using Adaptive.Aeron.Protocol;
 using Adaptive.Agrona.Concurrent;
 
 namespace Adaptive.Aeron.LogBuffer
 {
     /// <summary>
-    /// Rebuild a term buffer based on incoming frames that can be out-of-order.
+    /// Rebuild a term buffer from received frames which can be out-of-order. The resulting data structure will only
+    /// monotonically increase in state.
     /// </summary>
     public class TermRebuilder
     {
@@ -17,12 +18,13 @@ namespace Adaptive.Aeron.LogBuffer
         /// <param name="length">     of the sequence of frames in bytes. </param>
         public static void Insert(IAtomicBuffer termBuffer, int termOffset, UnsafeBuffer packet, int length)
         {
-            var firstFrameLength = packet.GetInt(0); // LITTLE_ENDIAN
-            packet.PutIntOrdered(0, 0);
-            Thread.MemoryBarrier(); // UnsafeAccess.UNSAFE.storeFence();
+            termBuffer.PutBytes(termOffset + DataHeaderFlyweight.HEADER_LENGTH, packet, DataHeaderFlyweight.HEADER_LENGTH, length - DataHeaderFlyweight.HEADER_LENGTH);
 
-            termBuffer.PutBytes(termOffset, packet, 0, length);
-            FrameDescriptor.FrameLengthOrdered(termBuffer, termOffset, firstFrameLength);
+            termBuffer.PutLong(termOffset + 24, packet.GetLong(24));
+            termBuffer.PutLong(termOffset + 16, packet.GetLong(16));
+            termBuffer.PutLong(termOffset + 8, packet.GetLong(8));
+
+            termBuffer.PutLongOrdered(termOffset, packet.GetLong(0));
         }
     }
 }

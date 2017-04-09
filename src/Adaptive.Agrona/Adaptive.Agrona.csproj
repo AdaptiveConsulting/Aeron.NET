@@ -69,6 +69,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ByteBuffer.cs" />
+    <Compile Include="CacheLinePadding.cs" />
     <Compile Include="Concurrent\AtomicBoolean.cs" />
     <Compile Include="Concurrent\AtomicLong.cs" />
     <Compile Include="BitUtil.cs" />
@@ -124,6 +125,7 @@
     <Compile Include="Concurrent\SystemEpochClock.cs" />
     <Compile Include="Util\ByteUtil.cs" />
     <Compile Include="Util\IntUtil.cs" />
+    <Compile Include="Util\LockSupport.cs" />
     <Compile Include="Util\MappedByteBuffer.cs" />
     <Compile Include="Util\NanoUtil.cs" />
     <Compile Include="Util\UnixTimeConverter.cs" />

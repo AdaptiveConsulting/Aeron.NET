@@ -176,7 +176,7 @@ namespace Adaptive.Aeron
 
             var position = _subscriberPosition.Get();
             var termOffset = (int) position & _termLengthMask;
-            var offset = termOffset;
+            var resultingOffset = termOffset;
             var fragmentsRead = 0;
             var termBuffer = ActiveTermBuffer(position);
 
@@ -185,15 +185,15 @@ namespace Adaptive.Aeron
                 var capacity = termBuffer.Capacity;
                 do
                 {
-                    var length = FrameDescriptor.FrameLengthVolatile(termBuffer, offset);
+                    var length = FrameDescriptor.FrameLengthVolatile(termBuffer, resultingOffset);
                     if (length <= 0)
                     {
                         break;
                     }
 
-                    var frameOffset = offset;
+                    var frameOffset = resultingOffset;
                     var alignedLength = BitUtil.Align(length, FrameDescriptor.FRAME_ALIGNMENT);
-                    offset += alignedLength;
+                    resultingOffset += alignedLength;
 
                     if (!FrameDescriptor.IsPaddingFrame(termBuffer, frameOffset))
                     {
@@ -210,24 +210,24 @@ namespace Adaptive.Aeron
                         if (action == ControlledFragmentHandlerAction.ABORT)
                         {
                             --fragmentsRead;
-                            offset = frameOffset;
+                            resultingOffset = frameOffset;
                             break;
                         }
                         if (action == ControlledFragmentHandlerAction.COMMIT)
                         {
                             position += alignedLength;
-                            termOffset = offset;
+                            termOffset = resultingOffset;
                             _subscriberPosition.SetOrdered(position);
                         }
                     }
-                } while (fragmentsRead < fragmentLimit && offset < capacity);
+                } while (fragmentsRead < fragmentLimit && resultingOffset < capacity);
             }
             catch (Exception t)
             {
                 _errorHandler(t);
             }
 
-            UpdatePosition(position, termOffset, offset);
+            UpdatePosition(position, termOffset, resultingOffset);
 
             return fragmentsRead;
         }
