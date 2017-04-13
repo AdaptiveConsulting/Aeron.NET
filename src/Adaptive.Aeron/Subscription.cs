@@ -1,41 +1,43 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using Adaptive.Aeron.LogBuffer;
 using Adaptive.Agrona;
 using Adaptive.Agrona.Collections;
 
 namespace Adaptive.Aeron
 {
-    public class SubscriptionLhsPadding
+    [StructLayout(LayoutKind.Sequential)]
+    internal struct SubscriptionFields
     {
-        protected CacheLinePadding _padding1;
+        internal static readonly Image[] EMPTY_ARRAY = new Image[0];
 
-        // To prevent compiler removing unused padding fields
-        public override string ToString()
+        // padding to prevent false sharing
+        private CacheLinePadding _padding1;
+
+        internal readonly long registrationId;
+        internal int roundRobinIndex;
+        internal readonly int streamId;
+        internal volatile bool isClosed;
+        internal volatile Image[] images;
+        internal readonly ClientConductor clientConductor;
+        internal readonly string channel;
+        
+        // padding to prevent false sharing
+        private CacheLinePadding _padding2;
+
+        internal SubscriptionFields(long registrationId, int streamId, ClientConductor clientConductor, string channel)
         {
-            return $"{_padding1}";
-        }
-    }
+            _padding1 = new CacheLinePadding();
+            _padding2 = new CacheLinePadding();
 
-    public class SubscriptionFields : SubscriptionLhsPadding
-    {
-        protected static readonly Image[] EMPTY_ARRAY = new Image[0];
-
-        protected readonly long _registrationId;
-        protected int _roundRobinIndex = 0;
-        protected readonly int _streamId;
-        protected volatile bool _isClosed = false;
-
-        protected volatile Image[] _images = EMPTY_ARRAY;
-        protected readonly ClientConductor _clientConductor;
-        protected readonly string _channel;
-
-        protected internal SubscriptionFields(long registrationId, int streamId, ClientConductor clientConductor, string channel)
-        {
-            _registrationId = registrationId;
-            _streamId = streamId;
-            _clientConductor = clientConductor;
-            _channel = channel;
+            this.registrationId = registrationId;
+            this.streamId = streamId;
+            this.clientConductor = clientConductor;
+            this.channel = channel;
+            roundRobinIndex = 0;
+            isClosed = false;
+            images = EMPTY_ARRAY;
         }
     }
 
@@ -61,26 +63,26 @@ namespace Adaptive.Aeron
     /// </para>
     /// </summary>
     /// <seealso cref="FragmentAssembler" />
-    public class Subscription : SubscriptionFields, IDisposable
+    public class Subscription : IDisposable
     {
-        protected CacheLinePadding _padding2;
+        private SubscriptionFields _fields;
 
         internal Subscription(ClientConductor conductor, string channel, int streamId, long registrationId)
-            : base(registrationId, streamId, conductor, channel)
         {
+            _fields = new SubscriptionFields(registrationId, streamId, conductor, channel);
         }
 
         /// <summary>
         /// Media address for delivery to the channel.
         /// </summary>
         /// <returns> Media address for delivery to the channel. </returns>
-        public string Channel => _channel;
+        public string Channel => _fields.channel;
 
         /// <summary>
         /// Stream identity for scoping within the channel media address.
         /// </summary>
         /// <returns> Stream identity for scoping within the channel media address. </returns>
-        public int StreamId => _streamId;
+        public int StreamId => _fields.streamId;
 
         /// <summary>
         /// Poll the <seealso cref="Image"/>s under the subscription for available message fragments.
@@ -98,14 +100,14 @@ namespace Adaptive.Aeron
         /// <returns> the number of fragments received </returns>
         public int Poll(FragmentHandler fragmentHandler, int fragmentLimit)
         {
-            var images = _images;
+            var images = _fields.images;
             var length = images.Length;
             var fragmentsRead = 0;
 
-            var startingIndex = _roundRobinIndex++;
+            var startingIndex = _fields.roundRobinIndex++;
             if (startingIndex >= length)
             {
-                _roundRobinIndex = startingIndex = 0;
+                _fields.roundRobinIndex = startingIndex = 0;
             }
 
             for (var i = startingIndex; i < length && fragmentsRead < fragmentLimit; i++)
@@ -140,14 +142,14 @@ namespace Adaptive.Aeron
         /// <seealso cref="IControlledFragmentHandler" />
         public int ControlledPoll(IControlledFragmentHandler fragmentHandler, int fragmentLimit)
         {
-            var images = _images;
+            var images = _fields.images;
             var length = images.Length;
             var fragmentsRead = 0;
 
-            var startingIndex = _roundRobinIndex++;
+            var startingIndex = _fields.roundRobinIndex++;
             if (startingIndex >= length)
             {
-                _roundRobinIndex = startingIndex = 0;
+                _fields.roundRobinIndex = startingIndex = 0;
             }
 
             for (var i = startingIndex; i < length && fragmentsRead < fragmentLimit; i++)
@@ -176,7 +178,7 @@ namespace Adaptive.Aeron
         public long BlockPoll(IBlockHandler blockHandler, int blockLengthLimit)
         {
             long bytesConsumed = 0;
-            foreach (var image in _images)
+            foreach (var image in _fields.images)
             {
                 bytesConsumed += image.BlockPoll(blockHandler, blockLengthLimit);
             }
@@ -210,7 +212,7 @@ namespace Adaptive.Aeron
         /// Count of images connected to this subscription.
         /// </summary>
         /// <returns> count of images connected to this subscription. </returns>
-        public int ImageCount => _images.Length;
+        public int ImageCount => _fields.images.Length;
 
         /// <summary>
         /// Return the <seealso cref="Image"/> associated with the given sessionId.
@@ -221,7 +223,7 @@ namespace Adaptive.Aeron
         {
             Image result = null;
 
-            foreach (var image in _images)
+            foreach (var image in _fields.images)
             {
                 if (sessionId == image.SessionId)
                 {
@@ -237,7 +239,7 @@ namespace Adaptive.Aeron
         /// Get a <seealso cref="IList{T}"/> of active <seealso cref="Image"/>s that match this subscription.
         /// </summary>
         /// <returns> a <seealso cref="List{T}"/> of active <seealso cref="Image"/>s that match this subscription. </returns>
-        public IList<Image> Images => _images;
+        public IList<Image> Images => _fields.images;
 
         /// <summary>
         /// Iterate over the <seealso cref="Image"/>s for this subscription.
@@ -245,7 +247,7 @@ namespace Adaptive.Aeron
         /// <param name="imageConsumer"> to handle each <seealso cref="Image"/>. </param>
         public void ForEachImage(Action<Image> imageConsumer)
         {
-            foreach (var image in _images)
+            foreach (var image in _fields.images)
             {
                 imageConsumer(image);
             }
@@ -263,21 +265,21 @@ namespace Adaptive.Aeron
         public  void Dispose()
 #endif
         {
-            lock (_clientConductor)
+            lock (_fields.clientConductor)
             {
-                if (!_isClosed)
+                if (!_fields.isClosed)
                 {
-                    _isClosed = true;
+                    _fields.isClosed = true;
 
-                    _clientConductor.ReleaseSubscription(this);
+                    _fields.clientConductor.ReleaseSubscription(this);
 
-                    foreach (var image in _images)
+                    foreach (var image in _fields.images)
                     {
-                        _clientConductor.UnavailableImageHandler()(image);
-                        _clientConductor.LingerResource(image.ManagedResource());
+                        _fields.clientConductor.UnavailableImageHandler()(image);
+                        _fields.clientConductor.LingerResource(image.ManagedResource());
                     }
 
-                    _images = EMPTY_ARRAY;
+                    _fields.images = SubscriptionFields.EMPTY_ARRAY;
                 }
             }
         }
@@ -286,29 +288,29 @@ namespace Adaptive.Aeron
         /// Has this object been closed and should no longer be used?
         /// </summary>
         /// <returns> true if it has been closed otherwise false. </returns>
-        public bool Closed => _isClosed;
+        public bool Closed => _fields.isClosed;
 
         /// <summary>
         /// Return the registration id used to register this Publication with the media driver.
         /// </summary>
         /// <returns> registration id </returns>
-        public long RegistrationId => _registrationId;
+        public long RegistrationId => _fields.registrationId;
 
         internal void AddImage(Image image)
         {
-            if (_isClosed)
+            if (_fields.isClosed)
             {
-                _clientConductor.LingerResource(image.ManagedResource());
+                _fields.clientConductor.LingerResource(image.ManagedResource());
             }
             else
             {
-                _images = ArrayUtil.Add(_images, image);
+                _fields.images = ArrayUtil.Add(_fields.images, image);
             }
         }
 
         internal Image RemoveImage(long correlationId)
         {
-            var oldArray = _images;
+            var oldArray = _fields.images;
             Image removedImage = null;
 
             foreach (var image in oldArray)
@@ -322,8 +324,8 @@ namespace Adaptive.Aeron
 
             if (null != removedImage)
             {
-                _images = ArrayUtil.Remove(oldArray, removedImage);
-                _clientConductor.LingerResource(removedImage.ManagedResource());
+                _fields.images = ArrayUtil.Remove(oldArray, removedImage);
+                _fields.clientConductor.LingerResource(removedImage.ManagedResource());
             }
 
             return removedImage;
@@ -333,7 +335,7 @@ namespace Adaptive.Aeron
         {
             var hasImage = false;
 
-            foreach (var image in _images)
+            foreach (var image in _fields.images)
             {
                 if (correlationId == image.CorrelationId)
                 {
@@ -345,6 +347,6 @@ namespace Adaptive.Aeron
             return hasImage;
         }
 
-        internal bool HasNoImages => _images.Length == 0;
+        internal bool HasNoImages => _fields.images.Length == 0;
     }
 }
