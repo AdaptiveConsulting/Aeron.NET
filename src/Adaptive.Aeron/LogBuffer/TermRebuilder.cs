@@ -10,21 +10,27 @@ namespace Adaptive.Aeron.LogBuffer
     public class TermRebuilder
     {
         /// <summary>
-        /// Insert a packet of frames into the log at the appropriate offset as indicated by the term termOffset header.
+        /// Insert a packet of frames into the log at the appropriate termOffset as indicated by the term termOffset header.
+        /// 
+        /// If the packet has already been inserted then this is a noop.
         /// </summary>
         /// <param name="termBuffer"> into which the packet should be inserted. </param>
-        /// <param name="termOffset">     offset in the term at which the packet should be inserted. </param>
+        /// <param name="termOffset"> in the term at which the packet should be inserted. </param>
         /// <param name="packet">     containing a sequence of frames. </param>
         /// <param name="length">     of the sequence of frames in bytes. </param>
         public static void Insert(IAtomicBuffer termBuffer, int termOffset, UnsafeBuffer packet, int length)
         {
-            termBuffer.PutBytes(termOffset + DataHeaderFlyweight.HEADER_LENGTH, packet, DataHeaderFlyweight.HEADER_LENGTH, length - DataHeaderFlyweight.HEADER_LENGTH);
+            if (0 == termBuffer.GetInt(termOffset))
+            {
+                termBuffer.PutBytes(termOffset + DataHeaderFlyweight.HEADER_LENGTH, packet,
+                    DataHeaderFlyweight.HEADER_LENGTH, length - DataHeaderFlyweight.HEADER_LENGTH);
 
-            termBuffer.PutLong(termOffset + 24, packet.GetLong(24));
-            termBuffer.PutLong(termOffset + 16, packet.GetLong(16));
-            termBuffer.PutLong(termOffset + 8, packet.GetLong(8));
+                termBuffer.PutLong(termOffset + 24, packet.GetLong(24));
+                termBuffer.PutLong(termOffset + 16, packet.GetLong(16));
+                termBuffer.PutLong(termOffset + 8, packet.GetLong(8));
 
-            termBuffer.PutLongOrdered(termOffset, packet.GetLong(0));
+                termBuffer.PutLongOrdered(termOffset, packet.GetLong(0));
+            }
         }
     }
 }

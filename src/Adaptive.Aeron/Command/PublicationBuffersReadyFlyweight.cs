@@ -21,7 +21,7 @@ namespace Adaptive.Aeron.Command
     /// +---------------------------------------------------------------+
     /// |                         Log File Length                       |
     /// +---------------------------------------------------------------+
-    /// |                          Log File Name                      ...
+    /// |                          Log File Name (ASCII)               ...
     /// ...                                                             |
     /// +---------------------------------------------------------------+ 
     public class PublicationBuffersReadyFlyweight
@@ -133,14 +133,23 @@ namespace Adaptive.Aeron.Command
             return this;
         }
 
+        /// <summary>
+        /// Get the log file name in ASCII.
+        /// </summary>
+        /// <returns> the log file name in ASCII. </returns>
         public string LogFileName()
         {
-            return _buffer.GetStringUtf8(_offset + LOGFILE_FIELD_OFFSET);
+            return _buffer.GetStringAscii(_offset + LOGFILE_FIELD_OFFSET);
         }
 
+        /// <summary>
+        /// Set the log file name in ASCII.
+        /// </summary>
+        /// <param name="logFileName"> for the publication buffers. </param>
+        /// <returns> the log file name in ASCII. </returns>
         public PublicationBuffersReadyFlyweight LogFileName(string logFileName)
         {
-            _buffer.PutStringUtf8(_offset + LOGFILE_FIELD_OFFSET, logFileName);
+            _buffer.PutStringAscii(_offset + LOGFILE_FIELD_OFFSET, logFileName);
             return this;
         }
 

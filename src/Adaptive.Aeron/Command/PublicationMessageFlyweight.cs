@@ -16,8 +16,8 @@ namespace Adaptive.Aeron.Command
     /// +---------------------------------------------------------------+
     /// |                        Channel Length                         |
     /// +---------------------------------------------------------------+
-    /// |                           Channel                            ...
-    /// ...                                                              |
+    /// |                           Channel   (ASCII)                  ...
+    /// ...                                                             |
     /// +---------------------------------------------------------------+
     /// </para>
     /// </summary>
@@ -50,22 +50,22 @@ namespace Adaptive.Aeron.Command
         }
 
         /// <summary>
-        /// Get the channel field
+        /// Get the channel field in ASCII
         /// </summary>
         /// <returns> channel field </returns>
         public string Channel()
         {
-            return buffer.GetStringUtf8(offset + CHANNEL_OFFSET);
+            return buffer.GetStringAscii(offset + CHANNEL_OFFSET);
         }
 
         /// <summary>
-        /// Set the channel field
+        /// Set the channel field in ASCII
         /// </summary>
         /// <param name="channel"> field value </param>
         /// <returns> flyweight </returns>
         public PublicationMessageFlyweight Channel(string channel)
         {
-            _lengthOfChannel = buffer.PutStringUtf8(offset + CHANNEL_OFFSET, channel);
+            _lengthOfChannel = buffer.PutStringAscii(offset + CHANNEL_OFFSET, channel);
 
             return this;
         }

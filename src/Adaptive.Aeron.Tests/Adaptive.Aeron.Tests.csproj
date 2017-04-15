@@ -74,6 +74,7 @@
     <Compile Include="ImageTest.cs" />
     <Compile Include="LogBuffer\TermAppenderTest.cs" />
     <Compile Include="LogBuffer\TermBlockScannerTest.cs" />
+    <Compile Include="LogBuffer\TermGapFillerTests.cs" />
     <Compile Include="LogBuffer\TermReaderTest.cs" />
     <Compile Include="LogBuffer\TermRebuilderTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

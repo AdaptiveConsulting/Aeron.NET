@@ -201,6 +201,13 @@ namespace Adaptive.Agrona
         /// <returns> the String as represented by the UTF-8 encoded bytes. </returns>
         string GetStringUtf8(int index);
 
+        /// <summary>
+        /// Get a String from bytes encoded in ASCII format that is length prefixed.
+        /// </summary>
+        /// <param name="index">    at which the String begins. </param>
+        /// <returns> the String as represented by the ASCII encoded bytes. </returns>
+        string GetStringAscii(int index);
+
         ///// <summary>
         ///// Get a String from bytes encoded in UTF-8 format that is length prefixed.
         ///// </summary>
@@ -216,6 +223,14 @@ namespace Adaptive.Agrona
         /// <param name="length"> of the String in bytes to decode. </param>
         /// <returns> the String as represented by the UTF-8 encoded bytes. </returns>
         string GetStringUtf8(int index, int length);
+
+        /// <summary>
+        /// Get part of String from bytes encoded in ASCII format that is length prefixed.
+        /// </summary>
+        /// <param name="index"> at which the String begins. </param>
+        /// <param name="length"> of the String in bytes to decode. </param>
+        /// <returns> the String as represented by the ASCII encoded bytes. </returns>
+        string GetStringAscii(int index, int length);
 
         /// <summary>
         /// Get an encoded UTF-8 String from the buffer that does not have a length prefix.
