@@ -79,6 +79,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Adaptive.Agrona.Tests.licenseheader" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
