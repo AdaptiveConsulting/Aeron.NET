@@ -46,6 +46,10 @@ namespace Adaptive.Aeron.Protocol
         public const int HDR_TYPE_SETUP = 0x05;
 
         /// <summary>
+        /// header type RTT Measurement </summary>
+        public const int HDR_TYPE_RTTM = 0x06;
+
+        /// <summary>
         /// header type EXT </summary>
         public const int HDR_TYPE_EXT = 0xFFFF;
 

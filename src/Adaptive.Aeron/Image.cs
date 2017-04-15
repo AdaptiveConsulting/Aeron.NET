@@ -11,6 +11,14 @@ namespace Adaptive.Aeron
     /// <summary>
     /// Represents a replicated publication <seealso cref="Image"/> from a publisher to a <seealso cref="Subscription"/>.
     /// Each <seealso cref="Image"/> identifies a source publisher by session id.
+    /// 
+    /// By default fragmented messages are not reassembled before delivery. If an application must
+    /// receive whole messages, whether or not they were fragmented, then the Subscriber
+    /// should be created with a <seealso cref="FragmentAssembler"/> or a custom implementation.
+    /// 
+    /// It is an application's responsibility to <seealso cref="Poll"/> the <seealso cref="Image"/> for new messages.
+    /// 
+    /// <b>Note:</b>Images are not threadsafe and should not be shared between subscribers.
     /// </summary>
     public class Image
     {

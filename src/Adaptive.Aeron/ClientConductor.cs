@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading;
 using Adaptive.Aeron.Exceptions;
+using Adaptive.Aeron.io.aeron;
 using Adaptive.Agrona;
 using Adaptive.Agrona.Concurrent;
 using Adaptive.Agrona.Concurrent.Broadcast;
@@ -336,12 +337,14 @@ namespace Adaptive.Aeron
 
             if (now > _timeOfLastCheckResources + ResourceTimeoutNs)
             {
-                for (var i = _lingeringResources.Count - 1; i >= 0; i--)
+                var lingeringResources = _lingeringResources;
+                for (int lastIndex = lingeringResources.Count - 1, i = lastIndex; i >= 0; i--)
                 {
-                    var resource = _lingeringResources[i];
-                    if (now > (resource.TimeOfLastStateChange() + ResourceLingerNs))
+                    var resource = lingeringResources[i];
+                    if (now > resource.TimeOfLastStateChange() + ResourceLingerNs)
                     {
-                        _lingeringResources.RemoveAt(i);
+                        ListUtil.FastUnorderedRemove(lingeringResources, i, lastIndex);
+                        lastIndex--;
                         resource.Delete();
                     }
                 }

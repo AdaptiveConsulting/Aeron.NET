@@ -871,6 +871,18 @@ namespace Adaptive.Agrona.Concurrent
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #if DEBUG
+        public virtual string GetStringAscii(int index)
+#else
+        public string GetStringAscii(int index)
+#endif
+        {
+            var length = GetInt(index);
+
+            return GetStringAscii(index, length);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#if DEBUG
         public virtual string GetStringUtf8(int index, int length)
 #else
         public string GetStringUtf8(int index, int length)
@@ -883,9 +895,28 @@ namespace Adaptive.Agrona.Concurrent
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#if DEBUG
+        public virtual string GetStringAscii(int index, int length)
+#else
+        public string GetStringAscii(int index, int length)
+#endif
+        {
+            var stringInBytes = new byte[length];
+            GetBytes(index + BitUtil.SIZE_OF_INT, stringInBytes);
+
+            return Encoding.ASCII.GetString(stringInBytes);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int PutStringUtf8(int index, string value)
         {
             return PutStringUtf8(index, value, int.MaxValue);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public int PutStringAscii(int index, string value)
+        {
+            return PutStringAscii(index, value, int.MaxValue);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -894,6 +925,23 @@ namespace Adaptive.Agrona.Concurrent
             var bytes = value == null
                 ? BufferUtil.NullBytes
                 : Encoding.UTF8.GetBytes(value);
+            if (bytes.Length > maxEncodedSize)
+            {
+                throw new ArgumentException("Encoded string larger than maximum size: " + maxEncodedSize);
+            }
+
+            PutInt(index, bytes.Length);
+            PutBytes(index + BitUtil.SIZE_OF_INT, bytes);
+
+            return BitUtil.SIZE_OF_INT + bytes.Length;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public int PutStringAscii(int index, string value, int maxEncodedSize)
+        {
+            var bytes = value == null
+                ? BufferUtil.NullBytes
+                : Encoding.ASCII.GetBytes(value);
             if (bytes.Length > maxEncodedSize)
             {
                 throw new ArgumentException("Encoded string larger than maximum size: " + maxEncodedSize);

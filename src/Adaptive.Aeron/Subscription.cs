@@ -44,25 +44,20 @@ namespace Adaptive.Aeron
 
     /// <summary>
     /// Aeron Subscriber API for receiving a reconstructed <seealso cref="Image"/> for a stream of messages from publishers on
-    /// a given channel and streamId pair.
-    /// <para>
-    /// Subscribers are created via an <seealso cref="Aeron"/> object, and received messages are delivered
+    /// a given channel and streamId pair. <seealso cref="Image"/>s are aggregated under a <seealso cref="Subscription"/>.
+    /// 
+    /// <seealso cref="Subscription"/>s are created via an <seealso cref="Aeron"/> object, and received messages are delivered
     /// to the <seealso cref="FragmentHandler"/>.
-    /// </para>
-    /// <para>
+    /// 
     /// By default fragmented messages are not reassembled before delivery. If an application must
     /// receive whole messages, whether or not they were fragmented, then the Subscriber
     /// should be created with a <seealso cref="FragmentAssembler"/> or a custom implementation.
-    /// </para>
-    /// <para>
-    /// It is an application's responsibility to <seealso cref="Poll"/> the Subscriber for new messages.
-    /// </para>
-    /// <para>
-    /// Subscriptions are not threadsafe and should not be shared between subscribers.
     /// 
-    /// </para>
+    /// It is an application's responsibility to <seealso cref="Poll"/> the <seealso cref="Subscription"/> for new messages.
+    /// 
+    /// <b>Note:</b>Subscriptions are not threadsafe and should not be shared between subscribers.
     /// </summary>
-    /// <seealso cref="FragmentAssembler" />
+    /// <seealso cref="FragmentAssembler"> </seealso>
     public class Subscription : IDisposable
     {
         private SubscriptionFields _fields;
