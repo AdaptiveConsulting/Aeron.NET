@@ -16,7 +16,6 @@
 
 using System;
 using System.IO;
-using System.Threading;
 using Adaptive.Aeron.Exceptions;
 using Adaptive.Agrona;
 using Adaptive.Agrona.Concurrent;
@@ -342,15 +341,25 @@ namespace Adaptive.Aeron
 
 
             /// <summary>
-            /// Set the <seealso cref="EpochClock"/> to be used for tracking wall clock time when interacting with the driver.
+            /// Set the <seealso cref="IEpochClock"/> to be used for tracking wall clock time when interacting with the driver.
             /// </summary>
-            /// <param name="clock"> <seealso cref="EpochClock"/> to be used for tracking wall clock time when interacting with the driver. </param>
+            /// <param name="clock"> <seealso cref="IEpochClock"/> to be used for tracking wall clock time when interacting with the driver. </param>
             /// <returns> this Aeron.Context for method chaining </returns>
             public Context EpochClock(IEpochClock clock)
             {
                 _epochClock = clock;
                 return this;
             }
+
+            /// <summary>
+            /// Get the <seealso cref="IEpochClock"/> used by the client for the epoch time in milliseconds.
+            /// </summary>
+            /// <returns> the <seealso cref="IEpochClock"/> used by the client for the epoch time in milliseconds. </returns>
+            public IEpochClock EpochClock()
+            {
+                return _epochClock;
+            }
+
 
             /// <summary>
             /// Set the <seealso cref="NanoClock"/> to be used for tracking high resolution time.
@@ -372,6 +381,15 @@ namespace Adaptive.Aeron
             {
                 _idleStrategy = idleStrategy;
                 return this;
+            }
+
+            /// <summary>
+            /// Get the <seealso cref="IIdleStrategy"/> employed by the client conductor thread.
+            /// </summary>
+            /// <returns> the <seealso cref="IIdleStrategy"/> employed by the client conductor thread. </returns>
+            public IIdleStrategy IdleStrategy()
+            {
+                return _idleStrategy;
             }
 
             /// <summary>
@@ -419,6 +437,15 @@ namespace Adaptive.Aeron
             {
                 _errorHandler = errorHandler;
                 return this;
+            }
+
+            /// <summary>
+            /// Get the error handler that will be called for errors reported back from the media driver.
+            /// </summary>
+            /// <returns> the error handler that will be called for errors reported back from the media driver. </returns>
+            public ErrorHandler ErrorHandler()
+            {
+                return _errorHandler;
             }
 
             /// <summary>

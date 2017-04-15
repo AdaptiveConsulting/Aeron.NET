@@ -40,6 +40,7 @@ namespace Adaptive.Aeron
         private readonly SubscriptionMessageFlyweight _subscriptionMessage = new SubscriptionMessageFlyweight();
         private readonly RemoveMessageFlyweight _removeMessage = new RemoveMessageFlyweight();
         private readonly CorrelatedMessageFlyweight _correlatedMessage = new CorrelatedMessageFlyweight();
+        private readonly DestinationMessageFlyweight _destinationMessage = new DestinationMessageFlyweight();
         private readonly IRingBuffer _toDriverCommandBuffer;
 
         public DriverProxy(IRingBuffer toDriverCommandBuffer)
@@ -53,6 +54,7 @@ namespace Adaptive.Aeron
 
             _correlatedMessage.Wrap(_buffer, 0);
             _removeMessage.Wrap(_buffer, 0);
+            _destinationMessage.Wrap(_buffer, 0);
 
             var clientId = toDriverCommandBuffer.NextCorrelationId();
             _correlatedMessage.ClientId(clientId);
@@ -149,5 +151,34 @@ namespace Adaptive.Aeron
                 throw new InvalidOperationException("Could not send client keepalive command");
             }
         }
+
+        public long AddDestination(long registrationId, string endpointChannel)
+        {
+            long correlationId = _toDriverCommandBuffer.NextCorrelationId();
+
+            _destinationMessage.RegistrationCorrelationId(registrationId).Channel(endpointChannel).CorrelationId(correlationId);
+
+            if (!_toDriverCommandBuffer.Write(ControlProtocolEvents.ADD_DESTINATION, _buffer, 0, _destinationMessage.Length()))
+            {
+                throw new InvalidOperationException("Could not write destination command");
+            }
+
+            return correlationId;
+        }
+
+        public long RemoveDestination(long registrationId, string endpointChannel)
+        {
+            long correlationId = _toDriverCommandBuffer.NextCorrelationId();
+
+            _destinationMessage.RegistrationCorrelationId(registrationId).Channel(endpointChannel).CorrelationId(correlationId);
+
+            if (!_toDriverCommandBuffer.Write(ControlProtocolEvents.REMOVE_DESTINATION, _buffer, 0, _destinationMessage.Length()))
+            {
+                throw new InvalidOperationException("Could not write destination command");
+            }
+
+            return correlationId;
+        }
+
     }
 }

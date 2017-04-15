@@ -96,6 +96,12 @@ namespace Adaptive.Aeron
         public int StreamId => _fields.streamId;
 
         /// <summary>
+        /// Return the registration id used to register this Publication with the media driver.
+        /// </summary>
+        /// <returns> registration id </returns>
+        public long RegistrationId => _fields.registrationId;
+
+        /// <summary>
         /// Poll the <seealso cref="Image"/>s under the subscription for available message fragments.
         /// <para>
         /// Each fragment read will be a whole message if it is under MTU length. If larger than MTU then it will come
@@ -220,6 +226,15 @@ namespace Adaptive.Aeron
         //}
 
         /// <summary>
+        /// Has the subscription currently no images connected to it?
+        /// </summary>
+        /// <returns> he subscription currently no images connected to it? </returns>
+        public bool HasNoImages()
+        {
+            return _fields.images.Length == 0;
+        }
+
+        /// <summary>
         /// Count of images connected to this subscription.
         /// </summary>
         /// <returns> count of images connected to this subscription. </returns>
@@ -280,17 +295,7 @@ namespace Adaptive.Aeron
             {
                 if (!_fields.isClosed)
                 {
-                    _fields.isClosed = true;
-
-                    _fields.clientConductor.ReleaseSubscription(this);
-
-                    foreach (var image in _fields.images)
-                    {
-                        _fields.clientConductor.UnavailableImageHandler()(image);
-                        _fields.clientConductor.LingerResource(image.ManagedResource());
-                    }
-
-                    _fields.images = SubscriptionFields.EMPTY_ARRAY;
+                    Release();
                 }
             }
         }
@@ -301,13 +306,31 @@ namespace Adaptive.Aeron
         /// <returns> true if it has been closed otherwise false. </returns>
         public bool Closed => _fields.isClosed;
 
-        /// <summary>
-        /// Return the registration id used to register this Publication with the media driver.
-        /// </summary>
-        /// <returns> registration id </returns>
-        public long RegistrationId => _fields.registrationId;
+        internal void Release()
+        {
+            _fields.isClosed = true;
 
-        internal void AddImage(Image image)
+            foreach (var image in _fields.images)
+            {
+                _fields.clientConductor.LingerResource(image.ManagedResource());
+
+                try
+                {
+                    _fields.clientConductor.UnavailableImageHandler(image);
+                }
+                catch (Exception ex)
+                {
+                    _fields.clientConductor.HandleError(ex);
+                }
+            }
+
+            _fields.images = SubscriptionFields.EMPTY_ARRAY;
+
+            _fields.clientConductor.ReleaseSubscription(this);
+        }
+
+
+    internal void AddImage(Image image)
         {
             if (_fields.isClosed)
             {
@@ -357,7 +380,5 @@ namespace Adaptive.Aeron
 
             return hasImage;
         }
-
-        internal bool HasNoImages => _fields.images.Length == 0;
     }
 }
