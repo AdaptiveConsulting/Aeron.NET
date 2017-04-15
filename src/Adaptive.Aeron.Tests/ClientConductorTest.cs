@@ -443,7 +443,7 @@ namespace Adaptive.Aeron.Tests
 
             Conductor.OnAvailableImage(STREAM_ID_1, SESSION_ID_1, SubscriberPositionMap, SESSION_ID_1 + "-log", SOURCE_INFO, CORRELATION_ID);
 
-            Assert.False(subscription.HasNoImages);
+            Assert.False(subscription.HasNoImages());
 
             A.CallTo(() => MockAvailableImageHandler(A<Image>._)).MustHaveHappened();
 
@@ -451,7 +451,7 @@ namespace Adaptive.Aeron.Tests
 
             A.CallTo(() => MockUnavailableImageHandler(A<Image>._)).MustHaveHappened();
 
-            Assert.True(subscription.HasNoImages);
+            Assert.True(subscription.HasNoImages());
         }
 
         [Test]

@@ -28,7 +28,7 @@ namespace Adaptive.Aeron
     /// <summary>
     /// Aeron Publisher API for sending messages to subscribers of a given channel and streamId pair. Publishers
     /// are created via the <seealso cref="Aeron.AddPublication(String, int)"/> method, and messages are sent via one of the
-    /// <seealso cref="Offer(DirectBuffer)"/> methods, or a <seealso cref="TryClaim(int, BufferClaim)"/> and <seealso cref="BufferClaim.Commit"/>
+    /// <seealso cref="Offer(IDirectBuffer)"/> methods, or a <seealso cref="TryClaim(int, BufferClaim)"/> and <seealso cref="BufferClaim.Commit"/>
     /// method combination.
     /// <para>
     /// The APIs used to send are all non-blocking.
@@ -69,7 +69,7 @@ namespace Adaptive.Aeron
         private readonly UnsafeBuffer _logMetaDataBuffer;
         private readonly HeaderWriter _headerWriter;
         private readonly LogBuffers _logBuffers;
-        private readonly ClientConductor _clientConductor;
+        private readonly ClientConductor _conductor;
 
         internal Publication(ClientConductor clientConductor, string channel, int streamId, int sessionId, IReadablePosition positionLimit, LogBuffers logBuffers, long registrationId)
         {
@@ -84,7 +84,7 @@ namespace Adaptive.Aeron
             var termLength = logBuffers.TermLength();
             MaxPayloadLength = LogBufferDescriptor.MtuLength(logMetaDataBuffer) - DataHeaderFlyweight.HEADER_LENGTH;
             MaxMessageLength = FrameDescriptor.ComputeMaxMessageLength(termLength);
-            _clientConductor = clientConductor;
+            _conductor = clientConductor;
             Channel = channel;
             StreamId = streamId;
             SessionId = sessionId;
@@ -147,10 +147,16 @@ namespace Adaptive.Aeron
         public int MaxPayloadLength { get; }
 
         /// <summary>
+        /// Return the registration id used to register this Publication with the media driver.
+        /// </summary>
+        /// <returns> registration id </returns>
+        public long RegistrationId { get; }
+
+        /// <summary>
         /// Has the <seealso cref="Publication"/> seen an active Subscriber recently?
         /// </summary>
         /// <returns> true if this <seealso cref="Publication"/> has seen an active subscriber otherwise false. </returns>
-        public bool IsConnected => !_isClosed && _clientConductor.IsPublicationConnected(LogBufferDescriptor.TimeOfLastStatusMessage(_logMetaDataBuffer));
+        public bool IsConnected => !_isClosed && _conductor.IsPublicationConnected(LogBufferDescriptor.TimeOfLastStatusMessage(_logMetaDataBuffer));
 
         /// <summary>
         /// Release resources used by this Publication when there are no more references.
@@ -159,7 +165,7 @@ namespace Adaptive.Aeron
         /// </summary>
         public void Dispose()
         {
-            lock (_clientConductor)
+            lock (_conductor)
             {
                 if (--_refCount == 0)
                 {
@@ -182,7 +188,7 @@ namespace Adaptive.Aeron
             if (!_isClosed)
             {
                 _isClosed = true;
-                _clientConductor.ReleasePublication(this);
+                _conductor.ReleasePublication(this);
             }
         }
 
@@ -247,7 +253,11 @@ namespace Adaptive.Aeron
         /// <returns> The new stream position, otherwise a negative error value <seealso cref="NOT_CONNECTED"/>, <seealso cref="BACK_PRESSURED"/>,
         /// <seealso cref="ADMIN_ACTION"/> or <seealso cref="CLOSED"/>. </returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public long Offer(UnsafeBuffer buffer, int offset, int length, ReservedValueSupplier reservedValueSupplier = null)
+        public long Offer(
+            UnsafeBuffer buffer, 
+            int offset, 
+            int length, 
+            ReservedValueSupplier reservedValueSupplier = null)
         {
             var newPosition = CLOSED;
             if (!_isClosed)
@@ -274,7 +284,7 @@ namespace Adaptive.Aeron
 
                     newPosition = NewPosition(partitionIndex, (int) termOffset, position, result);
                 }
-                else if (_clientConductor.IsPublicationConnected(LogBufferDescriptor.TimeOfLastStatusMessage(_logMetaDataBuffer)))
+                else if (_conductor.IsPublicationConnected(LogBufferDescriptor.TimeOfLastStatusMessage(_logMetaDataBuffer)))
                 {
                     newPosition = BACK_PRESSURED;
                 }
@@ -324,11 +334,11 @@ namespace Adaptive.Aeron
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public long TryClaim(int length, BufferClaim bufferClaim)
         {
+            CheckForMaxPayloadLength(length);
             var newPosition = CLOSED;
+
             if (!_isClosed)
             {
-                CheckForMaxPayloadLength(length);
-
                 var limit = _positionLimit.Volatile;
                 var partitionIndex = LogBufferDescriptor.ActivePartitionIndex(_logMetaDataBuffer);
                 var termAppender = _termAppenders[partitionIndex];
@@ -341,7 +351,7 @@ namespace Adaptive.Aeron
                     var result = termAppender.Claim(_headerWriter, length, bufferClaim);
                     newPosition = NewPosition(partitionIndex, (int) termOffset, position, result);
                 }
-                else if (_clientConductor.IsPublicationConnected(LogBufferDescriptor.TimeOfLastStatusMessage(_logMetaDataBuffer)))
+                else if (_conductor.IsPublicationConnected(LogBufferDescriptor.TimeOfLastStatusMessage(_logMetaDataBuffer)))
                 {
                     newPosition = BACK_PRESSURED;
                 }
@@ -355,11 +365,28 @@ namespace Adaptive.Aeron
         }
 
         /// <summary>
-        /// Return the registration id used to register this Publication with the media driver.
+        /// Add a destination manually to a multi-destination-cast Publication.
         /// </summary>
-        /// <returns> registration id </returns>
-        public long RegistrationId { get; }
+        /// <param name="endpointChannel"> for the destination to add </param>
+        public void AddDestination(string endpointChannel)
+        {
+            lock (_conductor)
+            {
+                _conductor.AddDestination(this, endpointChannel);
+            }
+        }
 
+        /// <summary>
+        /// Remove a previously added destination manually from a multi-destination-cast Publication.
+        /// </summary>
+        /// <param name="endpointChannel"> for the destination to remove </param>
+        public void RemoveDestination(string endpointChannel)
+        {
+            lock (_conductor)
+            {
+                _conductor.RemoveDestination(this, endpointChannel);
+            }
+        }
 
         /// <seealso cref="Dispose()" />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

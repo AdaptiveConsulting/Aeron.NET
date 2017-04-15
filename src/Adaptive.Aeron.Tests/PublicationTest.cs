@@ -31,6 +31,7 @@ namespace Adaptive.Aeron.Tests
         private const int CorrelationID = 2000;
         private const int SendBufferCapacity = 1024;
         private const int PartionIndex = 0;
+        private const int MTU_LENGTH = 4096;
 
         private byte[] _sendBuffer;
         private UnsafeBuffer _atomicSendBuffer;
@@ -60,6 +61,7 @@ namespace Adaptive.Aeron.Tests
             A.CallTo(() => _logBuffers.MetaDataBuffer()).Returns(_logMetaDataBuffer);
 
             LogBufferDescriptor.InitialTermId(_logMetaDataBuffer, TermID1);
+            LogBufferDescriptor.MtuLength(_logMetaDataBuffer, MTU_LENGTH);
             LogBufferDescriptor.TimeOfLastStatusMessage(_logMetaDataBuffer, 0);
 
             for (var i = 0; i < LogBufferDescriptor.PARTITION_COUNT; i++)

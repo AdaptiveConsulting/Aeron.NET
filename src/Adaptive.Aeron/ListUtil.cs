@@ -14,18 +14,16 @@
  * limitations under the License.
  */
 
+using System;
+
 namespace Adaptive.Aeron
 {
     using System.Collections.Generic;
 
     namespace io.aeron
     {
-        public abstract class ListUtil
+        public static class ListUtil
         {
-            private ListUtil()
-            {
-            }
-
             /// <summary>
             /// Removes element at i, but instead of copying all elements to the left, moves into the same slot the last
             /// element. If i is the last element it is just removed. This avoids the copy costs, but spoils the list order.
@@ -42,7 +40,28 @@ namespace Adaptive.Aeron
                     list[i] = last;
                 }
             }
+
+            /// <summary>
+            /// Removes element at i, but instead of copying all elements to the left, moves into the same slot the last
+            /// element. If i is the last element it is just removed. This avoids the copy costs, but spoils the list order.
+            /// </summary>
+            /// <param name="list">      to be modified </param>
+            /// <param name="e">         to be removed </param>
+            /// <returns> true if found and removed, false otherwise </returns>
+            public static bool FastUnorderedRemove<T>(List<T> list, T e)
+            {
+                if (e == null) throw new ArgumentNullException(nameof(e));
+
+                for (int i = 0, size = list.Count; i < size; i++)
+                {
+                    if (e.Equals(list[i]))
+                    {
+                        FastUnorderedRemove(list, i, size - 1);
+                        return true;
+                    }
+                }
+                return false;
+            }
         }
     }
-
 }

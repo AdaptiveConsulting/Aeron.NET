@@ -63,6 +63,7 @@
     <Compile Include="ActivePublications.cs" />
     <Compile Include="ActiveSubscriptions.cs" />
     <Compile Include="Aeron.cs" />
+    <Compile Include="Command\DestinationMessageFlyweight.cs" />
     <Compile Include="ListUtil.cs" />
     <Compile Include="BufferBuilder.cs" />
     <Compile Include="ClientConductor.cs" />

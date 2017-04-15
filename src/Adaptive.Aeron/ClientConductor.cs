@@ -62,11 +62,7 @@ namespace Adaptive.Aeron
         private readonly UnavailableImageHandler _unavailableImageHandler;
 
         private RegistrationException _driverException;
-
-        internal ClientConductor()
-        {
-        }
-
+        
         internal ClientConductor(
             IEpochClock epochClock,
             INanoClock nanoClock,
@@ -106,15 +102,12 @@ namespace Adaptive.Aeron
 
         public void OnClose()
         {
-            lock (this)
-            {
-                _activePublications.Dispose();
-                _activeSubscriptions.Dispose();
+            _activePublications.Dispose();
+            _activeSubscriptions.Dispose();
 
-                Thread.Yield();
+            Thread.Yield();
 
-                _lingeringResources.ForEach(mr => mr.Delete());
-            }
+            _lingeringResources.ForEach(mr => mr.Delete());
         }
 
         public int DoWork()
@@ -137,6 +130,11 @@ namespace Adaptive.Aeron
         public string RoleName()
         {
             return "aeron-client-conductor";
+        }
+
+        internal void HandleError(Exception ex)
+        {
+            _errorHandler(ex);
         }
 
         internal Publication AddPublication(string channel, int streamId)
@@ -197,6 +195,20 @@ namespace Adaptive.Aeron
             _activeSubscriptions.Remove(subscription);
         }
 
+        public void AddDestination(Publication publication, string endpointChannel)
+        {
+            VerifyDriverIsActive();
+
+            AwaitResponse(_driverProxy.AddDestination(publication.RegistrationId, endpointChannel), endpointChannel);
+        }
+
+        public virtual void RemoveDestination(Publication publication, string endpointChannel)
+        {
+            VerifyDriverIsActive();
+
+            AwaitResponse(_driverProxy.RemoveDestination(publication.RegistrationId, endpointChannel), endpointChannel);
+        }
+
         public void OnNewPublication(string channel, int streamId, int sessionId, int publicationLimitId, string logFileName, long correlationId)
         {
             var publication = new Publication(this, channel, streamId, sessionId, new UnsafeBufferPosition(_counterValuesBuffer, publicationLimitId), _logBuffersFactory.Map(logFileName, MapMode.ReadWrite), correlationId);
@@ -216,7 +228,16 @@ namespace Adaptive.Aeron
                     {
                         var image = new Image(subscription, sessionId, new UnsafeBufferPosition(_counterValuesBuffer, (int) positionId), _logBuffersFactory.Map(logFileName, _imageMapMode), _errorHandler, sourceIdentity, correlationId);
                         subscription.AddImage(image);
-                        _availableImageHandler(image);
+
+                        try
+                        {
+                            _availableImageHandler(image);
+                        }
+                        catch (Exception e)
+                        {
+                            _errorHandler(e);
+                            throw;
+                        }
                     }
                 }
             });
@@ -234,7 +255,15 @@ namespace Adaptive.Aeron
                 var image = subscription.RemoveImage(correlationId);
                 if (null != image)
                 {
-                    _unavailableImageHandler(image);
+                    try
+                    {
+                        _unavailableImageHandler(image);
+                    }
+                    catch (Exception e)
+                    {
+                        _errorHandler(e);
+                        throw;
+                    }
                 }
             });
         }
@@ -259,17 +288,14 @@ namespace Adaptive.Aeron
             return _epochClock.Time() <= timeOfLastStatusMessage + _publicationConnectionTimeoutMs;
         }
 
-        internal UnavailableImageHandler UnavailableImageHandler()
-        {
-            return _unavailableImageHandler;
-        }
+        internal UnavailableImageHandler UnavailableImageHandler => _unavailableImageHandler;
 
         private void CheckDriverHeartbeat()
         {
             var now = _epochClock.Time();
             var currentDriverKeepaliveTime = _driverProxy.TimeOfLastDriverKeepalive();
 
-            if (_driverActive && (now > (currentDriverKeepaliveTime + _driverTimeoutMs)))
+            if (_driverActive && now > currentDriverKeepaliveTime + _driverTimeoutMs)
             {
                 _driverActive = false;
 

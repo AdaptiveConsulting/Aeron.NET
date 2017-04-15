@@ -39,6 +39,12 @@ namespace Adaptive.Aeron.Command
         /// <summary>
         /// Keepalive from Client </summary>
         public const int CLIENT_KEEPALIVE = 0x06;
+        /// <summary>
+        /// Add Destination </summary>
+        public const int ADD_DESTINATION = 0x07;
+        /// <summary>
+        /// Remove Destination </summary>
+        public const int REMOVE_DESTINATION = 0x08;
 
         // Media Driver to Clients
 

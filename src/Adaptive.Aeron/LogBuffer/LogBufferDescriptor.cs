@@ -244,7 +244,7 @@ namespace Adaptive.Aeron.LogBuffer
         }
 
         /// <summary>
-        /// Get the value of the correlation ID for this log.
+        /// Get the value of the correlation ID for this log relating to the command which created it.
         /// </summary>
         /// <param name="logMetaDataBuffer"> containing the meta data. </param>
         /// <returns> the value of the correlation ID used for this log. </returns>
@@ -255,7 +255,7 @@ namespace Adaptive.Aeron.LogBuffer
         }
 
         /// <summary>
-        /// Set the correlation ID used for this log.
+        /// Set the correlation ID used for this log relating to the command which created it.
         /// </summary>
         /// <param name="logMetaDataBuffer"> containing the meta data. </param>
         /// <param name="id">                value to be set. </param>
@@ -441,7 +441,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// </summary>
         /// <param name="logMetaDataBuffer"> into which the default headers should be stored. </param>
         /// <param name="defaultHeader">     to be stored. </param>
-        /// <exception cref="ArgumentException"> if the default header is larger than <seealso cref="LOG_DEFAULT_FRAME_HEADER_MAX_LENGTH"/> </exception>
+        /// <exception cref="ArgumentException"> if the defaultHeader is larger than <seealso cref="LOG_DEFAULT_FRAME_HEADER_MAX_LENGTH"/> </exception>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void StoreDefaultFrameHeader(UnsafeBuffer logMetaDataBuffer, IDirectBuffer defaultHeader)
         {

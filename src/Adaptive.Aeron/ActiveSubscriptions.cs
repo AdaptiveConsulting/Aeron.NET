@@ -67,7 +67,7 @@ namespace Adaptive.Aeron
 
             foreach (var subscription in subscriptions)
             {
-                subscription.Dispose();
+                subscription.Release();
             }
         }
     }
