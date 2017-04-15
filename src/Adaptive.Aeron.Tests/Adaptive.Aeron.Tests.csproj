@@ -82,6 +82,7 @@
     <Compile Include="SubscriptionTest.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Adaptive.Aeron.Tests.licenseheader" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
