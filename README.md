@@ -162,4 +162,4 @@ Note: For best performance, build in x64 release mode and run without the debugg
 ### More Information
 The best place for more information is the [Aeron Wiki](https://github.com/real-logic/Aeron/wiki)
 
-[![Gitter](https://badges.gitter.im/Join Chat.svg)](https://gitter.im/real-logic/Aeron?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) To chat with other Aeron users and the contributors.
+[![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/real-logic/Aeron?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) To chat with other Aeron users and the contributors.
