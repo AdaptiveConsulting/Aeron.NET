@@ -15,16 +15,27 @@
  */
 
 using System;
+using System.Text;
 using Adaptive.Agrona;
 using Adaptive.Agrona.Concurrent;
 
 namespace Adaptive.Aeron
 {
     /// <summary>
-    /// Builder for appending buffers that grows capacity as needed.
+    /// Reusable Builder for appending a sequence of buffers that grows internal capacity as needed.
+    /// 
+    /// Similar in concept to <see cref="StringBuilder"/>
     /// </summary>
     public class BufferBuilder
     {
+        /// <summary>
+        /// Maximum capcity to which the array can grow
+        /// </summary>
+        public const int MAX_CAPACITY = int.MaxValue - 8;
+
+        /// <summary>
+        /// Initial capcity for the internal buffer.
+        /// </summary>
         public const int INITIAL_CAPACITY = 4096;
 
         private readonly UnsafeBuffer _mutableDirectBuffer;
@@ -157,7 +168,21 @@ namespace Adaptive.Aeron
         {
             do
             {
-                capacity <<= 1;
+                int newCapacity = capacity + (capacity >> 1);
+
+                if (newCapacity < 0 || newCapacity > MAX_CAPACITY)
+                {
+                    if (capacity == MAX_CAPACITY)
+                    {
+                        throw new InvalidOperationException("Max capacity reached: " + MAX_CAPACITY);
+                    }
+
+                    capacity = MAX_CAPACITY;
+                }
+                else
+                {
+                    capacity = newCapacity;
+                }
             } while (capacity < requiredCapacity);
 
             return capacity;

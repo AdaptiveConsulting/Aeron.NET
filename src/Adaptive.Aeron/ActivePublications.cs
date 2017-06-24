@@ -24,7 +24,7 @@ namespace Adaptive.Aeron
     /// <summary>
     /// Map for navigating to active <seealso cref="Publication"/>s.
     /// </summary>
-    public class ActivePublications : IDisposable
+    class ActivePublications : IDisposable
     {
         private readonly IDictionary<string, Dictionary<int, Publication>> _publicationsByChannelMap = 
             new Dictionary<string, Dictionary<int, Publication>>();

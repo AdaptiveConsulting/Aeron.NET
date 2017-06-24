@@ -243,6 +243,26 @@ namespace Adaptive.Aeron
             /// </summary>
             public const long DEFAULT_DRIVER_TIMEOUT_MS = 10000;
 
+            /// <summary>
+            /// The param name to be used for the term length as a channel URI param.
+            /// </summary>
+            public const string TERM_LENGTH_PARAM_NAME = "term-length";
+
+            /// <summary>
+            /// MTU length parameter name for using as a channel URI param.
+            /// </summary>
+            public const string MTU_LENGTH_URI_PARAM_NAME = "mtu";
+
+            /// <summary>
+            /// Key for the mode of control that such be used for multi-destination-cast semantics.
+            /// </summary>
+            public const string MDC_CONTROL_MODE = "control-mode";
+
+            /// <summary>
+            /// Valid value for <seealso cref="MDC_CONTROL_MODE"/> when manual control is desired.
+            /// </summary>
+            public const string MDC_CONTROL_MODE_MANUAL = "manual";
+
             public Context()
             {
                 _aeronDirectoryName = Config.GetProperty(AERON_DIR_PROP_NAME, AERON_DIR_PROP_DEFAULT);
