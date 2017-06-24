@@ -25,12 +25,14 @@ namespace Adaptive.Aeron
         public static class ListUtil
         {
             /// <summary>
-            /// Removes element at i, but instead of copying all elements to the left, moves into the same slot the last
-            /// element. If i is the last element it is just removed. This avoids the copy costs, but spoils the list order.
+            /// Removes element at index i, but instead of copying all elements to the left, moves into the same slot the last
+            /// element. This avoids the copy costs, but spoils the list order. If i is the last element it is just removed.
             /// </summary>
-            /// <param name="list">      to be modified </param>
-            /// <param name="i">         removal index </param>
-            /// <param name="lastIndex"> last element index </param>
+            /// <param name="list">      to be modified.</param>
+            /// <param name="i">         removal index.</param>
+            /// <param name="lastIndex"> last element index.</param>
+            /// <typeparam name="T">     element type.</typeparam>
+            /// <exception cref="IndexOutOfRangeException"> if i or lastIndex are out of bounds.</exception>
             public static void FastUnorderedRemove<T>(List<T> list, int i, int lastIndex)
             {
                 T last = list[lastIndex];
@@ -42,12 +44,13 @@ namespace Adaptive.Aeron
             }
 
             /// <summary>
-            /// Removes element at i, but instead of copying all elements to the left, moves into the same slot the last
-            /// element. If i is the last element it is just removed. This avoids the copy costs, but spoils the list order.
+            /// Removes element but instead of copying all elements to the left, moves into the same slot the last element.
+            /// This avoids the copy costs, but spoils the list order. If e is the last element it is just removed.
             /// </summary>
-            /// <param name="list">      to be modified </param>
-            /// <param name="e">         to be removed </param>
-            /// <returns> true if found and removed, false otherwise </returns>
+            /// <param name="list">      to be modified.</param>
+            /// <param name="e">         to be removed.</param>
+            /// <typeparam name="T">     element type.</typeparam>
+            /// <returns> true if found and removed, false otherwise.</returns>
             public static bool FastUnorderedRemove<T>(List<T> list, T e)
             {
                 if (e == null) throw new ArgumentNullException(nameof(e));
@@ -60,6 +63,7 @@ namespace Adaptive.Aeron
                         return true;
                     }
                 }
+
                 return false;
             }
         }

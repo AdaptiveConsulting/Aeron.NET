@@ -50,6 +50,18 @@ namespace Adaptive.Aeron.Tests
         }
 
         [Test]
+        public void ShouldGrowToMultipleOfInitialCapaity()
+        {
+            int srcCapacity = BufferBuilder.INITIAL_CAPACITY * 5;
+            UnsafeBuffer srcBuffer = new UnsafeBuffer(new byte[srcCapacity]);
+
+            _bufferBuilder.Append(srcBuffer, 0, srcBuffer.Capacity);
+
+            Assert.That(_bufferBuilder.Limit(), Is.EqualTo(srcCapacity));
+            Assert.That(_bufferBuilder.Capacity, Is.GreaterThanOrEqualTo(srcCapacity));
+        }
+
+        [Test]
         public void ShouldAppendThenReset()
         {
             UnsafeBuffer srcBuffer = new UnsafeBuffer(new byte[BufferBuilder.INITIAL_CAPACITY]);
@@ -134,7 +146,7 @@ namespace Adaptive.Aeron.Tests
             bufferBuilder.Buffer().GetBytes(0, temp, 0, buffer.Length);
 
             Assert.That(bufferBuilder.Limit(), Is.EqualTo(buffer.Length));
-            Assert.That(bufferBuilder.Capacity(), Is.EqualTo(bufferLength * 2));
+            Assert.That(bufferBuilder.Capacity(), Is.GreaterThan(bufferLength));
             Assert.That(temp, Is.EqualTo(buffer));
         }
 
@@ -157,7 +169,7 @@ namespace Adaptive.Aeron.Tests
             bufferBuilder.Buffer().GetBytes(0, temp, 0, secondLength + firstLength);
 
             Assert.That(bufferBuilder.Limit(), Is.EqualTo(firstLength + secondLength));
-            Assert.That(bufferBuilder.Capacity(), Is.EqualTo(bufferLength));
+            Assert.That(bufferBuilder.Capacity(), Is.GreaterThanOrEqualTo(firstLength + secondLength));
             Assert.That(temp, Is.EqualTo(buffer));
         }
 
