@@ -80,15 +80,15 @@ namespace Adaptive.Aeron
 
         public void Dispose()
         {
-            var publications = from publicationByStreamIdMap in _publicationsByChannelMap.Values
-                from publication in publicationByStreamIdMap.Values
-                select publication;
-
-            foreach (var publication in publications)
+            foreach (var publications in _publicationsByChannelMap.Values)
             {
-                publication.Release();
+                foreach (var publication in publications.Values)
+                {
+                    publication.ForceClose();
+                }
             }
+
+            _publicationsByChannelMap.Clear();
         }
     }
-
 }

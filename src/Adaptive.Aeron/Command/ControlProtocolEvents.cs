@@ -17,52 +17,83 @@
 namespace Adaptive.Aeron.Command
 {
     /// <summary>
-    /// List of event types used in the control protocol between the
-    /// media driver and the core.
+    /// List of events used in the control protocol between client and the media driver.
     /// </summary>
     public class ControlProtocolEvents
     {
         // Clients to Media Driver
 
         /// <summary>
-        /// Add Publication </summary>
+        /// Add Publication.
+        /// </summary>
         public const int ADD_PUBLICATION = 0x01;
+
         /// <summary>
-        /// Remove Publication </summary>
+        /// Remove Publication.
+        /// </summary>
         public const int REMOVE_PUBLICATION = 0x02;
+
         /// <summary>
-        /// Add Subscriber </summary>
+        /// Add an Exclusive Publication.
+        /// </summary>
+        public const int ADD_EXCLUSIVE_PUBLICATION = 0x03;
+
+        /// <summary>
+        /// Add a Subscriber.
+        /// </summary>
         public const int ADD_SUBSCRIPTION = 0x04;
+
         /// <summary>
-        /// Remove Subscriber </summary>
+        /// Remove a Subscriber.
+        /// </summary>
         public const int REMOVE_SUBSCRIPTION = 0x05;
+
         /// <summary>
-        /// Keepalive from Client </summary>
+        /// Keepalive from Client.
+        /// </summary>
         public const int CLIENT_KEEPALIVE = 0x06;
+
         /// <summary>
-        /// Add Destination </summary>
+        /// Add Destination to an existing Publication.
+        /// </summary>
         public const int ADD_DESTINATION = 0x07;
+
         /// <summary>
-        /// Remove Destination </summary>
+        /// Remove Destination from an existing Publication.
+        /// </summary>
         public const int REMOVE_DESTINATION = 0x08;
 
         // Media Driver to Clients
 
         /// <summary>
-        /// Error Response </summary>
+        /// Error Response as a result of attempting to process a client command operation.
+        /// </summary>
         public const int ON_ERROR = 0x0F01;
+
         /// <summary>
-        /// New subscription Buffer Notification </summary>
+        /// Subscribed Image buffers are available notification.
+        /// </summary>
         public const int ON_AVAILABLE_IMAGE = 0x0F02;
+        
         /// <summary>
-        /// New publication Buffer Notification </summary>
+        /// New Publication buffers are ready notification.
+        /// </summary>
         public const int ON_PUBLICATION_READY = 0x0F03;
+
         /// <summary>
-        /// Operation Succeeded </summary>
+        /// Operation has succeeded.
+        /// </summary>
         public const int ON_OPERATION_SUCCESS = 0x0F04;
+
         /// <summary>
-        /// Inform client of timeout and removal of inactive image </summary>
+        /// Inform client of timeout and removal of an inactive Image.
+        /// </summary>
         public const int ON_UNAVAILABLE_IMAGE = 0x0F05;
+
+        /// <summary>
+        /// New Exclusive Publication buffers are ready notification.
+        /// </summary>
+        public const int ON_EXCLUSIVE_PUBLICATION_READY = 0x0F06;
     }
 
 }

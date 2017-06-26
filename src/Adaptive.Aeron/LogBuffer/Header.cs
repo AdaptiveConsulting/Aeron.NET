@@ -26,7 +26,9 @@ namespace Adaptive.Aeron.LogBuffer
     public class Header
     {
         private readonly int _positionBitsToShift;
-        private int _initialTermId;
+        private readonly int _initialTermId;
+        private int _offset;
+        private IDirectBuffer _buffer;
 
         public Header()
         {
@@ -65,16 +67,6 @@ namespace Adaptive.Aeron.LogBuffer
             return _initialTermId;
         }
 
-        /// <summary>
-        /// Set the initial term id this stream started at.
-        /// </summary>
-        /// <param name="initialTermId"> this stream started at. </param>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void InitialTermId(int initialTermId)
-        {
-            _initialTermId = initialTermId;
-        }
-
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void SetBuffer(IDirectBuffer buffer, int offset)
         {
@@ -85,13 +77,26 @@ namespace Adaptive.Aeron.LogBuffer
         /// <summary>
         /// The offset at which the frame begins.
         /// </summary>
-        public int Offset { get; private set; }
-        
+        public int Offset
+        {
+            get { return _offset; }
+            set { _offset = value; }
+        }
+
         /// <summary>
         /// The <seealso cref="IDirectBuffer"/> containing the header.
         /// </summary>
-        public IDirectBuffer Buffer { get; private set; }
-
+        public IDirectBuffer Buffer
+        {
+            get { return _buffer; }
+            set {
+                if (value != _buffer)
+                {
+                    _buffer = value;
+                }
+            }
+        }
+        
         /// <summary>
         /// The total length of the frame including the header.
         /// </summary>

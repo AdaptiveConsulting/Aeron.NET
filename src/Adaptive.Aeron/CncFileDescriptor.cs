@@ -42,7 +42,7 @@ namespace Adaptive.Aeron
     ///  +----------------------------+
     /// </pre>
     /// 
-    /// Meta Data Layout (CnC Version 4)
+    /// Meta Data Layout (CnC Version 6)
     /// <pre>
     ///  +----------------------------+
     ///  |   to-driver buffer length  |
@@ -64,7 +64,7 @@ namespace Adaptive.Aeron
     {
         public const string CNC_FILE = "cnc.dat";
 
-        public const int CNC_VERSION = 5;
+        public const int CNC_VERSION = 6;
 
         public static readonly int CNC_VERSION_FIELD_OFFSET;
         public static readonly int CNC_METADATA_OFFSET;

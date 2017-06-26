@@ -111,6 +111,16 @@ namespace Adaptive.Aeron.LogBuffer
         }
 
         /// <summary>
+        /// Compute the maximum supported message length for a buffer of given capacity when the publication is exclusive.
+        /// </summary>
+        /// <param name="capacity"> of the log buffer. </param>
+        /// <returns> the maximum supported length for a message. </returns>
+        public static int ComputeExclusiveMaxMessageLength(int capacity)
+        {
+            return capacity / 4;
+        }
+
+        /// <summary>
         /// The buffer offset at which the length field begins.
         /// </summary>
         /// <param name="termOffset"> at which the frame begins. </param>

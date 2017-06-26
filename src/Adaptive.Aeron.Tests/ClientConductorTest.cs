@@ -76,7 +76,7 @@ namespace Adaptive.Aeron.Tests
         private AvailableImageHandler MockAvailableImageHandler;
         private UnavailableImageHandler MockUnavailableImageHandler;
         private ILogBuffersFactory LogBuffersFactory;
-        private IDictionary<long, long> SubscriberPositionMap;
+        private Dictionary<long, long> SubscriberPositionMap;
         private bool SuppressPrintError = false;
 
 
@@ -117,21 +117,24 @@ namespace Adaptive.Aeron.Tests
             A.CallTo(() => DriverProxy.AddSubscription(A<string>._, A<int>._)).Returns(CORRELATION_ID);
             A.CallTo(() => DriverProxy.RemoveSubscription(CORRELATION_ID)).Returns(CLOSE_CORRELATION_ID);
 
-            Conductor = new ClientConductor(
-                EpochClock, 
-                NanoClock, 
-                MockToClientReceiver, 
-                LogBuffersFactory, 
-                CounterValuesBuffer, 
-                DriverProxy, 
-                MockClientErrorHandler, 
-                MockAvailableImageHandler, 
-                MockUnavailableImageHandler, 
-                MapMode.ReadOnly, 
-                KEEP_ALIVE_INTERVAL, 
-                AWAIT_TIMEOUT, 
-                NanoUtil.FromMilliseconds(INTER_SERVICE_TIMEOUT_MS), 
-                PUBLICATION_CONNECTION_TIMEOUT_MS);
+            Aeron.Context ctx = new Aeron.Context()
+                .EpochClock(EpochClock)
+                .NanoClock(NanoClock)
+                .ToClientBuffer(MockToClientReceiver)
+                .DriverProxy(DriverProxy)
+                .LogBuffersFactory(LogBuffersFactory)
+                .ErrorHandler(MockClientErrorHandler)
+                .AvailableImageHandler(MockAvailableImageHandler)
+                .UnavailableImageHandler(MockUnavailableImageHandler)
+                .ImageMapMode(MapMode.ReadOnly)
+                .KeepAliveInterval(KEEP_ALIVE_INTERVAL)
+                .DriverTimeoutMs(AWAIT_TIMEOUT)
+                .InterServiceTimeout(INTER_SERVICE_TIMEOUT_MS * 1000000)
+                .PublicationConnectionTimeout(PUBLICATION_CONNECTION_TIMEOUT_MS)
+                .CountersValuesBuffer(CounterValuesBuffer);
+
+
+            Conductor = new ClientConductor(ctx);
 
             PublicationReady.Wrap(PublicationReadyBuffer, 0);
             CorrelatedMessage.Wrap(CorrelatedMessageBuffer, 0);

@@ -22,46 +22,47 @@ using Adaptive.Agrona;
 namespace Adaptive.Aeron
 {
     /// <summary>
-    /// A <seealso cref="IControlledFragmentHandler"/> that sits in a chain-of-responsibility pattern that reassembles fragmented messages
-    /// so that the next handler in the chain only sees whole messages.
-    /// <para>
+    /// A <seealso cref="IControlledFragmentHandler"/> that sits in a chain-of-responsibility pattern that reassembles fragmented
+    /// messages so that the next handler in the chain only sees whole messages.
+    /// 
     /// Unfragmented messages are delegated without copy. Fragmented messages are copied to a temporary
     /// buffer for reassembly before delegation.
-    /// </para>
-    /// <para>
+    /// 
     /// The <seealso cref="Header"/> passed to the delegate on assembling a message will be that of the last fragment.
-    /// </para>
-    /// <para>
+    /// 
     /// Session based buffers will be allocated and grown as necessary based on the length of messages to be assembled.
-    /// When sessions go inactive see <seealso cref="IUnavailableImageHandler"/>, it is possible to free the buffer by calling
+    /// When sessions go inactive see <seealso cref="UnavailableImageHandler"/>, it is possible to free the buffer by calling
     /// <seealso cref="FreeSessionBuffer(int)"/>.
-    /// </para>
     /// </summary>
+    /// <seealso cref="Subscription.ControlledPoll"/>
+    /// <seealso cref="Image.ControlledPoll"/>
+    /// <seealso cref="Image.ControlledPeek"/>
     public class ControlledFragmentAssembler : IControlledFragmentHandler
     {
+        private readonly int _initialBufferLength;
         private readonly IControlledFragmentHandler _delegate;
         private readonly IDictionary<int, BufferBuilder> _builderBySessionIdMap = new Dictionary<int, BufferBuilder>();
-        private readonly Func<int, BufferBuilder> _builderFunc;
-
-        /// <summary>
-        /// Construct an adapter to reassemble message fragments and delegate on only whole messages.
-        /// </summary>
-        /// <param name="delegate"> onto which whole messages are forwarded. </param>
-        public ControlledFragmentAssembler(IControlledFragmentHandler @delegate) : this(@delegate, BufferBuilder.INITIAL_CAPACITY)
-        {
-        }
 
         /// <summary>
         /// Construct an adapter to reassembly message fragments and delegate on only whole messages.
         /// </summary>
         /// <param name="delegate">            onto which whole messages are forwarded. </param>
         /// <param name="initialBufferLength"> to be used for each session. </param>
-        public ControlledFragmentAssembler(IControlledFragmentHandler @delegate, int initialBufferLength)
+        public ControlledFragmentAssembler(IControlledFragmentHandler @delegate, int initialBufferLength = BufferBuilder.INITIAL_CAPACITY)
         {
+            _initialBufferLength = initialBufferLength;
             _delegate = @delegate;
-            _builderFunc = (ignore) => new BufferBuilder(initialBufferLength);
         }
 
+        /// <summary>
+        /// Get the delegate unto which assembled messages are delegated.
+        /// </summary>
+        /// <returns>  the delegate unto which assembled messages are delegated. </returns>
+        public virtual IControlledFragmentHandler Delegate()
+        {
+            return _delegate;
+        }
+        
         /// <summary>
         /// The implementation of <seealso cref="IControlledFragmentHandler"/> that reassembles and forwards whole messages.
         /// </summary>
@@ -86,7 +87,7 @@ namespace Adaptive.Aeron
                     BufferBuilder builder;
                     if (!_builderBySessionIdMap.TryGetValue(header.SessionId, out builder))
                     {
-                        builder = _builderFunc(header.SessionId);
+                        builder = GetBufferBuilder(header.SessionId);
                         _builderBySessionIdMap[header.SessionId] = builder;
                     }
                     builder.Reset().Append(buffer, offset, length);
@@ -134,6 +135,29 @@ namespace Adaptive.Aeron
                 return true;
             }
             return false;
+        }
+
+        /// <summary>
+        /// Clear down the cache of buffers by session for reassembling messages.
+        /// </summary>
+        public void Clear()
+        {
+            _builderBySessionIdMap.Clear();
+        }
+
+        private BufferBuilder GetBufferBuilder(int sessionId)
+        {
+            BufferBuilder bufferBuilder;
+
+            _builderBySessionIdMap.TryGetValue(sessionId, out bufferBuilder);
+
+            if (null == bufferBuilder)
+            {
+                bufferBuilder = new BufferBuilder(_initialBufferLength);
+                _builderBySessionIdMap[sessionId] = bufferBuilder;
+            }
+            
+            return bufferBuilder;
         }
     }
 }

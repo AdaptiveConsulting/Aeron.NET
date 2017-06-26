@@ -75,11 +75,36 @@ namespace Adaptive.Aeron
 
             _publicationMessage.CorrelationId(correlationId);
 
-            _publicationMessage.StreamId(streamId).Channel(channel);
+            _publicationMessage
+                .StreamId(streamId)
+                .Channel(channel);
 
             if (!_toDriverCommandBuffer.Write(ControlProtocolEvents.ADD_PUBLICATION, _buffer, 0, _publicationMessage.Length()))
             {
                 throw new InvalidOperationException("Could not write add publication command");
+            }
+
+            return correlationId;
+        }
+
+
+#if DEBUG
+        public virtual long AddExclusivePublication(string channel, int streamId)
+#else
+        public long AddExclusivePublication(string channel, int streamId)
+#endif
+        {
+            long correlationId = _toDriverCommandBuffer.NextCorrelationId();
+
+            _publicationMessage.CorrelationId(correlationId);
+
+            _publicationMessage
+                .StreamId(streamId)
+                .Channel(channel);
+
+            if (!_toDriverCommandBuffer.Write(ControlProtocolEvents.ADD_EXCLUSIVE_PUBLICATION, _buffer, 0, _publicationMessage.Length()))
+            {
+                throw new InvalidOperationException("Could not write add exclusive publication command");
             }
 
             return correlationId;

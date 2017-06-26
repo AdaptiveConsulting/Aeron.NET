@@ -41,6 +41,8 @@ namespace Adaptive.Aeron.Tests
         private Image ImageOneMock;
         private Header Header;
         private Image ImageTwoMock;
+        private AvailableImageHandler AvailableImageHandler;
+        private UnavailableImageHandler UnavailableImageHandler;
 
         private Subscription Subscription;
 
@@ -53,10 +55,18 @@ namespace Adaptive.Aeron.Tests
             ImageOneMock = A.Fake<Image>();
             ImageTwoMock = A.Fake<Image>();
             Header = A.Fake<Header>();
+            AvailableImageHandler = A.Fake<AvailableImageHandler>();
+            UnavailableImageHandler = A.Fake<UnavailableImageHandler>();
 
             A.CallTo(() => Header.Flags).Returns(FLAGS);
 
-            Subscription = new Subscription(Conductor, CHANNEL, STREAM_ID_1, SUBSCRIPTION_CORRELATION_ID);
+            Subscription = new Subscription(
+                Conductor, 
+                CHANNEL, 
+                STREAM_ID_1, 
+                SUBSCRIPTION_CORRELATION_ID,
+                AvailableImageHandler,
+                UnavailableImageHandler);
             A.CallTo(() => Conductor.ReleaseSubscription(Subscription));
         }
 

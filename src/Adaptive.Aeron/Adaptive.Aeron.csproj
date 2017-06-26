@@ -64,7 +64,6 @@
     <Compile Include="ActiveSubscriptions.cs" />
     <Compile Include="Aeron.cs" />
     <Compile Include="Command\DestinationMessageFlyweight.cs" />
-    <Compile Include="ListUtil.cs" />
     <Compile Include="BufferBuilder.cs" />
     <Compile Include="ClientConductor.cs" />
     <Compile Include="CncFileDescriptor.cs" />
@@ -86,13 +85,18 @@
     <Compile Include="Exceptions\DriverTimeoutException.cs" />
     <Compile Include="Exceptions\RegistrationException.cs" />
     <Compile Include="FragmentAssembler.cs" />
+    <Compile Include="ImageControlledFragmentHandler.cs" />
+    <Compile Include="ImageFragmentAssembler.cs" />
     <Compile Include="ImageHandlers.cs" />
     <Compile Include="IDriverListener.cs" />
     <Compile Include="ILogBuffersFactory.cs" />
     <Compile Include="Image.cs" />
+    <Compile Include="ListUtil.cs" />
     <Compile Include="LogBuffers.cs" />
     <Compile Include="LogBuffer\BufferClaim.cs" />
     <Compile Include="LogBuffer\ControlledFragmentHandlerAction.cs" />
+    <Compile Include="LogBuffer\ExclusiveBufferClaim.cs" />
+    <Compile Include="LogBuffer\ExclusiveTermAppender.cs" />
     <Compile Include="LogBuffer\FrameDescriptor.cs" />
     <Compile Include="LogBuffer\Header.cs" />
     <Compile Include="LogBuffer\HeaderWriter.cs" />
@@ -109,6 +113,7 @@
     <Compile Include="Protocol\DataHeaderFlyweight.cs" />
     <Compile Include="Protocol\HeaderFlyweight.cs" />
     <Compile Include="Protocol\RttMeasurementFlyweight.cs" />
+    <Compile Include="ExclusivePublication.cs" />
     <Compile Include="Publication.cs" />
     <Compile Include="ReservedValueSupplier.cs" />
     <Compile Include="Subscription.cs" />

@@ -61,14 +61,15 @@ namespace Adaptive.Aeron
 
         public void Dispose()
         {
-            var subscriptions = from subs in _subscriptionsByStreamIdMap.Values
-                from subscription in subs
-                select subscription;
-
-            foreach (var subscription in subscriptions)
+            foreach (var subscriptions in _subscriptionsByStreamIdMap.Values)
             {
-                subscription.Release();
+                for (int i = 0, size = subscriptions.Count; i < size; i++)
+                {
+                    subscriptions[i].ForceClose();
+                }
             }
+
+            _subscriptionsByStreamIdMap.Clear();
         }
     }
 }
