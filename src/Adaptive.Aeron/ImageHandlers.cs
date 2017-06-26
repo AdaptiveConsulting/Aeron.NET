@@ -17,12 +17,18 @@
 namespace Adaptive.Aeron
 {
     /// <summary>
-    /// Interface for delivery of new image events to a <seealso cref="Aeron"/> instance.
+    /// Interface for notification of new <see cref="Image"/>s becoming available under a <see cref="Subscription"/>
+    /// 
+    /// Method called by Aeron to deliver notification of a new <see cref="Image"/> being available for polling.
+    /// <param name="image"> that is now available.</param>
     /// </summary>
     public delegate void AvailableImageHandler(Image image);
 
     /// <summary>
-    /// Interface for delivery of inactive image events to a <seealso cref="Subscription"/>.
+    /// Interface for delivery of inactive image notification to a <seealso cref="Subscription"/>.
+    /// 
+    /// Method called by Aeron to deliver notification that an <see cref="Image"/> is no longer available for polling.
     /// </summary>
+    /// <param name="image"> the image that has become unavailable.</param>
     public delegate void UnavailableImageHandler(Image image);
 }

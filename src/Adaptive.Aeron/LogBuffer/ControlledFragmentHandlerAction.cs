@@ -38,8 +38,8 @@ namespace Adaptive.Aeron.LogBuffer
         COMMIT,
 
         /// <summary>
-        /// Continue processing taking the same approach as the in
-        /// <seealso cref="FragmentHandler.OnFragment(IDirectBuffer, int, int, Header)"/>.
+        /// Continue processing until fragment limit or no fragments with position commit at end of poll as the in
+        /// <seealso cref="FragmentHandler"/>.
         /// </summary>
         CONTINUE,
     }

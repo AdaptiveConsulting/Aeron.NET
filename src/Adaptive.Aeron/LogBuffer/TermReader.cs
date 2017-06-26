@@ -19,6 +19,7 @@ using System.Runtime.CompilerServices;
 using Adaptive.Aeron.Protocol;
 using Adaptive.Agrona;
 using Adaptive.Agrona.Concurrent;
+using Adaptive.Agrona.Concurrent.Status;
 
 namespace Adaptive.Aeron.LogBuffer
 {
@@ -30,6 +31,70 @@ namespace Adaptive.Aeron.LogBuffer
     /// </summary>
     public class TermReader
     {
+        /// <summary>
+        /// Reads data from a term in a log buffer and updates a passed <seealso cref="IPosition"/> so progress is not lost in the
+        /// event of an exception.
+        ///     
+        /// If a fragmentsLimit of 0 or less is passed then at least one read will be attempted.
+        /// </summary>
+        /// <param name="termBuffer">         to be read for fragments. </param>
+        /// <param name="termOffset">         within the buffer that the read should begin. </param>
+        /// <param name="handler">            the handler for data that has been read </param>
+        /// <param name="fragmentsLimit">     limit the number of fragments read. </param>
+        /// <param name="header">             to be used for mapping over the header for a given fragment. </param>
+        /// <param name="errorHandler">       to be notified if an error occurs during the callback. </param>
+        /// <param name="currentPosition">    prior to reading further fragments </param>
+        /// <param name="subscriberPosition"> to be updated after reading with new position </param>
+        /// <returns> the number of fragments read </returns>
+        public static int Read(UnsafeBuffer termBuffer, int termOffset, FragmentHandler handler, int fragmentsLimit, Header header, ErrorHandler errorHandler, long currentPosition, IPosition subscriberPosition)
+        {
+            int fragmentsRead = 0;
+            int offset = termOffset;
+            int capacity = termBuffer.Capacity;
+            header.Buffer = termBuffer;
+
+            try
+            {
+                do
+                {
+                    int frameLength = FrameDescriptor.FrameLengthVolatile(termBuffer, offset);
+                    if (frameLength <= 0)
+                    {
+                        break;
+                    }
+
+                    //JAVA TO C# CONVERTER WARNING: The original Java variable was marked 'final':
+                    //ORIGINAL LINE: final int frameOffset = offset;
+                    int frameOffset = offset;
+                    offset += BitUtil.Align(frameLength, FrameDescriptor.FRAME_ALIGNMENT);
+
+                    if (!FrameDescriptor.IsPaddingFrame(termBuffer, frameOffset))
+                    {
+                        header.Offset= frameOffset;
+
+                        handler(termBuffer, frameOffset + DataHeaderFlyweight.HEADER_LENGTH, frameLength - DataHeaderFlyweight.HEADER_LENGTH, header);
+
+                        ++fragmentsRead;
+                    }
+                } while (fragmentsRead < fragmentsLimit && offset < capacity);
+            }
+
+            catch (Exception t)
+            {
+                errorHandler(t);
+            }
+            finally
+            {
+                long newPosition = currentPosition + (offset - termOffset);
+                if (newPosition > currentPosition)
+                {
+                    subscriberPosition.SetOrdered(newPosition);
+                }
+            }
+
+            return fragmentsRead;
+        }
+
         /// <summary>
         /// Reads data from a term in a log buffer.
         /// 

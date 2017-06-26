@@ -62,12 +62,44 @@ namespace Adaptive.Agrona
         }
 
         /// <summary>
+        /// Check that file exists, open file, and return MappedByteBuffer for entire file
+        /// <para>
+        /// The file itself will be closed, but the mapping will persist.
+        /// 
+        /// </para>
+        /// </summary>
+        /// <param name="location">         of the file to map </param>
+        /// <param name="descriptionLabel"> to be associated for any exceptions </param>
+        /// <returns> <seealso cref="MappedByteBuffer"/> for the file </returns>
+        public static MappedByteBuffer MapExistingFile(FileInfo location, string descriptionLabel)
+        {
+            CheckFileExists(location, descriptionLabel);
+
+            return new MappedByteBuffer(OpenMemoryMappedFile(location.FullName, MapMode.ReadWrite));
+        }
+
+
+        /// <summary>
         /// Unmap a <seealso cref="MappedByteBuffer"/> without waiting for the next GC cycle.
         /// </summary>
         /// <param name="wrapper"> to be unmapped. </param>
         public static void Unmap(MappedByteBuffer wrapper)
         {
             wrapper?.Dispose();
+        }
+
+        /// <summary>
+        /// Check that a file exists and throw an exception if not.
+        /// </summary>
+        /// <param name="file"> to check existence of. </param>
+        /// <param name="name"> to associate for the exception </param>
+        public static void CheckFileExists(FileInfo file, string name)
+        {
+            if (!file.Exists)
+            {
+                string msg = "Missing file for " + name + " : " + file.FullName;
+                throw new InvalidOperationException(msg);
+            }
         }
 
         /// <summary>
@@ -90,6 +122,11 @@ namespace Adaptive.Agrona
         public static string TmpDirName()
         {
             return Path.GetTempPath();
+        }
+
+        public static void Delete(FileSystemInfo file, bool b)
+        {   
+            file.Delete();
         }
     }
 }

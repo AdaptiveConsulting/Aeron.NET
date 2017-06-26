@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Runtime.InteropServices;
 using Adaptive.Aeron.LogBuffer;
 using Adaptive.Agrona;
@@ -38,11 +39,19 @@ namespace Adaptive.Aeron
         internal volatile Image[] images;
         internal readonly ClientConductor clientConductor;
         internal readonly string channel;
-        
+        internal readonly AvailableImageHandler availableImageHandler;
+        internal readonly UnavailableImageHandler unavailableImageHandler;
+
         // padding to prevent false sharing
         private CacheLinePadding _padding2;
 
-        internal SubscriptionFields(long registrationId, int streamId, ClientConductor clientConductor, string channel)
+        internal SubscriptionFields(
+            long registrationId, 
+            int streamId, 
+            ClientConductor clientConductor, 
+            string channel,
+            AvailableImageHandler availableImageHandler,
+            UnavailableImageHandler unavailableImageHandler)
         {
             _padding1 = new CacheLinePadding();
             _padding2 = new CacheLinePadding();
@@ -51,6 +60,8 @@ namespace Adaptive.Aeron
             this.streamId = streamId;
             this.clientConductor = clientConductor;
             this.channel = channel;
+            this.availableImageHandler = availableImageHandler;
+            this.unavailableImageHandler = unavailableImageHandler;
             roundRobinIndex = 0;
             isClosed = false;
             images = EMPTY_ARRAY;
@@ -73,14 +84,23 @@ namespace Adaptive.Aeron
     /// 
     /// <b>Note:</b>Subscriptions are not threadsafe and should not be shared between subscribers.
     /// </summary>
-    /// <seealso cref="FragmentAssembler"> </seealso>
+    /// <seealso cref="FragmentAssembler"/>
+    /// <seealso cref="IControlledFragmentHandler"/>
+    /// <seealso cref="Aeron.AddSubscription(string, int)"/>
+    /// <seealso cref="Aeron.AddSubscription(string, int, AvailableImageHandler, UnavailableImageHandler)"/>
     public class Subscription : IDisposable
     {
         private SubscriptionFields _fields;
 
-        internal Subscription(ClientConductor conductor, string channel, int streamId, long registrationId)
-        {
-            _fields = new SubscriptionFields(registrationId, streamId, conductor, channel);
+        internal Subscription(
+            ClientConductor conductor, 
+            string channel, 
+            int streamId, 
+            long registrationId,
+            AvailableImageHandler availableImageHandler,
+            UnavailableImageHandler unavailableImageHandler)
+        { 
+            _fields = new SubscriptionFields(registrationId, streamId, conductor, channel, availableImageHandler, unavailableImageHandler);
         }
 
         /// <summary>
@@ -100,6 +120,24 @@ namespace Adaptive.Aeron
         /// </summary>
         /// <returns> registration id </returns>
         public long RegistrationId => _fields.registrationId;
+
+        /// <summary>
+        /// Callback used to indicate when an <see cref="Image"/> becomes available under this <see cref="Subscription"/>
+        /// </summary>
+        /// <returns> callback used to indicate when an <see cref="Image"/> becomes available under this <see cref="Subscription"/>.</returns>
+        public AvailableImageHandler AvailableImageHandler()
+        {
+            return _fields.availableImageHandler;
+        }
+
+        /// <summary>
+        /// Callback used to indicate when an <see cref="Image"/> goes unavailable under this <see cref="Subscription"/>
+        /// </summary>
+        /// <returns> callback used to indicate when an <see cref="Image"/> goes unavailable under this <see cref="Subscription"/>.</returns>
+        public UnavailableImageHandler UnavailableImageHandler()
+        {
+            return _fields.unavailableImageHandler;
+        }
 
         /// <summary>
         /// Poll the <seealso cref="Image"/>s under the subscription for available message fragments.
@@ -264,8 +302,8 @@ namespace Adaptive.Aeron
         /// <summary>
         /// Get a <seealso cref="IList{T}"/> of active <seealso cref="Image"/>s that match this subscription.
         /// </summary>
-        /// <returns> a <seealso cref="List{T}"/> of active <seealso cref="Image"/>s that match this subscription. </returns>
-        public IList<Image> Images => _fields.images;
+        /// <returns> an unmodifiable <see cref="List{T}"/> of active <seealso cref="Image"/>s that match this subscription. </returns>
+        public IList<Image> Images => new ReadOnlyCollection<Image>(_fields.images);
 
         /// <summary>
         /// Iterate over the <seealso cref="Image"/>s for this subscription.
@@ -280,6 +318,16 @@ namespace Adaptive.Aeron
         }
 
         /// <summary>
+        /// Get the image at the given index from the images array.
+        /// </summary>
+        /// <param name="index"> in the array</param>
+        /// <returns> image at given index</returns>
+        public Image GetImage(int index)
+        {
+            return Images[index];
+        }
+
+        /// <summary>
         /// Close the Subscription so that associated <seealso cref="Image"/>s can be released.
         /// <para>
         /// This method is idempotent.
@@ -291,12 +339,21 @@ namespace Adaptive.Aeron
         public  void Dispose()
 #endif
         {
-            lock (_fields.clientConductor)
+            _fields.clientConductor.ClientLock().Lock() ;
+            try
             {
                 if (!_fields.isClosed)
                 {
-                    Release();
+                    _fields.isClosed = true;
+
+                    CloseImages();
+
+                    _fields.clientConductor.ReleaseSubscription(this);
                 }
+            }
+            finally
+            {
+                _fields.clientConductor.ClientLock().Unlock();
             }
         }
 
@@ -306,27 +363,13 @@ namespace Adaptive.Aeron
         /// <returns> true if it has been closed otherwise false. </returns>
         public bool Closed => _fields.isClosed;
 
-        internal void Release()
+        internal void ForceClose()
         {
             _fields.isClosed = true;
 
-            foreach (var image in _fields.images)
-            {
-                _fields.clientConductor.LingerResource(image.ManagedResource());
+            CloseImages();
 
-                try
-                {
-                    _fields.clientConductor.UnavailableImageHandler(image);
-                }
-                catch (Exception ex)
-                {
-                    _fields.clientConductor.HandleError(ex);
-                }
-            }
-
-            _fields.images = SubscriptionFields.EMPTY_ARRAY;
-
-            _fields.clientConductor.ReleaseSubscription(this);
+            _fields.clientConductor.AsyncReleaseSubscription(this);
         }
 
 
@@ -380,5 +423,27 @@ namespace Adaptive.Aeron
 
             return hasImage;
         }
-    }
+
+        private void CloseImages()
+        {
+            foreach (Image image in _fields.images)
+            {
+                _fields.clientConductor.LingerResource(image.ManagedResource());
+
+                try
+                {
+                    if (null != _fields.unavailableImageHandler)
+                    {
+                        _fields.unavailableImageHandler(image);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _fields.clientConductor.HandleError(ex);
+                }
+            }
+
+            _fields.images = new Image[0];
+        }
+}
 }

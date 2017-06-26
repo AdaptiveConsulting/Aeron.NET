@@ -26,18 +26,22 @@ using Adaptive.Agrona.Util;
 namespace Adaptive.Aeron
 {
     /// <summary>
-    /// Aeron Publisher API for sending messages to subscribers of a given channel and streamId pair. Publishers
-    /// are created via the <seealso cref="Aeron.AddPublication(String, int)"/> method, and messages are sent via one of the
-    /// <seealso cref="Offer(IDirectBuffer)"/> methods, or a <seealso cref="TryClaim(int, BufferClaim)"/> and <seealso cref="BufferClaim.Commit"/>
-    /// method combination.
+    /// Aeron Publisher API for sending messages to subscribers of a given channel and streamId pair. ExclusivePublications
+    /// each get their own session id so multiple can be concurrently active on the same media driver as independent streams.
     /// 
-    /// The APIs used to send are all non-blocking.
+    /// <see cref="ExclusivePublication"/>s are create via the <see cref="Aeron.AddExclusivePublication(string, int)"/> method,
+    /// and messages are sent via one of the <see cref="Offer(UnsafeBuffer)"/> methods, or a
+    /// <see cref="TryClaim(int, ExlusiveBufferClaim)"/> and <see cref="ExclusiveBufferClaim.Commit"/> method combination.
     /// 
-    /// <b>Note:</b> Publication instances are threadsafe and can be shared between publishing threads.
+    /// <see cref="ExclusivePublication"/>s have the potential to provide greater throughput than <see cref="Publication"/>s.
+    /// 
+    /// The APIs used try claim and offer are non-blocking.
+    /// 
+    /// <b>Note:</b> ExclusivePublication instances are NOT threadsafe for offer and try claim method but are for position.
     /// </summary>
-    /// <seealso cref="Aeron.AddPublication(string, int)" />
-    /// <seealso cref="BufferClaim" />
-    public class Publication : IDisposable
+    /// <seealso cref="Aeron.AddExclusivePublication(string, int)" />
+    /// <seealso cref="ExclusiveBufferClaim" />
+    public class ExclusivePublication : IDisposable
     {
         /// <summary>
         /// The publication is not yet connected to a subscriber.
@@ -55,7 +59,7 @@ namespace Adaptive.Aeron
         public const long ADMIN_ACTION = -3;
 
         /// <summary>
-        /// The <seealso cref="Publication"/> has been closed and should no longer be used.
+        /// The <seealso cref="ExclusivePublication"/> has been closed and should no longer be used.
         /// </summary>
         public const long CLOSED = -4;
 
@@ -63,26 +67,37 @@ namespace Adaptive.Aeron
         private readonly int _positionBitsToShift;
         private volatile bool _isClosed;
 
-        private readonly TermAppender[] _termAppenders = new TermAppender[LogBufferDescriptor.PARTITION_COUNT];
+        private readonly ExclusiveTermAppender[] _termAppenders = new ExclusiveTermAppender[LogBufferDescriptor.PARTITION_COUNT];
         private readonly IReadablePosition _positionLimit;
         private readonly UnsafeBuffer _logMetaDataBuffer;
         private readonly HeaderWriter _headerWriter;
         private readonly LogBuffers _logBuffers;
         private readonly ClientConductor _conductor;
+        private long _termBeginPosition;
+        private int _activePartitionIndex;
+        private int _termId;
+        private int _termOffset;
 
-        internal Publication(ClientConductor clientConductor, string channel, int streamId, int sessionId, IReadablePosition positionLimit, LogBuffers logBuffers, long registrationId)
+        internal ExclusivePublication(
+            ClientConductor clientConductor, 
+            string channel, 
+            int streamId, 
+            int sessionId, 
+            IReadablePosition positionLimit,
+            LogBuffers logBuffers, 
+            long registrationId)
         {
             var buffers = logBuffers.TermBuffers();
             var logMetaDataBuffer = logBuffers.MetaDataBuffer();
 
             for (var i = 0; i < LogBufferDescriptor.PARTITION_COUNT; i++)
             {
-                _termAppenders[i] = new TermAppender(buffers[i], logMetaDataBuffer, i);
+                _termAppenders[i] = new ExclusiveTermAppender(buffers[i], logMetaDataBuffer, i);
             }
 
             var termLength = logBuffers.TermLength();
             MaxPayloadLength = LogBufferDescriptor.MtuLength(logMetaDataBuffer) - DataHeaderFlyweight.HEADER_LENGTH;
-            MaxMessageLength = FrameDescriptor.ComputeMaxMessageLength(termLength);
+            MaxMessageLength = FrameDescriptor.ComputeExclusiveMaxMessageLength(termLength);
             _conductor = clientConductor;
             Channel = channel;
             StreamId = streamId;
@@ -94,6 +109,12 @@ namespace Adaptive.Aeron
             _logBuffers = logBuffers;
             _positionBitsToShift = IntUtil.NumberOfTrailingZeros(termLength);
             _headerWriter = new HeaderWriter(LogBufferDescriptor.DefaultFrameHeader(logMetaDataBuffer));
+            this._activePartitionIndex = LogBufferDescriptor.ActivePartitionIndex(logMetaDataBuffer);
+
+            long rawTail = _termAppenders[_activePartitionIndex].RawTail();
+            _termId = LogBufferDescriptor.TermId(rawTail);
+            _termOffset = LogBufferDescriptor.TermOffset(rawTail, termLength);
+            _termBeginPosition = LogBufferDescriptor.ComputeTermBeginPosition(_termId, _positionBitsToShift, InitialTermId);
         }
 
         /// <summary>
@@ -117,13 +138,13 @@ namespace Adaptive.Aeron
 
 
         /// <summary>
-        /// Session under which messages are published. Identifies this Publication instance.
+        /// Session under which messages are published. Identifies this <see cref="ExclusivePublication"/> instance.
         /// </summary>
         /// <returns> the session id for this publication. </returns>
         public int SessionId { get; }
 
         /// <summary>
-        /// The initial term id assigned when this <seealso cref="Publication"/> was created. This can be used to determine how many
+        /// The initial term id assigned when this <seealso cref="ExclusivePublication"/> was created. This can be used to determine how many
         /// terms have passed since creation.
         /// </summary>
         /// <returns> the initial term id. </returns>
@@ -152,22 +173,20 @@ namespace Adaptive.Aeron
         public long RegistrationId { get; }
 
         /// <summary>
-        /// Has the <seealso cref="Publication"/> seen an active Subscriber recently?
+        /// Has the <see cref="ExclusivePublication"/> seen an active Subscriber recently?
         /// </summary>
-        /// <returns> true if this <seealso cref="Publication"/> has seen an active subscriber otherwise false. </returns>
+        /// <returns> true if this <see cref="ExclusivePublication"/> has seen an active subscriber otherwise false. </returns>
         public bool IsConnected => !_isClosed && _conductor.IsPublicationConnected(LogBufferDescriptor.TimeOfLastStatusMessage(_logMetaDataBuffer));
 
         /// <summary>
-        /// Release resources used by this Publication when there are no more references.
-        /// 
-        /// Publications are reference counted and are only truly closed when the ref count reaches zero.
+        /// Release resources used by this Publication.
         /// </summary>
         public void Dispose()
         {
             _conductor.ClientLock().Lock();
             try
             {
-                if (!_isClosed && --_refCount == 0)
+                if (!_isClosed)
                 {
                     _isClosed = true;
                     _conductor.ReleasePublication(this);
@@ -220,11 +239,11 @@ namespace Adaptive.Aeron
         }
 
         /// <summary>
-        /// Get the position limit beyond which this <seealso cref="Publication"/> will be back pressured.
+        /// Get the position limit beyond which this <see cref="ExclusivePublication"/> will be back pressured.
         /// 
         /// This should only be used as a guide to determine when back pressure is likely to be applied.
         /// </summary>
-        /// <returns> the position limit beyond which this <seealso cref="Publication"/> will be back pressured. </returns>
+        /// <returns> the position limit beyond which this <see cref="ExclusivePublication"/> will be back pressured. </returns>
         public long PositionLimit
         {
             get
@@ -269,26 +288,23 @@ namespace Adaptive.Aeron
             if (!_isClosed)
             {
                 var limit = _positionLimit.Volatile;
-                var partitionIndex = LogBufferDescriptor.ActivePartitionIndex(_logMetaDataBuffer);
-                var termAppender = _termAppenders[partitionIndex];
-                var rawTail = termAppender.RawTailVolatile();
-                var termOffset = rawTail & 0xFFFFFFFFL;
-                var position = LogBufferDescriptor.ComputeTermBeginPosition(LogBufferDescriptor.TermId(rawTail), _positionBitsToShift, InitialTermId) + termOffset;
+                ExclusiveTermAppender termAppender = _termAppenders[_activePartitionIndex];
+                long position = _termBeginPosition + this._termOffset;
 
                 if (position < limit)
                 {
-                    long result;
+                    int result;
                     if (length <= MaxPayloadLength)
                     {
-                        result = termAppender.AppendUnfragmentedMessage(_headerWriter, buffer, offset, length, reservedValueSupplier);
+                        result = termAppender.AppendUnfragmentedMessage(_termId, _termOffset, _headerWriter, buffer, offset, length, reservedValueSupplier);
                     }
                     else
                     {
                         CheckForMaxMessageLength(length);
-                        result = termAppender.AppendFragmentedMessage(_headerWriter, buffer, offset, length, MaxPayloadLength, reservedValueSupplier);
+                        result = termAppender.AppendFragmentedMessage(_termId, _termOffset, _headerWriter, buffer, offset, length, MaxPayloadLength, reservedValueSupplier);
                     }
 
-                    newPosition = NewPosition(partitionIndex, (int) termOffset, position, result);
+                    newPosition = NewPosition(result);
                 }
                 else if (_conductor.IsPublicationConnected(LogBufferDescriptor.TimeOfLastStatusMessage(_logMetaDataBuffer)))
                 {
@@ -305,12 +321,12 @@ namespace Adaptive.Aeron
 
         /// <summary>
         /// Try to claim a range in the publication log into which a message can be written with zero copy semantics.
-        /// Once the message has been written then <seealso cref="BufferClaim.Commit()"/> should be called thus making it available.
+        /// Once the message has been written then <seealso cref="ExclusiveBufferClaim.Commit()"/> should be called thus making it available.
         /// <para>
         /// <b>Note:</b> This method can only be used for message lengths less than MTU length minus header.
         ///     
         /// <pre>{@code
-        ///     final BufferClaim bufferClaim = new BufferClaim(); // Can be stored and reused to avoid allocation
+        ///     final ExclusiveBufferClaim bufferClaim = new ExclusiveBufferClaim(); // Can be stored and reused to avoid allocation
         ///     
         ///     if (publication.tryClaim(messageLength, bufferClaim) > 0L)
         ///     {
@@ -335,10 +351,10 @@ namespace Adaptive.Aeron
         /// <returns> The new stream position, otherwise <seealso cref="NOT_CONNECTED"/>, <seealso cref="BACK_PRESSURED"/>,
         /// <seealso cref="ADMIN_ACTION"/> or <seealso cref="CLOSED"/>. </returns>
         /// <exception cref="ArgumentException"> if the length is greater than max payload length within an MTU. </exception>
-        /// <seealso cref="BufferClaim.Commit()" />
-        /// <seealso cref="BufferClaim.Abort()" />
+        /// <seealso cref="ExclusiveBufferClaim.Commit()" />
+        /// <seealso cref="ExclusiveBufferClaim.Abort()" />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public long TryClaim(int length, BufferClaim bufferClaim)
+        public long TryClaim(int length, ExclusiveBufferClaim bufferClaim)
         {
             CheckForMaxPayloadLength(length);
             var newPosition = CLOSED;
@@ -346,16 +362,13 @@ namespace Adaptive.Aeron
             if (!_isClosed)
             {
                 var limit = _positionLimit.Volatile;
-                var partitionIndex = LogBufferDescriptor.ActivePartitionIndex(_logMetaDataBuffer);
-                var termAppender = _termAppenders[partitionIndex];
-                var rawTail = termAppender.RawTailVolatile();
-                var termOffset = rawTail & 0xFFFFFFFFL;
-                var position = LogBufferDescriptor.ComputeTermBeginPosition(LogBufferDescriptor.TermId(rawTail), _positionBitsToShift, InitialTermId) + termOffset;
+                ExclusiveTermAppender termAppender = _termAppenders[_activePartitionIndex];
+                long position = _termBeginPosition + _termOffset;
 
                 if (position < limit)
                 {
-                    var result = termAppender.Claim(_headerWriter, length, bufferClaim);
-                    newPosition = NewPosition(partitionIndex, (int) termOffset, position, result);
+                    int result = termAppender.Claim(_termId, _termOffset, _headerWriter, length, bufferClaim);
+                    newPosition = NewPosition(result);
                 }
                 else if (_conductor.IsPublicationConnected(LogBufferDescriptor.TimeOfLastStatusMessage(_logMetaDataBuffer)))
                 {
@@ -403,32 +416,31 @@ namespace Adaptive.Aeron
                 _conductor.ClientLock().Unlock();
             }
         }
-
-        /// <seealso cref="Dispose()" />
+        
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal void IncRef()
+        private long NewPosition(int resultingOffset)
         {
-            ++_refCount;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private long NewPosition(int index, int currentTail, long position, long result)
-        {
-            var newPosition = ADMIN_ACTION;
-            var termOffset = TermAppender.TermOffset(result);
-            if (termOffset > 0)
+            if (resultingOffset > 0)
             {
-                newPosition = (position - currentTail) + termOffset;
+                _termOffset = resultingOffset;
+
+                return _termBeginPosition + resultingOffset;
             }
-            else if (termOffset == TermAppender.TRIPPED)
+            else
             {
-                var nextIndex = LogBufferDescriptor.NextPartitionIndex(index);
-                
-                _termAppenders[nextIndex].TailTermId(TermAppender.TermId(result) + 1);
+                int nextIndex = LogBufferDescriptor.NextPartitionIndex(_activePartitionIndex);
+                int nextTermId = _termId + 1;
+
+                _activePartitionIndex = nextIndex;
+                _termOffset = 0;
+                _termId = nextTermId;
+                _termBeginPosition = LogBufferDescriptor.ComputeTermBeginPosition(nextTermId, _positionBitsToShift, InitialTermId);
+
+                _termAppenders[nextIndex].TailTermId(nextTermId);
                 LogBufferDescriptor.ActivePartitionIndexOrdered(_logMetaDataBuffer, nextIndex);
-            }
 
-            return newPosition;
+                return ADMIN_ACTION;
+            }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -459,10 +471,10 @@ namespace Adaptive.Aeron
 
         private class PublicationManagedResource : IManagedResource
         {
-            private readonly Publication _publication;
+            private readonly ExclusivePublication _publication;
             private long _timeOfLastStateChange;
 
-            public PublicationManagedResource(Publication publication)
+            public PublicationManagedResource(ExclusivePublication publication)
             {
                 _publication = publication;
             }

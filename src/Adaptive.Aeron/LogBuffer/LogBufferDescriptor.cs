@@ -305,11 +305,21 @@ namespace Adaptive.Aeron.LogBuffer
         /// <param name="logMetaDataBuffer">    containing the meta data. </param>
         /// <param name="activePartitionIndex"> value of the active partition index used by the producer of this log. </param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void ActivePartitionIndex(UnsafeBuffer logMetaDataBuffer, int activePartitionIndex)
+        public static void ActivePartitionIndexOrdered(UnsafeBuffer logMetaDataBuffer, int activePartitionIndex)
         {
             logMetaDataBuffer.PutIntOrdered(LOG_ACTIVE_PARTITION_INDEX_OFFSET, activePartitionIndex);
         }
 
+        /// <summary>
+        /// Set the value of the current active partition index for the producer.
+        /// </summary>
+        /// <param name="logMetaDataBuffer">    containing the meta data. </param>
+        /// <param name="activePartitionIndex"> value of the active partition index used by the producer of this log. </param>
+        public static void ActivePartitionIndex(UnsafeBuffer logMetaDataBuffer, int activePartitionIndex)
+        {
+            logMetaDataBuffer.PutInt(LOG_ACTIVE_PARTITION_INDEX_OFFSET, activePartitionIndex);
+        }
+        
         /// <summary>
         /// Rotate to the next partition in sequence for the term id.
         /// </summary>
@@ -490,7 +500,7 @@ namespace Adaptive.Aeron.LogBuffer
         {
             var nextIndex = NextPartitionIndex(activePartitionIndex);
             InitialiseTailWithTermId(logMetaDataBuffer, nextIndex, termId);
-            ActivePartitionIndex(logMetaDataBuffer, nextIndex);
+            ActivePartitionIndexOrdered(logMetaDataBuffer, nextIndex);
         }
 
         /// <summary>
@@ -529,6 +539,39 @@ namespace Adaptive.Aeron.LogBuffer
             return (int) Math.Min(tail, termLength);
         }
 
+        /// <summary>
+        /// Pack a termId and termOffset into a raw tail value.
+        /// </summary>
+        /// <param name="termId">     to be packed. </param>
+        /// <param name="termOffset"> to be packed. </param>
+        /// <returns> the packed value. </returns>
+        public static long PackTail(int termId, int termOffset)
+        {
+            return (((long)termId) << 32) + termOffset;
+        }
+
+        /// <summary>
+        /// Set the raw value of the tail for the given partition.
+        /// </summary>
+        /// <param name="logMetaDataBuffer"> containing the tail counters. </param>
+        /// <param name="partitionIndex">    for the tail counter. </param>
+        /// <param name="rawTail">           to be stored </param>
+        public static void RawTail(UnsafeBuffer logMetaDataBuffer, int partitionIndex, long rawTail)
+        {
+            logMetaDataBuffer.PutLong(TERM_TAIL_COUNTERS_OFFSET + (BitUtil.SIZE_OF_LONG * partitionIndex), rawTail);
+        }
+
+        /// <summary>
+        /// Set the raw value of the tail for the given partition.
+        /// </summary>
+        /// <param name="logMetaDataBuffer"> containing the tail counters. </param>
+        /// <param name="partitionIndex">    for the tail counter. </param>
+        /// <param name="rawTail">           to be stored </param>
+        public static void RawTailVolatile(UnsafeBuffer logMetaDataBuffer, int partitionIndex, long rawTail)
+        {
+            logMetaDataBuffer.PutLongVolatile(TERM_TAIL_COUNTERS_OFFSET + (BitUtil.SIZE_OF_LONG * partitionIndex), rawTail);
+        }
+        
         /// <summary>
         /// Get the raw value of the tail for the given partition.
         /// </summary>
