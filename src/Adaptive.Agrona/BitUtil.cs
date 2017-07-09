@@ -300,7 +300,7 @@ namespace Adaptive.Agrona
         {
             if (!IsPowerOfTwo(alignment))
             {
-                throw new ArgumentException("Alignment must be a power of 2: alignment=" + alignment);
+                ThrowHelper.ThrowArgumentException("Alignment must be a power of 2: alignment=" + alignment);
             }
 
             return (address & (alignment - 1)) == 0;

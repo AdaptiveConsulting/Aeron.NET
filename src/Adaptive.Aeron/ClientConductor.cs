@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using Adaptive.Aeron.Exceptions;
 using Adaptive.Aeron.io.aeron;
@@ -358,6 +359,7 @@ namespace Adaptive.Aeron
             _lingeringResources.Add(managedResource);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal bool IsPublicationConnected(long timeOfLastStatusMessageMs)
         {
             return _epochClock.Time() <= (timeOfLastStatusMessageMs + _publicationConnectionTimeoutMs);

@@ -15,6 +15,7 @@
  */
 
 using System;
+using Adaptive.Agrona.Util;
 
 namespace Adaptive.Agrona.Concurrent.RingBuffer
 {
@@ -87,7 +88,7 @@ namespace Adaptive.Agrona.Concurrent.RingBuffer
             if (!BitUtil.IsPowerOfTwo(capacity - TrailerLength))
             {
                 var msg = "Capacity must be a positive power of 2 + TRAILER_LENGTH: capacity=" + capacity;
-                throw new InvalidOperationException(msg);
+                ThrowHelper.ThrowInvalidOperationException(msg);
             }
         }
     }

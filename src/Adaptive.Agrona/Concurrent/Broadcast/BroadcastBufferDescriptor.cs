@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+using Adaptive.Agrona.Util;
 using System;
 
 namespace Adaptive.Agrona.Concurrent.Broadcast
@@ -68,7 +69,7 @@ namespace Adaptive.Agrona.Concurrent.Broadcast
             if (!BitUtil.IsPowerOfTwo(capacity))
             {
                 var msg = "Capacity must be a positive power of 2 + TRAILER_LENGTH: capacity=" + capacity;
-                throw new InvalidOperationException(msg);
+                ThrowHelper.ThrowInvalidOperationException(msg);
             }
         }
     }

@@ -19,6 +19,7 @@ using System.Runtime.CompilerServices;
 using Adaptive.Aeron.Protocol;
 using Adaptive.Agrona;
 using Adaptive.Agrona.Concurrent;
+using Adaptive.Agrona.Util;
 
 namespace Adaptive.Aeron.LogBuffer
 {
@@ -188,13 +189,14 @@ namespace Adaptive.Aeron.LogBuffer
             if (termLength < TERM_MIN_LENGTH)
             {
                 string s = $"Term length less than min length of {TERM_MIN_LENGTH:D}, length={termLength:D}";
-                throw new InvalidOperationException(s);
+                ThrowHelper.ThrowInvalidOperationException(s);
+                return;
             }
 
             if ((termLength & (FrameDescriptor.FRAME_ALIGNMENT - 1)) != 0)
             {
                 string s = $"Term length not a multiple of {FrameDescriptor.FRAME_ALIGNMENT:D}, length={termLength:D}";
-                throw new InvalidOperationException(s);
+                ThrowHelper.ThrowInvalidOperationException(s);
             }
         }
 
@@ -457,8 +459,9 @@ namespace Adaptive.Aeron.LogBuffer
         {
             if (defaultHeader.Capacity != DataHeaderFlyweight.HEADER_LENGTH)
             {
-                throw new ArgumentException(
+                ThrowHelper.ThrowArgumentException(
                     $"Default header of {defaultHeader.Capacity:D} not equal to {DataHeaderFlyweight.HEADER_LENGTH:D}");
+                return;
             }
 
             logMetaDataBuffer.PutInt(LOG_DEFAULT_FRAME_HEADER_LENGTH_OFFSET, DataHeaderFlyweight.HEADER_LENGTH);

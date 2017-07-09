@@ -15,9 +15,11 @@
  */
 
 using System;
+using System.Runtime.CompilerServices;
 using System.Text;
 using Adaptive.Agrona;
 using Adaptive.Agrona.Concurrent;
+using Adaptive.Agrona.Util;
 
 namespace Adaptive.Aeron
 {
@@ -84,11 +86,12 @@ namespace Adaptive.Aeron
         /// Set this limit for this buffer as the position at which the next append operation will occur.
         /// </summary>
         /// <param name="limit"> to be the new value. </param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Limit(int limit)
         {
             if (limit < 0 || limit >= _capacity)
             {
-                throw new ArgumentException($"Limit outside range: capacity={_capacity:D} limit={limit:D}");
+                ThrowHelper.ThrowArgumentException($"Limit outside range: capacity={_capacity:D} limit={limit:D}");
             }
 
             _limit = limit;
@@ -150,7 +153,7 @@ namespace Adaptive.Aeron
             if (requiredCapacity < 0)
             {
                 string s = $"Insufficient capacity: limit={_limit:D} additional={additionalCapacity:D}";
-                throw new InvalidOperationException(s);
+                ThrowHelper.ThrowInvalidOperationException(s);
             }
 
             if (requiredCapacity > _capacity)
@@ -174,7 +177,7 @@ namespace Adaptive.Aeron
                 {
                     if (capacity == MAX_CAPACITY)
                     {
-                        throw new InvalidOperationException("Max capacity reached: " + MAX_CAPACITY);
+                        ThrowHelper.ThrowInvalidOperationException("Max capacity reached: " + MAX_CAPACITY);
                     }
 
                     capacity = MAX_CAPACITY;
