@@ -448,7 +448,7 @@ namespace Adaptive.Aeron
         {
             if (length > MaxPayloadLength)
             {
-                throw new ArgumentException(
+                ThrowHelper.ThrowArgumentException(
                     $"Claim exceeds maxPayloadLength of {MaxPayloadLength:D}, length={length:D}");
             }
         }
@@ -458,7 +458,7 @@ namespace Adaptive.Aeron
         {
             if (length > MaxMessageLength)
             {
-                throw new ArgumentException(
+                ThrowHelper.ThrowArgumentException(
                     $"Mssage exceeds maxMessageLength of {MaxMessageLength:D}, length={length:D}");
             }
         }

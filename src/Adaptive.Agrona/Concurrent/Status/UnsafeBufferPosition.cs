@@ -63,7 +63,11 @@ namespace Adaptive.Agrona.Concurrent.Status
             return _buffer.GetLong(_offset);
         }
 
-        public long Volatile => _buffer.GetLongVolatile(_offset);
+        public long Volatile
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get { return _buffer.GetLongVolatile(_offset); }
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Set(long value)
