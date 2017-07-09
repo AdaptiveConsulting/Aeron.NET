@@ -15,6 +15,7 @@
  */
 
 using System;
+using System.Runtime.CompilerServices;
 using Adaptive.Aeron.LogBuffer;
 using Adaptive.Aeron.Protocol;
 using Adaptive.Agrona;
@@ -141,6 +142,7 @@ namespace Adaptive.Aeron
         /// The position this <seealso cref="Image"/> has been consumed to by the subscriber.
         /// </summary>
         /// <returns> the position this <seealso cref="Image"/> has been consumed to by the subscriber. </returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public long Position()
         {
             if (_isClosed)
@@ -155,11 +157,12 @@ namespace Adaptive.Aeron
         /// Set the subscriber position for this <seealso cref="Image"/> to indicate where it has been consumed to.
         /// </summary>
         /// <param name="newPosition"> for the consumption point. </param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Position(long newPosition)
         {
             if (_isClosed)
             {
-                throw new InvalidOperationException("Image is closed");
+                ThrowHelper.ThrowInvalidOperationException("Image is closed");
             }
 
             ValidatePosition(newPosition);
@@ -479,18 +482,19 @@ namespace Adaptive.Aeron
             return _termBuffers[LogBufferDescriptor.IndexByPosition(position, _positionBitsToShift)];
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void ValidatePosition(long newPosition)
         {
             long currentPosition = _subscriberPosition.Get();
             long limitPosition = currentPosition + TermBufferLength;
             if (newPosition < currentPosition || newPosition > limitPosition)
             {
-                throw new ArgumentException("newPosition of " + newPosition + " out of range " + currentPosition + "-" + limitPosition);
+                ThrowHelper.ThrowArgumentException("newPosition of " + newPosition + " out of range " + currentPosition + "-" + limitPosition);
             }
 
             if(0 != (newPosition & (FrameDescriptor.FRAME_ALIGNMENT - 1)))
             {
-                throw new ArgumentException("newPosition of " + newPosition + " not aligned to FRAME_ALIGNMENT");
+                ThrowHelper.ThrowArgumentException("newPosition of " + newPosition + " not aligned to FRAME_ALIGNMENT");
             }
         }
 

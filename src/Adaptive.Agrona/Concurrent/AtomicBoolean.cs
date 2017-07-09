@@ -15,7 +15,9 @@
  */
 
 using System;
+using System.Runtime.CompilerServices;
 using System.Threading;
+using Adaptive.Agrona.Util;
 
 namespace Adaptive.Agrona.Concurrent
 {
@@ -37,6 +39,7 @@ namespace Adaptive.Agrona.Concurrent
         /// <param name="newValue">The new value</param>
         /// <param name="comparand">The comparand (expected value)</param>
         /// <returns></returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool CompareAndSet(bool comparand, bool newValue)
         {
             var newValueInt = ToInt(newValue);
@@ -45,26 +48,30 @@ namespace Adaptive.Agrona.Concurrent
             return Interlocked.CompareExchange(ref _value, newValueInt, comparandInt) == comparandInt;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool Get()
         {
             return ToBool(Volatile.Read(ref _value));
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static bool ToBool(int value)
         {
             if (value != FALSE && value != TRUE)
             {
-                throw new ArgumentOutOfRangeException(nameof(value));
+                ThrowHelper.ThrowArgumentOutOfRangeException(nameof(value));
             }
 
             return value == TRUE;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static int ToInt(bool value)
         {
             return value ? TRUE : FALSE;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Set(bool value)
         {
             Volatile.Write(ref _value, ToInt(value));

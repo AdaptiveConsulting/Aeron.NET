@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+using Adaptive.Agrona.Util;
 using System;
 using System.Text;
 
@@ -39,7 +40,7 @@ namespace Adaptive.Agrona
             var resultingPosition = index + length;
             if (index < 0 || resultingPosition > capacity)
             {
-                throw new IndexOutOfRangeException($"index={index:D}, length={length:D}, capacity={capacity:D}");
+                ThrowHelper.ThrowIndexOutOfRangeException($"index={index:D}, length={length:D}, capacity={capacity:D}");
             }
 #endif
         }

@@ -46,6 +46,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// <param name="currentPosition">    prior to reading further fragments </param>
         /// <param name="subscriberPosition"> to be updated after reading with new position </param>
         /// <returns> the number of fragments read </returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int Read(UnsafeBuffer termBuffer, int termOffset, FragmentHandler handler, int fragmentsLimit, Header header, ErrorHandler errorHandler, long currentPosition, IPosition subscriberPosition)
         {
             int fragmentsRead = 0;

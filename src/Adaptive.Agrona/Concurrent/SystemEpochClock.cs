@@ -15,12 +15,14 @@
  */
 
 using System;
+using System.Runtime.CompilerServices;
 using Adaptive.Agrona.Util;
 
 namespace Adaptive.Agrona.Concurrent
 {
     public class SystemEpochClock : IEpochClock
     {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public long Time()
         {
             return UnixTimeConverter.CurrentUnixTimeMillis();

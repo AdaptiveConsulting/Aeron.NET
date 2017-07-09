@@ -131,6 +131,7 @@
     <Compile Include="Util\LockSupport.cs" />
     <Compile Include="Util\MappedByteBuffer.cs" />
     <Compile Include="Util\NanoUtil.cs" />
+    <Compile Include="Util\ThrowHelper.cs" />
     <Compile Include="Util\UnixTimeConverter.cs" />
   </ItemGroup>
   <ItemGroup>

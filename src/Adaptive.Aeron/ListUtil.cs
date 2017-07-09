@@ -15,6 +15,7 @@
  */
 
 using System;
+using Adaptive.Agrona.Util;
 
 namespace Adaptive.Aeron
 {
@@ -53,7 +54,10 @@ namespace Adaptive.Aeron
             /// <returns> true if found and removed, false otherwise.</returns>
             public static bool FastUnorderedRemove<T>(List<T> list, T e)
             {
-                if (e == null) throw new ArgumentNullException(nameof(e));
+                if (e == null)
+                {
+                    ThrowHelper.ThrowArgumentNullException(nameof(e));
+                }
 
                 for (int i = 0, size = list.Count; i < size; i++)
                 {
