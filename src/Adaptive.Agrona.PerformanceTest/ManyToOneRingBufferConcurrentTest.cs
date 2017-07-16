@@ -36,13 +36,12 @@ namespace Adaptive.Agrona.PerformanceTest
 
         private void InitializeInstanceFields()
         {
-            _unsafeBuffer = new UnsafeBuffer(_byteBuffer);
+            _unsafeBuffer = new UnsafeBuffer(BufferUtil.AllocateDirectAligned(16 * 1024 + RingBufferDescriptor.TrailerLength, BitUtil.CACHE_LINE_LENGTH));
             _ringBuffer = new ManyToOneRingBuffer(_unsafeBuffer);
         }
 
         private const int MsgTypeID = 7;
 
-        private readonly byte[] _byteBuffer = new byte[16*1024 + RingBufferDescriptor.TrailerLength];
         private UnsafeBuffer _unsafeBuffer;
         private IRingBuffer _ringBuffer;
 
