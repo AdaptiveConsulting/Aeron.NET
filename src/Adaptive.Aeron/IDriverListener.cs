@@ -28,7 +28,7 @@ namespace Adaptive.Aeron
         void OnAvailableImage(
             int streamId, 
             int sessionId, 
-            Dictionary<long, long> subscriberPositionMap, 
+            IDictionary<long, long> subscriberPositionMap, 
             string logFileName, 
             string sourceIdentity, 
             long correlationId);

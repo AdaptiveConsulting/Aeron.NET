@@ -194,7 +194,7 @@ namespace Adaptive.Aeron
             return _activeExclusivePublications[registrationId];
         }
 
-        internal void ReleasePublication(Publication publication)
+        internal virtual void ReleasePublication(Publication publication)
         {
             VerifyActive();
 
@@ -209,7 +209,9 @@ namespace Adaptive.Aeron
         {
             VerifyActive();
 
-            _activeExclusivePublications.TryRemove(publication.RegistrationId, out ExclusivePublication publicationToRemove);
+            ExclusivePublication publicationToRemove;
+
+            _activeExclusivePublications.TryRemove(publication.RegistrationId, out publicationToRemove);
 
             if (publication == publicationToRemove)
             {
@@ -249,7 +251,7 @@ namespace Adaptive.Aeron
             return subscription;
         }
 
-        internal void ReleaseSubscription(Subscription subscription)
+        internal virtual void ReleaseSubscription(Subscription subscription)
         {
             VerifyActive();
 
@@ -296,7 +298,7 @@ namespace Adaptive.Aeron
             _activeExclusivePublications[correlationId] = publication;
         }
 
-        public void OnAvailableImage(int streamId, int sessionId, Dictionary<long, long> subscriberPositionMap, string logFileName, string sourceIdentity, long correlationId)
+        public void OnAvailableImage(int streamId, int sessionId, IDictionary<long, long> subscriberPositionMap, string logFileName, string sourceIdentity, long correlationId)
         {
             _activeSubscriptions.ForEach(streamId, (subscription) =>
             {
@@ -358,7 +360,7 @@ namespace Adaptive.Aeron
             _lingeringResources.Add(managedResource);
         }
 
-        internal bool IsPublicationConnected(long timeOfLastStatusMessageMs)
+        internal virtual bool IsPublicationConnected(long timeOfLastStatusMessageMs)
         {
             return _epochClock.Time() <= (timeOfLastStatusMessageMs + _publicationConnectionTimeoutMs);
         }
@@ -389,9 +391,7 @@ namespace Adaptive.Aeron
         private void AwaitResponse(long correlationId, string expectedChannel)
         {
             _driverException = null;
-            //JAVA TO C# CONVERTER WARNING: The original Java variable was marked 'final':
-            //ORIGINAL LINE: final long timeoutDeadlineNs = nanoClock.nanoTime() + driverTimeoutNs;
-            long timeoutDeadlineNs = _nanoClock.NanoTime() + _driverTimeoutNs;
+            var timeoutDeadlineNs = _nanoClock.NanoTime() + _driverTimeoutNs;
 
             do
             {

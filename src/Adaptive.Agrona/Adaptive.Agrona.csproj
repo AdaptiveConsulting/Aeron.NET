@@ -70,6 +70,7 @@
   <ItemGroup>
     <Compile Include="ByteBuffer.cs" />
     <Compile Include="CacheLinePadding.cs" />
+    <Compile Include="Collections\DefaultDictionary.cs" />
     <Compile Include="Concurrent\AtomicBoolean.cs" />
     <Compile Include="Concurrent\AtomicLong.cs" />
     <Compile Include="BitUtil.cs" />

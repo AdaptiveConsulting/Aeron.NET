@@ -217,10 +217,10 @@ namespace Adaptive.Aeron
             }
 
             var fragmentsRead = 0;
-            long initialPosition = _subscriberPosition.Get();
-            int initialOffset = (int) initialPosition & _termLengthMask;
-            int resultingOffset = initialOffset;
-            UnsafeBuffer termBuffer = ActiveTermBuffer(initialPosition);
+            var initialPosition = _subscriberPosition.Get();
+            var initialOffset = (int) initialPosition & _termLengthMask;
+            var resultingOffset = initialOffset;
+            var termBuffer = ActiveTermBuffer(initialPosition);
             int capacity = termBuffer.Capacity;
             _header.Buffer = termBuffer;
 
@@ -238,7 +238,7 @@ namespace Adaptive.Aeron
                     var alignedLength = BitUtil.Align(length, FrameDescriptor.FRAME_ALIGNMENT);
                     resultingOffset += alignedLength;
 
-                    if (!FrameDescriptor.IsPaddingFrame(termBuffer, frameOffset))
+                    if (FrameDescriptor.IsPaddingFrame(termBuffer, frameOffset))
                     {
                         continue;
                     }

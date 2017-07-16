@@ -17,6 +17,7 @@
 using System.Collections.Generic;
 using Adaptive.Aeron.Command;
 using Adaptive.Agrona;
+using Adaptive.Agrona.Collections;
 using Adaptive.Agrona.Concurrent.Broadcast;
 
 namespace Adaptive.Aeron
@@ -36,7 +37,7 @@ namespace Adaptive.Aeron
         private readonly CorrelatedMessageFlyweight _correlatedMessage = new CorrelatedMessageFlyweight();
         private readonly ImageMessageFlyweight _imageMessage = new ImageMessageFlyweight();
         private readonly IDriverListener _listener;
-        private readonly Dictionary<long, long> _subscriberPositionMap = new Dictionary<long, long>();
+        private readonly IDictionary<long, long> _subscriberPositionMap = new DefaultDictionary<long, long>(MISSING_REGISTRATION_ID);
 
         private long _activeCorrelationId;
         private long _lastReceivedCorrelationId;
