@@ -22,44 +22,44 @@ namespace Adaptive.Agrona.Concurrent.Status
     {
         private readonly AtomicLong _value = new AtomicLong();
 
-        public void Dispose()
+        public override void Dispose()
         {
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public int Id()
+        public override int Id()
         {
             return 0;
         }
 
-        public long Volatile => _value.Get();
+        public override long Volatile => _value.Get();
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public long Get()
+        public override long Get()
         {
             return _value.Get();
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Set(long value)
+        public override void Set(long value)
         {
             _value.Set(value);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void SetOrdered(long value)
+        public override void SetOrdered(long value)
         {
             _value.Set(value);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool ProposeMax(long proposedValue)
+        public override bool ProposeMax(long proposedValue)
         {
             return ProposeMaxOrdered(proposedValue);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool ProposeMaxOrdered(long proposedValue)
+        public override bool ProposeMaxOrdered(long proposedValue)
         {
             bool updated = false;
 

@@ -19,11 +19,10 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
 using Adaptive.Aeron.Exceptions;
-using Adaptive.Aeron.io.aeron;
 using Adaptive.Agrona;
+using Adaptive.Agrona.Collections;
 using Adaptive.Agrona.Concurrent;
 using Adaptive.Agrona.Concurrent.Status;
-using Adaptive.Agrona.Util;
 
 namespace Adaptive.Aeron
 {
@@ -474,7 +473,7 @@ namespace Adaptive.Aeron
 
             if (nowNs > (_timeOfLastCheckResourcesNs + RESOURCE_TIMEOUT_NS))
             {
-                List<IManagedResource> lingeringResources = this._lingeringResources;
+                List<IManagedResource> lingeringResources = _lingeringResources;
                 for (int lastIndex = lingeringResources.Count - 1, i = lastIndex; i >= 0; i--)
                 {
                     IManagedResource resource = lingeringResources[i];
@@ -502,32 +501,5 @@ namespace Adaptive.Aeron
                 _errorHandler(new DriverTimeoutException("MediaDriver has been inactive for over " + _driverTimeoutMs + "ms"));
             }
         }
-    }
-}
-
-public interface ILock
-{
-    void Lock();
-    void Unlock();
-    bool TryLock();
-}
-
-public class ReentrantLock : ILock
-{
-    private readonly object _lockObj = new object();
-
-    public void Lock()
-    {
-        Monitor.Enter(_lockObj);
-    }
-
-    public void Unlock()
-    {
-        Monitor.Exit(_lockObj);
-    }
-
-    public bool TryLock()
-    {
-        return Monitor.TryEnter(_lockObj);
     }
 }

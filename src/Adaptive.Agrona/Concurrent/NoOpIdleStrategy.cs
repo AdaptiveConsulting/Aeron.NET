@@ -17,8 +17,8 @@
 namespace Adaptive.Agrona.Concurrent
 {
     /// <summary>
-    /// Low-latency idle strategy to be employed in loops that do significant work on each iteration such that any work in the
-    /// idle strategy would be wasteful.
+    /// Low-latency idle strategy to be employed in loops that do significant work on each iteration such that any
+    /// work in the idle strategy would be wasteful.
     /// </summary>
     public sealed class NoOpIdleStrategy : IIdleStrategy
     {

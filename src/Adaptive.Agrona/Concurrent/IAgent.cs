@@ -18,6 +18,9 @@ using System;
 
 namespace Adaptive.Agrona.Concurrent
 {
+    /// <summary>
+    /// An Agent is scheduled to do work on a thread on a duty cycle. Each Agent should have a defined role in a system.
+    /// </summary>
     public interface IAgent
     {
         /// <summary>
@@ -35,7 +38,7 @@ namespace Adaptive.Agrona.Concurrent
         /// 
         /// This method will be called after the agent thread has terminated. It will only be called once by a single thread.
         /// 
-        /// <b>Note:</b> Implementations of this method much be idempotent.
+        /// <b>Note:</b> Implementations of this method must be idempotent.
         /// </summary>
         void OnClose(); // default to do nothing unless you want to handle the notification.
 

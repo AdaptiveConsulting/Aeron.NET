@@ -61,11 +61,10 @@ namespace Adaptive.Agrona.Concurrent.Errors
                     ++entries;
 
                     consumer(
-                        buffer.GetInt(offset + DistinctErrorLog.ObservationCountOffset), 
-                        buffer.GetLong(offset + DistinctErrorLog.FirstObservationTimestampOffset), 
-                        lastObservationTimestamp, 
-                        buffer.GetStringUtf8(offset + DistinctErrorLog.EncodedErrorOffset, 
-                        length - DistinctErrorLog.EncodedErrorOffset));
+                        buffer.GetInt(offset + DistinctErrorLog.ObservationCountOffset),
+                        buffer.GetLong(offset + DistinctErrorLog.FirstObservationTimestampOffset),
+                        lastObservationTimestamp,
+                        buffer.GetStringWithoutLengthUtf8(offset + DistinctErrorLog.EncodedErrorOffset, length - DistinctErrorLog.EncodedErrorOffset));
                 }
 
                 offset += BitUtil.Align(length, DistinctErrorLog.RecordAlignment);

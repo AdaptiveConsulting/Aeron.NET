@@ -16,7 +16,7 @@
 
 using System;
 using System.Collections.Generic;
-using Adaptive.Aeron.io.aeron;
+using Adaptive.Agrona.Collections;
 
 namespace Adaptive.Aeron
 {

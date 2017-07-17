@@ -71,6 +71,7 @@
     <Compile Include="ByteBuffer.cs" />
     <Compile Include="CacheLinePadding.cs" />
     <Compile Include="Collections\DefaultDictionary.cs" />
+    <Compile Include="Collections\ListUtil.cs" />
     <Compile Include="Concurrent\AgentInvoker.cs" />
     <Compile Include="Concurrent\AtomicBoolean.cs" />
     <Compile Include="Concurrent\AtomicLong.cs" />
@@ -95,7 +96,9 @@
     <Compile Include="Concurrent\IEpochClock.cs" />
     <Compile Include="Concurrent\IAgent.cs" />
     <Compile Include="Concurrent\IAtomicBuffer.cs" />
+    <Compile Include="Concurrent\ILock.cs" />
     <Compile Include="Concurrent\IThreadFactory.cs" />
+    <Compile Include="Concurrent\ReentrantLock.cs" />
     <Compile Include="Concurrent\Status\AtomicCounter.cs" />
     <Compile Include="Concurrent\Status\AtomicLongPosition.cs" />
     <Compile Include="Concurrent\Status\CountersManager.cs" />

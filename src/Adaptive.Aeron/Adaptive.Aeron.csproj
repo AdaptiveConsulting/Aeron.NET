@@ -91,7 +91,6 @@
     <Compile Include="IDriverListener.cs" />
     <Compile Include="ILogBuffersFactory.cs" />
     <Compile Include="Image.cs" />
-    <Compile Include="ListUtil.cs" />
     <Compile Include="LogBuffers.cs" />
     <Compile Include="LogBuffer\BufferClaim.cs" />
     <Compile Include="LogBuffer\ControlledFragmentHandlerAction.cs" />

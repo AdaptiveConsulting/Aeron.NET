@@ -31,9 +31,9 @@ namespace Adaptive.Agrona.Collections
         /// <param name="key"> on which the lookup is done. </param>
         /// <param name="supplier"> of the default value if one is not found. </param>
         /// <returns> the value if found or a new default which as been added to the map. </returns>
-        public static V GetOrDefault<K, V>(IDictionary<K, V> map, K key, Func<K, V> supplier)
+        public static TValue GetOrDefault<TKey, TValue>(IDictionary<TKey, TValue> map, TKey key, Func<TKey, TValue> supplier)
         {
-            V value;
+            TValue value;
             if (!map.TryGetValue(key, out value))
             {
                 value = supplier(key);

@@ -160,12 +160,12 @@ namespace Adaptive.Agrona.Concurrent
             int bufferLength = buffer.Length;
             if (offset != 0 && (offset < 0 || offset > bufferLength - 1))
             {
-                ThrowHelper.ThrowArgumentException("offset=" + offset + " not valid for buffer.length=" + bufferLength);
+                ThrowHelper.ThrowArgumentException("offset=" + offset + " not valid for capacity=" + bufferLength);
             }
 
             if (length < 0 || length > bufferLength - offset)
             {
-                ThrowHelper.ThrowArgumentException("offset=" + offset + " length=" + length + " not valid for buffer.length=" + bufferLength);
+                ThrowHelper.ThrowArgumentException("offset=" + offset + " length=" + length + " not valid for capacity=" + bufferLength);
             }
 #endif
 
@@ -215,12 +215,12 @@ namespace Adaptive.Agrona.Concurrent
             int bufferCapacity = buffer.Capacity;
             if (offset != 0 && (offset < 0 || offset > bufferCapacity - 1))
             {
-                ThrowHelper.ThrowArgumentException("offset=" + offset + " not valid for buffer.capacity()=" + bufferCapacity);
+                ThrowHelper.ThrowArgumentException("offset=" + offset + " not valid for capacity=" + bufferCapacity);
             }
 
             if (length < 0 || length > bufferCapacity - offset)
             {
-                ThrowHelper.ThrowArgumentException("offset=" + offset + " length=" + length + " not valid for buffer.capacity()=" + bufferCapacity);
+                ThrowHelper.ThrowArgumentException("offset=" + offset + " length=" + length + " not valid for capacity=" + bufferCapacity);
             }
 #endif
 
@@ -1045,7 +1045,7 @@ namespace Adaptive.Agrona.Concurrent
         {
             BoundsCheck0(index, length);
         }
-
+        
         ///////////////////////////////////////////////////////////////////////////
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -21,16 +21,20 @@ using Adaptive.Agrona.Concurrent.Status;
 namespace Adaptive.Agrona.Concurrent
 {
     /// <summary>
-    /// Base agent runner that is responsible for lifecycle of an <seealso cref="Agent"/> and ensuring exceptions are handled.
+    /// Agent runner containing an <see cref="IAgent"/> which is run on a <see cref="Thread"/>.
     /// <para>
-    /// Note: An agent runner should only be once per instance.
+    /// Note: An instance should only be started once and then discarded, it should not be reused.
     /// </para>
     /// </summary>
     public class AgentRunner : IDisposable
     {
-        private static readonly Thread Tombstone = null;
+        /// <summary>
+        /// Indicates that the runner is being closed.
+        /// </summary>
+        public static readonly Thread Tombstone = null;
 
         private volatile bool _running = true;
+        private volatile bool _done = false;
 
         private readonly AtomicCounter _errorCounter;
         private readonly ErrorHandler _errorHandler;
@@ -39,11 +43,11 @@ namespace Adaptive.Agrona.Concurrent
         private readonly AtomicReference<Thread> _thread = new AtomicReference<Thread>();
 
         /// <summary>
-        /// Create an agent passing in <seealso cref="_idleStrategy"/>
+        /// Create an agent runner and initialise it.
         /// </summary>
         /// <param name="idleStrategy"> to use for Agent run loop </param>
         /// <param name="errorHandler"> to be called if an <seealso cref="Exception"/> is encountered </param>
-        /// <param name="errorCounter"> for reporting how many exceptions have been seen. </param>
+        /// <param name="errorCounter"> to be incremented each time an exception is encountered. This may be null.</param>
         /// <param name="agent">        to be run in this thread. </param>
         public AgentRunner(IIdleStrategy idleStrategy, ErrorHandler errorHandler, AtomicCounter errorCounter, IAgent agent)
         {
@@ -88,12 +92,17 @@ namespace Adaptive.Agrona.Concurrent
         }
 
         /// <summary>
-        /// The <seealso cref="IAgent"/> who's lifecycle is being managed.
+        /// The <seealso cref="IAgent"/> which is contained.
         /// </summary>
-        /// <returns> <seealso cref="IAgent"/> who's lifecycle is being managed. </returns>
+        /// <returns> <seealso cref="IAgent"/> being contained.</returns>
         public IAgent Agent()
         {
             return _agent;
+        }
+
+        public Thread Thread()
+        {
+            return _thread.Get();
         }
 
         /// <summary>
@@ -104,28 +113,39 @@ namespace Adaptive.Agrona.Concurrent
         /// </summary>
         public void Run()
         {
-            if (!_thread.CompareAndSet(null, Thread.CurrentThread))
+            try
             {
-                return;
+                if (!_thread.CompareAndSet(null, System.Threading.Thread.CurrentThread))
+                {
+                    return;
+                }
+
+                var idleStrategy = _idleStrategy;
+                var agent = _agent;
+                while (_running)
+                {
+                    try
+                    {
+                        idleStrategy.Idle(agent.DoWork());
+                    }
+                    catch (ThreadInterruptedException)
+                    {
+                        break;
+                    }
+                    catch (Exception ex)
+                    {
+                        if (_running)
+                        {
+                            _errorCounter?.Increment();
+
+                            _errorHandler(ex);
+                        }
+                    }
+                }
             }
-
-            var idleStrategy = _idleStrategy;
-            var agent = _agent;
-            while (_running)
+            finally
             {
-                try
-                {
-                    idleStrategy.Idle(agent.DoWork());
-                }
-                catch (ThreadInterruptedException)
-                {
-                }
-                catch (Exception ex)
-                {
-                    _errorCounter?.Increment();
-
-                    _errorHandler(ex);
-                }
+                _done = true;
             }
         }
 
@@ -151,12 +171,12 @@ namespace Adaptive.Agrona.Concurrent
                         {
                             thread.Join(1000);
 
-                            if (!thread.IsAlive)
+                            if (!thread.IsAlive || _done)
                             {
                                 break;
                             }
 
-                            Console.Error.WriteLine("timeout await for agent. Retrying...");
+                            Console.Error.WriteLine($"Timeout waitinf for {_agent.RoleName()}. Retrying...");
 
                             thread.Interrupt();
                         }

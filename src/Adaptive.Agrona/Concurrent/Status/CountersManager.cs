@@ -55,7 +55,7 @@ namespace Adaptive.Agrona.Concurrent.Status
     ///  +-+-------------------------------------------------------------+
     ///  |R|                      Label Length                           |
     ///  +-+-------------------------------------------------------------+
-    ///  |                  124 bytes of Label in UTF-8                 ...
+    ///  |                  380 bytes of Label in UTF-8                 ...
     /// ...                                                              |
     ///  +---------------------------------------------------------------+
     ///  |                   Repeats to end of buffer                   ...
@@ -70,12 +70,7 @@ namespace Adaptive.Agrona.Concurrent.Status
         /// Default type id of a counter when none is supplied.
         /// </summary>
         public const int DEFAULT_TYPE_ID = 0;
-
-        /// <summary>
-        /// Default function to set a key when none is supplied.
-        /// </summary>
-        public static readonly Action<IMutableDirectBuffer> DEFAULT_KEY_FUNC = ignore => { };
-
+        
         private int _idHighWaterMark = -1;
         private readonly Queue<int> _freeList = new Queue<int>();
 
@@ -101,7 +96,24 @@ namespace Adaptive.Agrona.Concurrent.Status
         /// <returns> the id allocated for the counter. </returns>
         public int Allocate(string label)
         {
-            return Allocate(label, DEFAULT_TYPE_ID, DEFAULT_KEY_FUNC);
+            int counterId = NextCounterId();
+            if ((CounterOffset(counterId) + COUNTER_LENGTH) > ValuesBuffer.Capacity)
+            {
+                throw new ArgumentException("Unable to allocated counter, values buffer is full");
+            }
+
+            int recordOffset = MetaDataOffset(counterId);
+            if ((recordOffset + METADATA_LENGTH) > MetaDataBuffer.Capacity)
+            {
+                throw new ArgumentException("Unable to allocate counter, labels buffer is full");
+            }
+
+            MetaDataBuffer.PutInt(recordOffset + TYPE_ID_OFFSET, DEFAULT_TYPE_ID);
+            MetaDataBuffer.PutStringUtf8(recordOffset + LABEL_OFFSET, label, MAX_LABEL_LENGTH);
+
+            MetaDataBuffer.PutIntOrdered(recordOffset, RECORD_ALLOCATED);
+
+            return counterId;
         }
 
         /// <summary>

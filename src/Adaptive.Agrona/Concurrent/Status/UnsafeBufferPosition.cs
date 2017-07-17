@@ -52,37 +52,37 @@ namespace Adaptive.Agrona.Concurrent.Status
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public int Id()
+        public override int Id()
         {
             return _counterId;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public long Get()
+        public override long Get()
         {
             return _buffer.GetLong(_offset);
         }
 
-        public long Volatile
+        public override long Volatile
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get { return _buffer.GetLongVolatile(_offset); }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Set(long value)
+        public override void Set(long value)
         {
             _buffer.PutLong(_offset, value);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void SetOrdered(long value)
+        public override void SetOrdered(long value)
         {
             _buffer.PutLongOrdered(_offset, value);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool ProposeMax(long proposedValue)
+        public override bool ProposeMax(long proposedValue)
         {
             var buffer = _buffer;
             var offset = _offset;
@@ -98,7 +98,7 @@ namespace Adaptive.Agrona.Concurrent.Status
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool ProposeMaxOrdered(long proposedValue)
+        public override bool ProposeMaxOrdered(long proposedValue)
         {
             var buffer = _buffer;
             var offset = _offset;
@@ -113,7 +113,7 @@ namespace Adaptive.Agrona.Concurrent.Status
             return updated;
         }
 
-        public void Dispose()
+        public override void Dispose()
         {
             _countersManager?.Free(_counterId);
         }

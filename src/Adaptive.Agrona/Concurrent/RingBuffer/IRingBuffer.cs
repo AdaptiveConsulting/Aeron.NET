@@ -103,14 +103,14 @@ namespace Adaptive.Agrona.Concurrent.RingBuffer
         long ConsumerPosition();
 
         /// <summary>
-        /// Size of the backlog of bytes in the buffer between producers and consumers. The figure includes the size of headers.
+        /// Size of the buffer backlog in bytes between producers and consumers. The figure includes the size of headers.
         /// </summary>
         /// <returns> size of the backlog of bytes in the buffer between producers and consumers. </returns>
         int Size();
 
         /// <summary>
-        /// Unblock a multi-producer ring buffer where a producer has died during the act of offering. The operation will scan from
-        /// the consumer position up to the producer position.
+        /// Unblock a multi-producer ring buffer where a producer has died during the act of offering. The operation will
+        /// scan from the consumer position up to the producer position.
         /// 
         /// If no action is required at the position then none will be taken.
         /// </summary>
