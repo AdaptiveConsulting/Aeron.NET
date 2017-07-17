@@ -86,12 +86,12 @@ namespace Adaptive.Aeron.Protocol
             return this;
         }
 
-        public virtual long EchoTimestamp()
+        public virtual long EchoTimestampNs()
         {
             return GetLong(ECHO_TIMESTAMP_FIELD_OFFSET);
         }
 
-        public virtual RttMeasurementFlyweight EchoTimestamp(long timestamp)
+        public virtual RttMeasurementFlyweight EchoTimestampNs(long timestamp)
         {
             PutLong(ECHO_TIMESTAMP_FIELD_OFFSET, timestamp);
 
@@ -135,7 +135,7 @@ namespace Adaptive.Aeron.Protocol
                 .Append(" type=").Append(HeaderType())
                 .Append(" session_id=").Append(SessionId())
                 .Append(" stream_id=").Append(StreamId())
-                .Append(" echo_timestamp=").Append(EchoTimestamp())
+                .Append(" echo_timestamp=").Append(EchoTimestampNs())
                 .Append(" reception_delta=").Append(ReceptionDelta())
                 .Append(" receiver_id=").Append(ReceiverId()).Append("}");
 

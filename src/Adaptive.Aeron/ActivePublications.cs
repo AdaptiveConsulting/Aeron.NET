@@ -16,8 +16,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using Adaptive.Agrona.Collections;
 
 namespace Adaptive.Aeron
 {
@@ -26,7 +24,7 @@ namespace Adaptive.Aeron
     /// </summary>
     class ActivePublications : IDisposable
     {
-        private readonly IDictionary<string, Dictionary<int, Publication>> _publicationsByChannelMap = 
+        private readonly Dictionary<string, Dictionary<int, Publication>> _publicationsByChannelMap = 
             new Dictionary<string, Dictionary<int, Publication>>();
 
         public Publication Get(string channel, int streamId)
@@ -48,11 +46,14 @@ namespace Adaptive.Aeron
 
         public Publication Put(string channel, int streamId, Publication publication)
         {
-            var publicationByStreamIdMap = CollectionUtil.GetOrDefault(
-                _publicationsByChannelMap, 
-                channel, 
-                _ => new Dictionary<int, Publication>());
+            Dictionary<int, Publication> publicationByStreamIdMap;
 
+            if (!_publicationsByChannelMap.TryGetValue(channel, out publicationByStreamIdMap))
+            {
+                publicationByStreamIdMap = new Dictionary<int, Publication>();
+                _publicationsByChannelMap[channel] = publicationByStreamIdMap;
+            }
+            
             publicationByStreamIdMap.Add(streamId, publication);
             return publication;
         }

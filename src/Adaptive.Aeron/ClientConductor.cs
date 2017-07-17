@@ -55,7 +55,7 @@ namespace Adaptive.Aeron
         private bool _isDriverActive = true;
         private volatile ClientConductorStatus _status = ClientConductorStatus.ACTIVE;
 
-        private readonly ReentrantLock _lock = new ReentrantLock();
+        private readonly ILock _clientLock;
         private readonly Aeron.Context _ctx;
         private readonly IEpochClock _epochClock;
         private readonly MapMode _imageMapMode;
@@ -69,6 +69,7 @@ namespace Adaptive.Aeron
         private readonly UnsafeBuffer _counterValuesBuffer;
         private readonly DriverProxy _driverProxy;
         private readonly ErrorHandler _errorHandler;
+        private readonly AgentInvoker _driverAgentInvoker;
 
         private RegistrationException _driverException;
 
@@ -81,6 +82,7 @@ namespace Adaptive.Aeron
         {
             _ctx = ctx;
 
+            _clientLock = ctx.ClientLock();
             _epochClock = ctx.EpochClock();
             _nanoClock = ctx.NanoClock();
             _errorHandler = ctx.ErrorHandler();
@@ -94,6 +96,8 @@ namespace Adaptive.Aeron
             _interServiceTimeoutNs = ctx.InterServiceTimeout();
             _publicationConnectionTimeoutMs = ctx.PublicationConnectionTimeout();
             _driverListener = new DriverListenerAdapter(ctx.ToClientBuffer(), this);
+            _driverAgentInvoker = ctx.DriverAgentInvoker();
+
             long nowNs = _nanoClock.NanoTime();
             _timeOfLastKeepaliveNs = nowNs;
             _timeOfLastCheckResourcesNs = nowNs;
@@ -115,7 +119,7 @@ namespace Adaptive.Aeron
                 _activePublications.Dispose();
                 _activeSubscriptions.Dispose();
 
-                Aeron.Sleep(1);
+                Thread.Yield();
 
                 for (int i = 0, size = _lingeringResources.Count; i < size; i++)
                 {
@@ -133,7 +137,7 @@ namespace Adaptive.Aeron
         {
             int workCount = 0;
 
-            if (_lock.TryLock())
+            if (_clientLock.TryLock())
             {
                 try
                 {
@@ -144,7 +148,7 @@ namespace Adaptive.Aeron
                 }
                 finally
                 {
-                    _lock.Unlock();
+                    _clientLock.Unlock();
                 }
             }
 
@@ -156,11 +160,16 @@ namespace Adaptive.Aeron
             return "aeron-client-conductor";
         }
 
+        public Aeron.Context Context()
+        {
+            return _ctx;
+        }
+
         public ClientConductorStatus Status => _status;
 
-        internal ILock ClientLock()
+        internal virtual ILock ClientLock()
         {
-            return _lock;
+            return _clientLock;
         }
 
         internal void HandleError(Exception ex)
@@ -308,7 +317,7 @@ namespace Adaptive.Aeron
                     if (Adaptive.Aeron.DriverListenerAdapter.MISSING_REGISTRATION_ID != positionId)
                     {
                         Image image = new Image(subscription, sessionId, new UnsafeBufferPosition(_counterValuesBuffer, (int)positionId), _logBuffersFactory.Map(logFileName, _imageMapMode), _errorHandler, sourceIdentity, correlationId);
-                        subscription.AddImage(image);
+                        
                         try
                         {
                             AvailableImageHandler handler = subscription.AvailableImageHandler();
@@ -321,6 +330,8 @@ namespace Adaptive.Aeron
                         {
                             _errorHandler(ex);
                         }
+
+                        subscription.AddImage(image);
                     }
                 }
             });
@@ -388,14 +399,21 @@ namespace Adaptive.Aeron
             return workCount;
         }
 
-        private void AwaitResponse(long correlationId, string expectedChannel)
+        private void AwaitResponse(long correlationId, string expectedChannel) 
         {
             _driverException = null;
-            var timeoutDeadlineNs = _nanoClock.NanoTime() + _driverTimeoutNs;
+            var deadlineNs = _nanoClock.NanoTime() + _driverTimeoutNs;
 
             do
             {
-                LockSupport.ParkNanos(1);
+                if (null == _driverAgentInvoker)
+                {
+                    Aeron.Sleep(1);
+                }
+                else
+                {
+                    _driverAgentInvoker.Invoke();
+                }
 
                 DoWork(correlationId, expectedChannel);
 
@@ -408,9 +426,9 @@ namespace Adaptive.Aeron
 
                     return;
                 }
-            } while (_nanoClock.NanoTime() < timeoutDeadlineNs);
+            } while (_nanoClock.NanoTime() < deadlineNs);
 
-            throw new DriverTimeoutException("No response within driver timeout");
+            throw new DriverTimeoutException("No response from driver wihtout timeout");
         }
 
         private void VerifyActive()
@@ -428,10 +446,13 @@ namespace Adaptive.Aeron
 
         private int OnCheckTimeouts()
         {
-            //JAVA TO C# CONVERTER WARNING: The original Java variable was marked 'final':
-            //ORIGINAL LINE: final long nowNs = nanoClock.nanoTime();
+            int workCount = 0;
             long nowNs = _nanoClock.NanoTime();
-            int result = 0;
+
+            if (nowNs < (_timeOfLastWorkNs + Aeron.IdleSleepNs))
+            {
+                return workCount;
+            }
 
             if (nowNs > (_timeOfLastWorkNs + _interServiceTimeoutNs))
             {
@@ -448,7 +469,7 @@ namespace Adaptive.Aeron
                 CheckDriverHeartbeat();
 
                 _timeOfLastKeepaliveNs = nowNs;
-                result++;
+                workCount++;
             }
 
             if (nowNs > (_timeOfLastCheckResourcesNs + RESOURCE_TIMEOUT_NS))
@@ -466,21 +487,19 @@ namespace Adaptive.Aeron
                 }
 
                 _timeOfLastCheckResourcesNs = nowNs;
-                result++;
+                workCount++;
             }
 
-            return result;
+            return workCount;
         }
 
         private void CheckDriverHeartbeat()
         {
-            long lastDriverKeepalive = _driverProxy.TimeOfLastDriverKeepalive();
-            long timeoutDeadlineMs = lastDriverKeepalive + _driverTimeoutMs;
-            if (_isDriverActive && (_epochClock.Time() > timeoutDeadlineMs))
+            long deadlineMs = _driverProxy.TimeOfLastDriverKeepaliveMs() + _driverTimeoutMs;
+            if (_isDriverActive && (_epochClock.Time() > deadlineMs))
             {
                 _isDriverActive = false;
-                string msg = "MediaDriver has been inactive for over " + _driverTimeoutMs + "ms";
-                _errorHandler(new DriverTimeoutException(msg));
+                _errorHandler(new DriverTimeoutException("MediaDriver has been inactive for over " + _driverTimeoutMs + "ms"));
             }
         }
     }

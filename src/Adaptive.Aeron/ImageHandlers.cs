@@ -29,6 +29,6 @@ namespace Adaptive.Aeron
     /// 
     /// Method called by Aeron to deliver notification that an <see cref="Image"/> is no longer available for polling.
     /// </summary>
-    /// <param name="image"> the image that has become unavailable.</param>
+    /// <param name="image"> that is no longer available for polling.</param>
     public delegate void UnavailableImageHandler(Image image);
 }

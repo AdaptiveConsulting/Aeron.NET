@@ -71,6 +71,7 @@
     <Compile Include="ByteBuffer.cs" />
     <Compile Include="CacheLinePadding.cs" />
     <Compile Include="Collections\DefaultDictionary.cs" />
+    <Compile Include="Concurrent\AgentInvoker.cs" />
     <Compile Include="Concurrent\AtomicBoolean.cs" />
     <Compile Include="Concurrent\AtomicLong.cs" />
     <Compile Include="BitUtil.cs" />
@@ -122,6 +123,7 @@
     <Compile Include="IMutableDirectBuffer.cs" />
     <Compile Include="IManagedResource.cs" />
     <Compile Include="IoUtil.cs" />
+    <Compile Include="Objects.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Concurrent\SystemEpochClock.cs" />
     <Compile Include="Util\ByteUtil.cs" />

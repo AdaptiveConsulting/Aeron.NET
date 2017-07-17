@@ -38,6 +38,9 @@ namespace Adaptive.Aeron
     /// </summary>
     public class Image
     {
+        private readonly long _joiningPosition;
+        private readonly int _initialTermId;
+
         private readonly int _termLengthMask;
         private readonly int _positionBitsToShift;
         private volatile bool _isClosed;
@@ -71,13 +74,15 @@ namespace Adaptive.Aeron
             _errorHandler = errorHandler;
             SourceIdentity = sourceIdentity;
             CorrelationId = correlationId;
-
+            _joiningPosition = subscriberPosition.Get();
+            
             _termBuffers = logBuffers.TermBuffers();
 
             var termLength = logBuffers.TermLength();
             _termLengthMask = termLength - 1;
             _positionBitsToShift = IntUtil.NumberOfTrailingZeros(termLength);
-            _header = new Header(LogBufferDescriptor.InitialTermId(logBuffers.MetaDataBuffer()), _positionBitsToShift);
+            _initialTermId = LogBufferDescriptor.InitialTermId(logBuffers.MetaDataBuffer());
+            _header = new Header(LogBufferDescriptor.InitialTermId(logBuffers.MetaDataBuffer()), _positionBitsToShift, this);
         }
 
         /// <summary>
@@ -103,7 +108,7 @@ namespace Adaptive.Aeron
         /// The initial term at which the stream started for this session.
         /// </summary>
         /// <returns> the initial term id. </returns>
-        public int InitialTermId => _header.InitialTermId();
+        public int InitialTermId => _initialTermId;
 
         /// <summary>
         /// The correlationId for identification of the image with the media driver.
@@ -122,6 +127,15 @@ namespace Adaptive.Aeron
         /// </summary>
         /// <returns> true if it has been closed otherwise false. </returns>
         public bool Closed => _isClosed;
+
+        /// <summary>
+        /// Get the position the subscriber joined this stream at.
+        /// </summary>
+        /// <returns> the position the subscriber joined this stream at.</returns>
+        public long JoiningPosition()
+        {
+            return _joiningPosition;
+        }
 
         /// <summary>
         /// The position this <seealso cref="Image"/> has been consumed to by the subscriber.

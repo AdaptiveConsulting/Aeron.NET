@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.Runtime.CompilerServices;
 using Adaptive.Aeron.Protocol;
 using Adaptive.Agrona;
@@ -29,8 +30,15 @@ namespace Adaptive.Aeron.LogBuffer
         private readonly int _initialTermId;
         private int _offset;
         private IDirectBuffer _buffer;
-
-        public Header()
+        private readonly Object _context;
+        
+        /// <summary>
+        /// Construct a header that references a buffer for the log.
+        /// </summary>
+        /// <param name="initialTermId">       this stream started at. </param>
+        /// <param name="positionBitsToShift"> for calculating positions. </param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Header(int initialTermId, int positionBitsToShift) : this(initialTermId, positionBitsToShift, null)
         {
         }
 
@@ -39,11 +47,22 @@ namespace Adaptive.Aeron.LogBuffer
         /// </summary>
         /// <param name="initialTermId">       this stream started at. </param>
         /// <param name="positionBitsToShift"> for calculating positions. </param>
+        /// <param name="context"> for storing state when which can be accessed with <see cref="Context"/>.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Header(int initialTermId, int positionBitsToShift)
+        public Header(int initialTermId, int positionBitsToShift, Object context)
         {
             _initialTermId = initialTermId;
             _positionBitsToShift = positionBitsToShift;
+            _context = context;
+        }
+        
+        /// <summary>
+        /// Context for storing state related to the context of the callback where the header is used.
+        /// </summary>
+        /// <returns>  context for storing state related to the context of the callback where the header is used.</returns>
+        public Object Context
+        {
+            get { return _context; }
         }
 
         /// <summary>

@@ -63,24 +63,24 @@ namespace Adaptive.Aeron.LogBuffer
         }
 
         /// <summary>
-        /// Get the value of the flags field. The lower 8 bits are valid.
+        /// Get the value of the flags field.
         /// </summary>
         /// <returns> the value of the header flags field. </returns>
         /// <seealso cref="DataHeaderFlyweight"/>
-        public short Flags()
+        public byte Flags()
         {
-            return (short)(_buffer.GetByte(HeaderFlyweight.FLAGS_FIELD_OFFSET) & 0xFF);
+            return _buffer.GetByte(HeaderFlyweight.FLAGS_FIELD_OFFSET);
         }
 
         /// <summary>
-        /// Set the value of the header flags field. The lower 8 bits are valid.
+        /// Set the value of the header flags field.
         /// </summary>
         /// <param name="flags"> value to be set in the header. </param>
         /// <returns> this for a fluent API. </returns>
         /// <seealso cref="DataHeaderFlyweight"/>
-        public ExclusiveBufferClaim Flags(short flags)
+        public ExclusiveBufferClaim Flags(byte flags)
         {
-            _buffer.PutByte(HeaderFlyweight.FLAGS_FIELD_OFFSET, (byte)flags);
+            _buffer.PutByte(HeaderFlyweight.FLAGS_FIELD_OFFSET, flags);
 
             return this;
         }

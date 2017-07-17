@@ -99,6 +99,8 @@ namespace Adaptive.Aeron.LogBuffer
         /// Reads data from a term in a log buffer.
         /// 
         /// If a fragmentsLimit of 0 or less is passed then at least one read will be attempted.
+        /// Note: this method has users outside of Aeron
+        /// 
         /// </summary>
         /// <param name="termBuffer">     to be read for fragments. </param>
         /// <param name="offset">         offset within the buffer that the read should begin. </param>

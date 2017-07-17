@@ -67,8 +67,8 @@ namespace Adaptive.Aeron.Tests
 
         private UnsafeBuffer CounterValuesBuffer;
 
-        private readonly IEpochClock EpochClock = new SystemEpochClock();
-        private readonly INanoClock NanoClock = new SystemNanoClock();
+        private readonly TestEpochClock EpochClock = new TestEpochClock();
+        private readonly TestNanoClock NanoClock = new TestNanoClock();
         private ErrorHandler MockClientErrorHandler;
 
         private DriverProxy DriverProxy;
@@ -76,6 +76,7 @@ namespace Adaptive.Aeron.Tests
         private AvailableImageHandler MockAvailableImageHandler;
         private UnavailableImageHandler MockUnavailableImageHandler;
         private ILogBuffersFactory LogBuffersFactory;
+        private ILock mockClientLock = A.Fake<ILock>();
         private Dictionary<long, long> SubscriberPositionMap;
         private bool SuppressPrintError = false;
 
@@ -110,6 +111,8 @@ namespace Adaptive.Aeron.Tests
             SubscriberPositionMap = new Dictionary<long, long>(); // should return -1 when element does not exist
 
             DriverProxy = A.Fake<DriverProxy>();
+            
+            A.CallTo(() => mockClientLock.TryLock()).Returns(true);
 
             A.CallTo(() => DriverProxy.AddPublication(CHANNEL, STREAM_ID_1)).Returns(CORRELATION_ID);
             A.CallTo(() => DriverProxy.AddPublication(CHANNEL, STREAM_ID_2)).Returns(CORRELATION_ID_2);
@@ -118,6 +121,7 @@ namespace Adaptive.Aeron.Tests
             A.CallTo(() => DriverProxy.RemoveSubscription(CORRELATION_ID)).Returns(CLOSE_CORRELATION_ID);
 
             Aeron.Context ctx = new Aeron.Context()
+                .ClientLock(mockClientLock)
                 .EpochClock(EpochClock)
                 .NanoClock(NanoClock)
                 .ToClientBuffer(MockToClientReceiver)
@@ -205,6 +209,7 @@ namespace Adaptive.Aeron.Tests
 
 
         [Test]
+        [Timeout(5000)]
         [ExpectedException(typeof(DriverTimeoutException))]
         public void AddPublicationShouldTimeoutWithoutReadyMessage()
         {
@@ -396,6 +401,7 @@ namespace Adaptive.Aeron.Tests
         }
 
         [Test]
+        [Timeout(5000)]
         [ExpectedException(typeof(DriverTimeoutException))]
         public void AddSubscriptionShouldTimeoutWithoutOperationSuccessful()
         {
@@ -482,7 +488,8 @@ namespace Adaptive.Aeron.Tests
             SuppressPrintError = true;
 
             Conductor.DoWork();
-            Thread.Sleep((int) INTER_SERVICE_TIMEOUT_MS + 100);
+            NanoClock.AdvanceMillis(INTER_SERVICE_TIMEOUT_MS);
+            NanoClock.AdvancedNanos(1);
             Conductor.DoWork();
 
             A.CallTo(() => MockClientErrorHandler(A<ConductorServiceTimeoutException>._)).MustHaveHappened();
@@ -495,6 +502,36 @@ namespace Adaptive.Aeron.Tests
                 var length = filler(buffer);
                 Conductor.DriverListenerAdapter().OnMessage(msgTypeId, buffer, 0, length);
             });
+        }
+    }
+
+    class TestEpochClock : IEpochClock
+    {
+        private int _time;
+        
+        public long Time()
+        {
+            return _time += 10;
+        }
+    }
+
+    class TestNanoClock : INanoClock
+    {
+        private long _time;
+
+        public void AdvanceMillis(long durationMs)
+        {
+            _time += (durationMs * 10000000);
+        }
+
+        public void AdvancedNanos(long durationNs)
+        {
+            _time += durationNs;
+        }
+
+        public long NanoTime()
+        {
+            return _time += 10000000;
         }
     }
 }

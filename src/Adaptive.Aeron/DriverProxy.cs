@@ -60,7 +60,7 @@ namespace Adaptive.Aeron
             _correlatedMessage.ClientId(clientId);
         }
 
-        public long TimeOfLastDriverKeepalive()
+        public long TimeOfLastDriverKeepaliveMs()
         {
             return _toDriverCommandBuffer.ConsumerHeartbeatTime();
         }

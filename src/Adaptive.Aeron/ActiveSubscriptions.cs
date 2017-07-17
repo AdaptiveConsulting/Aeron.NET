@@ -16,13 +16,14 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
+using Adaptive.Aeron.io.aeron;
 
 namespace Adaptive.Aeron
 {
     internal class ActiveSubscriptions : IDisposable
     {
-        private readonly Dictionary<int, List<Subscription>> _subscriptionsByStreamIdMap = new Dictionary<int, List<Subscription>>();
+        private readonly Dictionary<int, List<Subscription>> _subscriptionsByStreamIdMap =
+            new Dictionary<int, List<Subscription>>();
 
         public void ForEach(int streamId, Action<Subscription> handler)
         {
@@ -41,7 +42,7 @@ namespace Adaptive.Aeron
                 subscriptions = new List<Subscription>();
                 _subscriptionsByStreamIdMap[subscription.StreamId] = subscriptions;
             }
-            
+
             subscriptions.Add(subscription);
         }
 
@@ -52,7 +53,7 @@ namespace Adaptive.Aeron
             List<Subscription> subscriptions;
             if (_subscriptionsByStreamIdMap.TryGetValue(streamId, out subscriptions))
             {
-                if (subscriptions.Remove(subscription) && subscriptions.Count == 0)
+                if (Remove(subscriptions, subscription) && subscriptions.Count == 0)
                 {
                     _subscriptionsByStreamIdMap.Remove(streamId);
                 }
@@ -70,6 +71,20 @@ namespace Adaptive.Aeron
             }
 
             _subscriptionsByStreamIdMap.Clear();
+        }
+
+        private static bool Remove(List<Subscription> subscriptions, Subscription subscription)
+        {
+            for (int i = 0, size = subscriptions.Count; i < size; i++)
+            {
+                if (subscription == subscriptions[i])
+                {
+                    ListUtil.FastUnorderedRemove(subscriptions, i, size - 1);
+                    return true;
+                }
+            }
+
+            return false;
         }
     }
 }
