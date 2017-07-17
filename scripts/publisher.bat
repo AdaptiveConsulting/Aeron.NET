@@ -1,2 +1,4 @@
 @echo off
-..\src\Samples\Adaptive.Aeron.Samples.SimplePublisher\bin\x64\Release\Adaptive.Aeron.Samples.SimplePublisher.exe
+pushd %~dp0..
+.\src\Samples\Adaptive.Aeron.Samples.SimplePublisher\bin\Release\Adaptive.Aeron.Samples.SimplePublisher.exe
+popd

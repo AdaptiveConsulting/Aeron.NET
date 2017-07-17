@@ -1,3 +1,5 @@
 @echo off
-..\src\Adaptive.Aeron.Samples.RateSubscriber\bin\x64\Release\Adaptive.Aeron.Samples.RateSubscriber.exe
+pushd %~dp0..
+.\src\Samples\Adaptive.Aeron.Samples.RateSubscriber\bin\Release\Adaptive.Aeron.Samples.RateSubscriber.exe
+popd
 	

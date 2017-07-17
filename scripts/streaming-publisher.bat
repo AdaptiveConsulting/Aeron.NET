@@ -1,4 +1,6 @@
 @echo off
-..\src\Adaptive.Aeron.Samples.StreamingPublisher\bin\x64\Release\Adaptive.Aeron.Samples.StreamingPublisher.exe ^
+pushd %~dp0..
+.\src\Samples\Adaptive.Aeron.Samples.StreamingPublisher\bin\Release\Adaptive.Aeron.Samples.StreamingPublisher.exe ^
 	-Daeron.sample.messageLength=32 ^
 	-Daeron.sample.messages=500000000
+popd
