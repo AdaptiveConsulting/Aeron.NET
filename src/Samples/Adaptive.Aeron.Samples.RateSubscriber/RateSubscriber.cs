@@ -19,7 +19,7 @@ namespace Adaptive.Aeron.Samples.RateSubscriber
             Console.WriteLine("Subscribing to " + Channel + " on stream Id " + StreamID);
 
             var ctx = new Aeron.Context()
-                .AvailableImageHandler(SamplesUtil.PrintUnavailableImage)
+                .AvailableImageHandler(SamplesUtil.PrintAvailableImage)
                 .UnavailableImageHandler(SamplesUtil.PrintUnavailableImage);
 
             var reporter = new RateReporter(1000, SamplesUtil.PrintRate);
