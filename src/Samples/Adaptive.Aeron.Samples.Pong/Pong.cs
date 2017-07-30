@@ -25,7 +25,7 @@ namespace Adaptive.Aeron.Samples.Pong
         public static void Main()
         {
             var ctx = new Aeron.Context()
-                .AvailableImageHandler(SamplesUtil.PrintUnavailableImage)
+                .AvailableImageHandler(SamplesUtil.PrintAvailableImage)
                 .UnavailableImageHandler(SamplesUtil.PrintUnavailableImage);
             
             IIdleStrategy idleStrategy = new BusySpinIdleStrategy();
