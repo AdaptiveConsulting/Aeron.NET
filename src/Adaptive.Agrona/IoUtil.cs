@@ -121,6 +121,10 @@ namespace Adaptive.Agrona
         /// <returns> tmp directory for the runtime </returns>
         public static string TmpDirName()
         {
+            if (Environment.OSVersion.Platform == PlatformID.Unix)
+            {
+                return @"/dev/shm";
+            }
             return Path.GetTempPath();
         }
 
