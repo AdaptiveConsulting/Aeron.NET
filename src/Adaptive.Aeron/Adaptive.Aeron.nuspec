@@ -2,7 +2,7 @@
 <package >
   <metadata>
     <id>Aeron.Client</id>
-    <version>1.0.2.0</version>
+    <version>1.3.0.0</version>
     <title>Aeron Client</title>
     <authors>Adaptive Financial Consulting Ltd.</authors>
     <owners>Adaptive Financial Consulting Ltd.</owners>
