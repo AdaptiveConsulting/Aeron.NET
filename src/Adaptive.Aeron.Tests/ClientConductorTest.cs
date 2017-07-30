@@ -172,10 +172,12 @@ namespace Adaptive.Aeron.Tests
 
 
         [Test]
-        [ExpectedException(typeof(DriverTimeoutException))]
         public void AddPublicationShouldTimeoutWithoutReadyMessage()
         {
-            Conductor.AddPublication(CHANNEL, STREAM_ID_1);
+            Assert.Throws<DriverTimeoutException>(() =>
+            {
+                Conductor.AddPublication(CHANNEL, STREAM_ID_1);
+            });
         }
 
         [Test]
@@ -222,27 +224,27 @@ namespace Adaptive.Aeron.Tests
         }
 
         [Test]
-        [ExpectedException(typeof(RegistrationException))]
+        //TODO verify this is correct
         public void ShouldFailToClosePublicationOnMediaDriverError()
         {
             WhenReceiveBroadcastOnMessage(ControlProtocolEvents.ON_PUBLICATION_READY, PublicationReadyBuffer, (buffer) => PublicationReady.Length());
-
-            var publication = Conductor.AddPublication(CHANNEL, STREAM_ID_1);
-
-            WhenReceiveBroadcastOnMessage(ControlProtocolEvents.ON_ERROR, ErrorMessageBuffer, (buffer) =>
+            Assert.Throws<RegistrationException>(() =>
             {
-                ErrorResponse.ErrorCode(ErrorCode.INVALID_CHANNEL);
-                ErrorResponse.ErrorMessage("channel unknown");
-                ErrorResponse.OffendingCommandCorrelationId(CLOSE_CORRELATION_ID);
-                return ErrorResponse.Length();
-            });
+                var publication = Conductor.AddPublication(CHANNEL, STREAM_ID_1);
+                WhenReceiveBroadcastOnMessage(ControlProtocolEvents.ON_ERROR, ErrorMessageBuffer, (buffer) =>
+                {
+                    ErrorResponse.ErrorCode(ErrorCode.INVALID_CHANNEL);
+                    ErrorResponse.ErrorMessage("channel unknown");
+                    ErrorResponse.OffendingCommandCorrelationId(CLOSE_CORRELATION_ID);
+                    return ErrorResponse.Length();
+                });
 
-            publication.Dispose();
+                publication.Dispose();
+            });
         }
 
 
         [Test]
-        [ExpectedException(typeof(RegistrationException))]
         public void ShouldFailToAddPublicationOnMediaDriverError()
         {
             WhenReceiveBroadcastOnMessage(ControlProtocolEvents.ON_ERROR, ErrorMessageBuffer, (buffer) =>
@@ -252,8 +254,10 @@ namespace Adaptive.Aeron.Tests
                 ErrorResponse.OffendingCommandCorrelationId(CORRELATION_ID);
                 return ErrorResponse.Length();
             });
-
-            Conductor.AddPublication(CHANNEL, STREAM_ID_1);
+            Assert.Throws<RegistrationException>(() =>
+            {
+                Conductor.AddPublication(CHANNEL, STREAM_ID_1);
+            });
         }
 
         [Test]
@@ -364,14 +368,15 @@ namespace Adaptive.Aeron.Tests
         }
 
         [Test]
-        [ExpectedException(typeof(DriverTimeoutException))]
         public void AddSubscriptionShouldTimeoutWithoutOperationSuccessful()
         {
-            Conductor.AddSubscription(CHANNEL, STREAM_ID_1);
+            Assert.Throws<DriverTimeoutException>(() =>
+            {
+                Conductor.AddSubscription(CHANNEL, STREAM_ID_1);
+            });
         }
 
         [Test]
-        [ExpectedException(typeof(RegistrationException))]
         public void ShouldFailToAddSubscriptionOnMediaDriverError()
         {
             WhenReceiveBroadcastOnMessage(ControlProtocolEvents.ON_ERROR, ErrorMessageBuffer, (buffer) =>
@@ -381,8 +386,10 @@ namespace Adaptive.Aeron.Tests
                 ErrorResponse.OffendingCommandCorrelationId(CORRELATION_ID);
                 return ErrorResponse.Length();
             });
-
-            Conductor.AddSubscription(CHANNEL, STREAM_ID_1);
+            Assert.Throws<RegistrationException>(() =>
+            {
+                Conductor.AddSubscription(CHANNEL, STREAM_ID_1);
+            });
         }
 
         [Test]

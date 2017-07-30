@@ -26,7 +26,7 @@ namespace Adaptive.Agrona.PerformanceTest
 
         private const int MsgTypeID = 7;
 
-        private readonly byte[] _byteBuffer = new byte[16*1024 + RingBufferDescriptor.TrailerLength];
+        private readonly ByteBuffer _byteBuffer = BufferUtil.AllocateDirectAligned(16 * 1024 + RingBufferDescriptor.TrailerLength, UnsafeBuffer.ALIGNMENT);
         private UnsafeBuffer _unsafeBuffer;
         private IRingBuffer _ringBuffer;
 

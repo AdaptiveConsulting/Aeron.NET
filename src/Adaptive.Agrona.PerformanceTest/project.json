@@ -1,0 +1,12 @@
+{
+	"dependencies": {
+		"Adaptive.Agrona": {"target": "project"}
+	},
+	"frameworks": {
+		"net451": {
+		"frameworkAssemblies": {
+                "System.Runtime": ""
+            }
+		}
+	}
+}

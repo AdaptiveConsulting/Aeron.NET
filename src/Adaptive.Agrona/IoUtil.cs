@@ -10,7 +10,7 @@ namespace Adaptive.Agrona
         ReadOnly,
         ReadWrite
     }
-    
+
     public class IoUtil
     {
         /// <summary>
@@ -39,8 +39,8 @@ namespace Adaptive.Agrona
             var fileAccess = FileAccess.ReadWrite;
             var fileShare = FileShare.ReadWrite;
             var memoryMappedFileAccess = MemoryMappedFileAccess.ReadWrite;
-            
-            
+
+
             var f = new FileStream(path, FileMode.Open, fileAccess, fileShare);
             return MemoryMappedFile.CreateFromFile(f, Guid.NewGuid().ToString(), 0, memoryMappedFileAccess, new MemoryMappedFileSecurity(), HandleInheritability.None, false);
         }
@@ -73,7 +73,9 @@ namespace Adaptive.Agrona
         /// <returns> tmp directory for the runtime </returns>
         public static string TmpDirName()
         {
-            return Path.GetTempPath();
+          if (Environment.OSVersion.Platform == PlatformID.Unix)
+              return @"/dev/shm";
+          return Path.GetTempPath();
         }
     }
 }

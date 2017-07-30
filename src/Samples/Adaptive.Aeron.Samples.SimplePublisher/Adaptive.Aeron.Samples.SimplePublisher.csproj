@@ -67,14 +67,6 @@
     <Compile Include="SimplePublisher.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Adaptive.Aeron\Adaptive.Aeron.csproj">
-      <Project>{ce06a485-98f5-4fef-a756-d0ef4dda8309}</Project>
-      <Name>Adaptive.Aeron</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\Adaptive.Agrona\Adaptive.Agrona.csproj">
-      <Project>{4d9df40e-0726-47dd-8d70-34eb23429b59}</Project>
-      <Name>Adaptive.Agrona</Name>
-    </ProjectReference>
     <ProjectReference Include="..\Adaptive.Aeron.Samples.Common\Adaptive.Aeron.Samples.Common.csproj">
       <Project>{a8a90b16-ddea-4a3e-a89a-7f7fb2d18416}</Project>
       <Name>Adaptive.Aeron.Samples.Common</Name>
