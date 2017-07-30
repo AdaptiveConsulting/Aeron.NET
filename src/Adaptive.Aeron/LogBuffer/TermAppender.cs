@@ -1,4 +1,20 @@
-﻿using System;
+﻿/*
+ * Copyright 2014 - 2017 Adaptive Financial Consulting Ltd
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0S
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+using System;
 using System.Runtime.CompilerServices;
 using Adaptive.Aeron.Protocol;
 using Adaptive.Agrona;
@@ -51,7 +67,7 @@ namespace Adaptive.Aeron.LogBuffer
         }
 
         /// <summary>
-        /// Get the raw value current tail value in a volatile memory ordering fashion.
+        /// Get the raw current tail value in a volatile memory ordering fashion.
         /// </summary>
         /// <returns> the current tail value. </returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -76,8 +92,8 @@ namespace Adaptive.Aeron.LogBuffer
         /// <param name="header">      for writing the default header. </param>
         /// <param name="length">      of the message to be written. </param>
         /// <param name="bufferClaim"> to be updated with the claimed region. </param>
-        /// <returns> the resulting offset of the term after the append on success otherwise <seealso cref="#TRIPPED"/> or <seealso cref="#FAILED"/>
-        /// packed with the termId if a padding record was inserted at the end. </returns>
+        /// <returns> the resulting offset of the term after the append on success otherwise <seealso cref="TRIPPED"/> 
+        /// or <seealso cref="FAILED"/> packed with the termId if a padding record was inserted at the end.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public long Claim(HeaderWriter header, int length, BufferClaim bufferClaim)
         {
@@ -112,8 +128,8 @@ namespace Adaptive.Aeron.LogBuffer
         /// <param name="srcOffset"> at which the message begins. </param>
         /// <param name="length">    of the message in the source buffer. </param>
         /// <param name="reservedValueSupplier"><see cref="ReservedValueSupplier"/> for the frame</param>
-        /// <returns> the resulting offset of the term after the append on success otherwise <seealso cref="TRIPPED"/> or <seealso cref="FAILED"/>
-        /// packed with the termId if a padding record was inserted at the end. </returns>
+        /// <returns> the resulting offset of the term after the append on success otherwise <seealso cref="TRIPPED"/> or 
+        /// <seealso cref="FAILED"/> packed with the termId if a padding record was inserted at the end.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #if DEBUG
         public virtual long AppendUnfragmentedMessage(HeaderWriter header, UnsafeBuffer srcBuffer, int srcOffset, int length, ReservedValueSupplier reservedValueSupplier)
@@ -163,8 +179,8 @@ namespace Adaptive.Aeron.LogBuffer
         /// <param name="length">           of the message in the source buffer. </param>
         /// <param name="maxPayloadLength"> that the message will be fragmented into. </param>
         /// /// <param name="reservedValueSupplier"><see cref="ReservedValueSupplier"/> for the frame</param>
-        /// <returns> the resulting offset of the term after the append on success otherwise <seealso cref="#TRIPPED"/> or <seealso cref="#FAILED"/>
-        /// packed with the termId if a padding record was inserted at the end. </returns>
+        /// <returns> the resulting offset of the term after the append on success otherwise <seealso cref="TRIPPED"/> 
+        /// or <seealso cref="FAILED"/> packed with the termId if a padding record was inserted at the end.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public long AppendFragmentedMessage(HeaderWriter header, UnsafeBuffer srcBuffer, int srcOffset, int length,
             int maxPayloadLength, ReservedValueSupplier reservedValueSupplier)

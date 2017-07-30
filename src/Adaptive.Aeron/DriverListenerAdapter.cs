@@ -1,6 +1,23 @@
-﻿using System.Collections.Generic;
+﻿/*
+ * Copyright 2014 - 2017 Adaptive Financial Consulting Ltd
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0S
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+using System.Collections.Generic;
 using Adaptive.Aeron.Command;
 using Adaptive.Agrona;
+using Adaptive.Agrona.Collections;
 using Adaptive.Agrona.Concurrent.Broadcast;
 
 namespace Adaptive.Aeron
@@ -8,7 +25,6 @@ namespace Adaptive.Aeron
     /// <summary>
     /// Analogue of the <see cref="DriverProxy"/> on the client side
     /// </summary>
-
     internal class DriverListenerAdapter
     {
         public const long MISSING_REGISTRATION_ID = -1L;
@@ -21,7 +37,7 @@ namespace Adaptive.Aeron
         private readonly CorrelatedMessageFlyweight _correlatedMessage = new CorrelatedMessageFlyweight();
         private readonly ImageMessageFlyweight _imageMessage = new ImageMessageFlyweight();
         private readonly IDriverListener _listener;
-        private readonly IDictionary<long, long> _subscriberPositionMap = new Dictionary<long, long>();
+        private readonly IDictionary<long, long> _subscriberPositionMap = new DefaultDictionary<long, long>(MISSING_REGISTRATION_ID);
 
         private long _activeCorrelationId;
         private long _lastReceivedCorrelationId;
@@ -51,16 +67,14 @@ namespace Adaptive.Aeron
         {
             switch (msgTypeId)
             {
-                case ControlProtocolEvents.ON_PUBLICATION_READY:
+                case ControlProtocolEvents.ON_ERROR:
                 {
-                    _publicationReady.Wrap(buffer, index);
+                    _errorResponse.Wrap(buffer, index);
 
-                    long correlationId = _publicationReady.CorrelationId();
+                    long correlationId = _errorResponse.OffendingCommandCorrelationId();
                     if (correlationId == _activeCorrelationId)
                     {
-                        _listener.OnNewPublication(_expectedChannel, _publicationReady.StreamId(),
-                            _publicationReady.SessionId(), _publicationReady.PublicationLimitCounterId(),
-                            _publicationReady.LogFileName(), correlationId);
+                        _listener.OnError(_errorResponse.ErrorCode(), _errorResponse.ErrorMessage(), correlationId);
 
                         _lastReceivedCorrelationId = correlationId;
                     }
@@ -84,7 +98,30 @@ namespace Adaptive.Aeron
                         _imageReady.StreamId(), 
                         _imageReady.SessionId(), 
                         _subscriberPositionMap,
-                        _imageReady.LogFileName(), _imageReady.SourceIdentity(), _imageReady.CorrelationId());
+                        _imageReady.LogFileName(), 
+                        _imageReady.SourceIdentity(), 
+                        _imageReady.CorrelationId());
+                    break;
+                }
+
+
+                case ControlProtocolEvents.ON_PUBLICATION_READY:
+                {
+                    _publicationReady.Wrap(buffer, index);
+
+                    long correlationId = _publicationReady.CorrelationId();
+                    if (correlationId == _activeCorrelationId)
+                    {
+                        _listener.OnNewPublication(
+                            _expectedChannel, 
+                            _publicationReady.StreamId(),
+                            _publicationReady.SessionId(), 
+                            _publicationReady.PublicationLimitCounterId(),
+                            _publicationReady.LogFileName(), 
+                            correlationId);
+
+                        _lastReceivedCorrelationId = correlationId;
+                    }
                     break;
                 }
 
@@ -108,14 +145,20 @@ namespace Adaptive.Aeron
                     break;
                 }
 
-                case ControlProtocolEvents.ON_ERROR:
+                case ControlProtocolEvents.ON_EXCLUSIVE_PUBLICATION_READY:
                 {
-                    _errorResponse.Wrap(buffer, index);
+                    _publicationReady.Wrap(buffer, index);
 
-                    long correlationId = _errorResponse.OffendingCommandCorrelationId();
+                    long correlationId = _publicationReady.CorrelationId();
                     if (correlationId == _activeCorrelationId)
                     {
-                        _listener.OnError(_errorResponse.ErrorCode(), _errorResponse.ErrorMessage(), correlationId);
+                        _listener.OnNewExclusivePublication(
+                            _expectedChannel,
+                            _publicationReady.StreamId(),
+                            _publicationReady.SessionId(),
+                            _publicationReady.PublicationLimitCounterId(),
+                            _publicationReady.LogFileName(),
+                            correlationId);
 
                         _lastReceivedCorrelationId = correlationId;
                     }

@@ -1,8 +1,25 @@
-﻿using System;
+﻿/*
+ * Copyright 2014 - 2017 Adaptive Financial Consulting Ltd
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0S
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+using System;
 using System.Runtime.CompilerServices;
 using Adaptive.Aeron.Protocol;
 using Adaptive.Agrona;
 using Adaptive.Agrona.Concurrent;
+using Adaptive.Agrona.Util;
 
 namespace Adaptive.Aeron.LogBuffer
 {
@@ -172,13 +189,14 @@ namespace Adaptive.Aeron.LogBuffer
             if (termLength < TERM_MIN_LENGTH)
             {
                 string s = $"Term length less than min length of {TERM_MIN_LENGTH:D}, length={termLength:D}";
-                throw new InvalidOperationException(s);
+                ThrowHelper.ThrowInvalidOperationException(s);
+                return;
             }
 
             if ((termLength & (FrameDescriptor.FRAME_ALIGNMENT - 1)) != 0)
             {
                 string s = $"Term length not a multiple of {FrameDescriptor.FRAME_ALIGNMENT:D}, length={termLength:D}";
-                throw new InvalidOperationException(s);
+                ThrowHelper.ThrowInvalidOperationException(s);
             }
         }
 
@@ -228,7 +246,7 @@ namespace Adaptive.Aeron.LogBuffer
         }
 
         /// <summary>
-        /// Get the value of the correlation ID for this log.
+        /// Get the value of the correlation ID for this log relating to the command which created it.
         /// </summary>
         /// <param name="logMetaDataBuffer"> containing the meta data. </param>
         /// <returns> the value of the correlation ID used for this log. </returns>
@@ -239,7 +257,7 @@ namespace Adaptive.Aeron.LogBuffer
         }
 
         /// <summary>
-        /// Set the correlation ID used for this log.
+        /// Set the correlation ID used for this log relating to the command which created it.
         /// </summary>
         /// <param name="logMetaDataBuffer"> containing the meta data. </param>
         /// <param name="id">                value to be set. </param>
@@ -289,11 +307,21 @@ namespace Adaptive.Aeron.LogBuffer
         /// <param name="logMetaDataBuffer">    containing the meta data. </param>
         /// <param name="activePartitionIndex"> value of the active partition index used by the producer of this log. </param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void ActivePartitionIndex(UnsafeBuffer logMetaDataBuffer, int activePartitionIndex)
+        public static void ActivePartitionIndexOrdered(UnsafeBuffer logMetaDataBuffer, int activePartitionIndex)
         {
             logMetaDataBuffer.PutIntOrdered(LOG_ACTIVE_PARTITION_INDEX_OFFSET, activePartitionIndex);
         }
 
+        /// <summary>
+        /// Set the value of the current active partition index for the producer.
+        /// </summary>
+        /// <param name="logMetaDataBuffer">    containing the meta data. </param>
+        /// <param name="activePartitionIndex"> value of the active partition index used by the producer of this log. </param>
+        public static void ActivePartitionIndex(UnsafeBuffer logMetaDataBuffer, int activePartitionIndex)
+        {
+            logMetaDataBuffer.PutInt(LOG_ACTIVE_PARTITION_INDEX_OFFSET, activePartitionIndex);
+        }
+        
         /// <summary>
         /// Rotate to the next partition in sequence for the term id.
         /// </summary>
@@ -425,14 +453,15 @@ namespace Adaptive.Aeron.LogBuffer
         /// </summary>
         /// <param name="logMetaDataBuffer"> into which the default headers should be stored. </param>
         /// <param name="defaultHeader">     to be stored. </param>
-        /// <exception cref="ArgumentException"> if the default header is larger than <seealso cref="LOG_DEFAULT_FRAME_HEADER_MAX_LENGTH"/> </exception>
+        /// <exception cref="ArgumentException"> if the defaultHeader is larger than <seealso cref="LOG_DEFAULT_FRAME_HEADER_MAX_LENGTH"/> </exception>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void StoreDefaultFrameHeader(UnsafeBuffer logMetaDataBuffer, IDirectBuffer defaultHeader)
         {
             if (defaultHeader.Capacity != DataHeaderFlyweight.HEADER_LENGTH)
             {
-                throw new ArgumentException(
+                ThrowHelper.ThrowArgumentException(
                     $"Default header of {defaultHeader.Capacity:D} not equal to {DataHeaderFlyweight.HEADER_LENGTH:D}");
+                return;
             }
 
             logMetaDataBuffer.PutInt(LOG_DEFAULT_FRAME_HEADER_LENGTH_OFFSET, DataHeaderFlyweight.HEADER_LENGTH);
@@ -474,7 +503,7 @@ namespace Adaptive.Aeron.LogBuffer
         {
             var nextIndex = NextPartitionIndex(activePartitionIndex);
             InitialiseTailWithTermId(logMetaDataBuffer, nextIndex, termId);
-            ActivePartitionIndex(logMetaDataBuffer, nextIndex);
+            ActivePartitionIndexOrdered(logMetaDataBuffer, nextIndex);
         }
 
         /// <summary>
@@ -513,6 +542,39 @@ namespace Adaptive.Aeron.LogBuffer
             return (int) Math.Min(tail, termLength);
         }
 
+        /// <summary>
+        /// Pack a termId and termOffset into a raw tail value.
+        /// </summary>
+        /// <param name="termId">     to be packed. </param>
+        /// <param name="termOffset"> to be packed. </param>
+        /// <returns> the packed value. </returns>
+        public static long PackTail(int termId, int termOffset)
+        {
+            return (((long)termId) << 32) + termOffset;
+        }
+
+        /// <summary>
+        /// Set the raw value of the tail for the given partition.
+        /// </summary>
+        /// <param name="logMetaDataBuffer"> containing the tail counters. </param>
+        /// <param name="partitionIndex">    for the tail counter. </param>
+        /// <param name="rawTail">           to be stored </param>
+        public static void RawTail(UnsafeBuffer logMetaDataBuffer, int partitionIndex, long rawTail)
+        {
+            logMetaDataBuffer.PutLong(TERM_TAIL_COUNTERS_OFFSET + (BitUtil.SIZE_OF_LONG * partitionIndex), rawTail);
+        }
+
+        /// <summary>
+        /// Set the raw value of the tail for the given partition.
+        /// </summary>
+        /// <param name="logMetaDataBuffer"> containing the tail counters. </param>
+        /// <param name="partitionIndex">    for the tail counter. </param>
+        /// <param name="rawTail">           to be stored </param>
+        public static void RawTailVolatile(UnsafeBuffer logMetaDataBuffer, int partitionIndex, long rawTail)
+        {
+            logMetaDataBuffer.PutLongVolatile(TERM_TAIL_COUNTERS_OFFSET + (BitUtil.SIZE_OF_LONG * partitionIndex), rawTail);
+        }
+        
         /// <summary>
         /// Get the raw value of the tail for the given partition.
         /// </summary>

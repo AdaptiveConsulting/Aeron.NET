@@ -1,4 +1,20 @@
-﻿using Adaptive.Agrona;
+﻿/*
+ * Copyright 2014 - 2017 Adaptive Financial Consulting Ltd
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0S
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+using Adaptive.Agrona;
 using Adaptive.Agrona.Concurrent;
 using Adaptive.Agrona.Util;
 
@@ -26,7 +42,7 @@ namespace Adaptive.Aeron
     ///  +----------------------------+
     /// </pre>
     /// 
-    /// Meta Data Layout (CnC Version 4)
+    /// Meta Data Layout (CnC Version 6)
     /// <pre>
     ///  +----------------------------+
     ///  |   to-driver buffer length  |
@@ -48,7 +64,7 @@ namespace Adaptive.Aeron
     {
         public const string CNC_FILE = "cnc.dat";
 
-        public const int CNC_VERSION = 5;
+        public const int CNC_VERSION = 6;
 
         public static readonly int CNC_VERSION_FIELD_OFFSET;
         public static readonly int CNC_METADATA_OFFSET;

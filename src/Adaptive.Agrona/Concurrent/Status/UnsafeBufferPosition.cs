@@ -1,4 +1,20 @@
-﻿using System.Runtime.CompilerServices;
+﻿/*
+ * Copyright 2014 - 2017 Adaptive Financial Consulting Ltd
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+using System.Runtime.CompilerServices;
 
 namespace Adaptive.Agrona.Concurrent.Status
 {
@@ -36,33 +52,37 @@ namespace Adaptive.Agrona.Concurrent.Status
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public int Id()
+        public override int Id()
         {
             return _counterId;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public long Get()
+        public override long Get()
         {
             return _buffer.GetLong(_offset);
         }
 
-        public long Volatile => _buffer.GetLongVolatile(_offset);
+        public override long Volatile
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get { return _buffer.GetLongVolatile(_offset); }
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Set(long value)
+        public override void Set(long value)
         {
             _buffer.PutLong(_offset, value);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void SetOrdered(long value)
+        public override void SetOrdered(long value)
         {
             _buffer.PutLongOrdered(_offset, value);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool ProposeMax(long proposedValue)
+        public override bool ProposeMax(long proposedValue)
         {
             var buffer = _buffer;
             var offset = _offset;
@@ -78,7 +98,7 @@ namespace Adaptive.Agrona.Concurrent.Status
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool ProposeMaxOrdered(long proposedValue)
+        public override bool ProposeMaxOrdered(long proposedValue)
         {
             var buffer = _buffer;
             var offset = _offset;
@@ -93,7 +113,7 @@ namespace Adaptive.Agrona.Concurrent.Status
             return updated;
         }
 
-        public void Dispose()
+        public override void Dispose()
         {
             _countersManager?.Free(_counterId);
         }

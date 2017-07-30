@@ -1,4 +1,20 @@
-﻿using System;
+﻿/*
+ * Copyright 2014 - 2017 Adaptive Financial Consulting Ltd
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -114,7 +130,10 @@ namespace Adaptive.Agrona.Concurrent
         public void Wrap(byte[] buffer)
 #endif
         {
-            if (buffer == null) throw new ArgumentNullException(nameof(buffer));
+            if (buffer == null)
+            {
+                ThrowHelper.ThrowArgumentNullException(nameof(buffer));
+            }
 
             FreeGcHandle();
 
@@ -132,18 +151,21 @@ namespace Adaptive.Agrona.Concurrent
         public void Wrap(byte[] buffer, int offset, int length)
 #endif
         {
-            if (buffer == null) throw new ArgumentNullException(nameof(buffer));
+            if (buffer == null)
+            {
+                ThrowHelper.ThrowArgumentException(nameof(buffer));
+            }
 
 #if SHOULD_BOUNDS_CHECK
             int bufferLength = buffer.Length;
             if (offset != 0 && (offset < 0 || offset > bufferLength - 1))
             {
-                throw new ArgumentException("offset=" + offset + " not valid for buffer.length=" + bufferLength);
+                ThrowHelper.ThrowArgumentException("offset=" + offset + " not valid for capacity=" + bufferLength);
             }
 
             if (length < 0 || length > bufferLength - offset)
             {
-                throw new ArgumentException("offset=" + offset + " length=" + length + " not valid for buffer.length=" + bufferLength);
+                ThrowHelper.ThrowArgumentException("offset=" + offset + " length=" + length + " not valid for capacity=" + bufferLength);
             }
 #endif
 
@@ -193,12 +215,12 @@ namespace Adaptive.Agrona.Concurrent
             int bufferCapacity = buffer.Capacity;
             if (offset != 0 && (offset < 0 || offset > bufferCapacity - 1))
             {
-                throw new ArgumentException("offset=" + offset + " not valid for buffer.capacity()=" + bufferCapacity);
+                ThrowHelper.ThrowArgumentException("offset=" + offset + " not valid for capacity=" + bufferCapacity);
             }
 
             if (length < 0 || length > bufferCapacity - offset)
             {
-                throw new ArgumentException("offset=" + offset + " length=" + length + " not valid for buffer.capacity()=" + bufferCapacity);
+                ThrowHelper.ThrowArgumentException("offset=" + offset + " length=" + length + " not valid for capacity=" + bufferCapacity);
             }
 #endif
 
@@ -240,7 +262,12 @@ namespace Adaptive.Agrona.Concurrent
 #if DEBUG
         public virtual IntPtr BufferPointer => new IntPtr(_pBuffer);
 #else
-        public IntPtr BufferPointer => new IntPtr(_pBuffer);
+        public IntPtr BufferPointer
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get { return new IntPtr(_pBuffer); }
+        }
+
 #endif
 
 #if DEBUG
@@ -257,7 +284,6 @@ namespace Adaptive.Agrona.Concurrent
 #endif
         {
             BoundsCheck0(index, length);
-
             // TODO PERF Naive implementation, we should not write byte by byte, this is slow
             //UNSAFE.SetMemory(byteArray, addressOffset + index, length, value);
             for (var i = index; i < index + length; i++)
@@ -275,7 +301,7 @@ namespace Adaptive.Agrona.Concurrent
         {
             if (limit > Capacity)
             {
-                throw new IndexOutOfRangeException($"limit={limit:D} is beyond capacity={Capacity:D}");
+                ThrowHelper.ThrowIndexOutOfRangeException($"limit={limit:D} is beyond capacity={Capacity:D}");
             }
         }
 
@@ -291,7 +317,7 @@ namespace Adaptive.Agrona.Concurrent
             var address = new IntPtr(_pBuffer).ToInt64();
             if (0 != (address & (ALIGNMENT - 1)))
             {
-                throw new InvalidOperationException(
+                ThrowHelper.ThrowInvalidOperationException(
                     $"AtomicBuffer is not correctly aligned: addressOffset={address:D} in not divisible by {ALIGNMENT:D}");
             }
         }
@@ -344,8 +370,9 @@ namespace Adaptive.Agrona.Concurrent
         public long GetLongVolatile(int index)
 #endif
         {
+#if SHOULD_BOUNDS_CHECK
             BoundsCheck0(index, BitUtil.SIZE_OF_LONG);
-
+#endif
             return Volatile.Read(ref *(long*) (_pBuffer + index));
         }
 
@@ -466,8 +493,9 @@ namespace Adaptive.Agrona.Concurrent
         public int GetIntVolatile(int index)
 #endif
         {
+#if SHOULD_BOUNDS_CHECK
             BoundsCheck0(index, BitUtil.SIZE_OF_INT);
-
+#endif
             return Volatile.Read(ref *(int*) (_pBuffer + index));
         }
 
@@ -490,8 +518,9 @@ namespace Adaptive.Agrona.Concurrent
         public void PutIntOrdered(int index, int value)
 #endif
         {
+#if SHOULD_BOUNDS_CHECK
             BoundsCheck0(index, BitUtil.SIZE_OF_INT);
-
+#endif
             Volatile.Write(ref *(int*) (_pBuffer + index), value);
         }
 
@@ -639,8 +668,9 @@ namespace Adaptive.Agrona.Concurrent
         public short GetShort(int index)
 #endif
         {
+#if SHOULD_BOUNDS_CHECK
             BoundsCheck0(index, BitUtil.SIZE_OF_SHORT);
-
+#endif
             return *(short*) (_pBuffer + index);
         }
 
@@ -871,6 +901,18 @@ namespace Adaptive.Agrona.Concurrent
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #if DEBUG
+        public virtual string GetStringAscii(int index)
+#else
+        public string GetStringAscii(int index)
+#endif
+        {
+            var length = GetInt(index);
+
+            return GetStringAscii(index, length);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#if DEBUG
         public virtual string GetStringUtf8(int index, int length)
 #else
         public string GetStringUtf8(int index, int length)
@@ -883,9 +925,28 @@ namespace Adaptive.Agrona.Concurrent
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#if DEBUG
+        public virtual string GetStringAscii(int index, int length)
+#else
+        public string GetStringAscii(int index, int length)
+#endif
+        {
+            var stringInBytes = new byte[length];
+            GetBytes(index + BitUtil.SIZE_OF_INT, stringInBytes);
+
+            return Encoding.ASCII.GetString(stringInBytes);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int PutStringUtf8(int index, string value)
         {
             return PutStringUtf8(index, value, int.MaxValue);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public int PutStringAscii(int index, string value)
+        {
+            return PutStringAscii(index, value, int.MaxValue);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -896,7 +957,24 @@ namespace Adaptive.Agrona.Concurrent
                 : Encoding.UTF8.GetBytes(value);
             if (bytes.Length > maxEncodedSize)
             {
-                throw new ArgumentException("Encoded string larger than maximum size: " + maxEncodedSize);
+                ThrowHelper.ThrowArgumentException("Encoded string larger than maximum size: " + maxEncodedSize);
+            }
+
+            PutInt(index, bytes.Length);
+            PutBytes(index + BitUtil.SIZE_OF_INT, bytes);
+
+            return BitUtil.SIZE_OF_INT + bytes.Length;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public int PutStringAscii(int index, string value, int maxEncodedSize)
+        {
+            var bytes = value == null
+                ? BufferUtil.NullBytes
+                : Encoding.ASCII.GetBytes(value);
+            if (bytes.Length > maxEncodedSize)
+            {
+                ThrowHelper.ThrowArgumentException("Encoded string larger than maximum size: " + maxEncodedSize);
             }
 
             PutInt(index, bytes.Length);
@@ -936,12 +1014,12 @@ namespace Adaptive.Agrona.Concurrent
         ///////////////////////////////////////////////////////////////////////////
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private  void BoundsCheck(int index)
+        private void BoundsCheck(int index)
         {
 #if SHOULD_BOUNDS_CHECK
             if (index < 0 || index >= Capacity)
             {
-                throw new IndexOutOfRangeException($"index={index:D}, capacity={Capacity:D}");
+                ThrowHelper.ThrowIndexOutOfRangeException($"index={index:D}, capacity={Capacity:D}");
             }
 #endif
         }
@@ -953,7 +1031,7 @@ namespace Adaptive.Agrona.Concurrent
             long resultingPosition = index + (long)length;
             if (index < 0 || resultingPosition > Capacity)
             {
-                throw new IndexOutOfRangeException($"index={index:D}, length={length:D}, capacity={Capacity:D}");
+                ThrowHelper.ThrowIndexOutOfRangeException($"index={index:D}, length={length:D}, capacity={Capacity:D}");
             }
 #endif
         }
@@ -967,7 +1045,7 @@ namespace Adaptive.Agrona.Concurrent
         {
             BoundsCheck0(index, length);
         }
-
+        
         ///////////////////////////////////////////////////////////////////////////
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

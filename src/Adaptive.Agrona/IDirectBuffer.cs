@@ -1,4 +1,20 @@
-﻿using System;
+﻿/*
+ * Copyright 2014 - 2017 Adaptive Financial Consulting Ltd
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+using System;
 
 namespace Adaptive.Agrona
 {
@@ -201,6 +217,13 @@ namespace Adaptive.Agrona
         /// <returns> the String as represented by the UTF-8 encoded bytes. </returns>
         string GetStringUtf8(int index);
 
+        /// <summary>
+        /// Get a String from bytes encoded in ASCII format that is length prefixed.
+        /// </summary>
+        /// <param name="index">    at which the String begins. </param>
+        /// <returns> the String as represented by the ASCII encoded bytes. </returns>
+        string GetStringAscii(int index);
+
         ///// <summary>
         ///// Get a String from bytes encoded in UTF-8 format that is length prefixed.
         ///// </summary>
@@ -216,6 +239,14 @@ namespace Adaptive.Agrona
         /// <param name="length"> of the String in bytes to decode. </param>
         /// <returns> the String as represented by the UTF-8 encoded bytes. </returns>
         string GetStringUtf8(int index, int length);
+
+        /// <summary>
+        /// Get part of String from bytes encoded in ASCII format that is length prefixed.
+        /// </summary>
+        /// <param name="index"> at which the String begins. </param>
+        /// <param name="length"> of the String in bytes to decode. </param>
+        /// <returns> the String as represented by the ASCII encoded bytes. </returns>
+        string GetStringAscii(int index, int length);
 
         /// <summary>
         /// Get an encoded UTF-8 String from the buffer that does not have a length prefix.

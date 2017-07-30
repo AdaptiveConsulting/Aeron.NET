@@ -1,4 +1,20 @@
-﻿using Adaptive.Agrona;
+﻿/*
+ * Copyright 2014 - 2017 Adaptive Financial Consulting Ltd
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0S
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+using Adaptive.Agrona;
 
 namespace Adaptive.Aeron.Command
 {
@@ -34,17 +50,17 @@ namespace Adaptive.Aeron.Command
     /// |                                                               |
     /// +---------------------------------------------------------------+
     /// |                                                              ...
-    /// ...     Up to "Position Indicators Count" entries of this form
+    /// ...     Up to "Position Indicators Count" entries of this form  |
     /// +---------------------------------------------------------------+
     /// |                         Log File Length                       |
     /// +---------------------------------------------------------------+
-    /// |                          Log File Name                       ...
-    /// ...                                                              |
+    /// |                          Log File Name (ASCII)               ...
+    /// ...                                                             |
     /// +---------------------------------------------------------------+
     /// |                     Source identity Length                    |
     /// +---------------------------------------------------------------+
-    /// |                     Source identity Name                     ...
-    /// ...                                                              |
+    /// |                     Source identity (ASCII)                  ...
+    /// ...                                                             |
     /// +---------------------------------------------------------------+ 
     public class ImageBuffersReadyFlyweight
     {
@@ -216,42 +232,42 @@ namespace Adaptive.Aeron.Command
         }
 
         /// <summary>
-        /// Return the Log Filename
+        /// Return the Log Filename in ASCII
         /// </summary>
         /// <returns> log filename </returns>
         public string LogFileName()
         {
-            return _buffer.GetStringUtf8(_offset + LogFileNameOffset());
+            return _buffer.GetStringAscii(_offset + LogFileNameOffset());
         }
 
         /// <summary>
-        /// Set the log filename
+        /// Set the log filename in ASCII
         /// </summary>
         /// <param name="logFileName"> for the image </param>
         /// <returns> flyweight </returns>
         public ImageBuffersReadyFlyweight LogFileName(string logFileName)
         {
-            _buffer.PutStringUtf8(_offset + LogFileNameOffset(), logFileName);
+            _buffer.PutStringAscii(_offset + LogFileNameOffset(), logFileName);
             return this;
         }
 
         /// <summary>
-        /// Return the source identity string
+        /// Return the source identity string in ASCII
         /// </summary>
         /// <returns> source identity string </returns>
         public string SourceIdentity()
         {
-            return _buffer.GetStringUtf8(_offset + SourceIdentityOffset());
+            return _buffer.GetStringAscii(_offset + SourceIdentityOffset());
         }
 
         /// <summary>
-        /// Set the source identity string
+        /// Set the source identity string in ASCII
         /// </summary>
         /// <param name="value"> for the source identity </param>
         /// <returns> flyweight </returns>
         public ImageBuffersReadyFlyweight SourceIdentity(string value)
         {
-            _buffer.PutStringUtf8(_offset + SourceIdentityOffset(), value);
+            _buffer.PutStringAscii(_offset + SourceIdentityOffset(), value);
             return this;
         }
 

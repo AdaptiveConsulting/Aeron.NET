@@ -1,14 +1,43 @@
-﻿using System;
+﻿/*
+ * Copyright 2014 - 2017 Adaptive Financial Consulting Ltd
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0S
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+using System;
+using System.Runtime.CompilerServices;
+using System.Text;
 using Adaptive.Agrona;
 using Adaptive.Agrona.Concurrent;
+using Adaptive.Agrona.Util;
 
 namespace Adaptive.Aeron
 {
     /// <summary>
-    /// Builder for appending buffers that grows capacity as needed.
+    /// Reusable Builder for appending a sequence of buffers that grows internal capacity as needed.
+    /// 
+    /// Similar in concept to <see cref="StringBuilder"/>
     /// </summary>
     public class BufferBuilder
     {
+        /// <summary>
+        /// Maximum capcity to which the array can grow
+        /// </summary>
+        public const int MAX_CAPACITY = int.MaxValue - 8;
+
+        /// <summary>
+        /// Initial capcity for the internal buffer.
+        /// </summary>
         public const int INITIAL_CAPACITY = 4096;
 
         private readonly UnsafeBuffer _mutableDirectBuffer;
@@ -57,11 +86,12 @@ namespace Adaptive.Aeron
         /// Set this limit for this buffer as the position at which the next append operation will occur.
         /// </summary>
         /// <param name="limit"> to be the new value. </param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Limit(int limit)
         {
             if (limit < 0 || limit >= _capacity)
             {
-                throw new ArgumentException($"Limit outside range: capacity={_capacity:D} limit={limit:D}");
+                ThrowHelper.ThrowArgumentException($"Limit outside range: capacity={_capacity:D} limit={limit:D}");
             }
 
             _limit = limit;
@@ -123,7 +153,7 @@ namespace Adaptive.Aeron
             if (requiredCapacity < 0)
             {
                 string s = $"Insufficient capacity: limit={_limit:D} additional={additionalCapacity:D}";
-                throw new InvalidOperationException(s);
+                ThrowHelper.ThrowInvalidOperationException(s);
             }
 
             if (requiredCapacity > _capacity)
@@ -141,7 +171,21 @@ namespace Adaptive.Aeron
         {
             do
             {
-                capacity <<= 1;
+                int newCapacity = capacity + (capacity >> 1);
+
+                if (newCapacity < 0 || newCapacity > MAX_CAPACITY)
+                {
+                    if (capacity == MAX_CAPACITY)
+                    {
+                        ThrowHelper.ThrowInvalidOperationException("Max capacity reached: " + MAX_CAPACITY);
+                    }
+
+                    capacity = MAX_CAPACITY;
+                }
+                else
+                {
+                    capacity = newCapacity;
+                }
             } while (capacity < requiredCapacity);
 
             return capacity;

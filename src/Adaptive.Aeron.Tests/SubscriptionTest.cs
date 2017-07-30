@@ -1,4 +1,20 @@
-﻿using Adaptive.Aeron;
+﻿/*
+ * Copyright 2014 - 2017 Adaptive Financial Consulting Ltd
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+using Adaptive.Aeron;
 using Adaptive.Aeron.LogBuffer;
 using Adaptive.Aeron.Protocol;
 using Adaptive.Agrona;
@@ -25,6 +41,8 @@ namespace Adaptive.Aeron.Tests
         private Image ImageOneMock;
         private Header Header;
         private Image ImageTwoMock;
+        private AvailableImageHandler AvailableImageHandler;
+        private UnavailableImageHandler UnavailableImageHandler;
 
         private Subscription Subscription;
 
@@ -37,10 +55,18 @@ namespace Adaptive.Aeron.Tests
             ImageOneMock = A.Fake<Image>();
             ImageTwoMock = A.Fake<Image>();
             Header = A.Fake<Header>();
+            AvailableImageHandler = A.Fake<AvailableImageHandler>();
+            UnavailableImageHandler = A.Fake<UnavailableImageHandler>();
 
             A.CallTo(() => Header.Flags).Returns(FLAGS);
 
-            Subscription = new Subscription(Conductor, CHANNEL, STREAM_ID_1, SUBSCRIPTION_CORRELATION_ID);
+            Subscription = new Subscription(
+                Conductor, 
+                CHANNEL, 
+                STREAM_ID_1, 
+                SUBSCRIPTION_CORRELATION_ID,
+                AvailableImageHandler,
+                UnavailableImageHandler);
             A.CallTo(() => Conductor.ReleaseSubscription(Subscription));
         }
 

@@ -1,4 +1,21 @@
-﻿using System.Runtime.CompilerServices;
+﻿/*
+ * Copyright 2014 - 2017 Adaptive Financial Consulting Ltd
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0S
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+using System;
+using System.Runtime.CompilerServices;
 using Adaptive.Aeron.Protocol;
 using Adaptive.Agrona;
 
@@ -10,9 +27,18 @@ namespace Adaptive.Aeron.LogBuffer
     public class Header
     {
         private readonly int _positionBitsToShift;
-        private int _initialTermId;
-
-        public Header()
+        private readonly int _initialTermId;
+        private int _offset;
+        private IDirectBuffer _buffer;
+        private readonly Object _context;
+        
+        /// <summary>
+        /// Construct a header that references a buffer for the log.
+        /// </summary>
+        /// <param name="initialTermId">       this stream started at. </param>
+        /// <param name="positionBitsToShift"> for calculating positions. </param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Header(int initialTermId, int positionBitsToShift) : this(initialTermId, positionBitsToShift, null)
         {
         }
 
@@ -21,11 +47,22 @@ namespace Adaptive.Aeron.LogBuffer
         /// </summary>
         /// <param name="initialTermId">       this stream started at. </param>
         /// <param name="positionBitsToShift"> for calculating positions. </param>
+        /// <param name="context"> for storing state when which can be accessed with <see cref="Context"/>.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Header(int initialTermId, int positionBitsToShift)
+        public Header(int initialTermId, int positionBitsToShift, Object context)
         {
             _initialTermId = initialTermId;
             _positionBitsToShift = positionBitsToShift;
+            _context = context;
+        }
+        
+        /// <summary>
+        /// Context for storing state related to the context of the callback where the header is used.
+        /// </summary>
+        /// <returns>  context for storing state related to the context of the callback where the header is used.</returns>
+        public Object Context
+        {
+            get { return _context; }
         }
 
         /// <summary>
@@ -49,16 +86,6 @@ namespace Adaptive.Aeron.LogBuffer
             return _initialTermId;
         }
 
-        /// <summary>
-        /// Set the initial term id this stream started at.
-        /// </summary>
-        /// <param name="initialTermId"> this stream started at. </param>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void InitialTermId(int initialTermId)
-        {
-            _initialTermId = initialTermId;
-        }
-
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void SetBuffer(IDirectBuffer buffer, int offset)
         {
@@ -69,13 +96,26 @@ namespace Adaptive.Aeron.LogBuffer
         /// <summary>
         /// The offset at which the frame begins.
         /// </summary>
-        public int Offset { get; private set; }
-        
+        public int Offset
+        {
+            get { return _offset; }
+            set { _offset = value; }
+        }
+
         /// <summary>
         /// The <seealso cref="IDirectBuffer"/> containing the header.
         /// </summary>
-        public IDirectBuffer Buffer { get; private set; }
-
+        public IDirectBuffer Buffer
+        {
+            get { return _buffer; }
+            set {
+                if (value != _buffer)
+                {
+                    _buffer = value;
+                }
+            }
+        }
+        
         /// <summary>
         /// The total length of the frame including the header.
         /// </summary>

@@ -1,4 +1,20 @@
-﻿using System.Text;
+﻿/*
+ * Copyright 2014 - 2017 Adaptive Financial Consulting Ltd
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+using System.Text;
 using Adaptive.Agrona.Concurrent;
 using NUnit.Framework;
 
@@ -31,6 +47,18 @@ namespace Adaptive.Aeron.Tests
             _bufferBuilder.Append(srcBuffer, 0, 0);
 
             Assert.That(_bufferBuilder.Limit(), Is.EqualTo(0));
+        }
+
+        [Test]
+        public void ShouldGrowToMultipleOfInitialCapaity()
+        {
+            int srcCapacity = BufferBuilder.INITIAL_CAPACITY * 5;
+            UnsafeBuffer srcBuffer = new UnsafeBuffer(new byte[srcCapacity]);
+
+            _bufferBuilder.Append(srcBuffer, 0, srcBuffer.Capacity);
+
+            Assert.That(_bufferBuilder.Limit(), Is.EqualTo(srcCapacity));
+            Assert.That(_bufferBuilder.Capacity, Is.GreaterThanOrEqualTo(srcCapacity));
         }
 
         [Test]
@@ -118,7 +146,7 @@ namespace Adaptive.Aeron.Tests
             bufferBuilder.Buffer().GetBytes(0, temp, 0, buffer.Length);
 
             Assert.That(bufferBuilder.Limit(), Is.EqualTo(buffer.Length));
-            Assert.That(bufferBuilder.Capacity(), Is.EqualTo(bufferLength * 2));
+            Assert.That(bufferBuilder.Capacity(), Is.GreaterThan(bufferLength));
             Assert.That(temp, Is.EqualTo(buffer));
         }
 
@@ -141,7 +169,7 @@ namespace Adaptive.Aeron.Tests
             bufferBuilder.Buffer().GetBytes(0, temp, 0, secondLength + firstLength);
 
             Assert.That(bufferBuilder.Limit(), Is.EqualTo(firstLength + secondLength));
-            Assert.That(bufferBuilder.Capacity(), Is.EqualTo(bufferLength));
+            Assert.That(bufferBuilder.Capacity(), Is.GreaterThanOrEqualTo(firstLength + secondLength));
             Assert.That(temp, Is.EqualTo(buffer));
         }
 

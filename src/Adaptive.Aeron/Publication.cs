@@ -1,4 +1,20 @@
-﻿using System;
+﻿/*
+ * Copyright 2014 - 2017 Adaptive Financial Consulting Ltd
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0S
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+using System;
 using System.Runtime.CompilerServices;
 using Adaptive.Aeron.LogBuffer;
 using Adaptive.Aeron.Protocol;
@@ -11,16 +27,16 @@ namespace Adaptive.Aeron
 {
     /// <summary>
     /// Aeron Publisher API for sending messages to subscribers of a given channel and streamId pair. Publishers
-    /// are created via an <seealso cref="Aeron"/> object, and messages are sent via an offer method or a claim and commit
+    /// are created via the <seealso cref="Aeron.AddPublication(String, int)"/> method, and messages are sent via one of the
+    /// <seealso cref="Offer(IDirectBuffer)"/> methods, or a <seealso cref="TryClaim(int, BufferClaim)"/> and <seealso cref="BufferClaim.Commit"/>
     /// method combination.
-    /// <para>
+    /// 
     /// The APIs used to send are all non-blocking.
-    /// </para>
-    /// <para>
-    /// Note: Publication instances are threadsafe and can be shared between publishing threads.
-    /// </para>
+    /// 
+    /// <b>Note:</b> Publication instances are threadsafe and can be shared between publishing threads.
     /// </summary>
     /// <seealso cref="Aeron.AddPublication(string, int)" />
+    /// <seealso cref="BufferClaim" />
     public class Publication : IDisposable
     {
         /// <summary>
@@ -52,7 +68,7 @@ namespace Adaptive.Aeron
         private readonly UnsafeBuffer _logMetaDataBuffer;
         private readonly HeaderWriter _headerWriter;
         private readonly LogBuffers _logBuffers;
-        private readonly ClientConductor _clientConductor;
+        private readonly ClientConductor _conductor;
 
         internal Publication(ClientConductor clientConductor, string channel, int streamId, int sessionId, IReadablePosition positionLimit, LogBuffers logBuffers, long registrationId)
         {
@@ -67,7 +83,7 @@ namespace Adaptive.Aeron
             var termLength = logBuffers.TermLength();
             MaxPayloadLength = LogBufferDescriptor.MtuLength(logMetaDataBuffer) - DataHeaderFlyweight.HEADER_LENGTH;
             MaxMessageLength = FrameDescriptor.ComputeMaxMessageLength(termLength);
-            _clientConductor = clientConductor;
+            _conductor = clientConductor;
             Channel = channel;
             StreamId = streamId;
             SessionId = sessionId;
@@ -130,10 +146,16 @@ namespace Adaptive.Aeron
         public int MaxPayloadLength { get; }
 
         /// <summary>
+        /// Return the registration id used to register this Publication with the media driver.
+        /// </summary>
+        /// <returns> registration id </returns>
+        public long RegistrationId { get; }
+
+        /// <summary>
         /// Has the <seealso cref="Publication"/> seen an active Subscriber recently?
         /// </summary>
         /// <returns> true if this <seealso cref="Publication"/> has seen an active subscriber otherwise false. </returns>
-        public bool IsConnected => !_isClosed && _clientConductor.IsPublicationConnected(LogBufferDescriptor.TimeOfLastStatusMessage(_logMetaDataBuffer));
+        public bool IsConnected => !_isClosed && _conductor.IsPublicationConnected(LogBufferDescriptor.TimeOfLastStatusMessage(_logMetaDataBuffer));
 
         /// <summary>
         /// Release resources used by this Publication when there are no more references.
@@ -142,12 +164,18 @@ namespace Adaptive.Aeron
         /// </summary>
         public void Dispose()
         {
-            lock (_clientConductor)
+            _conductor.ClientLock().Lock();
+            try
             {
-                if (--_refCount == 0)
+                if (!_isClosed && --_refCount == 0)
                 {
-                    Release();
+                    _isClosed = true;
+                    _conductor.ReleasePublication(this);
                 }
+            }
+            finally
+            {
+                _conductor.ClientLock().Unlock();
             }
         }
 
@@ -158,14 +186,15 @@ namespace Adaptive.Aeron
         public bool IsClosed => _isClosed;
 
         /// <summary>
-        /// Release resources and forcibly close the Publication regardless of reference count.
+        /// Forcibly close the Publication and release resources
         /// </summary>
-        internal void Release()
+        internal void ForceClose()
         {
             if (!_isClosed)
             {
                 _isClosed = true;
-                _clientConductor.ReleasePublication(this);
+                _conductor.AsyncReleasePublication(RegistrationId);
+                _conductor.LingerResource(ManagedResource());
             }
         }
 
@@ -230,7 +259,11 @@ namespace Adaptive.Aeron
         /// <returns> The new stream position, otherwise a negative error value <seealso cref="NOT_CONNECTED"/>, <seealso cref="BACK_PRESSURED"/>,
         /// <seealso cref="ADMIN_ACTION"/> or <seealso cref="CLOSED"/>. </returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public long Offer(UnsafeBuffer buffer, int offset, int length, ReservedValueSupplier reservedValueSupplier = null)
+        public long Offer(
+            UnsafeBuffer buffer, 
+            int offset, 
+            int length, 
+            ReservedValueSupplier reservedValueSupplier = null)
         {
             var newPosition = CLOSED;
             if (!_isClosed)
@@ -257,7 +290,7 @@ namespace Adaptive.Aeron
 
                     newPosition = NewPosition(partitionIndex, (int) termOffset, position, result);
                 }
-                else if (_clientConductor.IsPublicationConnected(LogBufferDescriptor.TimeOfLastStatusMessage(_logMetaDataBuffer)))
+                else if (_conductor.IsPublicationConnected(LogBufferDescriptor.TimeOfLastStatusMessage(_logMetaDataBuffer)))
                 {
                     newPosition = BACK_PRESSURED;
                 }
@@ -272,7 +305,7 @@ namespace Adaptive.Aeron
 
         /// <summary>
         /// Try to claim a range in the publication log into which a message can be written with zero copy semantics.
-        /// Once the message has been written then <seealso cref="BufferClaim#commit()"/> should be called thus making it available.
+        /// Once the message has been written then <seealso cref="BufferClaim.Commit()"/> should be called thus making it available.
         /// <para>
         /// <b>Note:</b> This method can only be used for message lengths less than MTU length minus header.
         ///     
@@ -307,11 +340,11 @@ namespace Adaptive.Aeron
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public long TryClaim(int length, BufferClaim bufferClaim)
         {
+            CheckForMaxPayloadLength(length);
             var newPosition = CLOSED;
+
             if (!_isClosed)
             {
-                CheckForMaxPayloadLength(length);
-
                 var limit = _positionLimit.Volatile;
                 var partitionIndex = LogBufferDescriptor.ActivePartitionIndex(_logMetaDataBuffer);
                 var termAppender = _termAppenders[partitionIndex];
@@ -324,7 +357,7 @@ namespace Adaptive.Aeron
                     var result = termAppender.Claim(_headerWriter, length, bufferClaim);
                     newPosition = NewPosition(partitionIndex, (int) termOffset, position, result);
                 }
-                else if (_clientConductor.IsPublicationConnected(LogBufferDescriptor.TimeOfLastStatusMessage(_logMetaDataBuffer)))
+                else if (_conductor.IsPublicationConnected(LogBufferDescriptor.TimeOfLastStatusMessage(_logMetaDataBuffer)))
                 {
                     newPosition = BACK_PRESSURED;
                 }
@@ -338,20 +371,44 @@ namespace Adaptive.Aeron
         }
 
         /// <summary>
-        /// Return the registration id used to register this Publication with the media driver.
+        /// Add a destination manually to a multi-destination-cast Publication.
         /// </summary>
-        /// <returns> registration id </returns>
-        public long RegistrationId { get; }
+        /// <param name="endpointChannel"> for the destination to add </param>
+        public void AddDestination(string endpointChannel)
+        {
+            _conductor.ClientLock().Lock();
+            try
+            {
+                _conductor.AddDestination(RegistrationId, endpointChannel);
+            }
+            finally
+            {
+                _conductor.ClientLock().Unlock();
+            }
+        }
 
+        /// <summary>
+        /// Remove a previously added destination manually from a multi-destination-cast Publication.
+        /// </summary>
+        /// <param name="endpointChannel"> for the destination to remove </param>
+        public void RemoveDestination(string endpointChannel)
+        {
+            _conductor.ClientLock().Lock();
+            try
+            {
+                _conductor.RemoveDestination(RegistrationId, endpointChannel);
+            }
+            finally
+            {
+                _conductor.ClientLock().Unlock();
+            }
+        }
 
         /// <seealso cref="Dispose()" />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal void IncRef()
         {
-            lock (_clientConductor)
-            {
-                ++_refCount;
-            }
+            ++_refCount;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -368,7 +425,7 @@ namespace Adaptive.Aeron
                 var nextIndex = LogBufferDescriptor.NextPartitionIndex(index);
                 
                 _termAppenders[nextIndex].TailTermId(TermAppender.TermId(result) + 1);
-                LogBufferDescriptor.ActivePartitionIndex(_logMetaDataBuffer, nextIndex);
+                LogBufferDescriptor.ActivePartitionIndexOrdered(_logMetaDataBuffer, nextIndex);
             }
 
             return newPosition;
@@ -379,7 +436,7 @@ namespace Adaptive.Aeron
         {
             if (length > MaxPayloadLength)
             {
-                throw new ArgumentException(
+                ThrowHelper.ThrowArgumentException(
                     $"Claim exceeds maxPayloadLength of {MaxPayloadLength:D}, length={length:D}");
             }
         }
@@ -389,8 +446,8 @@ namespace Adaptive.Aeron
         {
             if (length > MaxMessageLength)
             {
-                throw new ArgumentException(
-                    $"Encoded message exceeds maxMessageLength of {MaxMessageLength:D}, length={length:D}");
+                ThrowHelper.ThrowArgumentException(
+                    $"Mssage exceeds maxMessageLength of {MaxMessageLength:D}, length={length:D}");
             }
         }
 

@@ -1,4 +1,20 @@
-﻿using Adaptive.Agrona;
+﻿/*
+ * Copyright 2014 - 2017 Adaptive Financial Consulting Ltd
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0S
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+using Adaptive.Agrona;
 
 namespace Adaptive.Aeron.Command
 {
@@ -16,8 +32,8 @@ namespace Adaptive.Aeron.Command
     /// +---------------------------------------------------------------+
     /// |                        Channel Length                         |
     /// +---------------------------------------------------------------+
-    /// |                           Channel                            ...
-    /// ...                                                              |
+    /// |                           Channel   (ASCII)                  ...
+    /// ...                                                             |
     /// +---------------------------------------------------------------+
     /// </para>
     /// </summary>
@@ -50,22 +66,22 @@ namespace Adaptive.Aeron.Command
         }
 
         /// <summary>
-        /// Get the channel field
+        /// Get the channel field in ASCII
         /// </summary>
         /// <returns> channel field </returns>
         public string Channel()
         {
-            return buffer.GetStringUtf8(offset + CHANNEL_OFFSET);
+            return buffer.GetStringAscii(offset + CHANNEL_OFFSET);
         }
 
         /// <summary>
-        /// Set the channel field
+        /// Set the channel field in ASCII
         /// </summary>
         /// <param name="channel"> field value </param>
         /// <returns> flyweight </returns>
         public PublicationMessageFlyweight Channel(string channel)
         {
-            _lengthOfChannel = buffer.PutStringUtf8(offset + CHANNEL_OFFSET, channel);
+            _lengthOfChannel = buffer.PutStringAscii(offset + CHANNEL_OFFSET, channel);
 
             return this;
         }

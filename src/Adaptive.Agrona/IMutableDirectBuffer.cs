@@ -1,4 +1,20 @@
-﻿using System;
+﻿/*
+ * Copyright 2014 - 2017 Adaptive Financial Consulting Ltd
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+using System;
 
 namespace Adaptive.Agrona
 {
@@ -150,6 +166,14 @@ namespace Adaptive.Agrona
         /// <param name="value">  of the String to be encoded. </param>
         /// <returns> the number of bytes put to the buffer. </returns>
         int PutStringUtf8(int index, string value);
+
+        /// <summary>
+        /// Encode a String as ASCII bytes to the buffer with a length prefix.
+        /// </summary>
+        /// <param name="index"> at which the String should be encoded. </param>
+        /// <param name="value">  of the String to be encoded. </param>
+        /// <returns> the number of bytes put to the buffer. </returns>
+        int PutStringAscii(int index, string value);
 
         ///// <summary>
         ///// Encode a String as UTF-8 bytes to the buffer with a length prefix.

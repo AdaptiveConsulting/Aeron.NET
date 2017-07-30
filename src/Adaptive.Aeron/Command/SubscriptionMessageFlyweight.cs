@@ -1,24 +1,40 @@
-﻿using Adaptive.Agrona;
+﻿/*
+ * Copyright 2014 - 2017 Adaptive Financial Consulting Ltd
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0S
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+using Adaptive.Agrona;
 
 namespace Adaptive.Aeron.Command
 {
     /// <summary>
     /// Control message for adding or removing a subscription.
     /// 
-    /// <para>
     /// 0                   1                   2                   3
     /// 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
     /// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     /// |                    Command Correlation ID                     |
     /// +---------------------------------------------------------------+
-    /// |                  Registration Correlation ID                  |
+    /// |                 Registration Correlation ID                   |
     /// +---------------------------------------------------------------+
-    /// |                           Stream Id                           |
+    /// |                         Stream Id                             |
     /// +---------------------------------------------------------------+
-    /// |       Channel Length         |   Channel                     ...
-    /// |                                                              ...
+    /// |                       Channel Length                          |
     /// +---------------------------------------------------------------+
-    /// </para>
+    /// |                       Channel (ASCII)                        ...
+    /// ...                                                              |
+    /// +---------------------------------------------------------------+
     /// </summary>
     public class SubscriptionMessageFlyweight : CorrelatedMessageFlyweight
     {
@@ -73,22 +89,22 @@ namespace Adaptive.Aeron.Command
         }
 
         /// <summary>
-        /// return the channel field
+        /// Get the channel field in ASCII
         /// </summary>
         /// <returns> channel field </returns>
         public string Channel()
         {
-            return buffer.GetStringUtf8(offset + CHANNEL_OFFSET);
+            return buffer.GetStringAscii(offset + CHANNEL_OFFSET);
         }
 
         /// <summary>
-        /// Set channel field
+        /// Set channel field in ASCII
         /// </summary>
         /// <param name="channel"> field value </param>
         /// <returns> flyweight </returns>
         public SubscriptionMessageFlyweight Channel(string channel)
         {
-            _lengthOfChannel = buffer.PutStringUtf8(offset + CHANNEL_OFFSET, channel);
+            _lengthOfChannel = buffer.PutStringAscii(offset + CHANNEL_OFFSET, channel);
 
             return this;
         }

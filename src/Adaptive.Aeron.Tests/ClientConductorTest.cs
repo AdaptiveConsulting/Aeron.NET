@@ -1,4 +1,20 @@
-﻿using System;
+﻿/*
+ * Copyright 2014 - 2017 Adaptive Financial Consulting Ltd
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using Adaptive.Aeron.Command;
@@ -34,7 +50,7 @@ namespace Adaptive.Aeron.Tests
 
         private static readonly long KEEP_ALIVE_INTERVAL = NanoUtil.FromMilliseconds(500);
         private const long AWAIT_TIMEOUT = 100;
-        private const long INTER_SERVICE_TIMEOUT_MS = 100;
+        private const long INTER_SERVICE_TIMEOUT_MS = 1000;
         private const long PUBLICATION_CONNECTION_TIMEOUT_MS = 5000;
 
         private const string SOURCE_INFO = "127.0.0.1:40789";
@@ -51,8 +67,8 @@ namespace Adaptive.Aeron.Tests
 
         private UnsafeBuffer CounterValuesBuffer;
 
-        private readonly IEpochClock EpochClock = new SystemEpochClock();
-        private readonly INanoClock NanoClock = new SystemNanoClock();
+        private readonly TestEpochClock EpochClock = new TestEpochClock();
+        private readonly TestNanoClock NanoClock = new TestNanoClock();
         private ErrorHandler MockClientErrorHandler;
 
         private DriverProxy DriverProxy;
@@ -60,7 +76,8 @@ namespace Adaptive.Aeron.Tests
         private AvailableImageHandler MockAvailableImageHandler;
         private UnavailableImageHandler MockUnavailableImageHandler;
         private ILogBuffersFactory LogBuffersFactory;
-        private IDictionary<long, long> SubscriberPositionMap;
+        private ILock mockClientLock = A.Fake<ILock>();
+        private Dictionary<long, long> SubscriberPositionMap;
         private bool SuppressPrintError = false;
 
 
@@ -94,6 +111,8 @@ namespace Adaptive.Aeron.Tests
             SubscriberPositionMap = new Dictionary<long, long>(); // should return -1 when element does not exist
 
             DriverProxy = A.Fake<DriverProxy>();
+            
+            A.CallTo(() => mockClientLock.TryLock()).Returns(true);
 
             A.CallTo(() => DriverProxy.AddPublication(CHANNEL, STREAM_ID_1)).Returns(CORRELATION_ID);
             A.CallTo(() => DriverProxy.AddPublication(CHANNEL, STREAM_ID_2)).Returns(CORRELATION_ID_2);
@@ -101,7 +120,25 @@ namespace Adaptive.Aeron.Tests
             A.CallTo(() => DriverProxy.AddSubscription(A<string>._, A<int>._)).Returns(CORRELATION_ID);
             A.CallTo(() => DriverProxy.RemoveSubscription(CORRELATION_ID)).Returns(CLOSE_CORRELATION_ID);
 
-            Conductor = new ClientConductor(EpochClock, NanoClock, MockToClientReceiver, LogBuffersFactory, CounterValuesBuffer, DriverProxy, MockClientErrorHandler, MockAvailableImageHandler, MockUnavailableImageHandler, MapMode.ReadOnly, KEEP_ALIVE_INTERVAL, AWAIT_TIMEOUT, NanoUtil.FromMilliseconds(INTER_SERVICE_TIMEOUT_MS), PUBLICATION_CONNECTION_TIMEOUT_MS);
+            Aeron.Context ctx = new Aeron.Context()
+                .ClientLock(mockClientLock)
+                .EpochClock(EpochClock)
+                .NanoClock(NanoClock)
+                .ToClientBuffer(MockToClientReceiver)
+                .DriverProxy(DriverProxy)
+                .LogBuffersFactory(LogBuffersFactory)
+                .ErrorHandler(MockClientErrorHandler)
+                .AvailableImageHandler(MockAvailableImageHandler)
+                .UnavailableImageHandler(MockUnavailableImageHandler)
+                .ImageMapMode(MapMode.ReadOnly)
+                .KeepAliveInterval(KEEP_ALIVE_INTERVAL)
+                .DriverTimeoutMs(AWAIT_TIMEOUT)
+                .InterServiceTimeout(INTER_SERVICE_TIMEOUT_MS * 1000000)
+                .PublicationConnectionTimeout(PUBLICATION_CONNECTION_TIMEOUT_MS)
+                .CountersValuesBuffer(CounterValuesBuffer);
+
+
+            Conductor = new ClientConductor(ctx);
 
             PublicationReady.Wrap(PublicationReadyBuffer, 0);
             CorrelatedMessage.Wrap(CorrelatedMessageBuffer, 0);
@@ -153,7 +190,7 @@ namespace Adaptive.Aeron.Tests
         [Test]
         public void AddPublicationShouldNotifyMediaDriver()
         {
-            WhenReceiveBroadcastOnMessage(ControlProtocolEvents.ON_PUBLICATION_READY, PublicationReadyBuffer, (buffer) => PublicationReady.Length());
+            WhenReceiveBroadcastOnMessage(ControlProtocolEvents.ON_PUBLICATION_READY, PublicationReadyBuffer, buffer => PublicationReady.Length());
 
             Conductor.AddPublication(CHANNEL, STREAM_ID_1);
 
@@ -163,7 +200,7 @@ namespace Adaptive.Aeron.Tests
         [Test]
         public void AddPublicationShouldMapLogFile()
         {
-            WhenReceiveBroadcastOnMessage(ControlProtocolEvents.ON_PUBLICATION_READY, PublicationReadyBuffer, (buffer) => PublicationReady.Length());
+            WhenReceiveBroadcastOnMessage(ControlProtocolEvents.ON_PUBLICATION_READY, PublicationReadyBuffer, buffer => PublicationReady.Length());
 
             Conductor.AddPublication(CHANNEL, STREAM_ID_1);
 
@@ -172,6 +209,7 @@ namespace Adaptive.Aeron.Tests
 
 
         [Test]
+        [Timeout(5000)]
         [ExpectedException(typeof(DriverTimeoutException))]
         public void AddPublicationShouldTimeoutWithoutReadyMessage()
         {
@@ -181,7 +219,7 @@ namespace Adaptive.Aeron.Tests
         [Test]
         public void ConductorShouldCachePublicationInstances()
         {
-            WhenReceiveBroadcastOnMessage(ControlProtocolEvents.ON_PUBLICATION_READY, PublicationReadyBuffer, (buffer) => PublicationReady.Length());
+            WhenReceiveBroadcastOnMessage(ControlProtocolEvents.ON_PUBLICATION_READY, PublicationReadyBuffer, buffer => PublicationReady.Length());
 
             var firstPublication = Conductor.AddPublication(CHANNEL, STREAM_ID_1);
             var secondPublication = Conductor.AddPublication(CHANNEL, STREAM_ID_1);
@@ -192,11 +230,11 @@ namespace Adaptive.Aeron.Tests
         [Test]
         public void ClosingPublicationShouldNotifyMediaDriver()
         {
-            WhenReceiveBroadcastOnMessage(ControlProtocolEvents.ON_PUBLICATION_READY, PublicationReadyBuffer, (buffer) => PublicationReady.Length());
+            WhenReceiveBroadcastOnMessage(ControlProtocolEvents.ON_PUBLICATION_READY, PublicationReadyBuffer, buffer => PublicationReady.Length());
 
             var publication = Conductor.AddPublication(CHANNEL, STREAM_ID_1);
 
-            WhenReceiveBroadcastOnMessage(ControlProtocolEvents.ON_OPERATION_SUCCESS, CorrelatedMessageBuffer, (buffer) => CorrelatedMessageFlyweight.LENGTH);
+            WhenReceiveBroadcastOnMessage(ControlProtocolEvents.ON_OPERATION_SUCCESS, CorrelatedMessageBuffer, buffer => CorrelatedMessageFlyweight.LENGTH);
 
             publication.Dispose();
 
@@ -206,15 +244,15 @@ namespace Adaptive.Aeron.Tests
         [Test]
         public void ClosingPublicationShouldPurgeCache()
         {
-            WhenReceiveBroadcastOnMessage(ControlProtocolEvents.ON_PUBLICATION_READY, PublicationReadyBuffer, (buffer) => PublicationReady.Length());
+            WhenReceiveBroadcastOnMessage(ControlProtocolEvents.ON_PUBLICATION_READY, PublicationReadyBuffer, buffer => PublicationReady.Length());
 
             var firstPublication = Conductor.AddPublication(CHANNEL, STREAM_ID_1);
 
-            WhenReceiveBroadcastOnMessage(ControlProtocolEvents.ON_OPERATION_SUCCESS, CorrelatedMessageBuffer, (buffer) => CorrelatedMessageFlyweight.LENGTH);
+            WhenReceiveBroadcastOnMessage(ControlProtocolEvents.ON_OPERATION_SUCCESS, CorrelatedMessageBuffer, buffer => CorrelatedMessageFlyweight.LENGTH);
 
             firstPublication.Dispose();
 
-            WhenReceiveBroadcastOnMessage(ControlProtocolEvents.ON_PUBLICATION_READY, PublicationReadyBuffer, (buffer) => PublicationReady.Length());
+            WhenReceiveBroadcastOnMessage(ControlProtocolEvents.ON_PUBLICATION_READY, PublicationReadyBuffer, buffer => PublicationReady.Length());
 
             var secondPublication = Conductor.AddPublication(CHANNEL, STREAM_ID_1);
 
@@ -225,11 +263,11 @@ namespace Adaptive.Aeron.Tests
         [ExpectedException(typeof(RegistrationException))]
         public void ShouldFailToClosePublicationOnMediaDriverError()
         {
-            WhenReceiveBroadcastOnMessage(ControlProtocolEvents.ON_PUBLICATION_READY, PublicationReadyBuffer, (buffer) => PublicationReady.Length());
+            WhenReceiveBroadcastOnMessage(ControlProtocolEvents.ON_PUBLICATION_READY, PublicationReadyBuffer, buffer => PublicationReady.Length());
 
             var publication = Conductor.AddPublication(CHANNEL, STREAM_ID_1);
 
-            WhenReceiveBroadcastOnMessage(ControlProtocolEvents.ON_ERROR, ErrorMessageBuffer, (buffer) =>
+            WhenReceiveBroadcastOnMessage(ControlProtocolEvents.ON_ERROR, ErrorMessageBuffer, buffer =>
             {
                 ErrorResponse.ErrorCode(ErrorCode.INVALID_CHANNEL);
                 ErrorResponse.ErrorMessage("channel unknown");
@@ -245,7 +283,7 @@ namespace Adaptive.Aeron.Tests
         [ExpectedException(typeof(RegistrationException))]
         public void ShouldFailToAddPublicationOnMediaDriverError()
         {
-            WhenReceiveBroadcastOnMessage(ControlProtocolEvents.ON_ERROR, ErrorMessageBuffer, (buffer) =>
+            WhenReceiveBroadcastOnMessage(ControlProtocolEvents.ON_ERROR, ErrorMessageBuffer, buffer =>
             {
                 ErrorResponse.ErrorCode(ErrorCode.INVALID_CHANNEL);
                 ErrorResponse.ErrorMessage("invalid channel");
@@ -259,7 +297,7 @@ namespace Adaptive.Aeron.Tests
         [Test]
         public void PublicationOnlyRemovedOnLastClose()
         {
-            WhenReceiveBroadcastOnMessage(ControlProtocolEvents.ON_PUBLICATION_READY, PublicationReadyBuffer, (buffer) => PublicationReady.Length());
+            WhenReceiveBroadcastOnMessage(ControlProtocolEvents.ON_PUBLICATION_READY, PublicationReadyBuffer, buffer => PublicationReady.Length());
 
             var publication = Conductor.AddPublication(CHANNEL, STREAM_ID_1);
             Conductor.AddPublication(CHANNEL, STREAM_ID_1);
@@ -268,21 +306,20 @@ namespace Adaptive.Aeron.Tests
 
             A.CallTo(() => DriverProxy.RemovePublication(CORRELATION_ID)).MustNotHaveHappened();
 
-            WhenReceiveBroadcastOnMessage(ControlProtocolEvents.ON_OPERATION_SUCCESS, CorrelatedMessageBuffer, (buffer) => CorrelatedMessageFlyweight.LENGTH);
+            WhenReceiveBroadcastOnMessage(ControlProtocolEvents.ON_OPERATION_SUCCESS, CorrelatedMessageBuffer, buffer => CorrelatedMessageFlyweight.LENGTH);
 
             publication.Dispose();
             A.CallTo(() => DriverProxy.RemovePublication(CORRELATION_ID)).MustHaveHappened();
         }
 
-
         [Test]
         public void ClosingPublicationDoesNotRemoveOtherPublications()
         {
-            WhenReceiveBroadcastOnMessage(ControlProtocolEvents.ON_PUBLICATION_READY, PublicationReadyBuffer, (buffer) => PublicationReady.Length());
+            WhenReceiveBroadcastOnMessage(ControlProtocolEvents.ON_PUBLICATION_READY, PublicationReadyBuffer, buffer => PublicationReady.Length());
 
             var publication = Conductor.AddPublication(CHANNEL, STREAM_ID_1);
 
-            WhenReceiveBroadcastOnMessage(ControlProtocolEvents.ON_PUBLICATION_READY, PublicationReadyBuffer, (buffer) =>
+            WhenReceiveBroadcastOnMessage(ControlProtocolEvents.ON_PUBLICATION_READY, PublicationReadyBuffer, buffer =>
             {
                 PublicationReady.StreamId(STREAM_ID_2);
                 PublicationReady.SessionId(SESSION_ID_2);
@@ -293,7 +330,7 @@ namespace Adaptive.Aeron.Tests
 
             Conductor.AddPublication(CHANNEL, STREAM_ID_2);
 
-            WhenReceiveBroadcastOnMessage(ControlProtocolEvents.ON_OPERATION_SUCCESS, CorrelatedMessageBuffer, (buffer) => CorrelatedMessageFlyweight.LENGTH);
+            WhenReceiveBroadcastOnMessage(ControlProtocolEvents.ON_OPERATION_SUCCESS, CorrelatedMessageBuffer, buffer => CorrelatedMessageFlyweight.LENGTH);
 
             publication.Dispose();
 
@@ -304,13 +341,13 @@ namespace Adaptive.Aeron.Tests
         [Test]
         public void ShouldNotMapBuffersForUnknownCorrelationId()
         {
-            WhenReceiveBroadcastOnMessage(ControlProtocolEvents.ON_PUBLICATION_READY, PublicationReadyBuffer, (buffer) =>
+            WhenReceiveBroadcastOnMessage(ControlProtocolEvents.ON_PUBLICATION_READY, PublicationReadyBuffer, buffer =>
             {
                 PublicationReady.CorrelationId(UNKNOWN_CORRELATION_ID);
                 return PublicationReady.Length();
             });
 
-            WhenReceiveBroadcastOnMessage(ControlProtocolEvents.ON_PUBLICATION_READY, PublicationReadyBuffer, (buffer) =>
+            WhenReceiveBroadcastOnMessage(ControlProtocolEvents.ON_PUBLICATION_READY, PublicationReadyBuffer, buffer =>
             {
                 PublicationReady.CorrelationId(CORRELATION_ID);
                 return PublicationReady.Length();
@@ -330,7 +367,7 @@ namespace Adaptive.Aeron.Tests
         [Test]
         public void AddSubscriptionShouldNotifyMediaDriver()
         {
-            WhenReceiveBroadcastOnMessage(ControlProtocolEvents.ON_OPERATION_SUCCESS, CorrelatedMessageBuffer, (buffer) =>
+            WhenReceiveBroadcastOnMessage(ControlProtocolEvents.ON_OPERATION_SUCCESS, CorrelatedMessageBuffer, buffer =>
             {
                 CorrelatedMessage.CorrelationId(CORRELATION_ID);
                 return CorrelatedMessageFlyweight.LENGTH;
@@ -344,7 +381,7 @@ namespace Adaptive.Aeron.Tests
         [Test]
         public void ClosingSubscriptionShouldNotifyMediaDriver()
         {
-            WhenReceiveBroadcastOnMessage(ControlProtocolEvents.ON_OPERATION_SUCCESS, CorrelatedMessageBuffer, (buffer) =>
+            WhenReceiveBroadcastOnMessage(ControlProtocolEvents.ON_OPERATION_SUCCESS, CorrelatedMessageBuffer, buffer =>
             {
                 CorrelatedMessage.CorrelationId(CORRELATION_ID);
                 return CorrelatedMessageFlyweight.LENGTH;
@@ -352,7 +389,7 @@ namespace Adaptive.Aeron.Tests
 
             var subscription = Conductor.AddSubscription(CHANNEL, STREAM_ID_1);
 
-            WhenReceiveBroadcastOnMessage(ControlProtocolEvents.ON_OPERATION_SUCCESS, CorrelatedMessageBuffer, (buffer) =>
+            WhenReceiveBroadcastOnMessage(ControlProtocolEvents.ON_OPERATION_SUCCESS, CorrelatedMessageBuffer, buffer =>
             {
                 CorrelatedMessage.CorrelationId(CLOSE_CORRELATION_ID);
                 return CorrelatedMessageFlyweight.LENGTH;
@@ -364,6 +401,7 @@ namespace Adaptive.Aeron.Tests
         }
 
         [Test]
+        [Timeout(5000)]
         [ExpectedException(typeof(DriverTimeoutException))]
         public void AddSubscriptionShouldTimeoutWithoutOperationSuccessful()
         {
@@ -374,7 +412,7 @@ namespace Adaptive.Aeron.Tests
         [ExpectedException(typeof(RegistrationException))]
         public void ShouldFailToAddSubscriptionOnMediaDriverError()
         {
-            WhenReceiveBroadcastOnMessage(ControlProtocolEvents.ON_ERROR, ErrorMessageBuffer, (buffer) =>
+            WhenReceiveBroadcastOnMessage(ControlProtocolEvents.ON_ERROR, ErrorMessageBuffer, buffer =>
             {
                 ErrorResponse.ErrorCode(ErrorCode.INVALID_CHANNEL);
                 ErrorResponse.ErrorMessage("invalid channel");
@@ -388,7 +426,7 @@ namespace Adaptive.Aeron.Tests
         [Test]
         public void ClientNotifiedOfNewImageShouldMapLogFile()
         {
-            WhenReceiveBroadcastOnMessage(ControlProtocolEvents.ON_OPERATION_SUCCESS, CorrelatedMessageBuffer, (buffer) =>
+            WhenReceiveBroadcastOnMessage(ControlProtocolEvents.ON_OPERATION_SUCCESS, CorrelatedMessageBuffer, buffer =>
             {
                 CorrelatedMessage.CorrelationId(CORRELATION_ID);
                 return CorrelatedMessageFlyweight.LENGTH;
@@ -404,7 +442,7 @@ namespace Adaptive.Aeron.Tests
         [Test]
         public void ClientNotifiedOfNewAndInactiveImages()
         {
-            WhenReceiveBroadcastOnMessage(ControlProtocolEvents.ON_OPERATION_SUCCESS, CorrelatedMessageBuffer, (buffer) =>
+            WhenReceiveBroadcastOnMessage(ControlProtocolEvents.ON_OPERATION_SUCCESS, CorrelatedMessageBuffer, buffer =>
             {
                 CorrelatedMessage.CorrelationId(CORRELATION_ID);
                 return CorrelatedMessageFlyweight.LENGTH;
@@ -414,16 +452,15 @@ namespace Adaptive.Aeron.Tests
 
             Conductor.OnAvailableImage(STREAM_ID_1, SESSION_ID_1, SubscriberPositionMap, SESSION_ID_1 + "-log", SOURCE_INFO, CORRELATION_ID);
 
-            Assert.False(subscription.HasNoImages);
+            Assert.False(subscription.HasNoImages());
 
             A.CallTo(() => MockAvailableImageHandler(A<Image>._)).MustHaveHappened();
 
             Conductor.OnUnavailableImage(STREAM_ID_1, CORRELATION_ID);
 
-
             A.CallTo(() => MockUnavailableImageHandler(A<Image>._)).MustHaveHappened();
 
-            Assert.True(subscription.HasNoImages);
+            Assert.True(subscription.HasNoImages());
         }
 
         [Test]
@@ -451,7 +488,8 @@ namespace Adaptive.Aeron.Tests
             SuppressPrintError = true;
 
             Conductor.DoWork();
-            Thread.Sleep((int) INTER_SERVICE_TIMEOUT_MS + 10);
+            NanoClock.AdvanceMillis(INTER_SERVICE_TIMEOUT_MS);
+            NanoClock.AdvancedNanos(1);
             Conductor.DoWork();
 
             A.CallTo(() => MockClientErrorHandler(A<ConductorServiceTimeoutException>._)).MustHaveHappened();
@@ -464,6 +502,36 @@ namespace Adaptive.Aeron.Tests
                 var length = filler(buffer);
                 Conductor.DriverListenerAdapter().OnMessage(msgTypeId, buffer, 0, length);
             });
+        }
+    }
+
+    class TestEpochClock : IEpochClock
+    {
+        private int _time;
+        
+        public long Time()
+        {
+            return _time += 10;
+        }
+    }
+
+    class TestNanoClock : INanoClock
+    {
+        private long _time;
+
+        public void AdvanceMillis(long durationMs)
+        {
+            _time += (durationMs * 10000000);
+        }
+
+        public void AdvancedNanos(long durationNs)
+        {
+            _time += durationNs;
+        }
+
+        public long NanoTime()
+        {
+            return _time += 10000000;
         }
     }
 }

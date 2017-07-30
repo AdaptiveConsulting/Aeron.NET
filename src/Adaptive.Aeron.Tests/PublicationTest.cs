@@ -1,4 +1,20 @@
-﻿using Adaptive.Aeron.LogBuffer;
+﻿/*
+ * Copyright 2014 - 2017 Adaptive Financial Consulting Ltd
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+using Adaptive.Aeron.LogBuffer;
 using Adaptive.Agrona.Concurrent;
 using Adaptive.Agrona.Concurrent.Status;
 using FakeItEasy;
@@ -15,6 +31,7 @@ namespace Adaptive.Aeron.Tests
         private const int CorrelationID = 2000;
         private const int SendBufferCapacity = 1024;
         private const int PartionIndex = 0;
+        private const int MTU_LENGTH = 4096;
 
         private byte[] _sendBuffer;
         private UnsafeBuffer _atomicSendBuffer;
@@ -44,6 +61,7 @@ namespace Adaptive.Aeron.Tests
             A.CallTo(() => _logBuffers.MetaDataBuffer()).Returns(_logMetaDataBuffer);
 
             LogBufferDescriptor.InitialTermId(_logMetaDataBuffer, TermID1);
+            LogBufferDescriptor.MtuLength(_logMetaDataBuffer, MTU_LENGTH);
             LogBufferDescriptor.TimeOfLastStatusMessage(_logMetaDataBuffer, 0);
 
             for (var i = 0; i < LogBufferDescriptor.PARTITION_COUNT; i++)
