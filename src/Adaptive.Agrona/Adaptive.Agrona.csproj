@@ -89,6 +89,7 @@
     <Compile Include="Concurrent\Broadcast\CopyBroadcastReceiver.cs" />
     <Compile Include="Concurrent\Broadcast\RecordDescriptor.cs" />
     <Compile Include="Concurrent\BusySpinIdleStrategy.cs" />
+    <Compile Include="Concurrent\CompositeAgent.cs" />
     <Compile Include="Concurrent\DefaultThreadFactory.cs" />
     <Compile Include="Concurrent\Errors\DistinctErrorLog.cs" />
     <Compile Include="Concurrent\Errors\ErrorReader.cs" />

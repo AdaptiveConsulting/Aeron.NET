@@ -24,6 +24,17 @@ namespace Adaptive.Agrona.Concurrent
     public interface IAgent
     {
         /// <summary>
+        /// To be overridden by Agents that need to do resource init on start.
+        /// 
+        /// This method will be called by the agent thread. It will only be called once.
+        /// 
+        /// <b>Note:</b> Implementations of this method must be idempotent.
+        /// 
+        /// In Java this is optional to implement (default method) C# doesn't have the same construct for interfaces.
+        /// </summary>
+        void OnStart();
+        
+        /// <summary>
         /// An agent should implement this method to do its work.
         /// 
         /// The return value is used for implementing a backoff strategy that can be employed when no work is

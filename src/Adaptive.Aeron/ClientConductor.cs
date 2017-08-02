@@ -102,6 +102,11 @@ namespace Adaptive.Aeron
             _timeOfLastCheckResourcesNs = nowNs;
             _timeOfLastWorkNs = nowNs;
         }
+        
+        public void OnStart()
+        {
+            // Do Nothing
+        }
 
         public void OnClose()
         {
