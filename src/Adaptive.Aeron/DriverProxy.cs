@@ -35,7 +35,9 @@ namespace Adaptive.Aeron
         /// Maximum capacity of the write buffer </summary>
         public const int MSG_BUFFER_CAPACITY = 1024;
 
-        private readonly UnsafeBuffer _buffer = new UnsafeBuffer(BufferUtil.AllocateDirectAligned(MSG_BUFFER_CAPACITY,BitUtil.CACHE_LINE_LENGTH * 2));
+        // Keep a reference to _byteBuffer prevent it from being garbage collected.  It unpins the array used by _buffer in its finalizer.
+        private readonly ByteBuffer _byteBuffer = BufferUtil.AllocateDirectAligned(MSG_BUFFER_CAPACITY, BitUtil.CACHE_LINE_LENGTH * 2);
+        private readonly UnsafeBuffer _buffer;
         private readonly PublicationMessageFlyweight _publicationMessage = new PublicationMessageFlyweight();
         private readonly SubscriptionMessageFlyweight _subscriptionMessage = new SubscriptionMessageFlyweight();
         private readonly RemoveMessageFlyweight _removeMessage = new RemoveMessageFlyweight();
@@ -46,6 +48,8 @@ namespace Adaptive.Aeron
         public DriverProxy(IRingBuffer toDriverCommandBuffer)
         {
             if (toDriverCommandBuffer == null) throw new ArgumentNullException(nameof(toDriverCommandBuffer));
+
+            _buffer = new UnsafeBuffer(_byteBuffer);
 
             _toDriverCommandBuffer = toDriverCommandBuffer;
 
