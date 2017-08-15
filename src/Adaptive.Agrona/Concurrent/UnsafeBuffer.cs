@@ -143,6 +143,9 @@ namespace Adaptive.Agrona.Concurrent
 
             _pBuffer = (byte*) _pinnedGcHandle.AddrOfPinnedObject().ToPointer();
             Capacity = buffer.Length;
+
+            ByteArray = buffer;
+            ByteBuffer = null;
         }
 
 #if DEBUG
@@ -177,6 +180,9 @@ namespace Adaptive.Agrona.Concurrent
 
             _pBuffer = (byte*) _pinnedGcHandle.AddrOfPinnedObject().ToPointer() + offset;
             Capacity = length;
+
+            ByteArray = buffer;
+            ByteBuffer = null;
         }
 
 #if DEBUG
@@ -190,6 +196,9 @@ namespace Adaptive.Agrona.Concurrent
 
             _pBuffer = (byte*) buffer.BufferPointer.ToPointer();
             Capacity = buffer.Capacity;
+
+            ByteArray = buffer.ByteArray;
+            ByteBuffer = buffer.ByteBuffer;
         }
 
 #if DEBUG
@@ -203,6 +212,9 @@ namespace Adaptive.Agrona.Concurrent
 
             _pBuffer = (byte*) buffer.BufferPointer.ToPointer();
             Capacity = buffer.Capacity;
+
+            ByteArray = null;
+            ByteBuffer = buffer;
         }
 
 #if DEBUG
@@ -229,6 +241,9 @@ namespace Adaptive.Agrona.Concurrent
 
             _pBuffer = (byte*) buffer.BufferPointer.ToPointer() + offset;
             Capacity = length;
+
+            ByteArray = buffer.ByteArray;
+            ByteBuffer = buffer.ByteBuffer;
         }
 
 #if DEBUG
@@ -243,6 +258,9 @@ namespace Adaptive.Agrona.Concurrent
 
             _pBuffer = (byte*) pointer.ToPointer();
             Capacity = length;
+
+            ByteBuffer = null;
+            ByteArray = null;
         }
 
 #if DEBUG
@@ -257,6 +275,9 @@ namespace Adaptive.Agrona.Concurrent
 
             _pBuffer = (byte*) pointer.ToPointer() + offset;
             Capacity = length;
+
+            ByteBuffer = null;
+            ByteArray = null;
         }
 
 #if DEBUG
@@ -267,6 +288,10 @@ namespace Adaptive.Agrona.Concurrent
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get { return new IntPtr(_pBuffer); }
         }
+
+        public byte[] ByteArray { get; private set; }
+
+        public ByteBuffer ByteBuffer { get; private set; }
 
 #endif
 
@@ -1108,6 +1133,9 @@ namespace Adaptive.Agrona.Concurrent
 
             FreeGcHandle();
 
+            ByteArray = null;
+            ByteBuffer = null;
+            
             _disposed = true;
         }
 

@@ -70,6 +70,16 @@ namespace Adaptive.Agrona
         /// A pointer to the underlying buffer.
         /// </summary>
         IntPtr BufferPointer { get; }
+
+        /// <summary>
+        /// Get the underlying byte[] if one exists
+        /// </summary>
+        byte[] ByteArray { get; }
+
+        /// <summary>
+        /// Get the underlying <see cref="ByteBuffer"/> if one exists
+        /// </summary>
+        ByteBuffer ByteBuffer { get; }
         
         /// <summary>
         /// Get the capacity of the underlying buffer.
