@@ -2,7 +2,7 @@
 <package >
   <metadata>
     <id>Aeron.Client</id>
-    <version>1.3.0.0</version>
+    <version>1.3.1.0</version>
     <title>Aeron Client</title>
     <authors>Adaptive Financial Consulting Ltd.</authors>
     <owners>Adaptive Financial Consulting Ltd.</owners>
@@ -11,8 +11,8 @@
     <iconUrl>https://raw.githubusercontent.com/AdaptiveConsulting/Aeron.NET/master/images/adaptive.png</iconUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>Efficient reliable UDP unicast, UDP multicast, and IPC transport protocol.</description>
-    <releaseNotes>Initial Release.</releaseNotes>
-    <copyright>Copyright 2016</copyright>
+    <releaseNotes>Fix bug with driver communication. Add NoopLock &amp; CompositeAgent</releaseNotes>
+    <copyright>Copyright 2017</copyright>
     <tags>aeron client messaging networking transport udp ipc</tags>
   </metadata>
 </package>
