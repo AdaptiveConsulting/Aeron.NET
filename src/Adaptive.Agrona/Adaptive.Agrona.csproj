@@ -127,6 +127,7 @@
     <Compile Include="IMutableDirectBuffer.cs" />
     <Compile Include="IManagedResource.cs" />
     <Compile Include="IoUtil.cs" />
+    <Compile Include="Concurrent\NoOpLock.cs" />
     <Compile Include="Objects.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Concurrent\SystemEpochClock.cs" />
