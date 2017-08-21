@@ -288,12 +288,11 @@ namespace Adaptive.Agrona.Concurrent
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get { return new IntPtr(_pBuffer); }
         }
+#endif
 
         public byte[] ByteArray { get; private set; }
 
         public ByteBuffer ByteBuffer { get; private set; }
-
-#endif
 
 #if DEBUG
         public virtual int Capacity { get; private set; }
