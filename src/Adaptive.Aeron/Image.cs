@@ -39,11 +39,13 @@ namespace Adaptive.Aeron
     /// </summary>
     public class Image
     {
-        private readonly long _joiningPosition;
+        private readonly long _joinPosition;
+        private long _finalPosition;
         private readonly int _initialTermId;
 
         private readonly int _termLengthMask;
         private readonly int _positionBitsToShift;
+        private bool _isEos;
         private volatile bool _isClosed;
 
         private readonly IPosition _subscriberPosition;
@@ -75,7 +77,7 @@ namespace Adaptive.Aeron
             _errorHandler = errorHandler;
             SourceIdentity = sourceIdentity;
             CorrelationId = correlationId;
-            _joiningPosition = subscriberPosition.Get();
+            _joinPosition = subscriberPosition.Get();
             
             _termBuffers = logBuffers.TermBuffers();
 
@@ -104,7 +106,15 @@ namespace Adaptive.Aeron
         /// <returns> source identity of the sending publisher as an abstract concept appropriate for the media. </returns>
         public string SourceIdentity { get; }
 
-
+        /// <summary>
+        /// The length in bytes of the MTU (Maximum Transmission Unit) the Sender used for the datagram.
+        /// </summary>
+        /// <returns> length in bytes of the MTU (Maximum Transmission Unit) the Sender used for the datagram. </returns>
+        public int MtuLength()
+        {
+            return LogBufferDescriptor.MtuLength(_logBuffers.MetaDataBuffer());
+        }
+        
         /// <summary>
         /// The initial term at which the stream started for this session.
         /// </summary>
@@ -112,9 +122,9 @@ namespace Adaptive.Aeron
         public int InitialTermId => _initialTermId;
 
         /// <summary>
-        /// The correlationId for identification of the image with the media driver.
+        /// The originalRegistrationId for identification of the image with the media driver.
         /// </summary>
-        /// <returns> the correlationId for identification of the image with the media driver. </returns>
+        /// <returns> the originalRegistrationId for identification of the image with the media driver. </returns>
         public long CorrelationId { get; }
 
         /// <summary>
@@ -133,9 +143,9 @@ namespace Adaptive.Aeron
         /// Get the position the subscriber joined this stream at.
         /// </summary>
         /// <returns> the position the subscriber joined this stream at.</returns>
-        public long JoiningPosition()
+        public long JoinPosition()
         {
-            return _joiningPosition;
+            return _joinPosition;
         }
 
         /// <summary>
@@ -147,7 +157,7 @@ namespace Adaptive.Aeron
         {
             if (_isClosed)
             {
-                return 0;
+                return _finalPosition;
             }
 
             return _subscriberPosition.Get();
@@ -168,6 +178,20 @@ namespace Adaptive.Aeron
             ValidatePosition(newPosition);
 
             _subscriberPosition.SetOrdered(newPosition);
+        }
+
+        /// <summary>
+        /// Is the current consumed position at the end of the stream?
+        /// </summary>
+        /// <returns> true if at the end of the stream or false if not. </returns>
+        public virtual bool IsEndOfStream()
+        {
+            if (_isClosed)
+            {
+                return _isEos;
+            }
+
+            return _subscriberPosition.Get() >= LogBufferDescriptor.EndOfStreamPosition(_logBuffers.MetaDataBuffer());
         }
 
         ///// <summary>
@@ -226,7 +250,7 @@ namespace Adaptive.Aeron
         /// <returns> the number of fragments that have been consumed. </returns>
         /// <seealso cref="ControlledFragmentAssembler" />
         /// <seealso cref="ImageControlledFragmentAssembler" />
-        public int ControlledPoll(IControlledFragmentHandler fragmentHandler, int fragmentLimit)
+        public int ControlledPoll(ControlledFragmentHandler fragmentHandler, int fragmentLimit)
         {
             if (_isClosed)
             {
@@ -261,7 +285,7 @@ namespace Adaptive.Aeron
                     }
                     _header.Offset = frameOffset;
 
-                    var action = fragmentHandler.OnFragment(
+                    var action = fragmentHandler(
                         termBuffer,
                         frameOffset + DataHeaderFlyweight.HEADER_LENGTH,
                         length - DataHeaderFlyweight.HEADER_LENGTH,
@@ -317,7 +341,7 @@ namespace Adaptive.Aeron
         /// <returns> the resulting position after the scan terminates which is a complete message. </returns>
         /// <seealso cref="ControlledFragmentAssembler"/>
         /// <seealso cref="ImageControlledFragmentAssembler"/>
-        public virtual long ControlledPeek(long initialPosition, IControlledFragmentHandler fragmentHandler, long limitPosition)
+        public virtual long ControlledPeek(long initialPosition, ControlledFragmentHandler fragmentHandler, long limitPosition)
         {
             if (_isClosed)
             {
@@ -356,7 +380,7 @@ namespace Adaptive.Aeron
                     _header.Offset = frameOffset;
 
 
-                    var action = fragmentHandler.OnFragment(
+                    var action = fragmentHandler(
                         termBuffer,
                         frameOffset + DataHeaderFlyweight.HEADER_LENGTH,
                         length - DataHeaderFlyweight.HEADER_LENGTH,
@@ -396,7 +420,7 @@ namespace Adaptive.Aeron
         /// <param name="blockHandler">     to which block is delivered. </param>
         /// <param name="blockLengthLimit"> up to which a block may be in length. </param>
         /// <returns> the number of bytes that have been consumed. </returns>
-        public int BlockPoll(IBlockHandler blockHandler, int blockLengthLimit)
+        public int BlockPoll(BlockHandler blockHandler, int blockLengthLimit)
         {
             if (_isClosed)
             {
@@ -417,7 +441,7 @@ namespace Adaptive.Aeron
                 {
                     var termId = termBuffer.GetInt(termOffset + DataHeaderFlyweight.TERM_ID_FIELD_OFFSET);
 
-                    blockHandler.OnBlock(termBuffer, termOffset, bytesConsumed, SessionId, termId);
+                    blockHandler(termBuffer, termOffset, bytesConsumed, SessionId, termId);
                 }
                 catch (Exception t)
                 {
@@ -500,7 +524,10 @@ namespace Adaptive.Aeron
 
         internal IManagedResource ManagedResource()
         {
+            _finalPosition = _subscriberPosition.Volatile;
+            _isEos = _finalPosition >= LogBufferDescriptor.EndOfStreamPosition(_logBuffers.MetaDataBuffer());
             _isClosed = true;
+
             return new ImageManagedResource(this);
         }
 

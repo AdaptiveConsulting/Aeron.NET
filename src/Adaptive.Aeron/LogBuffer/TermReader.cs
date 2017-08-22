@@ -25,9 +25,8 @@ namespace Adaptive.Aeron.LogBuffer
 {
     /// <summary>
     /// A term buffer reader.
-    /// <para>
+    /// 
     /// <b>Note:</b> Reading from the term is thread safe, but each thread needs its own instance of this class.
-    /// </para>
     /// </summary>
     public class TermReader
     {

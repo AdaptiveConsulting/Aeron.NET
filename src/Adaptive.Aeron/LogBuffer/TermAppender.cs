@@ -47,7 +47,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// </summary>
         public const int FAILED = -2;
 
-        private readonly long tailAddressOffset;
+        private readonly long _tailAddressOffset;
         private readonly UnsafeBuffer _termBuffer;
         private readonly UnsafeBuffer _metaDataBuffer;
 
@@ -63,7 +63,7 @@ namespace Adaptive.Aeron.LogBuffer
             metaDataBuffer.BoundsCheck(tailCounterOffset, BitUtil.SIZE_OF_LONG);
             _termBuffer = termBuffer;
             _metaDataBuffer = metaDataBuffer;
-            tailAddressOffset = tailCounterOffset; // TODO divergence
+            _tailAddressOffset = tailCounterOffset; // TODO divergence
         }
 
         /// <summary>
@@ -73,17 +73,7 @@ namespace Adaptive.Aeron.LogBuffer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public long RawTailVolatile()
         {
-            return _metaDataBuffer.GetLongVolatile((int)tailAddressOffset);
-        }
-
-        /// <summary>
-        /// Set the value for the tail counter.
-        /// </summary>
-        /// <param name="termId"> for the tail counter </param>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void TailTermId(int termId)
-        {
-            _metaDataBuffer.PutLong((int)tailAddressOffset, ((long) termId) << 32);
+            return _metaDataBuffer.GetLongVolatile((int)_tailAddressOffset);
         }
         
         /// <summary>
@@ -108,12 +98,12 @@ namespace Adaptive.Aeron.LogBuffer
             long resultingOffset = termOffset + alignedLength;
             if (resultingOffset > termLength)
             {
-                resultingOffset = HandleEndOfLogCondition(termBuffer, termOffset, header, termLength, TermId(rawTail));
+                resultingOffset = HandleEndOfLogCondition(termBuffer, termOffset, header, termLength, LogBufferDescriptor.TermId(rawTail));
             }
             else
             {
                 int offset = (int) termOffset;
-                header.Write(termBuffer, offset, frameLength, TermId(rawTail));
+                header.Write(termBuffer, offset, frameLength, LogBufferDescriptor.TermId(rawTail));
                 bufferClaim.Wrap(termBuffer, offset, frameLength);
             }
 
@@ -148,12 +138,12 @@ namespace Adaptive.Aeron.LogBuffer
             long resultingOffset = termOffset + alignedLength;
             if (resultingOffset > termLength)
             {
-                resultingOffset = HandleEndOfLogCondition(termBuffer, termOffset, header, termLength, TermId(rawTail));
+                resultingOffset = HandleEndOfLogCondition(termBuffer, termOffset, header, termLength, LogBufferDescriptor.TermId(rawTail));
             }
             else
             {
                 int offset = (int) termOffset;
-                header.Write(termBuffer, offset, frameLength, TermId(rawTail));
+                header.Write(termBuffer, offset, frameLength, LogBufferDescriptor.TermId(rawTail));
                 termBuffer.PutBytes(offset + DataHeaderFlyweight.HEADER_LENGTH, srcBuffer, srcOffset, length);
 
                 if (null != reservedValueSupplier)
@@ -193,7 +183,7 @@ namespace Adaptive.Aeron.LogBuffer
             int requiredLength = (numMaxPayloads*(maxPayloadLength + DataHeaderFlyweight.HEADER_LENGTH)) +
                                  lastFrameLength;
             long rawTail = GetAndAddRawTail(requiredLength);
-            int termId = TermId(rawTail);
+            int termId = LogBufferDescriptor.TermId(rawTail);
             long termOffset = rawTail & 0xFFFFFFFFL;
 
             UnsafeBuffer termBuffer = _termBuffer;
@@ -242,42 +232,7 @@ namespace Adaptive.Aeron.LogBuffer
 
             return resultingOffset;
         }
-
-
-        /// <summary>
-        /// Pack the values for termOffset and termId into a long for returning on the stack.
-        /// </summary>
-        /// <param name="termId">     value to be packed. </param>
-        /// <param name="termOffset"> value to be packed. </param>
-        /// <returns> a long with both ints packed into it. </returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static long Pack(int termId, int termOffset)
-        {
-            return ((long) termId << 32) | (termOffset & 0xFFFFFFFFL);
-        }
-
-        /// <summary>
-        /// The termOffset as a result of the append
-        /// </summary>
-        /// <param name="result"> into which the termOffset value has been packed. </param>
-        /// <returns> the termOffset after the append </returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int TermOffset(long result)
-        {
-            return (int) result;
-        }
-
-        /// <summary>
-        /// The termId in which the append operation took place.
-        /// </summary>
-        /// <param name="result"> into which the termId value has been packed. </param>
-        /// <returns> the termId in which the append operation took place. </returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int TermId(long result)
-        {
-            return (int)((long)((ulong)result >> 32));
-        }
-
+       
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private long HandleEndOfLogCondition(UnsafeBuffer termBuffer, long termOffset, HeaderWriter header,
             int termLength, int termId)
@@ -298,13 +253,13 @@ namespace Adaptive.Aeron.LogBuffer
                 }
             }
 
-            return Pack(termId, resultingOffset);
+            return LogBufferDescriptor.PackTail(termId, resultingOffset);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private long GetAndAddRawTail(int alignedLength)
         {
-            return _metaDataBuffer.GetAndAddLong((int)tailAddressOffset, alignedLength);
+            return _metaDataBuffer.GetAndAddLong((int)_tailAddressOffset, alignedLength);
         }
     }
 }

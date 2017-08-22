@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Text;
 
 namespace Adaptive.Agrona.Concurrent.Status
 {
@@ -55,7 +56,7 @@ namespace Adaptive.Agrona.Concurrent.Status
     ///  +-+-------------------------------------------------------------+
     ///  |R|                      Label Length                           |
     ///  +-+-------------------------------------------------------------+
-    ///  |                  380 bytes of Label in UTF-8                 ...
+    ///  |                      380 bytes of Label                      ...
     /// ...                                                              |
     ///  +---------------------------------------------------------------+
     ///  |                   Repeats to end of buffer                   ...
@@ -90,29 +91,53 @@ namespace Adaptive.Agrona.Concurrent.Status
         }
 
         /// <summary>
-        /// Allocate a new counter with a given label.
+        /// Create a new counter buffer manager over two buffers.
         /// </summary>
-        /// <param name="label"> to describe the counter. </param>
+        /// <param name="metaDataBuffer"> containing the types, keys, and labels for the counters. </param>
+        /// <param name="valuesBuffer">   containing the values of the counters themselves. </param>
+        /// <param name="labelCharset">   for the label encoding. </param>
+        public CountersManager(IAtomicBuffer metaDataBuffer, IAtomicBuffer valuesBuffer, Encoding labelCharset) : base(metaDataBuffer, valuesBuffer, labelCharset)
+        {
+            valuesBuffer.VerifyAlignment();
+
+            if (metaDataBuffer.Capacity < (valuesBuffer.Capacity * 2))
+            {
+                throw new ArgumentException("Meta data buffer not sufficiently large");
+            }
+        }
+
+        /// <summary>
+        /// Allocate a new counter with a given label and type.
+        /// </summary>
+        /// <param name="label">  to describe the counter. </param>
+        /// <param name="typeId"> for the type of counter. </param>
         /// <returns> the id allocated for the counter. </returns>
-        public int Allocate(string label)
+        public int Allocate(string label, int typeId = DEFAULT_TYPE_ID)
         {
             int counterId = NextCounterId();
             if ((CounterOffset(counterId) + COUNTER_LENGTH) > ValuesBuffer.Capacity)
             {
-                throw new ArgumentException("Unable to allocated counter, values buffer is full");
+                throw new InvalidOperationException("Unable to allocated counter, values buffer is full");
             }
 
             int recordOffset = MetaDataOffset(counterId);
             if ((recordOffset + METADATA_LENGTH) > MetaDataBuffer.Capacity)
             {
-                throw new ArgumentException("Unable to allocate counter, labels buffer is full");
+                throw new InvalidOperationException("Unable to allocate counter, labels buffer is full");
             }
-
-            MetaDataBuffer.PutInt(recordOffset + TYPE_ID_OFFSET, DEFAULT_TYPE_ID);
-            MetaDataBuffer.PutStringUtf8(recordOffset + LABEL_OFFSET, label, MAX_LABEL_LENGTH);
-
-            MetaDataBuffer.PutIntOrdered(recordOffset, RECORD_ALLOCATED);
-
+            
+            try
+            {
+                MetaDataBuffer.PutInt(recordOffset + TYPE_ID_OFFSET, typeId);
+                PutLabel(recordOffset, label);
+                MetaDataBuffer.PutIntOrdered(recordOffset, RECORD_ALLOCATED);
+            }
+            catch (Exception)
+            {
+                _freeList.Enqueue(counterId);
+                throw;
+            }
+            
             return counterId;
         }
 
@@ -131,26 +156,93 @@ namespace Adaptive.Agrona.Concurrent.Status
             var counterId = NextCounterId();
             if (CounterOffset(counterId) + COUNTER_LENGTH > ValuesBuffer.Capacity)
             {
-                throw new ArgumentException("Unable to allocated counter, values buffer is full");
+                throw new InvalidOperationException("Unable to allocated counter, values buffer is full");
             }
 
             var recordOffset = MetaDataOffset(counterId);
             if (recordOffset + METADATA_LENGTH > MetaDataBuffer.Capacity)
             {
-                throw new ArgumentException("Unable to allocate counter, labels buffer is full");
+                throw new InvalidOperationException("Unable to allocate counter, labels buffer is full");
             }
 
-            MetaDataBuffer.PutInt(recordOffset + TYPE_ID_OFFSET, typeId);
-            keyFunc(new UnsafeBuffer(MetaDataBuffer, recordOffset + KEY_OFFSET, MAX_KEY_LENGTH));
-            MetaDataBuffer.PutStringUtf8(recordOffset + LABEL_OFFSET, label, MAX_LABEL_LENGTH);
 
-            MetaDataBuffer.PutIntOrdered(recordOffset, RECORD_ALLOCATED);
+            try
+            {
+                MetaDataBuffer.PutInt(recordOffset + TYPE_ID_OFFSET, typeId);
+                keyFunc(new UnsafeBuffer(MetaDataBuffer, recordOffset + KEY_OFFSET, MAX_KEY_LENGTH));
+                PutLabel(recordOffset, label);
 
+                MetaDataBuffer.PutIntOrdered(recordOffset, RECORD_ALLOCATED);
+            }
+            catch (Exception)
+            {
+                _freeList.Enqueue(counterId);
+                throw;
+            }
+            
             return counterId;
         }
 
         /// <summary>
-        /// Allocate a counter record and wrap it with a new <seealso cref="AtomicCounter"/> for use.
+        /// Allocate a counter with the minimum of allocation by allowing the label an key to be provided and copied.
+        /// <para>
+        /// If the keyBuffer is null then a copy of the key is not attempted.
+        ///    
+        /// </para>
+        /// </summary>
+        /// <param name="typeId">      for the counter. </param>
+        /// <param name="keyBuffer">   containing the optional key for the counter. </param>
+        /// <param name="keyOffset">   within the keyBuffer at which the key begins. </param>
+        /// <param name="keyLength">   of the key in the keyBuffer. </param>
+        /// <param name="labelBuffer"> containing the mandatory label for the counter. </param>
+        /// <param name="labelOffset"> within the labelBuffer at which the label begins. </param>
+        /// <param name="labelLength"> of the label in the labelBuffer. </param>
+        /// <returns> the id allocated for the counter. </returns>
+        public int Allocate(int typeId, IDirectBuffer keyBuffer, int keyOffset, int keyLength, IDirectBuffer labelBuffer, int labelOffset, int labelLength)
+        {
+            int counterId = NextCounterId();
+            if ((CounterOffset(counterId) + COUNTER_LENGTH) > ValuesBuffer.Capacity)
+            {
+                throw new InvalidOperationException("Unable to allocated counter, values buffer is full");
+            }
+
+            int recordOffset = MetaDataOffset(counterId);
+            if ((recordOffset + METADATA_LENGTH) > MetaDataBuffer.Capacity)
+            {
+                throw new InvalidOperationException("Unable to allocate counter, labels buffer is full");
+            }
+
+            try
+            {
+                MetaDataBuffer.PutInt(recordOffset + TYPE_ID_OFFSET, typeId);
+
+                int length;
+
+                if (null != keyBuffer)
+                {
+                    length = Math.Min(keyLength, MAX_KEY_LENGTH);
+                    MetaDataBuffer.PutBytes(recordOffset + KEY_OFFSET, keyBuffer, keyOffset, length);
+                }
+
+                length = Math.Min(labelLength, MAX_LABEL_LENGTH);
+                MetaDataBuffer.PutInt(recordOffset + LABEL_OFFSET, length);
+                MetaDataBuffer.PutBytes(recordOffset + LABEL_OFFSET + BitUtil.SIZE_OF_INT, labelBuffer, labelOffset, length);
+
+                MetaDataBuffer.PutIntOrdered(recordOffset, RECORD_ALLOCATED);
+            }
+            catch (Exception)
+            {
+                _freeList.Enqueue(counterId);
+                throw;
+            }
+
+            return counterId;
+        }
+
+
+        /// <summary>
+        /// Allocate a counter record and wrap it with a new <seealso cref="AtomicCounter"/> for use with a default type
+        /// of <see cref="DEFAULT_TYPE_ID"/>
         /// </summary>
         /// <param name="label"> to describe the counter. </param>
         /// <returns> a newly allocated <seealso cref="AtomicCounter"/> </returns>
@@ -162,15 +254,53 @@ namespace Adaptive.Agrona.Concurrent.Status
         /// <summary>
         /// Allocate a counter record and wrap it with a new <seealso cref="AtomicCounter"/> for use.
         /// </summary>
+        /// <param name="label">  to describe the counter. </param>
+        /// <param name="typeId"> for the type of counter. </param>
+        /// <returns> a newly allocated <seealso cref="AtomicCounter"/> </returns>
+        public AtomicCounter NewCounter(string label, int typeId)
+        {
+            return new AtomicCounter(ValuesBuffer, Allocate(label, typeId), this);
+        }
+        
+        /// <summary>
+        /// Allocate a counter record and wrap it with a new <seealso cref="AtomicCounter"/> for use.
+        /// </summary>
         /// <param name="label">   to describe the counter. </param>
         /// <param name="typeId">  for the type of counter. </param>
-        /// <param name="keyFunc"> for setting the key value for the counter.
-        /// </param>
+        /// <param name="keyFunc"> for setting the key value for the counter.</param>
         /// <returns> a newly allocated <seealso cref="AtomicCounter"/> </returns>
         public AtomicCounter NewCounter(string label, int typeId, Action<IMutableDirectBuffer> keyFunc)
         {
             return new AtomicCounter(ValuesBuffer, Allocate(label, typeId, keyFunc), this);
         }
+
+        /// <summary>
+        /// Allocate a counter record and wrap it with a new <seealso cref="AtomicCounter"/> for use.
+        /// <para>
+        /// If the keyBuffer is null then a copy of the key is not attempted.
+        /// 
+        /// </para>
+        /// </summary>
+        /// <param name="typeId">      for the counter. </param>
+        /// <param name="keyBuffer">   containing the optional key for the counter. </param>
+        /// <param name="keyOffset">   within the keyBuffer at which the key begins. </param>
+        /// <param name="keyLength">   of the key in the keyBuffer. </param>
+        /// <param name="labelBuffer"> containing the mandatory label for the counter. </param>
+        /// <param name="labelOffset"> within the labelBuffer at which the label begins. </param>
+        /// <param name="labelLength"> of the label in the labelBuffer. </param>
+        /// <returns> the id allocated for the counter. </returns>
+        public virtual AtomicCounter NewCounter(
+            int typeId, 
+            IDirectBuffer keyBuffer, 
+            int keyOffset, 
+            int keyLength, 
+            IDirectBuffer labelBuffer, 
+            int labelOffset, 
+            int labelLength)
+        {
+            return new AtomicCounter(ValuesBuffer, Allocate(typeId, keyBuffer, keyOffset, keyLength, labelBuffer, labelOffset, labelLength), this);
+        }
+
 
         /// <summary>
         /// Free the counter identified by counterId.
@@ -203,6 +333,29 @@ namespace Adaptive.Agrona.Concurrent.Status
             ValuesBuffer.PutLongOrdered(CounterOffset(counterId), 0L);
 
             return counterId;
+        }
+
+        private void PutLabel(int recordOffset, string label)
+        {
+            if (Encoding.ASCII.Equals(LabelCharset))
+            {
+                MetaDataBuffer.PutStringAscii(recordOffset + LABEL_OFFSET, label.Length > MAX_LABEL_LENGTH ? label.Substring(0, MAX_LABEL_LENGTH) : label);
+            }
+            else
+            {
+                byte[] bytes = LabelCharset.GetBytes(label);
+
+                if (bytes.Length > MAX_LABEL_LENGTH)
+                {
+                    MetaDataBuffer.PutInt(recordOffset + LABEL_OFFSET, MAX_LABEL_LENGTH);
+                    MetaDataBuffer.PutBytes(recordOffset + LABEL_OFFSET + BitUtil.SIZE_OF_INT, bytes, 0, MAX_LABEL_LENGTH);
+                }
+                else
+                {
+                    MetaDataBuffer.PutInt(recordOffset + LABEL_OFFSET, bytes.Length);
+                    MetaDataBuffer.PutBytes(recordOffset + LABEL_OFFSET + BitUtil.SIZE_OF_INT, bytes);
+                }
+            }
         }
     }
 }

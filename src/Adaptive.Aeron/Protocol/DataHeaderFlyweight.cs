@@ -16,6 +16,8 @@
 
 using System;
 using System.Text;
+using Adaptive.Aeron.LogBuffer;
+using Adaptive.Agrona;
 using Adaptive.Agrona.Concurrent;
 
 namespace Adaptive.Aeron.Protocol
@@ -46,6 +48,16 @@ namespace Adaptive.Aeron.Protocol
         /// Begin and End Flags
         /// </summary>
         public static readonly short BEGIN_AND_END_FLAGS = BEGIN_FLAG | END_FLAG;
+
+        /// <summary>
+        /// End of Stream Flag
+        /// </summary>
+        public const short EOS_FLAG = 0x20;
+
+        /// <summary>
+        /// Begin, End, and End of Stream Flags
+        /// </summary>
+        public static readonly short BEGIN_END_AND_EOS_FLAGS = BEGIN_FLAG | END_FLAG | EOS_FLAG;
 
         public const long DEFAULT_RESERVE_VALUE = 0L;
 
@@ -187,7 +199,7 @@ namespace Adaptive.Aeron.Protocol
         /// <returns> byte array containing the header </returns>
 	    public static UnsafeBuffer CreateDefaultHeader(int sessionId, int streamId, int termId)
         {
-            var buffer = new UnsafeBuffer(new byte[HEADER_LENGTH]);
+            var buffer = new UnsafeBuffer(BufferUtil.AllocateDirectAligned(HEADER_LENGTH, FrameDescriptor.FRAME_ALIGNMENT));
 
             buffer.PutByte(VERSION_FIELD_OFFSET, CURRENT_VERSION);
             buffer.PutByte(FLAGS_FIELD_OFFSET, (byte)BEGIN_AND_END_FLAGS);

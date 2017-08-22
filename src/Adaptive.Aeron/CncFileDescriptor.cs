@@ -34,9 +34,9 @@ namespace Adaptive.Aeron
     ///  +----------------------------+
     ///  |      to-clients Buffer     |
     ///  +----------------------------+
-    ///  |   Counter Metadata Buffer  |
+    ///  |  Counters Metadata Buffer  |
     ///  +----------------------------+
-    ///  |    Counter Values Buffer   |
+    ///  |   Counters Values Buffer   |
     ///  +----------------------------+
     ///  |          Error Log         |
     ///  +----------------------------+
@@ -44,59 +44,55 @@ namespace Adaptive.Aeron
     /// 
     /// Meta Data Layout (CnC Version 6)
     /// <pre>
-    ///  +----------------------------+
-    ///  |   to-driver buffer length  |
-    ///  +----------------------------+
-    ///  |  to-clients buffer length  |
-    ///  +----------------------------+
-    ///  |   metadata buffer length   |
-    ///  +----------------------------+
-    ///  |    values buffer length    |
-    ///  +----------------------------+
-    ///  |   Client Liveness Timeout  |
-    ///  |                            |
-    ///  +----------------------------+
-    ///  |      Error Log length      |
-    ///  +----------------------------+
+    ///  0                   1                   2                   3
+    ///  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+    /// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    /// |                      Aeron CnC Version                        |
+    /// +---------------------------------------------------------------+
+    /// |                   to-driver buffer length                     |
+    /// +---------------------------------------------------------------+
+    /// |                  to-clients buffer length                     |
+    /// +---------------------------------------------------------------+
+    /// |               Counters Metadata buffer length                 |
+    /// +---------------------------------------------------------------+
+    /// |                Counters Values buffer length                  |
+    /// +---------------------------------------------------------------+
+    /// |                   Error Log buffer length                     |
+    /// +---------------------------------------------------------------+
+    /// |                   Client Liveness Timeout                     |
+    /// |                                                               |
+    /// +---------------------------------------------------------------+
     /// </pre>
     /// </summary>
     public class CncFileDescriptor
     {
         public const string CNC_FILE = "cnc.dat";
 
-        public const int CNC_VERSION = 6;
+        public const int CNC_VERSION = 7;
 
         public static readonly int CNC_VERSION_FIELD_OFFSET;
-        public static readonly int CNC_METADATA_OFFSET;
-
-        /* Meta Data Offsets (offsets within the meta data section) */
-
         public static readonly int TO_DRIVER_BUFFER_LENGTH_FIELD_OFFSET;
         public static readonly int TO_CLIENTS_BUFFER_LENGTH_FIELD_OFFSET;
         public static readonly int COUNTERS_METADATA_BUFFER_LENGTH_FIELD_OFFSET;
         public static readonly int COUNTERS_VALUES_BUFFER_LENGTH_FIELD_OFFSET;
         public static readonly int CLIENT_LIVENESS_TIMEOUT_FIELD_OFFSET;
         public static readonly int ERROR_LOG_BUFFER_LENGTH_FIELD_OFFSET;
+        public static readonly int META_DATA_LENGTH;
+        public static readonly int END_OF_METADATA_OFFSET;
 
         static CncFileDescriptor()
         {
             CNC_VERSION_FIELD_OFFSET = 0;
-            CNC_METADATA_OFFSET = CNC_VERSION_FIELD_OFFSET + BitUtil.SIZE_OF_INT;
-
-            TO_DRIVER_BUFFER_LENGTH_FIELD_OFFSET = 0;
+            TO_DRIVER_BUFFER_LENGTH_FIELD_OFFSET = CNC_VERSION_FIELD_OFFSET + BitUtil.SIZE_OF_INT;
             TO_CLIENTS_BUFFER_LENGTH_FIELD_OFFSET = TO_DRIVER_BUFFER_LENGTH_FIELD_OFFSET + BitUtil.SIZE_OF_INT;
             COUNTERS_METADATA_BUFFER_LENGTH_FIELD_OFFSET = TO_CLIENTS_BUFFER_LENGTH_FIELD_OFFSET + BitUtil.SIZE_OF_INT;
             COUNTERS_VALUES_BUFFER_LENGTH_FIELD_OFFSET = COUNTERS_METADATA_BUFFER_LENGTH_FIELD_OFFSET + BitUtil.SIZE_OF_INT;
-            CLIENT_LIVENESS_TIMEOUT_FIELD_OFFSET = COUNTERS_VALUES_BUFFER_LENGTH_FIELD_OFFSET + BitUtil.SIZE_OF_INT;
-            ERROR_LOG_BUFFER_LENGTH_FIELD_OFFSET = CLIENT_LIVENESS_TIMEOUT_FIELD_OFFSET + BitUtil.SIZE_OF_LONG;
-            META_DATA_LENGTH = ERROR_LOG_BUFFER_LENGTH_FIELD_OFFSET + BitUtil.SIZE_OF_INT;
-            END_OF_METADATA_OFFSET = BitUtil.Align(BitUtil.SIZE_OF_INT + META_DATA_LENGTH, (BitUtil.CACHE_LINE_LENGTH*2));
+            ERROR_LOG_BUFFER_LENGTH_FIELD_OFFSET = COUNTERS_VALUES_BUFFER_LENGTH_FIELD_OFFSET + BitUtil.SIZE_OF_INT;
+            CLIENT_LIVENESS_TIMEOUT_FIELD_OFFSET = ERROR_LOG_BUFFER_LENGTH_FIELD_OFFSET + BitUtil.SIZE_OF_INT;
+            META_DATA_LENGTH = CLIENT_LIVENESS_TIMEOUT_FIELD_OFFSET + BitUtil.SIZE_OF_LONG;
+            END_OF_METADATA_OFFSET = BitUtil.Align(META_DATA_LENGTH, BitUtil.CACHE_LINE_LENGTH * 2);
         }
-
-        public static readonly int META_DATA_LENGTH;
-
-        public static readonly int END_OF_METADATA_OFFSET;
-
+        
         /// <summary>
         /// Compute the length of the cnc file and return it.
         /// </summary>
@@ -114,32 +110,32 @@ namespace Adaptive.Aeron
 
         public static int ToDriverBufferLengthOffset(int baseOffset)
         {
-            return baseOffset + CNC_METADATA_OFFSET + TO_DRIVER_BUFFER_LENGTH_FIELD_OFFSET;
+            return baseOffset + TO_DRIVER_BUFFER_LENGTH_FIELD_OFFSET;
         }
 
         public static int ToClientsBufferLengthOffset(int baseOffset)
         {
-            return baseOffset + CNC_METADATA_OFFSET + TO_CLIENTS_BUFFER_LENGTH_FIELD_OFFSET;
+            return baseOffset + TO_CLIENTS_BUFFER_LENGTH_FIELD_OFFSET;
         }
 
         public static int CountersMetaDataBufferLengthOffset(int baseOffset)
         {
-            return baseOffset + CNC_METADATA_OFFSET + COUNTERS_METADATA_BUFFER_LENGTH_FIELD_OFFSET;
+            return baseOffset + COUNTERS_METADATA_BUFFER_LENGTH_FIELD_OFFSET;
         }
 
         public static int CountersValuesBufferLengthOffset(int baseOffset)
         {
-            return baseOffset + CNC_METADATA_OFFSET + COUNTERS_VALUES_BUFFER_LENGTH_FIELD_OFFSET;
+            return baseOffset + COUNTERS_VALUES_BUFFER_LENGTH_FIELD_OFFSET;
         }
 
         public static int ClientLivenessTimeoutOffset(int baseOffset)
         {
-            return baseOffset + CNC_METADATA_OFFSET + CLIENT_LIVENESS_TIMEOUT_FIELD_OFFSET;
+            return baseOffset + CLIENT_LIVENESS_TIMEOUT_FIELD_OFFSET;
         }
 
         public static int ErrorLogBufferLengthOffset(int baseOffset)
         {
-            return baseOffset + CNC_METADATA_OFFSET + ERROR_LOG_BUFFER_LENGTH_FIELD_OFFSET;
+            return baseOffset + ERROR_LOG_BUFFER_LENGTH_FIELD_OFFSET;
         }
 
         public static void FillMetaData(UnsafeBuffer cncMetaDataBuffer, int toDriverBufferLength, int toClientsBufferLength, int counterMetaDataBufferLength, int counterValuesBufferLength, long clientLivenessTimeout, int errorLogBufferLength)
@@ -148,14 +144,18 @@ namespace Adaptive.Aeron
             cncMetaDataBuffer.PutInt(ToClientsBufferLengthOffset(0), toClientsBufferLength);
             cncMetaDataBuffer.PutInt(CountersMetaDataBufferLengthOffset(0), counterMetaDataBufferLength);
             cncMetaDataBuffer.PutInt(CountersValuesBufferLengthOffset(0), counterValuesBufferLength);
-            cncMetaDataBuffer.PutLong(ClientLivenessTimeoutOffset(0), clientLivenessTimeout);
             cncMetaDataBuffer.PutInt(ErrorLogBufferLengthOffset(0), errorLogBufferLength);
+            cncMetaDataBuffer.PutLong(ClientLivenessTimeoutOffset(0), clientLivenessTimeout);
+        }
+
+        public static void SignalCncReady(UnsafeBuffer cncMetaDataBuffer)
+        {
             cncMetaDataBuffer.PutIntVolatile(CncVersionOffset(0), CNC_VERSION);
         }
 
         public static UnsafeBuffer CreateMetaDataBuffer(MappedByteBuffer buffer)
         {
-            return new UnsafeBuffer(buffer.Pointer, 0, BitUtil.SIZE_OF_INT + META_DATA_LENGTH);
+            return new UnsafeBuffer(buffer.Pointer, 0, META_DATA_LENGTH);
         }
 
         public static UnsafeBuffer CreateToDriverBuffer(MappedByteBuffer buffer, IDirectBuffer metaDataBuffer)

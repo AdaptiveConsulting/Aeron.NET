@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 
-using Adaptive.Agrona;
-
 namespace Adaptive.Aeron.LogBuffer
 {
     public enum ControlledFragmentHandlerAction

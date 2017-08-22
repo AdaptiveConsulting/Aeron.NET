@@ -56,6 +56,11 @@ namespace Adaptive.Aeron.LogBuffer
         /// </summary>
         public const int TERM_MIN_LENGTH = 64 * 1024;
 
+        /// <summary>
+        /// Maximum buffer length for a log term
+        /// </summary>
+        public const int TERM_MAX_LENGTH = 1024 * 1024 * 1024;
+
         static LogBufferDescriptor()
         {
             var offset = 0;
@@ -66,8 +71,9 @@ namespace Adaptive.Aeron.LogBuffer
 
             offset = (BitUtil.CACHE_LINE_LENGTH * 2);
             LOG_TIME_OF_LAST_SM_OFFSET = offset;
+            LOG_END_OF_STREAM_POSITION_OFFSET = LOG_TIME_OF_LAST_SM_OFFSET + BitUtil.SIZE_OF_LONG;
 
-            offset += (BitUtil.CACHE_LINE_LENGTH*2);
+            offset += (BitUtil.CACHE_LINE_LENGTH * 2);
             LOG_CORRELATION_ID_OFFSET = offset;
             LOG_INITIAL_TERM_ID_OFFSET = LOG_CORRELATION_ID_OFFSET + BitUtil.SIZE_OF_LONG;
             LOG_DEFAULT_FRAME_HEADER_LENGTH_OFFSET = LOG_INITIAL_TERM_ID_OFFSET + BitUtil.SIZE_OF_INT;
@@ -99,6 +105,11 @@ namespace Adaptive.Aeron.LogBuffer
         public static readonly int LOG_TIME_OF_LAST_SM_OFFSET;
 
         /// <summary>
+        /// Offset within the log meta data where the position of the End of Stream is stored.
+        /// </summary>
+        public static readonly int LOG_END_OF_STREAM_POSITION_OFFSET;
+
+        /// <summary>
         /// Offset within the log meta data where the active term id is stored.
         /// </summary>
         public static readonly int LOG_INITIAL_TERM_ID_OFFSET;
@@ -126,7 +137,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// <summary>
         ///  Maximum length of a frame header
         /// </summary>
-        public static readonly int LOG_DEFAULT_FRAME_HEADER_MAX_LENGTH = BitUtil.CACHE_LINE_LENGTH*2;
+        public static readonly int LOG_DEFAULT_FRAME_HEADER_MAX_LENGTH = BitUtil.CACHE_LINE_LENGTH * 2;
 
 
         /// <summary>
@@ -154,6 +165,9 @@ namespace Adaptive.Aeron.LogBuffer
         /// ...                                                              |
         ///  +---------------------------------------------------------------+
         ///  |                 Time of Last Status Message                   |
+        ///  |                                                               |
+        ///  +---------------------------------------------------------------+
+        ///  |                    End of Stream Position                     |
         ///  |                                                               |
         ///  +---------------------------------------------------------------+
         ///  |                      Cache Line Padding                      ...
@@ -188,15 +202,19 @@ namespace Adaptive.Aeron.LogBuffer
         {
             if (termLength < TERM_MIN_LENGTH)
             {
-                string s = $"Term length less than min length of {TERM_MIN_LENGTH:D}, length={termLength:D}";
-                ThrowHelper.ThrowInvalidOperationException(s);
-                return;
+                ThrowHelper.ThrowInvalidOperationException(
+                    $"Term length less than min length of {TERM_MIN_LENGTH:D}, length={termLength:D}");
             }
 
-            if ((termLength & (FrameDescriptor.FRAME_ALIGNMENT - 1)) != 0)
+            if (termLength > TERM_MAX_LENGTH)
             {
-                string s = $"Term length not a multiple of {FrameDescriptor.FRAME_ALIGNMENT:D}, length={termLength:D}";
-                ThrowHelper.ThrowInvalidOperationException(s);
+                ThrowHelper.ThrowInvalidOperationException(
+                    $"Term length more than max length of {TERM_MAX_LENGTH:D}: length = {termLength:D}");
+            }
+
+            if (!BitUtil.IsPowerOfTwo(termLength))
+            {
+                ThrowHelper.ThrowInvalidOperationException("Term length not a power of 2: length=" + termLength);
             }
         }
 
@@ -290,6 +308,27 @@ namespace Adaptive.Aeron.LogBuffer
         }
 
         /// <summary>
+        /// Get the value of the end of stream position.
+        /// </summary>
+        /// <param name="logMetaDataBuffer"> containing the meta data. </param>
+        /// <returns> the value of end of stream position </returns>
+        public static long EndOfStreamPosition(UnsafeBuffer logMetaDataBuffer)
+        {
+            return logMetaDataBuffer.GetLongVolatile(LOG_END_OF_STREAM_POSITION_OFFSET);
+        }
+
+        /// <summary>
+        /// Set the value of the end of stream position.
+        /// </summary>
+        /// <param name="logMetaDataBuffer"> containing the meta data. </param>
+        /// <param name="position">          value of the end of stream position </param>
+        public static void EndOfStreamPosition(UnsafeBuffer logMetaDataBuffer, long position)
+        {
+            logMetaDataBuffer.PutLongOrdered(LOG_END_OF_STREAM_POSITION_OFFSET, position);
+        }
+
+
+        /// <summary>
         /// Get the value of the active partition index used by the producer of this log. Consumers may have a different active
         /// index if they are running behind. The read is done with volatile semantics.
         /// </summary>
@@ -321,7 +360,7 @@ namespace Adaptive.Aeron.LogBuffer
         {
             logMetaDataBuffer.PutInt(LOG_ACTIVE_PARTITION_INDEX_OFFSET, activePartitionIndex);
         }
-        
+
         /// <summary>
         /// Rotate to the next partition in sequence for the term id.
         /// </summary>
@@ -330,7 +369,7 @@ namespace Adaptive.Aeron.LogBuffer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int NextPartitionIndex(int currentIndex)
         {
-            return (currentIndex + 1)%PARTITION_COUNT;
+            return (currentIndex + 1) % PARTITION_COUNT;
         }
 
         /// <summary>
@@ -342,7 +381,7 @@ namespace Adaptive.Aeron.LogBuffer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int IndexByTerm(int initialTermId, int activeTermId)
         {
-            return (activeTermId - initialTermId)%PARTITION_COUNT;
+            return (activeTermId - initialTermId) % PARTITION_COUNT;
         }
 
         /// <summary>
@@ -353,7 +392,7 @@ namespace Adaptive.Aeron.LogBuffer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int IndexByTermCount(long termCount)
         {
-            return (int)(termCount%PARTITION_COUNT);
+            return (int) (termCount % PARTITION_COUNT);
         }
 
         /// <summary>
@@ -365,7 +404,7 @@ namespace Adaptive.Aeron.LogBuffer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int IndexByPosition(long position, int positionBitsToShift)
         {
-            return (int) (((long) ((ulong) position >> positionBitsToShift))%PARTITION_COUNT);
+            return (int) (((long) ((ulong) position >> positionBitsToShift)) % PARTITION_COUNT);
         }
 
         /// <summary>
@@ -434,7 +473,7 @@ namespace Adaptive.Aeron.LogBuffer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static long ComputeLogLength(int termLength)
         {
-            return (termLength * PARTITION_COUNT) + LOG_META_DATA_LENGTH;
+            return ((long)termLength * PARTITION_COUNT) + LOG_META_DATA_LENGTH;
         }
 
         /// <summary>
@@ -445,7 +484,7 @@ namespace Adaptive.Aeron.LogBuffer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int ComputeTermLength(long logLength)
         {
-            return (int)((logLength - LOG_META_DATA_LENGTH) / PARTITION_COUNT);
+            return (int) ((logLength - LOG_META_DATA_LENGTH) / PARTITION_COUNT);
         }
 
         /// <summary>
@@ -460,12 +499,13 @@ namespace Adaptive.Aeron.LogBuffer
             if (defaultHeader.Capacity != DataHeaderFlyweight.HEADER_LENGTH)
             {
                 ThrowHelper.ThrowArgumentException(
-                    $"Default header of {defaultHeader.Capacity:D} not equal to {DataHeaderFlyweight.HEADER_LENGTH:D}");
+                    $"Default header capacity not equal to HEADER_LENGTH: length={defaultHeader.Capacity:D}");
                 return;
             }
 
             logMetaDataBuffer.PutInt(LOG_DEFAULT_FRAME_HEADER_LENGTH_OFFSET, DataHeaderFlyweight.HEADER_LENGTH);
-            logMetaDataBuffer.PutBytes(LOG_DEFAULT_FRAME_HEADER_OFFSET, defaultHeader, 0, DataHeaderFlyweight.HEADER_LENGTH);
+            logMetaDataBuffer.PutBytes(LOG_DEFAULT_FRAME_HEADER_OFFSET, defaultHeader, 0,
+                DataHeaderFlyweight.HEADER_LENGTH);
         }
 
         /// <summary>
@@ -476,7 +516,8 @@ namespace Adaptive.Aeron.LogBuffer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static UnsafeBuffer DefaultFrameHeader(UnsafeBuffer logMetaDataBuffer)
         {
-            return new UnsafeBuffer(logMetaDataBuffer, LOG_DEFAULT_FRAME_HEADER_OFFSET, DataHeaderFlyweight.HEADER_LENGTH);
+            return new UnsafeBuffer(logMetaDataBuffer, LOG_DEFAULT_FRAME_HEADER_OFFSET,
+                DataHeaderFlyweight.HEADER_LENGTH);
         }
 
         /// <summary>
@@ -488,16 +529,16 @@ namespace Adaptive.Aeron.LogBuffer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void ApplyDefaultHeader(UnsafeBuffer logMetaDataBuffer, UnsafeBuffer termBuffer, int termOffset)
         {
-            termBuffer.PutBytes(termOffset, logMetaDataBuffer, LOG_DEFAULT_FRAME_HEADER_OFFSET, DataHeaderFlyweight.HEADER_LENGTH);
+            termBuffer.PutBytes(termOffset, logMetaDataBuffer, LOG_DEFAULT_FRAME_HEADER_OFFSET,
+                DataHeaderFlyweight.HEADER_LENGTH);
         }
 
         /// <summary>
         /// Rotate the log and update the default headers for the new term.
         /// </summary>
-        /// <param name="logPartitions">     for the partitions of the log. </param>
         /// <param name="logMetaDataBuffer"> for the meta data. </param>
-        /// <param name="activeIndex">       current active index. </param>
-        /// <param name="newTermId">         to be used in the default headers. </param>
+        /// <param name="activePartitionIndex">       current active index. </param>
+        /// <param name="termId">         to be used in the default headers. </param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void RotateLog(UnsafeBuffer logMetaDataBuffer, int activePartitionIndex, int termId)
         {
@@ -509,12 +550,13 @@ namespace Adaptive.Aeron.LogBuffer
         /// <summary>
         /// Set the initial value for the termId in the upper bits of the tail counter.
         /// </summary>
-        /// <param name="termMetaData">  contain the tail counter. </param>
-        /// <param name="initialTermId"> to be set. </param>
+        /// <param name="logMetaData"> contain the tail counter. </param>
+        /// <param name="partitionIndex"> to be intialized. </param>
+        /// <param name="termId"> to be set.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void InitialiseTailWithTermId(UnsafeBuffer logMetaData, int partitionIndex, int termId)
         {
-            logMetaData.PutLong(TERM_TAIL_COUNTERS_OFFSET + partitionIndex * BitUtil.SIZE_OF_LONG, (long)termId << 32);
+            logMetaData.PutLong(TERM_TAIL_COUNTERS_OFFSET + partitionIndex * BitUtil.SIZE_OF_LONG, PackTail(termId, 0));
         }
 
         /// <summary>
@@ -525,7 +567,7 @@ namespace Adaptive.Aeron.LogBuffer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int TermId(long rawTail)
         {
-            return (int) ((long) ((ulong) rawTail >> 32));
+            return (int) (rawTail >> 32);
         }
 
         /// <summary>
@@ -533,7 +575,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// </summary>
         /// <param name="rawTail">    containing the termOffset. </param>
         /// <param name="termLength"> that the offset cannot exceed. </param>
-        /// <returns> the termOffset value. </returns>
+        /// <returns> the termOffset value.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int TermOffset(long rawTail, long termLength)
         {
@@ -543,14 +585,26 @@ namespace Adaptive.Aeron.LogBuffer
         }
 
         /// <summary>
+        /// The termOffset as a result of the append
+        /// </summary>
+        /// <param name="result"> into which the termOffset value has been packed.</param>
+        /// <returns> the termOffset after the append</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int TermOffset(long result)
+        {
+            return (int) result;
+        }
+
+        /// <summary>
         /// Pack a termId and termOffset into a raw tail value.
         /// </summary>
         /// <param name="termId">     to be packed. </param>
         /// <param name="termOffset"> to be packed. </param>
         /// <returns> the packed value. </returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static long PackTail(int termId, int termOffset)
         {
-            return (((long)termId) << 32) + termOffset;
+            return ((long) termId << 32) | (termOffset & 0xFFFFFFFFL);
         }
 
         /// <summary>
@@ -565,6 +619,18 @@ namespace Adaptive.Aeron.LogBuffer
         }
 
         /// <summary>
+        /// Get the raw value of the tail for the given partition.
+        /// </summary>
+        /// <param name="logMetaDataBuffer"> containing the tail counters. </param>
+        /// <param name="partitionIndex">    for the tail counter. </param>
+        /// <returns> the raw value of the tail for the current active partition. </returns>
+        public static long RawTail(UnsafeBuffer logMetaDataBuffer, int partitionIndex)
+        {
+            return logMetaDataBuffer.GetLong(TERM_TAIL_COUNTERS_OFFSET + (BitUtil.SIZE_OF_LONG * partitionIndex));
+        }
+
+
+        /// <summary>
         /// Set the raw value of the tail for the given partition.
         /// </summary>
         /// <param name="logMetaDataBuffer"> containing the tail counters. </param>
@@ -572,9 +638,10 @@ namespace Adaptive.Aeron.LogBuffer
         /// <param name="rawTail">           to be stored </param>
         public static void RawTailVolatile(UnsafeBuffer logMetaDataBuffer, int partitionIndex, long rawTail)
         {
-            logMetaDataBuffer.PutLongVolatile(TERM_TAIL_COUNTERS_OFFSET + (BitUtil.SIZE_OF_LONG * partitionIndex), rawTail);
+            logMetaDataBuffer.PutLongVolatile(TERM_TAIL_COUNTERS_OFFSET + (BitUtil.SIZE_OF_LONG * partitionIndex),
+                rawTail);
         }
-        
+
         /// <summary>
         /// Get the raw value of the tail for the given partition.
         /// </summary>
@@ -584,7 +651,7 @@ namespace Adaptive.Aeron.LogBuffer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static long RawTailVolatile(UnsafeBuffer logMetaDataBuffer, int partitionIndex)
         {
-            return logMetaDataBuffer.GetLongVolatile(TERM_TAIL_COUNTERS_OFFSET + BitUtil.SIZE_OF_LONG*partitionIndex);
+            return logMetaDataBuffer.GetLongVolatile(TERM_TAIL_COUNTERS_OFFSET + BitUtil.SIZE_OF_LONG * partitionIndex);
         }
 
         /// <summary>

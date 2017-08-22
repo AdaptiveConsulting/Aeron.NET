@@ -34,15 +34,15 @@ namespace Adaptive.Aeron.Tests
         [Test]
         public void ShouldInitialiseToDefaultValues()
         {
-            Assert.That(_bufferBuilder.Capacity(), Is.EqualTo(BufferBuilder.INITIAL_CAPACITY));
-            Assert.That(_bufferBuilder.Buffer().Capacity, Is.EqualTo(BufferBuilder.INITIAL_CAPACITY));
+            Assert.That(_bufferBuilder.Capacity(), Is.EqualTo(BufferBuilder.MIN_ALLOCATED_CAPACITY));
+            Assert.That(_bufferBuilder.Buffer().Capacity, Is.EqualTo(BufferBuilder.MIN_ALLOCATED_CAPACITY));
             Assert.That(_bufferBuilder.Limit(), Is.EqualTo(0));
         }
 
         [Test]
         public void ShouldAppendNothingForZeroLength()
         {
-            UnsafeBuffer srcBuffer = new UnsafeBuffer(new byte[BufferBuilder.INITIAL_CAPACITY]);
+            UnsafeBuffer srcBuffer = new UnsafeBuffer(new byte[BufferBuilder.MIN_ALLOCATED_CAPACITY]);
 
             _bufferBuilder.Append(srcBuffer, 0, 0);
 
@@ -52,7 +52,7 @@ namespace Adaptive.Aeron.Tests
         [Test]
         public void ShouldGrowToMultipleOfInitialCapaity()
         {
-            int srcCapacity = BufferBuilder.INITIAL_CAPACITY * 5;
+            int srcCapacity = BufferBuilder.MIN_ALLOCATED_CAPACITY * 5;
             UnsafeBuffer srcBuffer = new UnsafeBuffer(new byte[srcCapacity]);
 
             _bufferBuilder.Append(srcBuffer, 0, srcBuffer.Capacity);
@@ -64,7 +64,7 @@ namespace Adaptive.Aeron.Tests
         [Test]
         public void ShouldAppendThenReset()
         {
-            UnsafeBuffer srcBuffer = new UnsafeBuffer(new byte[BufferBuilder.INITIAL_CAPACITY]);
+            UnsafeBuffer srcBuffer = new UnsafeBuffer(new byte[BufferBuilder.MIN_ALLOCATED_CAPACITY]);
 
             _bufferBuilder.Append(srcBuffer, 0, srcBuffer.Capacity);
 
@@ -78,7 +78,7 @@ namespace Adaptive.Aeron.Tests
         [Test]
         public void ShouldAppendOneBufferWithoutResizing()
         {
-            var srcBuffer = new UnsafeBuffer(new byte[BufferBuilder.INITIAL_CAPACITY]);
+            var srcBuffer = new UnsafeBuffer(new byte[BufferBuilder.MIN_ALLOCATED_CAPACITY]);
             var bytes = Encoding.UTF8.GetBytes("Hello World");
             srcBuffer.PutBytes(0, bytes, 0, bytes.Length);
 
@@ -88,14 +88,14 @@ namespace Adaptive.Aeron.Tests
             _bufferBuilder.Buffer().GetBytes(0, temp, 0, bytes.Length);
 
             Assert.That(_bufferBuilder.Limit(), Is.EqualTo(bytes.Length));
-            Assert.That(_bufferBuilder.Capacity(), Is.EqualTo(BufferBuilder.INITIAL_CAPACITY));
+            Assert.That(_bufferBuilder.Capacity(), Is.EqualTo(BufferBuilder.MIN_ALLOCATED_CAPACITY));
             Assert.That(temp, Is.EqualTo(bytes));
         }
 
         [Test]
         public void ShouldAppendTwoBuffersWithoutResizing()
         {
-            UnsafeBuffer srcBuffer = new UnsafeBuffer(new byte[BufferBuilder.INITIAL_CAPACITY]);
+            UnsafeBuffer srcBuffer = new UnsafeBuffer(new byte[BufferBuilder.MIN_ALLOCATED_CAPACITY]);
             byte[] bytes = Encoding.UTF8.GetBytes("1111111122222222");
             srcBuffer.PutBytes(0, bytes, 0, bytes.Length);
 
@@ -106,7 +106,7 @@ namespace Adaptive.Aeron.Tests
             _bufferBuilder.Buffer().GetBytes(0, temp, 0, bytes.Length);
 
             Assert.That(_bufferBuilder.Limit(), Is.EqualTo(bytes.Length));
-            Assert.That(_bufferBuilder.Capacity(), Is.EqualTo(BufferBuilder.INITIAL_CAPACITY));
+            Assert.That(_bufferBuilder.Capacity(), Is.EqualTo(BufferBuilder.MIN_ALLOCATED_CAPACITY));
             Assert.That(temp, Is.EqualTo(bytes));
         }
 
@@ -176,7 +176,7 @@ namespace Adaptive.Aeron.Tests
         [Test]
         public void ShouldCompactBufferToLowerLimit()
         {
-            int bufferLength = BufferBuilder.INITIAL_CAPACITY / 2;
+            int bufferLength = BufferBuilder.MIN_ALLOCATED_CAPACITY / 2;
             byte[] buffer = new byte[bufferLength];
             UnsafeBuffer srcBuffer = new UnsafeBuffer(buffer);
 

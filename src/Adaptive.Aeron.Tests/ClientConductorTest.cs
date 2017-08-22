@@ -53,6 +53,9 @@ namespace Adaptive.Aeron.Tests
         private const long INTER_SERVICE_TIMEOUT_MS = 1000;
         private const long PUBLICATION_CONNECTION_TIMEOUT_MS = 5000;
 
+        private const int SUBSCRIBER_POSITION_ID = 2;
+        private const int SUBSCRIBER_POSITION_REGISTRATION_ID = 4001;
+
         private const string SOURCE_INFO = "127.0.0.1:40789";
 
         private PublicationBuffersReadyFlyweight PublicationReady;
@@ -77,7 +80,6 @@ namespace Adaptive.Aeron.Tests
         private UnavailableImageHandler MockUnavailableImageHandler;
         private ILogBuffersFactory LogBuffersFactory;
         private ILock mockClientLock = A.Fake<ILock>();
-        private Dictionary<long, long> SubscriberPositionMap;
         private bool SuppressPrintError = false;
 
 
@@ -107,9 +109,7 @@ namespace Adaptive.Aeron.Tests
             MockUnavailableImageHandler = A.Fake<UnavailableImageHandler>();
 
             LogBuffersFactory = A.Fake<ILogBuffersFactory>();
-
-            SubscriberPositionMap = new Dictionary<long, long>(); // should return -1 when element does not exist
-
+            
             DriverProxy = A.Fake<DriverProxy>();
             
             A.CallTo(() => mockClientLock.TryLock()).Returns(true);
@@ -145,12 +145,11 @@ namespace Adaptive.Aeron.Tests
             ErrorResponse.Wrap(ErrorMessageBuffer, 0);
 
             PublicationReady.CorrelationId(CORRELATION_ID);
+            PublicationReady.RegistrationId(CORRELATION_ID);
             PublicationReady.SessionId(SESSION_ID_1);
             PublicationReady.StreamId(STREAM_ID_1);
             PublicationReady.LogFileName(SESSION_ID_1 + "-log");
-
-            SubscriberPositionMap.Add(CORRELATION_ID, 0);
-
+            
             CorrelatedMessage.CorrelationId(CLOSE_CORRELATION_ID);
 
             var termBuffersSession1 = new UnsafeBuffer[LogBufferDescriptor.PARTITION_COUNT];
@@ -325,6 +324,7 @@ namespace Adaptive.Aeron.Tests
                 PublicationReady.SessionId(SESSION_ID_2);
                 PublicationReady.LogFileName(SESSION_ID_2 + "-log");
                 PublicationReady.CorrelationId(CORRELATION_ID_2);
+                PublicationReady.RegistrationId(CORRELATION_ID_2);
                 return PublicationReady.Length();
             });
 
@@ -344,6 +344,7 @@ namespace Adaptive.Aeron.Tests
             WhenReceiveBroadcastOnMessage(ControlProtocolEvents.ON_PUBLICATION_READY, PublicationReadyBuffer, buffer =>
             {
                 PublicationReady.CorrelationId(UNKNOWN_CORRELATION_ID);
+                PublicationReady.RegistrationId(UNKNOWN_CORRELATION_ID);
                 return PublicationReady.Length();
             });
 
@@ -432,9 +433,16 @@ namespace Adaptive.Aeron.Tests
                 return CorrelatedMessageFlyweight.LENGTH;
             });
 
-            Conductor.AddSubscription(CHANNEL, STREAM_ID_1);
+            Subscription subscription = Conductor.AddSubscription(CHANNEL, STREAM_ID_1);
 
-            Conductor.OnAvailableImage(STREAM_ID_1, SESSION_ID_1, SubscriberPositionMap, SESSION_ID_1 + "-log", SOURCE_INFO, CORRELATION_ID);
+            Conductor.OnAvailableImage(
+                CORRELATION_ID, 
+                STREAM_ID_1, 
+                SESSION_ID_1, 
+                subscription.RegistrationId, 
+                SUBSCRIBER_POSITION_ID, 
+                SESSION_ID_1 + "-log", 
+                SOURCE_INFO);
 
             A.CallTo(() => LogBuffersFactory.Map(SESSION_ID_1 + "-log", A<MapMode>._)).MustHaveHappened();
         }
@@ -450,13 +458,20 @@ namespace Adaptive.Aeron.Tests
 
             var subscription = Conductor.AddSubscription(CHANNEL, STREAM_ID_1);
 
-            Conductor.OnAvailableImage(STREAM_ID_1, SESSION_ID_1, SubscriberPositionMap, SESSION_ID_1 + "-log", SOURCE_INFO, CORRELATION_ID);
+            Conductor.OnAvailableImage(
+                CORRELATION_ID, 
+                STREAM_ID_1, 
+                SESSION_ID_1, 
+                subscription.RegistrationId, 
+                SUBSCRIBER_POSITION_ID, 
+                SESSION_ID_1 + "-log", 
+                SOURCE_INFO);
 
             Assert.False(subscription.HasNoImages());
 
             A.CallTo(() => MockAvailableImageHandler(A<Image>._)).MustHaveHappened();
 
-            Conductor.OnUnavailableImage(STREAM_ID_1, CORRELATION_ID);
+            Conductor.OnUnavailableImage(CORRELATION_ID, STREAM_ID_1);
 
             A.CallTo(() => MockUnavailableImageHandler(A<Image>._)).MustHaveHappened();
 
@@ -466,7 +481,14 @@ namespace Adaptive.Aeron.Tests
         [Test]
         public void ShouldIgnoreUnknownNewImage()
         {
-            Conductor.OnAvailableImage(STREAM_ID_2, SESSION_ID_2, SubscriberPositionMap, SESSION_ID_2 + "-log", SOURCE_INFO, CORRELATION_ID_2);
+            Conductor.OnAvailableImage(
+                CORRELATION_ID_2, 
+                STREAM_ID_2, 
+                SESSION_ID_2, 
+                SUBSCRIBER_POSITION_REGISTRATION_ID, 
+                SUBSCRIBER_POSITION_ID, 
+                SESSION_ID_2 + "-log", 
+                SOURCE_INFO);
 
             A.CallTo(() => LogBuffersFactory.Map(A<string>._, A<MapMode>._)).MustNotHaveHappened();
             A.CallTo(() => MockAvailableImageHandler(A<Image>._)).MustNotHaveHappened();
@@ -475,7 +497,7 @@ namespace Adaptive.Aeron.Tests
         [Test]
         public void ShouldIgnoreUnknownInactiveImage()
         {
-            Conductor.OnUnavailableImage(STREAM_ID_2, CORRELATION_ID_2);
+            Conductor.OnUnavailableImage(CORRELATION_ID_2, STREAM_ID_2);
 
             A.CallTo(() => LogBuffersFactory.Map(A<string>._, A<MapMode>._)).MustNotHaveHappened();
             A.CallTo(() => MockAvailableImageHandler(A<Image>._)).MustNotHaveHappened();
@@ -493,6 +515,8 @@ namespace Adaptive.Aeron.Tests
             Conductor.DoWork();
 
             A.CallTo(() => MockClientErrorHandler(A<ConductorServiceTimeoutException>._)).MustHaveHappened();
+
+            Assert.True(Conductor.IsClosed());
         }
 
         private void WhenReceiveBroadcastOnMessage(int msgTypeId, IMutableDirectBuffer buffer, Func<IMutableDirectBuffer, int> filler)

@@ -32,7 +32,8 @@ namespace Adaptive.Aeron
     public class DriverProxy
     {
         /// <summary>
-        /// Maximum capacity of the write buffer </summary>
+        /// Maximum capacity of the write buffer
+        /// </summary>
         public const int MSG_BUFFER_CAPACITY = 1024;
 
         private readonly UnsafeBuffer _buffer = new UnsafeBuffer(BufferUtil.AllocateDirectAligned(MSG_BUFFER_CAPACITY,BitUtil.CACHE_LINE_LENGTH * 2));
@@ -43,7 +44,7 @@ namespace Adaptive.Aeron
         private readonly DestinationMessageFlyweight _destinationMessage = new DestinationMessageFlyweight();
         private readonly IRingBuffer _toDriverCommandBuffer;
 
-        public DriverProxy(IRingBuffer toDriverCommandBuffer)
+        public DriverProxy(IRingBuffer toDriverCommandBuffer, long clientId)
         {
             if (toDriverCommandBuffer == null) throw new ArgumentNullException(nameof(toDriverCommandBuffer));
 
@@ -56,7 +57,6 @@ namespace Adaptive.Aeron
             _removeMessage.Wrap(_buffer, 0);
             _destinationMessage.Wrap(_buffer, 0);
 
-            var clientId = toDriverCommandBuffer.NextCorrelationId();
             _correlatedMessage.ClientId(clientId);
         }
 

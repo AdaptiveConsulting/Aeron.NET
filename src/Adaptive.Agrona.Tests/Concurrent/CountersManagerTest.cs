@@ -15,6 +15,7 @@
  */
 
 using System;
+using System.Text;
 using Adaptive.Agrona.Collections;
 using Adaptive.Agrona.Concurrent;
 using Adaptive.Agrona.Concurrent.Status;
@@ -41,15 +42,55 @@ namespace Adaptive.Agrona.Tests.Concurrent
             _consumer = A.Fake<IntObjConsumer<string>>();
             _metaData = A.Fake<CountersReader.MetaData>();
 
-            _labelsBuffer = new UnsafeBuffer(new byte[NumberOfCounters*CountersReader.METADATA_LENGTH]);
-            _counterBuffer = new UnsafeBuffer(new byte[NumberOfCounters*CountersReader.COUNTER_LENGTH]);
+            _labelsBuffer = new UnsafeBuffer(new byte[NumberOfCounters * CountersReader.METADATA_LENGTH]);
+            _counterBuffer = new UnsafeBuffer(new byte[NumberOfCounters * CountersReader.COUNTER_LENGTH]);
 
-            _manager = new CountersManager(_labelsBuffer, _counterBuffer);
-            _otherManager = new CountersManager(_labelsBuffer, _counterBuffer);
+            _manager = new CountersManager(_labelsBuffer, _counterBuffer, Encoding.ASCII);
+            _otherManager = new CountersManager(_labelsBuffer, _counterBuffer, Encoding.ASCII);
         }
 
         [Test]
-        public void ManagerShouldStoreLabels()
+        public void ShouldTruncateLongLabel()
+        {
+            int labelLength = CountersReader.MAX_LABEL_LENGTH + 10;
+            var sb = new StringBuilder(labelLength);
+
+            for (int i = 0; i < labelLength; i++)
+            {
+                sb.Append('x');
+            }
+
+            var label = sb.ToString();
+            int counterId = _manager.Allocate(label);
+
+            _otherManager.ForEach(_consumer);
+            A.CallTo(() => _consumer(counterId, label.Substring(0, CountersReader.MAX_LABEL_LENGTH))).MustHaveHappened();
+        }
+
+        [Test]
+        public void ShouldCopeWithExceptionKeyFunc()
+        {
+            var ex = new Exception();
+
+            try
+            {
+                _manager.Allocate("label", CountersManager.DEFAULT_TYPE_ID, _ => { throw ex; });
+            }
+            catch (Exception caught)
+            {
+                Assert.AreEqual(ex, caught);
+
+                var counter = _manager.NewCounter("new label");
+                Assert.AreEqual(0, counter.Id);
+
+                return;
+            }
+
+            Assert.Fail("Should have thrown exception.");
+        }
+        
+        [Test]
+        public void ShouldStoreLabels()
         {
             var counterId = _manager.Allocate("abc");
             _otherManager.ForEach(_consumer);
@@ -58,7 +99,7 @@ namespace Adaptive.Agrona.Tests.Concurrent
         }
 
         [Test]
-        public void ManagerShouldStoreMultipleLabels()
+        public void ShouldStoreMultipleLabels()
         {
             var abc = _manager.Allocate("abc");
             var def = _manager.Allocate("def");
@@ -92,8 +133,8 @@ namespace Adaptive.Agrona.Tests.Concurrent
         }
 
         [Test]
-        [ExpectedException(typeof(ArgumentException))]
-        public void ManagerShouldNotOverAllocateCounters()
+        [ExpectedException(typeof(InvalidOperationException))]
+        public void ShouldNotOverAllocateCounters()
         {
             _manager.Allocate("abc");
             _manager.Allocate("def");
@@ -104,7 +145,7 @@ namespace Adaptive.Agrona.Tests.Concurrent
 
 
         [Test]
-        public void AllocatedCountersCanBeMapped()
+        public void ShouldMapAllocatedCounters()
         {
             _manager.Allocate("def");
 
@@ -136,6 +177,34 @@ namespace Adaptive.Agrona.Tests.Concurrent
                 .Then(A.CallTo(() => _metaData(counterIdTwo, typeIdTwo, A<IDirectBuffer>.That.Matches(d => d.GetLong(0) == keyTwo), "Test Label Two")).MustHaveHappened());
 
             A.CallTo(() => _metaData(A<int>._, A<int>._, A<IDirectBuffer>._, A<string>._)).MustHaveHappened(Repeated.Exactly.Twice);
+        }
+
+        [Test]
+        public void ShouldStoreRawData()
+        {
+            const int typeIdOne = 333;
+            const long keyOne = 777L;
+
+            var keyOneBuffer = new UnsafeBuffer(new byte[8]);
+            keyOneBuffer.PutLong(0, keyOne);
+            var labelOneBuffer = new UnsafeBuffer(Encoding.ASCII.GetBytes("Test Label One"));
+
+            const int typeIdTwo = 222;
+            const long keyTwo = 444;
+            var keyTwoBuffer = new UnsafeBuffer(new byte[8]);
+            keyTwoBuffer.PutLong(0, keyTwo);
+            var labelTwoBuffer = new UnsafeBuffer(Encoding.ASCII.GetBytes("Test Label Two"));
+
+            int counterIdOne = _manager.Allocate(
+                typeIdOne, keyOneBuffer, 0, keyOneBuffer.Capacity, labelOneBuffer, 0, labelOneBuffer.Capacity);
+
+            int counterIdTwo = _manager.Allocate(
+                typeIdTwo, keyTwoBuffer, 0, keyTwoBuffer.Capacity, labelTwoBuffer, 0, labelTwoBuffer.Capacity);
+
+            _manager.ForEach(_metaData);
+
+            A.CallTo(() => _metaData(counterIdOne, typeIdOne, A<IDirectBuffer>.That.Matches(d => d.GetLong(0) == keyOne), "Test Label One")).MustHaveHappened()
+                .Then(A.CallTo(() => _metaData(counterIdTwo, typeIdTwo, A<IDirectBuffer>.That.Matches(d => d.GetLong(0) == keyTwo), "Test Label Two")).MustHaveHappened());
         }
 
         [Test]

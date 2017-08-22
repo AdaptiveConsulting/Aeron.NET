@@ -141,6 +141,5 @@ namespace Adaptive.Aeron.Protocol
 
             return sb.ToString();
         }
-
-}
+    }
 }

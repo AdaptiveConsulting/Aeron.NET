@@ -38,39 +38,48 @@ namespace Adaptive.Aeron.Protocol
         public static readonly byte[] EMPTY_BUFFER = new byte[0];
 
         /// <summary>
-        /// header type PAD </summary>
+        /// header type PAD 
+        /// </summary>
         public const int HDR_TYPE_PAD = 0x00;
 
         /// <summary>
-        /// header type DATA </summary>
+        /// header type DATA 
+        /// </summary>
         public const int HDR_TYPE_DATA = 0x01;
 
         /// <summary>
-        /// header type NAK </summary>
+        /// header type NAK 
+        /// </summary>
         public const int HDR_TYPE_NAK = 0x02;
 
         /// <summary>
-        /// header type SM </summary>
+        /// header type SM 
+        /// </summary>
         public const int HDR_TYPE_SM = 0x03;
 
         /// <summary>
-        /// header type ERR </summary>
+        /// header type ERR 
+        /// </summary>
         public const int HDR_TYPE_ERR = 0x04;
 
         /// <summary>
-        /// header type SETUP </summary>
+        /// header type SETUP
+        /// </summary>
         public const int HDR_TYPE_SETUP = 0x05;
 
         /// <summary>
-        /// header type RTT Measurement </summary>
+        /// header type RTT Measurement 
+        /// </summary>
         public const int HDR_TYPE_RTTM = 0x06;
 
         /// <summary>
-        /// header type EXT </summary>
+        /// header type EXT 
+        /// </summary>
         public const int HDR_TYPE_EXT = 0xFFFF;
 
         /// <summary>
-        /// default version </summary>
+        /// default version 
+        /// </summary>
         public const byte CURRENT_VERSION = 0x0;
 
         public const int FRAME_LENGTH_FIELD_OFFSET = 0;
@@ -79,11 +88,11 @@ namespace Adaptive.Aeron.Protocol
         public const int TYPE_FIELD_OFFSET = 6;
         public static readonly int HEADER_LENGTH = TYPE_FIELD_OFFSET + BitUtil.SIZE_OF_SHORT;
 
-        public HeaderFlyweight() : base(EMPTY_BUFFER)
+        public HeaderFlyweight()
         {
         }
 
-        public HeaderFlyweight(IDirectBuffer buffer) : base(buffer)
+        public HeaderFlyweight(UnsafeBuffer buffer) : base(buffer)
         {
         }
 

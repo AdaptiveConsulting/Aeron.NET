@@ -69,7 +69,15 @@ namespace Adaptive.Aeron.Tests
                 _termBuffers[i] = new UnsafeBuffer(new byte[LogBufferDescriptor.TERM_MIN_LENGTH]);
             }
 
-            _publication = new Publication(_conductor, Channel, StreamID1, SessionID1, _publicationLimit, _logBuffers, CorrelationID);
+            _publication = new Publication(
+                _conductor, 
+                Channel, 
+                StreamID1, 
+                SessionID1, 
+                _publicationLimit, 
+                _logBuffers, 
+                CorrelationID,
+                CorrelationID);
 
             _publication.IncRef();
 

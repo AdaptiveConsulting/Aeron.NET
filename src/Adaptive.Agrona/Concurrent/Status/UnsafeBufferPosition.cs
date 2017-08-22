@@ -23,6 +23,7 @@ namespace Adaptive.Agrona.Concurrent.Status
     /// </summary>
     public class UnsafeBufferPosition : IPosition
     {
+        public bool IsClosed { get; private set; } = false;
         private readonly int _counterId;
         private readonly int _offset;
         private readonly UnsafeBuffer _buffer;
@@ -115,7 +116,12 @@ namespace Adaptive.Agrona.Concurrent.Status
 
         public override void Dispose()
         {
-            _countersManager?.Free(_counterId);
+            if (!IsClosed)
+            {
+                IsClosed = true;
+
+                _countersManager?.Free(_counterId);
+            }
         }
     }
 }

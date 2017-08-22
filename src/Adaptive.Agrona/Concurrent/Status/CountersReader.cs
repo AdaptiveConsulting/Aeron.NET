@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+using System.Text;
 using Adaptive.Agrona.Collections;
 
 namespace Adaptive.Agrona.Concurrent.Status
@@ -54,7 +55,7 @@ namespace Adaptive.Agrona.Concurrent.Status
     ///  +-+-------------------------------------------------------------+
     ///  |R|                      Label Length                           |
     ///  +-+-------------------------------------------------------------+
-    ///  |                  380 bytes of Label in UTF-8                 ...
+    ///  |                      380 bytes of Label                      ...
     /// ...                                                              |
     ///  +---------------------------------------------------------------+
     ///  |                   Repeats to end of buffer                   ...
@@ -65,6 +66,15 @@ namespace Adaptive.Agrona.Concurrent.Status
     /// </summary>
     public class CountersReader
     {
+        /// <summary>
+        /// Accept a metadata record.
+        /// </summary>
+        /// <param name="counterId"> of the counter.</param>
+        /// <param name="typeId"> of the counter.</param>
+        /// <param name="keyBuffer"> for the counter.</param>
+        /// <param name="label"> for the counter.</param>
+        public delegate void MetaData(int counterId, int typeId, IDirectBuffer keyBuffer, string label);
+        
         /// <summary>
         /// Record has not been used.
         /// </summary>
@@ -119,9 +129,12 @@ namespace Adaptive.Agrona.Concurrent.Status
         /// Length of the space allocated to a counter that includes padding to avoid false sharing.
         /// </summary>
         public static readonly int COUNTER_LENGTH = BitUtil.CACHE_LINE_LENGTH*2;
-
+        
         /// <summary>
         /// Construct a reader over buffers containing the values and associated metadata.
+        /// 
+        /// Counter labels default to <see cref="Encoding.UTF8"/>
+        /// 
         /// </summary>
         /// <param name="metaDataBuffer"> containing the counter metadata. </param>
         /// <param name="valuesBuffer">   containing the counter values. </param>
@@ -129,6 +142,20 @@ namespace Adaptive.Agrona.Concurrent.Status
         {
             ValuesBuffer = valuesBuffer;
             MetaDataBuffer = metaDataBuffer;
+        }
+
+        /// <summary>
+        /// Construct a reader over buffers containing the values and associated metadata.
+        /// 
+        /// </summary>
+        /// <param name="metaDataBuffer"> containing the counter metadata. </param>
+        /// <param name="valuesBuffer">   containing the counter values. </param>
+        /// <param name="encoding"> for the label encoding</param>
+        public CountersReader(IAtomicBuffer metaDataBuffer, IAtomicBuffer valuesBuffer, Encoding encoding)
+        {
+            ValuesBuffer = valuesBuffer;
+            MetaDataBuffer = metaDataBuffer;
+            LabelCharset = encoding;
         }
 
         /// <summary>
@@ -142,6 +169,12 @@ namespace Adaptive.Agrona.Concurrent.Status
         /// </summary>
         /// <returns> the buffer containing the values for the counters. </returns>
         public IAtomicBuffer ValuesBuffer { get; }
+
+        /// <summary>
+        /// The <see cref="Encoding"/> used for the encoded label.
+        /// </summary>
+        /// <returns> the <see cref="Encoding"/> used for the encoded label.</returns>
+        public Encoding LabelCharset { get; }
 
         /// <summary>
         /// The offset in the counter buffer for a given counterId.
@@ -174,14 +207,14 @@ namespace Adaptive.Agrona.Concurrent.Status
             for (int i = 0, capacity = MetaDataBuffer.Capacity; i < capacity; i += METADATA_LENGTH)
             {
                 var recordStatus = MetaDataBuffer.GetIntVolatile(i);
-                if (RECORD_UNUSED == recordStatus)
+                if (RECORD_ALLOCATED == recordStatus)
+                {
+                    var label = LabelValue(i);
+                    consumer(counterId, label);
+                }
+                else if (RECORD_UNUSED == recordStatus)
                 {
                     break;
-                }
-                else if (RECORD_ALLOCATED == recordStatus)
-                {
-                    var label = MetaDataBuffer.GetStringUtf8(i + LABEL_OFFSET);
-                    consumer(counterId, label);
                 }
 
                 counterId++;
@@ -199,17 +232,17 @@ namespace Adaptive.Agrona.Concurrent.Status
             for (int i = 0, capacity = MetaDataBuffer.Capacity; i < capacity; i += METADATA_LENGTH)
             {
                 var recordStatus = MetaDataBuffer.GetIntVolatile(i);
-                if (RECORD_UNUSED == recordStatus)
-                {
-                    break;
-                }
                 if (RECORD_ALLOCATED == recordStatus)
                 {
                     var typeId = MetaDataBuffer.GetInt(i + TYPE_ID_OFFSET);
-                    var label = MetaDataBuffer.GetStringUtf8(i + LABEL_OFFSET);
+                    var label = LabelValue(i);
                     IDirectBuffer keyBuffer = new UnsafeBuffer(MetaDataBuffer, i + KEY_OFFSET, MAX_KEY_LENGTH);
 
                     metaData(counterId, typeId, keyBuffer, label);
+                }
+                else if (RECORD_UNUSED == recordStatus)
+                {
+                    break;
                 }
 
                 counterId++;
@@ -226,9 +259,13 @@ namespace Adaptive.Agrona.Concurrent.Status
             return ValuesBuffer.GetLongVolatile(CounterOffset(counterId));
         }
 
-        /// <summary>
-        /// Callback function for consuming metadata records of counters.
-        /// </summary>
-        public delegate void MetaData(int counterId, int typeId, IDirectBuffer keyBuffer, string label);
+        private string LabelValue(int recordOffset)
+        {
+            int labelLength = MetaDataBuffer.GetInt(recordOffset + LABEL_OFFSET);
+            byte[] stringInBytes = new byte[labelLength];
+            MetaDataBuffer.GetBytes(recordOffset + LABEL_OFFSET + BitUtil.SIZE_OF_INT, stringInBytes);
+
+            return LabelCharset.GetString(stringInBytes);
+        }
     }
 }

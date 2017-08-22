@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-using Adaptive.Agrona;
 using Adaptive.Agrona.Concurrent;
 
 namespace Adaptive.Aeron.LogBuffer

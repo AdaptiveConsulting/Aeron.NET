@@ -67,10 +67,10 @@ namespace Adaptive.Aeron.Tests.LogBuffer
             const int termId = 7;
             const int termOffset = -1;
 
-            long result = TermAppender.Pack(termId, termOffset);
+            long result = LogBufferDescriptor.PackTail(termId, termOffset);
 
-            Assert.That(TermAppender.TermId(result), Is.EqualTo(termId));
-            Assert.That(TermAppender.TermOffset(result), Is.EqualTo(termOffset));
+            Assert.That(LogBufferDescriptor.TermId(result), Is.EqualTo(termId));
+            Assert.That(LogBufferDescriptor.TermOffset(result), Is.EqualTo(termOffset));
         }
 
         [Test]
@@ -83,11 +83,11 @@ namespace Adaptive.Aeron.Tests.LogBuffer
             int alignedFrameLength = BitUtil.Align(frameLength, FrameDescriptor.FRAME_ALIGNMENT);
             const int tail = 0;
 
-            _logMetaDataBuffer.PutLong(TermTailCounterOffset, TermAppender.Pack(TermID, tail));
+            _logMetaDataBuffer.PutLong(TermTailCounterOffset, LogBufferDescriptor.PackTail(TermID, tail));
 
             Assert.That(_termAppender.AppendUnfragmentedMessage(_headerWriter, buffer, 0, msgLength, RVS), Is.EqualTo((long) alignedFrameLength));
             
-            Assert.AreEqual(LogBufferDescriptor.RawTailVolatile(_logMetaDataBuffer, PartionIndex), TermAppender.Pack(TermID, tail + alignedFrameLength));
+            Assert.AreEqual(LogBufferDescriptor.RawTailVolatile(_logMetaDataBuffer, PartionIndex), LogBufferDescriptor.PackTail(TermID, tail + alignedFrameLength));
 
             A.CallTo(() => _headerWriter.Write(_termBuffer, tail, frameLength, TermID)).MustHaveHappened()
                 .Then(A.CallTo(() => _termBuffer.PutBytes(headerLength, buffer, 0, msgLength)).MustHaveHappened())
@@ -105,12 +105,12 @@ namespace Adaptive.Aeron.Tests.LogBuffer
             int alignedFrameLength = BitUtil.Align(frameLength, FrameDescriptor.FRAME_ALIGNMENT);
             int tail = 0;
 
-            _logMetaDataBuffer.PutLong(TermTailCounterOffset, TermAppender.Pack(TermID, tail));
+            _logMetaDataBuffer.PutLong(TermTailCounterOffset, LogBufferDescriptor.PackTail(TermID, tail));
             
             Assert.That(_termAppender.AppendUnfragmentedMessage(_headerWriter, buffer, 0, msgLength, RVS), Is.EqualTo((long) alignedFrameLength));
             Assert.That(_termAppender.AppendUnfragmentedMessage(_headerWriter, buffer, 0, msgLength, RVS), Is.EqualTo((long) alignedFrameLength*2));
 
-            Assert.AreEqual(LogBufferDescriptor.RawTailVolatile(_logMetaDataBuffer, PartionIndex), TermAppender.Pack(TermID, tail + alignedFrameLength * 2));
+            Assert.AreEqual(LogBufferDescriptor.RawTailVolatile(_logMetaDataBuffer, PartionIndex), LogBufferDescriptor.PackTail(TermID, tail + alignedFrameLength * 2));
             
             A.CallTo(() => _headerWriter.Write(_termBuffer, tail, frameLength, TermID)).MustHaveHappened()
                 .Then(A.CallTo(() => _termBuffer.PutBytes(headerLength, buffer, 0, msgLength)).MustHaveHappened())
@@ -132,12 +132,12 @@ namespace Adaptive.Aeron.Tests.LogBuffer
             UnsafeBuffer buffer = new UnsafeBuffer(new byte[128]);
             int frameLength = TermBufferLength - tailValue;
 
-            _logMetaDataBuffer.PutLong(TermTailCounterOffset, TermAppender.Pack(TermID, tailValue));
+            _logMetaDataBuffer.PutLong(TermTailCounterOffset, LogBufferDescriptor.PackTail(TermID, tailValue));
 
-            long expectResult = TermAppender.Pack(TermID, TermAppender.TRIPPED);
+            long expectResult = LogBufferDescriptor.PackTail(TermID, TermAppender.TRIPPED);
             Assert.That(_termAppender.AppendUnfragmentedMessage(_headerWriter, buffer, 0, msgLength, RVS), Is.EqualTo(expectResult));
             
-            Assert.AreEqual(LogBufferDescriptor.RawTailVolatile(_logMetaDataBuffer, PartionIndex), TermAppender.Pack(TermID, tailValue + requiredFrameSize));
+            Assert.AreEqual(LogBufferDescriptor.RawTailVolatile(_logMetaDataBuffer, PartionIndex), LogBufferDescriptor.PackTail(TermID, tailValue + requiredFrameSize));
             
             A.CallTo(() => _headerWriter.Write(_termBuffer, tailValue, frameLength, TermID)).MustHaveHappened()
                 .Then(A.CallTo(() => _termBuffer.PutShort(FrameDescriptor.TypeOffset(tailValue), (short) FrameDescriptor.PADDING_FRAME_TYPE)).MustHaveHappened())
@@ -154,11 +154,11 @@ namespace Adaptive.Aeron.Tests.LogBuffer
             UnsafeBuffer buffer = new UnsafeBuffer(new byte[msgLength]);
             int tail = 0;
             
-            _logMetaDataBuffer.PutLong(TermTailCounterOffset, TermAppender.Pack(TermID, tail));
+            _logMetaDataBuffer.PutLong(TermTailCounterOffset, LogBufferDescriptor.PackTail(TermID, tail));
             
             Assert.That(_termAppender.AppendFragmentedMessage(_headerWriter, buffer, 0, msgLength, MaxPayloadLength, RVS), Is.EqualTo((long) requiredCapacity));
 
-            Assert.AreEqual(LogBufferDescriptor.RawTailVolatile(_logMetaDataBuffer, PartionIndex), TermAppender.Pack(TermID, tail + requiredCapacity));
+            Assert.AreEqual(LogBufferDescriptor.RawTailVolatile(_logMetaDataBuffer, PartionIndex), LogBufferDescriptor.PackTail(TermID, tail + requiredCapacity));
 
             A.CallTo(() => _headerWriter.Write(_termBuffer, tail, MaxFrameLength, TermID)).MustHaveHappened()
                 .Then(A.CallTo(() => _termBuffer.PutBytes(tail + headerLength, buffer, 0, MaxPayloadLength)).MustHaveHappened())
@@ -184,7 +184,7 @@ namespace Adaptive.Aeron.Tests.LogBuffer
 
             A.CallTo(() => _termBuffer.PutIntOrdered(A<int>._, A<int>._));
 
-            _logMetaDataBuffer.PutLong(TermTailCounterOffset, TermAppender.Pack(TermID, tail));
+            _logMetaDataBuffer.PutLong(TermTailCounterOffset, LogBufferDescriptor.PackTail(TermID, tail));
 
             Assert.That(_termAppender.Claim(_headerWriter, msgLength, bufferClaim), Is.EqualTo((long) alignedFrameLength));
 
@@ -195,7 +195,7 @@ namespace Adaptive.Aeron.Tests.LogBuffer
             bufferClaim.Commit();
 
 
-            Assert.AreEqual(LogBufferDescriptor.RawTailVolatile(_logMetaDataBuffer, PartionIndex), TermAppender.Pack(TermID, tail + alignedFrameLength));
+            Assert.AreEqual(LogBufferDescriptor.RawTailVolatile(_logMetaDataBuffer, PartionIndex), LogBufferDescriptor.PackTail(TermID, tail + alignedFrameLength));
 
             A.CallTo(() => _headerWriter.Write(_termBuffer, tail, frameLength, TermID)).MustHaveHappened();
         }

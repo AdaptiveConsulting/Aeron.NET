@@ -14,42 +14,43 @@
  * limitations under the License.
  */
 
-using System.Collections.Generic;
-
 namespace Adaptive.Aeron
 {
     /// <summary>
     /// Callback interface for dispatching command responses from the driver on the control protocol.
     /// </summary>
-    internal interface IDriverListener
+    internal interface IDriverEventsListener
     {
-        void OnError(ErrorCode errorCode, string message, long correlationId);
+        void OnError(long correlationId, ErrorCode errorCode, string message);
 
         void OnAvailableImage(
+            long correlationId, 
             int streamId, 
-            int sessionId, 
-            IDictionary<long, long> subscriberPositionMap, 
+            int sessionId,
+            long subscriberRegistrationId, 
+            int subscriberPositionId, 
             string logFileName, 
-            string sourceIdentity, 
-            long correlationId);
+            string sourceIdentity);
 
         void OnNewPublication(
-            string channel, 
+            long correlationId, 
+            long registrationId,
             int streamId, 
             int sessionId, 
             int publicationLimitId, 
-            string logFileName, 
-            long correlationId);
+            string channel, 
+            string logFileName);
 
-        void OnUnavailableImage(int streamId, long correlationId);
+        void OnUnavailableImage(long correlationId, int streamId);
 
         void OnNewExclusivePublication(
-            string channel, 
+            long correlationId, 
+            long registrationid, 
             int streamId, 
             int sessionId, 
             int publicationLimitId, 
-            string logFileName, 
-            long correlationId);
+            string channel, 
+            string logFileName);
     }
 
 }

@@ -19,71 +19,47 @@ using Adaptive.Agrona;
 namespace Adaptive.Aeron.Command
 {
     /// <summary>
-    /// Message to denote that new buffers have been added for a subscription.
+    /// Message to denote that new buffers for a publication image are ready for a subscription.
     /// 
     /// NOTE: Layout should be SBE compliant
     /// </summary>
     /// <seealso cref="ControlProtocolEvents" />
     /// 
-    /// 0                   1                   2                   3
-    /// 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+    ///  0                   1                   2                   3
+    ///  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
     /// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    /// |                         Correlation ID                        |
+    /// |                       Correlation ID                          |
     /// |                                                               |
     /// +---------------------------------------------------------------+
-    /// |                          Session ID                           |
+    /// |                         Session ID                            |
     /// +---------------------------------------------------------------+
-    /// |                           Stream ID                           |
+    /// |                          Stream ID                            |
     /// +---------------------------------------------------------------+
-    /// |                Subscriber Position Block Length               |
-    /// +---------------------------------------------------------------+
-    /// |                   Subscriber Position Count                   |
-    /// +---------------------------------------------------------------+
-    /// |                      Subscriber Position Id 0                 |
-    /// +---------------------------------------------------------------+
-    /// |                         Registration Id 0                     |
+    /// |                  Subscriber Registration Id                   |
     /// |                                                               |
     /// +---------------------------------------------------------------+
-    /// |                     Subscriber Position Id 1                  |
+    /// |                    Subscriber Position Id                     |
     /// +---------------------------------------------------------------+
-    /// |                         Registration Id 1                     |
-    /// |                                                               |
+    /// |                       Log File Length                         |
     /// +---------------------------------------------------------------+
-    /// |                                                              ...
-    /// ...     Up to "Position Indicators Count" entries of this form  |
+    /// |                     Log File Name(ASCII)                    ..
+    /// ..                                                              |
     /// +---------------------------------------------------------------+
-    /// |                         Log File Length                       |
+    /// |                    Source identity Length                     |
     /// +---------------------------------------------------------------+
-    /// |                          Log File Name (ASCII)               ...
-    /// ...                                                             |
+    /// |                    Source identity(ASCII)                   ..
+    /// ..                                                              |
     /// +---------------------------------------------------------------+
-    /// |                     Source identity Length                    |
-    /// +---------------------------------------------------------------+
-    /// |                     Source identity (ASCII)                  ...
-    /// ...                                                             |
-    /// +---------------------------------------------------------------+ 
+    /// 
     public class ImageBuffersReadyFlyweight
     {
-        private static readonly int CORRELATION_ID_OFFSET;
-        private static readonly int SESSION_ID_OFFSET;
-        private static readonly int STREAM_ID_FIELD_OFFSET;
-        private static readonly int SUBSCRIBER_POSITION_BLOCK_LENGTH_OFFSET;
-        private static readonly int SUBSCRIBER_POSITION_COUNT_OFFSET;
-        private static readonly int SUBSCRIBER_POSITIONS_OFFSET;
-
-        private static readonly int SUBSCRIBER_POSITION_BLOCK_LENGTH;
-
-        static ImageBuffersReadyFlyweight()
-        {
-            CORRELATION_ID_OFFSET = 0;
-            SESSION_ID_OFFSET = CORRELATION_ID_OFFSET + BitUtil.SIZE_OF_LONG;
-            STREAM_ID_FIELD_OFFSET = SESSION_ID_OFFSET + BitUtil.SIZE_OF_INT;
-            SUBSCRIBER_POSITION_BLOCK_LENGTH_OFFSET = STREAM_ID_FIELD_OFFSET + BitUtil.SIZE_OF_INT;
-            SUBSCRIBER_POSITION_COUNT_OFFSET = SUBSCRIBER_POSITION_BLOCK_LENGTH_OFFSET + BitUtil.SIZE_OF_INT;
-            SUBSCRIBER_POSITIONS_OFFSET = SUBSCRIBER_POSITION_COUNT_OFFSET + BitUtil.SIZE_OF_INT;
-            SUBSCRIBER_POSITION_BLOCK_LENGTH = BitUtil.SIZE_OF_LONG + BitUtil.SIZE_OF_INT;
-        }
-
+        private static readonly int CORRELATION_ID_OFFSET = 0;
+        private static readonly int SESSION_ID_OFFSET = CORRELATION_ID_OFFSET + BitUtil.SIZE_OF_LONG;
+        private static readonly int STREAM_ID_FIELD_OFFSET = SESSION_ID_OFFSET + BitUtil.SIZE_OF_INT;
+        private static readonly int SUBSCRIBER_REGISTRATION_ID_OFFSET = STREAM_ID_FIELD_OFFSET + BitUtil.SIZE_OF_INT;
+        private static readonly int SUBSCRIBER_POSITION_ID_OFFSET = SUBSCRIBER_REGISTRATION_ID_OFFSET + BitUtil.SIZE_OF_LONG;
+        private static readonly int LOG_FILE_NAME_OFFSET = SUBSCRIBER_POSITION_ID_OFFSET + BitUtil.SIZE_OF_INT;
+        
         private IMutableDirectBuffer _buffer;
         private int _offset;
 
@@ -95,8 +71,8 @@ namespace Adaptive.Aeron.Command
         /// <returns> for fluent API </returns>
         public ImageBuffersReadyFlyweight Wrap(IMutableDirectBuffer buffer, int offset)
         {
-            this._buffer = buffer;
-            this._offset = offset;
+            _buffer = buffer;
+            _offset = offset;
 
             return this;
         }
@@ -162,38 +138,15 @@ namespace Adaptive.Aeron.Command
 
             return this;
         }
-
-        /// <summary>
-        /// return the number of position indicators
-        /// </summary>
-        /// <returns> the number of position indicators </returns>
-        public int SubscriberPositionCount()
-        {
-            return _buffer.GetInt(_offset + SUBSCRIBER_POSITION_COUNT_OFFSET);
-        }
-
-        /// <summary>
-        /// set the number of position indicators
-        /// </summary>
-        /// <param name="value"> the number of position indicators </param>
-        /// <returns> flyweight </returns>
-        public ImageBuffersReadyFlyweight SubscriberPositionCount(int value)
-        {
-            _buffer.PutInt(_offset + SUBSCRIBER_POSITION_BLOCK_LENGTH_OFFSET, SUBSCRIBER_POSITION_BLOCK_LENGTH);
-            _buffer.PutInt(_offset + SUBSCRIBER_POSITION_COUNT_OFFSET, value);
-
-            return this;
-        }
-
+        
         /// <summary>
         /// Set the position Id for the subscriber
         /// </summary>
-        /// <param name="index"> for the subscriber position </param>
         /// <param name="id"> for the subscriber position </param>
         /// <returns> flyweight </returns>
-        public ImageBuffersReadyFlyweight SubscriberPositionId(int index, int id)
+        public ImageBuffersReadyFlyweight SubscriberPositionId(int id)
         {
-            _buffer.PutInt(_offset + SubscriberPositionOffset(index), id);
+            _buffer.PutInt(_offset + SUBSCRIBER_POSITION_ID_OFFSET, id);
 
             return this;
         }
@@ -201,22 +154,20 @@ namespace Adaptive.Aeron.Command
         /// <summary>
         /// Return the position Id for the subscriber
         /// </summary>
-        /// <param name="index"> for the subscriber position </param>
         /// <returns> position Id for the subscriber </returns>
-        public int SubscriberPositionId(int index)
+        public int SubscriberPositionId()
         {
-            return _buffer.GetInt(_offset + SubscriberPositionOffset(index));
+            return _buffer.GetInt(_offset + SUBSCRIBER_POSITION_ID_OFFSET);
         }
 
         /// <summary>
         /// Set the registration Id for the subscriber position
         /// </summary>
-        /// <param name="index"> for the subscriber position </param>
         /// <param name="id"> for the subscriber position </param>
         /// <returns> flyweight </returns>
-        public ImageBuffersReadyFlyweight PositionIndicatorRegistrationId(int index, long id)
+        public ImageBuffersReadyFlyweight SubscriberRegistrationId(long id)
         {
-            _buffer.PutLong(_offset + SubscriberPositionOffset(index) + BitUtil.SIZE_OF_INT, id);
+            _buffer.PutLong(_offset + SUBSCRIBER_REGISTRATION_ID_OFFSET, id);
 
             return this;
         }
@@ -224,11 +175,10 @@ namespace Adaptive.Aeron.Command
         /// <summary>
         /// Return the registration Id for the subscriber position
         /// </summary>
-        /// <param name="index"> for the subscriber position </param>
         /// <returns> registration Id for the subscriber position </returns>
-        public long PositionIndicatorRegistrationId(int index)
+        public long SubscriberRegistrationId()
         {
-            return _buffer.GetLong(_offset + SubscriberPositionOffset(index) + BitUtil.SIZE_OF_INT);
+            return _buffer.GetLong(_offset + SUBSCRIBER_REGISTRATION_ID_OFFSET);
         }
 
         /// <summary>
@@ -237,7 +187,7 @@ namespace Adaptive.Aeron.Command
         /// <returns> log filename </returns>
         public string LogFileName()
         {
-            return _buffer.GetStringAscii(_offset + LogFileNameOffset());
+            return _buffer.GetStringAscii(_offset + LOG_FILE_NAME_OFFSET);
         }
 
         /// <summary>
@@ -247,7 +197,7 @@ namespace Adaptive.Aeron.Command
         /// <returns> flyweight </returns>
         public ImageBuffersReadyFlyweight LogFileName(string logFileName)
         {
-            _buffer.PutStringAscii(_offset + LogFileNameOffset(), logFileName);
+            _buffer.PutStringAscii(_offset + LOG_FILE_NAME_OFFSET, logFileName);
             return this;
         }
 
@@ -282,21 +232,10 @@ namespace Adaptive.Aeron.Command
             int sourceIdentityOffset = SourceIdentityOffset();
             return sourceIdentityOffset + _buffer.GetInt(_offset + sourceIdentityOffset) + BitUtil.SIZE_OF_INT;
         }
-
-        private int SubscriberPositionOffset(int index)
-        {
-            return SUBSCRIBER_POSITIONS_OFFSET + (index*SUBSCRIBER_POSITION_BLOCK_LENGTH);
-        }
-
-        private int LogFileNameOffset()
-        {
-            return SubscriberPositionOffset(SubscriberPositionCount());
-        }
-
+        
         private int SourceIdentityOffset()
         {
-            int logFileNameOffset = LogFileNameOffset();
-            return logFileNameOffset + _buffer.GetInt(_offset + logFileNameOffset) + BitUtil.SIZE_OF_INT;
+            return LOG_FILE_NAME_OFFSET + _buffer.GetInt(_offset + LOG_FILE_NAME_OFFSET) + BitUtil.SIZE_OF_INT;
         }
     }
 }

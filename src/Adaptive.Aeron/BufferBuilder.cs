@@ -31,14 +31,14 @@ namespace Adaptive.Aeron
     public class BufferBuilder
     {
         /// <summary>
-        /// Maximum capcity to which the array can grow
+        /// Maximum capcity to which the buffer can grow.
         /// </summary>
         public const int MAX_CAPACITY = int.MaxValue - 8;
 
         /// <summary>
-        /// Initial capcity for the internal buffer.
+        /// Initial minimum capacity for the internal buffer when used, zero if not used.
         /// </summary>
-        public const int INITIAL_CAPACITY = 4096;
+        public const int MIN_ALLOCATED_CAPACITY = 4096;
 
         private readonly UnsafeBuffer _mutableDirectBuffer;
 
@@ -47,9 +47,9 @@ namespace Adaptive.Aeron
         private int _capacity;
 
         /// <summary>
-        /// Construct a buffer builder with a default growth increment of <seealso cref="INITIAL_CAPACITY"/>
+        /// Construct a buffer builder with a default growth increment of <seealso cref="MIN_ALLOCATED_CAPACITY"/>
         /// </summary>
-        public BufferBuilder() : this(INITIAL_CAPACITY)
+        public BufferBuilder() : this(MIN_ALLOCATED_CAPACITY)
         {
         }
 
@@ -122,7 +122,7 @@ namespace Adaptive.Aeron
         /// <returns> the builder for fluent API usage. </returns>
 	    public BufferBuilder Compact()
         {
-            _capacity = Math.Max(INITIAL_CAPACITY, BitUtil.FindNextPositivePowerOfTwo(_limit));
+            _capacity = Math.Max(MIN_ALLOCATED_CAPACITY, BitUtil.FindNextPositivePowerOfTwo(_limit));
             _buffer = CopyOf(_buffer, _capacity);
             _mutableDirectBuffer.Wrap(_buffer);
 
@@ -171,7 +171,7 @@ namespace Adaptive.Aeron
         {
             do
             {
-                int newCapacity = capacity + (capacity >> 1);
+                int newCapacity = Math.Max(capacity + (capacity >> 1), MIN_ALLOCATED_CAPACITY);
 
                 if (newCapacity < 0 || newCapacity > MAX_CAPACITY)
                 {

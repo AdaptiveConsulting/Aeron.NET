@@ -23,7 +23,7 @@ namespace Adaptive.Agrona.Concurrent.Status
     /// </summary>
     public class AtomicCounter : IDisposable
     {
-        private readonly int _counterId;
+        public int Id { get; }
         private readonly int _offset;
         private readonly IAtomicBuffer _buffer;
         private readonly CountersManager _countersManager;
@@ -31,7 +31,7 @@ namespace Adaptive.Agrona.Concurrent.Status
         internal AtomicCounter(IAtomicBuffer buffer, int counterId, CountersManager countersManager)
         {
             _buffer = buffer;
-            _counterId = counterId;
+            Id = counterId;
             _countersManager = countersManager;
             _offset = CountersReader.CounterOffset(counterId);
             buffer.PutLong(_offset, 0);
@@ -113,7 +113,7 @@ namespace Adaptive.Agrona.Concurrent.Status
         /// </summary>
         public void Dispose()
         {
-            _countersManager.Free(_counterId);
+            _countersManager.Free(Id);
         }
     }
 }

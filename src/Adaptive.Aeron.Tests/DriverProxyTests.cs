@@ -28,13 +28,14 @@ namespace Adaptive.Aeron.Tests
         public void Setup()
         {
             conductorBuffer = new ManyToOneRingBuffer(new UnsafeBuffer(new byte[RingBufferDescriptor.TrailerLength + 1024]));
-            conductor = new DriverProxy(conductorBuffer);
+            conductor = new DriverProxy(conductorBuffer, CLIENT_ID);
         }
         
         public const string CHANNEL = "aeron:udp?interface=localhost:40123|endpoint=localhost:40124";
 
         private const int STREAM_ID = 1;
         private const long CORRELATION_ID = 3;
+        private const long CLIENT_ID = 7;
         private IRingBuffer conductorBuffer;
         private DriverProxy conductor;
 

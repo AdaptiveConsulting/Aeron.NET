@@ -41,13 +41,8 @@ namespace Adaptive.Aeron.LogBuffer
         /// The append operation tripped the end of the buffer and needs to rotate.
         /// </summary>
         public const int TRIPPED = -1;
-
-        /// <summary>
-        /// The append operation went past the end of the buffer and failed.
-        /// </summary>
-        public const int FAILED = -2;
-
-        private readonly long tailAddressOffset;
+        
+        private readonly long _tailAddressOffset;
         private readonly UnsafeBuffer _termBuffer;
         private readonly UnsafeBuffer _metaDataBuffer;
 
@@ -63,27 +58,7 @@ namespace Adaptive.Aeron.LogBuffer
             metaDataBuffer.BoundsCheck(tailCounterOffset, BitUtil.SIZE_OF_LONG);
             _termBuffer = termBuffer;
             _metaDataBuffer = metaDataBuffer;
-            tailAddressOffset = tailCounterOffset; // TODO divergence
-        }
-
-        /// <summary>
-        /// Get the raw current tail value in a volatile memory ordering fashion.
-        /// </summary>
-        /// <returns> the current tail value. </returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public long RawTail()
-        {
-            return _metaDataBuffer.GetLong((int)tailAddressOffset);
-        }
-
-        /// <summary>
-        /// Set the value for the tail counter.
-        /// </summary>
-        /// <param name="termId"> for the tail counter </param>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void TailTermId(int termId)
-        {
-            _metaDataBuffer.PutLong((int)tailAddressOffset, ((long)termId) << 32);
+            _tailAddressOffset = tailCounterOffset; // TODO divergence
         }
 
         /// <summary>
@@ -94,8 +69,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// <param name="header">      for writing the default header. </param>
         /// <param name="length">      of the message to be written. </param>
         /// <param name="bufferClaim"> to be updated with the claimed region. </param>
-        /// <returns> the resulting offset of the term after the append on success otherwise <seealso cref="TRIPPED"/> 
-        /// or <seealso cref="FAILED"/> packed with the termId if a padding record was inserted at the end.</returns>
+        /// <returns> the resulting offset of the term after the append on success otherwise <see cref="TRIPPED"/>.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int Claim(
             int termId,
@@ -108,10 +82,10 @@ namespace Adaptive.Aeron.LogBuffer
             int alignedLength = BitUtil.Align(frameLength, FrameDescriptor.FRAME_ALIGNMENT);
             UnsafeBuffer termBuffer = _termBuffer;
             int termLength = termBuffer.Capacity;
-
-            PutRawTailOrdered(termId, termOffset + alignedLength);
-
+            
             int resultingOffset = termOffset + alignedLength;
+            PutRawTailOrdered(termId, resultingOffset);
+
             if (resultingOffset > termLength)
             {
                 resultingOffset = HandleEndOfLogCondition(termBuffer, termOffset, header, termLength, termId);
@@ -120,6 +94,42 @@ namespace Adaptive.Aeron.LogBuffer
             {
                 header.Write(termBuffer, termOffset, frameLength, termId);
                 bufferClaim.Wrap(termBuffer, termOffset, frameLength);
+            }
+
+            return resultingOffset;
+        }
+
+        /// <summary>
+        /// Pad a length of the term buffer with a padding record.
+        /// </summary>
+        /// <param name="termId"> for the current term.</param>
+        /// <param name="termOffset"> in the term at which to append.</param>
+        /// <param name="header"> for writing the default header.</param>
+        /// <param name="length"> of the padding to be written.</param>
+        /// <returns> the resulting offset of the term after success otherwise <see cref="TRIPPED"/>.</returns>
+        public int AppendPadding(
+            int termId,
+            int termOffset,
+            HeaderWriter header,
+            int length)
+        {
+            int frameLength = length + DataHeaderFlyweight.HEADER_LENGTH;
+            int alignedLength = BitUtil.Align(frameLength, FrameDescriptor.FRAME_ALIGNMENT);
+            UnsafeBuffer termBuffer = _termBuffer;
+            int termLength = termBuffer.Capacity;
+
+            int resultingOffset = termOffset + alignedLength;
+            PutRawTailOrdered(termId, resultingOffset);
+
+            if (resultingOffset > termLength)
+            {
+                resultingOffset = HandleEndOfLogCondition(termBuffer, termOffset, header, termLength, termId);
+            }
+            else
+            {
+                header.Write(termBuffer, termOffset, frameLength, termId);
+                FrameDescriptor.FrameType(termBuffer, termOffset, FrameDescriptor.PADDING_FRAME_TYPE);
+                FrameDescriptor.FrameLengthOrdered(termBuffer, termOffset, frameLength);
             }
 
             return resultingOffset;
@@ -135,8 +145,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// <param name="srcOffset"> at which the message begins. </param>
         /// <param name="length">    of the message in the source buffer. </param>
         /// <param name="reservedValueSupplier"><see cref="ReservedValueSupplier"/> for the frame</param>
-        /// <returns> the resulting offset of the term after the append on success otherwise <seealso cref="TRIPPED"/> or 
-        /// <seealso cref="FAILED"/> packed with the termId if a padding record was inserted at the end.</returns>
+        /// <returns> the resulting offset of the term after the append on success otherwise <seealso cref="TRIPPED"/>.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #if DEBUG
         public virtual int AppendUnfragmentedMessage(
@@ -163,10 +172,10 @@ namespace Adaptive.Aeron.LogBuffer
 
             UnsafeBuffer termBuffer = _termBuffer;
             int termLength = termBuffer.Capacity;
-
-            PutRawTailOrdered(termId, termOffset + alignedLength);
             
             int resultingOffset = termOffset + alignedLength;
+            PutRawTailOrdered(termId, resultingOffset);
+
             if (resultingOffset > termLength)
             {
                 resultingOffset = HandleEndOfLogCondition(termBuffer, termOffset, header, termLength, termId);
@@ -201,8 +210,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// <param name="length">           of the message in the source buffer. </param>
         /// <param name="maxPayloadLength"> that the message will be fragmented into. </param>
         /// /// <param name="reservedValueSupplier"><see cref="ReservedValueSupplier"/> for the frame</param>
-        /// <returns> the resulting offset of the term after the append on success otherwise <seealso cref="TRIPPED"/> 
-        /// or <seealso cref="FAILED"/> packed with the termId if a padding record was inserted at the end.</returns>
+        /// <returns> the resulting offset of the term after the append on success otherwise <seealso cref="TRIPPED"/>.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int AppendFragmentedMessage(
             int termId,
@@ -223,10 +231,10 @@ namespace Adaptive.Aeron.LogBuffer
                                  lastFrameLength;
             UnsafeBuffer termBuffer = _termBuffer;
             int termLength = termBuffer.Capacity;
-            
-            PutRawTailOrdered(termId, termOffset + requiredLength);
 
             int resultingOffset = termOffset + requiredLength;
+            PutRawTailOrdered(termId, resultingOffset);
+            
             if (resultingOffset > termLength)
             {
                 resultingOffset = HandleEndOfLogCondition(termBuffer, termOffset, header, termLength, termId);
@@ -293,7 +301,7 @@ namespace Adaptive.Aeron.LogBuffer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void PutRawTailOrdered(int termId, int termOffset)
         {
-            _metaDataBuffer.PutLongOrdered((int)tailAddressOffset, LogBufferDescriptor.PackTail(termId, termOffset));
+            _metaDataBuffer.PutLongOrdered((int)_tailAddressOffset, LogBufferDescriptor.PackTail(termId, termOffset));
         }
     }
 }

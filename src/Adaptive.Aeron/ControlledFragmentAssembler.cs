@@ -14,15 +14,14 @@
  * limitations under the License.
  */
 
-using System;
 using System.Collections.Generic;
 using Adaptive.Aeron.LogBuffer;
-using Adaptive.Agrona;
+using Adaptive.Agrona.Concurrent;
 
 namespace Adaptive.Aeron
 {
     /// <summary>
-    /// A <seealso cref="IControlledFragmentHandler"/> that sits in a chain-of-responsibility pattern that reassembles fragmented
+    /// A <seealso cref="ControlledFragmentHandler"/> that sits in a chain-of-responsibility pattern that reassembles fragmented
     /// messages so that the next handler in the chain only sees whole messages.
     /// 
     /// Unfragmented messages are delegated without copy. Fragmented messages are copied to a temporary
@@ -37,10 +36,10 @@ namespace Adaptive.Aeron
     /// <seealso cref="Subscription.ControlledPoll"/>
     /// <seealso cref="Image.ControlledPoll"/>
     /// <seealso cref="Image.ControlledPeek"/>
-    public class ControlledFragmentAssembler : IControlledFragmentHandler
+    public class ControlledFragmentAssembler
     {
         private readonly int _initialBufferLength;
-        private readonly IControlledFragmentHandler _delegate;
+        private readonly ControlledFragmentHandler _delegate;
         private readonly IDictionary<int, BufferBuilder> _builderBySessionIdMap = new Dictionary<int, BufferBuilder>();
 
         /// <summary>
@@ -48,7 +47,7 @@ namespace Adaptive.Aeron
         /// </summary>
         /// <param name="delegate">            onto which whole messages are forwarded. </param>
         /// <param name="initialBufferLength"> to be used for each session. </param>
-        public ControlledFragmentAssembler(IControlledFragmentHandler @delegate, int initialBufferLength = BufferBuilder.INITIAL_CAPACITY)
+        public ControlledFragmentAssembler(ControlledFragmentHandler @delegate, int initialBufferLength = BufferBuilder.MIN_ALLOCATED_CAPACITY)
         {
             _initialBufferLength = initialBufferLength;
             _delegate = @delegate;
@@ -58,7 +57,7 @@ namespace Adaptive.Aeron
         /// Get the delegate unto which assembled messages are delegated.
         /// </summary>
         /// <returns>  the delegate unto which assembled messages are delegated. </returns>
-        public virtual IControlledFragmentHandler Delegate()
+        public virtual ControlledFragmentHandler Delegate()
         {
             return _delegate;
         }
@@ -70,7 +69,7 @@ namespace Adaptive.Aeron
         /// <param name="offset"> at which the data begins. </param>
         /// <param name="length"> of the data in bytes. </param>
         /// <param name="header"> representing the meta data for the data. </param>
-        public ControlledFragmentHandlerAction OnFragment(IDirectBuffer buffer, int offset, int length, Header header)
+        public ControlledFragmentHandlerAction OnFragment(UnsafeBuffer buffer, int offset, int length, Header header)
         {
             byte flags = header.Flags;
 
@@ -78,7 +77,7 @@ namespace Adaptive.Aeron
 
             if ((flags & FrameDescriptor.UNFRAGMENTED) == FrameDescriptor.UNFRAGMENTED)
             {
-                action = _delegate.OnFragment(buffer, offset, length, header);
+                action = _delegate(buffer, offset, length, header);
             }
             else
             {
@@ -103,7 +102,7 @@ namespace Adaptive.Aeron
                         if ((flags & FrameDescriptor.END_FRAG_FLAG) == FrameDescriptor.END_FRAG_FLAG)
                         {
                             int msgLength = builder.Limit();
-                            action = _delegate.OnFragment(builder.Buffer(), 0, msgLength, header);
+                            action = _delegate(builder.Buffer(), 0, msgLength, header);
 
                             if (ControlledFragmentHandlerAction.ABORT == action)
                             {

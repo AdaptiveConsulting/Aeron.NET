@@ -31,10 +31,16 @@ namespace Adaptive.Agrona.Concurrent
         /// <summary>
         /// Indicates that the runner is being closed.
         /// </summary>
-        public static readonly Thread Tombstone = null;
+        private static readonly Thread TOMBSTONE = null;
 
-        private volatile bool _running = true;
-        private volatile bool _done = false;
+        private static readonly int RETRY_CLOSE_TIMEOUT_MS = 3000;
+        
+        private volatile bool _isRunning = true;
+
+        /// <summary>
+        /// Has the <see cref="IAgent"/> been closed?
+        /// </summary>
+        public bool IsClosed { get; private set; }
 
         private readonly AtomicCounter _errorCounter;
         private readonly ErrorHandler _errorHandler;
@@ -122,30 +128,37 @@ namespace Adaptive.Agrona.Concurrent
 
                 var idleStrategy = _idleStrategy;
                 var agent = _agent;
-                while (_running)
+
+                try
                 {
-                    try
-                    {
-                        idleStrategy.Idle(agent.DoWork());
-                    }
-                    catch (ThreadInterruptedException)
+                    agent.OnStart();
+                }
+                catch (Exception ex)
+                {
+                    HandleError(ex);
+                    _isRunning = false;
+                }
+
+                while (_isRunning)
+                {
+                    if (DoDutyCycle(idleStrategy, agent))
                     {
                         break;
                     }
-                    catch (Exception ex)
-                    {
-                        if (_running)
-                        {
-                            _errorCounter?.Increment();
+                }
 
-                            _errorHandler(ex);
-                        }
-                    }
+                try
+                {
+                    agent.OnClose();
+                }
+                catch (Exception ex)
+                {
+                    HandleError(ex);
                 }
             }
             finally
             {
-                _done = true;
+                IsClosed = true;
             }
         }
 
@@ -158,36 +171,63 @@ namespace Adaptive.Agrona.Concurrent
         /// </summary>
         public void Dispose()
         {
-            _running = false;
+            _isRunning = false;
 
-            var thread = _thread.GetAndSet(Tombstone);
-            if (Tombstone != thread)
+            var thread = _thread.GetAndSet(TOMBSTONE);
+            if (TOMBSTONE != thread && null != thread)
             {
-                if (null != thread)
+                while (true)
                 {
-                    while (true)
+                    try
                     {
-                        try
-                        {
-                            thread.Join(1000);
+                        thread.Join(RETRY_CLOSE_TIMEOUT_MS);
 
-                            if (!thread.IsAlive || _done)
-                            {
-                                break;
-                            }
-
-                            Console.Error.WriteLine($"Timeout waitinf for {_agent.RoleName()}. Retrying...");
-
-                            thread.Interrupt();
-                        }
-                        catch (ThreadInterruptedException)
+                        if (!thread.IsAlive || IsClosed)
                         {
                             return;
                         }
+
+                        Console.Error.WriteLine($"Timeout waiting for agent '{_agent.RoleName()}' to close, Retrying...");
+
+                        thread.Interrupt();
+                    }
+                    catch (ThreadInterruptedException)
+                    {
+                        return;
                     }
                 }
+            }
+        }
 
-                _agent.OnClose();
+        private bool DoDutyCycle(IIdleStrategy idleStrategy, IAgent agent)
+        {
+            try
+            {
+                idleStrategy.Idle(agent.DoWork());
+            }
+            catch (ThreadInterruptedException)
+            {
+                return true;
+            }
+            catch (AgentTerminationException ex)
+            {
+                HandleError(ex);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                HandleError(ex);
+            }
+
+            return false;
+        }
+
+        private void HandleError(Exception exception)
+        {
+            if (_isRunning)
+            {
+                _errorCounter?.Increment();
+                _errorHandler(exception);
             }
         }
     }

@@ -26,7 +26,6 @@ namespace Adaptive.Aeron.LogBuffer
     /// All messages are logged in frames that have a minimum header layout as follows plus a reserve then
     /// the encoded message follows:
     /// 
-    /// <pre>
     ///   0                   1                   2                   3
     ///   0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
     ///  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -42,10 +41,9 @@ namespace Adaptive.Aeron.LogBuffer
     ///  |                        Encoded Message                       ...
     /// ...                                                              |
     ///  +---------------------------------------------------------------+
-    /// </pre>
     /// 
     /// The (B)egin and (E)nd flags are used for message fragmentation. R is for reserved bit.
-    /// Both are set for a message that does not span frames.
+    /// Both (B)egin and (E)nd flags are set for a message that does not span frames.
     /// </summary>
     public class FrameDescriptor
     {
@@ -100,24 +98,24 @@ namespace Adaptive.Aeron.LogBuffer
         public const int PADDING_FRAME_TYPE = HeaderFlyweight.HDR_TYPE_PAD;
 
         /// <summary>
-        /// Compute the maximum supported message length for a buffer of given capacity.
+        /// Compute the maximum supported message length for a buffer of given termLength.
         /// </summary>
-        /// <param name="capacity"> of the log buffer. </param>
+        /// <param name="termLength"> of the log buffer. </param>
         /// <returns> the maximum supported length for a message. </returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int ComputeMaxMessageLength(int capacity)
+        public static int ComputeMaxMessageLength(int termLength)
         {
-            return capacity/8;
+            return termLength / 8;
         }
 
         /// <summary>
-        /// Compute the maximum supported message length for a buffer of given capacity when the publication is exclusive.
+        /// Compute the maximum supported message length for a buffer of given termLength when the publication is exclusive.
         /// </summary>
-        /// <param name="capacity"> of the log buffer. </param>
+        /// <param name="termLength"> of the log buffer. </param>
         /// <returns> the maximum supported length for a message. </returns>
-        public static int ComputeExclusiveMaxMessageLength(int capacity)
+        public static int ComputeExclusiveMaxMessageLength(int termLength)
         {
-            return capacity / 4;
+            return termLength / 4;
         }
 
         /// <summary>
@@ -196,6 +194,18 @@ namespace Adaptive.Aeron.LogBuffer
         public static int FrameVersion(IAtomicBuffer buffer, int termOffset)
         {
             return buffer.GetByte(VersionOffset(termOffset));
+        }
+
+        /// <summary>
+        /// Get the flags field for a frame.
+        /// </summary>
+        /// <param name="buffer">     containing the frame. </param>
+        /// <param name="termOffset"> at which a frame begins. </param>
+        /// <returns> the value of the frame type header. </returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int FrameFlags(IAtomicBuffer buffer, int termOffset)
+        {
+            return buffer.GetByte(FlagsOffset(termOffset));
         }
 
         /// <summary>

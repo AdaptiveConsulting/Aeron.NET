@@ -18,6 +18,28 @@ using Adaptive.Agrona;
 
 namespace Adaptive.Aeron.Command
 {
+    /// <summary>
+    /// Control message for adding or removing a destination for a Publication in multi-destination-cast.
+    /// 
+    ///  0                   1                   2                   3
+    ///  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+    /// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    /// |                          Client ID                            |
+    /// |                                                               |
+    /// +---------------------------------------------------------------+
+    /// |                    Command Correlation ID                     |
+    /// |                                                               |
+    /// +---------------------------------------------------------------+
+    /// |                  Registration Correlation ID                  |
+    /// |                                                               |
+    /// +---------------------------------------------------------------+
+    /// |                       Channel Length                          |
+    /// +---------------------------------------------------------------+
+    /// |                       Channel(ASCII)                        ...
+    /// ..                                                              |
+    /// +---------------------------------------------------------------+
+    /// 
+    /// </summary>
     public class DestinationMessageFlyweight : CorrelatedMessageFlyweight
     {
         private static readonly int REGISTRATION_CORRELATION_ID_OFFSET = CORRELATION_ID_FIELD_OFFSET + BitUtil.SIZE_OF_LONG;

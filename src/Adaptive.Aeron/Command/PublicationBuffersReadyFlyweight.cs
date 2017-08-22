@@ -23,27 +23,31 @@ namespace Adaptive.Aeron.Command
     /// </summary>
     /// <seealso cref="ControlProtocolEvents" />
     /// 
-    /// 0                   1                   2                   3
-    /// 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+    ///  0                   1                   2                   3
+    ///  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
     /// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     /// |                         Correlation ID                        |
+    /// |                                                               |
+    /// +---------------------------------------------------------------+
+    /// |                        Registration ID                        |
     /// |                                                               |
     /// +---------------------------------------------------------------+
     /// |                          Session ID                           |
     /// +---------------------------------------------------------------+
     /// |                           Stream ID                           |
     /// +---------------------------------------------------------------+
-    /// |                    Publication Limit Offset                   |
+    /// |                  Publication Limit Counter Id                 |
     /// +---------------------------------------------------------------+
-    /// |                         Log File Length                       |
+    /// |                        Log File Length                        |
     /// +---------------------------------------------------------------+
-    /// |                          Log File Name (ASCII)               ...
-    /// ...                                                             |
-    /// +---------------------------------------------------------------+ 
+    /// |                     Log File Name(ASCII)                    ...
+    /// ...                                                              |
+    /// +---------------------------------------------------------------+
     public class PublicationBuffersReadyFlyweight
     {
         private const int CORRELATION_ID_OFFSET = 0;
-        private static readonly int SESSION_ID_OFFSET = CORRELATION_ID_OFFSET + BitUtil.SIZE_OF_LONG;
+        private static readonly int REGISTRATION_ID_OFFSET = CORRELATION_ID_OFFSET + BitUtil.SIZE_OF_LONG;
+        private static readonly int SESSION_ID_OFFSET = REGISTRATION_ID_OFFSET + BitUtil.SIZE_OF_LONG;
         private static readonly int STREAM_ID_FIELD_OFFSET = SESSION_ID_OFFSET + BitUtil.SIZE_OF_INT;
         private static readonly int PUBLICATION_LIMIT_COUNTER_ID_OFFSET = STREAM_ID_FIELD_OFFSET + BitUtil.SIZE_OF_INT;
         private static readonly int LOGFILE_FIELD_OFFSET = PUBLICATION_LIMIT_COUNTER_ID_OFFSET + BitUtil.SIZE_OF_INT;
@@ -59,14 +63,14 @@ namespace Adaptive.Aeron.Command
         /// <returns> for fluent API </returns>
         public PublicationBuffersReadyFlyweight Wrap(IMutableDirectBuffer buffer, int offset)
         {
-            this._buffer = buffer;
-            this._offset = offset;
+            _buffer = buffer;
+            _offset = offset;
 
             return this;
         }
 
         /// <summary>
-        /// return correlation id field
+        /// Get the correlation id field
         /// </summary>
         /// <returns> correlation id field </returns>
         public long CorrelationId()
@@ -75,7 +79,7 @@ namespace Adaptive.Aeron.Command
         }
 
         /// <summary>
-        /// set correlation id field
+        /// Set the correlation id field
         /// </summary>
         /// <param name="correlationId"> field value </param>
         /// <returns> flyweight </returns>
@@ -87,7 +91,28 @@ namespace Adaptive.Aeron.Command
         }
 
         /// <summary>
-        /// return session id field
+        /// Get the registration id field
+        /// </summary>
+        /// <returns> correlation id field </returns>
+        public long RegistrationId()
+        {
+            return _buffer.GetLong(_offset + REGISTRATION_ID_OFFSET);
+        }
+
+        /// <summary>
+        /// Set the correlation id field
+        /// </summary>
+        /// <param name="registrationId"> field value </param>
+        /// <returns> flyweight </returns>
+        public PublicationBuffersReadyFlyweight RegistrationId(long registrationId)
+        {
+            _buffer.PutLong(_offset + REGISTRATION_ID_OFFSET, registrationId);
+
+            return this;
+        }
+
+        /// <summary>
+        /// Get the session id field
         /// </summary>
         /// <returns> session id field </returns>
         public int SessionId()
@@ -96,7 +121,7 @@ namespace Adaptive.Aeron.Command
         }
 
         /// <summary>
-        /// set session id field
+        /// Set the session id field
         /// </summary>
         /// <param name="sessionId"> field value </param>
         /// <returns> flyweight </returns>
@@ -108,7 +133,7 @@ namespace Adaptive.Aeron.Command
         }
 
         /// <summary>
-        /// return stream id field
+        /// Get the stream id field
         /// </summary>
         /// <returns> stream id field </returns>
         public int StreamId()
@@ -117,7 +142,7 @@ namespace Adaptive.Aeron.Command
         }
 
         /// <summary>
-        /// set stream id field
+        /// Set the stream id field
         /// </summary>
         /// <param name="streamId"> field value </param>
         /// <returns> flyweight </returns>

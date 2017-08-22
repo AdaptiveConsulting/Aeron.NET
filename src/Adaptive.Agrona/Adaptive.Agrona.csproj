@@ -73,6 +73,7 @@
     <Compile Include="Collections\DefaultDictionary.cs" />
     <Compile Include="Collections\ListUtil.cs" />
     <Compile Include="Concurrent\AgentInvoker.cs" />
+    <Compile Include="Concurrent\AgentTerminationException.cs" />
     <Compile Include="Concurrent\AtomicBoolean.cs" />
     <Compile Include="Concurrent\AtomicLong.cs" />
     <Compile Include="BitUtil.cs" />

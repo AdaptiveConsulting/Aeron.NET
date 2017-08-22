@@ -15,7 +15,6 @@
  */
 
 using System.Runtime.CompilerServices;
-using System.Threading;
 using Adaptive.Aeron.Protocol;
 using Adaptive.Agrona;
 using Adaptive.Agrona.Concurrent;

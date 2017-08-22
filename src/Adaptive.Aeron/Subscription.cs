@@ -139,6 +139,24 @@ namespace Adaptive.Aeron
             return _fields.unavailableImageHandler;
         }
 
+
+        public int PollEndOfStreams(EndOfStreamHandler endOfStreamHandler)
+        {
+            int numberEndOfStreams = 0;
+
+            foreach (var image in Images)
+            {
+                if (image.IsEndOfStream())
+                {
+                    numberEndOfStreams++;
+                    endOfStreamHandler(image);
+                }
+            }
+
+            return numberEndOfStreams;
+        }
+
+
         /// <summary>
         /// Poll the <seealso cref="Image"/>s under the subscription for available message fragments.
         /// <para>
@@ -194,8 +212,8 @@ namespace Adaptive.Aeron
         /// <param name="fragmentHandler"> callback for handling each message fragment as it is read. </param>
         /// <param name="fragmentLimit">   number of message fragments to limit for the poll operation across multiple <seealso cref="Image"/>s. </param>
         /// <returns> the number of fragments received </returns>
-        /// <seealso cref="IControlledFragmentHandler" />
-        public int ControlledPoll(IControlledFragmentHandler fragmentHandler, int fragmentLimit)
+        /// <seealso cref="ControlledFragmentHandler" />
+        public int ControlledPoll(ControlledFragmentHandler fragmentHandler, int fragmentLimit)
         {
             var images = _fields.images;
             var length = images.Length;
@@ -230,7 +248,7 @@ namespace Adaptive.Aeron
         /// <param name="blockHandler">     to receive a block of fragments from each <seealso cref="Image"/>. </param>
         /// <param name="blockLengthLimit"> for each <seealso cref="Image"/> polled. </param>
         /// <returns> the number of bytes consumed. </returns>
-        public long BlockPoll(IBlockHandler blockHandler, int blockLengthLimit)
+        public long BlockPoll(BlockHandler blockHandler, int blockLengthLimit)
         {
             long bytesConsumed = 0;
             foreach (var image in _fields.images)
@@ -300,6 +318,16 @@ namespace Adaptive.Aeron
         }
 
         /// <summary>
+        /// Get the image at the given index from the images array.
+        /// </summary>
+        /// <param name="index"> in the array</param>
+        /// <returns> image at given index</returns>
+        public Image ImageAtIndex(int index)
+        {
+            return Images[index];
+        }
+
+        /// <summary>
         /// Get a <seealso cref="IList{T}"/> of active <seealso cref="Image"/>s that match this subscription.
         /// </summary>
         /// <returns> an unmodifiable <see cref="List{T}"/> of active <seealso cref="Image"/>s that match this subscription. </returns>
@@ -308,23 +336,13 @@ namespace Adaptive.Aeron
         /// <summary>
         /// Iterate over the <seealso cref="Image"/>s for this subscription.
         /// </summary>
-        /// <param name="imageConsumer"> to handle each <seealso cref="Image"/>. </param>
-        public void ForEachImage(Action<Image> imageConsumer)
+        /// <param name="consumer"> to handle each <seealso cref="Image"/>. </param>
+        public void ForEachImage(Action<Image> consumer)
         {
             foreach (var image in _fields.images)
             {
-                imageConsumer(image);
+                consumer(image);
             }
-        }
-
-        /// <summary>
-        /// Get the image at the given index from the images array.
-        /// </summary>
-        /// <param name="index"> in the array</param>
-        /// <returns> image at given index</returns>
-        public Image GetImage(int index)
-        {
-            return Images[index];
         }
 
         /// <summary>
@@ -336,7 +354,7 @@ namespace Adaptive.Aeron
 #if DEBUG
         public virtual void Dispose()
 #else
-        public  void Dispose()
+        public void Dispose()
 #endif
         {
             _fields.clientConductor.ClientLock().Lock() ;

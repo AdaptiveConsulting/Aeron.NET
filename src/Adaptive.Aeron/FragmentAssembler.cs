@@ -49,7 +49,7 @@ namespace Adaptive.Aeron
         /// Construct an adapter to reassemble message fragments and delegate on whole messages.
         /// </summary>
         /// <param name="fragmentHandler"> onto which whole messages are forwarded. </param>
-        public FragmentAssembler(FragmentHandler fragmentHandler) : this(fragmentHandler, BufferBuilder.INITIAL_CAPACITY)
+        public FragmentAssembler(FragmentHandler fragmentHandler) : this(fragmentHandler, BufferBuilder.MIN_ALLOCATED_CAPACITY)
         {
         }
 

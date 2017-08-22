@@ -63,6 +63,8 @@
     <Compile Include="ActivePublications.cs" />
     <Compile Include="ActiveSubscriptions.cs" />
     <Compile Include="Aeron.cs" />
+    <Compile Include="ChannelUri.cs" />
+    <Compile Include="ChannelUriStringBuilder.cs" />
     <Compile Include="Command\DestinationMessageFlyweight.cs" />
     <Compile Include="BufferBuilder.cs" />
     <Compile Include="ClientConductor.cs" />
@@ -78,8 +80,9 @@
     <Compile Include="Command\SubscriptionMessageFlyweight.cs" />
     <Compile Include="Config.cs" />
     <Compile Include="ControlledFragmentAssembler.cs" />
-    <Compile Include="DriverListenerAdapter.cs" />
+    <Compile Include="DriverEventsAdapter.cs" />
     <Compile Include="DriverProxy.cs" />
+    <Compile Include="EndOfStreamHandler.cs" />
     <Compile Include="ErrorCode.cs" />
     <Compile Include="Exceptions\ConductorServiceTimeoutException.cs" />
     <Compile Include="Exceptions\DriverTimeoutException.cs" />
@@ -88,7 +91,7 @@
     <Compile Include="ImageControlledFragmentHandler.cs" />
     <Compile Include="ImageFragmentAssembler.cs" />
     <Compile Include="ImageHandlers.cs" />
-    <Compile Include="IDriverListener.cs" />
+    <Compile Include="IDriverEventsListener.cs" />
     <Compile Include="ILogBuffersFactory.cs" />
     <Compile Include="Image.cs" />
     <Compile Include="LogBuffers.cs" />
@@ -99,8 +102,8 @@
     <Compile Include="LogBuffer\FrameDescriptor.cs" />
     <Compile Include="LogBuffer\Header.cs" />
     <Compile Include="LogBuffer\HeaderWriter.cs" />
-    <Compile Include="LogBuffer\IBlockHandler.cs" />
-    <Compile Include="LogBuffer\IControlledFragmentHandler.cs" />
+    <Compile Include="LogBuffer\BlockHandler.cs" />
+    <Compile Include="LogBuffer\ControlledFragmentHandler.cs" />
     <Compile Include="LogBuffer\FragmentHandler.cs" />
     <Compile Include="LogBuffer\LogBufferDescriptor.cs" />
     <Compile Include="LogBuffer\TermAppender.cs" />

@@ -16,6 +16,7 @@
 
 using System;
 using System.IO;
+using System.Text;
 using System.Threading;
 using Adaptive.Aeron.Exceptions;
 using Adaptive.Agrona;
@@ -31,9 +32,12 @@ namespace Adaptive.Aeron
     /// <summary>
     /// Aeron entry point for communicating to the Media Driver for creating <seealso cref="Publication"/>s and <seealso cref="Subscription"/>s.
     /// Use an <seealso cref="Context"/> to configure the Aeron object.
-    /// <para>
+    /// 
     /// A client application requires only one Aeron object per Media Driver.
-    /// </para>
+    /// 
+    /// <b>Note:</b> If <seealso cref="Context.ErrorHandler(ErrorHandler)"/> is not set and a <seealso cref="DriverTimeoutException"/>
+    /// occurs then the process will face the wrath of <seealso cref="Environment.Exit"/>. See <seealso cref="DEFAULT_ERROR_HANDLER"/>.
+    /// 
     /// </summary>
     public sealed class Aeron : IDisposable
     {
@@ -87,7 +91,9 @@ namespace Adaptive.Aeron
          */
         public const long PublicationConnectionTimeoutMs = 5000;
 
+        private readonly long _clientId;
         private readonly ILock _clientLock;
+        private readonly Context _ctx;
         private readonly ClientConductor _conductor;
         private readonly AgentRunner _conductorRunner;
         private readonly AgentInvoker _conductorInvoker;
@@ -97,6 +103,8 @@ namespace Adaptive.Aeron
         {
             ctx.Conclude();
 
+            _ctx = ctx;
+            _clientId = ctx.ClientId();
             _clientLock = ctx.ClientLock();
             _commandBuffer = ctx.ToDriverBuffer();
             _conductor = new ClientConductor(ctx);
@@ -105,7 +113,6 @@ namespace Adaptive.Aeron
             {
                 _conductorInvoker = new AgentInvoker(ctx.ErrorHandler(), null, _conductor);
                 _conductorRunner = null;
-                ctx.ConductorAgentInvoker(_conductorInvoker);
             }
             else
             {
@@ -116,7 +123,7 @@ namespace Adaptive.Aeron
 
         /// <summary>
         /// Create an Aeron instance and connect to the media driver with a default <seealso cref="Context"/>.
-        /// <para>
+        /// 
         /// Threads required for interacting with the media driver are created and managed within the Aeron instance.
         /// 
         /// </para>
@@ -143,10 +150,14 @@ namespace Adaptive.Aeron
                 var aeron = new Aeron(ctx);
                 if (ctx.UseConductorAgentInvoker())
                 {
-                    return aeron;
+                    aeron.ConductorAgentInvoker().Start();
+                }
+                else
+                {
+                    aeron.Start(ctx.ThreadFactory());
                 }
 
-                return aeron.Start(ctx.ThreadFactory());
+                return aeron;
             }
             catch (Exception)
             {
@@ -155,6 +166,33 @@ namespace Adaptive.Aeron
             }
         }
 
+        /// <summary>
+        /// Get the <seealso cref="Context"/> that is used by this client.
+        /// </summary>
+        /// <returns> the <seealso cref="Context"/> that is use by this client. </returns>
+        public Context Ctx()
+        {
+            return _ctx;
+        }
+
+        /// <summary>
+        /// Get the client identity that has been allocated for communicating with the media driver.
+        /// </summary>
+        /// <returns> the client identity that has been allocated for communicating with the media driver. </returns>
+        public long ClientId()
+        {
+            return _clientId;
+        }
+
+        /// <summary>
+        /// Get the <seealso cref="AgentInvoker"/> for the client conductor.
+        /// </summary>
+        /// <returns> the <seealso cref="AgentInvoker"/> for the client conductor. </returns>
+        public AgentInvoker ConductorAgentInvoker()
+        {
+            return _conductorInvoker;
+        }
+        
         /// <summary>
         /// Clean up and release all Aeron internal resources and shutdown threads.
         /// </summary>
@@ -171,6 +209,8 @@ namespace Adaptive.Aeron
                 {
                     _conductorInvoker.Dispose();
                 }
+
+                _ctx.Dispose();
             }
             finally
             {
@@ -240,8 +280,8 @@ namespace Adaptive.Aeron
         /// Add a new <seealso cref="Subscription"/> for subscribing to messages from publishers.
         ///   
         /// This method will override the default handlers from the <seealso cref="Context"/>, i.e.
-        /// <seealso cref="Context#availableImageHandler(AvailableImageHandler)"/> and
-        /// <seealso cref="Context#unavailableImageHandler(UnavailableImageHandler)"/>. Null values are valid and will
+        /// <seealso cref="Context.AvailableImageHandler(AvailableImageHandler)"/> and
+        /// <seealso cref="Context.UnavailableImageHandler(UnavailableImageHandler)"/>. Null values are valid and will
         /// result in no action being taken.
         /// </summary>
         /// <param name="channel">                 for receiving the messages known to the media layer. </param>
@@ -274,7 +314,7 @@ namespace Adaptive.Aeron
         /// <returns> next correlation id that is unique for the Media Driver. </returns>
         public long NextCorrelationId()
         {
-            if (_conductor.Status != ClientConductor.ClientConductorStatus.ACTIVE)
+            if (_conductor.IsClosed())
             {
                 throw new InvalidOperationException("Client is closed");
             }
@@ -288,14 +328,12 @@ namespace Adaptive.Aeron
         /// <returns> new <see cref="CountersReader"/> for the Aeron media driver in use.</returns>
         public CountersReader CountersReader()
         {
-            if (_conductor.Status != ClientConductor.ClientConductorStatus.ACTIVE)
+            if (_conductor.IsClosed())
             {
                 throw new InvalidOperationException("Client is closed");
             }
-
-            Context ctx = _conductor.Context();
-
-            return new CountersReader(ctx.CountersMetaDataBuffer(), ctx.CountersValuesBuffer());
+            
+            return new CountersReader(_ctx.CountersMetaDataBuffer(), _ctx.CountersValuesBuffer(), Encoding.ASCII);
         }
 
         private Aeron Start(IThreadFactory threadFactory)
@@ -306,19 +344,19 @@ namespace Adaptive.Aeron
         }
 
         /// <summary>
-        /// This class provides configuration for the <seealso cref="Aeron"/> class via the <seealso cref="Aeron#connect(Aeron.Context)"/>
+        /// This class provides configuration for the <seealso cref="Aeron"/> class via the <seealso cref="Aeron.Connect(Aeron.Context)"/>
         /// method and its overloads. It gives applications some control over the interactions with the Aeron Media Driver.
         /// It can also set up error handling as well as application callbacks for image information from the
         /// Media Driver.
         /// 
         /// A number of the properties are for testing and should not be set by end users.
         /// 
+        /// <b>Note:</b> Do not reuse instances of the context across different <seealso cref="Aeron"/> clients.
         /// </summary>
         public class Context : IDisposable
         {
+            private long _clientId;
             private bool _useConductorAgentInvoker = false;
-            private AgentInvoker _conductorAgentInvoker;
-            private AgentInvoker _driverAgentInvoker;
             private ILock _clientLock;
             private IEpochClock _epochClock;
             private INanoClock _nanoClock;
@@ -336,7 +374,7 @@ namespace Adaptive.Aeron
             private FileInfo _cncFile;
             private string _aeronDirectoryName;
             private DirectoryInfo _aeronDirectory;
-            private long _driverTimeoutMs = DEFAULT_DRIVER_TIMEOUT_MS;
+            private long _driverTimeoutMs = DRIVER_TIMEOUT_MS;
             private MappedByteBuffer _cncByteBuffer;
             private UnsafeBuffer _cncMetaDataBuffer;
             private UnsafeBuffer _countersMetaDataBuffer;
@@ -361,9 +399,26 @@ namespace Adaptive.Aeron
             public const string IPC_CHANNEL = "aeron:ipc";
 
             /// <summary>
+            /// URI used for Spy <see cref="Subscription"/>s whereby an outgoing unicast or multicast publication can be spied on
+            /// by IPC without receiving it again via the network.
+            /// </summary>
+            public const string SPY_PREFIX = "aeron-spy:";
+
+            /// <summary>
+            /// The address and port used for a UDP channel. For the publisher it is the socket to send to,
+            /// for the subscriber it is the socket to receive from.
+            /// </summary>
+            public const string ENDPOINT_PARAM_NAME = "endpoint";
+
+            /// <summary>
+            /// The network interface via which the socket will be routed.
+            /// </summary>
+            public const string INTERFACE_PARAM_NAME = "interface";
+
+            /// <summary>
             /// Timeout in which the driver is expected to respond.
             /// </summary>
-            public const long DEFAULT_DRIVER_TIMEOUT_MS = 10000;
+            public const long DRIVER_TIMEOUT_MS = 10000;
 
             /// <summary>
             /// Initial term id to be used when creating an <seealso cref="ExclusivePublication"/>.
@@ -384,6 +439,26 @@ namespace Adaptive.Aeron
             /// The param name to be used for the term length as a channel URI param.
             /// </summary>
             public const string TERM_LENGTH_PARAM_NAME = "term-length";
+            
+            /// <summary>
+            /// MTU length parameter name for using as a channel URI param.
+            /// </summary>
+            public const string MTU_LENGTH_PARAM_NAME = "mtu";
+
+            /// <summary>
+            /// Time To Live param for a multicast datagram.
+            /// </summary>
+            public const string TTL_PARAM_NAME = "ttl";
+
+            /// <summary>
+            /// The param for the control channel IP address and port for multi-destination-cast semantics.
+            /// </summary>
+            public const string MDC_CONTROL_PARAM_NAME = "control";
+
+            /// <summary>
+            /// Key for the mode of control that such be used for multi-destination-cast semantics.
+            /// </summary>
+            public const string MDC_CONTROL_MODE_PARAM_NAME = "control-mode";
 
             /// <summary>
             /// MTU length parameter name for using as a channel URI param.
@@ -517,10 +592,20 @@ namespace Adaptive.Aeron
 
                 if (null == _driverProxy)
                 {
-                    _driverProxy = new DriverProxy(ToDriverBuffer());
+                    _clientId = _toDriverBuffer.NextCorrelationId();
+                    _driverProxy = new DriverProxy(ToDriverBuffer(), _clientId);
                 }
 
                 return this;
+            }
+
+            /// <summary>
+            /// Get the client identity that has been allocated for communicating with the media driver.
+            /// </summary>
+            /// <returns> the client identity that has been allocated for communicating with the media driver.</returns>
+            public long ClientId()
+            {
+                return _clientId;
             }
 
             /// <summary>
@@ -554,47 +639,12 @@ namespace Adaptive.Aeron
                 return _useConductorAgentInvoker;
             }
 
-            public Context ConductorAgentInvoker(AgentInvoker conductorAgentInvoker)
-            {
-                _conductorAgentInvoker = conductorAgentInvoker;
-                return this;
-            }
-
-            /// <summary>
-            /// Get the <see cref="AgentInvoker"/> that is used to run the <see cref="ClientConductor"/>
-            /// </summary>
-            /// <returns> the <see cref="AgentInvoker"/> that is used to run the <see cref="ClientConductor"/></returns>
-            public AgentInvoker ConductorAgentInvoker()
-            {
-                return _conductorAgentInvoker;
-            }
-
-            /// <summary>
-            /// Set the <see cref="AgentInvoker"/> for the Media Driver to be used while awaiting a synchronous response.
-            /// 
-            /// Useful for when running on a low thread count scenario.
-            /// 
-            /// </summary>
-            /// <param name="driverAgentInvoker"> to be invoked while awaiting a response in the client.</param>
-            /// <returns> this for a fluent API.</returns>
-            public Context DriverAgentInvoker(AgentInvoker driverAgentInvoker)
-            {
-                _driverAgentInvoker = driverAgentInvoker;
-                return this;
-            }
-
-
-            /// <summary>
-            /// Get the <see cref="AgentInvoker"/> that is used to run the Media Driver while awaiting a synchronous response.
-            /// </summary>
-            /// <returns> the <see cref="AgentInvoker"/> that is used for running the Media Driver.</returns>
-            public AgentInvoker DriverAgentInvoker()
-            {
-                return _driverAgentInvoker;
-            }
-
             /// <summary>
             /// The <see cref="ILock"/> that is used to provide mutual exclusion in the Aeron client.
+            /// 
+            /// If the <see cref="UseConductorAgentInvoker(bool)"/> is set and only one thread accesses the client
+            /// then the lock can be set to <see cref="NoOpLock"/> to elide the lock overhead.
+            /// 
             /// </summary>
             /// <param name="lock"> that is used to provide mutual exclusion in the Aeron client.</param>
             /// <returns> this for a fluent API.</returns>
@@ -794,7 +844,7 @@ namespace Adaptive.Aeron
             /// Get the default callback handler for notifying when <seealso cref="Image"/>s become available.
             /// </summary>
             /// <returns> the callback handler for notifying when <seealso cref="Image"/>s become available. </returns>
-            public virtual AvailableImageHandler AvailableImageHandler()
+            public AvailableImageHandler AvailableImageHandler()
             {
                 return _availableImageHandler;
             }
@@ -814,13 +864,14 @@ namespace Adaptive.Aeron
             /// Get the callback handler for when an <seealso cref="Image"/> is unavailable.
             /// </summary>
             /// <returns> the callback handler for when an <seealso cref="Image"/> is unavailable. </returns>
-            public virtual UnavailableImageHandler unavailableImageHandler()
+            public UnavailableImageHandler UnavailableImageHandler()
             {
                 return _unavailableImageHandler;
             }
 
             /// <summary>
-            /// Get the buffer containing the counter meta data.
+            /// Get the buffer containing the counter meta data. These counters are R/W for the driver, read only for all
+            /// other users.
             /// </summary>
             /// <returns> The buffer storing the counter meta data. </returns>
             public UnsafeBuffer CountersMetaDataBuffer()
@@ -829,7 +880,7 @@ namespace Adaptive.Aeron
             }
 
             /// <summary>
-            /// Set the buffer containing the counter meta data.
+            /// Set the buffer containing the counter meta data. Testing/internal purposes only.
             /// </summary>
             /// <param name="countersMetaDataBuffer"> The new counter meta data buffer. </param>
             /// <returns> this Object for method chaining. </returns>
@@ -841,7 +892,7 @@ namespace Adaptive.Aeron
 
 
             /// <summary>
-            /// Get the buffer containing the counters.
+            /// Get the buffer containing the counters. These counters are R/W for the driver, read only for all other users.
             /// </summary>
             /// <returns> The buffer storing the counters. </returns>
             public UnsafeBuffer CountersValuesBuffer()
@@ -850,7 +901,7 @@ namespace Adaptive.Aeron
             }
 
             /// <summary>
-            /// Set the buffer containing the counters
+            /// Set the buffer containing the counters. Testing/internal purposes only.
             /// </summary>
             /// <param name="countersValuesBuffer"> The new counters buffer. </param>
             /// <returns> this Object for method chaining. </returns>
@@ -1062,7 +1113,7 @@ namespace Adaptive.Aeron
                     _cncMetaDataBuffer = CncFileDescriptor.CreateMetaDataBuffer(_cncByteBuffer);
 
                     int cncVersion;
-                    while (0 == (cncVersion = _cncMetaDataBuffer.GetInt(CncFileDescriptor.CncVersionOffset(0))))
+                    while (0 == (cncVersion = _cncMetaDataBuffer.GetIntVolatile(CncFileDescriptor.CncVersionOffset(0))))
                     {
                         if (_epochClock.Time() > (startTimeMs + DriverTimeoutMs()))
                         {
@@ -1148,20 +1199,20 @@ namespace Adaptive.Aeron
             /// </summary>
             /// <param name="directory"> to check</param>
             /// <param name="driverTimeoutMs"> for the driver liveness check.</param>
-            /// <param name="logProgress"> for feedback as liveness checked.</param>
+            /// <param name="logger"> for feedback as liveness checked.</param>
             /// <returns> true if a driver is active or false if not.</returns>
-            public static bool IsDriverActive(DirectoryInfo directory, long driverTimeoutMs, Action<string> logProgress)
+            public static bool IsDriverActive(DirectoryInfo directory, long driverTimeoutMs, Action<string> logger)
             {
                 FileInfo cncFile = new FileInfo(Path.Combine(directory.FullName, CncFileDescriptor.CNC_FILE));
 
                 if (cncFile.Exists)
                 {
-                    logProgress("INFO: Aeron CnC file " + cncFile + " exists");
+                    logger("INFO: Aeron CnC file " + cncFile + " exists");
 
                     var cncByteBuffer = IoUtil.MapExistingFile(cncFile, "CnC file");
                     try
                     {
-                        return IsDriverActive(driverTimeoutMs, logProgress, cncByteBuffer);
+                        return IsDriverActive(driverTimeoutMs, logger, cncByteBuffer);
                     }
                     finally
                     {
@@ -1176,14 +1227,14 @@ namespace Adaptive.Aeron
             /// Is a media driver active in the current Aeron directory?
             /// </summary>
             /// <param name="driverTimeoutMs"> for the driver liveness check.</param>
-            /// <param name="logHandler"> for feedback as liveness checked.</param>
+            /// <param name="logger"> for feedback as liveness checked.</param>
             /// <returns> true if a driver is active or false if not.</returns>
-            public bool IsDriverActive(long driverTimeoutMs, Action<string> logHandler)
+            public bool IsDriverActive(long driverTimeoutMs, Action<string> logger)
             {
-                var cncByteBuffer = MapExistingCncFile(logHandler);
+                var cncByteBuffer = MapExistingCncFile(logger);
                 try
                 {
-                    return IsDriverActive(driverTimeoutMs, logHandler, cncByteBuffer);
+                    return IsDriverActive(driverTimeoutMs, logger, cncByteBuffer);
                 }
                 finally
                 {
@@ -1195,20 +1246,29 @@ namespace Adaptive.Aeron
             /// Is a media driver active in the current mapped CnC buffer?
             /// </summary>
             /// <param name="driverTimeoutMs"> for the driver liveness check.</param>
-            /// <param name="logProgress">     for feedback as liveness checked.</param>
+            /// <param name="logger">     for feedback as liveness checked.</param>
             /// <param name="cncByteBuffer">   for the existing CnC file.</param>
             /// <returns> true if a driver is active or false if not.</returns>
-            public static bool IsDriverActive(long driverTimeoutMs, Action<string> logProgress,
-                MappedByteBuffer cncByteBuffer)
+            public static bool IsDriverActive(long driverTimeoutMs, Action<string> logger, MappedByteBuffer cncByteBuffer)
             {
-
                 if (null == cncByteBuffer)
                 {
                     return false;
                 }
 
                 UnsafeBuffer cncMetaDataBuffer = CncFileDescriptor.CreateMetaDataBuffer(cncByteBuffer);
-                int cncVersion = cncMetaDataBuffer.GetInt(CncFileDescriptor.CncVersionOffset(0));
+                
+                long startTimeMs = UnixTimeConverter.CurrentUnixTimeMillis();
+                int cncVersion;
+                while (0 == (cncVersion = cncMetaDataBuffer.GetIntVolatile(CncFileDescriptor.CncVersionOffset(0))))
+                {
+                    if (UnixTimeConverter.CurrentUnixTimeMillis() > (startTimeMs + driverTimeoutMs))
+                    {
+                        throw new DriverTimeoutException("CnC file is created but not initialised.");
+                    }
+
+                    Sleep(1);
+                }
 
                 if (CncFileDescriptor.CNC_VERSION != cncVersion)
                 {
@@ -1223,7 +1283,7 @@ namespace Adaptive.Aeron
                 long now = DateTime.Now.ToFileTimeUtc();
                 long diff = now - timestamp;
 
-                logProgress("INFO: Aeron toDriver consumer heartbeat is " + diff + "ms old");
+                logger("INFO: Aeron toDriver consumer heartbeat is " + diff + "ms old");
 
                 return diff <= driverTimeoutMs;
             }
@@ -1266,8 +1326,7 @@ namespace Adaptive.Aeron
                 if (CncFileDescriptor.CNC_VERSION != cncVersion)
                 {
                     throw new InvalidOperationException(
-                        "Aeron CnC version does not match: version=" + cncVersion + " required=" +
-                        CncFileDescriptor.CNC_VERSION);
+                        "Aeron CnC version does not match: required=" + CncFileDescriptor.CNC_VERSION + " version=" + cncVersion);
                 }
 
                 UnsafeBuffer buffer = CncFileDescriptor.CreateErrorLogBuffer(cncByteBuffer, cncMetaDataBuffer);

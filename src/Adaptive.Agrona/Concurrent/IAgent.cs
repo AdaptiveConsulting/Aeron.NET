@@ -20,6 +20,10 @@ namespace Adaptive.Agrona.Concurrent
 {
     /// <summary>
     /// An Agent is scheduled to do work on a thread on a duty cycle. Each Agent should have a defined role in a system.
+    /// 
+    /// <see cref="OnStart"/>, <see cref="DoWork"/>, and <see cref="OnClose"/> will all be called by the same thread and in a
+    /// threadsafe manner.
+    /// 
     /// </summary>
     public interface IAgent
     {
@@ -33,15 +37,17 @@ namespace Adaptive.Agrona.Concurrent
         /// In Java this is optional to implement (default method) C# doesn't have the same construct for interfaces.
         /// </summary>
         void OnStart();
-        
+
         /// <summary>
         /// An agent should implement this method to do its work.
         /// 
         /// The return value is used for implementing a backoff strategy that can be employed when no work is
         /// currently available for the agent to process.
+        /// 
+        /// If the Agent should terminate and close then a <see cref="AgentTerminationException"/> can be thrown.
         /// </summary>
-        /// <exception cref="Exception"> if an error has occurred </exception>
         /// <returns> 0 to indicate no work was currently available, a positive value otherwise. </returns>
+        /// <exception cref="Exception"> if an error has occurred </exception>
         int DoWork();
 
         /// <summary>

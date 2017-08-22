@@ -14,10 +14,9 @@
  * limitations under the License.
  */
 
-using System.Collections.Generic;
 using Adaptive.Aeron.Command;
 using Adaptive.Agrona;
-using Adaptive.Agrona.Collections;
+using Adaptive.Agrona.Concurrent;
 using Adaptive.Agrona.Concurrent.Broadcast;
 
 namespace Adaptive.Aeron
@@ -25,10 +24,8 @@ namespace Adaptive.Aeron
     /// <summary>
     /// Analogue of the <see cref="DriverProxy"/> on the client side
     /// </summary>
-    internal class DriverListenerAdapter
+    internal class DriverEventsAdapter
     {
-        public const long MISSING_REGISTRATION_ID = -1L;
-
         private readonly CopyBroadcastReceiver _broadcastReceiver;
 
         private readonly ErrorResponseFlyweight _errorResponse = new ErrorResponseFlyweight();
@@ -36,26 +33,28 @@ namespace Adaptive.Aeron
         private readonly ImageBuffersReadyFlyweight _imageReady = new ImageBuffersReadyFlyweight();
         private readonly CorrelatedMessageFlyweight _correlatedMessage = new CorrelatedMessageFlyweight();
         private readonly ImageMessageFlyweight _imageMessage = new ImageMessageFlyweight();
-        private readonly IDriverListener _listener;
-        private readonly IDictionary<long, long> _subscriberPositionMap = new DefaultDictionary<long, long>(MISSING_REGISTRATION_ID);
+        private readonly IDriverEventsListener _listener;
+        private readonly MessageHandler _messageHandler;
 
         private long _activeCorrelationId;
         private long _lastReceivedCorrelationId;
         private string _expectedChannel;
+        
 
-        internal DriverListenerAdapter(CopyBroadcastReceiver broadcastReceiver, IDriverListener listener)
+        internal DriverEventsAdapter(CopyBroadcastReceiver broadcastReceiver, IDriverEventsListener listener)
         {
             _broadcastReceiver = broadcastReceiver;
             _listener = listener;
+            _messageHandler = OnMessage;
         }
 
-        public int PollMessage(long activeCorrelationId, string expectedChannel)
+        public int Receive(long activeCorrelationId, string expectedChannel)
         {
             _activeCorrelationId = activeCorrelationId;
             _lastReceivedCorrelationId = -1;
             _expectedChannel = expectedChannel;
-
-            return _broadcastReceiver.Receive(OnMessage);
+            
+            return _broadcastReceiver.Receive(_messageHandler);
         }
 
         public long LastReceivedCorrelationId()
@@ -74,7 +73,7 @@ namespace Adaptive.Aeron
                     long correlationId = _errorResponse.OffendingCommandCorrelationId();
                     if (correlationId == _activeCorrelationId)
                     {
-                        _listener.OnError(_errorResponse.ErrorCode(), _errorResponse.ErrorMessage(), correlationId);
+                        _listener.OnError(correlationId, _errorResponse.ErrorCode(), _errorResponse.ErrorMessage());
 
                         _lastReceivedCorrelationId = correlationId;
                     }
@@ -85,22 +84,14 @@ namespace Adaptive.Aeron
                 {
                     _imageReady.Wrap(buffer, index);
 
-                    _subscriberPositionMap.Clear();
-                    for (int i = 0, max = _imageReady.SubscriberPositionCount(); i < max; i++)
-                    {
-                        long registrationId = _imageReady.PositionIndicatorRegistrationId(i);
-                        int positionId = _imageReady.SubscriberPositionId(i);
-
-                        _subscriberPositionMap.Add(registrationId, positionId);
-                    }
-
                     _listener.OnAvailableImage(
+                        _imageReady.CorrelationId(), 
                         _imageReady.StreamId(), 
-                        _imageReady.SessionId(), 
-                        _subscriberPositionMap,
+                        _imageReady.SessionId(),
+                        _imageReady.SubscriberRegistrationId(), 
+                        _imageReady.SubscriberPositionId(), 
                         _imageReady.LogFileName(), 
-                        _imageReady.SourceIdentity(), 
-                        _imageReady.CorrelationId());
+                        _imageReady.SourceIdentity());
                     break;
                 }
 
@@ -113,12 +104,13 @@ namespace Adaptive.Aeron
                     if (correlationId == _activeCorrelationId)
                     {
                         _listener.OnNewPublication(
-                            _expectedChannel, 
+                            correlationId, 
+                            _publicationReady.RegistrationId(),
                             _publicationReady.StreamId(),
                             _publicationReady.SessionId(), 
                             _publicationReady.PublicationLimitCounterId(),
-                            _publicationReady.LogFileName(), 
-                            correlationId);
+                            _expectedChannel, 
+                            _publicationReady.LogFileName());
 
                         _lastReceivedCorrelationId = correlationId;
                     }
@@ -141,7 +133,7 @@ namespace Adaptive.Aeron
                 {
                     _imageMessage.Wrap(buffer, index);
 
-                    _listener.OnUnavailableImage(_imageMessage.StreamId(), _imageMessage.CorrelationId());
+                    _listener.OnUnavailableImage(_imageMessage.CorrelationId(), _imageMessage.StreamId());
                     break;
                 }
 
@@ -153,12 +145,13 @@ namespace Adaptive.Aeron
                     if (correlationId == _activeCorrelationId)
                     {
                         _listener.OnNewExclusivePublication(
-                            _expectedChannel,
+                            correlationId,
+                            _publicationReady.RegistrationId(),
                             _publicationReady.StreamId(),
                             _publicationReady.SessionId(),
                             _publicationReady.PublicationLimitCounterId(),
-                            _publicationReady.LogFileName(),
-                            correlationId);
+                            _expectedChannel,
+                            _publicationReady.LogFileName());
 
                         _lastReceivedCorrelationId = correlationId;
                     }
