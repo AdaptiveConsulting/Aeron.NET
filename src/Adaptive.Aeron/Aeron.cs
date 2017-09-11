@@ -1103,7 +1103,7 @@ namespace Adaptive.Aeron
                     {
                         if (_epochClock.Time() > (startTimeMs + _driverTimeoutMs))
                         {
-                            throw new DriverTimeoutException("CnC file not found: " + cncFile.Name);
+                            throw new DriverTimeoutException("CnC file not found: " + cncFile.FullName);
                         }
 
                         Sleep(16);
