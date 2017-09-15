@@ -16,11 +16,13 @@
 
 using System;
 using System.IO;
+using System.Runtime.CompilerServices;
 using Adaptive.Aeron.LogBuffer;
 using Adaptive.Agrona;
 using Adaptive.Agrona.Concurrent;
 using Adaptive.Agrona.Util;
 
+[assembly: InternalsVisibleTo("DynamicProxyGenAssembly2")]
 namespace Adaptive.Aeron
 {
     /// <summary>

@@ -58,7 +58,12 @@ namespace Adaptive.Agrona
             
             
             var f = new FileStream(path, FileMode.Open, fileAccess, fileShare);
+
+#if NETFULL
             return MemoryMappedFile.CreateFromFile(f, Guid.NewGuid().ToString(), 0, memoryMappedFileAccess, new MemoryMappedFileSecurity(), HandleInheritability.None, false);
+#else
+            return MemoryMappedFile.CreateFromFile(f, Guid.NewGuid().ToString(), 0, memoryMappedFileAccess, HandleInheritability.None, false);
+#endif
         }
 
         /// <summary>
