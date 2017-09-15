@@ -8,8 +8,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Adaptive.Aeron\Adaptive.Aeron.csproj" />
-    <ProjectReference Include="..\Adaptive.Agrona\Adaptive.Agrona.csproj" />
+    <ProjectReference Include="..\..\Adaptive.Aeron\Adaptive.Aeron.csproj" />
+    <ProjectReference Include="..\..\Adaptive.Agrona\Adaptive.Agrona.csproj" />
   </ItemGroup>
 
   <ItemGroup>

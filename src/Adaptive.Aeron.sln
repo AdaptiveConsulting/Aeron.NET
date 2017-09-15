@@ -16,19 +16,28 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Adaptive.Agrona.Tests", "Adaptive.Agrona.Tests\Adaptive.Agrona.Tests.csproj", "{A1ABAA99-CAAE-41B2-B3F9-9BF2C23DFA8B}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Samples", "Samples", "{1807629C-08BB-487B-821E-8E0B72F5C4AC}"
-	ProjectSection(SolutionItems) = preProject
-		Samples\Adaptive.Aeron.Samples.BufferClaimIpcThroughput\Adaptive.Aeron.Samples.BufferClaimIpcThroughput.csproj = Samples\Adaptive.Aeron.Samples.BufferClaimIpcThroughput\Adaptive.Aeron.Samples.BufferClaimIpcThroughput.csproj
-		Samples\Adaptive.Aeron.Samples.Common\Adaptive.Aeron.Samples.Common.csproj = Samples\Adaptive.Aeron.Samples.Common\Adaptive.Aeron.Samples.Common.csproj
-		Samples\Adaptive.Aeron.Samples.HelloWorld\Adaptive.Aeron.Samples.HelloWorld.csproj = Samples\Adaptive.Aeron.Samples.HelloWorld\Adaptive.Aeron.Samples.HelloWorld.csproj
-		Samples\Adaptive.Aeron.Samples.IpcThroughput\Adaptive.Aeron.Samples.IpcThroughput.csproj = Samples\Adaptive.Aeron.Samples.IpcThroughput\Adaptive.Aeron.Samples.IpcThroughput.csproj
-		Samples\Adaptive.Aeron.Samples.Ping\Adaptive.Aeron.Samples.Ping.csproj = Samples\Adaptive.Aeron.Samples.Ping\Adaptive.Aeron.Samples.Ping.csproj
-		Samples\Adaptive.Aeron.Samples.Pong\Adaptive.Aeron.Samples.Pong.csproj = Samples\Adaptive.Aeron.Samples.Pong\Adaptive.Aeron.Samples.Pong.csproj
-		Samples\Adaptive.Aeron.Samples.RateSubscriber\Adaptive.Aeron.Samples.RateSubscriber.csproj = Samples\Adaptive.Aeron.Samples.RateSubscriber\Adaptive.Aeron.Samples.RateSubscriber.csproj
-		Samples\Adaptive.Aeron.Samples.SimplePublisher\Adaptive.Aeron.Samples.SimplePublisher.csproj = Samples\Adaptive.Aeron.Samples.SimplePublisher\Adaptive.Aeron.Samples.SimplePublisher.csproj
-		Samples\Adaptive.Aeron.Samples.SimpleSubscriber\Adaptive.Aeron.Samples.SimpleSubscriber.csproj = Samples\Adaptive.Aeron.Samples.SimpleSubscriber\Adaptive.Aeron.Samples.SimpleSubscriber.csproj
-		Samples\Adaptive.Aeron.Samples.StreamingPublisher\Adaptive.Aeron.Samples.StreamingPublisher.csproj = Samples\Adaptive.Aeron.Samples.StreamingPublisher\Adaptive.Aeron.Samples.StreamingPublisher.csproj
-		Samples\Adaptive.Aeron.Samples.Throughput\Adaptive.Aeron.Samples.Throughput.csproj = Samples\Adaptive.Aeron.Samples.Throughput\Adaptive.Aeron.Samples.Throughput.csproj
-	EndProjectSection
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Adaptive.Aeron.Samples.BufferClaimIpcThroughput", "Samples\Adaptive.Aeron.Samples.BufferClaimIpcThroughput\Adaptive.Aeron.Samples.BufferClaimIpcThroughput.csproj", "{29386401-8D9B-4F56-8B8D-A8242D4E295D}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Adaptive.Aeron.Samples.Common", "Samples\Adaptive.Aeron.Samples.Common\Adaptive.Aeron.Samples.Common.csproj", "{BB3FCE67-1719-4A1F-98BF-B56509C08794}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Adaptive.Aeron.Samples.HelloWorld", "Samples\Adaptive.Aeron.Samples.HelloWorld\Adaptive.Aeron.Samples.HelloWorld.csproj", "{16B25C6A-67C5-46E9-95BE-DB3B17D70DF8}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Adaptive.Aeron.Samples.IpcThroughput", "Samples\Adaptive.Aeron.Samples.IpcThroughput\Adaptive.Aeron.Samples.IpcThroughput.csproj", "{B8324314-0695-4919-91AE-9683972D4125}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Adaptive.Aeron.Samples.Ping", "Samples\Adaptive.Aeron.Samples.Ping\Adaptive.Aeron.Samples.Ping.csproj", "{A15D0AF3-F1D9-4AD4-9542-EB021EA31EA6}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Adaptive.Aeron.Samples.Pong", "Samples\Adaptive.Aeron.Samples.Pong\Adaptive.Aeron.Samples.Pong.csproj", "{183BDA16-AF0C-43CD-BF4E-73DC3284A5C7}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Adaptive.Aeron.Samples.RateSubscriber", "Samples\Adaptive.Aeron.Samples.RateSubscriber\Adaptive.Aeron.Samples.RateSubscriber.csproj", "{00DF060E-573A-4236-B462-89CE45698191}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Adaptive.Aeron.Samples.SimplePublisher", "Samples\Adaptive.Aeron.Samples.SimplePublisher\Adaptive.Aeron.Samples.SimplePublisher.csproj", "{DCB69FB3-9E28-4A0F-9E25-DAE0D083E555}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Adaptive.Aeron.Samples.SimpleSubscriber", "Samples\Adaptive.Aeron.Samples.SimpleSubscriber\Adaptive.Aeron.Samples.SimpleSubscriber.csproj", "{E2506D08-AF46-4B53-817A-A56B43C7C1EA}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Adaptive.Aeron.Samples.StreamingPublisher", "Samples\Adaptive.Aeron.Samples.StreamingPublisher\Adaptive.Aeron.Samples.StreamingPublisher.csproj", "{2D449099-F238-4105-97B8-697F93FA07CF}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Adaptive.Aeron.Samples.Throughput", "Samples\Adaptive.Aeron.Samples.Throughput\Adaptive.Aeron.Samples.Throughput.csproj", "{8038E62C-1D44-48AF-9E2B-C02228D4156F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -52,6 +61,50 @@ Global
 		{A1ABAA99-CAAE-41B2-B3F9-9BF2C23DFA8B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A1ABAA99-CAAE-41B2-B3F9-9BF2C23DFA8B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A1ABAA99-CAAE-41B2-B3F9-9BF2C23DFA8B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{29386401-8D9B-4F56-8B8D-A8242D4E295D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{29386401-8D9B-4F56-8B8D-A8242D4E295D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{29386401-8D9B-4F56-8B8D-A8242D4E295D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{29386401-8D9B-4F56-8B8D-A8242D4E295D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BB3FCE67-1719-4A1F-98BF-B56509C08794}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BB3FCE67-1719-4A1F-98BF-B56509C08794}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BB3FCE67-1719-4A1F-98BF-B56509C08794}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BB3FCE67-1719-4A1F-98BF-B56509C08794}.Release|Any CPU.Build.0 = Release|Any CPU
+		{16B25C6A-67C5-46E9-95BE-DB3B17D70DF8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{16B25C6A-67C5-46E9-95BE-DB3B17D70DF8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{16B25C6A-67C5-46E9-95BE-DB3B17D70DF8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{16B25C6A-67C5-46E9-95BE-DB3B17D70DF8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B8324314-0695-4919-91AE-9683972D4125}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B8324314-0695-4919-91AE-9683972D4125}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B8324314-0695-4919-91AE-9683972D4125}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B8324314-0695-4919-91AE-9683972D4125}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A15D0AF3-F1D9-4AD4-9542-EB021EA31EA6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A15D0AF3-F1D9-4AD4-9542-EB021EA31EA6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A15D0AF3-F1D9-4AD4-9542-EB021EA31EA6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A15D0AF3-F1D9-4AD4-9542-EB021EA31EA6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{183BDA16-AF0C-43CD-BF4E-73DC3284A5C7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{183BDA16-AF0C-43CD-BF4E-73DC3284A5C7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{183BDA16-AF0C-43CD-BF4E-73DC3284A5C7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{183BDA16-AF0C-43CD-BF4E-73DC3284A5C7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{00DF060E-573A-4236-B462-89CE45698191}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{00DF060E-573A-4236-B462-89CE45698191}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{00DF060E-573A-4236-B462-89CE45698191}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{00DF060E-573A-4236-B462-89CE45698191}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DCB69FB3-9E28-4A0F-9E25-DAE0D083E555}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DCB69FB3-9E28-4A0F-9E25-DAE0D083E555}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DCB69FB3-9E28-4A0F-9E25-DAE0D083E555}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DCB69FB3-9E28-4A0F-9E25-DAE0D083E555}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E2506D08-AF46-4B53-817A-A56B43C7C1EA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E2506D08-AF46-4B53-817A-A56B43C7C1EA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E2506D08-AF46-4B53-817A-A56B43C7C1EA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E2506D08-AF46-4B53-817A-A56B43C7C1EA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2D449099-F238-4105-97B8-697F93FA07CF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2D449099-F238-4105-97B8-697F93FA07CF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2D449099-F238-4105-97B8-697F93FA07CF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2D449099-F238-4105-97B8-697F93FA07CF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8038E62C-1D44-48AF-9E2B-C02228D4156F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8038E62C-1D44-48AF-9E2B-C02228D4156F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8038E62C-1D44-48AF-9E2B-C02228D4156F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8038E62C-1D44-48AF-9E2B-C02228D4156F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -61,6 +114,17 @@ Global
 		{E6F84F8E-68C6-43C8-A20E-E1F91DF99ABC} = {28EA6F59-93C1-4471-8124-DF76CF1EB0C4}
 		{46A1DE6D-55B0-4D64-959F-D19B8D378842} = {28EA6F59-93C1-4471-8124-DF76CF1EB0C4}
 		{A1ABAA99-CAAE-41B2-B3F9-9BF2C23DFA8B} = {17A2B870-68D3-4778-A74B-D08A96DD731A}
+		{29386401-8D9B-4F56-8B8D-A8242D4E295D} = {1807629C-08BB-487B-821E-8E0B72F5C4AC}
+		{BB3FCE67-1719-4A1F-98BF-B56509C08794} = {1807629C-08BB-487B-821E-8E0B72F5C4AC}
+		{16B25C6A-67C5-46E9-95BE-DB3B17D70DF8} = {1807629C-08BB-487B-821E-8E0B72F5C4AC}
+		{B8324314-0695-4919-91AE-9683972D4125} = {1807629C-08BB-487B-821E-8E0B72F5C4AC}
+		{A15D0AF3-F1D9-4AD4-9542-EB021EA31EA6} = {1807629C-08BB-487B-821E-8E0B72F5C4AC}
+		{183BDA16-AF0C-43CD-BF4E-73DC3284A5C7} = {1807629C-08BB-487B-821E-8E0B72F5C4AC}
+		{00DF060E-573A-4236-B462-89CE45698191} = {1807629C-08BB-487B-821E-8E0B72F5C4AC}
+		{DCB69FB3-9E28-4A0F-9E25-DAE0D083E555} = {1807629C-08BB-487B-821E-8E0B72F5C4AC}
+		{E2506D08-AF46-4B53-817A-A56B43C7C1EA} = {1807629C-08BB-487B-821E-8E0B72F5C4AC}
+		{2D449099-F238-4105-97B8-697F93FA07CF} = {1807629C-08BB-487B-821E-8E0B72F5C4AC}
+		{8038E62C-1D44-48AF-9E2B-C02228D4156F} = {1807629C-08BB-487B-821E-8E0B72F5C4AC}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {374403EA-85FA-4ACA-8E38-FB938FFC7016}

@@ -13,8 +13,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Adaptive.Aeron.Samples.Common\Adaptive.Aeron.Samples.Common.csproj" />
-    <ProjectReference Include="..\Adaptive.Aeron\Adaptive.Aeron.csproj" />
-    <ProjectReference Include="..\Adaptive.Agrona\Adaptive.Agrona.csproj" />
+    <ProjectReference Include="..\..\Adaptive.Aeron\Adaptive.Aeron.csproj" />
+    <ProjectReference Include="..\..\Adaptive.Agrona\Adaptive.Agrona.csproj" />
   </ItemGroup>
 
 </Project>
