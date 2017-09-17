@@ -152,12 +152,16 @@ Which you can upload to http://hdrhistogram.github.io/HdrHistogram/plotFiles.htm
 The source code is [here](src/Samples/Adaptive.Aeron.Samples.Ping/Ping.cs) and [here](src/Samples/Adaptive.Aeron.Samples.Pong/Pong.cs).
 
 ### Building from Source
-You will need [Visual Studio 2015](https://www.visualstudio.com/en-us/downloads/download-visual-studio-vs.aspx) installed. 
+You will need [Visual Studio 2017 Update 3](https://www.visualstudio.com/en-us/downloads/download-visual-studio-vs.aspx) installed. 
+Also, as the tooling hasn't caught up yet you'll need the last [.NET Core SDK](https://www.microsoft.com/net/download/core)
 
 1. Open `src/Adaptive.Aeron.sln`. 
 2. Click `Build -> Build Solution`.
 
 Note: For best performance, build in x64 release mode and run without the debugger attached.
+
+### Running tests
+As Aeron.NET now supports multitargeting, the only way to properly run tests for all framework versions is from dotnet cli issuing `dotnet test` on the test project folders, Visual Studio 2017 will only detect one project when launching the test runner
 
 ### More Information
 The best place for more information is the [Aeron Wiki](https://github.com/real-logic/Aeron/wiki)
