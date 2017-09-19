@@ -49,5 +49,10 @@ namespace Adaptive.Agrona
         {
             return new ByteBuffer(capacity, alignment);
         }
+
+        public static ByteBuffer AllocateDirect(int capacity)
+        {
+            return new ByteBuffer(capacity, BitUtil.SIZE_OF_LONG);
+        }
     }
 }

@@ -1,141 +1,23 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+<Project Sdk="Microsoft.NET.Sdk">
+
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{CE06A485-98F5-4FEF-A756-D0EF4DDA8309}</ProjectGuid>
-    <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Adaptive.Aeron</RootNamespace>
-    <AssemblyName>Adaptive.Aeron</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
-    <TargetFrameworkProfile />
+    <TargetFrameworks>netstandard2.0;net45</TargetFrameworks>
+    <PackageId>Aeron.Client</PackageId>
+    <VersionPrefix>1.4.0</VersionPrefix>
+    <VersionSuffix>standard</VersionSuffix>
+    <Authors>Adaptive Financial Consulting Ltd.</Authors>
+    <Company>Adaptive Financial Consulting Ltd.</Company>
+    <Product>Aeron Client</Product>
+    <Copyright>Copyright 2017</Copyright>
+    <PackageLicenseUrl>https://github.com/AdaptiveConsulting/Aeron.NET/blob/master/LICENSE</PackageLicenseUrl>
+    <PackageProjectUrl>https://github.com/AdaptiveConsulting/Aeron.NET/</PackageProjectUrl>
+    <PackageIconUrl>https://raw.githubusercontent.com/AdaptiveConsulting/Aeron.NET/master/images/adaptive.png</PackageIconUrl>
+    <Description>Efficient reliable UDP unicast, UDP multicast, and IPC transport protocol.</Description>
+    <PackageTags>aeron client messaging networking transport udp ipc</PackageTags>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <DocumentationFile>bin\Release\Adaptive.Aeron.XML</DocumentationFile>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
-    <DebugSymbols>true</DebugSymbols>
-    <OutputPath>bin\x64\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <DebugType>full</DebugType>
-    <PlatformTarget>x64</PlatformTarget>
-    <ErrorReport>prompt</ErrorReport>
-    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
-    <OutputPath>bin\x64\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <Optimize>true</Optimize>
-    <DebugType>pdbonly</DebugType>
-    <PlatformTarget>x64</PlatformTarget>
-    <ErrorReport>prompt</ErrorReport>
-    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-  </PropertyGroup>
+
   <ItemGroup>
-    <Reference Include="System" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Net.Http" />
-    <Reference Include="System.Xml" />
+    <ProjectReference Include="..\Adaptive.Agrona\Adaptive.Agrona.csproj" />
   </ItemGroup>
-  <ItemGroup>
-    <Compile Include="ActivePublications.cs" />
-    <Compile Include="ActiveSubscriptions.cs" />
-    <Compile Include="Aeron.cs" />
-    <Compile Include="ChannelUri.cs" />
-    <Compile Include="ChannelUriStringBuilder.cs" />
-    <Compile Include="Command\DestinationMessageFlyweight.cs" />
-    <Compile Include="BufferBuilder.cs" />
-    <Compile Include="ClientConductor.cs" />
-    <Compile Include="CncFileDescriptor.cs" />
-    <Compile Include="Command\ControlProtocolEvents.cs" />
-    <Compile Include="Command\CorrelatedMessageFlyweight.cs" />
-    <Compile Include="Command\ErrorResponseFlyweight.cs" />
-    <Compile Include="Command\ImageBuffersReadyFlyweight.cs" />
-    <Compile Include="Command\ImageMessageFlyweight.cs" />
-    <Compile Include="Command\PublicationBuffersReadyFlyweight.cs" />
-    <Compile Include="Command\PublicationMessageFlyweight.cs" />
-    <Compile Include="Command\RemoveMessageFlyweight.cs" />
-    <Compile Include="Command\SubscriptionMessageFlyweight.cs" />
-    <Compile Include="Config.cs" />
-    <Compile Include="ControlledFragmentAssembler.cs" />
-    <Compile Include="DriverEventsAdapter.cs" />
-    <Compile Include="DriverProxy.cs" />
-    <Compile Include="EndOfStreamHandler.cs" />
-    <Compile Include="ErrorCode.cs" />
-    <Compile Include="Exceptions\ConductorServiceTimeoutException.cs" />
-    <Compile Include="Exceptions\DriverTimeoutException.cs" />
-    <Compile Include="Exceptions\RegistrationException.cs" />
-    <Compile Include="FragmentAssembler.cs" />
-    <Compile Include="ImageControlledFragmentHandler.cs" />
-    <Compile Include="ImageFragmentAssembler.cs" />
-    <Compile Include="ImageHandlers.cs" />
-    <Compile Include="IDriverEventsListener.cs" />
-    <Compile Include="ILogBuffersFactory.cs" />
-    <Compile Include="Image.cs" />
-    <Compile Include="LogBuffers.cs" />
-    <Compile Include="LogBuffer\BufferClaim.cs" />
-    <Compile Include="LogBuffer\ControlledFragmentHandlerAction.cs" />
-    <Compile Include="LogBuffer\ExclusiveBufferClaim.cs" />
-    <Compile Include="LogBuffer\ExclusiveTermAppender.cs" />
-    <Compile Include="LogBuffer\FrameDescriptor.cs" />
-    <Compile Include="LogBuffer\Header.cs" />
-    <Compile Include="LogBuffer\HeaderWriter.cs" />
-    <Compile Include="LogBuffer\BlockHandler.cs" />
-    <Compile Include="LogBuffer\ControlledFragmentHandler.cs" />
-    <Compile Include="LogBuffer\FragmentHandler.cs" />
-    <Compile Include="LogBuffer\LogBufferDescriptor.cs" />
-    <Compile Include="LogBuffer\TermAppender.cs" />
-    <Compile Include="LogBuffer\TermBlockScanner.cs" />
-    <Compile Include="LogBuffer\TermGapFiller.cs" />
-    <Compile Include="LogBuffer\TermReader.cs" />
-    <Compile Include="MappedLogBuffersFactory.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Protocol\DataHeaderFlyweight.cs" />
-    <Compile Include="Protocol\HeaderFlyweight.cs" />
-    <Compile Include="Protocol\RttMeasurementFlyweight.cs" />
-    <Compile Include="ExclusivePublication.cs" />
-    <Compile Include="Publication.cs" />
-    <Compile Include="ReservedValueSupplier.cs" />
-    <Compile Include="Subscription.cs" />
-    <Compile Include="LogBuffer\TermRebuilder.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Adaptive.Agrona\Adaptive.Agrona.csproj">
-      <Project>{4D9DF40E-0726-47DD-8D70-34EB23429B59}</Project>
-      <Name>Adaptive.Agrona</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Adaptive.Aeron.licenseheader" />
-  </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
-       Other similar extension points exist, see Microsoft.Common.targets.
-  <Target Name="BeforeBuild">
-  </Target>
-  <Target Name="AfterBuild">
-  </Target>
-  -->
 </Project>

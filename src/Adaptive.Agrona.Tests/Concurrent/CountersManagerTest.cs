@@ -42,8 +42,8 @@ namespace Adaptive.Agrona.Tests.Concurrent
             _consumer = A.Fake<IntObjConsumer<string>>();
             _metaData = A.Fake<CountersReader.MetaData>();
 
-            _labelsBuffer = new UnsafeBuffer(new byte[NumberOfCounters * CountersReader.METADATA_LENGTH]);
-            _counterBuffer = new UnsafeBuffer(new byte[NumberOfCounters * CountersReader.COUNTER_LENGTH]);
+            _labelsBuffer = new UnsafeBuffer(BufferUtil.AllocateDirect(NumberOfCounters * CountersReader.METADATA_LENGTH));
+            _counterBuffer = new UnsafeBuffer(BufferUtil.AllocateDirect(NumberOfCounters * CountersReader.COUNTER_LENGTH));
 
             _manager = new CountersManager(_labelsBuffer, _counterBuffer, Encoding.ASCII);
             _otherManager = new CountersManager(_labelsBuffer, _counterBuffer, Encoding.ASCII);

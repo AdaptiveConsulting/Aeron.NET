@@ -206,7 +206,8 @@ namespace Adaptive.Aeron.Tests
             A.CallTo(() => LogBuffersFactory.Map(SESSION_ID_1 + "-log", MapMode.ReadWrite)).MustHaveHappened();
         }
 
-
+// Timeout not implemented in the .NetStandard version of NUnit yet
+#if NETFULL
         [Test]
         [Timeout(5000)]
         [ExpectedException(typeof(DriverTimeoutException))]
@@ -214,6 +215,7 @@ namespace Adaptive.Aeron.Tests
         {
             Conductor.AddPublication(CHANNEL, STREAM_ID_1);
         }
+#endif
 
         [Test]
         public void ConductorShouldCachePublicationInstances()
@@ -401,6 +403,8 @@ namespace Adaptive.Aeron.Tests
             A.CallTo(() => DriverProxy.RemoveSubscription(CORRELATION_ID)).MustHaveHappened();
         }
 
+ // Timeout not implemented in the .NetStandard version of NUnit yet
+#if NETFULL
         [Test]
         [Timeout(5000)]
         [ExpectedException(typeof(DriverTimeoutException))]
@@ -408,7 +412,7 @@ namespace Adaptive.Aeron.Tests
         {
             Conductor.AddSubscription(CHANNEL, STREAM_ID_1);
         }
-
+#endif
         [Test]
         [ExpectedException(typeof(RegistrationException))]
         public void ShouldFailToAddSubscriptionOnMediaDriverError()
