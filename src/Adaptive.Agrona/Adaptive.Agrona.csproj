@@ -1,20 +1,21 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;net452</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0;net45</TargetFrameworks>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <PackageId>Agrona</PackageId>
-    <Version>0.9.7-standard</Version>
+    <VersionPrefix>0.9.7</VersionPrefix>
+    <VersionSuffix>standard</VersionSuffix>
     <Authors>Adaptive Financial Consulting Ltd.</Authors>
     <Company>Adaptive Financial Consulting Ltd.</Company>
     <Product>Agrona libraries initially included in Aeron Client</Product>
     <Copyright>Copyright 2017</Copyright>
-    <PackageLicenseUrl>https://github.com/AdaptiveConsulting/Aeron/blob/master/LICENSE</PackageLicenseUrl>
-    <PackageProjectUrl>https://github.com/AdaptiveConsulting/Aeron/</PackageProjectUrl>
+    <PackageLicenseUrl>https://github.com/AdaptiveConsulting/Aeron.NET/blob/master/LICENSE</PackageLicenseUrl>
+    <PackageProjectUrl>https://github.com/AdaptiveConsulting/Aeron.NET/</PackageProjectUrl>
     <PackageIconUrl>https://raw.githubusercontent.com/AdaptiveConsulting/Aeron.NET/master/images/adaptive.png</PackageIconUrl>
     <Description>Agrona libraries initially included in Aeron Client</Description>
-    <PackageTags>agrona aeron client messaging networking transport udp ipc</PackageTags>
-    <PackageReleaseNotes>https://github.com/real-logic/aeron/wiki/Change-Log</PackageReleaseNotes>
+    <PackageTags>agrona high-performance primitives utilities</PackageTags>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 
   <!--Bounds check only on Debug mode, rest of define constants need to concatenate this one-->
@@ -27,8 +28,7 @@
     <DefineConstants>$(DefineConstants);NETCORE;NETSTANDARD;NETSTANDARD2_0</DefineConstants>
   </PropertyGroup>
   
-  <PropertyGroup Condition=" '$(TargetFramework)' == 'net452'">
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'net45'">
     <DefineConstants>$(DefineConstants);NET45;NETFULL</DefineConstants>
   </PropertyGroup>
-
 </Project>
