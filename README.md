@@ -73,7 +73,7 @@ using(Subscription subscriber = aeron.AddSubscription(channel, streamId)) {
 
 ### Samples
 Here are some of the samples that come with Aeron.
-Before running the samples, they need to be built (you will need [Visual Studio 2015](https://www.visualstudio.com/en-us/downloads/download-visual-studio-vs.aspx) installed). Run:
+Before running the samples, they need to be built (you will need [Visual Studio 2017](https://www.visualstudio.com/en-us/downloads/download-visual-studio-vs.aspx) installed). Run:
 
     scripts/build.bat
 
@@ -162,6 +162,11 @@ Note: For best performance, build in x64 release mode and run without the debugg
 
 ### Running tests
 As Aeron.NET now supports multitargeting, the only way to properly run tests for all framework versions is from dotnet cli issuing `dotnet test` on the test project folders, Visual Studio 2017 will only detect one project when launching the test runner
+
+### Packing NuGets
+Run `dotnet pack src\Adaptive.Aeron\Adaptive.Aeron.csproj /p:Configuration=Release`
+
+If there are also changes in Agrona run `src\Adaptive.Agrona\Adaptive.Agrona.csproj /p:Configuration=Release` Aeron depends on it so both should be published at the same time
 
 ### More Information
 The best place for more information is the [Aeron Wiki](https://github.com/real-logic/Aeron/wiki)
