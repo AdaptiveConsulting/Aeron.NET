@@ -39,6 +39,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Adaptive.Aeron.Samples.Stre
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Adaptive.Aeron.Samples.Throughput", "Samples\Adaptive.Aeron.Samples.Throughput\Adaptive.Aeron.Samples.Throughput.csproj", "{8038E62C-1D44-48AF-9E2B-C02228D4156F}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Adaptive.Agrona.PerformanceTest", "Adaptive.Agrona.PerformanceTest\Adaptive.Agrona.PerformanceTest.csproj", "{9C2B605E-5C8C-4BDC-9977-96FADDBA1967}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -105,6 +107,10 @@ Global
 		{8038E62C-1D44-48AF-9E2B-C02228D4156F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8038E62C-1D44-48AF-9E2B-C02228D4156F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8038E62C-1D44-48AF-9E2B-C02228D4156F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9C2B605E-5C8C-4BDC-9977-96FADDBA1967}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9C2B605E-5C8C-4BDC-9977-96FADDBA1967}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9C2B605E-5C8C-4BDC-9977-96FADDBA1967}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9C2B605E-5C8C-4BDC-9977-96FADDBA1967}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -125,6 +131,7 @@ Global
 		{E2506D08-AF46-4B53-817A-A56B43C7C1EA} = {1807629C-08BB-487B-821E-8E0B72F5C4AC}
 		{2D449099-F238-4105-97B8-697F93FA07CF} = {1807629C-08BB-487B-821E-8E0B72F5C4AC}
 		{8038E62C-1D44-48AF-9E2B-C02228D4156F} = {1807629C-08BB-487B-821E-8E0B72F5C4AC}
+		{9C2B605E-5C8C-4BDC-9977-96FADDBA1967} = {17A2B870-68D3-4778-A74B-D08A96DD731A}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {374403EA-85FA-4ACA-8E38-FB938FFC7016}
