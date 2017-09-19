@@ -3,6 +3,19 @@
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;net452</TargetFrameworks>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <PackageId>Agrona</PackageId>
+    <Version>1.4.1.0</Version>
+    <Authors>Adaptive Financial Consulting Ltd.</Authors>
+    <Company>Adaptive Financial Consulting Ltd.</Company>
+    <Product>Agrona libraries initially included in Aeron Client</Product>
+    <Copyright>Copyright 2017</Copyright>
+    <PackageLicenseUrl>https://github.com/AdaptiveConsulting/Aeron/blob/master/LICENSE</PackageLicenseUrl>
+    <PackageProjectUrl>https://github.com/AdaptiveConsulting/Aeron/</PackageProjectUrl>
+    <PackageIconUrl>https://raw.githubusercontent.com/AdaptiveConsulting/Aeron.NET/master/images/adaptive.png</PackageIconUrl>
+    <Description>Agrona libraries initially included in Aeron Client</Description>
+    <PackageTags>agrona aeron client messaging networking transport udp ipc</PackageTags>
+    <PackageReleaseNotes>https://github.com/real-logic/aeron/wiki/Change-Log</PackageReleaseNotes>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
   </PropertyGroup>
 
   <!--Bounds check only on Debug mode, rest of define constants need to concatenate this one-->
