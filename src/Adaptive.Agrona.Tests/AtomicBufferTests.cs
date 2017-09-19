@@ -86,7 +86,7 @@ namespace Adaptive.Agrona.Tests
         [Test]
         public void ShouldVerifyBufferAlignment()
         {
-            var buffer = new UnsafeBuffer(new byte[1024]);
+            var buffer = new UnsafeBuffer(BufferUtil.AllocateDirect(1024));
             try
             {
                 buffer.VerifyAlignment();

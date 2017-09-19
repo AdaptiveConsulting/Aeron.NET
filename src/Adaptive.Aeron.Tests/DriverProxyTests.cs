@@ -16,6 +16,7 @@
 
 using System;
 using Adaptive.Aeron.Command;
+using Adaptive.Agrona;
 using Adaptive.Agrona.Concurrent;
 using Adaptive.Agrona.Concurrent.RingBuffer;
 using NUnit.Framework;
@@ -27,7 +28,7 @@ namespace Adaptive.Aeron.Tests
         [SetUp]
         public void Setup()
         {
-            conductorBuffer = new ManyToOneRingBuffer(new UnsafeBuffer(new byte[RingBufferDescriptor.TrailerLength + 1024]));
+            conductorBuffer = new ManyToOneRingBuffer(new UnsafeBuffer(BufferUtil.AllocateDirect(RingBufferDescriptor.TrailerLength + 1024)));
             conductor = new DriverProxy(conductorBuffer, CLIENT_ID);
         }
         
