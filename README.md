@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/AdaptiveConsulting/Aeron.NET.svg?branch=master)](https://travis-ci.org/AdaptiveConsulting/Aeron.NET)
+
 # Aeron.NET
 [![NuGet](https://img.shields.io/nuget/v/Aeron.Client.svg)](https://www.nuget.org/packages/Aeron.Client/)
 
