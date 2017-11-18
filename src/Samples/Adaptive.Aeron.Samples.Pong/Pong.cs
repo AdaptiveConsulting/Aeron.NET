@@ -58,7 +58,7 @@ namespace Adaptive.Aeron.Samples.Pong
             {
                 FragmentHandler dataHandler = (buffer, offset, length, header) => PingHandler(pongPublication, buffer, offset, length);
 
-                while (running.Get())
+                while (running)
                 {
                     idleStrategy.Idle(pingSubscription.Poll(dataHandler, FrameCountLimit));
                 }

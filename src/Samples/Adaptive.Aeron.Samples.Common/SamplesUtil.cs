@@ -53,7 +53,7 @@ namespace Adaptive.Aeron.Samples.Common
         {
             return subscription =>
             {
-                while (running.Get())
+                while (running)
                 {
                     idleStrategy.Idle(subscription.Poll(fragmentHandler, limit));
                 }

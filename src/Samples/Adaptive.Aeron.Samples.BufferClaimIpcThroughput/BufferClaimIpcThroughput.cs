@@ -79,7 +79,7 @@ namespace Adaptive.Aeron.Samples.BufferClaimIpcThroughput
             {
                 var lastTotalBytes = Subscriber.TotalBytes();
 
-                while (Running.Get())
+                while (Running)
                 {
                     Thread.Sleep(1000);
 
@@ -112,14 +112,14 @@ namespace Adaptive.Aeron.Samples.BufferClaimIpcThroughput
                 long backPressureCount = 0;
                 long totalMessageCount = 0;
 
-                while (Running.Get())
+                while (Running)
                 {
                     for (var i = 0; i < BurstLength; i++)
                     {
                         while (publication.TryClaim(MessageLength, bufferClaim) <= 0)
                         {
                             ++backPressureCount;
-                            if (!Running.Get())
+                            if (!Running)
                             {
                                 break;
                             }
@@ -172,7 +172,7 @@ namespace Adaptive.Aeron.Samples.BufferClaimIpcThroughput
                 long successfulPolls = 0;
                 FragmentHandler onFragment = OnFragment;
 
-                while (Running.Get())
+                while (Running)
                 {
                     var fragmentsRead = image.Poll(onFragment, MessageCountLimit);
                     if (0 == fragmentsRead)

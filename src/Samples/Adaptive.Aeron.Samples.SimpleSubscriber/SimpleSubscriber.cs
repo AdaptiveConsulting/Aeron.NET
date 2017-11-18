@@ -74,7 +74,7 @@ namespace Adaptive.Aeron.Samples.SimpleSubscriber
                 IIdleStrategy idleStrategy = new BusySpinIdleStrategy();
 
                 // Try to read the data from subscriber
-                while (running.Get())
+                while (running)
                 {
                     // poll delivers messages to the dataHandler as they arrive
                     // and returns number of fragments read, or 0

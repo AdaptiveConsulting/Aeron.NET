@@ -55,6 +55,12 @@ namespace Adaptive.Agrona.Concurrent
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static implicit operator bool(AtomicBoolean value)
+        {
+            return value.Get();
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static bool ToBool(int value)
         {
             if (value != FALSE && value != TRUE)
