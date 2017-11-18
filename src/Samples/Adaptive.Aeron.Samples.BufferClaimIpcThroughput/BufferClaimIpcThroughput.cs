@@ -135,7 +135,6 @@ namespace Adaptive.Aeron.Samples.BufferClaimIpcThroughput
                     }
                 }
 
-
                 var backPressureRatio = backPressureCount/(double) totalMessageCount;
                 Console.WriteLine($"Publisher back pressure ratio: {backPressureRatio}");
             }
@@ -168,8 +167,8 @@ namespace Adaptive.Aeron.Samples.BufferClaimIpcThroughput
 
                 var image = Subscription.Images[0];
 
-                long failedPolls = 0;
-                long successfulPolls = 0;
+                var failedPolls = 0L;
+                var successfulPolls = 0L;
                 FragmentHandler onFragment = OnFragment;
 
                 while (Running)
