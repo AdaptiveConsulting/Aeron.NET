@@ -36,7 +36,7 @@ namespace Adaptive.Aeron.LogBuffer
         private readonly UnsafeBuffer _buffer = new UnsafeBuffer(IntPtr.Zero, 0);
 
         /// <summary>
-        /// Wrap a region of an underlying log buffer so can can represent a claimed space for use by a publisher.
+        /// Wrap a region of an underlying log buffer so it can represent a claimed space for use by a publisher.
         /// </summary>
         /// <param name="buffer"> to be wrapped. </param>
         /// <param name="offset"> at which the claimed region begins including space for the header. </param>

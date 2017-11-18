@@ -26,7 +26,7 @@ namespace Adaptive.Aeron.Samples.BufferClaimIpcThroughput
 {
     public class BufferClaimIpcThroughput
     {
-        private const int BurstLength = 1000000;
+        private const int BurstLength = 1_000_000;
         private static readonly int MessageLength = SampleConfiguration.MESSAGE_LENGTH;
         private static readonly int MessageCountLimit = SampleConfiguration.FRAGMENT_COUNT_LIMIT;
         private static readonly string Channel = Aeron.Context.IPC_CHANNEL;
