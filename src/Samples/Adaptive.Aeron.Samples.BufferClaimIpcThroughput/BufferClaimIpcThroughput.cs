@@ -26,7 +26,7 @@ namespace Adaptive.Aeron.Samples.BufferClaimIpcThroughput
 {
     public class BufferClaimIpcThroughput
     {
-        private const int BurstLength = 1000000;
+        private const int BurstLength = 1_000_000;
         private static readonly int MessageLength = SampleConfiguration.MESSAGE_LENGTH;
         private static readonly int MessageCountLimit = SampleConfiguration.FRAGMENT_COUNT_LIMIT;
         private static readonly string Channel = Aeron.Context.IPC_CHANNEL;
@@ -79,7 +79,7 @@ namespace Adaptive.Aeron.Samples.BufferClaimIpcThroughput
             {
                 var lastTotalBytes = Subscriber.TotalBytes();
 
-                while (Running.Get())
+                while (Running)
                 {
                     Thread.Sleep(1000);
 
@@ -112,14 +112,14 @@ namespace Adaptive.Aeron.Samples.BufferClaimIpcThroughput
                 long backPressureCount = 0;
                 long totalMessageCount = 0;
 
-                while (Running.Get())
+                while (Running)
                 {
                     for (var i = 0; i < BurstLength; i++)
                     {
                         while (publication.TryClaim(MessageLength, bufferClaim) <= 0)
                         {
                             ++backPressureCount;
-                            if (!Running.Get())
+                            if (!Running)
                             {
                                 break;
                             }
@@ -134,7 +134,6 @@ namespace Adaptive.Aeron.Samples.BufferClaimIpcThroughput
                         ++totalMessageCount;
                     }
                 }
-
 
                 var backPressureRatio = backPressureCount/(double) totalMessageCount;
                 Console.WriteLine($"Publisher back pressure ratio: {backPressureRatio}");
@@ -168,11 +167,11 @@ namespace Adaptive.Aeron.Samples.BufferClaimIpcThroughput
 
                 var image = Subscription.Images[0];
 
-                long failedPolls = 0;
-                long successfulPolls = 0;
+                var failedPolls = 0L;
+                var successfulPolls = 0L;
                 FragmentHandler onFragment = OnFragment;
 
-                while (Running.Get())
+                while (Running)
                 {
                     var fragmentsRead = image.Poll(onFragment, MessageCountLimit);
                     if (0 == fragmentsRead)

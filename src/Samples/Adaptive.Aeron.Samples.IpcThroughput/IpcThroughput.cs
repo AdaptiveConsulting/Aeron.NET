@@ -26,7 +26,7 @@ namespace Adaptive.Aeron.Samples.IpcThroughput
 {
     public class IpcThroughput
     {
-        private const int BurstLength = 1000000;
+        private const int BurstLength = 1_000_000;
         private static readonly int MessageLength = SampleConfiguration.MESSAGE_LENGTH;
         private static readonly int MessageCountLimit = SampleConfiguration.FRAGMENT_COUNT_LIMIT;
         private static readonly string Channel = Aeron.Context.IPC_CHANNEL;
@@ -79,7 +79,7 @@ namespace Adaptive.Aeron.Samples.IpcThroughput
             {
                 var lastTotalBytes = Subscriber.TotalBytes();
 
-                while (Running.Get())
+                while (Running)
                 {
                     Thread.Sleep(1000);
 
@@ -114,14 +114,14 @@ namespace Adaptive.Aeron.Samples.IpcThroughput
                     long backPressureCount = 0;
                     long totalMessageCount = 0;
 
-                    while (Running.Get())
+                    while (Running)
                     {
                         for (var i = 0; i < BurstLength; i++)
                         {
                             while (publication.Offer(buffer, 0, MessageLength) <= 0)
                             {
                                 ++backPressureCount;
-                                if (!Running.Get())
+                                if (!Running)
                                 {
                                     break;
                                 }
@@ -169,7 +169,7 @@ namespace Adaptive.Aeron.Samples.IpcThroughput
                 long successfulPolls = 0;
                 FragmentHandler onFragment = OnFragment;
                 
-                while (Running.Get())
+                while (Running)
                 {
                     var fragmentsRead = image.Poll(onFragment, MessageCountLimit);
                     if (0 == fragmentsRead)
