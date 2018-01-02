@@ -33,7 +33,7 @@ namespace Adaptive.Aeron.LogBuffer
     /// </summary>
     public class BufferClaim
     {
-        private readonly UnsafeBuffer _buffer = new UnsafeBuffer(IntPtr.Zero, 0);
+        protected readonly UnsafeBuffer _buffer = new UnsafeBuffer(IntPtr.Zero, 0);
 
         /// <summary>
         /// Wrap a region of an underlying log buffer so it can represent a claimed space for use by a publisher.

@@ -68,7 +68,7 @@ namespace Adaptive.Aeron
     {
         public const string CNC_FILE = "cnc.dat";
 
-        public const int CNC_VERSION = 7;
+        public const int CNC_VERSION = 11;
 
         public static readonly int CNC_VERSION_FIELD_OFFSET;
         public static readonly int TO_DRIVER_BUFFER_LENGTH_FIELD_OFFSET;
@@ -92,15 +92,16 @@ namespace Adaptive.Aeron
             META_DATA_LENGTH = CLIENT_LIVENESS_TIMEOUT_FIELD_OFFSET + BitUtil.SIZE_OF_LONG;
             END_OF_METADATA_OFFSET = BitUtil.Align(META_DATA_LENGTH, BitUtil.CACHE_LINE_LENGTH * 2);
         }
-        
+
         /// <summary>
         /// Compute the length of the cnc file and return it.
         /// </summary>
         /// <param name="totalLengthOfBuffers"> in bytes </param>
+        /// <param name="alignment"> for file length to adhere to</param>
         /// <returns> cnc file length in bytes </returns>
-        public static int ComputeCncFileLength(int totalLengthOfBuffers)
+        public static int ComputeCncFileLength(int totalLengthOfBuffers, int alignment)
         {
-            return END_OF_METADATA_OFFSET + totalLengthOfBuffers;
+            return BitUtil.Align(END_OF_METADATA_OFFSET + totalLengthOfBuffers, alignment);
         }
 
         public static int CncVersionOffset(int baseOffset)

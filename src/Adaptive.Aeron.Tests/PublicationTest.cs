@@ -15,6 +15,7 @@
  */
 
 using Adaptive.Aeron.LogBuffer;
+using Adaptive.Aeron.Status;
 using Adaptive.Agrona.Concurrent;
 using Adaptive.Agrona.Concurrent.Status;
 using FakeItEasy;
@@ -32,6 +33,7 @@ namespace Adaptive.Aeron.Tests
         private const int SendBufferCapacity = 1024;
         private const int PartionIndex = 0;
         private const int MTU_LENGTH = 4096;
+        private const int PAGE_SIZE = 4 * 1024;
 
         private byte[] _sendBuffer;
         private UnsafeBuffer _atomicSendBuffer;
@@ -41,7 +43,7 @@ namespace Adaptive.Aeron.Tests
         private ClientConductor _conductor;
         private LogBuffers _logBuffers;
         private IReadablePosition _publicationLimit;
-        private Publication _publication;
+        private ConcurrentPublication _publication;
 
         [SetUp]
         public void SetUp()
@@ -55,33 +57,36 @@ namespace Adaptive.Aeron.Tests
             _logBuffers = A.Fake<LogBuffers>();
             _publicationLimit = A.Fake<IReadablePosition>();
 
-            A.CallTo(() => _publicationLimit.Volatile).Returns(2*SendBufferCapacity);
-            A.CallTo(() => _logBuffers.TermBuffers()).Returns(_termBuffers);
+            A.CallTo(() => _publicationLimit.Volatile).Returns(2 * SendBufferCapacity);
+            A.CallTo(() => _logBuffers.DuplicateTermBuffers()).Returns(_termBuffers);
             A.CallTo(() => _logBuffers.TermLength()).Returns(LogBufferDescriptor.TERM_MIN_LENGTH);
             A.CallTo(() => _logBuffers.MetaDataBuffer()).Returns(_logMetaDataBuffer);
 
             LogBufferDescriptor.InitialTermId(_logMetaDataBuffer, TermID1);
             LogBufferDescriptor.MtuLength(_logMetaDataBuffer, MTU_LENGTH);
-            LogBufferDescriptor.TimeOfLastStatusMessage(_logMetaDataBuffer, 0);
+            LogBufferDescriptor.TermLength(_logMetaDataBuffer, LogBufferDescriptor.TERM_MIN_LENGTH);
+            LogBufferDescriptor.PageSize(_logMetaDataBuffer, PAGE_SIZE);
+            LogBufferDescriptor.IsConnected(_logMetaDataBuffer, false);
 
             for (var i = 0; i < LogBufferDescriptor.PARTITION_COUNT; i++)
             {
                 _termBuffers[i] = new UnsafeBuffer(new byte[LogBufferDescriptor.TERM_MIN_LENGTH]);
             }
 
-            _publication = new Publication(
-                _conductor, 
-                Channel, 
-                StreamID1, 
-                SessionID1, 
-                _publicationLimit, 
-                _logBuffers, 
+            _publication = new ConcurrentPublication(
+                _conductor,
+                Channel,
+                StreamID1,
+                SessionID1,
+                _publicationLimit,
+                ChannelEndpointStatus.NO_ID_ALLOCATED,
+                _logBuffers,
                 CorrelationID,
                 CorrelationID);
 
-            _publication.IncRef();
-
             LogBufferDescriptor.InitialiseTailWithTermId(_logMetaDataBuffer, PartionIndex, TermID1);
+
+            A.CallTo(() => _conductor.ReleasePublication(_publication)).Invokes(() => _publication.InternalClose());
         }
 
         [Test]
@@ -89,6 +94,8 @@ namespace Adaptive.Aeron.Tests
         {
             _publication.Dispose();
             Assert.AreEqual(_publication.Position, Publication.CLOSED);
+
+            A.CallTo(() => _conductor.ReleasePublication(_publication)).MustHaveHappened();
         }
 
         [Test]
@@ -111,7 +118,7 @@ namespace Adaptive.Aeron.Tests
         public void ShouldReportThatPublicationHasNotBeenConnectedYet()
         {
             A.CallTo(() => _publicationLimit.Volatile).Returns(0);
-            A.CallTo(() => _conductor.IsPublicationConnected(A<long>._)).Returns(false);
+            LogBufferDescriptor.IsConnected(_logMetaDataBuffer, false);
 
             Assert.False(_publication.IsConnected);
         }
@@ -119,7 +126,7 @@ namespace Adaptive.Aeron.Tests
         [Test]
         public void ShouldReportThatPublicationHasBeenConnectedYet()
         {
-            A.CallTo(() => _conductor.IsPublicationConnected(A<long>._)).Returns(true);
+            LogBufferDescriptor.IsConnected(_logMetaDataBuffer, true);
             Assert.True(_publication.IsConnected);
         }
 
@@ -136,31 +143,11 @@ namespace Adaptive.Aeron.Tests
         }
 
         [Test]
-        public void ShouldNotUnmapBuffersBeforeLastRelease()
-        {
-            _publication.IncRef();
-            _publication.Dispose();
-
-            A.CallTo(() => _logBuffers.Dispose()).MustNotHaveHappened();
-        }
-
-        [Test]
-        public void ShouldUnmapBuffersWithMultipleReferences()
-        {
-            _publication.IncRef();
-            _publication.Dispose();
-
-            _publication.Dispose();
-            A.CallTo(() => _conductor.ReleasePublication(_publication)).MustHaveHappened(Repeated.Exactly.Once);
-        }
-
-        [Test]
-        public void ShouldReleaseResourcesIdempotently()
+        public void ShouldReleasePublicationOnClose()
         {
             _publication.Dispose();
-            _publication.Dispose();
 
-            A.CallTo(() => _conductor.ReleasePublication(_publication)).MustHaveHappened(Repeated.Exactly.Once);
+            A.CallTo(() => _conductor.ReleasePublication(_publication)).MustHaveHappened();
         }
     }
 }

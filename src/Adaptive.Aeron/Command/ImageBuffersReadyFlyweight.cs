@@ -35,7 +35,7 @@ namespace Adaptive.Aeron.Command
     /// +---------------------------------------------------------------+
     /// |                          Stream ID                            |
     /// +---------------------------------------------------------------+
-    /// |                  Subscriber Registration Id                   |
+    /// |                Subscription Registration Id                   |
     /// |                                                               |
     /// +---------------------------------------------------------------+
     /// |                    Subscriber Position Id                     |
@@ -56,8 +56,8 @@ namespace Adaptive.Aeron.Command
         private static readonly int CORRELATION_ID_OFFSET = 0;
         private static readonly int SESSION_ID_OFFSET = CORRELATION_ID_OFFSET + BitUtil.SIZE_OF_LONG;
         private static readonly int STREAM_ID_FIELD_OFFSET = SESSION_ID_OFFSET + BitUtil.SIZE_OF_INT;
-        private static readonly int SUBSCRIBER_REGISTRATION_ID_OFFSET = STREAM_ID_FIELD_OFFSET + BitUtil.SIZE_OF_INT;
-        private static readonly int SUBSCRIBER_POSITION_ID_OFFSET = SUBSCRIBER_REGISTRATION_ID_OFFSET + BitUtil.SIZE_OF_LONG;
+        private static readonly int SUBSCRIPTION_REGISTRATION_ID_OFFSET = STREAM_ID_FIELD_OFFSET + BitUtil.SIZE_OF_INT;
+        private static readonly int SUBSCRIBER_POSITION_ID_OFFSET = SUBSCRIPTION_REGISTRATION_ID_OFFSET + BitUtil.SIZE_OF_LONG;
         private static readonly int LOG_FILE_NAME_OFFSET = SUBSCRIBER_POSITION_ID_OFFSET + BitUtil.SIZE_OF_INT;
         
         private IMutableDirectBuffer _buffer;
@@ -161,24 +161,24 @@ namespace Adaptive.Aeron.Command
         }
 
         /// <summary>
-        /// Set the registration Id for the subscriber position
+        /// Set the registration Id for the Subscription
         /// </summary>
-        /// <param name="id"> for the subscriber position </param>
+        /// <param name="id"> for the Subscription </param>
         /// <returns> flyweight </returns>
-        public ImageBuffersReadyFlyweight SubscriberRegistrationId(long id)
+        public ImageBuffersReadyFlyweight SubscriptionRegistrationId(long id)
         {
-            _buffer.PutLong(_offset + SUBSCRIBER_REGISTRATION_ID_OFFSET, id);
+            _buffer.PutLong(_offset + SUBSCRIPTION_REGISTRATION_ID_OFFSET, id);
 
             return this;
         }
 
         /// <summary>
-        /// Return the registration Id for the subscriber position
+        /// Return the registration Id for the Subscription
         /// </summary>
-        /// <returns> registration Id for the subscriber position </returns>
-        public long SubscriberRegistrationId()
+        /// <returns> registration Id for the Subscription </returns>
+        public long SubscriptionRegistrationId()
         {
-            return _buffer.GetLong(_offset + SUBSCRIBER_REGISTRATION_ID_OFFSET);
+            return _buffer.GetLong(_offset + SUBSCRIPTION_REGISTRATION_ID_OFFSET);
         }
 
         /// <summary>

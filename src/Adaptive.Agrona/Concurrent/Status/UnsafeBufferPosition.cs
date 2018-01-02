@@ -82,6 +82,11 @@ namespace Adaptive.Agrona.Concurrent.Status
             _buffer.PutLongOrdered(_offset, value);
         }
 
+        public override void SetVolatile(long value)
+        {
+            _buffer.PutLongVolatile(_offset, value);
+        }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override bool ProposeMax(long proposedValue)
         {

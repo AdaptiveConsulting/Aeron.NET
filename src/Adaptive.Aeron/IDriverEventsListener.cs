@@ -38,10 +38,17 @@ namespace Adaptive.Aeron
             int streamId, 
             int sessionId, 
             int publicationLimitId, 
-            string channel, 
+            int statusIndicatorId, 
             string logFileName);
+        
+        void OnNewSubscription(
+            long correlationId,
+            int statusIndicatorId);
 
-        void OnUnavailableImage(long correlationId, int streamId);
+        void OnUnavailableImage(
+            long correlationId, 
+            long subscriptionRegistrationId, 
+            int streamId);
 
         void OnNewExclusivePublication(
             long correlationId, 
@@ -49,8 +56,24 @@ namespace Adaptive.Aeron
             int streamId, 
             int sessionId, 
             int publicationLimitId, 
-            string channel, 
+            int statusIndicatorId, 
             string logFileName);
+        
+        void OnChannelEndpointError(
+            int statusIndicatorId,
+            string message);
+
+        void OnNewCounter(
+            long correlationId,
+            int counterId);
+
+        void OnAvailableCounter(
+            long correlationId,
+            int counterId);
+
+        void OnUnavailableCounter(
+            long correlationId,
+            int counterId);
     }
 
 }

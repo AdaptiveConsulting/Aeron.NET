@@ -75,6 +75,27 @@ namespace Adaptive.Aeron.Protocol
         public DataHeaderFlyweight(UnsafeBuffer buffer) : base(buffer)
         {
         }
+        
+        /// <summary>
+        /// Is the frame at data frame at the beginning of packet a heartbeat message?
+        /// </summary>
+        /// <param name="packet"> containing the data frame. </param>
+        /// <param name="length"> of the data frame. </param>
+        /// <returns> true if a heartbeat otherwise false. </returns>
+        public static bool IsHeartbeat(UnsafeBuffer packet, int length)
+        {
+            return length == HEADER_LENGTH && packet.GetInt(0) == 0;
+        }
+
+        /// <summary>
+        /// Does the data frame in the packet have the EOS flag set?
+        /// </summary>
+        /// <param name="packet"> containing the data frame. </param>
+        /// <returns> true if the EOS flag is set otherwise false. </returns>
+        public static bool IsEndOfStream(UnsafeBuffer packet)
+        {
+            return BEGIN_END_AND_EOS_FLAGS == (packet.GetByte(FLAGS_FIELD_OFFSET) & 0xFF);
+        }
 
         /// <summary>
         /// return session id field
@@ -83,6 +104,11 @@ namespace Adaptive.Aeron.Protocol
         public int SessionId()
         {
             return GetInt(SESSION_ID_FIELD_OFFSET);
+        }
+        
+        public static int SessionId(UnsafeBuffer termBuffer, int frameOffset)
+        {
+            return termBuffer.GetInt(frameOffset + SESSION_ID_FIELD_OFFSET, ByteOrder.LittleEndian);
         }
 
         /// <summary>
@@ -104,6 +130,11 @@ namespace Adaptive.Aeron.Protocol
         public int StreamId()
         {
             return GetInt(STREAM_ID_FIELD_OFFSET);
+        }
+        
+        public static int StreamId(UnsafeBuffer termBuffer, int frameOffset)
+        {
+            return termBuffer.GetInt(frameOffset + STREAM_ID_FIELD_OFFSET, ByteOrder.LittleEndian);
         }
 
         /// <summary>
@@ -127,6 +158,11 @@ namespace Adaptive.Aeron.Protocol
             return GetInt(TERM_ID_FIELD_OFFSET);
         }
 
+        public static int TermId(UnsafeBuffer termBuffer, int frameOffset)
+        {
+            return termBuffer.GetInt(frameOffset + TERM_ID_FIELD_OFFSET, ByteOrder.LittleEndian);
+        }
+        
         /// <summary>
         /// set term id field
         /// </summary>
@@ -148,6 +184,11 @@ namespace Adaptive.Aeron.Protocol
             return GetInt(TERM_OFFSET_FIELD_OFFSET);
         }
 
+        public static int TermOffset(UnsafeBuffer termBuffer, int frameOffset)
+        {
+            return termBuffer.GetInt(frameOffset + TERM_OFFSET_FIELD_OFFSET, ByteOrder.LittleEndian);
+        }
+        
         /// <summary>
         /// set term offset field
         /// </summary>

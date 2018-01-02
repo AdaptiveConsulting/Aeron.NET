@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+using System;
 using Adaptive.Aeron.LogBuffer;
 using Adaptive.Aeron.Protocol;
 using Adaptive.Agrona;
@@ -31,7 +32,7 @@ namespace Adaptive.Aeron.Tests.LogBuffer
         private const int MaxFrameLength = 1024;
         private const int MaxPayloadLength = MaxFrameLength - DataHeaderFlyweight.HEADER_LENGTH;
         private const int PartionIndex = 0;
-        private static readonly int TermTailCounterOffset = LogBufferDescriptor.TERM_TAIL_COUNTERS_OFFSET + PartionIndex*BitUtil.SIZE_OF_LONG;
+        private static readonly int TermTailCounterOffset = LogBufferDescriptor.TERM_TAIL_COUNTERS_OFFSET + PartionIndex * BitUtil.SIZE_OF_LONG;
         private static UnsafeBuffer _defaultHeader;
         private const int TermID = 7;
         private const long RV = 7777;
@@ -41,6 +42,7 @@ namespace Adaptive.Aeron.Tests.LogBuffer
         private UnsafeBuffer _termBuffer;
         private UnsafeBuffer _logMetaDataBuffer;
         private HeaderWriter _headerWriter;
+
         private TermAppender _termAppender;
 
         [SetUp]
@@ -51,7 +53,7 @@ namespace Adaptive.Aeron.Tests.LogBuffer
             var buffer = new UnsafeBuffer(new byte[TermBufferLength]);
 
             _termBuffer = A.Fake<UnsafeBuffer>(x => x.Wrapping(buffer));
-            _logMetaDataBuffer = A.Fake<UnsafeBuffer>(x=> x.Wrapping(new UnsafeBuffer(new byte[MetaDataBufferLength])));
+            _logMetaDataBuffer = A.Fake<UnsafeBuffer>(x => x.Wrapping(new UnsafeBuffer(new byte[MetaDataBufferLength])));
             _headerWriter = A.Fake<HeaderWriter>(x => x.Wrapping(new HeaderWriter(DataHeaderFlyweight.CreateDefaultHeader(0, 0, TermID))));
 
             A.CallTo(() => _termBuffer.Capacity).Returns(TermBufferLength);
@@ -59,18 +61,6 @@ namespace Adaptive.Aeron.Tests.LogBuffer
             A.CallTo(() => _logMetaDataBuffer.Capacity).Returns(MetaDataBufferLength);
 
             _termAppender = new TermAppender(_termBuffer, _logMetaDataBuffer, PartionIndex);
-        }
-
-        [Test]
-        public void ShouldPackResult()
-        {
-            const int termId = 7;
-            const int termOffset = -1;
-
-            long result = LogBufferDescriptor.PackTail(termId, termOffset);
-
-            Assert.That(LogBufferDescriptor.TermId(result), Is.EqualTo(termId));
-            Assert.That(LogBufferDescriptor.TermOffset(result), Is.EqualTo(termOffset));
         }
 
         [Test]
@@ -85,13 +75,13 @@ namespace Adaptive.Aeron.Tests.LogBuffer
 
             _logMetaDataBuffer.PutLong(TermTailCounterOffset, LogBufferDescriptor.PackTail(TermID, tail));
 
-            Assert.That(_termAppender.AppendUnfragmentedMessage(_headerWriter, buffer, 0, msgLength, RVS), Is.EqualTo((long) alignedFrameLength));
-            
+            Assert.That(_termAppender.AppendUnfragmentedMessage(_headerWriter, buffer, 0, msgLength, RVS, TermID), Is.EqualTo((long) alignedFrameLength));
+
             Assert.AreEqual(LogBufferDescriptor.RawTailVolatile(_logMetaDataBuffer, PartionIndex), LogBufferDescriptor.PackTail(TermID, tail + alignedFrameLength));
 
             A.CallTo(() => _headerWriter.Write(_termBuffer, tail, frameLength, TermID)).MustHaveHappened()
                 .Then(A.CallTo(() => _termBuffer.PutBytes(headerLength, buffer, 0, msgLength)).MustHaveHappened())
-                .Then(A.CallTo(() => _termBuffer.PutLong(tail + DataHeaderFlyweight.RESERVED_VALUE_OFFSET, RV)).MustHaveHappened())
+                .Then(A.CallTo(() => _termBuffer.PutLong(tail + DataHeaderFlyweight.RESERVED_VALUE_OFFSET, RV, ByteOrder.LittleEndian)).MustHaveHappened())
                 .Then(A.CallTo(() => _termBuffer.PutIntOrdered(tail, frameLength)).MustHaveHappened());
         }
 
@@ -106,24 +96,24 @@ namespace Adaptive.Aeron.Tests.LogBuffer
             int tail = 0;
 
             _logMetaDataBuffer.PutLong(TermTailCounterOffset, LogBufferDescriptor.PackTail(TermID, tail));
-            
-            Assert.That(_termAppender.AppendUnfragmentedMessage(_headerWriter, buffer, 0, msgLength, RVS), Is.EqualTo((long) alignedFrameLength));
-            Assert.That(_termAppender.AppendUnfragmentedMessage(_headerWriter, buffer, 0, msgLength, RVS), Is.EqualTo((long) alignedFrameLength*2));
+
+            Assert.That(_termAppender.AppendUnfragmentedMessage(_headerWriter, buffer, 0, msgLength, RVS, TermID), Is.EqualTo((long) alignedFrameLength));
+            Assert.That(_termAppender.AppendUnfragmentedMessage(_headerWriter, buffer, 0, msgLength, RVS, TermID), Is.EqualTo((long) alignedFrameLength * 2));
 
             Assert.AreEqual(LogBufferDescriptor.RawTailVolatile(_logMetaDataBuffer, PartionIndex), LogBufferDescriptor.PackTail(TermID, tail + alignedFrameLength * 2));
-            
+
             A.CallTo(() => _headerWriter.Write(_termBuffer, tail, frameLength, TermID)).MustHaveHappened()
                 .Then(A.CallTo(() => _termBuffer.PutBytes(headerLength, buffer, 0, msgLength)).MustHaveHappened())
-                .Then(A.CallTo(() => _termBuffer.PutLong(tail + DataHeaderFlyweight.RESERVED_VALUE_OFFSET, RV)).MustHaveHappened())
+                .Then(A.CallTo(() => _termBuffer.PutLong(tail + DataHeaderFlyweight.RESERVED_VALUE_OFFSET, RV, ByteOrder.LittleEndian)).MustHaveHappened())
                 .Then(A.CallTo(() => _termBuffer.PutIntOrdered(tail, frameLength)).MustHaveHappened())
                 .Then(A.CallTo(() => _headerWriter.Write(_termBuffer, alignedFrameLength, frameLength, TermID)).MustHaveHappened())
                 .Then(A.CallTo(() => _termBuffer.PutBytes(alignedFrameLength + headerLength, buffer, 0, msgLength)).MustHaveHappened())
-                .Then(A.CallTo(() => _termBuffer.PutLong(alignedFrameLength + DataHeaderFlyweight.RESERVED_VALUE_OFFSET, RV)).MustHaveHappened())
+                .Then(A.CallTo(() => _termBuffer.PutLong(alignedFrameLength + DataHeaderFlyweight.RESERVED_VALUE_OFFSET, RV, ByteOrder.LittleEndian)).MustHaveHappened())
                 .Then(A.CallTo(() => _termBuffer.PutIntOrdered(alignedFrameLength, frameLength)).MustHaveHappened());
         }
 
         [Test]
-        public void ShouldPadLogAndTripWhenAppendingWithInsufficientRemainingCapacity()
+        public void ShouldPadLogWhenAppendingWithInsufficientRemainingCapacity()
         {
             const int msgLength = 120;
             int headerLength = _defaultHeader.Capacity;
@@ -134,13 +124,12 @@ namespace Adaptive.Aeron.Tests.LogBuffer
 
             _logMetaDataBuffer.PutLong(TermTailCounterOffset, LogBufferDescriptor.PackTail(TermID, tailValue));
 
-            long expectResult = LogBufferDescriptor.PackTail(TermID, TermAppender.TRIPPED);
-            Assert.That(_termAppender.AppendUnfragmentedMessage(_headerWriter, buffer, 0, msgLength, RVS), Is.EqualTo(expectResult));
-            
+            Assert.That(_termAppender.AppendUnfragmentedMessage(_headerWriter, buffer, 0, msgLength, RVS, TermID), Is.EqualTo(TermAppender.FAILED));
+
             Assert.AreEqual(LogBufferDescriptor.RawTailVolatile(_logMetaDataBuffer, PartionIndex), LogBufferDescriptor.PackTail(TermID, tailValue + requiredFrameSize));
-            
+
             A.CallTo(() => _headerWriter.Write(_termBuffer, tailValue, frameLength, TermID)).MustHaveHappened()
-                .Then(A.CallTo(() => _termBuffer.PutShort(FrameDescriptor.TypeOffset(tailValue), (short) FrameDescriptor.PADDING_FRAME_TYPE)).MustHaveHappened())
+                .Then(A.CallTo(() => _termBuffer.PutShort(FrameDescriptor.TypeOffset(tailValue), FrameDescriptor.PADDING_FRAME_TYPE)).MustHaveHappened())
                 .Then(A.CallTo(() => _termBuffer.PutIntOrdered(tailValue, frameLength)).MustHaveHappened());
         }
 
@@ -153,22 +142,22 @@ namespace Adaptive.Aeron.Tests.LogBuffer
             int requiredCapacity = BitUtil.Align(headerLength + 1, FrameDescriptor.FRAME_ALIGNMENT) + MaxFrameLength;
             UnsafeBuffer buffer = new UnsafeBuffer(new byte[msgLength]);
             int tail = 0;
-            
+
             _logMetaDataBuffer.PutLong(TermTailCounterOffset, LogBufferDescriptor.PackTail(TermID, tail));
-            
-            Assert.That(_termAppender.AppendFragmentedMessage(_headerWriter, buffer, 0, msgLength, MaxPayloadLength, RVS), Is.EqualTo((long) requiredCapacity));
+
+            Assert.That(_termAppender.AppendFragmentedMessage(_headerWriter, buffer, 0, msgLength, MaxPayloadLength, RVS, TermID), Is.EqualTo(requiredCapacity));
 
             Assert.AreEqual(LogBufferDescriptor.RawTailVolatile(_logMetaDataBuffer, PartionIndex), LogBufferDescriptor.PackTail(TermID, tail + requiredCapacity));
 
             A.CallTo(() => _headerWriter.Write(_termBuffer, tail, MaxFrameLength, TermID)).MustHaveHappened()
                 .Then(A.CallTo(() => _termBuffer.PutBytes(tail + headerLength, buffer, 0, MaxPayloadLength)).MustHaveHappened())
                 .Then(A.CallTo(() => _termBuffer.PutByte(FrameDescriptor.FlagsOffset(tail), FrameDescriptor.BEGIN_FRAG_FLAG)).MustHaveHappened())
-                .Then(A.CallTo(() => _termBuffer.PutLong(tail + DataHeaderFlyweight.RESERVED_VALUE_OFFSET, RV)).MustHaveHappened())
+                .Then(A.CallTo(() => _termBuffer.PutLong(tail + DataHeaderFlyweight.RESERVED_VALUE_OFFSET, RV, ByteOrder.LittleEndian)).MustHaveHappened())
                 .Then(A.CallTo(() => _termBuffer.PutIntOrdered(tail, MaxFrameLength)).MustHaveHappened())
                 .Then(A.CallTo(() => _headerWriter.Write(_termBuffer, MaxFrameLength, frameLength, TermID)).MustHaveHappened())
                 .Then(A.CallTo(() => _termBuffer.PutBytes(MaxFrameLength + headerLength, buffer, MaxPayloadLength, 1)).MustHaveHappened())
                 .Then(A.CallTo(() => _termBuffer.PutByte(FrameDescriptor.FlagsOffset(MaxFrameLength), FrameDescriptor.END_FRAG_FLAG)).MustHaveHappened())
-                .Then(A.CallTo(() => _termBuffer.PutLong(MaxFrameLength + DataHeaderFlyweight.RESERVED_VALUE_OFFSET, RV)).MustHaveHappened())
+                .Then(A.CallTo(() => _termBuffer.PutLong(MaxFrameLength + DataHeaderFlyweight.RESERVED_VALUE_OFFSET, RV, ByteOrder.LittleEndian)).MustHaveHappened())
                 .Then(A.CallTo(() => _termBuffer.PutIntOrdered(MaxFrameLength, frameLength)).MustHaveHappened());
         }
 
@@ -182,11 +171,9 @@ namespace Adaptive.Aeron.Tests.LogBuffer
             const int tail = 0;
             BufferClaim bufferClaim = new BufferClaim();
 
-            A.CallTo(() => _termBuffer.PutIntOrdered(A<int>._, A<int>._));
-
             _logMetaDataBuffer.PutLong(TermTailCounterOffset, LogBufferDescriptor.PackTail(TermID, tail));
 
-            Assert.That(_termAppender.Claim(_headerWriter, msgLength, bufferClaim), Is.EqualTo((long) alignedFrameLength));
+            Assert.That(_termAppender.Claim(_headerWriter, msgLength, bufferClaim, TermID), Is.EqualTo((long) alignedFrameLength));
 
             Assert.That(bufferClaim.Offset, Is.EqualTo(tail + headerLength));
             Assert.That(bufferClaim.Length, Is.EqualTo(msgLength));
@@ -194,10 +181,92 @@ namespace Adaptive.Aeron.Tests.LogBuffer
             // Map flyweight or encode to buffer directly then call commit() when done
             bufferClaim.Commit();
 
-
             Assert.AreEqual(LogBufferDescriptor.RawTailVolatile(_logMetaDataBuffer, PartionIndex), LogBufferDescriptor.PackTail(TermID, tail + alignedFrameLength));
 
             A.CallTo(() => _headerWriter.Write(_termBuffer, tail, frameLength, TermID)).MustHaveHappened();
+        }
+
+        [Test]
+        public void ShouldAppendUnfragmentedFromVectorsToEmptyLog()
+        {
+            var headerLength = _defaultHeader.Capacity;
+            var bufferOne = new UnsafeBuffer(new byte[64]);
+            var bufferTwo = new UnsafeBuffer(new byte[256]);
+            bufferOne.SetMemory(0, bufferOne.Capacity, (byte) '1');
+            bufferTwo.SetMemory(0, bufferTwo.Capacity, (byte) '2');
+            var msgLength = bufferOne.Capacity + 200;
+            var framgeLength = msgLength + headerLength;
+            var alignedFrameLength = BitUtil.Align(framgeLength, FrameDescriptor.FRAME_ALIGNMENT);
+            var tail = 0;
+
+            _logMetaDataBuffer.PutLong(TermTailCounterOffset, LogBufferDescriptor.PackTail(TermID, tail));
+
+            var vectors = new[]
+            {
+                new DirectBufferVector(bufferOne, 0, bufferOne.Capacity),
+                new DirectBufferVector(bufferTwo, 0, 200)
+            };
+
+            Assert.That(_termAppender.AppendUnfragmentedMessage(_headerWriter, vectors, msgLength, RVS, TermID), Is.EqualTo(alignedFrameLength));
+
+            Assert.AreEqual(LogBufferDescriptor.RawTailVolatile(_logMetaDataBuffer, PartionIndex), LogBufferDescriptor.PackTail(TermID, tail + alignedFrameLength));
+        }
+
+        [Test]
+        public void ShouldAppendFragmentedFromVectorsToEmptyLog()
+        {
+            var mtu = 2048;
+            var headerLength = _defaultHeader.Capacity;
+            var maxPayloadLength = mtu - headerLength;
+            var bufferOneLength = 64;
+            var bufferTwoLength = 3000;
+            var bufferOne = new UnsafeBuffer(new byte[bufferOneLength]);
+            var bufferTwo = new UnsafeBuffer(new byte[bufferTwoLength]);
+            bufferOne.SetMemory(0, bufferOne.Capacity, (byte) '1');
+            bufferTwo.SetMemory(0, bufferTwo.Capacity, (byte) '2');
+            var msgLength = bufferOneLength + bufferTwoLength;
+            var tail = 0;
+            var frameOneLength = mtu;
+            var frameTwoLength = (msgLength - (mtu - headerLength)) + headerLength;
+            var resultingOffset = frameOneLength + BitUtil.Align(frameTwoLength, FrameDescriptor.FRAME_ALIGNMENT);
+
+            _logMetaDataBuffer.PutLong(TermTailCounterOffset, LogBufferDescriptor.PackTail(TermID, tail));
+
+            var vectors = new[]
+            {
+                new DirectBufferVector(bufferOne, 0, bufferOneLength),
+                new DirectBufferVector(bufferTwo, 0, bufferTwoLength)
+            };
+
+            Assert.That(_termAppender.AppendFragmentedMessage(_headerWriter, vectors, msgLength, maxPayloadLength, RVS, TermID), Is.EqualTo(resultingOffset));
+
+            var tail2 = tail + frameOneLength;
+            var bufferTwoOffset = maxPayloadLength - bufferOneLength;
+            var fragmentTwoPayloadLength = bufferTwoLength - (maxPayloadLength - bufferOneLength);
+
+            A.CallTo(() => _headerWriter.Write(_termBuffer, tail, frameOneLength, TermID)).MustHaveHappened()
+                .Then(A.CallTo(() => _termBuffer.PutBytes(headerLength, bufferOne, 0, bufferOneLength)).MustHaveHappened())
+                .Then(A.CallTo(() => _termBuffer.PutBytes(headerLength + bufferOneLength, bufferTwo, 0, maxPayloadLength - bufferOneLength)).MustHaveHappened())
+                .Then(A.CallTo(() => _termBuffer.PutLong(tail + DataHeaderFlyweight.RESERVED_VALUE_OFFSET, RV, ByteOrder.LittleEndian)).MustHaveHappened())
+                .Then(A.CallTo(() => _termBuffer.PutIntOrdered(tail, frameOneLength)).MustHaveHappened())
+                .Then(A.CallTo(() => _headerWriter.Write(_termBuffer, tail2, frameTwoLength, TermID)).MustHaveHappened())
+                .Then(A.CallTo(() => _termBuffer.PutBytes(tail2 + headerLength, bufferTwo, bufferTwoOffset, fragmentTwoPayloadLength)).MustHaveHappened())
+                .Then(A.CallTo(() => _termBuffer.PutLong(tail2 + DataHeaderFlyweight.RESERVED_VALUE_OFFSET, RV, ByteOrder.LittleEndian)).MustHaveHappened())
+                .Then(A.CallTo(() => _termBuffer.PutIntOrdered(tail2, frameTwoLength)).MustHaveHappened());
+        }
+
+        [Test]
+        [ExpectedException(typeof(InvalidOperationException))]
+        public void ShouldDetectInvalidTerm()
+        {
+            var length = 128;
+            var srcOffset = 0;
+
+            var buffer = new UnsafeBuffer(new byte[length]);
+
+            _logMetaDataBuffer.PutLong(TermTailCounterOffset, LogBufferDescriptor.PackTail(TermID + 1, 0));
+
+            _termAppender.AppendUnfragmentedMessage(_headerWriter, buffer, srcOffset, length, RVS, TermID);
         }
     }
 }

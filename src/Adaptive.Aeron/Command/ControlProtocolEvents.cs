@@ -62,6 +62,21 @@ namespace Adaptive.Aeron.Command
         /// Remove Destination from an existing Publication.
         /// </summary>
         public const int REMOVE_DESTINATION = 0x08;
+        
+        /// <summary>
+        /// Add a Counter to the counters manager.
+        /// </summary>
+        public const int ADD_COUNTER = 0x09;
+
+        /// <summary>
+        /// Remove a Counter from the counters manager.
+        /// </summary>
+        public const int REMOVE_COUNTER = 0x0A;
+
+        /// <summary>
+        /// Close indication from Client.
+        /// </summary>
+        public const int CLIENT_CLOSE = 0x0B;
 
         // Media Driver to Clients
 
@@ -94,6 +109,21 @@ namespace Adaptive.Aeron.Command
         /// New Exclusive Publication buffers are ready notification.
         /// </summary>
         public const int ON_EXCLUSIVE_PUBLICATION_READY = 0x0F06;
+        
+        /// <summary>
+        /// New Subscription is ready notification.
+        /// </summary>
+        public const int ON_SUBSCRIPTION_READY = 0x0F07;
+
+        /// <summary>
+        /// New counter is ready notification.
+        /// </summary>
+        public const int ON_COUNTER_READY = 0x0F08;
+
+        /// <summary>
+        /// Inform clients of removal of counter.
+        /// </summary>
+        public const int ON_UNAVAILABLE_COUNTER = 0x0F09;
     }
 
 }

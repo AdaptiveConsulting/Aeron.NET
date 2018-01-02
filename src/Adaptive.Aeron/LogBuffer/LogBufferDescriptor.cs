@@ -60,30 +60,16 @@ namespace Adaptive.Aeron.LogBuffer
         /// Maximum buffer length for a log term
         /// </summary>
         public const int TERM_MAX_LENGTH = 1024 * 1024 * 1024;
+        
+        /// <summary>
+        /// Minimum page size
+        /// </summary>
+        public const int PAGE_MIN_SIZE = 4 * 1024;
 
-        static LogBufferDescriptor()
-        {
-            var offset = 0;
-            TERM_TAIL_COUNTERS_OFFSET = offset;
-
-            offset += (BitUtil.SIZE_OF_LONG * PARTITION_COUNT);
-            LOG_ACTIVE_PARTITION_INDEX_OFFSET = offset;
-
-            offset = (BitUtil.CACHE_LINE_LENGTH * 2);
-            LOG_TIME_OF_LAST_SM_OFFSET = offset;
-            LOG_END_OF_STREAM_POSITION_OFFSET = LOG_TIME_OF_LAST_SM_OFFSET + BitUtil.SIZE_OF_LONG;
-
-            offset += (BitUtil.CACHE_LINE_LENGTH * 2);
-            LOG_CORRELATION_ID_OFFSET = offset;
-            LOG_INITIAL_TERM_ID_OFFSET = LOG_CORRELATION_ID_OFFSET + BitUtil.SIZE_OF_LONG;
-            LOG_DEFAULT_FRAME_HEADER_LENGTH_OFFSET = LOG_INITIAL_TERM_ID_OFFSET + BitUtil.SIZE_OF_INT;
-            LOG_MTU_LENGTH_OFFSET = LOG_DEFAULT_FRAME_HEADER_LENGTH_OFFSET + BitUtil.SIZE_OF_INT;
-
-            offset += BitUtil.CACHE_LINE_LENGTH;
-            LOG_DEFAULT_FRAME_HEADER_OFFSET = offset;
-
-            LOG_META_DATA_LENGTH = offset + LOG_DEFAULT_FRAME_HEADER_MAX_LENGTH;
-        }
+        /// <summary>
+        /// Maximum page size
+        /// </summary>
+        public const int PAGE_MAX_SIZE = 1024 * 1024 * 1024;
 
         // *******************************
         // *** Log Meta Data Constants ***
@@ -97,17 +83,17 @@ namespace Adaptive.Aeron.LogBuffer
         /// <summary>
         /// Offset within the log meta data where the active partition index is stored.
         /// </summary>
-        public static readonly int LOG_ACTIVE_PARTITION_INDEX_OFFSET;
-
-        /// <summary>
-        /// Offset within the log meta data where the time of last SM is stored.
-        /// </summary>
-        public static readonly int LOG_TIME_OF_LAST_SM_OFFSET;
+        public static readonly int LOG_ACTIVE_TERM_COUNT_OFFSET;
 
         /// <summary>
         /// Offset within the log meta data where the position of the End of Stream is stored.
         /// </summary>
         public static readonly int LOG_END_OF_STREAM_POSITION_OFFSET;
+        
+        /// <summary>
+        /// Offset within the log meta data where whether the log is connected or not is stored.
+        /// </summary>
+        public static readonly int LOG_IS_CONNECTED_OFFSET;
 
         /// <summary>
         /// Offset within the log meta data where the active term id is stored.
@@ -120,15 +106,25 @@ namespace Adaptive.Aeron.LogBuffer
         public static readonly int LOG_DEFAULT_FRAME_HEADER_LENGTH_OFFSET;
 
         /// <summary>
-        /// Offset within the log meta data which the MTU length is stored;
+        /// Offset within the log meta data which the MTU length is stored.
         /// </summary>
         public static readonly int LOG_MTU_LENGTH_OFFSET;
 
         /// <summary>
-        /// Offset within the log meta data which the
+        /// Offset within the log meta data which the correlation id is stored.
         /// </summary>
         public static readonly int LOG_CORRELATION_ID_OFFSET;
 
+        /// <summary>
+        /// Offset within the log meta data which the term length is stored.
+        /// </summary>
+        public static readonly int LOG_TERM_LENGTH_OFFSET;
+
+        /// <summary>
+        /// Offset within the log meta data which the page size is stored.
+        /// </summary>
+        public static readonly int LOG_PAGE_SIZE_OFFSET;
+        
         /// <summary>
         /// Offset at which the default frame headers begin.
         /// </summary>
@@ -156,19 +152,15 @@ namespace Adaptive.Aeron.LogBuffer
         ///  |                       Tail Counter 2                          |
         ///  |                                                               |
         ///  +---------------------------------------------------------------+
-        ///  |                      Cache Line Padding                      ...
+        ///  |                      Active Term Count                        |
+        ///  +---------------------------------------------------------------+
+        ///  |                     Cache Line Padding                       ...
         /// ...                                                              |
-        ///  +---------------------------------------------------------------+
-        ///  |                   Active Partition Index                      |
-        ///  +---------------------------------------------------------------+
-        ///  |                      Cache Line Padding                      ...
-        /// ...                                                              |
-        ///  +---------------------------------------------------------------+
-        ///  |                 Time of Last Status Message                   |
-        ///  |                                                               |
         ///  +---------------------------------------------------------------+
         ///  |                    End of Stream Position                     |
         ///  |                                                               |
+        ///  +---------------------------------------------------------------+
+        ///  |                        Is Connected                           |
         ///  +---------------------------------------------------------------+
         ///  |                      Cache Line Padding                      ...
         /// ...                                                              |
@@ -182,15 +174,45 @@ namespace Adaptive.Aeron.LogBuffer
         ///  +---------------------------------------------------------------+
         ///  |                          MTU Length                           |
         ///  +---------------------------------------------------------------+
+        ///  |                         Term Length                           |
+        ///  +---------------------------------------------------------------+
+        ///  |                          Page Size                            |
+        ///  +---------------------------------------------------------------+
         ///  |                      Cache Line Padding                      ...
         /// ...                                                              |
         ///  +---------------------------------------------------------------+
-        ///  |                    Default Frame Header                      ...
+        ///  |                     Default Frame Header                     ...
         /// ...                                                              |
         ///  +---------------------------------------------------------------+
         /// </pre>
         /// </summary>
         public static readonly int LOG_META_DATA_LENGTH;
+        
+        static LogBufferDescriptor()
+        {
+            int offset = 0;
+            TERM_TAIL_COUNTERS_OFFSET = offset;
+
+            offset += (BitUtil.SIZE_OF_LONG * PARTITION_COUNT);
+            LOG_ACTIVE_TERM_COUNT_OFFSET = offset;
+
+            offset = (BitUtil.CACHE_LINE_LENGTH * 2);
+            LOG_END_OF_STREAM_POSITION_OFFSET = offset;
+            LOG_IS_CONNECTED_OFFSET = LOG_END_OF_STREAM_POSITION_OFFSET + BitUtil.SIZE_OF_LONG;
+
+            offset += (BitUtil.CACHE_LINE_LENGTH * 2);
+            LOG_CORRELATION_ID_OFFSET = offset;
+            LOG_INITIAL_TERM_ID_OFFSET = LOG_CORRELATION_ID_OFFSET + BitUtil.SIZE_OF_LONG;
+            LOG_DEFAULT_FRAME_HEADER_LENGTH_OFFSET = LOG_INITIAL_TERM_ID_OFFSET + BitUtil.SIZE_OF_INT;
+            LOG_MTU_LENGTH_OFFSET = LOG_DEFAULT_FRAME_HEADER_LENGTH_OFFSET + BitUtil.SIZE_OF_INT;
+            LOG_TERM_LENGTH_OFFSET = LOG_MTU_LENGTH_OFFSET + BitUtil.SIZE_OF_INT;
+            LOG_PAGE_SIZE_OFFSET = LOG_TERM_LENGTH_OFFSET + BitUtil.SIZE_OF_INT;
+
+            offset += BitUtil.CACHE_LINE_LENGTH;
+            LOG_DEFAULT_FRAME_HEADER_OFFSET = offset;
+
+            LOG_META_DATA_LENGTH = BitUtil.Align(offset + LOG_DEFAULT_FRAME_HEADER_MAX_LENGTH, PAGE_MIN_SIZE);
+        }
 
         /// <summary>
         /// Check that term length is valid and alignment is valid.
@@ -215,6 +237,29 @@ namespace Adaptive.Aeron.LogBuffer
             if (!BitUtil.IsPowerOfTwo(termLength))
             {
                 ThrowHelper.ThrowInvalidOperationException("Term length not a power of 2: length=" + termLength);
+            }
+        }
+        
+        /// <summary>
+        /// Check that page size is valid and alignment is valid.
+        /// </summary>
+        /// <param name="pageSize"> to be checked. </param>
+        /// <exception cref="InvalidOperationException"> if the size is not as expected. </exception>
+        public static void CheckPageSize(int pageSize)
+        {
+            if (pageSize < PAGE_MIN_SIZE)
+            {
+                ThrowHelper.ThrowInvalidOperationException($"Page size less than min size of {PAGE_MIN_SIZE}: page size={pageSize}");
+            }
+
+            if (pageSize > PAGE_MAX_SIZE)
+            {
+                ThrowHelper.ThrowInvalidOperationException($"Page size more than max size of {PAGE_MAX_SIZE}: page size={pageSize}");
+            }
+
+            if (!BitUtil.IsPowerOfTwo(pageSize))
+            {
+                ThrowHelper.ThrowInvalidOperationException($"Page size not a power of 2: page size={pageSize}");
             }
         }
 
@@ -262,6 +307,46 @@ namespace Adaptive.Aeron.LogBuffer
         {
             logMetaDataBuffer.PutInt(LOG_MTU_LENGTH_OFFSET, mtuLength);
         }
+        
+        /// <summary>
+        /// Get the value of the Term Length used for this log.
+        /// </summary>
+        /// <param name="logMetaDataBuffer"> containing the meta data. </param>
+        /// <returns> the value of the term length used for this log. </returns>
+        public static int TermLength(UnsafeBuffer logMetaDataBuffer)
+        {
+            return logMetaDataBuffer.GetInt(LOG_TERM_LENGTH_OFFSET);
+        }
+
+        /// <summary>
+        /// Set the term length used for this log.
+        /// </summary>
+        /// <param name="logMetaDataBuffer"> containing the meta data. </param>
+        /// <param name="termLength">        value to be set. </param>
+        public static void TermLength(UnsafeBuffer logMetaDataBuffer, int termLength)
+        {
+            logMetaDataBuffer.PutInt(LOG_TERM_LENGTH_OFFSET, termLength);
+        }
+
+        /// <summary>
+        /// Get the value of the page size used for this log.
+        /// </summary>
+        /// <param name="logMetaDataBuffer"> containing the meta data. </param>
+        /// <returns> the value of the page size used for this log. </returns>
+        public static int PageSize(UnsafeBuffer logMetaDataBuffer)
+        {
+            return logMetaDataBuffer.GetInt(LOG_PAGE_SIZE_OFFSET);
+        }
+
+        /// <summary>
+        /// Set the page size used for this log.
+        /// </summary>
+        /// <param name="logMetaDataBuffer"> containing the meta data. </param>
+        /// <param name="pageSize">          value to be set. </param>
+        public static void PageSize(UnsafeBuffer logMetaDataBuffer, int pageSize)
+        {
+            logMetaDataBuffer.PutInt(LOG_PAGE_SIZE_OFFSET, pageSize);
+        }
 
         /// <summary>
         /// Get the value of the correlation ID for this log relating to the command which created it.
@@ -286,25 +371,23 @@ namespace Adaptive.Aeron.LogBuffer
         }
 
         /// <summary>
-        /// Get the value of the time of last SM in <seealso cref="System#currentTimeMillis()"/>.
+        /// Get whether the log is considered connected or not by the driver.
         /// </summary>
         /// <param name="logMetaDataBuffer"> containing the meta data. </param>
-        /// <returns> the value of time of last SM </returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static long TimeOfLastStatusMessage(UnsafeBuffer logMetaDataBuffer)
+        /// <returns> whether the log is considered connected or not by the driver. </returns>
+        public static bool IsConnected(UnsafeBuffer logMetaDataBuffer)
         {
-            return logMetaDataBuffer.GetLongVolatile(LOG_TIME_OF_LAST_SM_OFFSET);
+            return logMetaDataBuffer.GetIntVolatile(LOG_IS_CONNECTED_OFFSET) == 1;
         }
 
         /// <summary>
-        /// Set the value of the time of last SM used by the producer of this log.
+        /// Set whether the log is considered connected or not by the driver.
         /// </summary>
         /// <param name="logMetaDataBuffer"> containing the meta data. </param>
-        /// <param name="timeInMillis">      value of the time of last SM in <seealso cref="System#currentTimeMillis()"/> </param>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void TimeOfLastStatusMessage(UnsafeBuffer logMetaDataBuffer, long timeInMillis)
+        /// <param name="isConnected">       or not </param>
+        public static void IsConnected(UnsafeBuffer logMetaDataBuffer, bool isConnected)
         {
-            logMetaDataBuffer.PutLongOrdered(LOG_TIME_OF_LAST_SM_OFFSET, timeInMillis);
+            logMetaDataBuffer.PutIntOrdered(LOG_IS_CONNECTED_OFFSET, isConnected ? 1 : 0);
         }
 
         /// <summary>
@@ -327,38 +410,47 @@ namespace Adaptive.Aeron.LogBuffer
             logMetaDataBuffer.PutLongOrdered(LOG_END_OF_STREAM_POSITION_OFFSET, position);
         }
 
-
         /// <summary>
-        /// Get the value of the active partition index used by the producer of this log. Consumers may have a different active
-        /// index if they are running behind. The read is done with volatile semantics.
+        /// Get the value of the active term count used by the producer of this log. Consumers may have a different
+        /// active term count if they are running behind. The read is done with volatile semantics.
         /// </summary>
         /// <param name="logMetaDataBuffer"> containing the meta data. </param>
-        /// <returns> the value of the active partition index used by the producer of this log. </returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int ActivePartitionIndex(UnsafeBuffer logMetaDataBuffer)
+        /// <returns> the value of the active term count used by the producer of this log. </returns>
+        public static int ActiveTermCount(UnsafeBuffer logMetaDataBuffer)
         {
-            return logMetaDataBuffer.GetIntVolatile(LOG_ACTIVE_PARTITION_INDEX_OFFSET);
+            return logMetaDataBuffer.GetIntVolatile(LOG_ACTIVE_TERM_COUNT_OFFSET);
         }
-
+        
         /// <summary>
-        /// Set the value of the current active partition index for the producer using memory ordered semantics.
+        /// Set the value of the current active term count for the producer using memory ordered semantics.
         /// </summary>
-        /// <param name="logMetaDataBuffer">    containing the meta data. </param>
-        /// <param name="activePartitionIndex"> value of the active partition index used by the producer of this log. </param>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void ActivePartitionIndexOrdered(UnsafeBuffer logMetaDataBuffer, int activePartitionIndex)
+        /// <param name="logMetaDataBuffer"> containing the meta data. </param>
+        /// <param name="termCount">         value of the active term count used by the producer of this log. </param>
+        public static void ActiveTermCountOrdered(UnsafeBuffer logMetaDataBuffer, int termCount)
         {
-            logMetaDataBuffer.PutIntOrdered(LOG_ACTIVE_PARTITION_INDEX_OFFSET, activePartitionIndex);
+            logMetaDataBuffer.PutIntOrdered(LOG_ACTIVE_TERM_COUNT_OFFSET, termCount);
         }
-
+        
+        /// <summary>
+        /// Compare and set the value of the current active term count.
+        /// </summary>
+        /// <param name="logMetaDataBuffer"> containing the meta data. </param>
+        /// <param name="expectedTermCount"> value of the active term count expected in the log </param>
+        /// <param name="updateTermCount">   value of the active term count to be updated in the log </param>
+        /// <returns> true if successful otherwise false. </returns>
+        public static bool CasActiveTermCount(UnsafeBuffer logMetaDataBuffer, int expectedTermCount, int updateTermCount)
+        {
+            return logMetaDataBuffer.CompareAndSetInt(LOG_ACTIVE_TERM_COUNT_OFFSET, expectedTermCount, updateTermCount);
+        }
+        
         /// <summary>
         /// Set the value of the current active partition index for the producer.
         /// </summary>
-        /// <param name="logMetaDataBuffer">    containing the meta data. </param>
-        /// <param name="activePartitionIndex"> value of the active partition index used by the producer of this log. </param>
-        public static void ActivePartitionIndex(UnsafeBuffer logMetaDataBuffer, int activePartitionIndex)
+        /// <param name="logMetaDataBuffer"> containing the meta data. </param>
+        /// <param name="termCount">         value of the active term count used by the producer of this log. </param>
+        public static void ActiveTermCount(UnsafeBuffer logMetaDataBuffer, int termCount)
         {
-            logMetaDataBuffer.PutInt(LOG_ACTIVE_PARTITION_INDEX_OFFSET, activePartitionIndex);
+            logMetaDataBuffer.PutInt(LOG_ACTIVE_TERM_COUNT_OFFSET, termCount);
         }
 
         /// <summary>
@@ -422,6 +514,19 @@ namespace Adaptive.Aeron.LogBuffer
 
             return (termCount << positionBitsToShift) + termOffset;
         }
+        
+        /// <summary>
+        /// Compute the current position in absolute number of bytes.
+        /// </summary>
+        /// <param name="termCount">           of terms since the initial term. </param>
+        /// <param name="termOffset">          in the term. </param>
+        /// <param name="positionBitsToShift"> number of times to left shift the term count </param>
+        /// <returns> the absolute position in bytes </returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static long ComputePosition(int termCount, int termOffset, int positionBitsToShift)
+        {
+            return (termCount << positionBitsToShift) + termOffset;
+        }
 
         /// <summary>
         /// Compute the current position in absolute number of bytes for the beginning of a term.
@@ -467,25 +572,22 @@ namespace Adaptive.Aeron.LogBuffer
 
         /// <summary>
         /// Compute the total length of a log file given the term length.
+        ///     
+        /// Assumes TERM_MAX_LENGTH is 1GB and that filePageSize is 1GB or less and a power of 2.
         /// </summary>
         /// <param name="termLength"> on which to base the calculation. </param>
+        /// <param name="filePageSize"> to use for log. </param>
         /// <returns> the total length of the log file. </returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static long ComputeLogLength(int termLength)
+        public static long ComputeLogLength(int termLength, int filePageSize)
         {
-            return ((long)termLength * PARTITION_COUNT) + LOG_META_DATA_LENGTH;
+            if (termLength < (1024 * 1024 * 1024))
+            {
+                return BitUtil.Align((termLength * PARTITION_COUNT) + LOG_META_DATA_LENGTH, filePageSize);
+            }
+
+            return (PARTITION_COUNT * termLength) + BitUtil.Align(LOG_META_DATA_LENGTH, filePageSize);
         }
 
-        /// <summary>
-        /// Compute the term length based on the total length of the log.
-        /// </summary>
-        /// <param name="logLength"> the total length of the log. </param>
-        /// <returns> length of an individual term buffer in the log. </returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int ComputeTermLength(long logLength)
-        {
-            return (int) ((logLength - LOG_META_DATA_LENGTH) / PARTITION_COUNT);
-        }
 
         /// <summary>
         /// Store the default frame header to the log meta data buffer.
@@ -499,7 +601,7 @@ namespace Adaptive.Aeron.LogBuffer
             if (defaultHeader.Capacity != DataHeaderFlyweight.HEADER_LENGTH)
             {
                 ThrowHelper.ThrowArgumentException(
-                    $"Default header capacity not equal to HEADER_LENGTH: length={defaultHeader.Capacity:D}");
+                    $"Default header length not equal to HEADER_LENGTH: length={defaultHeader.Capacity:D}");
                 return;
             }
 
@@ -534,17 +636,32 @@ namespace Adaptive.Aeron.LogBuffer
         }
 
         /// <summary>
-        /// Rotate the log and update the default headers for the new term.
+        /// Rotate the log and update the tail counter for the new term.
+        ///    
+        /// This method is safe for concurrent use.
         /// </summary>
         /// <param name="logMetaDataBuffer"> for the meta data. </param>
-        /// <param name="activePartitionIndex">       current active index. </param>
-        /// <param name="termId">         to be used in the default headers. </param>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void RotateLog(UnsafeBuffer logMetaDataBuffer, int activePartitionIndex, int termId)
+        /// <param name="currentTermCount">  from which to rotate. </param>
+        /// <param name="currentTermId">     to be used in the default headers. </param>
+        /// <returns> true if log was rotated. </returns>
+        public static bool RotateLog(UnsafeBuffer logMetaDataBuffer, int currentTermCount, int currentTermId)
         {
-            var nextIndex = NextPartitionIndex(activePartitionIndex);
-            InitialiseTailWithTermId(logMetaDataBuffer, nextIndex, termId);
-            ActivePartitionIndexOrdered(logMetaDataBuffer, nextIndex);
+            int nextTermId = currentTermId + 1;
+            int nextTermCount = currentTermCount + 1;
+            int nextIndex = IndexByTermCount(nextTermCount);
+            int expectedTermId = nextTermId - PARTITION_COUNT;
+
+            long rawTail;
+            do
+            {
+                rawTail = RawTail(logMetaDataBuffer, nextIndex);
+                if (expectedTermId != TermId(rawTail))
+                {
+                    break;
+                }
+            } while (!CasRawTail(logMetaDataBuffer, nextIndex, rawTail, PackTail(nextTermId, 0)));
+
+            return CasActiveTermCount(logMetaDataBuffer, currentTermCount, nextTermCount);
         }
 
         /// <summary>
@@ -662,8 +779,24 @@ namespace Adaptive.Aeron.LogBuffer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static long RawTailVolatile(UnsafeBuffer logMetaDataBuffer)
         {
-            int partitionIndex = ActivePartitionIndex(logMetaDataBuffer);
+            var partitionIndex = IndexByTermCount(ActiveTermCount(logMetaDataBuffer));
             return logMetaDataBuffer.GetLongVolatile(TERM_TAIL_COUNTERS_OFFSET + BitUtil.SIZE_OF_LONG * partitionIndex);
         }
+        
+        /// <summary>
+        /// Compare and set the raw value of the tail for the given partition.
+        /// </summary>
+        /// <param name="logMetaDataBuffer"> containing the tail counters. </param>
+        /// <param name="partitionIndex">    for the tail counter. </param>
+        /// <param name="expectedRawTail">   expected current value. </param>
+        /// <param name="updateRawTail">     to be applied. </param>
+        /// <returns> true if the update was successful otherwise false. </returns>
+        /// [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool CasRawTail(UnsafeBuffer logMetaDataBuffer, int partitionIndex, long expectedRawTail, long updateRawTail)
+        {
+            var index = TERM_TAIL_COUNTERS_OFFSET + (BitUtil.SIZE_OF_LONG * partitionIndex);
+            return logMetaDataBuffer.CompareAndSetLong(index, expectedRawTail, updateRawTail);
+        }
+
     }
 }

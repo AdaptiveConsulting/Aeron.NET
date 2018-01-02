@@ -26,12 +26,26 @@ namespace Adaptive.Agrona.Tests.Concurrent
 {
     public class CountersManagerTest
     {
+        class TestEpochClock : IEpochClock
+        {
+            public long CurrentTimestamp { get; set; }
+            
+            public long Time()
+            {
+                return CurrentTimestamp;
+            }
+        }
+        
         private const int NumberOfCounters = 4;
+        private const long FREE_TO_REUSE_TIMEOUT = 1000;
+
+        private TestEpochClock _testClock;
 
         private UnsafeBuffer _labelsBuffer;
         private UnsafeBuffer _counterBuffer;
         private CountersManager _manager;
-        private CountersReader _otherManager;
+        private CountersReader _reader;
+        private CountersManager _managerWithCooldown;
 
         private IntObjConsumer<string> _consumer;
         private CountersReader.MetaData _metaData;
@@ -39,6 +53,8 @@ namespace Adaptive.Agrona.Tests.Concurrent
         [SetUp]
         public void Setup()
         {
+            _testClock  = new TestEpochClock();
+            
             _consumer = A.Fake<IntObjConsumer<string>>();
             _metaData = A.Fake<CountersReader.MetaData>();
 
@@ -46,7 +62,8 @@ namespace Adaptive.Agrona.Tests.Concurrent
             _counterBuffer = new UnsafeBuffer(BufferUtil.AllocateDirect(NumberOfCounters * CountersReader.COUNTER_LENGTH));
 
             _manager = new CountersManager(_labelsBuffer, _counterBuffer, Encoding.ASCII);
-            _otherManager = new CountersManager(_labelsBuffer, _counterBuffer, Encoding.ASCII);
+            _reader = new CountersManager(_labelsBuffer, _counterBuffer, Encoding.ASCII);
+            _managerWithCooldown = new CountersManager(_labelsBuffer, _counterBuffer, Encoding.ASCII, _testClock, FREE_TO_REUSE_TIMEOUT);
         }
 
         [Test]
@@ -63,7 +80,7 @@ namespace Adaptive.Agrona.Tests.Concurrent
             var label = sb.ToString();
             int counterId = _manager.Allocate(label);
 
-            _otherManager.ForEach(_consumer);
+            _reader.ForEach(_consumer);
             A.CallTo(() => _consumer(counterId, label.Substring(0, CountersReader.MAX_LABEL_LENGTH))).MustHaveHappened();
         }
 
@@ -93,7 +110,7 @@ namespace Adaptive.Agrona.Tests.Concurrent
         public void ShouldStoreLabels()
         {
             var counterId = _manager.Allocate("abc");
-            _otherManager.ForEach(_consumer);
+            _reader.ForEach(_consumer);
 
             A.CallTo(() => _consumer(counterId, "abc")).MustHaveHappened();
         }
@@ -105,7 +122,7 @@ namespace Adaptive.Agrona.Tests.Concurrent
             var def = _manager.Allocate("def");
             var ghi = _manager.Allocate("ghi");
 
-            _otherManager.ForEach(_consumer);
+            _reader.ForEach(_consumer);
 
             A.CallTo(() => _consumer(abc, "abc")).MustHaveHappened()
                 .Then(A.CallTo(() => _consumer(def, "def")).MustHaveHappened())
@@ -122,7 +139,7 @@ namespace Adaptive.Agrona.Tests.Concurrent
             var ghi = _manager.Allocate("ghi");
 
             _manager.Free(def);
-            _otherManager.ForEach(_consumer);
+            _reader.ForEach(_consumer);
 
             A.CallTo(() => _consumer(abc, "abc")).MustHaveHappened()
                 .Then(A.CallTo(() => _consumer(ghi, "ghi")).MustHaveHappened());
@@ -130,6 +147,32 @@ namespace Adaptive.Agrona.Tests.Concurrent
             A.CallTo(() => _consumer(A<int>._, A<string>._)).MustHaveHappened(Repeated.Exactly.Twice);
 
             Assert.AreEqual(_manager.Allocate("the next label"), def);
+        }
+
+        [Test]
+        public void ShouldFreeAndNotReuseCountersThatHaveCooldown()
+        {
+            int abc = _managerWithCooldown.Allocate("abc");
+            int def = _managerWithCooldown.Allocate("def");
+            int ghi = _managerWithCooldown.Allocate("ghi");
+
+            _managerWithCooldown.Free(def);
+
+            _testClock.CurrentTimestamp += FREE_TO_REUSE_TIMEOUT - 1;
+            Assert.That(_managerWithCooldown.Allocate("the next label"), Is.GreaterThan(ghi));
+        }
+
+        [Test]
+        public void ShouldFreeAndReuseCountersAfterCooldown()
+        {
+            int abc = _managerWithCooldown.Allocate("abc");
+            int def = _managerWithCooldown.Allocate("def");
+            int ghi = _managerWithCooldown.Allocate("ghi");
+
+            _managerWithCooldown.Free(def);
+
+            _testClock.CurrentTimestamp += FREE_TO_REUSE_TIMEOUT;
+            Assert.That(_managerWithCooldown.Allocate("the next label"), Is.EqualTo(def));
         }
 
         [Test]
@@ -142,7 +185,6 @@ namespace Adaptive.Agrona.Tests.Concurrent
             _manager.Allocate("jkl");
             _manager.Allocate("mno");
         }
-
 
         [Test]
         public void ShouldMapAllocatedCounters()

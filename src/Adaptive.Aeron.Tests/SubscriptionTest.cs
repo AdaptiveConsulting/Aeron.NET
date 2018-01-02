@@ -49,11 +49,15 @@ namespace Adaptive.Aeron.Tests
         [SetUp]
         public void Setup()
         {
+            ImageOneMock = A.Fake<Image>();
+            ImageTwoMock = A.Fake<Image>();
+            
+            A.CallTo(() => ImageOneMock.CorrelationId).Returns(1);
+            A.CallTo(() => ImageTwoMock.CorrelationId).Returns(2);
+
             AtomicReadBuffer = new UnsafeBuffer(new byte[READ_BUFFER_CAPACITY]);
             Conductor = A.Fake<ClientConductor>();
             FragmentHandler = A.Fake<FragmentHandler>();
-            ImageOneMock = A.Fake<Image>();
-            ImageTwoMock = A.Fake<Image>();
             Header = A.Fake<Header>();
             AvailableImageHandler = A.Fake<AvailableImageHandler>();
             UnavailableImageHandler = A.Fake<UnavailableImageHandler>();
@@ -61,13 +65,14 @@ namespace Adaptive.Aeron.Tests
             A.CallTo(() => Header.Flags).Returns(FLAGS);
 
             Subscription = new Subscription(
-                Conductor, 
-                CHANNEL, 
-                STREAM_ID_1, 
+                Conductor,
+                CHANNEL,
+                STREAM_ID_1,
                 SUBSCRIPTION_CORRELATION_ID,
                 AvailableImageHandler,
                 UnavailableImageHandler);
-            A.CallTo(() => Conductor.ReleaseSubscription(Subscription));
+            
+            A.CallTo(() => Conductor.ReleaseSubscription(Subscription)).Invokes(() => Subscription.InternalClose());
         }
 
         [Test]
@@ -75,6 +80,8 @@ namespace Adaptive.Aeron.Tests
         {
             Subscription.Dispose();
             Assert.True(Subscription.Closed);
+
+            A.CallTo(() => Conductor.ReleaseSubscription(Subscription)).MustHaveHappened();
         }
 
         [Test]

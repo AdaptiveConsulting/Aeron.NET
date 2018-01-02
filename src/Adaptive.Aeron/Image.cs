@@ -79,7 +79,7 @@ namespace Adaptive.Aeron
             CorrelationId = correlationId;
             _joinPosition = subscriberPosition.Get();
             
-            _termBuffers = logBuffers.TermBuffers();
+            _termBuffers = logBuffers.DuplicateTermBuffers();
 
             var termLength = logBuffers.TermLength();
             _termLengthMask = termLength - 1;
@@ -95,7 +95,8 @@ namespace Adaptive.Aeron
         public int TermBufferLength => _termLengthMask + 1;
 
         /// <summary>
-        /// The sessionId for the steam of messages.
+        /// The sessionId for the steam of messages. Sessions are unique within a <see cref="Subscription"/> and unique across
+        /// all <see cref="Publication"/>s from a <see cref="SourceIdentity"/>
         /// </summary>
         /// <returns> the sessionId for the steam of messages. </returns>
         public int SessionId { get; }
@@ -122,10 +123,10 @@ namespace Adaptive.Aeron
         public int InitialTermId => _initialTermId;
 
         /// <summary>
-        /// The originalRegistrationId for identification of the image with the media driver.
+        /// The correlationId for identification of the image with the media driver.
         /// </summary>
-        /// <returns> the originalRegistrationId for identification of the image with the media driver. </returns>
-        public long CorrelationId { get; }
+        /// <returns> the correlationId for identification of the image with the media driver. </returns>
+        public virtual long CorrelationId { get; }
 
         /// <summary>
         /// Get the <seealso cref="Subscription"/> to which this <seealso cref="Image"/> belongs.
@@ -310,6 +311,98 @@ namespace Adaptive.Aeron
                         _subscriberPosition.SetOrdered(initialPosition);
                     }
                 } while (fragmentsRead < fragmentLimit && resultingOffset < capacity);
+            }
+            catch (Exception t)
+            {
+                _errorHandler(t);
+            }
+            finally
+            {
+                long resultingPosition = initialPosition + (resultingOffset - initialOffset);
+                if (resultingPosition > initialPosition)
+                {
+                    _subscriberPosition.SetOrdered(resultingPosition);
+                }
+            }
+
+            return fragmentsRead;
+        }
+
+        /// <summary>
+        /// Poll for new messages in a stream. If new messages are found beyond the last consumed position then they
+        /// will be delivered to the <seealso cref="ControlledFragmentHandler"/> up to a limited number of fragments as specified or
+        /// the maximum position specified.
+        /// <para>
+        /// Use a <seealso cref="ControlledFragmentAssembler"/> to assemble messages which span multiple fragments.
+        ///     
+        /// </para>
+        /// </summary>
+        /// <param name="fragmentHandler"> to which message fragments are delivered. </param>
+        /// <param name="maxPosition">     to consume messages up to. </param>
+        /// <param name="fragmentLimit">   for the number of fragments to be consumed during one polling operation. </param>
+        /// <returns> the number of fragments that have been consumed. </returns>
+        /// <seealso cref="ControlledFragmentAssembler"/>
+        /// <seealso cref="ImageControlledFragmentAssembler"/>
+        public virtual int BoundedControlledPoll(ControlledFragmentHandler fragmentHandler, long maxPosition,
+            int fragmentLimit)
+        {
+            if (_isClosed)
+            {
+                return 0;
+            }
+
+            var fragmentsRead = 0;
+            var initialPosition = _subscriberPosition.Get();
+            var initialOffset = (int) initialPosition & _termLengthMask;
+            var resultingOffset = initialOffset;
+            var termBuffer = ActiveTermBuffer(initialPosition);
+            var endOffset = Math.Min(termBuffer.Capacity, (int) (maxPosition - initialPosition + initialOffset));
+            _header.Buffer = termBuffer;
+
+            try
+            {
+                while (fragmentsRead < fragmentLimit && resultingOffset < endOffset)
+                {
+                    int length = FrameDescriptor.FrameLengthVolatile(termBuffer, resultingOffset);
+                    if (length <= 0)
+                    {
+                        break;
+                    }
+
+                    int frameOffset = resultingOffset;
+                    int alignedLength = BitUtil.Align(length, FrameDescriptor.FRAME_ALIGNMENT);
+                    resultingOffset += alignedLength;
+
+                    if (FrameDescriptor.IsPaddingFrame(termBuffer, frameOffset))
+                    {
+                        continue;
+                    }
+
+                    _header.Offset = frameOffset;
+
+                    var action = fragmentHandler(termBuffer,
+                        frameOffset + DataHeaderFlyweight.HEADER_LENGTH,
+                        length - DataHeaderFlyweight.HEADER_LENGTH, _header);
+
+                    if (action == ControlledFragmentHandlerAction.ABORT)
+                    {
+                        resultingOffset -= alignedLength;
+                        break;
+                    }
+
+                    ++fragmentsRead;
+
+                    if (action == ControlledFragmentHandlerAction.BREAK)
+                    {
+                        break;
+                    }
+                    else if (action == ControlledFragmentHandlerAction.COMMIT)
+                    {
+                        initialPosition += (resultingOffset - initialOffset);
+                        initialOffset = resultingOffset;
+                        _subscriberPosition.SetOrdered(initialPosition);
+                    }
+                }
             }
             catch (Exception t)
             {
@@ -522,39 +615,16 @@ namespace Adaptive.Aeron
             }
         }
 
-        internal IManagedResource ManagedResource()
+        internal LogBuffers LogBuffers()
+        {
+            return _logBuffers;
+        }
+        
+        internal void Close()
         {
             _finalPosition = _subscriberPosition.Volatile;
             _isEos = _finalPosition >= LogBufferDescriptor.EndOfStreamPosition(_logBuffers.MetaDataBuffer());
             _isClosed = true;
-
-            return new ImageManagedResource(this);
-        }
-
-        private class ImageManagedResource : IManagedResource
-        {
-            private long _timeOfLastStateChange;
-            private readonly Image _image;
-
-            public ImageManagedResource(Image image)
-            {
-                _image = image;
-            }
-
-            public void TimeOfLastStateChange(long time)
-            {
-                _timeOfLastStateChange = time;
-            }
-
-            public long TimeOfLastStateChange()
-            {
-                return _timeOfLastStateChange;
-            }
-
-            public void Delete()
-            {
-                _image._logBuffers.Dispose();
-            }
         }
     }
 }

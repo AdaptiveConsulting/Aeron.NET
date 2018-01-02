@@ -53,6 +53,12 @@ namespace Adaptive.Agrona.Concurrent.Status
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public override void SetVolatile(long value)
+        {
+            _value.Set(value);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override bool ProposeMax(long proposedValue)
         {
             return ProposeMaxOrdered(proposedValue);

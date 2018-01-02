@@ -42,6 +42,12 @@ namespace Adaptive.Agrona.Concurrent.Status
         public abstract void SetOrdered(long value);
 
         /// <summary>
+        /// Sets the current position of the component with volatile memory semantics.
+        /// </summary>
+        /// <param name="value"> the current position of the component. </param>
+        public abstract void SetVolatile(long value);
+        
+        /// <summary>
         /// Set the position to a new proposedValue if greater than the current value with memory ordering semantics.
         /// </summary>
         /// <param name="proposedValue"> for the new max. </param>

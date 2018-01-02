@@ -29,84 +29,121 @@ namespace Adaptive.Aeron
     /// Takes a log file name and maps the file into memory and wraps it with <seealso cref="UnsafeBuffer"/>s as appropriate.
     /// </summary>
     /// <seealso cref="LogBufferDescriptor" />
-    public class LogBuffers : IDisposable
+    public class LogBuffers : IDisposable, IManagedResource
     {
+        private long _timeOfLastStateChangeNs;
+        private int _refCount;
+        
         private readonly int _termLength;
-        private readonly UnsafeBuffer[] termBuffers = new UnsafeBuffer[LogBufferDescriptor.PARTITION_COUNT];
-        private readonly UnsafeBuffer logMetaDataBuffer;
+        private readonly UnsafeBuffer[] _termBuffers = new UnsafeBuffer[LogBufferDescriptor.PARTITION_COUNT];
+        private readonly UnsafeBuffer _logMetaDataBuffer;
         private readonly MappedByteBuffer[] _mappedByteBuffers;
 
         internal LogBuffers()
         {
         }
 
-        public LogBuffers(string logFileName, MapMode mapMode)
+        /// <summary>
+        /// Construct the log buffers for a given log file.
+        /// </summary>
+        /// <param name="logFileName"></param>
+        public LogBuffers(string logFileName)
         {
-            var fileInfo = new FileInfo(logFileName);
-
-            var logLength = fileInfo.Length;
-            var termLength = LogBufferDescriptor.ComputeTermLength(logLength);
-
-            LogBufferDescriptor.CheckTermLength(termLength);
-
-            _termLength = termLength;
-
-            // if log length exceeds MAX_INT we need multiple mapped buffers, (see FileChannel.map doc).
-            if (logLength < int.MaxValue)
+            try
             {
-                var mappedBuffer = IoUtil.MapExistingFile(logFileName, mapMode);
+                var fileInfo = new FileInfo(logFileName);
 
-                _mappedByteBuffers = new[] {mappedBuffer};
-                
-                for (var i = 0; i < LogBufferDescriptor.PARTITION_COUNT; i++)
+                var logLength = fileInfo.Length;
+
+                // if log length exceeds MAX_INT we need multiple mapped buffers, (see FileChannel.map doc).
+                if (logLength < int.MaxValue)
                 {
-                    termBuffers[i] = new UnsafeBuffer(mappedBuffer.Pointer, i * termLength, termLength);
-                }
+                    var mappedBuffer = IoUtil.MapExistingFile(logFileName, MapMode.ReadWrite);
+                    _mappedByteBuffers = new[] {mappedBuffer};
 
-                logMetaDataBuffer = new UnsafeBuffer(mappedBuffer.Pointer, (int)(logLength - LogBufferDescriptor.LOG_META_DATA_LENGTH), LogBufferDescriptor.LOG_META_DATA_LENGTH);
-            }
-            else
-            {
-                _mappedByteBuffers = new MappedByteBuffer[LogBufferDescriptor.PARTITION_COUNT + 1];
-                var memoryMappedFile = IoUtil.OpenMemoryMappedFile(logFileName, mapMode);
-                
-                for (var i = 0; i < LogBufferDescriptor.PARTITION_COUNT; i++)
+                    _logMetaDataBuffer = new UnsafeBuffer(mappedBuffer.Pointer,
+                        (int) (logLength - LogBufferDescriptor.LOG_META_DATA_LENGTH),
+                        LogBufferDescriptor.LOG_META_DATA_LENGTH);
+
+                    int termLength = LogBufferDescriptor.TermLength(_logMetaDataBuffer);
+                    int pageSize = LogBufferDescriptor.PageSize(_logMetaDataBuffer);
+
+                    LogBufferDescriptor.CheckTermLength(termLength);
+                    LogBufferDescriptor.CheckPageSize(pageSize);
+
+                    _termLength = termLength;
+
+                    for (var i = 0; i < LogBufferDescriptor.PARTITION_COUNT; i++)
+                    {
+                        _termBuffers[i] = new UnsafeBuffer(mappedBuffer.Pointer, i * termLength, termLength);
+                    }
+                }
+                else
                 {
-                    _mappedByteBuffers[i] = new MappedByteBuffer(memoryMappedFile, termLength*(long) i, termLength);
-                    termBuffers[i] = new UnsafeBuffer(_mappedByteBuffers[i].Pointer, 0, termLength);
+                    _mappedByteBuffers = new MappedByteBuffer[LogBufferDescriptor.PARTITION_COUNT + 1];
+
+                    int assumedTermLength = LogBufferDescriptor.TERM_MAX_LENGTH;
+                    long metaDataSectionOffset = assumedTermLength * (long) LogBufferDescriptor.PARTITION_COUNT;
+                    long metaDataMappingLength = logLength - metaDataSectionOffset;
+
+                    var memoryMappedFile = IoUtil.OpenMemoryMappedFile(logFileName, MapMode.ReadWrite);
+
+                    var metaDataMappedBuffer =
+                        new MappedByteBuffer(memoryMappedFile, metaDataSectionOffset, metaDataMappingLength);
+                    _mappedByteBuffers[_mappedByteBuffers.Length - 1] = metaDataMappedBuffer;
+                    _logMetaDataBuffer = new UnsafeBuffer(
+                        metaDataMappedBuffer.Pointer,
+                        (int) metaDataMappingLength - LogBufferDescriptor.LOG_META_DATA_LENGTH,
+                        LogBufferDescriptor.LOG_META_DATA_LENGTH);
+
+                    int metaDataTermLength = LogBufferDescriptor.TermLength(_logMetaDataBuffer);
+                    int pageSize = LogBufferDescriptor.PageSize(_logMetaDataBuffer);
+
+                    LogBufferDescriptor.CheckPageSize(pageSize);
+                    if (metaDataTermLength != assumedTermLength)
+                    {
+                        throw new InvalidOperationException(
+                            $"Assumed term length {assumedTermLength} does not match metadta: termLength = {metaDataTermLength}");
+                    }
+
+                    _termLength = assumedTermLength;
+
+                    for (var i = 0; i < LogBufferDescriptor.PARTITION_COUNT; i++)
+                    {
+                        long position = assumedTermLength * (long) i;
+
+                        _mappedByteBuffers[i] = new MappedByteBuffer(memoryMappedFile, position, assumedTermLength);
+                        _termBuffers[i] = new UnsafeBuffer(_mappedByteBuffers[i].Pointer, 0, assumedTermLength);
+                    }
                 }
-
-                var metaDataMappedBuffer = new MappedByteBuffer(memoryMappedFile, logLength - LogBufferDescriptor.LOG_META_DATA_LENGTH, LogBufferDescriptor.LOG_META_DATA_LENGTH);
-                _mappedByteBuffers[_mappedByteBuffers.Length - 1] = metaDataMappedBuffer;
-                logMetaDataBuffer = new UnsafeBuffer(metaDataMappedBuffer.Pointer, 0, LogBufferDescriptor.LOG_META_DATA_LENGTH);
             }
-
-            // TODO try/catch
-            
-            foreach (var buffer in termBuffers)
+            catch (InvalidOperationException ex)
             {
-                buffer.VerifyAlignment();
+                Dispose();
+                throw ex;
             }
-
-            logMetaDataBuffer.VerifyAlignment();
         }
 
 #if DEBUG
-        public virtual UnsafeBuffer[] TermBuffers()
+        public virtual UnsafeBuffer[] DuplicateTermBuffers()
 #else
-        public UnsafeBuffer[] TermBuffers()
+        public UnsafeBuffer[] DuplicateTermBuffers()
 #endif
         {
-            return termBuffers;
+            return _termBuffers;
         }
 
 #if DEBUG
         public virtual UnsafeBuffer MetaDataBuffer()
 #else
+        /// <summary>
+        /// Get the buffer which holds the log metadata.
+        /// </summary>
+        /// <returns> the buffer which holds the log metadata. </returns>
         public UnsafeBuffer MetaDataBuffer()
 #endif
         {
-            return logMetaDataBuffer;
+            return _logMetaDataBuffer;
         }
 
 #if DEBUG
@@ -124,10 +161,39 @@ namespace Adaptive.Aeron
 #if DEBUG
         public virtual int TermLength()
 #else
+        /// <summary>
+        ///  The length of the term buffer in each log partition.
+        /// </summary>
+        /// <returns> length of the term buffer in each log partition. </returns>
         public int TermLength()
 #endif
         {
             return _termLength;
+        }
+
+        public int IncRef()
+        {
+            return ++_refCount;
+        }
+
+        public int DecRef()
+        {
+            return --_refCount;
+        }
+
+        public void TimeOfLastStateChange(long timeNs)
+        {
+            _timeOfLastStateChangeNs = timeNs;
+        } 
+        
+        public long TimeOfLastStateChange()
+        {
+            return _timeOfLastStateChangeNs;
+        }
+        
+        public void Delete()
+        {
+            Dispose();
         }
     }
 }

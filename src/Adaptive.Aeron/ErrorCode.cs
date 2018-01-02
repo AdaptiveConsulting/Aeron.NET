@@ -36,6 +36,14 @@ namespace Adaptive.Aeron
         /// <summary>
         /// Attempted to remove a publication, but it was not found. 
         /// </summary>
-        UNKNOWN_PUBLICATION = 3
+        UNKNOWN_PUBLICATION = 3,
+        /// <summary>
+        /// Channel Endpoint could not be successfully opened.
+        /// </summary>
+        CHANNEL_ENDPOINT_ERROR = 4,
+        /// <summary>
+        /// Attempted to remove a counter, but it was not found.
+        /// </summary>
+        UNKNOWN_COUNTER = 5
     }
 }

@@ -42,6 +42,7 @@ namespace Adaptive.Aeron
         private readonly RemoveMessageFlyweight _removeMessage = new RemoveMessageFlyweight();
         private readonly CorrelatedMessageFlyweight _correlatedMessage = new CorrelatedMessageFlyweight();
         private readonly DestinationMessageFlyweight _destinationMessage = new DestinationMessageFlyweight();
+        private readonly CounterMessageFlyweight _counterMessage = new CounterMessageFlyweight();
         private readonly IRingBuffer _toDriverCommandBuffer;
 
         public DriverProxy(IRingBuffer toDriverCommandBuffer, long clientId)
@@ -56,6 +57,7 @@ namespace Adaptive.Aeron
             _correlatedMessage.Wrap(_buffer, 0);
             _removeMessage.Wrap(_buffer, 0);
             _destinationMessage.Wrap(_buffer, 0);
+            _counterMessage.Wrap(_buffer, 0);
 
             _correlatedMessage.ClientId(clientId);
         }
@@ -204,6 +206,61 @@ namespace Adaptive.Aeron
 
             return correlationId;
         }
+        
+        public long AddCounter(int typeId, IDirectBuffer keyBuffer, int keyOffset, int keyLength, IDirectBuffer labelBuffer, int labelOffset, int labelLength)
+        {
+            long correlationId = _toDriverCommandBuffer.NextCorrelationId();
 
+            _counterMessage.TypeId(typeId).KeyBuffer(keyBuffer, keyOffset, keyLength).LabelBuffer(labelBuffer, labelOffset, labelLength).CorrelationId(correlationId);
+
+            if (!_toDriverCommandBuffer.Write(ControlProtocolEvents.ADD_COUNTER, _buffer, 0, _counterMessage.Length()))
+            {
+                throw new InvalidOperationException("Could not write add counter command");
+            }
+
+            return correlationId;
+        }
+
+        public long AddCounter(int typeId, string label)
+        {
+            long correlationId = _toDriverCommandBuffer.NextCorrelationId();
+
+            _counterMessage.TypeId(typeId).KeyBuffer(null, 0, 0).Label(label).CorrelationId(correlationId);
+
+            if (!_toDriverCommandBuffer.Write(ControlProtocolEvents.ADD_COUNTER, _buffer, 0, _counterMessage.Length()))
+            {
+                throw new InvalidOperationException("Could not write add counter command");
+            }
+
+            return correlationId;
+        }
+
+        public long RemoveCounter(long registrationId)
+        {
+            long correlationId = _toDriverCommandBuffer.NextCorrelationId();
+
+            _removeMessage.RegistrationId(registrationId).CorrelationId(correlationId);
+
+            if (!_toDriverCommandBuffer.Write(ControlProtocolEvents.REMOVE_COUNTER, _buffer, 0, RemoveMessageFlyweight.Length()))
+            {
+                throw new InvalidOperationException("Could not write remove counter command");
+            }
+
+            return correlationId;
+        }
+
+        public virtual long ClientClose()
+        {
+            long correlationId = _toDriverCommandBuffer.NextCorrelationId();
+
+            _correlatedMessage.CorrelationId(correlationId);
+
+            if (!_toDriverCommandBuffer.Write(ControlProtocolEvents.CLIENT_CLOSE, _buffer, 0, CorrelatedMessageFlyweight.LENGTH))
+            {
+                throw new InvalidOperationException("Could not send client close command");
+            }
+
+            return correlationId;
+        }
     }
 }

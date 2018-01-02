@@ -207,7 +207,10 @@ namespace Adaptive.Aeron
         /// <seealso cref="Publication.RemoveDestination(String)"></seealso>
         public ChannelUriStringBuilder ControlMode(string controlMode)
         {
-            if (null != controlMode && !controlMode.Equals(Aeron.Context.MDC_CONTROL_MODE_MANUAL))
+            if (null != controlMode && 
+                !controlMode.Equals(Aeron.Context.MDC_CONTROL_MODE_MANUAL) &&
+                !controlMode.Equals(Aeron.Context.MDC_CONTROL_MODE_DYNAMIC)
+                )
             {
                 throw new ArgumentException("Invalid control mode: " + controlMode);
             }

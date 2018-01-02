@@ -168,7 +168,8 @@ namespace Adaptive.Agrona.Concurrent
 
             if (length < 0 || length > bufferLength - offset)
             {
-                ThrowHelper.ThrowArgumentException("offset=" + offset + " length=" + length + " not valid for capacity=" + bufferLength);
+                ThrowHelper.ThrowArgumentException("offset=" + offset + " length=" + length +
+                                                   " not valid for capacity=" + bufferLength);
             }
 #endif
 
@@ -232,7 +233,8 @@ namespace Adaptive.Agrona.Concurrent
 
             if (length < 0 || length > bufferCapacity - offset)
             {
-                ThrowHelper.ThrowArgumentException("offset=" + offset + " length=" + length + " not valid for capacity=" + bufferCapacity);
+                ThrowHelper.ThrowArgumentException("offset=" + offset + " length=" + length +
+                                                   " not valid for capacity=" + bufferCapacity);
             }
 #endif
 
@@ -359,7 +361,7 @@ namespace Adaptive.Agrona.Concurrent
 #if DEBUG
         //public virtual void PutLong(int index, long value, ByteOrder byteOrder)
 #else
-        //public void PutLong(int index, long value, ByteOrder byteOrder)
+//public void PutLong(int index, long value, ByteOrder byteOrder)
 #endif
         //{
         //    BoundsCheck0(index, BitUtil.SIZE_OF_LONG);
@@ -381,6 +383,17 @@ namespace Adaptive.Agrona.Concurrent
         public virtual void PutLong(int index, long value)
 #else
         public void PutLong(int index, long value)
+#endif
+        {
+            BoundsCheck0(index, BitUtil.SIZE_OF_LONG);
+            *(long*) (_pBuffer + index) = value;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#if DEBUG
+        public virtual void PutLong(int index, long value, ByteOrder byteOrder)
+#else
+        public void PutLong(int index, long value, ByteOrder byteOrder)
 #endif
         {
             BoundsCheck0(index, BitUtil.SIZE_OF_LONG);
@@ -478,7 +491,7 @@ namespace Adaptive.Agrona.Concurrent
 #if DEBUG
         //public virtual void PutInt(int index, int value, ByteOrder byteOrder)
 #else
-        //public void PutInt(int index, int value, ByteOrder byteOrder)
+//public void PutInt(int index, int value, ByteOrder byteOrder)
 #endif
         //{
         //    BoundsCheck0(index, BitUtil.SIZE_OF_INT);
@@ -492,6 +505,18 @@ namespace Adaptive.Agrona.Concurrent
         public virtual int GetInt(int index)
 #else
         public int GetInt(int index)
+#endif
+        {
+            BoundsCheck0(index, BitUtil.SIZE_OF_INT);
+
+            return *(int*) (_pBuffer + index);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#if DEBUG
+        public virtual int GetInt(int index, ByteOrder byteOrder)
+#else
+        public int GetInt(int index, ByteOrder byteOrder)
 #endif
         {
             BoundsCheck0(index, BitUtil.SIZE_OF_INT);
@@ -614,7 +639,7 @@ namespace Adaptive.Agrona.Concurrent
 #if DEBUG
         //public virtual void PutDouble(int index, double value, ByteOrder byteOrder)
 #else
-        //public void PutDouble(int index, double value, ByteOrder byteOrder)
+//public void PutDouble(int index, double value, ByteOrder byteOrder)
 #endif
         //{
         //    if (SHOULD_BOUNDS_CHECK)
@@ -700,9 +725,34 @@ namespace Adaptive.Agrona.Concurrent
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #if DEBUG
+        public virtual short GetShort(int index, ByteOrder byteOrder)
+#else
+        public short GetShort(int index, ByteOrder byteOrder)
+#endif
+        {
+#if SHOULD_BOUNDS_CHECK
+            BoundsCheck0(index, BitUtil.SIZE_OF_SHORT);
+#endif
+            return *(short*) (_pBuffer + index);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#if DEBUG
         public virtual void PutShort(int index, short value)
 #else
         public void PutShort(int index, short value)
+#endif
+        {
+            BoundsCheck0(index, BitUtil.SIZE_OF_SHORT);
+
+            *(short*) (_pBuffer + index) = value;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#if DEBUG
+        public virtual void PutShort(int index, short value, ByteOrder byteOrder)
+#else
+        public void PutShort(int index, short value, ByteOrder byteOrder)
 #endif
         {
             BoundsCheck0(index, BitUtil.SIZE_OF_SHORT);
@@ -901,7 +951,7 @@ namespace Adaptive.Agrona.Concurrent
 #if DEBUG
         //public virtual void PutCharVolatile(int index, char value)
 #else
-        //public void PutCharVolatile(int index, char value)
+//public void PutCharVolatile(int index, char value)
 #endif
         //{
         //    BoundsCheck0(index, BitUtil.SIZE_OF_CHAR);
@@ -971,6 +1021,50 @@ namespace Adaptive.Agrona.Concurrent
         public int PutStringAscii(int index, string value)
         {
             return PutStringAscii(index, value, int.MaxValue);
+        }
+
+        public int PutStringWithoutLengthAscii(int index, string value)
+        {
+            int length = value?.Length ?? 0;
+
+
+#if SHOULD_BOUNDS_CHECK
+            BoundsCheck0(index, length);
+#endif
+            for (int i = 0; i < length; i++)
+            {
+                var c = value[i];
+                if (c > (char) 127)
+                {
+                    c = '?';
+                }
+
+                *(char*) (_pBuffer + index + i) = c;
+            }
+
+            return length;
+        }
+
+        public int PutStringWithoutLengthAscii(int index, string value, int valueOffset, int length)
+        {
+            var len = value != null ? Math.Min(value.Length - valueOffset, length) : 0;
+
+#if SHOULD_BOUNDS_CHECK
+            BoundsCheck0(index, len);
+#endif
+
+            for (int i = 0; i < len; i++)
+            {
+                char c = value[valueOffset + i];
+                if (c > (char) 127)
+                {
+                    c = '?';
+                }
+
+                *(char*) (_pBuffer + index + i) = c;
+            }
+
+            return len;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1052,7 +1146,7 @@ namespace Adaptive.Agrona.Concurrent
         private void BoundsCheck0(int index, int length)
         {
 #if SHOULD_BOUNDS_CHECK
-            long resultingPosition = index + (long)length;
+            long resultingPosition = index + (long) length;
             if (index < 0 || resultingPosition > Capacity)
             {
                 ThrowHelper.ThrowIndexOutOfRangeException($"index={index:D}, length={length:D}, capacity={Capacity:D}");
@@ -1069,7 +1163,7 @@ namespace Adaptive.Agrona.Concurrent
         {
             BoundsCheck0(index, length);
         }
-        
+
         ///////////////////////////////////////////////////////////////////////////
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1134,7 +1228,7 @@ namespace Adaptive.Agrona.Concurrent
 
             ByteArray = null;
             ByteBuffer = null;
-            
+
             _disposed = true;
         }
 

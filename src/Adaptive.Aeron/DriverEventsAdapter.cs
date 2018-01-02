@@ -30,16 +30,16 @@ namespace Adaptive.Aeron
 
         private readonly ErrorResponseFlyweight _errorResponse = new ErrorResponseFlyweight();
         private readonly PublicationBuffersReadyFlyweight _publicationReady = new PublicationBuffersReadyFlyweight();
+        private readonly SubscriptionReadyFlyweight _subscriptionReady = new SubscriptionReadyFlyweight();
         private readonly ImageBuffersReadyFlyweight _imageReady = new ImageBuffersReadyFlyweight();
-        private readonly CorrelatedMessageFlyweight _correlatedMessage = new CorrelatedMessageFlyweight();
+        private readonly OperationSucceededFlyweight _operationSucceeded = new OperationSucceededFlyweight();
         private readonly ImageMessageFlyweight _imageMessage = new ImageMessageFlyweight();
+        private readonly CounterUpdateFlyweight _counterUpdate = new CounterUpdateFlyweight();
         private readonly IDriverEventsListener _listener;
         private readonly MessageHandler _messageHandler;
 
         private long _activeCorrelationId;
         private long _lastReceivedCorrelationId;
-        private string _expectedChannel;
-        
 
         internal DriverEventsAdapter(CopyBroadcastReceiver broadcastReceiver, IDriverEventsListener listener)
         {
@@ -48,11 +48,10 @@ namespace Adaptive.Aeron
             _messageHandler = OnMessage;
         }
 
-        public int Receive(long activeCorrelationId, string expectedChannel)
+        public int Receive(long activeCorrelationId)
         {
             _activeCorrelationId = activeCorrelationId;
             _lastReceivedCorrelationId = -1;
-            _expectedChannel = expectedChannel;
             
             return _broadcastReceiver.Receive(_messageHandler);
         }
@@ -70,8 +69,13 @@ namespace Adaptive.Aeron
                 {
                     _errorResponse.Wrap(buffer, index);
 
-                    long correlationId = _errorResponse.OffendingCommandCorrelationId();
-                    if (correlationId == _activeCorrelationId)
+                    int correlationId = (int)_errorResponse.OffendingCommandCorrelationId();
+
+                    if (ErrorCode.CHANNEL_ENDPOINT_ERROR == _errorResponse.ErrorCode())
+                    {
+                        _listener.OnChannelEndpointError(correlationId, _errorResponse.ErrorMessage());
+                    }
+                    else if (correlationId == _activeCorrelationId)
                     {
                         _listener.OnError(correlationId, _errorResponse.ErrorCode(), _errorResponse.ErrorMessage());
 
@@ -88,7 +92,7 @@ namespace Adaptive.Aeron
                         _imageReady.CorrelationId(), 
                         _imageReady.StreamId(), 
                         _imageReady.SessionId(),
-                        _imageReady.SubscriberRegistrationId(), 
+                        _imageReady.SubscriptionRegistrationId(), 
                         _imageReady.SubscriberPositionId(), 
                         _imageReady.LogFileName(), 
                         _imageReady.SourceIdentity());
@@ -109,19 +113,33 @@ namespace Adaptive.Aeron
                             _publicationReady.StreamId(),
                             _publicationReady.SessionId(), 
                             _publicationReady.PublicationLimitCounterId(),
-                            _expectedChannel, 
+                            _publicationReady.ChannelStatusCounterId(), 
                             _publicationReady.LogFileName());
 
                         _lastReceivedCorrelationId = correlationId;
                     }
                     break;
                 }
+                    
+                case ControlProtocolEvents.ON_SUBSCRIPTION_READY:
+                {
+                    _subscriptionReady.Wrap(buffer, index);
 
+                    long correlationId = _subscriptionReady.CorrelationId();
+                    if (correlationId == _activeCorrelationId)
+                    {
+                        _listener.OnNewSubscription(correlationId, _subscriptionReady.ChannelStatusCounterId());
+
+                        _lastReceivedCorrelationId = correlationId;
+                    }
+                    break;
+                }
+                    
                 case ControlProtocolEvents.ON_OPERATION_SUCCESS:
                 {
-                    _correlatedMessage.Wrap(buffer, index);
+                    _operationSucceeded.Wrap(buffer, index);
 
-                    long correlationId = _correlatedMessage.CorrelationId();
+                    long correlationId = _operationSucceeded.CorrelationId();
                     if (correlationId == _activeCorrelationId)
                     {
                         _lastReceivedCorrelationId = correlationId;
@@ -133,7 +151,8 @@ namespace Adaptive.Aeron
                 {
                     _imageMessage.Wrap(buffer, index);
 
-                    _listener.OnUnavailableImage(_imageMessage.CorrelationId(), _imageMessage.StreamId());
+                    _listener.OnUnavailableImage(
+                        _imageMessage.CorrelationId(), _imageMessage.SubscriptionRegistrationId(), _imageMessage.StreamId());
                     break;
                 }
 
@@ -150,11 +169,38 @@ namespace Adaptive.Aeron
                             _publicationReady.StreamId(),
                             _publicationReady.SessionId(),
                             _publicationReady.PublicationLimitCounterId(),
-                            _expectedChannel,
+                            _publicationReady.ChannelStatusCounterId(),
                             _publicationReady.LogFileName());
 
                         _lastReceivedCorrelationId = correlationId;
                     }
+                    break;
+                }
+                    
+                case ControlProtocolEvents.ON_COUNTER_READY:
+                {
+                    _counterUpdate.Wrap(buffer, index);
+
+                    int counterId = _counterUpdate.CounterId();
+                    long correlationId = _counterUpdate.CorrelationId();
+                    if (correlationId == _activeCorrelationId)
+                    {
+                        _listener.OnNewCounter(correlationId, counterId);
+
+                        _lastReceivedCorrelationId = correlationId;
+                    }
+                    else
+                    {
+                        _listener.OnAvailableCounter(correlationId, counterId);
+                    }
+                    break;
+                }
+
+                case ControlProtocolEvents.ON_UNAVAILABLE_COUNTER:
+                {
+                    _counterUpdate.Wrap(buffer, index);
+
+                    _listener.OnUnavailableCounter(_counterUpdate.CorrelationId(), _counterUpdate.CounterId());
                     break;
                 }
             }

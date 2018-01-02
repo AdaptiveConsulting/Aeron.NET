@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.Runtime.CompilerServices;
 using Adaptive.Aeron.Protocol;
 using Adaptive.Agrona.Concurrent;
@@ -47,6 +48,12 @@ namespace Adaptive.Aeron.LogBuffer
     /// </summary>
     public class FrameDescriptor
     {
+        /// <summary>
+        /// Set a pragmatic maximum message length regardless of term length to encourage better design.
+        /// Messages larger than half the cache size should be broken up into chunks and streamed.
+        /// </summary>
+        public const int MAX_MESSAGE_LENGTH = 16 * 1024 * 1024;
+
         /// <summary>
         /// Alignment as a multiple of bytes for each frame. The length field will store the unaligned length in bytes.
         /// </summary>
@@ -105,7 +112,7 @@ namespace Adaptive.Aeron.LogBuffer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int ComputeMaxMessageLength(int termLength)
         {
-            return termLength / 8;
+            return Math.Min(termLength / 8, MAX_MESSAGE_LENGTH);
         }
 
         /// <summary>
@@ -115,7 +122,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// <returns> the maximum supported length for a message. </returns>
         public static int ComputeExclusiveMaxMessageLength(int termLength)
         {
-            return termLength / 4;
+            return Math.Min(termLength / 4, MAX_MESSAGE_LENGTH);
         }
 
         /// <summary>

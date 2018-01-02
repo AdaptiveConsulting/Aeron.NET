@@ -35,7 +35,7 @@ namespace Adaptive.Agrona.Util
             Pointer = new IntPtr(ptr);
         }
 
-        public MappedByteBuffer(MemoryMappedFile memoryMappedFile, long offset, int length)
+        public MappedByteBuffer(MemoryMappedFile memoryMappedFile, long offset, long length)
         {
             _memoryMappedFile = memoryMappedFile;
             byte* ptr = (byte*)0;

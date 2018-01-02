@@ -28,11 +28,14 @@ namespace Adaptive.Aeron.Command
     /// |                        Correlation ID                         |
     /// |                                                               |
     /// +---------------------------------------------------------------+
+    /// |                 Subscription Registration ID                  |
+    /// |                                                               |
+    /// +---------------------------------------------------------------+
     /// |                          Stream ID                            |
     /// +---------------------------------------------------------------+
     /// |                        Channel Length                         |
     /// +---------------------------------------------------------------+
-    /// |                           Channel (ASCII)                    ...
+    /// |                       Channel (ASCII)                        ...
     /// ...                                                             |
     /// +---------------------------------------------------------------+
     /// </para>
@@ -40,8 +43,9 @@ namespace Adaptive.Aeron.Command
     public class ImageMessageFlyweight
     {
         private const int CORRELATION_ID_OFFSET = 0;
-        private const int STREAM_ID_FIELD_OFFSET = 8;
-        private const int CHANNEL_OFFSET = 12;
+        private const int SUBSCRIPTION_REGISTRATION_ID_OFFSET = CORRELATION_ID_OFFSET + BitUtil.SIZE_OF_LONG;
+        private const int STREAM_ID_FIELD_OFFSET = SUBSCRIPTION_REGISTRATION_ID_OFFSET + BitUtil.SIZE_OF_LONG;
+        private const int CHANNEL_OFFSET = STREAM_ID_FIELD_OFFSET + BitUtil.SIZE_OF_INT;
 
         private IMutableDirectBuffer buffer;
         private int offset;
@@ -76,6 +80,27 @@ namespace Adaptive.Aeron.Command
         public ImageMessageFlyweight CorrelationId(long correlationId)
         {
             buffer.PutLong(offset + CORRELATION_ID_OFFSET, correlationId);
+
+            return this;
+        }
+
+        /// <summary>
+        /// Registration ID for the subscription.
+        /// </summary>
+        /// <returns> registration ID for the subscription. </returns>
+        public long SubscriptionRegistrationId()
+        {
+            return buffer.GetLong(offset + SUBSCRIPTION_REGISTRATION_ID_OFFSET);
+        }
+
+        /// <summary>
+        /// Set the registration ID for the subscription.
+        /// </summary>
+        /// <param name="registrationId"> for the subscription </param>
+        /// <returns> flyweight </returns>
+        public ImageMessageFlyweight SubscriptionRegistrationId(long registrationId)
+        {
+            buffer.PutLong(offset + SUBSCRIPTION_REGISTRATION_ID_OFFSET, registrationId);
 
             return this;
         }

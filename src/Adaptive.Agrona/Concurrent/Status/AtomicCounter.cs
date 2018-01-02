@@ -23,12 +23,26 @@ namespace Adaptive.Agrona.Concurrent.Status
     /// </summary>
     public class AtomicCounter : IDisposable
     {
-        public int Id { get; }
         private readonly int _offset;
         private readonly IAtomicBuffer _buffer;
         private readonly CountersManager _countersManager;
 
-        internal AtomicCounter(IAtomicBuffer buffer, int counterId, CountersManager countersManager)
+        /// <summary>
+        /// Map a counter over a buffer. This version will NOT free the counter on close.
+        /// </summary>
+        /// <param name="buffer">    containing the counter. </param>
+        /// <param name="counterId"> identifier of the counter. </param>
+        public AtomicCounter(IAtomicBuffer buffer, int counterId) : this(buffer, counterId, null)
+        {
+        }
+
+        /// <summary>
+        /// Map a counter over a buffer. This version will free the counter on close.
+        /// </summary>
+        /// <param name="buffer">          containing the counter. </param>
+        /// <param name="counterId">       identifier for the counter. </param>
+        /// <param name="countersManager"> to be called to free the counter on close. </param>
+        public AtomicCounter(IAtomicBuffer buffer, int counterId, CountersManager countersManager)
         {
             _buffer = buffer;
             Id = counterId;
@@ -36,6 +50,18 @@ namespace Adaptive.Agrona.Concurrent.Status
             _offset = CountersReader.CounterOffset(counterId);
             buffer.PutLong(_offset, 0);
         }
+
+        /// <summary>
+        /// Identity for the counter within the <seealso cref="CountersManager"/>.
+        /// </summary>
+        /// <returns> identity for the counter within the <seealso cref="CountersManager"/>. </returns>
+        public int Id { get; }
+
+        /// <summary>
+        /// Has this counter been closed?
+        /// </summary>
+        /// <returns> true if this counter has already been closed. </returns>
+        public bool IsClosed { get; private set; }
 
         /// <summary>
         /// Perform an atomic increment that will not lose updates across threads.
@@ -50,7 +76,7 @@ namespace Adaptive.Agrona.Concurrent.Status
         /// Perform an atomic increment that is not safe across threads.
         /// </summary>
         /// <returns> the previous value of the counter </returns>
-        public long OrderedIncrement()
+        public long IncrementOrdered()
         {
             return _buffer.AddLongOrdered(_offset, 1);
         }
@@ -68,9 +94,9 @@ namespace Adaptive.Agrona.Concurrent.Status
         /// Set the counter with ordered semantics.
         /// </summary>
         /// <param name="value"> to be set with ordered semantics. </param>
-        public long Ordered
+        public void SetOrdered(long value)
         {
-            set { _buffer.PutLongOrdered(_offset, value); }
+            _buffer.PutLongOrdered(_offset, value);
         }
 
         /// <summary>
@@ -78,7 +104,7 @@ namespace Adaptive.Agrona.Concurrent.Status
         /// </summary>
         /// <param name="increment"> to be added. </param>
         /// <returns> the previous value of the counter </returns>
-        public long Add(long increment)
+        public long GetAndAdd(long increment)
         {
             return _buffer.GetAndAddLong(_offset, increment);
         }
@@ -88,13 +114,24 @@ namespace Adaptive.Agrona.Concurrent.Status
         /// </summary>
         /// <param name="increment"> to be added with ordered store semantics. </param>
         /// <returns> the previous value of the counter </returns>
-        public long AddOrdered(long increment)
+        public long GetAndAddOrdered(long increment)
         {
             return _buffer.AddLongOrdered(_offset, increment);
         }
 
         /// <summary>
-        /// Get the latest value for the counter.
+        /// Compare the current value to expected and if true then set to the update value atomically.
+        /// </summary>
+        /// <param name="expectedValue"> for the counter. </param>
+        /// <param name="updateValue">   for the counter. </param>
+        /// <returns> true if successful otherwise false. </returns>
+        public bool CompareAndSet(long expectedValue, long updateValue)
+        {
+            return _buffer.CompareAndSetLong(_offset, expectedValue, updateValue);
+        }
+
+        /// <summary>
+        /// Get the latest value for the counter with volatile semantics.
         /// </summary>
         /// <returns> the latest value for the counter. </returns>
         public long Get()
@@ -113,7 +150,15 @@ namespace Adaptive.Agrona.Concurrent.Status
         /// </summary>
         public void Dispose()
         {
-            _countersManager.Free(Id);
+            if (!IsClosed)
+            {
+                IsClosed = true;
+
+                if (null != _countersManager)
+                {
+                    _countersManager.Free(Id);
+                }
+            }
         }
     }
 }

@@ -36,7 +36,9 @@ namespace Adaptive.Aeron.Command
     /// +---------------------------------------------------------------+
     /// |                           Stream ID                           |
     /// +---------------------------------------------------------------+
-    /// |                  Publication Limit Counter Id                 |
+    /// |                  Publication Limit Counter ID                 |
+    /// +---------------------------------------------------------------+
+    /// |                  Channel Status Indicator ID                  |
     /// +---------------------------------------------------------------+
     /// |                        Log File Length                        |
     /// +---------------------------------------------------------------+
@@ -50,7 +52,8 @@ namespace Adaptive.Aeron.Command
         private static readonly int SESSION_ID_OFFSET = REGISTRATION_ID_OFFSET + BitUtil.SIZE_OF_LONG;
         private static readonly int STREAM_ID_FIELD_OFFSET = SESSION_ID_OFFSET + BitUtil.SIZE_OF_INT;
         private static readonly int PUBLICATION_LIMIT_COUNTER_ID_OFFSET = STREAM_ID_FIELD_OFFSET + BitUtil.SIZE_OF_INT;
-        private static readonly int LOGFILE_FIELD_OFFSET = PUBLICATION_LIMIT_COUNTER_ID_OFFSET + BitUtil.SIZE_OF_INT;
+        private static readonly int CHANNEL_STATUS_INDICATOR_ID_OFFSET = PUBLICATION_LIMIT_COUNTER_ID_OFFSET + BitUtil.SIZE_OF_INT;
+        private static readonly int LOGFILE_FIELD_OFFSET = CHANNEL_STATUS_INDICATOR_ID_OFFSET + BitUtil.SIZE_OF_INT;
 
         private IMutableDirectBuffer _buffer;
         private int _offset;
@@ -170,6 +173,27 @@ namespace Adaptive.Aeron.Command
         public PublicationBuffersReadyFlyweight PublicationLimitCounterId(int positionCounterId)
         {
             _buffer.PutInt(_offset + PUBLICATION_LIMIT_COUNTER_ID_OFFSET, positionCounterId);
+
+            return this;
+        }
+        
+        /// <summary>
+        /// The channel status counter id.
+        /// </summary>
+        /// <returns> channel status counter id. </returns>
+        public int ChannelStatusCounterId()
+        {
+            return _buffer.GetInt(_offset + CHANNEL_STATUS_INDICATOR_ID_OFFSET);
+        }
+
+        /// <summary>
+        /// Set channel status counter id field
+        /// </summary>
+        /// <param name="counterId"> field value </param>
+        /// <returns> flyweight </returns>
+        public PublicationBuffersReadyFlyweight ChannelStatusCounterId(int counterId)
+        {
+            _buffer.PutInt(_offset + CHANNEL_STATUS_INDICATOR_ID_OFFSET, counterId);
 
             return this;
         }

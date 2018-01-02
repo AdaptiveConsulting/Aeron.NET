@@ -23,9 +23,9 @@ namespace Adaptive.Aeron
     /// </summary>
     internal class MappedLogBuffersFactory : ILogBuffersFactory
     {
-        public LogBuffers Map(string logFileName, MapMode mapMode)
+        public LogBuffers Map(string logFileName)
         {
-            return new LogBuffers(logFileName, mapMode);
+            return new LogBuffers(logFileName);
         }
     }
 

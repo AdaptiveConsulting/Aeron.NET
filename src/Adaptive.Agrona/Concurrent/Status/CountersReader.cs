@@ -50,7 +50,10 @@ namespace Adaptive.Agrona.Concurrent.Status
     ///  +---------------------------------------------------------------+
     ///  |                          Type Id                              |
     ///  +---------------------------------------------------------------+
-    ///  |                      120 bytes for key                       ...
+    ///  |                   Free-for-reuse Deadline                     |
+    ///  |                                                               |
+    ///  +---------------------------------------------------------------+
+    ///  |                      112 bytes for key                       ...
     /// ...                                                              |
     ///  +-+-------------------------------------------------------------+
     ///  |R|                      Label Length                           |
@@ -74,14 +77,14 @@ namespace Adaptive.Agrona.Concurrent.Status
         /// <param name="keyBuffer"> for the counter.</param>
         /// <param name="label"> for the counter.</param>
         public delegate void MetaData(int counterId, int typeId, IDirectBuffer keyBuffer, string label);
-        
+
         /// <summary>
         /// Record has not been used.
         /// </summary>
         public const int RECORD_UNUSED = 0;
 
         /// <summary>
-        /// Record currently allocated for use..
+        /// Record currently allocated for use.
         /// </summary>
         public const int RECORD_ALLOCATED = 1;
 
@@ -91,24 +94,34 @@ namespace Adaptive.Agrona.Concurrent.Status
         public const int RECORD_RECLAIMED = -1;
 
         /// <summary>
+        /// Deadline to indicate counter is not free to be reused.
+        /// </summary>
+        public static readonly long NOT_FREE_TO_REUSE = long.MaxValue;
+
+        /// <summary>
         /// Offset in the record at which the type id field is stored.
         /// </summary>
         public static readonly int TYPE_ID_OFFSET = BitUtil.SIZE_OF_INT;
 
         /// <summary>
+        /// Offset in the record at which the deadline (in milliseconds) for when counter may be reused.
+        /// </summary>
+        public static readonly int FREE_FOR_REUSE_DEADLINE_OFFSET = TYPE_ID_OFFSET + BitUtil.SIZE_OF_INT;
+
+        /// <summary>
         /// Offset in the record at which the key is stored.
         /// </summary>
-        public static readonly int KEY_OFFSET = TYPE_ID_OFFSET + BitUtil.SIZE_OF_INT;
+        public static readonly int KEY_OFFSET = FREE_FOR_REUSE_DEADLINE_OFFSET + BitUtil.SIZE_OF_LONG;
 
         /// <summary>
         /// Offset in the record at which the label is stored.
         /// </summary>
-        public static readonly int LABEL_OFFSET = BitUtil.CACHE_LINE_LENGTH*2;
+        public static readonly int LABEL_OFFSET = BitUtil.CACHE_LINE_LENGTH * 2;
 
         /// <summary>
         /// Length of a counter label length including length prefix.
         /// </summary>
-        public static readonly int FULL_LABEL_LENGTH = BitUtil.CACHE_LINE_LENGTH*6;
+        public static readonly int FULL_LABEL_LENGTH = BitUtil.CACHE_LINE_LENGTH * 6;
 
         /// <summary>
         /// Maximum length of a label not including its length prefix.
@@ -118,8 +131,8 @@ namespace Adaptive.Agrona.Concurrent.Status
         /// <summary>
         /// Maximum length a key can be.
         /// </summary>
-        public static readonly int MAX_KEY_LENGTH = (BitUtil.CACHE_LINE_LENGTH*2) - (BitUtil.SIZE_OF_INT*2);
-        
+        public static readonly int MAX_KEY_LENGTH = (BitUtil.CACHE_LINE_LENGTH * 2) - (BitUtil.SIZE_OF_INT * 2) - BitUtil.SIZE_OF_LONG;
+
         /// <summary>
         /// Length of a meta data record in bytes.
         /// </summary>
@@ -128,8 +141,8 @@ namespace Adaptive.Agrona.Concurrent.Status
         /// <summary>
         /// Length of the space allocated to a counter that includes padding to avoid false sharing.
         /// </summary>
-        public static readonly int COUNTER_LENGTH = BitUtil.CACHE_LINE_LENGTH*2;
-        
+        public static readonly int COUNTER_LENGTH = BitUtil.CACHE_LINE_LENGTH * 2;
+
         /// <summary>
         /// Construct a reader over buffers containing the values and associated metadata.
         /// 
@@ -139,9 +152,8 @@ namespace Adaptive.Agrona.Concurrent.Status
         /// <param name="metaDataBuffer"> containing the counter metadata. </param>
         /// <param name="valuesBuffer">   containing the counter values. </param>
         public CountersReader(IAtomicBuffer metaDataBuffer, IAtomicBuffer valuesBuffer)
+            : this(metaDataBuffer, valuesBuffer, Encoding.UTF8)
         {
-            ValuesBuffer = valuesBuffer;
-            MetaDataBuffer = metaDataBuffer;
         }
 
         /// <summary>
@@ -153,11 +165,18 @@ namespace Adaptive.Agrona.Concurrent.Status
         /// <param name="encoding"> for the label encoding</param>
         public CountersReader(IAtomicBuffer metaDataBuffer, IAtomicBuffer valuesBuffer, Encoding encoding)
         {
+            MaxCounterId = valuesBuffer.Capacity / COUNTER_LENGTH;
             ValuesBuffer = valuesBuffer;
             MetaDataBuffer = metaDataBuffer;
             LabelCharset = encoding;
         }
 
+        /// <summary>
+        /// Get the maximum counter id which can be supported given the length of the values buffer.
+        /// </summary>
+        /// <returns> the maximum counter id which can be supported given the length of the values buffer. </returns>
+        public int MaxCounterId { get; protected set; }
+        
         /// <summary>
         /// Get the buffer containing the metadata for the counters.
         /// </summary>
@@ -183,7 +202,7 @@ namespace Adaptive.Agrona.Concurrent.Status
         /// <returns> the offset in the counter buffer. </returns>
         public static int CounterOffset(int counterId)
         {
-            return counterId*COUNTER_LENGTH;
+            return counterId * COUNTER_LENGTH;
         }
 
         /// <summary>
@@ -193,7 +212,7 @@ namespace Adaptive.Agrona.Concurrent.Status
         /// <returns> the offset at which the metadata record begins. </returns>
         public static int MetaDataOffset(int counterId)
         {
-            return counterId*METADATA_LENGTH;
+            return counterId * METADATA_LENGTH;
         }
 
         /// <summary>
@@ -228,7 +247,7 @@ namespace Adaptive.Agrona.Concurrent.Status
         public void ForEach(MetaData metaData)
         {
             var counterId = 0;
-            
+
             for (int i = 0, capacity = MetaDataBuffer.Capacity; i < capacity; i += METADATA_LENGTH)
             {
                 var recordStatus = MetaDataBuffer.GetIntVolatile(i);
@@ -256,7 +275,57 @@ namespace Adaptive.Agrona.Concurrent.Status
         /// <returns> the current value of the counter. </returns>
         public long GetCounterValue(int counterId)
         {
+            ValidateCounterId(counterId);
+            
             return ValuesBuffer.GetLongVolatile(CounterOffset(counterId));
+        }
+        
+        /// <summary>
+        /// Get the state for a given counter id as a volatile read.
+        /// </summary>
+        /// <param name="counterId"> to be read. </param>
+        /// <returns> the current state of the counter. </returns>
+        /// <seealso cref="RECORD_UNUSED"></seealso>
+        /// <seealso cref="RECORD_ALLOCATED"></seealso>
+        /// <seealso cref="RECORD_RECLAIMED"></seealso>
+        public int GetCounterState(int counterId)
+        {
+            ValidateCounterId(counterId);
+
+            return MetaDataBuffer.GetIntVolatile(MetaDataOffset(counterId));
+        }
+
+        /// <summary>
+        /// Get the deadline (in milliseconds) for when a given counter id may be reused.
+        /// </summary>
+        /// <param name="counterId"> to be read. </param>
+        /// <returns> deadline (in milliseconds) for when a given counter id may be reused or <seealso cref="#NOT_FREE_TO_REUSE"/> if
+        /// currently in use. </returns>
+        public long GetFreeForReuseDeadline(int counterId)
+        {
+            ValidateCounterId(counterId);
+
+            return MetaDataBuffer.GetLongVolatile(MetaDataOffset(counterId) + FREE_FOR_REUSE_DEADLINE_OFFSET);
+        }
+
+        /// <summary>
+        /// Get the label for a given counter id.
+        /// </summary>
+        /// <param name="counterId"> to be read. </param>
+        /// <returns> the label for the given counter id. </returns>
+        public string GetCounterLabel(int counterId)
+        {
+            ValidateCounterId(counterId);
+
+            return LabelValue(MetaDataOffset(counterId));
+        }
+
+        private void ValidateCounterId(int counterId)
+        {
+            if (counterId < 0 || counterId > MaxCounterId)
+            {
+                throw new System.ArgumentException("Counter id " + counterId + " out of range: maxCounterId=" + MaxCounterId);
+            }
         }
 
         private string LabelValue(int recordOffset)
