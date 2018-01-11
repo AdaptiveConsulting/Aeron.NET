@@ -65,7 +65,7 @@ namespace Adaptive.Agrona.Tests
 
             TempFileName = Path.GetTempFileName();
             MappedByteBuffer = new MappedByteBuffer(MemoryMappedFile.CreateFromFile(TempFileName,
-                FileMode.OpenOrCreate, Guid.NewGuid().ToString(), BufferCapacity));
+                FileMode.OpenOrCreate, null, BufferCapacity));
 
             MemoryMappedFileBacked = new UnsafeBuffer(MappedByteBuffer.Pointer, BufferCapacity);
 
