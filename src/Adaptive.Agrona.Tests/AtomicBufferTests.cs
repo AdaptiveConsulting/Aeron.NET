@@ -15,6 +15,9 @@
  */
 
 using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.IO;
 using System.IO.MemoryMappedFiles;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -38,14 +41,58 @@ namespace Adaptive.Agrona.Tests
         private const long LongValue = int.MaxValue + 5L;
         private const double DoubleValue = int.MaxValue + 7.0d;
 
-        [Datapoint] public readonly IAtomicBuffer ByteArrayBacked = new UnsafeBuffer(new byte[BufferCapacity], 0, BufferCapacity);
-        [Datapoint] public readonly IAtomicBuffer AlignedByteArrayBacked = new UnsafeBuffer(BufferUtil.AllocateDirectAligned(BufferCapacity, BitUtil.CACHE_LINE_LENGTH));
+        private string TempFileName;
+        private MappedByteBuffer MappedByteBuffer;
 
-        [Datapoint] public static readonly IAtomicBuffer UnmanagedBacked = new UnsafeBuffer(Marshal.AllocHGlobal(BufferCapacity), BufferCapacity);
+        private IAtomicBuffer ByteArrayBacked;
+        private IAtomicBuffer AlignedByteArrayBacked;
 
-        private static readonly MappedByteBuffer MappedByteBuffer = new MappedByteBuffer(MemoryMappedFile.CreateNew("testmap", BufferCapacity));
+        private IAtomicBuffer UnmanagedBacked;
 
-        [Datapoint] public static readonly IAtomicBuffer MemoryMappedFileBacked = new UnsafeBuffer(MappedByteBuffer.Pointer, BufferCapacity);
+        private IAtomicBuffer MemoryMappedFileBacked;
+        private bool Initialized;
+
+        public void Initialize()
+        {
+            if (Initialized)
+                return;
+
+            ByteArrayBacked = new UnsafeBuffer(new byte[BufferCapacity], 0, BufferCapacity);
+            AlignedByteArrayBacked =
+                new UnsafeBuffer(BufferUtil.AllocateDirectAligned(BufferCapacity, BitUtil.CACHE_LINE_LENGTH));
+
+            UnmanagedBacked = new UnsafeBuffer(Marshal.AllocHGlobal(BufferCapacity), BufferCapacity);
+
+            TempFileName = Path.GetTempFileName();
+            MappedByteBuffer = new MappedByteBuffer(MemoryMappedFile.CreateFromFile(TempFileName,
+                FileMode.OpenOrCreate, null, BufferCapacity));
+
+            MemoryMappedFileBacked = new UnsafeBuffer(MappedByteBuffer.Pointer, BufferCapacity);
+
+            Initialized = true;
+        }
+
+        [OneTimeTearDown]
+        public void Destroy()
+        {
+            if (!Initialized)
+                return;
+
+            MappedByteBuffer?.Dispose();
+
+            File.Delete(TempFileName);
+        }
+
+        [DatapointSource]
+        public IEnumerable<IAtomicBuffer> Datapoints()
+        {
+            Initialize();
+
+            yield return ByteArrayBacked;
+            yield return AlignedByteArrayBacked;
+            yield return UnmanagedBacked;
+            yield return MemoryMappedFileBacked;
+        }
 
         [Theory]
         public void ShouldGetCapacity(IAtomicBuffer buffer)
@@ -110,7 +157,7 @@ namespace Adaptive.Agrona.Tests
         {
             var testBytes = Encoding.UTF8.GetBytes("xxxxxxxxxxx");
 
-            buffer.SetMemory(0, testBytes.Length, (byte) 'x');
+            buffer.SetMemory(0, testBytes.Length, (byte)'x');
 
             for (var i = 0; i < testBytes.Length; i++)
             {
@@ -388,7 +435,7 @@ namespace Adaptive.Agrona.Tests
         [Theory]
         public void ShouldGetByteArrayFromBuffer(IAtomicBuffer buffer)
         {
-            byte[] testArray = {(byte) 'H', (byte) 'e', (byte) 'l', (byte) 'l', (byte) 'o'};
+            byte[] testArray = { (byte)'H', (byte)'e', (byte)'l', (byte)'l', (byte)'o' };
 
             var i = Index;
             foreach (var v in testArray)
