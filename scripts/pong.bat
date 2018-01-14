@@ -1,4 +1,4 @@
 @echo off
 pushd %~dp0..
-.\src\Samples\Adaptive.Aeron.Samples.Pong\bin\Release\Adaptive.Aeron.Samples.Pong.exe
+.\src\Samples\Adaptive.Aeron.Samples.Pong\bin\Release\net45\Adaptive.Aeron.Samples.Pong.exe
 popd
