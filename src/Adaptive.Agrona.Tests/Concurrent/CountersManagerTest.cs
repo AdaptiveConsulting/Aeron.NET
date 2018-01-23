@@ -198,7 +198,7 @@ namespace Adaptive.Agrona.Tests.Concurrent
 
             writer.SetOrdered(expectedValue);
 
-            Assert.AreEqual(reader.Volatile, expectedValue);
+            Assert.AreEqual(reader.GetVolatile(), expectedValue);
         }
 
         [Test]

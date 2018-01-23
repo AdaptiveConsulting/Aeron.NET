@@ -57,7 +57,7 @@ namespace Adaptive.Aeron.Tests
             _logBuffers = A.Fake<LogBuffers>();
             _publicationLimit = A.Fake<IReadablePosition>();
 
-            A.CallTo(() => _publicationLimit.Volatile).Returns(2 * SendBufferCapacity);
+            A.CallTo(() => _publicationLimit.GetVolatile()).Returns(2 * SendBufferCapacity);
             A.CallTo(() => _logBuffers.DuplicateTermBuffers()).Returns(_termBuffers);
             A.CallTo(() => _logBuffers.TermLength()).Returns(LogBufferDescriptor.TERM_MIN_LENGTH);
             A.CallTo(() => _logBuffers.MetaDataBuffer()).Returns(_logMetaDataBuffer);
@@ -117,7 +117,7 @@ namespace Adaptive.Aeron.Tests
         [Test]
         public void ShouldReportThatPublicationHasNotBeenConnectedYet()
         {
-            A.CallTo(() => _publicationLimit.Volatile).Returns(0);
+            A.CallTo(() => _publicationLimit.GetVolatile()).Returns(0);
             LogBufferDescriptor.IsConnected(_logMetaDataBuffer, false);
 
             Assert.False(_publication.IsConnected);

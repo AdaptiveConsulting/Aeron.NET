@@ -33,7 +33,7 @@ namespace Adaptive.Agrona.Concurrent.Status
         /// Get the current position of a component with volatile semantics
         /// </summary>
         /// <returns> the current position of a component with volatile semantics </returns>
-        public abstract long Volatile { get; }
+        public abstract long GetVolatile();
 
         public abstract void Dispose();
     }

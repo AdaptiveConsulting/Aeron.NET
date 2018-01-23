@@ -622,7 +622,7 @@ namespace Adaptive.Aeron
         
         internal void Close()
         {
-            _finalPosition = _subscriberPosition.Volatile;
+            _finalPosition = _subscriberPosition.GetVolatile();
             _isEos = _finalPosition >= LogBufferDescriptor.EndOfStreamPosition(_logBuffers.MetaDataBuffer());
             _isClosed = true;
         }

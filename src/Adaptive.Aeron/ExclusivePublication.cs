@@ -116,7 +116,7 @@ namespace Adaptive.Aeron
             var newPosition = CLOSED;
             if (!_isClosed)
             {
-                var limit = _positionLimit.Volatile;
+                var limit = _positionLimit.GetVolatile();
                 ExclusiveTermAppender termAppender = _termAppenders[_activePartitionIndex];
                 long position = _termBeginPosition + _termOffset;
 
@@ -153,7 +153,7 @@ namespace Adaptive.Aeron
             var newPosition = CLOSED;
             if (!_isClosed)
             {
-                var limit = _positionLimit.Volatile;
+                var limit = _positionLimit.GetVolatile();
                 ExclusiveTermAppender termAppender = _termAppenders[_activePartitionIndex];
                 long position = _termBeginPosition + _termOffset;
 
@@ -232,7 +232,7 @@ namespace Adaptive.Aeron
 
             if (!_isClosed)
             {
-                var limit = _positionLimit.Volatile;
+                var limit = _positionLimit.GetVolatile();
                 ExclusiveTermAppender termAppender = _termAppenders[_activePartitionIndex];
                 long position = _termBeginPosition + _termOffset;
 
@@ -264,7 +264,7 @@ namespace Adaptive.Aeron
 
             if (!_isClosed)
             {
-                long limit = _positionLimit.Volatile;
+                long limit = _positionLimit.GetVolatile();
                 ExclusiveTermAppender termAppender = _termAppenders[_activePartitionIndex];
                 long position = _termBeginPosition + _termOffset;
 

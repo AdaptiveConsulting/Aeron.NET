@@ -143,7 +143,10 @@ namespace Adaptive.Agrona.Concurrent.Status
         /// Get the value of the counter using weak ordering semantics. This is the same a standard read of a field.
         /// </summary>
         /// <returns> the  value for the counter. </returns>
-        public long Weak => _buffer.GetLong(_offset);
+        public long GetWeak()
+        {
+            return _buffer.GetLong(_offset);
+        }
 
         /// <summary>
         /// Free the counter slot for reuse.

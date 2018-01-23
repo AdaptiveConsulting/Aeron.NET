@@ -32,7 +32,11 @@ namespace Adaptive.Agrona.Concurrent.Status
             return 0;
         }
 
-        public override long Volatile => _value.Get();
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public override long GetVolatile()
+        {
+            return _value.Get();
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override long Get()

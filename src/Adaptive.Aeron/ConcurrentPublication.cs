@@ -60,7 +60,7 @@ namespace Adaptive.Aeron
 			long newPosition = CLOSED;
 			if (!_isClosed)
 			{
-				long limit = _positionLimit.Volatile;
+				long limit = _positionLimit.GetVolatile();
 				int termCount = LogBufferDescriptor.ActiveTermCount(_logMetaDataBuffer);
 				TermAppender termAppender = _termAppenders[LogBufferDescriptor.IndexByTermCount(termCount)];
 				long rawTail = termAppender.RawTailVolatile();
@@ -105,7 +105,7 @@ namespace Adaptive.Aeron
 
 			if (!_isClosed)
 			{
-				long limit = _positionLimit.Volatile;
+				long limit = _positionLimit.GetVolatile();
 				int termCount = LogBufferDescriptor.ActiveTermCount(_logMetaDataBuffer);
 				TermAppender termAppender = _termAppenders[LogBufferDescriptor.IndexByTermCount(termCount)];
 				long rawTail = termAppender.RawTailVolatile();
@@ -151,7 +151,7 @@ namespace Adaptive.Aeron
 
 			if (!_isClosed)
 			{
-				long limit = _positionLimit.Volatile;
+				long limit = _positionLimit.GetVolatile();
 				int termCount = LogBufferDescriptor.ActiveTermCount(_logMetaDataBuffer);
 				TermAppender termAppender = _termAppenders[LogBufferDescriptor.IndexByTermCount(termCount)];
 				long rawTail = termAppender.RawTailVolatile();

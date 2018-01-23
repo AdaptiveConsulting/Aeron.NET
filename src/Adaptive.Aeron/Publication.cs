@@ -286,7 +286,7 @@ namespace Adaptive.Aeron
                     return CLOSED;
                 }
 
-                return _positionLimit.Volatile;
+                return _positionLimit.GetVolatile();
             }
         }
 
