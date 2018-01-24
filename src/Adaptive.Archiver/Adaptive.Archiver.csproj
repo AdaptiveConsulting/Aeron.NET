@@ -1,0 +1,37 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.0;net45</TargetFrameworks>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <PackageId>Aeron.Archiver</PackageId>
+    <VersionPrefix>1.7.0</VersionPrefix>
+    <Authors>Adaptive Financial Consulting Ltd.</Authors>
+    <Company>Adaptive Financial Consulting Ltd.</Company>
+    <Product>Clustering libraries over the Aeron transport</Product>
+    <Copyright>Copyright 2018</Copyright>
+    <PackageLicenseUrl>https://github.com/AdaptiveConsulting/Aeron.NET/blob/master/LICENSE</PackageLicenseUrl>
+    <PackageProjectUrl>https://github.com/AdaptiveConsulting/Aeron.NET/</PackageProjectUrl>
+    <PackageIconUrl>https://raw.githubusercontent.com/AdaptiveConsulting/Aeron.NET/master/images/adaptive.png</PackageIconUrl>
+    <Description>Archiving over the Aeron transport</Description>
+    <PackageTags>aeron cluster high-performance raft</PackageTags>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);1591</NoWarn>
+    <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
+  </PropertyGroup>
+  <!--Bounds check only on Debug mode, rest of define constants need to concatenate this one-->
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <DefineConstants>SHOULD_BOUNDS_CHECK</DefineConstants>
+  </PropertyGroup>
+  <!-- .NET Standard 2.0 references, compilation flags and build options -->
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'netstandard2.0'">
+    <DefineConstants>$(DefineConstants);NETCORE;NETSTANDARD;NETSTANDARD2_0</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'net45'">
+    <DefineConstants>$(DefineConstants);NET45;NETFULL</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Adaptive.Aeron\Adaptive.Aeron.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Codecs" />
+  </ItemGroup>
+</Project>

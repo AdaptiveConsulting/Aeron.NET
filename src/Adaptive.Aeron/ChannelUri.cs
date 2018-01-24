@@ -33,7 +33,7 @@ namespace Adaptive.Aeron
         public const string AERON_SCHEME = "aeron";
 
         /// <summary>
-        /// Qualifier for spy subscriptions.
+        /// Qualifier for spy subscriptions which spy on outgoing network destined traffic efficiently.
         /// </summary>
         public const string SPY_QUALIFIER = "aeron-spy";
 
@@ -284,6 +284,21 @@ namespace Adaptive.Aeron
             return new ChannelUri(prefix, media, @params);
         }
 
+        /// <summary>
+        /// Add a sessionId to a given channel.
+        /// </summary>
+        /// <param name="channel">   to add sessionId to. </param>
+        /// <param name="sessionId"> to add to channel. </param>
+        /// <returns> new string that represents channel with sessionId added. </returns>
+        public static string AddSessionId(string channel, int sessionId)
+        {
+            ChannelUri channelUri = ChannelUri.Parse(channel);
+
+            channelUri.Put(Aeron.Context.SESSION_ID_PARAM_NAME, Convert.ToString(sessionId));
+
+            return channelUri.ToString();
+        }
+        
         private static bool StartsWith(string input, int position, string prefix)
         {
             if (input.Length - position < prefix.Length)

@@ -20,7 +20,6 @@ using Adaptive.Aeron.Protocol;
 using Adaptive.Agrona;
 using Adaptive.Agrona.Concurrent;
 using Adaptive.Agrona.Concurrent.Status;
-using Adaptive.Agrona.Util;
 using FakeItEasy;
 using NUnit.Framework;
 
@@ -29,7 +28,7 @@ namespace Adaptive.Aeron.Tests
     public class ImageTest
     {
         private const int TERM_BUFFER_LENGTH = LogBufferDescriptor.TERM_MIN_LENGTH;
-        private static readonly int POSITION_BITS_TO_SHIFT = IntUtil.NumberOfTrailingZeros(TERM_BUFFER_LENGTH);
+        private static readonly int POSITION_BITS_TO_SHIFT = LogBufferDescriptor.PositionBitsToShift(TERM_BUFFER_LENGTH);
         private static readonly byte[] DATA = new byte[36];
 
         static ImageTest()

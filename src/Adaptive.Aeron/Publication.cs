@@ -115,7 +115,7 @@ namespace Adaptive.Aeron
             _positionLimit = positionLimit;
             _channelStatusId = channelStatusId;
             _logBuffers = logBuffers;
-            _positionBitsToShift = IntUtil.NumberOfTrailingZeros(TermBufferLength);
+            _positionBitsToShift = LogBufferDescriptor.PositionBitsToShift(TermBufferLength);
             _headerWriter = new HeaderWriter(LogBufferDescriptor.DefaultFrameHeader(_logMetaDataBuffer));
         }
 

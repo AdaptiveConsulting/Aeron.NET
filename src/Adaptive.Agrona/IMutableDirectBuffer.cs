@@ -66,7 +66,23 @@ namespace Adaptive.Agrona
         /// <param name="index"> in bytes for where to put. </param>
         /// <param name="value"> for at a given index </param>
         void PutInt(int index, int value);
+        
+        /// <summary>
+        /// Puts an ASCII encoded int into the buffer
+        /// </summary>
+        /// <param name="index"> the offset at which to put the int </param>
+        /// <param name="value"> the int to write </param>
+        /// <returns> the number of bytes that the int took up encoded </returns>
+        int PutIntAscii(int index, int value);
 
+        /// <summary>
+        /// Puts an ASCII encoded long integer into the buffer
+        /// </summary>
+        /// <param name="index"> the offset at which to put the int </param>
+        /// <param name="value"> the int to write </param>
+        /// <returns> the number of bytes that the int took up encoded </returns>
+        int PutLongAscii(int index, long value);
+        
         ///// <summary>
         ///// Put a value to a given index.
         ///// </summary>

@@ -508,6 +508,16 @@ namespace Adaptive.Agrona.Concurrent
             *(int*) (_pBuffer + index) = value;
         }
 
+        public int PutIntAscii(int index, int value)
+        {
+            throw new NotImplementedException();
+        }
+
+        public int PutLongAscii(int index, long value)
+        {
+            throw new NotImplementedException();
+        }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #if DEBUG
         public virtual int GetIntVolatile(int index)
@@ -826,6 +836,8 @@ namespace Adaptive.Agrona.Concurrent
         public void GetBytes(int index, byte[] dst, int offset, int length)
 #endif
         {
+            if (length == 0) return;
+
             BoundsCheck0(index, length);
             BufferUtil.BoundsCheck(dst, offset, length);
 
@@ -863,6 +875,11 @@ namespace Adaptive.Agrona.Concurrent
         public void PutBytes(int index, byte[] src, int offset, int length)
 #endif
         {
+            if (length == 0)
+            {
+                return;
+            }
+
             BoundsCheck0(index, length);
             BufferUtil.BoundsCheck(src, offset, length);
 
@@ -880,6 +897,11 @@ namespace Adaptive.Agrona.Concurrent
         public void PutBytes(int index, IDirectBuffer srcBuffer, int srcIndex, int length)
 #endif
         {
+            if (length == 0)
+            {
+                return;
+            }
+
             BoundsCheck0(index, length);
             srcBuffer.BoundsCheck(srcIndex, length);
 

@@ -182,6 +182,9 @@ namespace Adaptive.Aeron.Tests
 
             A.CallTo(() => logBuffersSession1.MetaDataBuffer()).Returns(logMetaDataSession1);
             A.CallTo(() => logBuffersSession2.MetaDataBuffer()).Returns(logMetaDataSession2);
+            
+            A.CallTo(() => logBuffersSession1.TermLength()).Returns(TERM_BUFFER_LENGTH);
+            A.CallTo(() => logBuffersSession2.TermLength()).Returns(TERM_BUFFER_LENGTH);
         }
 
         // --------------------------------

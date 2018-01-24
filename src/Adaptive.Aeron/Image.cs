@@ -83,7 +83,7 @@ namespace Adaptive.Aeron
 
             var termLength = logBuffers.TermLength();
             _termLengthMask = termLength - 1;
-            _positionBitsToShift = IntUtil.NumberOfTrailingZeros(termLength);
+            _positionBitsToShift = LogBufferDescriptor.PositionBitsToShift(termLength);
             _initialTermId = LogBufferDescriptor.InitialTermId(logBuffers.MetaDataBuffer());
             _header = new Header(LogBufferDescriptor.InitialTermId(logBuffers.MetaDataBuffer()), _positionBitsToShift, this);
         }

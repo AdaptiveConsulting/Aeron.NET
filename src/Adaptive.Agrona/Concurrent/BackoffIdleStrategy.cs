@@ -56,12 +56,12 @@ namespace Adaptive.Agrona.Concurrent
         /// <param name="maxYields"> to perform before moving to <see cref="Thread.Sleep(int)"/></param>
         /// <param name="minParkPeriodMs"> to use when initating parkiing</param>
         /// <param name="maxParkPeriodMs"> to use when parking</param>
-        public BackoffIdleStrategy(long maxSpins, long maxYields, int minParkPeriodMs, int maxParkPeriodMs)
+        public BackoffIdleStrategy(long maxSpins, long maxYields, long minParkPeriodMs, long maxParkPeriodMs)
         {
             _maxSpins = maxSpins;
             _maxYields = maxYields;
-            _minParkPeriodMs = minParkPeriodMs;
-            _maxParkPeriodMs = maxParkPeriodMs;
+            _minParkPeriodMs = (int)minParkPeriodMs;
+            _maxParkPeriodMs = (int)maxParkPeriodMs;
             _state = State.NOT_IDLE;
         }
 

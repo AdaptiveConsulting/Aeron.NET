@@ -206,18 +206,19 @@ namespace Adaptive.Aeron
             int statusIndicatorId,
             string logFileName)
         {
-            _resourceByRegIdMap[correlationId]
-                = new ConcurrentPublication(
-                    this,
-                    _stashedChannel,
-                    streamId,
-                    sessionId,
-                    new UnsafeBufferPosition(_counterValuesBuffer, publicationLimitId),
-                    statusIndicatorId,
-                    LogBuffers(registrationId, logFileName),
-                    registrationId,
-                    correlationId
-                );
+            var publication = new ConcurrentPublication(
+                this,
+                _stashedChannel,
+                streamId,
+                sessionId,
+                new UnsafeBufferPosition(_counterValuesBuffer, publicationLimitId),
+                statusIndicatorId,
+                LogBuffers(registrationId, logFileName),
+                registrationId,
+                correlationId
+            );
+            
+            _resourceByRegIdMap[correlationId] = publication;
         }
 
         public void OnNewExclusivePublication(
@@ -229,18 +230,19 @@ namespace Adaptive.Aeron
             int statusIndicatorId,
             string logFileName)
         {
-            _resourceByRegIdMap[correlationId]
-                = new ExclusivePublication(
-                    this,
-                    _stashedChannel,
-                    streamId,
-                    sessionId,
-                    new UnsafeBufferPosition(_counterValuesBuffer, publicationLimitId),
-                    statusIndicatorId,
-                    LogBuffers(registrationId, logFileName),
-                    registrationId,
-                    correlationId
-                );
+            var publication = new ExclusivePublication(
+                this,
+                _stashedChannel,
+                streamId,
+                sessionId,
+                new UnsafeBufferPosition(_counterValuesBuffer, publicationLimitId),
+                statusIndicatorId,
+                LogBuffers(registrationId, logFileName),
+                registrationId,
+                correlationId
+            );
+            
+            _resourceByRegIdMap[correlationId] = publication;
         }
 
         public void OnNewSubscription(long correlationId, int statusIndicatorId)

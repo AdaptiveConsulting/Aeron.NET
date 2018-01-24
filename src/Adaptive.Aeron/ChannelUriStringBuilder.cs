@@ -27,6 +27,7 @@ namespace Adaptive.Aeron
         private int? _initialTermId;
         private int? _termId;
         private int? _termOffset;
+        private int? _sessionId;
 
         /// <summary>
         /// Clear out all the values thus setting back to the initial state.
@@ -47,6 +48,7 @@ namespace Adaptive.Aeron
             _initialTermId = null;
             _termId = null;
             _termOffset = null;
+            _sessionId = null;
 
             return this;
         }
@@ -87,6 +89,7 @@ namespace Adaptive.Aeron
         /// </summary>
         /// <param name="prefix"> to be applied to the URI before the the scheme. </param>
         /// <returns> this for a fluent API. </returns>
+        /// <seealso cref="ChannelUri.SPY_QUALIFIER"/>
         public ChannelUriStringBuilder Prefix(string prefix)
         {
             if (null != prefix && !prefix.Equals("") && !prefix.Equals(ChannelUri.SPY_QUALIFIER))
@@ -143,6 +146,7 @@ namespace Adaptive.Aeron
         /// </summary>
         /// <param name="endpoint"> address and port for the channel. </param>
         /// <returns> this for a fluent API. </returns>
+        /// <seealso cref="Aeron.Context.ENDPOINT_PARAM_NAME"/>
         public ChannelUriStringBuilder Endpoint(string endpoint)
         {
             _endpoint = endpoint;
@@ -153,6 +157,7 @@ namespace Adaptive.Aeron
         /// Get the endpoint address:port pairing for the channel.
         /// </summary>
         /// <returns> the endpoint address:port pairing for the channel. </returns>
+        /// <seealso cref="Aeron.Context.ENDPOINT_PARAM_NAME"/>
         public string Endpoint()
         {
             return _endpoint;
@@ -163,6 +168,7 @@ namespace Adaptive.Aeron
         /// </summary>
         /// <param name="networkInterface"> for routing traffic. </param>
         /// <returns> this for a fluent API. </returns>
+        /// <seealso cref="Aeron.Context.INTERFACE_PARAM_NAME"/>
         public ChannelUriStringBuilder NetworkInterface(string networkInterface)
         {
             _networkInterface = networkInterface;
@@ -173,6 +179,7 @@ namespace Adaptive.Aeron
         /// Get the address of the local interface in the form host:[port]/[subnet mask] for routing traffic.
         /// </summary>
         /// <returns> the address of the local interface in the form host:[port]/[subnet mask] for routing traffic. </returns>
+        /// <seealso cref="Aeron.Context.INTERFACE_PARAM_NAME"/>
         public string NetworkInterface()
         {
             return _networkInterface;
@@ -183,6 +190,7 @@ namespace Adaptive.Aeron
         /// </summary>
         /// <param name="controlEndpoint"> for joining a MDC control socket. </param>
         /// <returns> this for a fluent API. </returns>
+        /// <seealso cref="Aeron.Context.MDC_CONTROL_MODE_PARAM_NAME"/>
         public ChannelUriStringBuilder ControlEndpoint(string controlEndpoint)
         {
             _controlEndpoint = controlEndpoint;
@@ -193,6 +201,7 @@ namespace Adaptive.Aeron
         /// Get the control address:port pair for dynamically joining a multi-destination-cast publication.
         /// </summary>
         /// <returns> the control address:port pair for dynamically joining a multi-destination-cast publication. </returns>
+        /// <seealso cref="Aeron.Context.MDC_CONTROL_MODE_PARAM_NAME"/>
         public string ControlEndpoint()
         {
             return _controlEndpoint;
@@ -205,12 +214,15 @@ namespace Adaptive.Aeron
         /// <returns> this for a fluent API. </returns>
         /// <seealso cref="Publication.AddDestination(String)"></seealso>
         /// <seealso cref="Publication.RemoveDestination(String)"></seealso>
+        /// <seealso cref="Aeron.Context.MDC_CONTROL_MODE_PARAM_NAME"/>
+        /// <seealso cref="Aeron.Context.MDC_CONTROL_MODE_MANUAL"/>
+        /// <seealso cref="Aeron.Context.MDC_CONTROL_MODE_DYNAMIC"/>
         public ChannelUriStringBuilder ControlMode(string controlMode)
         {
-            if (null != controlMode && 
+            if (null != controlMode &&
                 !controlMode.Equals(Aeron.Context.MDC_CONTROL_MODE_MANUAL) &&
                 !controlMode.Equals(Aeron.Context.MDC_CONTROL_MODE_DYNAMIC)
-                )
+            )
             {
                 throw new ArgumentException("Invalid control mode: " + controlMode);
             }
@@ -223,6 +235,9 @@ namespace Adaptive.Aeron
         /// Get the control mode for multi-destination-cast.
         /// </summary>
         /// <returns> the control mode for multi-destination-cast. </returns>
+        /// <seealso cref="Aeron.Context.MDC_CONTROL_MODE_PARAM_NAME"/>
+        /// <seealso cref="Aeron.Context.MDC_CONTROL_MODE_MANUAL"/>
+        /// <seealso cref="Aeron.Context.MDC_CONTROL_MODE_DYNAMIC"/>
         public string ControlMode()
         {
             return _controlMode;
@@ -233,6 +248,7 @@ namespace Adaptive.Aeron
         /// </summary>
         /// <param name="isReliable"> false if loss can be be gap filled. </param>
         /// <returns> this for a fluent API. </returns>
+        /// <seealso cref="Aeron.Context.RELIABLE_STREAM_PARAM_NAME"/>
         public ChannelUriStringBuilder Reliable(bool? isReliable)
         {
             _reliable = isReliable;
@@ -243,6 +259,7 @@ namespace Adaptive.Aeron
         /// Get the subscription semantics for if loss is acceptable, or not, for a reliable message delivery.
         /// </summary>
         /// <returns> the subscription semantics for if loss is acceptable, or not, for a reliable message delivery. </returns>
+        /// <seealso cref="Aeron.Context.RELIABLE_STREAM_PARAM_NAME"/>
         public bool? Reliable()
         {
             return _reliable;
@@ -254,6 +271,7 @@ namespace Adaptive.Aeron
         /// </summary>
         /// <param name="ttl"> value for a multicast datagram. </param>
         /// <returns> this for a fluent API. </returns>
+        /// <seealso cref="Aeron.Context.TTL_PARAM_NAME"/>
         public ChannelUriStringBuilder Ttl(int? ttl)
         {
             if (null != ttl && (ttl < 0 || ttl > 255))
@@ -269,16 +287,19 @@ namespace Adaptive.Aeron
         /// Get the Time To Live (TTL) for a multicast datagram.
         /// </summary>
         /// <returns> the Time To Live (TTL) for a multicast datagram. </returns>
+        /// <seealso cref="Aeron.Context.TTL_PARAM_NAME"/>
         public int? Ttl()
         {
             return _ttl;
         }
 
         /// <summary>
-        /// Set the maximum transmission unit (MTU) including Aeron header for a datagram payload.
+        /// Set the maximum transmission unit (MTU) including Aeron header for a datagram payload. If this is greater
+        /// than the network MTU for UDP then the packet will be fragmented and can amplify the impact of loss.
         /// </summary>
         /// <param name="mtu"> the maximum transmission unit including Aeron header for a datagram payload. </param>
         /// <returns> this for a fluent API. </returns>
+        /// <seealso cref="Aeron.Context.MTU_LENGTH_PARAM_NAME"/>
         public ChannelUriStringBuilder Mtu(int? mtu)
         {
             if (null != mtu)
@@ -299,9 +320,11 @@ namespace Adaptive.Aeron
         }
 
         /// <summary>
-        /// Get the maximum transmission unit (MTU) including Aeron header for a datagram payload.
+        /// Get the maximum transmission unit (MTU) including Aeron header for a datagram payload. If this is greater
+        /// than the network MTU for UDP then the packet will be fragmented and can amplify the impact of loss.
         /// </summary>
         /// <returns> the maximum transmission unit (MTU) including Aeron header for a datagram payload. </returns>
+        /// <seealso cref="Aeron.Context.MTU_LENGTH_PARAM_NAME"/>
         public int? Mtu()
         {
             return _mtu;
@@ -312,6 +335,7 @@ namespace Adaptive.Aeron
         /// </summary>
         /// <param name="termLength"> of the buffer used for each term of the log. </param>
         /// <returns> this for a fluent API. </returns>
+        /// <seealso cref="Aeron.Context.TERM_LENGTH_PARAM_NAME"/>
         public ChannelUriStringBuilder TermLength(int? termLength)
         {
             if (null != termLength)
@@ -327,6 +351,7 @@ namespace Adaptive.Aeron
         /// Get the length of buffer used for each term of the log.
         /// </summary>
         /// <returns> the length of buffer used for each term of the log. </returns>
+        /// <seealso cref="Aeron.Context.TERM_LENGTH_PARAM_NAME"/>
         public int? TermLength()
         {
             return _termLength;
@@ -337,6 +362,7 @@ namespace Adaptive.Aeron
         /// </summary>
         /// <param name="initialTermId"> the initial term id at which a publication will start. </param>
         /// <returns> this for a fluent API. </returns>
+        /// <seealso cref="Aeron.Context.INITIAL_TERM_ID_PARAM_NAME"/>
         public ChannelUriStringBuilder InitialTermId(int? initialTermId)
         {
             _initialTermId = initialTermId;
@@ -347,6 +373,7 @@ namespace Adaptive.Aeron
         /// the initial term id at which a publication will start.
         /// </summary>
         /// <returns> the initial term id at which a publication will start. </returns>
+        /// <seealso cref="Aeron.Context.INITIAL_TERM_ID_PARAM_NAME"/>
         public int? InitialTermId()
         {
             return _initialTermId;
@@ -358,6 +385,7 @@ namespace Adaptive.Aeron
         /// </summary>
         /// <param name="termId"> at which a publication will start. </param>
         /// <returns> this for a fluent API. </returns>
+        /// <seealso cref="Aeron.Context.TERM_ID_PARAM_NAME"/>
         public ChannelUriStringBuilder TermId(int? termId)
         {
             _termId = termId;
@@ -368,6 +396,7 @@ namespace Adaptive.Aeron
         /// Get the current term id at which a publication will start.
         /// </summary>
         /// <returns> the current term id at which a publication will start. </returns>
+        /// <seealso cref="Aeron.Context.TERM_ID_PARAM_NAME"/>
         public int? TermId()
         {
             return _termId;
@@ -379,6 +408,7 @@ namespace Adaptive.Aeron
         /// </summary>
         /// <param name="termOffset"> within a term at which a publication will start. </param>
         /// <returns> this for a fluent API. </returns>
+        /// <seealso cref="Aeron.Context.TERM_OFFSET_PARAM_NAME"/>
         public ChannelUriStringBuilder TermOffset(int? termOffset)
         {
             if (null != termOffset)
@@ -402,9 +432,32 @@ namespace Adaptive.Aeron
         /// Get the offset within a term at which a publication will start.
         /// </summary>
         /// <returns> the offset within a term at which a publication will start. </returns>
+        /// <seealso cref="Aeron.Context.TERM_OFFSET_PARAM_NAME"/>
         public int? TermOffset()
         {
             return _termOffset;
+        }
+
+        /// <summary>
+        /// Set the session id for a publication or restricted subscription.
+        /// </summary>
+        /// <param name="sessionId"> for the publication or a restricted subscription. </param>
+        /// <returns> this for a fluent API. </returns>
+        /// <seealso cref="Aeron.Context.SESSION_ID_PARAM_NAME"/>
+        public ChannelUriStringBuilder SessionId(int? sessionId)
+        {
+            _sessionId = sessionId;
+            return this;
+        }
+
+        /// <summary>
+        /// Get the session id for a publication or restricted subscription.
+        /// </summary>
+        /// <returns> the session id for a publication or restricted subscription. </returns>
+        /// <seealso cref="Aeron.Context.SESSION_ID_PARAM_NAME"/>
+        public int? SessionId()
+        {
+            return _sessionId;
         }
 
         /// <summary>
@@ -479,6 +532,11 @@ namespace Adaptive.Aeron
                 _sb.Append(Aeron.Context.TERM_OFFSET_PARAM_NAME).Append('=').Append(_termOffset.Value).Append('|');
             }
 
+            if (null != _termOffset)
+            {
+                _sb.Append(Aeron.Context.SESSION_ID_PARAM_NAME).Append('=').Append(_sessionId.Value).Append('|');
+            }
+
             char lastChar = _sb[_sb.Length - 1];
             if (lastChar == '|' || lastChar == '?')
             {
@@ -486,6 +544,16 @@ namespace Adaptive.Aeron
             }
 
             return _sb.ToString();
+        }
+
+        /// <summary>
+        /// Call <seealso cref="Convert.ToInt32(String)"/> only if the value param is not null. Else pass null on.
+        /// </summary>
+        /// <param name="value"> to check for null and convert if not null. </param>
+        /// <returns> null if value param is null or result of <seealso cref="Convert.ToInt32(String)"/>. </returns>
+        public static int? IntegerValueOf(string value)
+        {
+            return null == value ? (int?) null : Convert.ToInt32(value);
         }
     }
 }

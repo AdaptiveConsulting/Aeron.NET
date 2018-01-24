@@ -246,7 +246,7 @@ namespace Adaptive.Aeron.LogBuffer
 
                 foreach (var vector in vectors)
                 {
-                    termBuffer.PutBytes(offset, vector.buffer, vector.length, length);
+                    termBuffer.PutBytes(offset, vector.buffer, vector.offset, vector.length);
                     offset += vector.length;
                 }
                 

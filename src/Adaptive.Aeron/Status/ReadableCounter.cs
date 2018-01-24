@@ -80,10 +80,9 @@ namespace Adaptive.Aeron.Status
         /// <summary>
         /// Return the state of the counter.
         /// </summary>
-        /// <seealso cref="CountersReader#RECORD_ALLOCATED"/>
-        /// <seealso cref="CountersReader#RECORD_LINGERING"/>
-        /// <seealso cref="CountersReader#RECORD_RECLAIMED"/>
-        /// <seealso cref="CountersReader#RECORD_UNUSED"/>
+        /// <seealso cref="CountersReader.RECORD_ALLOCATED"/>
+        /// <seealso cref="CountersReader.RECORD_RECLAIMED"/>
+        /// <seealso cref="CountersReader.RECORD_UNUSED"/>
         /// <returns> state for the counter. </returns>
         public virtual int State()
         {

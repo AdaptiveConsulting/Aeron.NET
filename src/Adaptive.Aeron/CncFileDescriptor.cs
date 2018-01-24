@@ -68,7 +68,7 @@ namespace Adaptive.Aeron
     {
         public const string CNC_FILE = "cnc.dat";
 
-        public const int CNC_VERSION = 11;
+        public const int CNC_VERSION = 12;
 
         public static readonly int CNC_VERSION_FIELD_OFFSET;
         public static readonly int TO_DRIVER_BUFFER_LENGTH_FIELD_OFFSET;

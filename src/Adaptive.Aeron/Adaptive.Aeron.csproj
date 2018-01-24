@@ -13,6 +13,8 @@
     <Description>Efficient reliable UDP unicast, UDP multicast, and IPC transport protocol.</Description>
     <PackageTags>aeron client messaging networking transport udp ipc</PackageTags>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);1591</NoWarn>
+    <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\Adaptive.Agrona\Adaptive.Agrona.csproj" />

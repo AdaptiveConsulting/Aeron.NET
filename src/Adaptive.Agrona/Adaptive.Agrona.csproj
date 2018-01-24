@@ -14,6 +14,8 @@
     <Description>Agrona libraries initially included in Aeron Client</Description>
     <PackageTags>agrona high-performance primitives utilities</PackageTags>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);1591</NoWarn>
+    <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
   </PropertyGroup>
   <!--Bounds check only on Debug mode, rest of define constants need to concatenate this one-->
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">

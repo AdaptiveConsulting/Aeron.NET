@@ -67,5 +67,10 @@ namespace Adaptive.Aeron
         {
             return GetLong(propertyName, defaultValue);
         }
+
+        public static int GetSizeAsInt(string propertyName, int defaultValue)
+        {
+            return GetInteger(propertyName, defaultValue);
+        }
     }
 }

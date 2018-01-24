@@ -53,7 +53,7 @@ namespace Adaptive.Agrona
             CheckFileExists(path);
 
             var fileAccess = FileAccess.ReadWrite;
-            var fileShare = FileShare.ReadWrite;
+            var fileShare = FileShare.ReadWrite | FileShare.Delete;
             var memoryMappedFileAccess = MemoryMappedFileAccess.ReadWrite;
             
             

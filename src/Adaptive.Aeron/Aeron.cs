@@ -191,7 +191,7 @@ namespace Adaptive.Aeron
         {
             return _conductorInvoker;
         }
-        
+
         /// <summary>
         /// Clean up and release all Aeron client resources and shutdown conducator thread if not using
         /// <see cref="Context.UseConductorAgentInvoker(bool)"/>.
@@ -201,7 +201,7 @@ namespace Adaptive.Aeron
         /// </summary>
         public void Dispose()
         {
-            if(_isClosed.CompareAndSet(false, true))
+            if (_isClosed.CompareAndSet(false, true))
             {
                 if (null != _conductorRunner)
                 {
@@ -298,7 +298,7 @@ namespace Adaptive.Aeron
             {
                 throw new InvalidOperationException("Client is closed");
             }
-            
+
             return _conductor.CountersReader();
         }
 
@@ -317,9 +317,11 @@ namespace Adaptive.Aeron
         /// <param name="labelOffset"> within the labelBuffer at which the label begins. </param>
         /// <param name="labelLength"> of the label in the labelBuffer. </param>
         /// <returns> the newly allocated counter. </returns>
-        public Counter AddCounter(int typeId, IDirectBuffer keyBuffer, int keyOffset, int keyLength, IDirectBuffer labelBuffer, int labelOffset, int labelLength)
+        public Counter AddCounter(int typeId, IDirectBuffer keyBuffer, int keyOffset, int keyLength,
+            IDirectBuffer labelBuffer, int labelOffset, int labelLength)
         {
-            return _conductor.AddCounter(typeId, keyBuffer, keyOffset, keyLength, labelBuffer, labelOffset, labelLength);
+            return _conductor.AddCounter(typeId, keyBuffer, keyOffset, keyLength, labelBuffer, labelOffset,
+                labelLength);
         }
 
         /// <summary>
@@ -434,9 +436,10 @@ namespace Adaptive.Aeron
             /// The param name to be used for the term length as a channel URI param.
             /// </summary>
             public const string TERM_LENGTH_PARAM_NAME = "term-length";
-            
+
             /// <summary>
-            /// MTU length parameter name for using as a channel URI param.
+            /// MTU length parameter name for using as a channel URI param. If this is greater than the network MTU for UDP
+            /// then the packet will be fragmented and can amplify the impact of loss.
             /// </summary>
             public const string MTU_LENGTH_PARAM_NAME = "mtu";
 
@@ -466,6 +469,11 @@ namespace Adaptive.Aeron
             public const string MDC_CONTROL_MODE = "control-mode";
 
             /// <summary>
+            /// Key for the session id for a publication or restricted subscription.
+            /// </summary>
+            public const string SESSION_ID_PARAM_NAME = "session-id";
+
+            /// <summary>
             /// Valid value for <seealso cref="MDC_CONTROL_MODE"/> when manual control is desired.
             /// </summary>
             public const string MDC_CONTROL_MODE_MANUAL = "manual";
@@ -474,7 +482,7 @@ namespace Adaptive.Aeron
             /// Valid value for <seealso cref="MDC_CONTROL_MODE_PARAM_NAME"/> when dynamic control is desired. Default value.
             /// </summary>
             public const string MDC_CONTROL_MODE_DYNAMIC = "dynamic";
-            
+
             /// <summary>
             /// Parameter name for channel URI param to indicate if a subscribed must be reliable or not. Value is boolean.
             /// </summary>
@@ -865,7 +873,7 @@ namespace Adaptive.Aeron
             {
                 return _unavailableImageHandler;
             }
-            
+
             /// <summary>
             /// Setup a callback for when a counter is available.
             /// </summary>
@@ -1246,7 +1254,8 @@ namespace Adaptive.Aeron
             /// <param name="logger">     for feedback as liveness checked.</param>
             /// <param name="cncByteBuffer">   for the existing CnC file.</param>
             /// <returns> true if a driver is active or false if not.</returns>
-            public static bool IsDriverActive(long driverTimeoutMs, Action<string> logger, MappedByteBuffer cncByteBuffer)
+            public static bool IsDriverActive(long driverTimeoutMs, Action<string> logger,
+                MappedByteBuffer cncByteBuffer)
             {
                 if (null == cncByteBuffer)
                 {
@@ -1254,7 +1263,7 @@ namespace Adaptive.Aeron
                 }
 
                 UnsafeBuffer cncMetaDataBuffer = CncFileDescriptor.CreateMetaDataBuffer(cncByteBuffer);
-                
+
                 long startTimeMs = UnixTimeConverter.CurrentUnixTimeMillis();
                 int cncVersion;
                 while (0 == (cncVersion = cncMetaDataBuffer.GetIntVolatile(CncFileDescriptor.CncVersionOffset(0))))
@@ -1323,20 +1332,34 @@ namespace Adaptive.Aeron
                 if (CncFileDescriptor.CNC_VERSION != cncVersion)
                 {
                     throw new InvalidOperationException(
-                        "Aeron CnC version does not match: required=" + CncFileDescriptor.CNC_VERSION + " version=" + cncVersion);
+                        "Aeron CnC version does not match: required=" + CncFileDescriptor.CNC_VERSION + " version=" +
+                        cncVersion);
                 }
 
                 UnsafeBuffer buffer = CncFileDescriptor.CreateErrorLogBuffer(cncByteBuffer, cncMetaDataBuffer);
-                var distinctErrorCount = ErrorLogReader.Read(
-                    buffer,
-                    (observationCount, firstObservationTimestamp, lastObservationTimestamp, encodedException) =>
-                        writer.WriteLine(
-                            $"***{Environment.NewLine}{observationCount} observations from {new DateTime(firstObservationTimestamp)} to {new DateTime(lastObservationTimestamp)} for:{Environment.NewLine} {encodedException}"));
+
+                void ErrorConsumer(int count, long firstTimestamp, long lastTimestamp, string ex)
+                    => FormatError(writer, count, firstTimestamp, lastTimestamp, ex);
+
+                var distinctErrorCount = ErrorLogReader.Read(buffer, ErrorConsumer);
 
                 writer.WriteLine();
                 writer.WriteLine("{0} distinct errors observed.", distinctErrorCount);
 
                 return distinctErrorCount;
+            }
+
+            private static void FormatError(
+                TextWriter writer,
+                int observationCount,
+                long firstObservationTimestamp,
+                long lastObservationTimestamp,
+                string encodedException)
+            {
+                writer.WriteLine(
+                    $"***{Environment.NewLine}{observationCount} observations from {new DateTime(firstObservationTimestamp)} " +
+                    $"to {new DateTime(lastObservationTimestamp)} " +
+                    $"for:{Environment.NewLine} {encodedException}");
             }
         }
 
