@@ -104,7 +104,7 @@ namespace Adaptive.Agrona
         ///// <param name="index">     in bytes from which to get. </param>
         ///// <param name="byteOrder"> of the value to be read. </param>
         ///// <returns> the value for at a given index </returns>
-        //long GetLong(int index, ByteOrder byteOrder);
+        long GetLong(int index, ByteOrder byteOrder);
 
         /// <summary>
         /// Get the value at a given index.
@@ -119,7 +119,7 @@ namespace Adaptive.Agrona
         ///// <param name="index">     in bytes from which to get. </param>
         ///// <param name="byteOrder"> of the value to be read. </param>
         ///// <returns> the value at a given index. </returns>
-        //int GetInt(int index, ByteOrder byteOrder);
+        int GetInt(int index, ByteOrder byteOrder);
 
         /// <summary>
         /// Get the value at a given index.
@@ -164,7 +164,7 @@ namespace Adaptive.Agrona
         ///// <param name="index">     in bytes from which to get. </param>
         ///// <param name="byteOrder"> of the value to be read. </param>
         ///// <returns> the value at a given index. </returns>
-        //short GetShort(int index, ByteOrder byteOrder);
+        short GetShort(int index, ByteOrder byteOrder);
 
         /// <summary>
         /// Get the value at a given index.

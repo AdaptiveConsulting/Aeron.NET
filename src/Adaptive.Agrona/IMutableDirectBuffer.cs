@@ -43,7 +43,7 @@ namespace Adaptive.Agrona
         ///// <param name="index">     in bytes for where to put. </param>
         ///// <param name="value">     for at a given index </param>
         ///// <param name="byteOrder"> of the value when written </param>
-        //void PutLong(int index, long value, ByteOrder byteOrder);
+        void PutLong(int index, long value, ByteOrder byteOrder);
 
         /// <summary>
         /// Put a value to a given index.
@@ -58,7 +58,7 @@ namespace Adaptive.Agrona
         ///// <param name="index">     in bytes for where to put. </param>
         ///// <param name="value">     to be written </param>
         ///// <param name="byteOrder"> of the value when written </param>
-        //void PutInt(int index, int value, ByteOrder byteOrder);
+        void PutInt(int index, int value, ByteOrder byteOrder);
 
         /// <summary>
         /// Put a value to a given index.
@@ -103,7 +103,7 @@ namespace Adaptive.Agrona
         ///// <param name="index">     in bytes for where to put. </param>
         ///// <param name="value">     to be written </param>
         ///// <param name="byteOrder"> of the value when written. </param>
-        //void PutShort(int index, short value, ByteOrder byteOrder);
+        void PutShort(int index, short value, ByteOrder byteOrder);
 
         /// <summary>
         /// Put a value to a given index.

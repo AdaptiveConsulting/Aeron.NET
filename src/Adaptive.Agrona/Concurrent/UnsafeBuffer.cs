@@ -350,25 +350,13 @@ namespace Adaptive.Agrona.Concurrent
 
         ///////////////////////////////////////////////////////////////////////////
 
-        //public long GetLong(int index, ByteOrder byteOrder)
-        //{
-        //    BoundsCheck0(index, BitUtil.SIZE_OF_LONG);
+        public long GetLong(int index, ByteOrder byteOrder)
+        {
+            BoundsCheck0(index, BitUtil.SIZE_OF_LONG);
 
-        //    var value = *(long*)(_pBuffer + index);
-        //    return EndianessConverter.ApplyInt64(byteOrder, value);
-        //}
-
-#if DEBUG
-        //public virtual void PutLong(int index, long value, ByteOrder byteOrder)
-#else
-//public void PutLong(int index, long value, ByteOrder byteOrder)
-#endif
-        //{
-        //    BoundsCheck0(index, BitUtil.SIZE_OF_LONG);
-
-        //    value = EndianessConverter.ApplyInt64(byteOrder, value);
-        //    *(long*)(_pBuffer + index) = value;
-        //}
+            var value = *(long*) (_pBuffer + index);
+            return EndianessConverter.ApplyInt64(byteOrder, value);
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public long GetLong(int index)
@@ -397,6 +385,8 @@ namespace Adaptive.Agrona.Concurrent
 #endif
         {
             BoundsCheck0(index, BitUtil.SIZE_OF_LONG);
+
+            value = EndianessConverter.ApplyInt64(byteOrder, value);
             *(long*) (_pBuffer + index) = value;
         }
 
@@ -478,27 +468,13 @@ namespace Adaptive.Agrona.Concurrent
             return Interlocked.Add(ref *(long*) (_pBuffer + index), delta) - delta;
         }
 
-        ///////////////////////////////////////////////////////////////////////////
+        public void PutInt(int index, int value, ByteOrder byteOrder)
+        {
+            BoundsCheck0(index, BitUtil.SIZE_OF_INT);
 
-        //public int GetInt(int index, ByteOrder byteOrder)
-        //{
-        //    BoundsCheck0(index, BitUtil.SIZE_OF_INT);
-
-        //    var value = *(int*)(_pBuffer + index);
-        //    return EndianessConverter.ApplyInt32(byteOrder, value);
-        //}
-
-#if DEBUG
-        //public virtual void PutInt(int index, int value, ByteOrder byteOrder)
-#else
-//public void PutInt(int index, int value, ByteOrder byteOrder)
-#endif
-        //{
-        //    BoundsCheck0(index, BitUtil.SIZE_OF_INT);
-
-        //    value = EndianessConverter.ApplyInt32(byteOrder, value);
-        //    *(int*)(_pBuffer + index) = value;
-        //}
+            value = EndianessConverter.ApplyInt32(byteOrder, value);
+            *(int*) (_pBuffer + index) = value;
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #if DEBUG
@@ -513,15 +489,12 @@ namespace Adaptive.Agrona.Concurrent
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#if DEBUG
-        public virtual int GetInt(int index, ByteOrder byteOrder)
-#else
         public int GetInt(int index, ByteOrder byteOrder)
-#endif
         {
             BoundsCheck0(index, BitUtil.SIZE_OF_INT);
 
-            return *(int*) (_pBuffer + index);
+            var value = *(int*) (_pBuffer + index);
+            return EndianessConverter.ApplyInt32(byteOrder, value);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
