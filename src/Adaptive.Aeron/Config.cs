@@ -62,5 +62,10 @@ namespace Adaptive.Aeron
             long value;
             return Params.TryGetValue(propertyName, out strValue) && long.TryParse(strValue, out value) ? value : defaultValue;
         }
+
+        public static long GetDurationInNanos(string propertyName, long defaultValue)
+        {
+            return GetLong(propertyName, defaultValue);
+        }
     }
 }
