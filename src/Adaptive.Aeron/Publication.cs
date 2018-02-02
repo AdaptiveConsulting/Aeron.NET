@@ -239,7 +239,7 @@ namespace Adaptive.Aeron
         /// <returns> status for the channel as one of the constants from <seealso cref="ChannelEndpointStatus"/> with it being
         /// <seealso cref="ChannelEndpointStatus.NO_ID_ALLOCATED"/> if the publication is closed. </returns>
         /// <seealso cref="ChannelEndpointStatus"/>
-        public virtual long ChannelStatus()
+        public long ChannelStatus()
         {
             if (_isClosed)
             {
@@ -248,7 +248,15 @@ namespace Adaptive.Aeron
 
             return _conductor.ChannelStatus(_channelStatusId);
         }
-
+        
+        /// <summary>
+        /// Get the counter used to represent the channel status for this publication.
+        /// </summary>
+        /// <returns> the counter used to represent the channel status for this publication. </returns>
+        public int ChannelStatusId()
+        {
+            return _channelStatusId;
+        }
 
         /// <summary>
         /// Get the current position to which the publication has advanced for this stream.
@@ -288,6 +296,15 @@ namespace Adaptive.Aeron
 
                 return _positionLimit.GetVolatile();
             }
+        }
+        
+        /// <summary>
+        /// Get the counter id for the position limit after which the publication will be back pressured.
+        /// </summary>
+        /// <returns> the counter id for the position limit after which the publication will be back pressured. </returns>
+        public int PositionLimitId()
+        {
+            return _positionLimit.Id();
         }
 
         /// <summary>
@@ -399,8 +416,6 @@ namespace Adaptive.Aeron
         {
             _isClosed = true;
         }
-
-        internal int ChannelStatusId => _channelStatusId;
 
         internal LogBuffers LogBuffers()
         {

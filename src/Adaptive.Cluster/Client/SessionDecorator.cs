@@ -1,7 +1,7 @@
 ﻿using Adaptive.Aeron;
 using Adaptive.Agrona;
 using Adaptive.Agrona.Concurrent;
-using Io.Aeron.Cluster.Codecs;
+using Adaptive.Cluster.Codecs;
 
 namespace Adaptive.Cluster.Client
 {

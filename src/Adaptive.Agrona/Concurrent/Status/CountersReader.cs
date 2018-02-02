@@ -79,6 +79,11 @@ namespace Adaptive.Agrona.Concurrent.Status
         public delegate void MetaData(int counterId, int typeId, IDirectBuffer keyBuffer, string label);
 
         /// <summary>
+        /// Can be used to representing a null counter id when passed as a argument.
+        /// </summary>
+        public const int NULL_COUNTER_ID = -1;
+        
+        /// <summary>
         /// Record has not been used.
         /// </summary>
         public const int RECORD_UNUSED = 0;

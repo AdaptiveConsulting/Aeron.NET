@@ -1,7 +1,7 @@
 ﻿using Adaptive.Aeron;
 using Adaptive.Aeron.LogBuffer;
 using Adaptive.Agrona.Concurrent;
-using Io.Aeron.Cluster.Codecs;
+using Adaptive.Cluster.Codecs;
 
 namespace Adaptive.Cluster.Client
 {
@@ -117,7 +117,7 @@ namespace Adaptive.Cluster.Client
             clusterSessionId = -1;
             correlationId = -1;
             templateId = -1;
-            eventCode = Io.Aeron.Cluster.Codecs.EventCode.NULL_VALUE;
+            eventCode = Codecs.EventCode.NULL_VALUE;
             detail = "";
             challengeData = null;
             pollComplete = false;

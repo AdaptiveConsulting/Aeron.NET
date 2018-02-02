@@ -5,14 +5,14 @@ using System.Collections.Generic;
 using Adaptive.Agrona;
 
 
-namespace Io.Aeron.Cluster.Codecs {
+namespace Adaptive.Cluster.Codecs {
 
 public class ServiceActionAckDecoder
 {
-    public const ushort BLOCK_LENGTH = 36;
+    public const ushort BLOCK_LENGTH = 24;
     public const ushort TEMPLATE_ID = 32;
     public const ushort SCHEMA_ID = 1;
-    public const ushort SCHEMA_VERSION = 0;
+    public const ushort SCHEMA_VERSION = 1;
 
     private ServiceActionAckDecoder _parentMessage;
     private IDirectBuffer _buffer;
@@ -88,63 +88,9 @@ public class ServiceActionAckDecoder
         this._limit = limit;
     }
 
-    public static int ServiceIdId()
-    {
-        return 1;
-    }
-
-    public static int ServiceIdSinceVersion()
-    {
-        return 0;
-    }
-
-    public static int ServiceIdEncodingOffset()
-    {
-        return 0;
-    }
-
-    public static int ServiceIdEncodingLength()
-    {
-        return 8;
-    }
-
-    public static string ServiceIdMetaAttribute(MetaAttribute metaAttribute)
-    {
-        switch (metaAttribute)
-        {
-            case MetaAttribute.EPOCH: return "unix";
-            case MetaAttribute.TIME_UNIT: return "nanosecond";
-            case MetaAttribute.SEMANTIC_TYPE: return "";
-            case MetaAttribute.PRESENCE: return "required";
-        }
-
-        return "";
-    }
-
-    public static long ServiceIdNullValue()
-    {
-        return -9223372036854775808L;
-    }
-
-    public static long ServiceIdMinValue()
-    {
-        return -9223372036854775807L;
-    }
-
-    public static long ServiceIdMaxValue()
-    {
-        return 9223372036854775807L;
-    }
-
-    public long ServiceId()
-    {
-        return _buffer.GetLong(_offset + 0, ByteOrder.LittleEndian);
-    }
-
-
     public static int LogPositionId()
     {
-        return 2;
+        return 1;
     }
 
     public static int LogPositionSinceVersion()
@@ -154,7 +100,7 @@ public class ServiceActionAckDecoder
 
     public static int LogPositionEncodingOffset()
     {
-        return 8;
+        return 0;
     }
 
     public static int LogPositionEncodingLength()
@@ -192,13 +138,13 @@ public class ServiceActionAckDecoder
 
     public long LogPosition()
     {
-        return _buffer.GetLong(_offset + 8, ByteOrder.LittleEndian);
+        return _buffer.GetLong(_offset + 0, ByteOrder.LittleEndian);
     }
 
 
     public static int LeadershipTermIdId()
     {
-        return 3;
+        return 2;
     }
 
     public static int LeadershipTermIdSinceVersion()
@@ -208,7 +154,7 @@ public class ServiceActionAckDecoder
 
     public static int LeadershipTermIdEncodingOffset()
     {
-        return 16;
+        return 8;
     }
 
     public static int LeadershipTermIdEncodingLength()
@@ -246,31 +192,31 @@ public class ServiceActionAckDecoder
 
     public long LeadershipTermId()
     {
-        return _buffer.GetLong(_offset + 16, ByteOrder.LittleEndian);
+        return _buffer.GetLong(_offset + 8, ByteOrder.LittleEndian);
     }
 
 
-    public static int TimestampId()
+    public static int ServiceIdId()
     {
-        return 4;
+        return 3;
     }
 
-    public static int TimestampSinceVersion()
+    public static int ServiceIdSinceVersion()
     {
         return 0;
     }
 
-    public static int TimestampEncodingOffset()
+    public static int ServiceIdEncodingOffset()
     {
-        return 24;
+        return 16;
     }
 
-    public static int TimestampEncodingLength()
+    public static int ServiceIdEncodingLength()
     {
-        return 8;
+        return 4;
     }
 
-    public static string TimestampMetaAttribute(MetaAttribute metaAttribute)
+    public static string ServiceIdMetaAttribute(MetaAttribute metaAttribute)
     {
         switch (metaAttribute)
         {
@@ -283,30 +229,30 @@ public class ServiceActionAckDecoder
         return "";
     }
 
-    public static long TimestampNullValue()
+    public static int ServiceIdNullValue()
     {
-        return -9223372036854775808L;
+        return -2147483648;
     }
 
-    public static long TimestampMinValue()
+    public static int ServiceIdMinValue()
     {
-        return -9223372036854775807L;
+        return -2147483647;
     }
 
-    public static long TimestampMaxValue()
+    public static int ServiceIdMaxValue()
     {
-        return 9223372036854775807L;
+        return 2147483647;
     }
 
-    public long Timestamp()
+    public int ServiceId()
     {
-        return _buffer.GetLong(_offset + 24, ByteOrder.LittleEndian);
+        return _buffer.GetInt(_offset + 16, ByteOrder.LittleEndian);
     }
 
 
     public static int ActionId()
     {
-        return 5;
+        return 4;
     }
 
     public static int ActionSinceVersion()
@@ -316,7 +262,7 @@ public class ServiceActionAckDecoder
 
     public static int ActionEncodingOffset()
     {
-        return 32;
+        return 20;
     }
 
     public static int ActionEncodingLength()
@@ -337,9 +283,9 @@ public class ServiceActionAckDecoder
         return "";
     }
 
-    public ServiceAction Action()
+    public ClusterAction Action()
     {
-        return (ServiceAction)_buffer.GetInt(_offset + 32, ByteOrder.LittleEndian);
+        return (ClusterAction)_buffer.GetInt(_offset + 20, ByteOrder.LittleEndian);
     }
 
 
@@ -372,28 +318,23 @@ public class ServiceActionAckDecoder
         }
         builder.Append(BLOCK_LENGTH);
         builder.Append("):");
-        //Token{signal=BEGIN_FIELD, name='serviceId', referencedName='null', description='null', id=1, version=0, deprecated=0, encodedLength=0, offset=0, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=BEGIN_FIELD, name='logPosition', referencedName='null', description='null', id=1, version=0, deprecated=0, encodedLength=0, offset=0, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
         //Token{signal=ENCODING, name='int64', referencedName='null', description='null', id=-1, version=0, deprecated=0, encodedLength=8, offset=0, componentTokenCount=1, encoding=Encoding{presence=REQUIRED, primitiveType=INT64, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
-        builder.Append("ServiceId=");
-        builder.Append(ServiceId());
-        builder.Append('|');
-        //Token{signal=BEGIN_FIELD, name='logPosition', referencedName='null', description='null', id=2, version=0, deprecated=0, encodedLength=0, offset=8, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
-        //Token{signal=ENCODING, name='int64', referencedName='null', description='null', id=-1, version=0, deprecated=0, encodedLength=8, offset=8, componentTokenCount=1, encoding=Encoding{presence=REQUIRED, primitiveType=INT64, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
         builder.Append("LogPosition=");
         builder.Append(LogPosition());
         builder.Append('|');
-        //Token{signal=BEGIN_FIELD, name='leadershipTermId', referencedName='null', description='null', id=3, version=0, deprecated=0, encodedLength=0, offset=16, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
-        //Token{signal=ENCODING, name='int64', referencedName='null', description='null', id=-1, version=0, deprecated=0, encodedLength=8, offset=16, componentTokenCount=1, encoding=Encoding{presence=REQUIRED, primitiveType=INT64, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=BEGIN_FIELD, name='leadershipTermId', referencedName='null', description='null', id=2, version=0, deprecated=0, encodedLength=0, offset=8, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=ENCODING, name='int64', referencedName='null', description='null', id=-1, version=0, deprecated=0, encodedLength=8, offset=8, componentTokenCount=1, encoding=Encoding{presence=REQUIRED, primitiveType=INT64, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
         builder.Append("LeadershipTermId=");
         builder.Append(LeadershipTermId());
         builder.Append('|');
-        //Token{signal=BEGIN_FIELD, name='timestamp', referencedName='null', description='null', id=4, version=0, deprecated=0, encodedLength=0, offset=24, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
-        //Token{signal=ENCODING, name='time_t', referencedName='null', description='Epoch time in milliseconds since 1 Jan 1970 UTC', id=-1, version=0, deprecated=0, encodedLength=8, offset=24, componentTokenCount=1, encoding=Encoding{presence=REQUIRED, primitiveType=INT64, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
-        builder.Append("Timestamp=");
-        builder.Append(Timestamp());
+        //Token{signal=BEGIN_FIELD, name='serviceId', referencedName='null', description='null', id=3, version=0, deprecated=0, encodedLength=0, offset=16, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=ENCODING, name='int32', referencedName='null', description='null', id=-1, version=0, deprecated=0, encodedLength=4, offset=16, componentTokenCount=1, encoding=Encoding{presence=REQUIRED, primitiveType=INT32, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        builder.Append("ServiceId=");
+        builder.Append(ServiceId());
         builder.Append('|');
-        //Token{signal=BEGIN_FIELD, name='action', referencedName='null', description='null', id=5, version=0, deprecated=0, encodedLength=0, offset=32, componentTokenCount=9, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
-        //Token{signal=BEGIN_ENUM, name='ServiceAction', referencedName='null', description='Action to be taken by a clustered service', id=-1, version=0, deprecated=0, encodedLength=4, offset=32, componentTokenCount=7, encoding=Encoding{presence=REQUIRED, primitiveType=INT32, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='null', timeUnit=null, semanticType='null'}}
+        //Token{signal=BEGIN_FIELD, name='action', referencedName='null', description='null', id=4, version=0, deprecated=0, encodedLength=0, offset=20, componentTokenCount=12, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=BEGIN_ENUM, name='ClusterAction', referencedName='null', description='Action to be taken by a cluster nodes', id=-1, version=0, deprecated=0, encodedLength=4, offset=20, componentTokenCount=10, encoding=Encoding{presence=REQUIRED, primitiveType=INT32, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='null', timeUnit=null, semanticType='null'}}
         builder.Append("Action=");
         builder.Append(Action());
 

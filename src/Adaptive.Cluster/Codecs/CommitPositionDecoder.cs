@@ -5,23 +5,23 @@ using System.Collections.Generic;
 using Adaptive.Agrona;
 
 
-namespace Io.Aeron.Cluster.Codecs {
+namespace Adaptive.Cluster.Codecs {
 
-public class ServiceActionRequestDecoder
+public class CommitPositionDecoder
 {
-    public const ushort BLOCK_LENGTH = 28;
-    public const ushort TEMPLATE_ID = 23;
+    public const ushort BLOCK_LENGTH = 24;
+    public const ushort TEMPLATE_ID = 51;
     public const ushort SCHEMA_ID = 1;
-    public const ushort SCHEMA_VERSION = 0;
+    public const ushort SCHEMA_VERSION = 1;
 
-    private ServiceActionRequestDecoder _parentMessage;
+    private CommitPositionDecoder _parentMessage;
     private IDirectBuffer _buffer;
     protected int _offset;
     protected int _limit;
     protected int _actingBlockLength;
     protected int _actingVersion;
 
-    public ServiceActionRequestDecoder()
+    public CommitPositionDecoder()
     {
         _parentMessage = this;
     }
@@ -61,7 +61,7 @@ public class ServiceActionRequestDecoder
         return _offset;
     }
 
-    public ServiceActionRequestDecoder Wrap(
+    public CommitPositionDecoder Wrap(
         IDirectBuffer buffer, int offset, int actingBlockLength, int actingVersion)
     {
         this._buffer = buffer;
@@ -88,27 +88,27 @@ public class ServiceActionRequestDecoder
         this._limit = limit;
     }
 
-    public static int LogPositionId()
+    public static int TermPositionId()
     {
         return 1;
     }
 
-    public static int LogPositionSinceVersion()
+    public static int TermPositionSinceVersion()
     {
         return 0;
     }
 
-    public static int LogPositionEncodingOffset()
+    public static int TermPositionEncodingOffset()
     {
         return 0;
     }
 
-    public static int LogPositionEncodingLength()
+    public static int TermPositionEncodingLength()
     {
         return 8;
     }
 
-    public static string LogPositionMetaAttribute(MetaAttribute metaAttribute)
+    public static string TermPositionMetaAttribute(MetaAttribute metaAttribute)
     {
         switch (metaAttribute)
         {
@@ -121,22 +121,22 @@ public class ServiceActionRequestDecoder
         return "";
     }
 
-    public static long LogPositionNullValue()
+    public static long TermPositionNullValue()
     {
         return -9223372036854775808L;
     }
 
-    public static long LogPositionMinValue()
+    public static long TermPositionMinValue()
     {
         return -9223372036854775807L;
     }
 
-    public static long LogPositionMaxValue()
+    public static long TermPositionMaxValue()
     {
         return 9223372036854775807L;
     }
 
-    public long LogPosition()
+    public long TermPosition()
     {
         return _buffer.GetLong(_offset + 0, ByteOrder.LittleEndian);
     }
@@ -196,27 +196,27 @@ public class ServiceActionRequestDecoder
     }
 
 
-    public static int TimestampId()
+    public static int LeaderMemberIdId()
     {
         return 3;
     }
 
-    public static int TimestampSinceVersion()
+    public static int LeaderMemberIdSinceVersion()
     {
         return 0;
     }
 
-    public static int TimestampEncodingOffset()
+    public static int LeaderMemberIdEncodingOffset()
     {
         return 16;
     }
 
-    public static int TimestampEncodingLength()
+    public static int LeaderMemberIdEncodingLength()
     {
-        return 8;
+        return 4;
     }
 
-    public static string TimestampMetaAttribute(MetaAttribute metaAttribute)
+    public static string LeaderMemberIdMetaAttribute(MetaAttribute metaAttribute)
     {
         switch (metaAttribute)
         {
@@ -229,48 +229,48 @@ public class ServiceActionRequestDecoder
         return "";
     }
 
-    public static long TimestampNullValue()
+    public static int LeaderMemberIdNullValue()
     {
-        return -9223372036854775808L;
+        return -2147483648;
     }
 
-    public static long TimestampMinValue()
+    public static int LeaderMemberIdMinValue()
     {
-        return -9223372036854775807L;
+        return -2147483647;
     }
 
-    public static long TimestampMaxValue()
+    public static int LeaderMemberIdMaxValue()
     {
-        return 9223372036854775807L;
+        return 2147483647;
     }
 
-    public long Timestamp()
+    public int LeaderMemberId()
     {
-        return _buffer.GetLong(_offset + 16, ByteOrder.LittleEndian);
+        return _buffer.GetInt(_offset + 16, ByteOrder.LittleEndian);
     }
 
 
-    public static int ActionId()
+    public static int LogSessionIdId()
     {
         return 4;
     }
 
-    public static int ActionSinceVersion()
+    public static int LogSessionIdSinceVersion()
     {
         return 0;
     }
 
-    public static int ActionEncodingOffset()
+    public static int LogSessionIdEncodingOffset()
     {
-        return 24;
+        return 20;
     }
 
-    public static int ActionEncodingLength()
+    public static int LogSessionIdEncodingLength()
     {
         return 4;
     }
 
-    public static string ActionMetaAttribute(MetaAttribute metaAttribute)
+    public static string LogSessionIdMetaAttribute(MetaAttribute metaAttribute)
     {
         switch (metaAttribute)
         {
@@ -283,9 +283,24 @@ public class ServiceActionRequestDecoder
         return "";
     }
 
-    public ServiceAction Action()
+    public static int LogSessionIdNullValue()
     {
-        return (ServiceAction)_buffer.GetInt(_offset + 24, ByteOrder.LittleEndian);
+        return -2147483648;
+    }
+
+    public static int LogSessionIdMinValue()
+    {
+        return -2147483647;
+    }
+
+    public static int LogSessionIdMaxValue()
+    {
+        return 2147483647;
+    }
+
+    public int LogSessionId()
+    {
+        return _buffer.GetInt(_offset + 20, ByteOrder.LittleEndian);
     }
 
 
@@ -299,7 +314,7 @@ public class ServiceActionRequestDecoder
     {
         int originalLimit = Limit();
         Limit(_offset + _actingBlockLength);
-        builder.Append("[ServiceActionRequest](sbeTemplateId=");
+        builder.Append("[CommitPosition](sbeTemplateId=");
         builder.Append(TEMPLATE_ID);
         builder.Append("|sbeSchemaId=");
         builder.Append(SCHEMA_ID);
@@ -318,25 +333,25 @@ public class ServiceActionRequestDecoder
         }
         builder.Append(BLOCK_LENGTH);
         builder.Append("):");
-        //Token{signal=BEGIN_FIELD, name='logPosition', referencedName='null', description='null', id=1, version=0, deprecated=0, encodedLength=0, offset=0, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=BEGIN_FIELD, name='termPosition', referencedName='null', description='null', id=1, version=0, deprecated=0, encodedLength=0, offset=0, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
         //Token{signal=ENCODING, name='int64', referencedName='null', description='null', id=-1, version=0, deprecated=0, encodedLength=8, offset=0, componentTokenCount=1, encoding=Encoding{presence=REQUIRED, primitiveType=INT64, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
-        builder.Append("LogPosition=");
-        builder.Append(LogPosition());
+        builder.Append("TermPosition=");
+        builder.Append(TermPosition());
         builder.Append('|');
         //Token{signal=BEGIN_FIELD, name='leadershipTermId', referencedName='null', description='null', id=2, version=0, deprecated=0, encodedLength=0, offset=8, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
         //Token{signal=ENCODING, name='int64', referencedName='null', description='null', id=-1, version=0, deprecated=0, encodedLength=8, offset=8, componentTokenCount=1, encoding=Encoding{presence=REQUIRED, primitiveType=INT64, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
         builder.Append("LeadershipTermId=");
         builder.Append(LeadershipTermId());
         builder.Append('|');
-        //Token{signal=BEGIN_FIELD, name='timestamp', referencedName='null', description='null', id=3, version=0, deprecated=0, encodedLength=0, offset=16, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
-        //Token{signal=ENCODING, name='time_t', referencedName='null', description='Epoch time in milliseconds since 1 Jan 1970 UTC', id=-1, version=0, deprecated=0, encodedLength=8, offset=16, componentTokenCount=1, encoding=Encoding{presence=REQUIRED, primitiveType=INT64, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
-        builder.Append("Timestamp=");
-        builder.Append(Timestamp());
+        //Token{signal=BEGIN_FIELD, name='leaderMemberId', referencedName='null', description='null', id=3, version=0, deprecated=0, encodedLength=0, offset=16, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=ENCODING, name='int32', referencedName='null', description='null', id=-1, version=0, deprecated=0, encodedLength=4, offset=16, componentTokenCount=1, encoding=Encoding{presence=REQUIRED, primitiveType=INT32, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        builder.Append("LeaderMemberId=");
+        builder.Append(LeaderMemberId());
         builder.Append('|');
-        //Token{signal=BEGIN_FIELD, name='action', referencedName='null', description='null', id=4, version=0, deprecated=0, encodedLength=0, offset=24, componentTokenCount=9, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
-        //Token{signal=BEGIN_ENUM, name='ServiceAction', referencedName='null', description='Action to be taken by a clustered service', id=-1, version=0, deprecated=0, encodedLength=4, offset=24, componentTokenCount=7, encoding=Encoding{presence=REQUIRED, primitiveType=INT32, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='null', timeUnit=null, semanticType='null'}}
-        builder.Append("Action=");
-        builder.Append(Action());
+        //Token{signal=BEGIN_FIELD, name='logSessionId', referencedName='null', description='null', id=4, version=0, deprecated=0, encodedLength=0, offset=20, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=ENCODING, name='int32', referencedName='null', description='null', id=-1, version=0, deprecated=0, encodedLength=4, offset=20, componentTokenCount=1, encoding=Encoding{presence=REQUIRED, primitiveType=INT32, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        builder.Append("LogSessionId=");
+        builder.Append(LogSessionId());
 
         Limit(originalLimit);
 

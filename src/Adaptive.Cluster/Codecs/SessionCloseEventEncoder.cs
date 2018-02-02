@@ -5,14 +5,14 @@ using System.Collections.Generic;
 using Adaptive.Agrona;
 
 
-namespace Io.Aeron.Cluster.Codecs {
+namespace Adaptive.Cluster.Codecs {
 
 public class SessionCloseEventEncoder
 {
     public const ushort BLOCK_LENGTH = 28;
     public const ushort TEMPLATE_ID = 22;
     public const ushort SCHEMA_ID = 1;
-    public const ushort SCHEMA_VERSION = 0;
+    public const ushort SCHEMA_VERSION = 1;
 
     private SessionCloseEventEncoder _parentMessage;
     private IMutableDirectBuffer _buffer;

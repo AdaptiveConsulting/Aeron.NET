@@ -1,5 +1,5 @@
 /* Generated SBE (Simple Binary Encoding) message codec */
-namespace Io.Aeron.Cluster.Codecs {
+namespace Adaptive.Cluster.Codecs {
 
     public enum SnapshotMark : int
     {

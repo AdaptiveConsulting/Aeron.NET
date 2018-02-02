@@ -228,10 +228,11 @@ namespace Adaptive.Archiver
         /// <returns> the <seealso cref="Publication"/> ready for use. </returns>
         public Publication AddRecordedPublication(string channel, int streamId)
         {
+            Publication publication = null;
             _lock.Lock();
             try
             {
-                Publication publication = aeron.AddPublication(channel, streamId);
+                publication = aeron.AddPublication(channel, streamId);
                 if (!publication.IsOriginal())
                 {
                     publication.Dispose();
@@ -241,13 +242,18 @@ namespace Adaptive.Archiver
                 }
 
                 StartRecording(ChannelUri.AddSessionId(channel, publication.SessionId), streamId, SourceLocation.LOCAL);
-
-                return publication;
+            }
+            catch (Exception)
+            {
+                publication?.Dispose();
+                throw;
             }
             finally
             {
                 _lock.Unlock();
             }
+
+            return publication;
         }
 
         /// <summary>
@@ -262,19 +268,25 @@ namespace Adaptive.Archiver
         /// <returns> the <seealso cref="ExclusivePublication"/> ready for use. </returns>
         public ExclusivePublication AddRecordedExclusivePublication(string channel, int streamId)
         {
+            ExclusivePublication publication = null;
             _lock.Lock();
             try
             {
-                ExclusivePublication publication = aeron.AddExclusivePublication(channel, streamId);
+                publication = aeron.AddExclusivePublication(channel, streamId);
 
                 StartRecording(ChannelUri.AddSessionId(channel, publication.SessionId), streamId, SourceLocation.LOCAL);
-
-                return publication;
+            }
+            catch (Exception)
+            {
+                publication?.Dispose();
+                throw;
             }
             finally
             {
                 _lock.Unlock();
             }
+            
+            return publication;
         }
 
         /// <summary>
@@ -1035,7 +1047,7 @@ namespace Adaptive.Archiver
 
             internal IIdleStrategy idleStrategy;
             internal ILock _lock;
-            internal string aeronDirectoryName = Aeron.Aeron.Context.AERON_DIR_PROP_DEFAULT;
+            internal string aeronDirectoryName;
             internal Aeron.Aeron aeron;
             internal bool ownsAeronClient = false;
 
@@ -1046,8 +1058,14 @@ namespace Adaptive.Archiver
             {
                 if (null == aeron)
                 {
-                    aeron = Aeron.Aeron.Connect(new Aeron.Aeron.Context()
-                        .AeronDirectoryName(aeronDirectoryName));
+                    var ctx = new Aeron.Aeron.Context();
+
+                    if (aeronDirectoryName != null)
+                    {
+                        ctx.AeronDirectoryName(aeronDirectoryName);
+                    }
+
+                    aeron = Aeron.Aeron.Connect(ctx);
 
                     ownsAeronClient = true;
                 }
@@ -1055,8 +1073,8 @@ namespace Adaptive.Archiver
                 if (null == idleStrategy)
                 {
                     idleStrategy = new BackoffIdleStrategy(
-                        Agrona.Concurrent.Configuration.IDLE_MAX_SPINS, 
-                        Agrona.Concurrent.Configuration.IDLE_MAX_YIELDS, 
+                        Agrona.Concurrent.Configuration.IDLE_MAX_SPINS,
+                        Agrona.Concurrent.Configuration.IDLE_MAX_YIELDS,
                         Agrona.Concurrent.Configuration.IDLE_MIN_PARK_MS,
                         Agrona.Concurrent.Configuration.IDLE_MAX_PARK_MS);
                 }

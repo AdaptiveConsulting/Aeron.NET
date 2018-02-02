@@ -28,24 +28,36 @@ namespace Adaptive.Agrona.Util
         public MappedByteBuffer(MemoryMappedFile memoryMappedFile)
         {
             _memoryMappedFile = memoryMappedFile;
-            byte* ptr = (byte*)0;
+            byte* ptr = (byte*) 0;
             _view = memoryMappedFile.CreateViewAccessor();
             _view.SafeMemoryMappedViewHandle.AcquirePointer(ref ptr);
-            
+
             Pointer = new IntPtr(ptr);
+            Capacity = _view.Capacity;
         }
 
         public MappedByteBuffer(MemoryMappedFile memoryMappedFile, long offset, long length)
         {
             _memoryMappedFile = memoryMappedFile;
-            byte* ptr = (byte*)0;
+            byte* ptr = (byte*) 0;
             _view = memoryMappedFile.CreateViewAccessor(offset, length);
             _view.SafeMemoryMappedViewHandle.AcquirePointer(ref ptr);
 
             Pointer = new IntPtr(ptr);
+            Capacity = length;
+        }
+
+        public void FillWithZeros()
+        {
+            for (int i = 0; i < Capacity; i++)
+            {
+                _view.Write(i, (byte) 0);
+            }
         }
 
         public IntPtr Pointer { get; }
+
+        public long Capacity { get; }
 
         public void Dispose()
         {
@@ -67,6 +79,7 @@ namespace Adaptive.Agrona.Util
                 _view.SafeMemoryMappedViewHandle.ReleasePointer();
                 _view.Dispose();
             }
+
             _memoryMappedFile?.Dispose();
 
             _disposed = true;

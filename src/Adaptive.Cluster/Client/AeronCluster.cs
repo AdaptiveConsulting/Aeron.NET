@@ -4,7 +4,7 @@ using Adaptive.Aeron;
 using Adaptive.Aeron.LogBuffer;
 using Adaptive.Agrona;
 using Adaptive.Agrona.Concurrent;
-using Io.Aeron.Cluster.Codecs;
+using Adaptive.Cluster.Codecs;
 
 namespace Adaptive.Cluster.Client
 {
@@ -107,7 +107,7 @@ namespace Adaptive.Cluster.Client
                 if (!_ctx.OwnsAeronClient())
                 {
                     _subscription.Dispose();
-                    _subscription.Dispose();
+                    _publication.Dispose();
                 }
 
                 _ctx.Dispose();
@@ -486,8 +486,8 @@ namespace Adaptive.Cluster.Client
             public const string CLUSTER_MEMBER_ENDPOINTS_DEFAULT = null;
 
             /// <summary>
-            /// Channel for sending messages to a cluster. Ideally this will be a multicast address or manual control mode
-            /// MDC (multi-destination-cast) as a second choice.
+            /// Channel for sending messages to a cluster. Ideally this will be a multicast address otherwise unicast will
+            /// be required and the <seealso cref="CLUSTER_MEMBER_ENDPOINTS_PROP_NAME"/> is used to substitute the endpoints.
             /// </summary>
             public const string INGRESS_CHANNEL_PROP_NAME = "aeron.cluster.ingress.channel";
 
@@ -607,7 +607,7 @@ namespace Adaptive.Cluster.Client
             private int _egressStreamId = Configuration.EgressStreamId();
             private IIdleStrategy _idleStrategy;
             private ILock _lock;
-            private string _aeronDirectoryName = Adaptive.Aeron.Aeron.Context.AERON_DIR_PROP_DEFAULT;
+            private string _aeronDirectoryName;
             private Aeron.Aeron _aeron;
             private ICredentialsSupplier _credentialsSupplier;
             private bool _ownsAeronClient = true;
@@ -617,8 +617,14 @@ namespace Adaptive.Cluster.Client
             {
                 if (null == _aeron)
                 {
-                    _aeron = Adaptive.Aeron.Aeron.Connect(new Aeron.Aeron.Context()
-                        .AeronDirectoryName(_aeronDirectoryName));
+                    var ctx = new Aeron.Aeron.Context();
+
+                    if (_aeronDirectoryName != null)
+                    {
+                        ctx.AeronDirectoryName(_aeronDirectoryName);
+                    }
+                    
+                    _aeron = Adaptive.Aeron.Aeron.Connect(ctx);
                 }
 
                 if (null == _idleStrategy)

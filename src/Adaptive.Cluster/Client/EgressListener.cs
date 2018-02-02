@@ -1,6 +1,6 @@
 ﻿using Adaptive.Aeron.LogBuffer;
 using Adaptive.Agrona;
-using Io.Aeron.Cluster.Codecs;
+using Adaptive.Cluster.Codecs;
 
 namespace Adaptive.Cluster.Client
 {

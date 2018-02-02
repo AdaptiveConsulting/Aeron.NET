@@ -1,4 +1,7 @@
-﻿namespace Adaptive.Cluster.Service
+﻿using System.Collections.Generic;
+using System.Collections.ObjectModel;
+
+namespace Adaptive.Cluster.Service
 {
     /// <summary>
     /// Interface for a <seealso cref="IClusteredService"/> to interact with cluster hosting it.
@@ -12,12 +15,6 @@
         ClusterRole Role();
 
         /// <summary>
-        /// Is the node currently in replay of existing messages.
-        /// </summary>
-        /// <returns> true if the node currently in replay of existing messages otherwise false. </returns>
-        bool IsReplay();
-
-        /// <summary>
         /// Get the <seealso cref="Aeron"/> client used by the cluster.
         /// </summary>
         /// <returns> the <seealso cref="Aeron"/> client used by the cluster. </returns>
@@ -29,6 +26,12 @@
         /// <param name="clusterSessionId"> to be looked up. </param>
         /// <returns> the <seealso cref="ClientSession"/> that matches the clusterSessionId. </returns>
         ClientSession GetClientSession(long clusterSessionId);
+        
+        /// <summary>
+        /// Get all <seealso cref="ClientSession"/>s.
+        /// </summary>
+        /// <returns> the <seealso cref="ClientSession"/>s. </returns>
+        ICollection<ClientSession> GetClientSessions();
 
         /// <summary>
         /// Current Epoch time in milliseconds.

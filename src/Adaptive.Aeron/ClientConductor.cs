@@ -189,7 +189,7 @@ namespace Adaptive.Aeron
                 }
                 else if (resource is Publication publication)
                 {
-                    if (publication.ChannelStatusId == statusIndicatorId)
+                    if (publication.ChannelStatusId() == statusIndicatorId)
                     {
                         HandleError(new ChannelEndpointException(statusIndicatorId, message));
                     }

@@ -5,14 +5,14 @@ using System.Collections.Generic;
 using Adaptive.Agrona;
 
 
-namespace Io.Aeron.Cluster.Codecs {
+namespace Adaptive.Cluster.Codecs {
 
 public class SessionHeaderDecoder
 {
     public const ushort BLOCK_LENGTH = 24;
     public const ushort TEMPLATE_ID = 3;
     public const ushort SCHEMA_ID = 1;
-    public const ushort SCHEMA_VERSION = 0;
+    public const ushort SCHEMA_VERSION = 1;
 
     private SessionHeaderDecoder _parentMessage;
     private IDirectBuffer _buffer;

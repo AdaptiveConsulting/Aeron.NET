@@ -5,14 +5,14 @@ using System.Collections.Generic;
 using Adaptive.Agrona;
 
 
-namespace Io.Aeron.Cluster.Codecs {
+namespace Adaptive.Cluster.Codecs {
 
 public class ScheduleTimerRequestEncoder
 {
-    public const ushort BLOCK_LENGTH = 32;
+    public const ushort BLOCK_LENGTH = 16;
     public const ushort TEMPLATE_ID = 30;
     public const ushort SCHEMA_ID = 1;
-    public const ushort SCHEMA_VERSION = 0;
+    public const ushort SCHEMA_VERSION = 1;
 
     private ScheduleTimerRequestEncoder _parentMessage;
     private IMutableDirectBuffer _buffer;
@@ -96,41 +96,9 @@ public class ScheduleTimerRequestEncoder
         this._limit = limit;
     }
 
-    public static int ServiceIdEncodingOffset()
-    {
-        return 0;
-    }
-
-    public static int ServiceIdEncodingLength()
-    {
-        return 8;
-    }
-
-    public static long ServiceIdNullValue()
-    {
-        return -9223372036854775808L;
-    }
-
-    public static long ServiceIdMinValue()
-    {
-        return -9223372036854775807L;
-    }
-
-    public static long ServiceIdMaxValue()
-    {
-        return 9223372036854775807L;
-    }
-
-    public ScheduleTimerRequestEncoder ServiceId(long value)
-    {
-        _buffer.PutLong(_offset + 0, value, ByteOrder.LittleEndian);
-        return this;
-    }
-
-
     public static int CorrelationIdEncodingOffset()
     {
-        return 8;
+        return 0;
     }
 
     public static int CorrelationIdEncodingLength()
@@ -155,46 +123,14 @@ public class ScheduleTimerRequestEncoder
 
     public ScheduleTimerRequestEncoder CorrelationId(long value)
     {
-        _buffer.PutLong(_offset + 8, value, ByteOrder.LittleEndian);
-        return this;
-    }
-
-
-    public static int TimestampEncodingOffset()
-    {
-        return 16;
-    }
-
-    public static int TimestampEncodingLength()
-    {
-        return 8;
-    }
-
-    public static long TimestampNullValue()
-    {
-        return -9223372036854775808L;
-    }
-
-    public static long TimestampMinValue()
-    {
-        return -9223372036854775807L;
-    }
-
-    public static long TimestampMaxValue()
-    {
-        return 9223372036854775807L;
-    }
-
-    public ScheduleTimerRequestEncoder Timestamp(long value)
-    {
-        _buffer.PutLong(_offset + 16, value, ByteOrder.LittleEndian);
+        _buffer.PutLong(_offset + 0, value, ByteOrder.LittleEndian);
         return this;
     }
 
 
     public static int DeadlineEncodingOffset()
     {
-        return 24;
+        return 8;
     }
 
     public static int DeadlineEncodingLength()
@@ -219,7 +155,7 @@ public class ScheduleTimerRequestEncoder
 
     public ScheduleTimerRequestEncoder Deadline(long value)
     {
-        _buffer.PutLong(_offset + 24, value, ByteOrder.LittleEndian);
+        _buffer.PutLong(_offset + 8, value, ByteOrder.LittleEndian);
         return this;
     }
 

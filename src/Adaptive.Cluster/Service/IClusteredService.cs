@@ -3,7 +3,7 @@ using Adaptive.Aeron;
 using Adaptive.Aeron.LogBuffer;
 using Adaptive.Agrona;
 using Adaptive.Agrona.Concurrent;
-using Io.Aeron.Cluster.Codecs;
+using Adaptive.Cluster.Codecs;
 
 namespace Adaptive.Cluster.Service
 {
@@ -69,12 +69,26 @@ namespace Adaptive.Cluster.Service
         /// The service should load its state from a stored snapshot in the provided archived <seealso cref="Image"/>.
         /// <para>
         /// <b>Note:</b> As this is a potentially long running operation the implementation should occasional call
-        /// <seealso cref="Thread.InterisInterrupted()"/> and if true then throw an <seealso cref="ThreadInterruptedException"/> or
+        /// <seealso cref="Thread.Yield()"/> and if true then throw an <seealso cref="ThreadInterruptedException"/> or
         /// <seealso cref="AgentTerminationException"/>.
         /// 
         /// </para>
         /// </summary>
         /// <param name="snapshotImage"> to which the service should store its state. </param>
         void OnLoadSnapshot(Image snapshotImage);
+        
+        /// <summary>
+        /// Notify the service that a replay of existing logs is about to begin.
+        /// </summary>
+        void OnReplayBegin();
+
+        /// <summary>
+        /// Notify the service that a replay of existing logs has ended so that it can check external state is consistent.
+        /// <para>
+        /// If the service is in an invalid state and wished to terminate operation it can throw a
+        /// <seealso cref="AgentTerminationException"/>.
+        /// </para>
+        /// </summary>
+        void OnReplayEnd();
     }
 }

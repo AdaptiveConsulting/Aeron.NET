@@ -86,7 +86,7 @@ namespace Adaptive.Aeron
                     long metaDataSectionOffset = assumedTermLength * (long) LogBufferDescriptor.PARTITION_COUNT;
                     long metaDataMappingLength = logLength - metaDataSectionOffset;
 
-                    var memoryMappedFile = IoUtil.OpenMemoryMappedFile(logFileName, MapMode.ReadWrite);
+                    var memoryMappedFile = IoUtil.OpenMemoryMappedFile(logFileName);
 
                     var metaDataMappedBuffer =
                         new MappedByteBuffer(memoryMappedFile, metaDataSectionOffset, metaDataMappingLength);

@@ -5,14 +5,14 @@ using System.Collections.Generic;
 using Adaptive.Agrona;
 
 
-namespace Io.Aeron.Cluster.Codecs {
+namespace Adaptive.Cluster.Codecs {
 
 public class TimerEventDecoder
 {
     public const ushort BLOCK_LENGTH = 16;
     public const ushort TEMPLATE_ID = 20;
     public const ushort SCHEMA_ID = 1;
-    public const ushort SCHEMA_VERSION = 0;
+    public const ushort SCHEMA_VERSION = 1;
 
     private TimerEventDecoder _parentMessage;
     private IDirectBuffer _buffer;

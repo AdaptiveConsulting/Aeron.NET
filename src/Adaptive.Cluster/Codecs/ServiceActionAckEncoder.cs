@@ -5,14 +5,14 @@ using System.Collections.Generic;
 using Adaptive.Agrona;
 
 
-namespace Io.Aeron.Cluster.Codecs {
+namespace Adaptive.Cluster.Codecs {
 
 public class ServiceActionAckEncoder
 {
-    public const ushort BLOCK_LENGTH = 36;
+    public const ushort BLOCK_LENGTH = 24;
     public const ushort TEMPLATE_ID = 32;
     public const ushort SCHEMA_ID = 1;
-    public const ushort SCHEMA_VERSION = 0;
+    public const ushort SCHEMA_VERSION = 1;
 
     private ServiceActionAckEncoder _parentMessage;
     private IMutableDirectBuffer _buffer;
@@ -96,41 +96,9 @@ public class ServiceActionAckEncoder
         this._limit = limit;
     }
 
-    public static int ServiceIdEncodingOffset()
-    {
-        return 0;
-    }
-
-    public static int ServiceIdEncodingLength()
-    {
-        return 8;
-    }
-
-    public static long ServiceIdNullValue()
-    {
-        return -9223372036854775808L;
-    }
-
-    public static long ServiceIdMinValue()
-    {
-        return -9223372036854775807L;
-    }
-
-    public static long ServiceIdMaxValue()
-    {
-        return 9223372036854775807L;
-    }
-
-    public ServiceActionAckEncoder ServiceId(long value)
-    {
-        _buffer.PutLong(_offset + 0, value, ByteOrder.LittleEndian);
-        return this;
-    }
-
-
     public static int LogPositionEncodingOffset()
     {
-        return 8;
+        return 0;
     }
 
     public static int LogPositionEncodingLength()
@@ -155,14 +123,14 @@ public class ServiceActionAckEncoder
 
     public ServiceActionAckEncoder LogPosition(long value)
     {
-        _buffer.PutLong(_offset + 8, value, ByteOrder.LittleEndian);
+        _buffer.PutLong(_offset + 0, value, ByteOrder.LittleEndian);
         return this;
     }
 
 
     public static int LeadershipTermIdEncodingOffset()
     {
-        return 16;
+        return 8;
     }
 
     public static int LeadershipTermIdEncodingLength()
@@ -187,46 +155,46 @@ public class ServiceActionAckEncoder
 
     public ServiceActionAckEncoder LeadershipTermId(long value)
     {
-        _buffer.PutLong(_offset + 16, value, ByteOrder.LittleEndian);
+        _buffer.PutLong(_offset + 8, value, ByteOrder.LittleEndian);
         return this;
     }
 
 
-    public static int TimestampEncodingOffset()
+    public static int ServiceIdEncodingOffset()
     {
-        return 24;
+        return 16;
     }
 
-    public static int TimestampEncodingLength()
+    public static int ServiceIdEncodingLength()
     {
-        return 8;
+        return 4;
     }
 
-    public static long TimestampNullValue()
+    public static int ServiceIdNullValue()
     {
-        return -9223372036854775808L;
+        return -2147483648;
     }
 
-    public static long TimestampMinValue()
+    public static int ServiceIdMinValue()
     {
-        return -9223372036854775807L;
+        return -2147483647;
     }
 
-    public static long TimestampMaxValue()
+    public static int ServiceIdMaxValue()
     {
-        return 9223372036854775807L;
+        return 2147483647;
     }
 
-    public ServiceActionAckEncoder Timestamp(long value)
+    public ServiceActionAckEncoder ServiceId(int value)
     {
-        _buffer.PutLong(_offset + 24, value, ByteOrder.LittleEndian);
+        _buffer.PutInt(_offset + 16, value, ByteOrder.LittleEndian);
         return this;
     }
 
 
     public static int ActionEncodingOffset()
     {
-        return 32;
+        return 20;
     }
 
     public static int ActionEncodingLength()
@@ -234,9 +202,9 @@ public class ServiceActionAckEncoder
         return 4;
     }
 
-    public ServiceActionAckEncoder Action(ServiceAction value)
+    public ServiceActionAckEncoder Action(ClusterAction value)
     {
-        _buffer.PutInt(_offset + 32, (int)value, ByteOrder.LittleEndian);
+        _buffer.PutInt(_offset + 20, (int)value, ByteOrder.LittleEndian);
         return this;
     }
 

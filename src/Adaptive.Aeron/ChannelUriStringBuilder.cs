@@ -28,6 +28,7 @@ namespace Adaptive.Aeron
         private int? _termId;
         private int? _termOffset;
         private int? _sessionId;
+        private int? _linger;
 
         /// <summary>
         /// Clear out all the values thus setting back to the initial state.
@@ -459,6 +460,36 @@ namespace Adaptive.Aeron
         {
             return _sessionId;
         }
+        
+        /// <summary>
+        /// Set the time a publication will linger in nanoseconds after being drained. This time is so that tail loss
+        /// can be recovered.
+        /// </summary>
+        /// <param name="lingerNs"> time for the publication after it is drained. </param>
+        /// <returns> this for a fluent API. </returns>
+        /// <seealso cref="Aeron.Context.LINGER_PARAM_NAME"></seealso>
+        public ChannelUriStringBuilder Linger(int? lingerNs)
+        {
+            if (null != lingerNs && lingerNs < 0)
+            {
+                throw new ArgumentException("Linger value cannot be negative: " + lingerNs);
+            }
+
+            _linger = lingerNs;
+            return this;
+        }
+
+        /// <summary>
+        /// Get the time a publication will linger in nanoseconds after being drained. This time is so that tail loss
+        /// can be recovered.
+        /// </summary>
+        /// <returns> the linger time in nanoseconds a publication will wait around after being drained. </returns>
+        /// <seealso cref="Aeron.Context.LINGER_PARAM_NAME"></seealso>
+        public int? Linger()
+        {
+            return _linger;
+        }
+
 
         /// <summary>
         /// Build a channel URI String for the given parameters.
@@ -532,11 +563,16 @@ namespace Adaptive.Aeron
                 _sb.Append(Aeron.Context.TERM_OFFSET_PARAM_NAME).Append('=').Append(_termOffset.Value).Append('|');
             }
 
-            if (null != _termOffset)
+            if (null != _sessionId)
             {
                 _sb.Append(Aeron.Context.SESSION_ID_PARAM_NAME).Append('=').Append(_sessionId.Value).Append('|');
             }
-
+            
+            if (null != _linger)
+            {
+                _sb.Append(Aeron.Context.LINGER_PARAM_NAME).Append('=').Append(_linger.Value).Append('|');
+            }
+           
             char lastChar = _sb[_sb.Length - 1];
             if (lastChar == '|' || lastChar == '?')
             {

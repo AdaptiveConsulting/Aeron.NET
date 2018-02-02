@@ -5,21 +5,21 @@ using System.Collections.Generic;
 using Adaptive.Agrona;
 
 
-namespace Io.Aeron.Cluster.Codecs {
+namespace Adaptive.Cluster.Codecs {
 
-public class ServiceActionRequestEncoder
+public class CommitPositionEncoder
 {
-    public const ushort BLOCK_LENGTH = 28;
-    public const ushort TEMPLATE_ID = 23;
+    public const ushort BLOCK_LENGTH = 24;
+    public const ushort TEMPLATE_ID = 51;
     public const ushort SCHEMA_ID = 1;
-    public const ushort SCHEMA_VERSION = 0;
+    public const ushort SCHEMA_VERSION = 1;
 
-    private ServiceActionRequestEncoder _parentMessage;
+    private CommitPositionEncoder _parentMessage;
     private IMutableDirectBuffer _buffer;
     protected int _offset;
     protected int _limit;
 
-    public ServiceActionRequestEncoder()
+    public CommitPositionEncoder()
     {
         _parentMessage = this;
     }
@@ -59,7 +59,7 @@ public class ServiceActionRequestEncoder
         return _offset;
     }
 
-    public ServiceActionRequestEncoder Wrap(IMutableDirectBuffer buffer, int offset)
+    public CommitPositionEncoder Wrap(IMutableDirectBuffer buffer, int offset)
     {
         this._buffer = buffer;
         this._offset = offset;
@@ -68,7 +68,7 @@ public class ServiceActionRequestEncoder
         return this;
     }
 
-    public ServiceActionRequestEncoder WrapAndApplyHeader(
+    public CommitPositionEncoder WrapAndApplyHeader(
         IMutableDirectBuffer buffer, int offset, MessageHeaderEncoder headerEncoder)
     {
         headerEncoder
@@ -96,32 +96,32 @@ public class ServiceActionRequestEncoder
         this._limit = limit;
     }
 
-    public static int LogPositionEncodingOffset()
+    public static int TermPositionEncodingOffset()
     {
         return 0;
     }
 
-    public static int LogPositionEncodingLength()
+    public static int TermPositionEncodingLength()
     {
         return 8;
     }
 
-    public static long LogPositionNullValue()
+    public static long TermPositionNullValue()
     {
         return -9223372036854775808L;
     }
 
-    public static long LogPositionMinValue()
+    public static long TermPositionMinValue()
     {
         return -9223372036854775807L;
     }
 
-    public static long LogPositionMaxValue()
+    public static long TermPositionMaxValue()
     {
         return 9223372036854775807L;
     }
 
-    public ServiceActionRequestEncoder LogPosition(long value)
+    public CommitPositionEncoder TermPosition(long value)
     {
         _buffer.PutLong(_offset + 0, value, ByteOrder.LittleEndian);
         return this;
@@ -153,60 +153,76 @@ public class ServiceActionRequestEncoder
         return 9223372036854775807L;
     }
 
-    public ServiceActionRequestEncoder LeadershipTermId(long value)
+    public CommitPositionEncoder LeadershipTermId(long value)
     {
         _buffer.PutLong(_offset + 8, value, ByteOrder.LittleEndian);
         return this;
     }
 
 
-    public static int TimestampEncodingOffset()
+    public static int LeaderMemberIdEncodingOffset()
     {
         return 16;
     }
 
-    public static int TimestampEncodingLength()
-    {
-        return 8;
-    }
-
-    public static long TimestampNullValue()
-    {
-        return -9223372036854775808L;
-    }
-
-    public static long TimestampMinValue()
-    {
-        return -9223372036854775807L;
-    }
-
-    public static long TimestampMaxValue()
-    {
-        return 9223372036854775807L;
-    }
-
-    public ServiceActionRequestEncoder Timestamp(long value)
-    {
-        _buffer.PutLong(_offset + 16, value, ByteOrder.LittleEndian);
-        return this;
-    }
-
-
-    public static int ActionEncodingOffset()
-    {
-        return 24;
-    }
-
-    public static int ActionEncodingLength()
+    public static int LeaderMemberIdEncodingLength()
     {
         return 4;
     }
 
-    public ServiceActionRequestEncoder Action(ServiceAction value)
+    public static int LeaderMemberIdNullValue()
     {
-        _buffer.PutInt(_offset + 24, (int)value, ByteOrder.LittleEndian);
+        return -2147483648;
+    }
+
+    public static int LeaderMemberIdMinValue()
+    {
+        return -2147483647;
+    }
+
+    public static int LeaderMemberIdMaxValue()
+    {
+        return 2147483647;
+    }
+
+    public CommitPositionEncoder LeaderMemberId(int value)
+    {
+        _buffer.PutInt(_offset + 16, value, ByteOrder.LittleEndian);
         return this;
     }
+
+
+    public static int LogSessionIdEncodingOffset()
+    {
+        return 20;
+    }
+
+    public static int LogSessionIdEncodingLength()
+    {
+        return 4;
+    }
+
+    public static int LogSessionIdNullValue()
+    {
+        return -2147483648;
+    }
+
+    public static int LogSessionIdMinValue()
+    {
+        return -2147483647;
+    }
+
+    public static int LogSessionIdMaxValue()
+    {
+        return 2147483647;
+    }
+
+    public CommitPositionEncoder LogSessionId(int value)
+    {
+        _buffer.PutInt(_offset + 20, value, ByteOrder.LittleEndian);
+        return this;
+    }
+
 
 
     public override string ToString()
@@ -216,7 +232,7 @@ public class ServiceActionRequestEncoder
 
     public StringBuilder AppendTo(StringBuilder builder)
     {
-        ServiceActionRequestDecoder writer = new ServiceActionRequestDecoder();
+        CommitPositionDecoder writer = new CommitPositionDecoder();
         writer.Wrap(_buffer, _offset, BLOCK_LENGTH, SCHEMA_VERSION);
 
         return writer.AppendTo(builder);

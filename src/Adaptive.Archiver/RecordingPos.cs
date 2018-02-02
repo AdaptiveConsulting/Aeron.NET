@@ -41,11 +41,6 @@ namespace Adaptive.Archiver
         public const long NULL_RECORDING_ID = -1L;
 
         /// <summary>
-        /// Represents a null counter id when not found.
-        /// </summary>
-        public const int NULL_COUNTER_ID = -1;
-
-        /// <summary>
         /// Human readable name for the counter.
         /// </summary>
         public const string NAME = "rec-pos";
@@ -87,7 +82,7 @@ namespace Adaptive.Archiver
         /// </summary>
         /// <param name="countersReader"> to search within. </param>
         /// <param name="recordingId">    for the active recording. </param>
-        /// <returns> the counter id if found otherwise <seealso cref="#NULL_COUNTER_ID"/>. </returns>
+        /// <returns> the counter id if found otherwise <seealso cref="CountersReader.NULL_COUNTER_ID"/>. </returns>
         public static int FindCounterIdByRecording(CountersReader countersReader, long recordingId)
         {
             IDirectBuffer buffer = countersReader.MetaDataBuffer;
@@ -106,7 +101,7 @@ namespace Adaptive.Archiver
                 }
             }
 
-            return NULL_COUNTER_ID;
+            return CountersReader.NULL_COUNTER_ID;
         }
 
         /// <summary>
@@ -143,7 +138,7 @@ namespace Adaptive.Archiver
         /// </summary>
         /// <param name="countersReader"> to search within. </param>
         /// <param name="sessionId">      for the active recording. </param>
-        /// <returns> the counter id if found otherwise <seealso cref="#NULL_COUNTER_ID"/>. </returns>
+        /// <returns> the counter id if found otherwise <seealso cref="CountersReader.NULL_COUNTER_ID"/>. </returns>
         public static int FindCounterIdBySession(CountersReader countersReader, int sessionId)
         {
             IDirectBuffer buffer = countersReader.MetaDataBuffer;
@@ -162,7 +157,7 @@ namespace Adaptive.Archiver
                 }
             }
 
-            return NULL_COUNTER_ID;
+            return CountersReader.NULL_COUNTER_ID;
         }
 
         /// <summary>
@@ -170,7 +165,7 @@ namespace Adaptive.Archiver
         /// </summary>
         /// <param name="countersReader"> to search within. </param>
         /// <param name="counterId">      for the active recording. </param>
-        /// <returns> the counter id if found otherwise <seealso cref="#NULL_RECORDING_ID"/>. </returns>
+        /// <returns> the counter id if found otherwise <seealso cref="NULL_RECORDING_ID"/>. </returns>
         public static long GetRecordingId(CountersReader countersReader, int counterId)
         {
             IDirectBuffer buffer = countersReader.MetaDataBuffer;

@@ -180,12 +180,21 @@ namespace Adaptive.Aeron
 
             _subscriberPosition.SetOrdered(newPosition);
         }
+        
+        /// <summary>
+        /// The counter id for the subscriber position counter.
+        /// </summary>
+        /// <returns> the id for the subscriber position counter. </returns>
+        public int SubscriberPositionId()
+        {
+            return _subscriberPosition.Id();
+        }
 
         /// <summary>
         /// Is the current consumed position at the end of the stream?
         /// </summary>
         /// <returns> true if at the end of the stream or false if not. </returns>
-        public virtual bool IsEndOfStream()
+        public bool IsEndOfStream()
         {
             if (_isClosed)
             {

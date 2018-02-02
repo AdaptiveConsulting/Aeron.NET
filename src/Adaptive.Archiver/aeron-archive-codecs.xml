@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <sbe:messageSchema xmlns:sbe="http://fixprotocol.io/2016/sbe"
-                   package="io.aeron.archive.codecs"
+                   package="Adaptive.Archiver.Codecs"
                    id="1"
                    version="0"
                    semanticVersion="5.2"

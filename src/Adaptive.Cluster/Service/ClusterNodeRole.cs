@@ -14,15 +14,10 @@ namespace Adaptive.Cluster.Service
         public const int CLUSTER_NODE_ROLE_TYPE_ID = 201;
 
         /// <summary>
-        /// Represents a null counter id when not found.
-        /// </summary>
-        public const int NULL_COUNTER_ID = -1;
-
-        /// <summary>
         /// Find the active counter id for a cluster node role.
         /// </summary>
         /// <param name="counters"> to search within. </param>
-        /// <returns> the counter id if found otherwise <seealso cref="NULL_COUNTER_ID"/>. </returns>
+        /// <returns> the counter id if found otherwise <seealso cref="CountersReader.NULL_COUNTER_ID"/>. </returns>
         public static int FindCounterId(CountersReader counters)
         {
             IDirectBuffer buffer = counters.MetaDataBuffer;
@@ -40,7 +35,7 @@ namespace Adaptive.Cluster.Service
                 }
             }
 
-            return NULL_COUNTER_ID;
+            return CountersReader.NULL_COUNTER_ID;
         }
     }
 

@@ -474,6 +474,11 @@ namespace Adaptive.Aeron
             public const string SESSION_ID_PARAM_NAME = "session-id";
 
             /// <summary>
+            /// Key for the linger timeout for a publication to wait around after draining in nanoseconds.
+            /// </summary>
+            public const string LINGER_PARAM_NAME = "linger";
+            
+            /// <summary>
             /// Valid value for <seealso cref="MDC_CONTROL_MODE"/> when manual control is desired.
             /// </summary>
             public const string MDC_CONTROL_MODE_MANUAL = "manual";

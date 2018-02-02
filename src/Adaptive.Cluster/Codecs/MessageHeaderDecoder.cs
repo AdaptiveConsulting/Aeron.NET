@@ -3,7 +3,7 @@ using System;
 using System.Text;
 using Adaptive.Agrona;
 
-namespace Io.Aeron.Cluster.Codecs {
+namespace Adaptive.Cluster.Codecs {
 public class MessageHeaderDecoder
 {
     public static int ENCODED_LENGTH = 8;

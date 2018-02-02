@@ -5,7 +5,7 @@ using Adaptive.Agrona;
 using Adaptive.Agrona.Concurrent;
 using Adaptive.Agrona.Concurrent.Status;
 using Adaptive.Archiver;
-using Io.Aeron.Cluster.Codecs;
+using Adaptive.Cluster.Codecs;
 
 namespace Adaptive.Cluster.Service
 {
@@ -97,27 +97,17 @@ namespace Adaptive.Cluster.Service
             /// <summary>
             /// Identity for a clustered service. Default to 0.
             /// </summary>
-            public const long SERVICE_ID_DEFAULT = 0;
+            public const int SERVICE_ID_DEFAULT = 0;
 
             /// <summary>
-            /// Channel for the clustered log.
+            /// Name for a clustered service to be the role of the <seealso cref="IAgent"/>.
             /// </summary>
-            public const string LOG_CHANNEL_PROP_NAME = "aeron.cluster.log.channel";
+            public const string SERVICE_NAME_PROP_NAME = "aeron.cluster.service.name";
 
             /// <summary>
-            /// Channel for the clustered log. Default to localhost:9030.
+            /// Name for a clustered service to be the role of the <seealso cref="IAgent"/>. Default to "clustered-service".
             /// </summary>
-            public const string LOG_CHANNEL_DEFAULT = "aeron:udp?endpoint=localhost:9030";
-
-            /// <summary>
-            /// Stream id within a channel for the clustered log.
-            /// </summary>
-            public const string LOG_STREAM_ID_PROP_NAME = "aeron.cluster.log.stream.id";
-
-            /// <summary>
-            /// Stream id within a channel for the clustered log. Default to stream id of 3.
-            /// </summary>
-            public const int LOG_STREAM_ID_DEFAULT = 3;
+            public const string SERVICE_NAME_DEFAULT = "clustered-service";
 
             /// <summary>
             /// Channel to be used for log or snapshot replay on startup.
@@ -140,25 +130,26 @@ namespace Adaptive.Cluster.Service
             public const int REPLAY_STREAM_ID_DEFAULT = 4;
 
             /// <summary>
-            /// Channel for sending messages to the Consensus Module.
+            /// Channel for bi-directional communications between the consensus module and services.
             /// </summary>
-            public const string CONSENSUS_MODULE_CHANNEL_PROP_NAME = "aeron.consensus.module.channel";
+            public const string SERVICE_CONTROL_CHANNEL_PROP_NAME = "aeron.cluster.service.control.channel";
 
             /// <summary>
-            /// Channel for for sending messages to the Consensus Module. This should be IPC.
+            /// Channel for for bi-directional communications between the consensus module and services. This should be IPC.
             /// </summary>
-            public static readonly string CONSENSUS_MODULE_CHANNEL_DEFAULT = Aeron.Aeron.Context.IPC_CHANNEL;
+            public const string SERVICE_CONTROL_CHANNEL_DEFAULT = "aeron:ipc?term-length=64k";
 
             /// <summary>
-            /// Stream id within a channel for sending messages to the Consensus Module.
+            /// Stream id within a channel for bi-directional communications between the consensus module and services.
             /// </summary>
-            public const string CONSENSUS_MODULE_STREAM_ID_PROP_NAME = "aeron.consensus.module.stream.id";
+            public const string SERVICE_CONTROL_STREAM_ID_PROP_NAME = "aeron.cluster.service.control.stream.id";
 
             /// <summary>
-            /// Stream id within a channel for sending messages to the Consensus Module. Default to stream id of 5.
+            /// Stream id within a channel for bi-directional communications between the consensus module and services.
+            /// Default to stream id of 5.
             /// </summary>
             public const int CONSENSUS_MODULE_STREAM_ID_DEFAULT = 5;
-
+            
             /// <summary>
             /// Channel to be used for archiving snapshots.
             /// </summary>
@@ -193,27 +184,18 @@ namespace Adaptive.Cluster.Service
             /// The value <seealso cref="#SERVICE_ID_DEFAULT"/> or system property <seealso cref="#SERVICE_ID_PROP_NAME"/> if set.
             /// </summary>
             /// <returns> <seealso cref="#SERVICE_ID_DEFAULT"/> or system property <seealso cref="#SERVICE_ID_PROP_NAME"/> if set. </returns>
-            public static long ServiceId()
+            public static int ServiceId()
             {
-                return Config.GetLong(SERVICE_ID_PROP_NAME, SERVICE_ID_DEFAULT);
+                return Config.GetInteger(SERVICE_ID_PROP_NAME, SERVICE_ID_DEFAULT);
             }
-
+            
             /// <summary>
-            /// The value <seealso cref="#LOG_CHANNEL_DEFAULT"/> or system property <seealso cref="#LOG_CHANNEL_PROP_NAME"/> if set.
+            /// The value <seealso cref="#SERVICE_NAME_DEFAULT"/> or system property <seealso cref="#SERVICE_NAME_PROP_NAME"/> if set.
             /// </summary>
-            /// <returns> <seealso cref="#LOG_CHANNEL_DEFAULT"/> or system property <seealso cref="#LOG_CHANNEL_PROP_NAME"/> if set. </returns>
-            public static string LogChannel()
+            /// <returns> <seealso cref="#SERVICE_NAME_DEFAULT"/> or system property <seealso cref="#SERVICE_NAME_PROP_NAME"/> if set. </returns>
+            public static string ServiceName()
             {
-                return Config.GetProperty(LOG_CHANNEL_PROP_NAME, LOG_CHANNEL_DEFAULT);
-            }
-
-            /// <summary>
-            /// The value <seealso cref="#LOG_STREAM_ID_DEFAULT"/> or system property <seealso cref="#LOG_STREAM_ID_PROP_NAME"/> if set.
-            /// </summary>
-            /// <returns> <seealso cref="#LOG_STREAM_ID_DEFAULT"/> or system property <seealso cref="#LOG_STREAM_ID_PROP_NAME"/> if set. </returns>
-            public static int LogStreamId()
-            {
-                return Config.GetInteger(LOG_STREAM_ID_PROP_NAME, LOG_STREAM_ID_DEFAULT);
+                return Config.GetProperty(SERVICE_NAME_PROP_NAME, SERVICE_NAME_DEFAULT);
             }
 
             /// <summary>
@@ -237,25 +219,25 @@ namespace Adaptive.Cluster.Service
             }
 
             /// <summary>
-            /// The value <seealso cref="#CONSENSUS_MODULE_CHANNEL_DEFAULT"/> or system property
-            /// <seealso cref="#CONSENSUS_MODULE_CHANNEL_PROP_NAME"/> if set.
+            /// The value <seealso cref="#SERVICE_CONTROL_CHANNEL_DEFAULT"/> or system property
+            /// <seealso cref="#SERVICE_CONTROL_CHANNEL_PROP_NAME"/> if set.
             /// </summary>
-            /// <returns> <seealso cref="#CONSENSUS_MODULE_CHANNEL_DEFAULT"/> or system property
-            /// <seealso cref="#CONSENSUS_MODULE_CHANNEL_PROP_NAME"/> if set. </returns>
-            public static string ConsensusModuleChannel()
+            /// <returns> <seealso cref="#SERVICE_CONTROL_CHANNEL_DEFAULT"/> or system property
+            /// <seealso cref="#SERVICE_CONTROL_CHANNEL_PROP_NAME"/> if set. </returns>
+            public static string ServiceControlChannel()
             {
-                return Config.GetProperty(CONSENSUS_MODULE_CHANNEL_PROP_NAME, CONSENSUS_MODULE_CHANNEL_DEFAULT);
+                return Config.GetProperty(SERVICE_CONTROL_CHANNEL_PROP_NAME, SERVICE_CONTROL_CHANNEL_DEFAULT);
             }
 
             /// <summary>
             /// The value <seealso cref="#CONSENSUS_MODULE_STREAM_ID_DEFAULT"/> or system property
-            /// <seealso cref="#CONSENSUS_MODULE_STREAM_ID_PROP_NAME"/> if set.
+            /// <seealso cref="#SERVICE_CONTROL_STREAM_ID_PROP_NAME"/> if set.
             /// </summary>
             /// <returns> <seealso cref="#CONSENSUS_MODULE_STREAM_ID_DEFAULT"/> or system property
-            /// <seealso cref="#CONSENSUS_MODULE_STREAM_ID_PROP_NAME"/> if set. </returns>
-            public static int ConsensusModuleStreamId()
+            /// <seealso cref="#SERVICE_CONTROL_STREAM_ID_PROP_NAME"/> if set. </returns>
+            public static int ServiceControlStreamId()
             {
-                return Config.GetInteger(CONSENSUS_MODULE_STREAM_ID_PROP_NAME, CONSENSUS_MODULE_STREAM_ID_DEFAULT);
+                return Config.GetInteger(SERVICE_CONTROL_STREAM_ID_PROP_NAME, CONSENSUS_MODULE_STREAM_ID_DEFAULT);
             }
 
             /// <summary>
@@ -306,13 +288,12 @@ namespace Adaptive.Cluster.Service
 
         public class Context : IDisposable
         {
-            internal long serviceId = Configuration.ServiceId();
-            internal string logChannel = Configuration.LogChannel();
-            internal int logStreamId = Configuration.LogStreamId();
+            internal int serviceId = Configuration.ServiceId();
+            internal string serviceName = Configuration.ServiceName();
             internal string replayChannel = Configuration.ReplayChannel();
             internal int replayStreamId = Configuration.ReplayStreamId();
-            internal string consensusModuleChannel = Configuration.ConsensusModuleChannel();
-            internal int consensusModuleStreamId = Configuration.ConsensusModuleStreamId();
+            internal string serviceControlChannel = Configuration.ServiceControlChannel();
+            internal int serviceControlStreamId = Configuration.ServiceControlStreamId();
             internal string snapshotChannel = Configuration.SnapshotChannel();
             internal int snapshotStreamId = Configuration.SnapshotStreamId();
             internal bool deleteDirOnStart = false;
@@ -325,7 +306,7 @@ namespace Adaptive.Cluster.Service
             internal CountedErrorHandler countedErrorHandler;
             internal AeronArchive.Context archiveContext;
             internal DirectoryInfo clusteredServiceDir;
-            internal string aeronDirectoryName = Adaptive.Aeron.Aeron.Context.AERON_DIR_PROP_DEFAULT;
+            internal string aeronDirectoryName;
             internal Aeron.Aeron aeron;
             internal bool ownsAeronClient;
 
@@ -333,6 +314,7 @@ namespace Adaptive.Cluster.Service
             internal RecordingLog recordingLog;
             internal ShutdownSignalBarrier shutdownSignalBarrier;
             internal Action terminationHook;
+            internal ClusterCncFile cncFile;
 
             public void Conclude()
             {
@@ -360,8 +342,12 @@ namespace Adaptive.Cluster.Service
                 if (null == aeron)
                 {
                     var context = new Aeron.Aeron.Context()
-                        .AeronDirectoryName(aeronDirectoryName)
                         .EpochClock(epochClock);
+
+                    if (aeronDirectoryName != null)
+                    {
+                        context.AeronDirectoryName(aeronDirectoryName);
+                    }
 
                     if (countedErrorHandler != null)
                     {
@@ -438,6 +424,8 @@ namespace Adaptive.Cluster.Service
                 {
                     terminationHook = () => shutdownSignalBarrier.Signal();
                 }
+
+                ConcludeCncFile();
             }
 
             /// <summary>
@@ -446,7 +434,7 @@ namespace Adaptive.Cluster.Service
             /// <param name="serviceId"> for this clustered service. </param>
             /// <returns> this for a fluent API </returns>
             /// <seealso cref= ClusteredServiceContainer.Configuration#SERVICE_ID_PROP_NAME </seealso>
-            public Context ServiceId(long serviceId)
+            public Context ServiceId(int serviceId)
             {
                 this.serviceId = serviceId;
                 return this;
@@ -457,54 +445,33 @@ namespace Adaptive.Cluster.Service
             /// </summary>
             /// <returns> the id for this clustered service. </returns>
             /// <seealso cref= ClusteredServiceContainer.Configuration#SERVICE_ID_PROP_NAME </seealso>
-            public long ServiceId()
+            public int ServiceId()
             {
                 return serviceId;
             }
 
             /// <summary>
-            /// Set the channel parameter for the cluster log channel.
+            /// Set the name for a clustered service to be the role of the <seealso cref="IAgent"/>.
             /// </summary>
-            /// <param name="channel"> parameter for the cluster log channel. </param>
+            /// <param name="serviceName"> for a clustered service to be the role of the <seealso cref="IAgent"/>. </param>
             /// <returns> this for a fluent API. </returns>
-            /// <seealso cref= ClusteredServiceContainer.Configuration#LOG_CHANNEL_PROP_NAME </seealso>
-            public Context LogChannel(string channel)
+            /// <seealso cref="Configuration.SERVICE_NAME_PROP_NAME"></seealso>
+            public Context ServiceName(string serviceName)
             {
-                logChannel = channel;
+                this.serviceName = serviceName;
                 return this;
             }
 
             /// <summary>
-            /// Get the channel parameter for the cluster log channel.
+            /// Get the name for a clustered service to be the role of the <seealso cref="IAgent"/>.
             /// </summary>
-            /// <returns> the channel parameter for the cluster channel. </returns>
-            /// <seealso cref= ClusteredServiceContainer.Configuration#LOG_CHANNEL_PROP_NAME </seealso>
-            public string LogChannel()
+            /// <returns> the name for a clustered service to be the role of the <seealso cref="IAgent"/>. </returns>
+            /// <seealso cref="Configuration.SERVICE_NAME_PROP_NAME"></seealso>
+            public string ServiceName()
             {
-                return logChannel;
+                return serviceName;
             }
 
-            /// <summary>
-            /// Set the stream id for the cluster log channel.
-            /// </summary>
-            /// <param name="streamId"> for the cluster log channel. </param>
-            /// <returns> this for a fluent API </returns>
-            /// <seealso cref= ClusteredServiceContainer.Configuration#LOG_STREAM_ID_PROP_NAME </seealso>
-            public Context LogStreamId(int streamId)
-            {
-                logStreamId = streamId;
-                return this;
-            }
-
-            /// <summary>
-            /// Get the stream id for the cluster log channel.
-            /// </summary>
-            /// <returns> the stream id for the cluster log channel. </returns>
-            /// <seealso cref= ClusteredServiceContainer.Configuration#LOG_STREAM_ID_PROP_NAME </seealso>
-            public int LogStreamId()
-            {
-                return logStreamId;
-            }
 
             /// <summary>
             /// Set the channel parameter for the cluster log and snapshot replay channel.
@@ -556,9 +523,9 @@ namespace Adaptive.Cluster.Service
             /// <param name="channel"> parameter for sending messages to the Consensus Module. </param>
             /// <returns> this for a fluent API. </returns>
             /// <seealso cref= Configuration#CONSENSUS_MODULE_CHANNEL_PROP_NAME </seealso>
-            public Context ConsensusModuleChannel(string channel)
+            public Context ServiceControlChannel(string channel)
             {
-                consensusModuleChannel = channel;
+                serviceControlChannel = channel;
                 return this;
             }
 
@@ -567,9 +534,9 @@ namespace Adaptive.Cluster.Service
             /// </summary>
             /// <returns> the channel parameter for sending messages to the Consensus Module. </returns>
             /// <seealso cref= Configuration#CONSENSUS_MODULE_CHANNEL_PROP_NAME </seealso>
-            public string ConsensusModuleChannel()
+            public string ServiceControlChannel()
             {
-                return consensusModuleChannel;
+                return serviceControlChannel;
             }
 
             /// <summary>
@@ -578,9 +545,9 @@ namespace Adaptive.Cluster.Service
             /// <param name="streamId"> for sending messages to the Consensus Module. </param>
             /// <returns> this for a fluent API </returns>
             /// <seealso cref= Configuration#CONSENSUS_MODULE_STREAM_ID_PROP_NAME </seealso>
-            public Context ConsensusModuleStreamId(int streamId)
+            public Context ServiceControlStreamId(int streamId)
             {
-                consensusModuleStreamId = streamId;
+                serviceControlStreamId = streamId;
                 return this;
             }
 
@@ -589,9 +556,9 @@ namespace Adaptive.Cluster.Service
             /// </summary>
             /// <returns> the stream id for sending messages to the Consensus Module. </returns>
             /// <seealso cref= Configuration#CONSENSUS_MODULE_STREAM_ID_PROP_NAME </seealso>
-            public int ConsensusModuleStreamId()
+            public int ServiceControlStreamId()
             {
-                return consensusModuleStreamId;
+                return serviceControlStreamId;
             }
 
             /// <summary>
@@ -958,7 +925,7 @@ namespace Adaptive.Cluster.Service
 
             /// <summary>
             /// Get the <seealso cref="Action"/> that is called when processing a
-            /// <seealso cref="ServiceAction.SHUTDOWN"/> or <seealso cref="ServiceAction.ABORT"/>
+            /// <seealso cref="ClusterAction.SHUTDOWN"/> or <seealso cref="ClusterAction.ABORT"/>
             /// <para>
             /// The default action is to call signal on the <seealso cref="#shutdownSignalBarrier()"/>.
             /// 
@@ -968,6 +935,26 @@ namespace Adaptive.Cluster.Service
             public Action TerminationHook()
             {
                 return terminationHook;
+            }
+            
+            /// <summary>
+            /// Set the <seealso cref="ClusterCncFile"/> in use.
+            /// </summary>
+            /// <param name="cncFile"> to use. </param>
+            /// <returns> this for a fluent API. </returns>
+            public Context CncFile(ClusterCncFile cncFile)
+            {
+                this.cncFile = cncFile;
+                return this;
+            }
+
+            /// <summary>
+            /// The <seealso cref="ClusterCncFile"/> in use.
+            /// </summary>
+            /// <returns> CnC file in use. </returns>
+            public ClusterCncFile CncFile()
+            {
+                return cncFile;
             }
 
             /// <summary>
@@ -989,11 +976,42 @@ namespace Adaptive.Cluster.Service
             /// </summary>
             public void Dispose()
             {
+                cncFile?.Dispose();
+                
                 if (ownsAeronClient)
                 {
                     aeron?.Dispose();
                 }
             }
+            
+            private void ConcludeCncFile()
+            {
+                if (null == cncFile)
+                {
+                    int alignedTotalCncFileLength = ClusterCncFile.AlignedTotalFileLength(ClusterCncFile.ALIGNMENT, aeron.Ctx().AeronDirectoryName(), archiveContext.ControlRequestChannel(), ServiceControlChannel(), null, serviceName, null);
+
+                    cncFile = new ClusterCncFile(new FileInfo(Path.Combine(clusteredServiceDir.FullName, ClusterCncFile.FILENAME)), ClusterComponentType.CONTAINER, alignedTotalCncFileLength, epochClock, 0);
+
+                    CncHeaderEncoder cncEncoder = cncFile.Encoder();
+
+                    cncEncoder
+                        .ArchiveStreamId(archiveContext.ControlRequestStreamId())
+                        .ServiceControlStreamId(serviceControlStreamId)
+                        .IngressStreamId(0)
+                        .MemberId(-1)
+                        .ServiceId(serviceId)
+                        .AeronDirectory(aeron.Ctx().AeronDirectoryName())
+                        .ArchiveChannel(archiveContext.ControlRequestChannel())
+                        .ServiceControlChannel(serviceControlChannel)
+                        .IngressChannel("")
+                        .ServiceName(serviceName)
+                        .Authenticator("");
+
+                    cncFile.SignalCncReady();
+                    cncFile.UpdateActivityTimestamp(epochClock.Time());
+                }
+            }
+
         }
     }
 }

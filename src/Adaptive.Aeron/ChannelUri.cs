@@ -39,8 +39,8 @@ namespace Adaptive.Aeron
 
         private static readonly string AERON_PREFIX = AERON_SCHEME + ":";
 
-        private readonly string _prefix;
-        private readonly string _media;
+        private string _prefix;
+        private string _media;
         private readonly IDictionary<string, string> _params;
 
         /// <summary>
@@ -75,12 +75,34 @@ namespace Adaptive.Aeron
         }
 
         /// <summary>
+        /// Change the prefix from what has been parsed.
+        /// </summary>
+        /// <param name="prefix"> to replace the existing prefix. </param>
+        /// <returns> this for a fluent API. </returns>
+        public ChannelUri Prefix(string prefix)
+        {
+            _prefix = prefix;
+            return this;
+        }
+
+        /// <summary>
         /// The media over which the channel operates.
         /// </summary>
         /// <returns> the media over which the channel operates. </returns>
         public string Media()
         {
             return _media;
+        }
+
+        /// <summary>
+        /// Set the media over which the channel operates.
+        /// </summary>
+        /// <param name="media"> to replace the parsed value. </param>
+        /// <returns> this for a fluent API. </returns>
+        public virtual ChannelUri Media(string media)
+        {
+            _media = media;
+            return this;
         }
 
         /// <summary>
@@ -144,7 +166,7 @@ namespace Adaptive.Aeron
         /// Generate a String representation of the URI that is valid for an Aeron channel.
         /// </summary>
         /// <returns> a String representation of the URI that is valid for an Aeron channel. </returns>
-        public string ToString()
+        public override string ToString()
         {
             StringBuilder sb;
             if (ReferenceEquals(_prefix, null) || "".Equals(_prefix))
@@ -154,7 +176,12 @@ namespace Adaptive.Aeron
             else
             {
                 sb = new StringBuilder(_params.Count * 20 + 20);
-                sb.Append(Aeron.Context.SPY_PREFIX);
+                sb.Append(_prefix);
+
+                if (!_prefix.EndsWith(":"))
+                {
+                    sb.Append(":");
+                }
             }
 
             sb.Append(AERON_PREFIX).Append(_media);
@@ -230,6 +257,7 @@ namespace Adaptive.Aeron
                                 builder.Append(c);
                                 break;
                         }
+
                         break;
 
                     case State.PARAMS_KEY:
@@ -245,6 +273,7 @@ namespace Adaptive.Aeron
                                 builder.Append(c);
                                 break;
                         }
+
                         break;
 
                     case State.PARAMS_VALUE:
@@ -260,6 +289,7 @@ namespace Adaptive.Aeron
                                 builder.Append(c);
                                 break;
                         }
+
                         break;
 
                     default:
@@ -298,7 +328,7 @@ namespace Adaptive.Aeron
 
             return channelUri.ToString();
         }
-        
+
         private static bool StartsWith(string input, int position, string prefix)
         {
             if (input.Length - position < prefix.Length)

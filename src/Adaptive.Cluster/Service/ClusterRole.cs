@@ -3,18 +3,18 @@
     public enum ClusterRole : long
     {
         /// <summary>
-        /// The cluster node is a candidate in a cluster election.
+        /// The cluster node is a follower of the current leader.
         /// </summary>
-        Candidate = 0,
+        Follower = 0,
+        
+        /// <summary>
+        /// The cluster node is a candidate to become a leader in an election.
+        /// </summary>
+        Candidate = 1,
 
         /// <summary>
         /// The cluster node is the leader of the current leadership term.
         /// </summary>
-        Leader = 1,
-
-        /// <summary>
-        /// The cluster node is a follower of the current leader.
-        /// </summary>
-        Follower = 2
+        Leader = 2
     }
 }

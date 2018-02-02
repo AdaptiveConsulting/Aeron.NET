@@ -8,7 +8,7 @@ using Adaptive.Archiver;
 namespace Adaptive.Cluster.Service
 {
     /// <summary>
-    /// An log of recordings that make up the history of a Raft log. Entries are in chronological order.
+    /// A log of recordings that make up the history of a Raft log. Entries are in order.
     /// 
     /// The log is made up of entries of log terms or snapshots to roll up state as of a log position and leadership term.
     /// 
@@ -24,77 +24,79 @@ namespace Adaptive.Cluster.Service
     ///  |                        Recording ID                           |
     ///  |                                                               |
     ///  +---------------------------------------------------------------+
-    ///  |         Log Position at beginning of term or snapshot         |
+    ///  |                     Leadership Term ID                        |
     ///  |                                                               |
     ///  +---------------------------------------------------------------+
-    ///  |                     Leadership Term ID                        |
+    ///  |             Log Position at beginning of term                 |
+    ///  |                                                               |
+    ///  +---------------------------------------------------------------+
+    ///  |                    Term Position/Length                       |
     ///  |                                                               |
     ///  +---------------------------------------------------------------+
     ///  |   Timestamp at beginning of term or when snapshot was taken   |
     ///  |                                                               |
     ///  +---------------------------------------------------------------+
-    ///  |                  Entry Type (Log or Snapshot)                 |
+    ///  |                       Member ID vote                          |
+    ///  +---------------------------------------------------------------+
+    ///  |                 Entry Type (Log or Snapshot)                  |
     ///  +---------------------------------------------------------------+
     ///  |                                                               |
     ///  |                                                              ...
-    /// ...                 Repeats to the end of the log                |
+    /// ...                Repeats to the end of the log                 |
     ///  |                                                               |
     ///  +---------------------------------------------------------------+
+    /// 
     /// </summary>
     public class RecordingLog
     {
-        private bool InstanceFieldsInitialized = false;
-
-        private void InitializeInstanceFields()
-        {
-            buffer = new UnsafeBuffer(byteBuffer);
-        }
-
         /// <summary>
         /// A copy of the entry in the log.
         /// </summary>
         public sealed class Entry
         {
             public readonly long recordingId;
-            public readonly long logPosition;
             public readonly long leadershipTermId;
+            public readonly long logPosition;
+            public readonly long termPosition;
             public readonly long timestamp;
+            public readonly int memberIdVote;
             public readonly int type;
+            public readonly int entryIndex;
 
-            public Entry(long recordingId, long logPosition, long leadershipTermId, long timestamp, int type)
+            /// <summary>
+            /// A new entry in the recording log.
+            /// </summary>
+            /// <param name="recordingId">      of the entry in an archive. </param>
+            /// <param name="leadershipTermId"> of this entry. </param>
+            /// <param name="logPosition">      accumulated position of the log over leadership terms for the beginning of the term. </param>
+            /// <param name="termPosition">     position reached within the current leadership term, same at leadership term length. </param>
+            /// <param name="timestamp">        of this entry. </param>
+            /// <param name="memberIdVote">     which member this node voted for in the election. </param>
+            /// <param name="type">             of the entry as a log of a term or a snapshot. </param>
+            /// <param name="entryIndex">       of the entry on disk. </param>
+            public Entry(
+                long recordingId,
+                long leadershipTermId,
+                long logPosition,
+                long termPosition,
+                long timestamp,
+                int memberIdVote,
+                int type,
+                int entryIndex)
             {
                 this.recordingId = recordingId;
-                this.logPosition = logPosition;
                 this.leadershipTermId = leadershipTermId;
+                this.logPosition = logPosition;
+                this.termPosition = termPosition;
                 this.timestamp = timestamp;
+                this.memberIdVote = memberIdVote;
                 this.type = type;
+                this.entryIndex = entryIndex;
             }
 
             public override string ToString()
             {
-                return "Entry{" + "recordingId=" + recordingId + ", logPosition=" + logPosition +
-                       ", leadershipTermId=" + leadershipTermId + ", timestamp=" + timestamp + ", type=" + type + '}';
-            }
-
-            public void ConfirmMatch(long logPosition, long leadershipTermId, long timestamp)
-            {
-                if (logPosition != this.logPosition)
-                {
-                    throw new InvalidOperationException("Log position does not match: this=" + this.logPosition +
-                                                        " that=" + logPosition);
-                }
-
-                if (leadershipTermId != this.leadershipTermId)
-                {
-                    throw new InvalidOperationException("Leadership term id does not match: this=" +
-                                                        this.leadershipTermId + " that=" + leadershipTermId);
-                }
-
-                if (timestamp != this.timestamp)
-                {
-                    throw new InvalidOperationException("Timestamp does not match: this=" + this.timestamp + " that=" +
-                                                        timestamp);
-                }
+                return "Entry{" + "recordingId=" + recordingId + ", leadershipTermId=" + leadershipTermId + ", logPosition=" + logPosition + ", termPosition=" + termPosition + ", timestamp=" + timestamp + ", memberIdVote=" + memberIdVote + ", type=" + type + ", entryIndex=" + entryIndex + '}';
             }
         }
 
@@ -116,7 +118,7 @@ namespace Adaptive.Cluster.Service
 
             public override string ToString()
             {
-                return "ReplayStep{" + ", recordingStartPosition=" + recordingStartPosition +
+                return "ReplayStep{recordingStartPosition=" + recordingStartPosition +
                        ", recordingStopPosition=" + recordingStopPosition + ", entry=" + entry + '}';
             }
         }
@@ -126,13 +128,32 @@ namespace Adaptive.Cluster.Service
         /// </summary>
         public class RecoveryPlan
         {
+            public readonly long lastLeadershipTermId;
+            public readonly long lastLogPosition;
+            public readonly long lastTermPositionCommitted;
+            public readonly long lastTermPositionAppended;
             public readonly ReplayStep snapshotStep;
             public readonly List<ReplayStep> termSteps;
 
-            public RecoveryPlan(ReplayStep snapshotStep, List<ReplayStep> termSteps)
+            public RecoveryPlan(
+                long lastLeadershipTermId,
+                long lastLogPosition,
+                long lastTermPositionCommitted,
+                long lastTermPositionAppended,
+                ReplayStep snapshotStep,
+                List<ReplayStep> termSteps)
             {
+                this.lastLeadershipTermId = lastLeadershipTermId;
+                this.lastLogPosition = lastLogPosition;
+                this.lastTermPositionCommitted = lastTermPositionCommitted;
+                this.lastTermPositionAppended = lastTermPositionAppended;
                 this.snapshotStep = snapshotStep;
                 this.termSteps = termSteps;
+            }
+
+            public override string ToString()
+            {
+                return "RecoveryPlan{" + "lastLeadershipTermId=" + lastLeadershipTermId + ", lastLogPosition=" + lastLogPosition + ", lastTermPositionCommitted=" + lastTermPositionCommitted + ", lastTermPositionAppended=" + lastTermPositionAppended + ", snapshotStep=" + snapshotStep + ", termSteps=" + termSteps + '}';
             }
         }
 
@@ -140,6 +161,11 @@ namespace Adaptive.Cluster.Service
         /// Filename for the recording index for the history of log terms and snapshots.
         /// </summary>
         public const string RECORDING_INDEX_FILE_NAME = "recording-index.log";
+
+        /// <summary>
+        /// Represents a value that is not set or invalid.
+        /// </summary>
+        public const int NULL_VALUE = -1;
 
         /// <summary>
         /// The index entry is for a recording of messages within a term to the consensus log.
@@ -157,31 +183,42 @@ namespace Adaptive.Cluster.Service
         public const int RECORDING_ID_OFFSET = 0;
 
         /// <summary>
-        /// The offset at which the absolute log position for the entry is stored.
-        /// </summary>
-        public static readonly int LOG_POSITION_OFFSET = RECORDING_ID_OFFSET + BitUtil.SIZE_OF_LONG;
-
-        /// <summary>
         /// The offset at which the leadership term id for the entry is stored.
         /// </summary>
-        public static readonly int LEADERSHIP_TERM_ID_OFFSET = LOG_POSITION_OFFSET + BitUtil.SIZE_OF_LONG;
+        public static readonly int LEADERSHIP_TERM_ID_OFFSET = RECORDING_ID_OFFSET + BitUtil.SIZE_OF_LONG;
+
+        /// <summary>
+        /// The offset at which the absolute log position for the entry is stored.
+        /// </summary>
+        public static readonly int LOG_POSITION_OFFSET = LEADERSHIP_TERM_ID_OFFSET + BitUtil.SIZE_OF_LONG;
+
+        /// <summary>
+        /// The offset at which the term position is stored.
+        /// </summary>
+        public static readonly int TERM_POSITION_OFFSET = LOG_POSITION_OFFSET + BitUtil.SIZE_OF_LONG;
 
         /// <summary>
         /// The offset at which the timestamp for the entry is stored.
         /// </summary>
-        public static readonly int TIMESTAMP_OFFSET = LEADERSHIP_TERM_ID_OFFSET + BitUtil.SIZE_OF_LONG;
+        public static readonly int TIMESTAMP_OFFSET = TERM_POSITION_OFFSET + BitUtil.SIZE_OF_LONG;
+
+        /// <summary>
+        /// The offset at which the voted for member id is recorded.
+        /// </summary>
+        public static readonly int MEMBER_ID_VOTE_OFFSET = TIMESTAMP_OFFSET + BitUtil.SIZE_OF_LONG;
 
         /// <summary>
         /// The offset at which the type of the entry is stored.
         /// </summary>
-        public static readonly int ENTRY_TYPE_OFFSET = TIMESTAMP_OFFSET + BitUtil.SIZE_OF_LONG;
+        public static readonly int ENTRY_TYPE_OFFSET = MEMBER_ID_VOTE_OFFSET + BitUtil.SIZE_OF_INT;
 
         /// <summary>
         /// The length of each entry.
         /// </summary>
         private static readonly int ENTRY_LENGTH =
-            BitUtil.Align(ENTRY_TYPE_OFFSET + BitUtil.SIZE_OF_LONG, BitUtil.CACHE_LINE_LENGTH);
+            BitUtil.Align(ENTRY_TYPE_OFFSET + BitUtil.SIZE_OF_INT, BitUtil.CACHE_LINE_LENGTH);
 
+        private int nextEntryIndex;
         private readonly DirectoryInfo parentDir;
         private readonly FileInfo indexFile;
         private readonly byte[] byteBuffer = new byte[4096];
@@ -194,11 +231,7 @@ namespace Adaptive.Cluster.Service
         /// <param name="parentDir"> in which the index will be created. </param>
         public RecordingLog(DirectoryInfo parentDir)
         {
-            if (!InstanceFieldsInitialized)
-            {
-                InitializeInstanceFields();
-                InstanceFieldsInitialized = true;
-            }
+            buffer = new UnsafeBuffer(byteBuffer);
 
             this.parentDir = parentDir;
             indexFile = new FileInfo(Path.Combine(parentDir.FullName, RECORDING_INDEX_FILE_NAME));
@@ -210,15 +243,24 @@ namespace Adaptive.Cluster.Service
         /// List of currently loaded entries.
         /// </summary>
         /// <returns> the list of currently loaded entries. </returns>
-        public virtual IList<Entry> Entries()
+        public IList<Entry> Entries()
         {
             return entries;
         }
 
         /// <summary>
+        /// Get the next index to be used when appending an entry to the log.
+        /// </summary>
+        /// <returns> the next index to be used when appending an entry to the log. </returns>
+        public virtual int NextEntryIndex()
+        {
+            return nextEntryIndex;
+        }
+
+        /// <summary>
         /// Reload the index from disk.
         /// </summary>
-        public virtual void Reload()
+        public void Reload()
         {
             entries.Clear();
 
@@ -236,6 +278,8 @@ namespace Adaptive.Cluster.Service
                     return;
                 }
 
+                // buffer clear
+                nextEntryIndex = 0;
                 while (true)
                 {
                     int length = fileChannel.Read(byteBuffer, 0, byteBuffer.Length);
@@ -259,7 +303,7 @@ namespace Adaptive.Cluster.Service
         /// Get the latest snapshot <seealso cref="Entry"/> in the index.
         /// </summary>
         /// <returns> the latest snapshot <seealso cref="Entry"/> in the index or null if no snapshot exists. </returns>
-        public virtual Entry GetLatestSnapshot()
+        public Entry GetLatestSnapshot()
         {
             for (int i = entries.Count - 1; i >= 0; i--)
             {
@@ -281,9 +325,36 @@ namespace Adaptive.Cluster.Service
         /// <returns> a new <seealso cref="RecoveryPlan"/> for the cluster. </returns>
         public virtual RecoveryPlan CreateRecoveryPlan(AeronArchive archive)
         {
-            List<ReplayStep> steps = new List<ReplayStep>();
+            var steps = new List<ReplayStep>();
 
-            return new RecoveryPlan(PlanRecovery(steps, entries, archive), steps);
+            var snapshotStep = PlanRecovery(steps, entries, archive);
+
+            long lastLeadershipTermId = -1;
+            long lastLogPosition = 0;
+            long lastTermPositionCommitted = -1;
+            long lastTermPositionAppended = 0;
+
+            if (null != snapshotStep)
+            {
+                lastLeadershipTermId = snapshotStep.entry.leadershipTermId;
+                lastLogPosition = snapshotStep.entry.logPosition;
+                lastTermPositionCommitted = snapshotStep.entry.termPosition;
+                lastTermPositionAppended = lastTermPositionCommitted;
+            }
+
+            int size = steps.Count;
+            if (size > 0)
+            {
+                ReplayStep replayStep = steps[size - 1];
+                Entry entry = replayStep.entry;
+
+                lastLeadershipTermId = entry.leadershipTermId;
+                lastLogPosition = entry.logPosition;
+                lastTermPositionCommitted = entry.termPosition;
+                lastTermPositionAppended = replayStep.recordingStopPosition;
+            }
+
+            return new RecoveryPlan(lastLeadershipTermId, lastLogPosition, lastTermPositionCommitted, lastTermPositionAppended, snapshotStep, steps);
         }
 
         internal static ReplayStep PlanRecovery(List<ReplayStep> steps, List<Entry> entries, AeronArchive archive)
@@ -321,13 +392,12 @@ namespace Adaptive.Cluster.Service
                         if (ENTRY_TYPE_TERM == entry.type)
                         {
                             GetRecordingExtent(archive, recordingExtent, snapshot);
+                            long snapshotPosition = snapshot.logPosition + snapshot.termPosition;
 
                             if (recordingExtent.stopPosition == AeronArchive.NULL_POSITION ||
-                                (entry.logPosition + recordingExtent.stopPosition) > snapshot.logPosition)
+                                (entry.logPosition + recordingExtent.stopPosition) > snapshotPosition)
                             {
-                                long replayRecordingFromPosition = snapshot.logPosition - entry.logPosition;
-                                steps.Add(new ReplayStep(replayRecordingFromPosition, recordingExtent.stopPosition,
-                                    entry));
+                                steps.Add(new ReplayStep(snapshot.termPosition, recordingExtent.stopPosition, entry));
                             }
 
                             break;
@@ -352,16 +422,17 @@ namespace Adaptive.Cluster.Service
         }
 
         /// <summary>
-        /// Get the latest snapshot for a given position.
+        /// Get the latest snapshot for a given position within a leadership term.
         /// </summary>
-        /// <param name="position"> to match the snapshot. </param>
+        /// <param name="leadershipTermId"> in which the snapshot was taken. </param>
+        /// <param name="termPosition">     within the leadership term. </param>
         /// <returns> the latest snapshot for a given position or null if no match found. </returns>
-        public virtual Entry GetSnapshotByPosition(long position)
+        public Entry GetSnapshot(long leadershipTermId, long termPosition)
         {
             for (int i = entries.Count - 1; i >= 0; i--)
             {
                 Entry entry = entries[i];
-                if (position == entry.logPosition)
+                if (entry.type == ENTRY_TYPE_SNAPSHOT && leadershipTermId == entry.leadershipTermId && termPosition == entry.termPosition)
                 {
                     return entry;
                 }
@@ -370,54 +441,165 @@ namespace Adaptive.Cluster.Service
             return null;
         }
 
+
         /// <summary>
         /// Append an index entry for a Raft term.
         /// </summary>
         /// <param name="recordingId">      in the archive for the term. </param>
-        /// <param name="logPosition">      reached at the beginning of the term. </param>
         /// <param name="leadershipTermId"> for the current term. </param>
+        /// <param name="logPosition">      reached at the beginning of the term. </param>
         /// <param name="timestamp">        at the beginning of the term. </param>
-        public virtual void AppendTerm(long recordingId, long logPosition, long leadershipTermId, long timestamp)
+        /// <param name="memberIdVote">     in the leader election. </param>
+        public void AppendTerm(long recordingId, long leadershipTermId, long logPosition, long timestamp, int memberIdVote)
         {
-            Append(ENTRY_TYPE_TERM, recordingId, logPosition, leadershipTermId, timestamp);
+            int size = entries.Count;
+            if (size > 0)
+            {
+                long expectedTermId = leadershipTermId - 1;
+                Entry entry = entries[size - 1];
+
+                if (entry.type != NULL_VALUE && entry.leadershipTermId != expectedTermId)
+                {
+                    throw new InvalidOperationException("leadershipTermId out of sequence: previous " + entry.leadershipTermId + " this " + leadershipTermId);
+                }
+            }
+
+            Append(ENTRY_TYPE_TERM, recordingId, leadershipTermId, logPosition, AeronArchive.NULL_POSITION, timestamp, memberIdVote);
         }
 
         /// <summary>
         /// Append an index entry for a snapshot.
         /// </summary>
         /// <param name="recordingId">      in the archive for the snapshot. </param>
-        /// <param name="logPosition">      reached for the snapshot. </param>
         /// <param name="leadershipTermId"> for the current term </param>
+        /// <param name="logPosition">      at the beginning of the leadership term. </param>
+        /// <param name="termPosition">     for the position in the current term or length so far for that term. </param>
         /// <param name="timestamp">        at which the snapshot was taken. </param>
-        public virtual void AppendSnapshot(long recordingId, long logPosition, long leadershipTermId, long timestamp)
+        public void AppendSnapshot(long recordingId, long leadershipTermId, long logPosition, long termPosition, long timestamp)
         {
-            Append(ENTRY_TYPE_SNAPSHOT, recordingId, logPosition, leadershipTermId, timestamp);
+            int size = entries.Count;
+            if (size > 0)
+            {
+                Entry entry = entries[size - 1];
+
+                if (entry.leadershipTermId != leadershipTermId)
+                {
+                    throw new InvalidOperationException("leadershipTermId out of sequence: previous " + entry.leadershipTermId + " this " + leadershipTermId);
+                }
+            }
+
+            Append(ENTRY_TYPE_SNAPSHOT, recordingId, leadershipTermId, logPosition, termPosition, timestamp, NULL_VALUE);
         }
 
-        private void Append(int entryType, long recordingId, long logPosition, long leadershipTermId, long timestamp)
+
+        /// <summary>
+        /// Commit the position reached in a leadership term before a clean shutdown.
+        /// </summary>
+        /// <param name="leadershipTermId"> for committing the term position reached. </param>
+        /// <param name="termPosition">     reached in the leadership term. </param>
+        public void CommitLeadershipTermPosition(long leadershipTermId, long termPosition)
+        {
+            int index = -1;
+            for (int i = 0, size = entries.Count; i < size; i++)
+            {
+                Entry entry = entries[i];
+                if (entry.leadershipTermId == leadershipTermId && entry.type == ENTRY_TYPE_TERM)
+                {
+                    index = entry.entryIndex;
+                    break;
+                }
+            }
+
+            if (-1 == index)
+            {
+                throw new ArgumentException("Unknown leadershipTermId: " + leadershipTermId);
+            }
+
+            buffer.PutLong(0, termPosition);
+            long filePosition = (index * ENTRY_LENGTH) + TERM_POSITION_OFFSET;
+
+            using (var fileChannel = new FileStream(indexFile.FullName, FileMode.Append, FileAccess.Write,
+                FileShare.ReadWrite, BitUtil.SIZE_OF_LONG, FileOptions.WriteThrough))
+            {
+                fileChannel.Position = filePosition;
+                fileChannel.Write(byteBuffer, 0, BitUtil.SIZE_OF_LONG); // Check 
+            }
+        }
+
+        /// <summary>
+        /// Tombstone an entry in the log so it is no longer valid.
+        /// </summary>
+        /// <param name="leadershipTermId"> to match for validation. </param>
+        /// <param name="entryIndex">       reached in the leadership term. </param>
+        public void TombstoneEntry(long leadershipTermId, int entryIndex)
+        {
+            int index = -1;
+            for (int i = 0, size = entries.Count; i < size; i++)
+            {
+                Entry entry = entries[i];
+                if (entry.leadershipTermId == leadershipTermId && entry.entryIndex == entryIndex)
+                {
+                    index = entry.entryIndex;
+                    break;
+                }
+            }
+
+            if (-1 == index)
+            {
+                throw new System.ArgumentException("Unknown entry index: " + entryIndex);
+            }
+
+            buffer.PutInt(0, NULL_VALUE);
+            long filePosition = (index * ENTRY_LENGTH) + ENTRY_TYPE_OFFSET;
+
+            using (var fileChannel = new FileStream(indexFile.FullName, FileMode.Append, FileAccess.Write,
+                FileShare.ReadWrite, BitUtil.SIZE_OF_INT, FileOptions.WriteThrough))
+            {
+                fileChannel.Position = filePosition;
+                fileChannel.Write(byteBuffer, 0, BitUtil.SIZE_OF_INT); // Check 
+            }
+        }
+
+
+        private void Append(int entryType, long recordingId, long leadershipTermId, long logPosition, long termPosition, long timestamp, int memberIdVote)
         {
             buffer.PutLong(RECORDING_ID_OFFSET, recordingId);
             buffer.PutLong(LOG_POSITION_OFFSET, logPosition);
             buffer.PutLong(LEADERSHIP_TERM_ID_OFFSET, leadershipTermId);
             buffer.PutLong(TIMESTAMP_OFFSET, timestamp);
+            buffer.PutLong(TERM_POSITION_OFFSET, termPosition);
+            buffer.PutInt(MEMBER_ID_VOTE_OFFSET, memberIdVote);
             buffer.PutInt(ENTRY_TYPE_OFFSET, entryType);
-
+            
             using (var fileChannel = new FileStream(indexFile.FullName, FileMode.Append, FileAccess.Write,
                 FileShare.ReadWrite, 4096, FileOptions.WriteThrough))
             {
-                fileChannel.WriteAsync(byteBuffer, 0, ENTRY_LENGTH);
+                fileChannel.Write(byteBuffer, 0, ENTRY_LENGTH);
             }
 
-            entries.Add(new Entry(recordingId, logPosition, leadershipTermId, timestamp, entryType));
+            entries.Add(new Entry(recordingId, leadershipTermId, logPosition, AeronArchive.NULL_POSITION, timestamp, memberIdVote, entryType, nextEntryIndex++));
         }
 
-        private static void CaptureEntriesFromBuffer(int limit, UnsafeBuffer buffer, List<Entry> entries)
+        private void CaptureEntriesFromBuffer(int limit, UnsafeBuffer buffer, List<Entry> entries)
         {
             for (int i = 0, length = limit; i < length; i += ENTRY_LENGTH)
             {
-                entries.Add(new Entry(buffer.GetLong(i + RECORDING_ID_OFFSET), buffer.GetLong(i + LOG_POSITION_OFFSET),
-                    buffer.GetLong(i + LEADERSHIP_TERM_ID_OFFSET), buffer.GetLong(i + TIMESTAMP_OFFSET),
-                    buffer.GetInt(i + ENTRY_TYPE_OFFSET)));
+                int entryType = buffer.GetInt(i + ENTRY_TYPE_OFFSET);
+
+                if (NULL_VALUE != entryType)
+                {
+                    entries.Add(new Entry(
+                        buffer.GetLong(i + RECORDING_ID_OFFSET), 
+                        buffer.GetLong(i + LEADERSHIP_TERM_ID_OFFSET), 
+                        buffer.GetLong(i + LOG_POSITION_OFFSET), 
+                        buffer.GetLong(i + TERM_POSITION_OFFSET), 
+                        buffer.GetLong(i + TIMESTAMP_OFFSET), 
+                        buffer.GetInt(i + MEMBER_ID_VOTE_OFFSET), 
+                        entryType, 
+                        nextEntryIndex));
+                }
+
+                ++nextEntryIndex;
             }
         }
 

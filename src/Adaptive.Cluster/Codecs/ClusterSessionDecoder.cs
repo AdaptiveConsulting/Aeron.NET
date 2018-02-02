@@ -5,14 +5,14 @@ using System.Collections.Generic;
 using Adaptive.Agrona;
 
 
-namespace Io.Aeron.Cluster.Codecs {
+namespace Adaptive.Cluster.Codecs {
 
 public class ClusterSessionDecoder
 {
-    public const ushort BLOCK_LENGTH = 28;
+    public const ushort BLOCK_LENGTH = 36;
     public const ushort TEMPLATE_ID = 103;
     public const ushort SCHEMA_ID = 1;
-    public const ushort SCHEMA_VERSION = 0;
+    public const ushort SCHEMA_VERSION = 1;
 
     private ClusterSessionDecoder _parentMessage;
     private IDirectBuffer _buffer;
@@ -142,9 +142,63 @@ public class ClusterSessionDecoder
     }
 
 
-    public static int LastCorrelationIdId()
+    public static int OpenedTermPositionId()
     {
         return 2;
+    }
+
+    public static int OpenedTermPositionSinceVersion()
+    {
+        return 0;
+    }
+
+    public static int OpenedTermPositionEncodingOffset()
+    {
+        return 8;
+    }
+
+    public static int OpenedTermPositionEncodingLength()
+    {
+        return 8;
+    }
+
+    public static string OpenedTermPositionMetaAttribute(MetaAttribute metaAttribute)
+    {
+        switch (metaAttribute)
+        {
+            case MetaAttribute.EPOCH: return "unix";
+            case MetaAttribute.TIME_UNIT: return "nanosecond";
+            case MetaAttribute.SEMANTIC_TYPE: return "";
+            case MetaAttribute.PRESENCE: return "required";
+        }
+
+        return "";
+    }
+
+    public static long OpenedTermPositionNullValue()
+    {
+        return -9223372036854775808L;
+    }
+
+    public static long OpenedTermPositionMinValue()
+    {
+        return -9223372036854775807L;
+    }
+
+    public static long OpenedTermPositionMaxValue()
+    {
+        return 9223372036854775807L;
+    }
+
+    public long OpenedTermPosition()
+    {
+        return _buffer.GetLong(_offset + 8, ByteOrder.LittleEndian);
+    }
+
+
+    public static int LastCorrelationIdId()
+    {
+        return 3;
     }
 
     public static int LastCorrelationIdSinceVersion()
@@ -154,7 +208,7 @@ public class ClusterSessionDecoder
 
     public static int LastCorrelationIdEncodingOffset()
     {
-        return 8;
+        return 16;
     }
 
     public static int LastCorrelationIdEncodingLength()
@@ -192,13 +246,13 @@ public class ClusterSessionDecoder
 
     public long LastCorrelationId()
     {
-        return _buffer.GetLong(_offset + 8, ByteOrder.LittleEndian);
+        return _buffer.GetLong(_offset + 16, ByteOrder.LittleEndian);
     }
 
 
     public static int TimeOfLastActivityId()
     {
-        return 3;
+        return 4;
     }
 
     public static int TimeOfLastActivitySinceVersion()
@@ -208,7 +262,7 @@ public class ClusterSessionDecoder
 
     public static int TimeOfLastActivityEncodingOffset()
     {
-        return 16;
+        return 24;
     }
 
     public static int TimeOfLastActivityEncodingLength()
@@ -246,13 +300,13 @@ public class ClusterSessionDecoder
 
     public long TimeOfLastActivity()
     {
-        return _buffer.GetLong(_offset + 16, ByteOrder.LittleEndian);
+        return _buffer.GetLong(_offset + 24, ByteOrder.LittleEndian);
     }
 
 
     public static int ResponseStreamIdId()
     {
-        return 4;
+        return 5;
     }
 
     public static int ResponseStreamIdSinceVersion()
@@ -262,7 +316,7 @@ public class ClusterSessionDecoder
 
     public static int ResponseStreamIdEncodingOffset()
     {
-        return 24;
+        return 32;
     }
 
     public static int ResponseStreamIdEncodingLength()
@@ -300,13 +354,13 @@ public class ClusterSessionDecoder
 
     public int ResponseStreamId()
     {
-        return _buffer.GetInt(_offset + 24, ByteOrder.LittleEndian);
+        return _buffer.GetInt(_offset + 32, ByteOrder.LittleEndian);
     }
 
 
     public static int ResponseChannelId()
     {
-        return 5;
+        return 6;
     }
 
     public static int ResponseChannelSinceVersion()
@@ -413,22 +467,27 @@ public class ClusterSessionDecoder
         builder.Append("ClusterSessionId=");
         builder.Append(ClusterSessionId());
         builder.Append('|');
-        //Token{signal=BEGIN_FIELD, name='lastCorrelationId', referencedName='null', description='null', id=2, version=0, deprecated=0, encodedLength=0, offset=8, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=BEGIN_FIELD, name='openedTermPosition', referencedName='null', description='null', id=2, version=0, deprecated=0, encodedLength=0, offset=8, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
         //Token{signal=ENCODING, name='int64', referencedName='null', description='null', id=-1, version=0, deprecated=0, encodedLength=8, offset=8, componentTokenCount=1, encoding=Encoding{presence=REQUIRED, primitiveType=INT64, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        builder.Append("OpenedTermPosition=");
+        builder.Append(OpenedTermPosition());
+        builder.Append('|');
+        //Token{signal=BEGIN_FIELD, name='lastCorrelationId', referencedName='null', description='null', id=3, version=0, deprecated=0, encodedLength=0, offset=16, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=ENCODING, name='int64', referencedName='null', description='null', id=-1, version=0, deprecated=0, encodedLength=8, offset=16, componentTokenCount=1, encoding=Encoding{presence=REQUIRED, primitiveType=INT64, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
         builder.Append("LastCorrelationId=");
         builder.Append(LastCorrelationId());
         builder.Append('|');
-        //Token{signal=BEGIN_FIELD, name='timeOfLastActivity', referencedName='null', description='null', id=3, version=0, deprecated=0, encodedLength=0, offset=16, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
-        //Token{signal=ENCODING, name='time_t', referencedName='null', description='Epoch time in milliseconds since 1 Jan 1970 UTC', id=-1, version=0, deprecated=0, encodedLength=8, offset=16, componentTokenCount=1, encoding=Encoding{presence=REQUIRED, primitiveType=INT64, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=BEGIN_FIELD, name='timeOfLastActivity', referencedName='null', description='null', id=4, version=0, deprecated=0, encodedLength=0, offset=24, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=ENCODING, name='time_t', referencedName='null', description='Epoch time in milliseconds since 1 Jan 1970 UTC', id=-1, version=0, deprecated=0, encodedLength=8, offset=24, componentTokenCount=1, encoding=Encoding{presence=REQUIRED, primitiveType=INT64, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
         builder.Append("TimeOfLastActivity=");
         builder.Append(TimeOfLastActivity());
         builder.Append('|');
-        //Token{signal=BEGIN_FIELD, name='responseStreamId', referencedName='null', description='null', id=4, version=0, deprecated=0, encodedLength=0, offset=24, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
-        //Token{signal=ENCODING, name='int32', referencedName='null', description='null', id=-1, version=0, deprecated=0, encodedLength=4, offset=24, componentTokenCount=1, encoding=Encoding{presence=REQUIRED, primitiveType=INT32, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=BEGIN_FIELD, name='responseStreamId', referencedName='null', description='null', id=5, version=0, deprecated=0, encodedLength=0, offset=32, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=ENCODING, name='int32', referencedName='null', description='null', id=-1, version=0, deprecated=0, encodedLength=4, offset=32, componentTokenCount=1, encoding=Encoding{presence=REQUIRED, primitiveType=INT32, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
         builder.Append("ResponseStreamId=");
         builder.Append(ResponseStreamId());
         builder.Append('|');
-        //Token{signal=BEGIN_VAR_DATA, name='responseChannel', referencedName='null', description='null', id=5, version=0, deprecated=0, encodedLength=0, offset=28, componentTokenCount=6, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=BEGIN_VAR_DATA, name='responseChannel', referencedName='null', description='null', id=6, version=0, deprecated=0, encodedLength=0, offset=36, componentTokenCount=6, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
         builder.Append("ResponseChannel=");
         builder.Append(ResponseChannel());
 

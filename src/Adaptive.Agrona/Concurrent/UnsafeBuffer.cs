@@ -82,7 +82,6 @@ namespace Adaptive.Agrona.Concurrent
             Wrap(buffer);
         }
 
-
         /// <summary>
         /// Attach a view to an existing <seealso cref="IDirectBuffer"/>
         /// </summary>
@@ -122,6 +121,11 @@ namespace Adaptive.Agrona.Concurrent
         public UnsafeBuffer(IntPtr address, int offset, int length)
         {
             Wrap(address, offset, length);
+        }
+
+        public UnsafeBuffer(MappedByteBuffer buffer)
+        {
+            Wrap(buffer.Pointer, 0, (int) buffer.Capacity);
         }
 
 #if DEBUG

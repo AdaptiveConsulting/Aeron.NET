@@ -1,59 +1,58 @@
-﻿using Adaptive.Aeron;
+﻿using System;
+using Adaptive.Aeron;
 using Adaptive.Aeron.LogBuffer;
 using Adaptive.Aeron.Status;
 using Adaptive.Agrona.Concurrent;
-using Io.Aeron.Cluster.Codecs;
+using Adaptive.Cluster.Codecs;
 
 namespace Adaptive.Cluster.Service
 {
     /// <summary>
-    /// Adapter for reading a log with a limit applied beyond which the consumer cannot progress.
+    /// Adapter for reading a log with a upper bound applied beyond which the consumer cannot progress.
     /// </summary>
-    internal sealed class BoundedLogAdapter : IControlledFragmentHandler
+    internal sealed class BoundedLogAdapter : IControlledFragmentHandler, IDisposable
     {
-        private bool InstanceFieldsInitialized = false;
-
-        private void InitializeInstanceFields()
-        {
-            fragmentAssembler = new ImageControlledFragmentAssembler(this, INITIAL_BUFFER_LENGTH, true);
-        }
-
         private const int FRAGMENT_LIMIT = 10;
         private const int INITIAL_BUFFER_LENGTH = 4096;
 
-        private ImageControlledFragmentAssembler fragmentAssembler;
+        private readonly ImageControlledFragmentAssembler fragmentAssembler;
         private readonly MessageHeaderDecoder messageHeaderDecoder = new MessageHeaderDecoder();
         private readonly SessionOpenEventDecoder openEventDecoder = new SessionOpenEventDecoder();
         private readonly SessionCloseEventDecoder closeEventDecoder = new SessionCloseEventDecoder();
         private readonly SessionHeaderDecoder sessionHeaderDecoder = new SessionHeaderDecoder();
         private readonly TimerEventDecoder timerEventDecoder = new TimerEventDecoder();
-        private readonly ServiceActionRequestDecoder actionRequestDecoder = new ServiceActionRequestDecoder();
+        private readonly ClusterActionRequestDecoder actionRequestDecoder = new ClusterActionRequestDecoder();
 
         private readonly Image image;
-        private readonly ReadableCounter limit;
+        private readonly ReadableCounter upperBound;
         private readonly ClusteredServiceAgent agent;
 
-        internal BoundedLogAdapter(Image image, ReadableCounter limit, ClusteredServiceAgent agent)
+        internal BoundedLogAdapter(Image image, ReadableCounter upperBound, ClusteredServiceAgent agent)
         {
-            if (!InstanceFieldsInitialized)
-            {
-                InitializeInstanceFields();
-                InstanceFieldsInitialized = true;
-            }
-
+            fragmentAssembler = new ImageControlledFragmentAssembler(this, INITIAL_BUFFER_LENGTH, true);
             this.image = image;
-            this.limit = limit;
+            this.upperBound = upperBound;
             this.agent = agent;
         }
 
+        public void Dispose()
+        {
+            image.Subscription?.Dispose();
+        }
+        
         public Image Image()
         {
             return image;
         }
 
+        public int UpperBoundCounterId()
+        {
+            return upperBound.CounterId();
+        }
+        
         public int Poll()
         {
-            return image.BoundedControlledPoll(fragmentAssembler, limit.Get(), FRAGMENT_LIMIT);
+            return image.BoundedControlledPoll(fragmentAssembler, upperBound.Get(), FRAGMENT_LIMIT);
         }
 
         public ControlledFragmentHandlerAction OnFragment(UnsafeBuffer buffer, int offset, int length, Header header)
@@ -99,7 +98,7 @@ namespace Adaptive.Cluster.Service
                     break;
                 }
 
-                case ServiceActionRequestDecoder.TEMPLATE_ID:
+                case ClusterActionRequestDecoder.TEMPLATE_ID:
                 {
                     actionRequestDecoder.Wrap(buffer, offset + MessageHeaderDecoder.ENCODED_LENGTH, messageHeaderDecoder.BlockLength(), messageHeaderDecoder.Version());
 

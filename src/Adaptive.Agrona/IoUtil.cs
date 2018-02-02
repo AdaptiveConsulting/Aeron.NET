@@ -15,6 +15,7 @@
  */
 
 using System;
+using System.ComponentModel;
 using System.IO;
 using System.IO.MemoryMappedFiles;
 using Adaptive.Agrona.Util;
@@ -26,7 +27,7 @@ namespace Adaptive.Agrona
         ReadOnly,
         ReadWrite
     }
-    
+
     public class IoUtil
     {
         /// <summary>
@@ -37,16 +38,72 @@ namespace Adaptive.Agrona
         /// <returns> <seealso cref="MappedByteBuffer"/> for the file </returns>
         public static MappedByteBuffer MapExistingFile(string path, MapMode mapMode)
         {
-            return new MappedByteBuffer(OpenMemoryMappedFile(path, mapMode));
+            return new MappedByteBuffer(OpenMemoryMappedFile(path));
         }
+
+        /// <summary>
+        /// Check that file exists, open file, and return <seealso cref="MappedByteBuffer"/> for entire file
+        /// </summary>
+        /// <param name="path"> of the file to map </param>
+        /// <param name="offset"></param>
+        /// <param name="length"></param>
+        /// <returns> <seealso cref="MappedByteBuffer"/> for the file </returns>
+        public static MappedByteBuffer MapExistingFile(FileInfo path, long offset, long length)
+        {
+            return new MappedByteBuffer(OpenMemoryMappedFile(path.FullName), offset, length);
+        }
+
+        public static MappedByteBuffer MapNewFile(FileInfo cncFile, long length, bool fillWithZeros = true)
+        {
+            var fileAccess = FileAccess.ReadWrite;
+            var fileShare = FileShare.ReadWrite | FileShare.Delete;
+            var memoryMappedFileAccess = MemoryMappedFileAccess.ReadWrite;
+
+            var f = new FileStream(cncFile.FullName, FileMode.CreateNew, fileAccess, fileShare);
+
+#if NETFULL
+            var mmFile = MemoryMappedFile.CreateFromFile(f, null, length, memoryMappedFileAccess, new MemoryMappedFileSecurity(), HandleInheritability.None, false);
+#else
+            var mmFile = MemoryMappedFile.CreateFromFile(f, null, length, memoryMappedFileAccess, HandleInheritability.None, false);
+#endif
+            
+            var mappedByteBuffer = new MappedByteBuffer(mmFile, 0, length);
+
+            if (fillWithZeros)
+            {
+                mappedByteBuffer.FillWithZeros();
+            }
+
+            return mappedByteBuffer;
+        }
+
+
+        public static MappedByteBuffer MapNewOrExixtingFile(FileInfo cncFile, long length)
+        {
+            var fileAccess = FileAccess.ReadWrite;
+            var fileShare = FileShare.ReadWrite | FileShare.Delete;
+            var memoryMappedFileAccess = MemoryMappedFileAccess.ReadWrite;
+
+            var f = new FileStream(cncFile.FullName, FileMode.OpenOrCreate, fileAccess, fileShare);
+
+#if NETFULL
+            var mmFile = MemoryMappedFile.CreateFromFile(f, null, length, memoryMappedFileAccess, new MemoryMappedFileSecurity(), HandleInheritability.None, false);
+#else
+            var mmFile = MemoryMappedFile.CreateFromFile(f, null, length, memoryMappedFileAccess, HandleInheritability.None, false);
+#endif
+            
+            var mappedByteBuffer = new MappedByteBuffer(mmFile, 0, length);
+
+            return mappedByteBuffer;
+        }
+
 
         /// <summary>
         /// Check that file exists and open file
         /// </summary>
         /// <param name="path"> of the file to map </param>
-        /// <param name="mapMode"> to be used for the file.</param>
         /// <returns> <seealso cref="MemoryMappedFile"/> the file </returns>
-        public static MemoryMappedFile OpenMemoryMappedFile(string path, MapMode mapMode)
+        public static MemoryMappedFile OpenMemoryMappedFile(string path)
         {
             // mapMode == MapMode.ReadOnly -> here for parity with the Java version but no affect, UnauthorisedAccessExceptions/IOExceptions thrown when trying to open file in Read mode, all files are opened ReadWrite
 
@@ -55,14 +112,15 @@ namespace Adaptive.Agrona
             var fileAccess = FileAccess.ReadWrite;
             var fileShare = FileShare.ReadWrite | FileShare.Delete;
             var memoryMappedFileAccess = MemoryMappedFileAccess.ReadWrite;
-            
-            
+
+
             var f = new FileStream(path, FileMode.Open, fileAccess, fileShare);
 
 #if NETFULL
             return MemoryMappedFile.CreateFromFile(f, null, 0, memoryMappedFileAccess, new MemoryMappedFileSecurity(), HandleInheritability.None, false);
 #else
-            return MemoryMappedFile.CreateFromFile(f, null, 0, memoryMappedFileAccess, HandleInheritability.None, false);
+            return MemoryMappedFile.CreateFromFile(f, null, 0, memoryMappedFileAccess, HandleInheritability.None,
+                false);
 #endif
         }
 
@@ -80,7 +138,7 @@ namespace Adaptive.Agrona
         {
             CheckFileExists(location, descriptionLabel);
 
-            return new MappedByteBuffer(OpenMemoryMappedFile(location.FullName, MapMode.ReadWrite));
+            return new MappedByteBuffer(OpenMemoryMappedFile(location.FullName));
         }
 
 
@@ -130,12 +188,30 @@ namespace Adaptive.Agrona
             {
                 return @"/dev/shm";
             }
+
             return Path.GetTempPath();
         }
 
-        public static void Delete(FileSystemInfo file, bool b)
-        {   
-            file.Delete();
+        public static void Delete(DirectoryInfo directory, bool b)
+        {
+            if (directory.Exists)
+            {
+                directory.Delete(true);
+            }
+        }
+
+        public static void EnsureDirectoryExists(DirectoryInfo directory, string descriptionLabel)
+        {
+            if (!directory.Exists)
+            {
+                directory.Create();
+
+                if (!directory.Exists)
+                {
+                    throw new ArgumentException("could not create " + descriptionLabel + " directory: " +
+                                                directory.FullName);
+                }
+            }
         }
     }
 }

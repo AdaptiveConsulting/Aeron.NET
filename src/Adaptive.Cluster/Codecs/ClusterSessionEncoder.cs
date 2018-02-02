@@ -5,14 +5,14 @@ using System.Collections.Generic;
 using Adaptive.Agrona;
 
 
-namespace Io.Aeron.Cluster.Codecs {
+namespace Adaptive.Cluster.Codecs {
 
 public class ClusterSessionEncoder
 {
-    public const ushort BLOCK_LENGTH = 28;
+    public const ushort BLOCK_LENGTH = 36;
     public const ushort TEMPLATE_ID = 103;
     public const ushort SCHEMA_ID = 1;
-    public const ushort SCHEMA_VERSION = 0;
+    public const ushort SCHEMA_VERSION = 1;
 
     private ClusterSessionEncoder _parentMessage;
     private IMutableDirectBuffer _buffer;
@@ -128,9 +128,41 @@ public class ClusterSessionEncoder
     }
 
 
-    public static int LastCorrelationIdEncodingOffset()
+    public static int OpenedTermPositionEncodingOffset()
     {
         return 8;
+    }
+
+    public static int OpenedTermPositionEncodingLength()
+    {
+        return 8;
+    }
+
+    public static long OpenedTermPositionNullValue()
+    {
+        return -9223372036854775808L;
+    }
+
+    public static long OpenedTermPositionMinValue()
+    {
+        return -9223372036854775807L;
+    }
+
+    public static long OpenedTermPositionMaxValue()
+    {
+        return 9223372036854775807L;
+    }
+
+    public ClusterSessionEncoder OpenedTermPosition(long value)
+    {
+        _buffer.PutLong(_offset + 8, value, ByteOrder.LittleEndian);
+        return this;
+    }
+
+
+    public static int LastCorrelationIdEncodingOffset()
+    {
+        return 16;
     }
 
     public static int LastCorrelationIdEncodingLength()
@@ -155,14 +187,14 @@ public class ClusterSessionEncoder
 
     public ClusterSessionEncoder LastCorrelationId(long value)
     {
-        _buffer.PutLong(_offset + 8, value, ByteOrder.LittleEndian);
+        _buffer.PutLong(_offset + 16, value, ByteOrder.LittleEndian);
         return this;
     }
 
 
     public static int TimeOfLastActivityEncodingOffset()
     {
-        return 16;
+        return 24;
     }
 
     public static int TimeOfLastActivityEncodingLength()
@@ -187,14 +219,14 @@ public class ClusterSessionEncoder
 
     public ClusterSessionEncoder TimeOfLastActivity(long value)
     {
-        _buffer.PutLong(_offset + 16, value, ByteOrder.LittleEndian);
+        _buffer.PutLong(_offset + 24, value, ByteOrder.LittleEndian);
         return this;
     }
 
 
     public static int ResponseStreamIdEncodingOffset()
     {
-        return 24;
+        return 32;
     }
 
     public static int ResponseStreamIdEncodingLength()
@@ -219,14 +251,14 @@ public class ClusterSessionEncoder
 
     public ClusterSessionEncoder ResponseStreamId(int value)
     {
-        _buffer.PutInt(_offset + 24, value, ByteOrder.LittleEndian);
+        _buffer.PutInt(_offset + 32, value, ByteOrder.LittleEndian);
         return this;
     }
 
 
     public static int ResponseChannelId()
     {
-        return 5;
+        return 6;
     }
 
     public static string ResponseChannelCharacterEncoding()

@@ -1,31 +1,32 @@
-﻿using Adaptive.Aeron;
+﻿using System;
+using Adaptive.Aeron;
 using Adaptive.Aeron.LogBuffer;
 using Adaptive.Agrona.Concurrent;
-using Io.Aeron.Cluster.Codecs;
+using Adaptive.Cluster.Codecs;
 
 namespace Adaptive.Cluster.Service
 {
-    internal class SnapshotLoader : IControlledFragmentHandler
+    internal class ServiceSnapshotLoader : IControlledFragmentHandler
     {
         private const int FRAGMENT_LIMIT = 10;
 
         private bool inSnapshot = false;
-        private bool inProgress = true;
+        private bool isDone = false;
         private readonly MessageHeaderDecoder messageHeaderDecoder = new MessageHeaderDecoder();
         private readonly SnapshotMarkerDecoder snapshotMarkerDecoder = new SnapshotMarkerDecoder();
         private readonly ClientSessionDecoder clientSessionDecoder = new ClientSessionDecoder();
         private readonly Image image;
         private readonly ClusteredServiceAgent agent;
 
-        internal SnapshotLoader(Image image, ClusteredServiceAgent agent)
+        internal ServiceSnapshotLoader(Image image, ClusteredServiceAgent agent)
         {
             this.image = image;
             this.agent = agent;
         }
 
-        public bool InProgress()
+        public bool IsDone()
         {
-            return inProgress;
+            return isDone;
         }
 
         public int Poll()
@@ -46,7 +47,7 @@ namespace Adaptive.Cluster.Service
                     long typeId = snapshotMarkerDecoder.TypeId();
                     if (typeId != ClusteredServiceContainer.SNAPSHOT_TYPE_ID)
                     {
-                        throw new System.InvalidOperationException("Unexpected snapshot type: " + typeId);
+                        throw new InvalidOperationException("Unexpected snapshot type: " + typeId);
                     }
 
                     switch (snapshotMarkerDecoder.Mark())
@@ -54,7 +55,7 @@ namespace Adaptive.Cluster.Service
                         case SnapshotMark.BEGIN:
                             if (inSnapshot)
                             {
-                                throw new System.InvalidOperationException("Already in snapshot");
+                                throw new InvalidOperationException("Already in snapshot");
                             }
 
                             inSnapshot = true;
@@ -63,10 +64,10 @@ namespace Adaptive.Cluster.Service
                         case SnapshotMark.END:
                             if (!inSnapshot)
                             {
-                                throw new System.InvalidOperationException("Missing begin snapshot");
+                                throw new InvalidOperationException("Missing begin snapshot");
                             }
 
-                            inProgress = false;
+                            isDone = true;
                             return ControlledFragmentHandlerAction.BREAK;
                     }
 
@@ -83,7 +84,7 @@ namespace Adaptive.Cluster.Service
                     break;
 
                 default:
-                    throw new System.InvalidOperationException("Unknown template id: " + templateId);
+                    throw new InvalidOperationException("Unknown template id: " + templateId);
             }
 
             return ControlledFragmentHandlerAction.CONTINUE;
