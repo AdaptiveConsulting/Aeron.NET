@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using Adaptive.Agrona;
 
 
-namespace Io.Aeron.Archive.Codecs {
+namespace Adaptive.Archiver.Codecs {
 
 public class ConnectRequestDecoder
 {

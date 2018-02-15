@@ -2,7 +2,7 @@
 using Adaptive.Aeron;
 using Adaptive.Agrona;
 using Adaptive.Agrona.Concurrent;
-using Io.Aeron.Archive.Codecs;
+using Adaptive.Archiver.Codecs;
 
 namespace Adaptive.Archiver
 {
@@ -211,6 +211,20 @@ namespace Adaptive.Archiver
             finally
             {
                 _lock.Unlock();
+            }
+        }
+
+        /// <summary>
+        /// Check if an error has been returned for the control session and throw a <seealso cref="ArchiveException"/> if necessary.
+        /// To check for an error response without raising an exception then try <seealso cref="PollForErrorResponse()"/>.
+        /// </summary>
+        ///  <seealso cref="PollForErrorResponse()"/>
+        public virtual void CheckForErrorResponse()
+        {
+            var errorMessage = PollForErrorResponse();
+            if (null != errorMessage)
+            {
+                throw new ArchiveException(errorMessage);
             }
         }
 

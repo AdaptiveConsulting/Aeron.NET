@@ -5,21 +5,21 @@ using System.Collections.Generic;
 using Adaptive.Agrona;
 
 
-namespace Adaptive.Archiver.Codecs {
+namespace Adaptive.Cluster.Codecs {
 
-public class ListRecordingsRequestEncoder
+public class VoteEncoder
 {
-    public const ushort BLOCK_LENGTH = 28;
-    public const ushort TEMPLATE_ID = 8;
+    public const ushort BLOCK_LENGTH = 36;
+    public const ushort TEMPLATE_ID = 51;
     public const ushort SCHEMA_ID = 1;
-    public const ushort SCHEMA_VERSION = 0;
+    public const ushort SCHEMA_VERSION = 1;
 
-    private ListRecordingsRequestEncoder _parentMessage;
+    private VoteEncoder _parentMessage;
     private IMutableDirectBuffer _buffer;
     protected int _offset;
     protected int _limit;
 
-    public ListRecordingsRequestEncoder()
+    public VoteEncoder()
     {
         _parentMessage = this;
     }
@@ -59,7 +59,7 @@ public class ListRecordingsRequestEncoder
         return _offset;
     }
 
-    public ListRecordingsRequestEncoder Wrap(IMutableDirectBuffer buffer, int offset)
+    public VoteEncoder Wrap(IMutableDirectBuffer buffer, int offset)
     {
         this._buffer = buffer;
         this._offset = offset;
@@ -68,7 +68,7 @@ public class ListRecordingsRequestEncoder
         return this;
     }
 
-    public ListRecordingsRequestEncoder WrapAndApplyHeader(
+    public VoteEncoder WrapAndApplyHeader(
         IMutableDirectBuffer buffer, int offset, MessageHeaderEncoder headerEncoder)
     {
         headerEncoder
@@ -96,133 +96,181 @@ public class ListRecordingsRequestEncoder
         this._limit = limit;
     }
 
-    public static int ControlSessionIdEncodingOffset()
+    public static int CandidateTermIdEncodingOffset()
     {
         return 0;
     }
 
-    public static int ControlSessionIdEncodingLength()
+    public static int CandidateTermIdEncodingLength()
     {
         return 8;
     }
 
-    public static long ControlSessionIdNullValue()
+    public static long CandidateTermIdNullValue()
     {
         return -9223372036854775808L;
     }
 
-    public static long ControlSessionIdMinValue()
+    public static long CandidateTermIdMinValue()
     {
         return -9223372036854775807L;
     }
 
-    public static long ControlSessionIdMaxValue()
+    public static long CandidateTermIdMaxValue()
     {
         return 9223372036854775807L;
     }
 
-    public ListRecordingsRequestEncoder ControlSessionId(long value)
+    public VoteEncoder CandidateTermId(long value)
     {
         _buffer.PutLong(_offset + 0, value, ByteOrder.LittleEndian);
         return this;
     }
 
 
-    public static int CorrelationIdEncodingOffset()
+    public static int LastBaseLogPositionEncodingOffset()
     {
         return 8;
     }
 
-    public static int CorrelationIdEncodingLength()
+    public static int LastBaseLogPositionEncodingLength()
     {
         return 8;
     }
 
-    public static long CorrelationIdNullValue()
+    public static long LastBaseLogPositionNullValue()
     {
         return -9223372036854775808L;
     }
 
-    public static long CorrelationIdMinValue()
+    public static long LastBaseLogPositionMinValue()
     {
         return -9223372036854775807L;
     }
 
-    public static long CorrelationIdMaxValue()
+    public static long LastBaseLogPositionMaxValue()
     {
         return 9223372036854775807L;
     }
 
-    public ListRecordingsRequestEncoder CorrelationId(long value)
+    public VoteEncoder LastBaseLogPosition(long value)
     {
         _buffer.PutLong(_offset + 8, value, ByteOrder.LittleEndian);
         return this;
     }
 
 
-    public static int FromRecordingIdEncodingOffset()
+    public static int LastTermPositionEncodingOffset()
     {
         return 16;
     }
 
-    public static int FromRecordingIdEncodingLength()
+    public static int LastTermPositionEncodingLength()
     {
         return 8;
     }
 
-    public static long FromRecordingIdNullValue()
+    public static long LastTermPositionNullValue()
     {
         return -9223372036854775808L;
     }
 
-    public static long FromRecordingIdMinValue()
+    public static long LastTermPositionMinValue()
     {
         return -9223372036854775807L;
     }
 
-    public static long FromRecordingIdMaxValue()
+    public static long LastTermPositionMaxValue()
     {
         return 9223372036854775807L;
     }
 
-    public ListRecordingsRequestEncoder FromRecordingId(long value)
+    public VoteEncoder LastTermPosition(long value)
     {
         _buffer.PutLong(_offset + 16, value, ByteOrder.LittleEndian);
         return this;
     }
 
 
-    public static int RecordCountEncodingOffset()
+    public static int CandidateMemberIdEncodingOffset()
     {
         return 24;
     }
 
-    public static int RecordCountEncodingLength()
+    public static int CandidateMemberIdEncodingLength()
     {
         return 4;
     }
 
-    public static int RecordCountNullValue()
+    public static int CandidateMemberIdNullValue()
     {
         return -2147483648;
     }
 
-    public static int RecordCountMinValue()
+    public static int CandidateMemberIdMinValue()
     {
         return -2147483647;
     }
 
-    public static int RecordCountMaxValue()
+    public static int CandidateMemberIdMaxValue()
     {
         return 2147483647;
     }
 
-    public ListRecordingsRequestEncoder RecordCount(int value)
+    public VoteEncoder CandidateMemberId(int value)
     {
         _buffer.PutInt(_offset + 24, value, ByteOrder.LittleEndian);
         return this;
     }
 
+
+    public static int FollowerMemberIdEncodingOffset()
+    {
+        return 28;
+    }
+
+    public static int FollowerMemberIdEncodingLength()
+    {
+        return 4;
+    }
+
+    public static int FollowerMemberIdNullValue()
+    {
+        return -2147483648;
+    }
+
+    public static int FollowerMemberIdMinValue()
+    {
+        return -2147483647;
+    }
+
+    public static int FollowerMemberIdMaxValue()
+    {
+        return 2147483647;
+    }
+
+    public VoteEncoder FollowerMemberId(int value)
+    {
+        _buffer.PutInt(_offset + 28, value, ByteOrder.LittleEndian);
+        return this;
+    }
+
+
+    public static int VoteEncodingOffset()
+    {
+        return 32;
+    }
+
+    public static int VoteEncodingLength()
+    {
+        return 4;
+    }
+
+    public VoteEncoder Vote(BooleanType value)
+    {
+        _buffer.PutInt(_offset + 32, (int)value, ByteOrder.LittleEndian);
+        return this;
+    }
 
 
     public override string ToString()
@@ -232,7 +280,7 @@ public class ListRecordingsRequestEncoder
 
     public StringBuilder AppendTo(StringBuilder builder)
     {
-        ListRecordingsRequestDecoder writer = new ListRecordingsRequestDecoder();
+        VoteDecoder writer = new VoteDecoder();
         writer.Wrap(_buffer, _offset, BLOCK_LENGTH, SCHEMA_VERSION);
 
         return writer.AppendTo(builder);

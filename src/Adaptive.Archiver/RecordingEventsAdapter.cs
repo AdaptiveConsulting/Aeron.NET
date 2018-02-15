@@ -1,7 +1,7 @@
 ﻿using Adaptive.Aeron;
 using Adaptive.Aeron.LogBuffer;
 using Adaptive.Agrona.Concurrent;
-using Io.Aeron.Archive.Codecs;
+using Adaptive.Archiver.Codecs;
 
 namespace Adaptive.Archiver
 {

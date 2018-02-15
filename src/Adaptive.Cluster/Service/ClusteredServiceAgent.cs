@@ -489,7 +489,7 @@ namespace Adaptive.Cluster.Service
                     SnapshotState(publication, baseLogPosition + termPosition);
                     service.OnTakeSnapshot(publication);
 
-                    AwaitRecordingComplete(recordingId, publication.Position, counters, counterId);
+                    AwaitRecordingComplete(recordingId, publication.Position, counters, counterId, archive);
                 }
                 finally
                 {
@@ -500,8 +500,12 @@ namespace Adaptive.Cluster.Service
             recordingLog.AppendSnapshot(recordingId, leadershipTermId, baseLogPosition, termPosition, timestampMs);
         }
 
-        private void AwaitRecordingComplete(long recordingId, long completePosition, CountersReader counters,
-            int counterId)
+        private void AwaitRecordingComplete(
+            long recordingId, 
+            long completePosition, 
+            CountersReader counters,
+            int counterId,
+            AeronArchive archive)
         {
             idleStrategy.Reset();
             do
@@ -513,6 +517,9 @@ namespace Adaptive.Cluster.Service
                 {
                     throw new System.InvalidOperationException("Recording has stopped unexpectedly: " + recordingId);
                 }
+
+                archive.CheckForErrorResponse();
+
             } while (counters.GetCounterValue(counterId) < completePosition);
         }
 
@@ -549,13 +556,11 @@ namespace Adaptive.Cluster.Service
 
                 case ClusterAction.SHUTDOWN:
                     OnTakeSnapshot(termPosition);
-                    ctx.RecordingLog().CommitLeadershipTermPosition(leadershipTermId, termPosition);
                     serviceControlPublisher.AckAction(logPosition, leadershipTermId, serviceId, action);
                     ctx.TerminationHook().Invoke();
                     break;
 
                 case ClusterAction.ABORT:
-                    ctx.RecordingLog().CommitLeadershipTermPosition(leadershipTermId, termPosition);
                     serviceControlPublisher.AckAction(logPosition, leadershipTermId, serviceId, action);
                     ctx.TerminationHook().Invoke();
                     break;

@@ -1,4 +1,4 @@
 #### Port
 Aeron.NET has been ported against Java version:
-- Agrona: v0.9.12 (ec52107)
-- Aeron:  v1.7.0  (3e60bdcd3)
+- Agrona: 0.9.12-30-gec52107
+- Aeron:  1.7.0-493-g2412c5c89

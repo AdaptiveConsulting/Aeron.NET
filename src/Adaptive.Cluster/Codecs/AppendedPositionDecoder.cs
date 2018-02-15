@@ -10,7 +10,7 @@ namespace Adaptive.Cluster.Codecs {
 public class AppendedPositionDecoder
 {
     public const ushort BLOCK_LENGTH = 20;
-    public const ushort TEMPLATE_ID = 50;
+    public const ushort TEMPLATE_ID = 52;
     public const ushort SCHEMA_ID = 1;
     public const ushort SCHEMA_VERSION = 1;
 
@@ -196,27 +196,27 @@ public class AppendedPositionDecoder
     }
 
 
-    public static int MemberIdId()
+    public static int FollowerMemberIdId()
     {
         return 3;
     }
 
-    public static int MemberIdSinceVersion()
+    public static int FollowerMemberIdSinceVersion()
     {
         return 0;
     }
 
-    public static int MemberIdEncodingOffset()
+    public static int FollowerMemberIdEncodingOffset()
     {
         return 16;
     }
 
-    public static int MemberIdEncodingLength()
+    public static int FollowerMemberIdEncodingLength()
     {
         return 4;
     }
 
-    public static string MemberIdMetaAttribute(MetaAttribute metaAttribute)
+    public static string FollowerMemberIdMetaAttribute(MetaAttribute metaAttribute)
     {
         switch (metaAttribute)
         {
@@ -229,22 +229,22 @@ public class AppendedPositionDecoder
         return "";
     }
 
-    public static int MemberIdNullValue()
+    public static int FollowerMemberIdNullValue()
     {
         return -2147483648;
     }
 
-    public static int MemberIdMinValue()
+    public static int FollowerMemberIdMinValue()
     {
         return -2147483647;
     }
 
-    public static int MemberIdMaxValue()
+    public static int FollowerMemberIdMaxValue()
     {
         return 2147483647;
     }
 
-    public int MemberId()
+    public int FollowerMemberId()
     {
         return _buffer.GetInt(_offset + 16, ByteOrder.LittleEndian);
     }
@@ -289,10 +289,10 @@ public class AppendedPositionDecoder
         builder.Append("LeadershipTermId=");
         builder.Append(LeadershipTermId());
         builder.Append('|');
-        //Token{signal=BEGIN_FIELD, name='memberId', referencedName='null', description='null', id=3, version=0, deprecated=0, encodedLength=0, offset=16, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=BEGIN_FIELD, name='followerMemberId', referencedName='null', description='null', id=3, version=0, deprecated=0, encodedLength=0, offset=16, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
         //Token{signal=ENCODING, name='int32', referencedName='null', description='null', id=-1, version=0, deprecated=0, encodedLength=4, offset=16, componentTokenCount=1, encoding=Encoding{presence=REQUIRED, primitiveType=INT32, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
-        builder.Append("MemberId=");
-        builder.Append(MemberId());
+        builder.Append("FollowerMemberId=");
+        builder.Append(FollowerMemberId());
 
         Limit(originalLimit);
 

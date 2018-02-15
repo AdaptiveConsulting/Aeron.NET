@@ -1,5 +1,5 @@
 /* Generated SBE (Simple Binary Encoding) message codec */
-namespace Io.Aeron.Archive.Codecs {
+namespace Adaptive.Archiver.Codecs {
 
     public enum ControlResponseCode : int
     {

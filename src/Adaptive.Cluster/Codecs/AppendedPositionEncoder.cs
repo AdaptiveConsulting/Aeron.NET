@@ -10,7 +10,7 @@ namespace Adaptive.Cluster.Codecs {
 public class AppendedPositionEncoder
 {
     public const ushort BLOCK_LENGTH = 20;
-    public const ushort TEMPLATE_ID = 50;
+    public const ushort TEMPLATE_ID = 52;
     public const ushort SCHEMA_ID = 1;
     public const ushort SCHEMA_VERSION = 1;
 
@@ -160,32 +160,32 @@ public class AppendedPositionEncoder
     }
 
 
-    public static int MemberIdEncodingOffset()
+    public static int FollowerMemberIdEncodingOffset()
     {
         return 16;
     }
 
-    public static int MemberIdEncodingLength()
+    public static int FollowerMemberIdEncodingLength()
     {
         return 4;
     }
 
-    public static int MemberIdNullValue()
+    public static int FollowerMemberIdNullValue()
     {
         return -2147483648;
     }
 
-    public static int MemberIdMinValue()
+    public static int FollowerMemberIdMinValue()
     {
         return -2147483647;
     }
 
-    public static int MemberIdMaxValue()
+    public static int FollowerMemberIdMaxValue()
     {
         return 2147483647;
     }
 
-    public AppendedPositionEncoder MemberId(int value)
+    public AppendedPositionEncoder FollowerMemberId(int value)
     {
         _buffer.PutInt(_offset + 16, value, ByteOrder.LittleEndian);
         return this;

@@ -10,7 +10,7 @@ namespace Adaptive.Cluster.Codecs {
 public class CommitPositionDecoder
 {
     public const ushort BLOCK_LENGTH = 24;
-    public const ushort TEMPLATE_ID = 51;
+    public const ushort TEMPLATE_ID = 53;
     public const ushort SCHEMA_ID = 1;
     public const ushort SCHEMA_VERSION = 1;
 

@@ -1,4 +1,4 @@
-﻿using Io.Aeron.Archive.Codecs;
+﻿using Adaptive.Archiver.Codecs;
 
 namespace Adaptive.Archiver
 {

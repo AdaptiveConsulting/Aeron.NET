@@ -1,7 +1,7 @@
 ﻿using Adaptive.Aeron;
 using Adaptive.Agrona;
 using Adaptive.Agrona.Concurrent;
-using Io.Aeron.Archive.Codecs;
+using Adaptive.Archiver.Codecs;
 
 namespace Adaptive.Archiver
 {
@@ -51,11 +51,11 @@ public class ArchiveProxy
 	/// <summary>
 	/// Create a proxy with a <seealso cref="Publication"/> for sending control message requests.
 	/// </summary>
-	/// <param name="publication">        publication for sending control messages to an archive. </param>
-	/// <param name="retryIdleStrategy">  for what should happen between retry attempts at offering messages. </param>
-	/// <param name="nanoClock">          to be used for calculating checking deadlines. </param>
-	/// <param name="connectTimeoutNs">   for for connection requests. </param>
-	/// <param name="retryAttempts">      for offering control messages before giving up. </param>
+	/// <param name="publication">       publication for sending control messages to an archive. </param>
+	/// <param name="retryIdleStrategy"> for what should happen between retry attempts at offering messages. </param>
+	/// <param name="nanoClock">         to be used for calculating checking deadlines. </param>
+	/// <param name="connectTimeoutNs">  for for connection requests. </param>
+	/// <param name="retryAttempts">     for offering control messages before giving up. </param>
 	public ArchiveProxy(Publication publication, IIdleStrategy retryIdleStrategy, INanoClock nanoClock, long connectTimeoutNs, int retryAttempts)
 	{
 		this.publication = publication;
