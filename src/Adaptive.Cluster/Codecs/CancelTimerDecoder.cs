@@ -7,21 +7,21 @@ using Adaptive.Agrona;
 
 namespace Adaptive.Cluster.Codecs {
 
-public class CancelTimerRequestDecoder
+public class CancelTimerDecoder
 {
     public const ushort BLOCK_LENGTH = 8;
     public const ushort TEMPLATE_ID = 31;
     public const ushort SCHEMA_ID = 1;
     public const ushort SCHEMA_VERSION = 1;
 
-    private CancelTimerRequestDecoder _parentMessage;
+    private CancelTimerDecoder _parentMessage;
     private IDirectBuffer _buffer;
     protected int _offset;
     protected int _limit;
     protected int _actingBlockLength;
     protected int _actingVersion;
 
-    public CancelTimerRequestDecoder()
+    public CancelTimerDecoder()
     {
         _parentMessage = this;
     }
@@ -61,7 +61,7 @@ public class CancelTimerRequestDecoder
         return _offset;
     }
 
-    public CancelTimerRequestDecoder Wrap(
+    public CancelTimerDecoder Wrap(
         IDirectBuffer buffer, int offset, int actingBlockLength, int actingVersion)
     {
         this._buffer = buffer;
@@ -152,7 +152,7 @@ public class CancelTimerRequestDecoder
     {
         int originalLimit = Limit();
         Limit(_offset + _actingBlockLength);
-        builder.Append("[CancelTimerRequest](sbeTemplateId=");
+        builder.Append("[CancelTimer](sbeTemplateId=");
         builder.Append(TEMPLATE_ID);
         builder.Append("|sbeSchemaId=");
         builder.Append(SCHEMA_ID);

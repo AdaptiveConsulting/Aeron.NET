@@ -749,8 +749,7 @@ namespace Adaptive.Aeron
 
                     if (nowNs > (resource.TimeOfLastStateChange() + RESOURCE_LINGER_NS))
                     {
-                        ListUtil.FastUnorderedRemove(lingeringResources, i, lastIndex);
-                        lastIndex--;
+                        ListUtil.FastUnorderedRemove(lingeringResources, i, lastIndex--);
                         resource.Delete();
                     }
                 }

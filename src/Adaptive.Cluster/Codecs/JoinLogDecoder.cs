@@ -7,21 +7,21 @@ using Adaptive.Agrona;
 
 namespace Adaptive.Cluster.Codecs {
 
-public class JoinLogRequestDecoder
+public class JoinLogDecoder
 {
     public const ushort BLOCK_LENGTH = 20;
     public const ushort TEMPLATE_ID = 33;
     public const ushort SCHEMA_ID = 1;
     public const ushort SCHEMA_VERSION = 1;
 
-    private JoinLogRequestDecoder _parentMessage;
+    private JoinLogDecoder _parentMessage;
     private IDirectBuffer _buffer;
     protected int _offset;
     protected int _limit;
     protected int _actingBlockLength;
     protected int _actingVersion;
 
-    public JoinLogRequestDecoder()
+    public JoinLogDecoder()
     {
         _parentMessage = this;
     }
@@ -61,7 +61,7 @@ public class JoinLogRequestDecoder
         return _offset;
     }
 
-    public JoinLogRequestDecoder Wrap(
+    public JoinLogDecoder Wrap(
         IDirectBuffer buffer, int offset, int actingBlockLength, int actingVersion)
     {
         this._buffer = buffer;
@@ -389,7 +389,7 @@ public class JoinLogRequestDecoder
     {
         int originalLimit = Limit();
         Limit(_offset + _actingBlockLength);
-        builder.Append("[JoinLogRequest](sbeTemplateId=");
+        builder.Append("[JoinLog](sbeTemplateId=");
         builder.Append(TEMPLATE_ID);
         builder.Append("|sbeSchemaId=");
         builder.Append(SCHEMA_ID);

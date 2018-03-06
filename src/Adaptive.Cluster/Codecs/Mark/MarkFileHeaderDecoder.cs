@@ -5,23 +5,23 @@ using System.Collections.Generic;
 using Adaptive.Agrona;
 
 
-namespace Adaptive.Cluster.Codecs {
+namespace Adaptive.Cluster.Codecs.Mark {
 
-public class CncHeaderDecoder
+public class MarkFileHeaderDecoder
 {
     public const ushort BLOCK_LENGTH = 128;
     public const ushort TEMPLATE_ID = 200;
     public const ushort SCHEMA_ID = 1;
     public const ushort SCHEMA_VERSION = 1;
 
-    private CncHeaderDecoder _parentMessage;
+    private MarkFileHeaderDecoder _parentMessage;
     private IDirectBuffer _buffer;
     protected int _offset;
     protected int _limit;
     protected int _actingBlockLength;
     protected int _actingVersion;
 
-    public CncHeaderDecoder()
+    public MarkFileHeaderDecoder()
     {
         _parentMessage = this;
     }
@@ -61,7 +61,7 @@ public class CncHeaderDecoder
         return _offset;
     }
 
-    public CncHeaderDecoder Wrap(
+    public MarkFileHeaderDecoder Wrap(
         IDirectBuffer buffer, int offset, int actingBlockLength, int actingVersion)
     {
         this._buffer = buffer;
@@ -142,27 +142,27 @@ public class CncHeaderDecoder
     }
 
 
-    public static int FileTypeId()
+    public static int ComponentTypeId()
     {
         return 2;
     }
 
-    public static int FileTypeSinceVersion()
+    public static int ComponentTypeSinceVersion()
     {
         return 0;
     }
 
-    public static int FileTypeEncodingOffset()
+    public static int ComponentTypeEncodingOffset()
     {
         return 4;
     }
 
-    public static int FileTypeEncodingLength()
+    public static int ComponentTypeEncodingLength()
     {
         return 4;
     }
 
-    public static string FileTypeMetaAttribute(MetaAttribute metaAttribute)
+    public static string ComponentTypeMetaAttribute(MetaAttribute metaAttribute)
     {
         switch (metaAttribute)
         {
@@ -175,7 +175,7 @@ public class CncHeaderDecoder
         return "";
     }
 
-    public ClusterComponentType FileType()
+    public ClusterComponentType ComponentType()
     {
         return (ClusterComponentType)_buffer.GetInt(_offset + 4, ByteOrder.LittleEndian);
     }
@@ -235,9 +235,63 @@ public class CncHeaderDecoder
     }
 
 
-    public static int PidId()
+    public static int StartTimestampId()
     {
         return 4;
+    }
+
+    public static int StartTimestampSinceVersion()
+    {
+        return 0;
+    }
+
+    public static int StartTimestampEncodingOffset()
+    {
+        return 16;
+    }
+
+    public static int StartTimestampEncodingLength()
+    {
+        return 8;
+    }
+
+    public static string StartTimestampMetaAttribute(MetaAttribute metaAttribute)
+    {
+        switch (metaAttribute)
+        {
+            case MetaAttribute.EPOCH: return "unix";
+            case MetaAttribute.TIME_UNIT: return "nanosecond";
+            case MetaAttribute.SEMANTIC_TYPE: return "";
+            case MetaAttribute.PRESENCE: return "required";
+        }
+
+        return "";
+    }
+
+    public static long StartTimestampNullValue()
+    {
+        return -9223372036854775808L;
+    }
+
+    public static long StartTimestampMinValue()
+    {
+        return -9223372036854775807L;
+    }
+
+    public static long StartTimestampMaxValue()
+    {
+        return 9223372036854775807L;
+    }
+
+    public long StartTimestamp()
+    {
+        return _buffer.GetLong(_offset + 16, ByteOrder.LittleEndian);
+    }
+
+
+    public static int PidId()
+    {
+        return 5;
     }
 
     public static int PidSinceVersion()
@@ -247,12 +301,12 @@ public class CncHeaderDecoder
 
     public static int PidEncodingOffset()
     {
-        return 16;
+        return 24;
     }
 
     public static int PidEncodingLength()
     {
-        return 4;
+        return 8;
     }
 
     public static string PidMetaAttribute(MetaAttribute metaAttribute)
@@ -268,30 +322,30 @@ public class CncHeaderDecoder
         return "";
     }
 
-    public static int PidNullValue()
+    public static long PidNullValue()
     {
-        return -2147483648;
+        return -9223372036854775808L;
     }
 
-    public static int PidMinValue()
+    public static long PidMinValue()
     {
-        return -2147483647;
+        return -9223372036854775807L;
     }
 
-    public static int PidMaxValue()
+    public static long PidMaxValue()
     {
-        return 2147483647;
+        return 9223372036854775807L;
     }
 
-    public int Pid()
+    public long Pid()
     {
-        return _buffer.GetInt(_offset + 16, ByteOrder.LittleEndian);
+        return _buffer.GetLong(_offset + 24, ByteOrder.LittleEndian);
     }
 
 
     public static int ArchiveStreamIdId()
     {
-        return 5;
+        return 6;
     }
 
     public static int ArchiveStreamIdSinceVersion()
@@ -301,7 +355,7 @@ public class CncHeaderDecoder
 
     public static int ArchiveStreamIdEncodingOffset()
     {
-        return 20;
+        return 32;
     }
 
     public static int ArchiveStreamIdEncodingLength()
@@ -339,13 +393,13 @@ public class CncHeaderDecoder
 
     public int ArchiveStreamId()
     {
-        return _buffer.GetInt(_offset + 20, ByteOrder.LittleEndian);
+        return _buffer.GetInt(_offset + 32, ByteOrder.LittleEndian);
     }
 
 
     public static int ServiceControlStreamIdId()
     {
-        return 6;
+        return 7;
     }
 
     public static int ServiceControlStreamIdSinceVersion()
@@ -355,7 +409,7 @@ public class CncHeaderDecoder
 
     public static int ServiceControlStreamIdEncodingOffset()
     {
-        return 24;
+        return 36;
     }
 
     public static int ServiceControlStreamIdEncodingLength()
@@ -393,13 +447,13 @@ public class CncHeaderDecoder
 
     public int ServiceControlStreamId()
     {
-        return _buffer.GetInt(_offset + 24, ByteOrder.LittleEndian);
+        return _buffer.GetInt(_offset + 36, ByteOrder.LittleEndian);
     }
 
 
     public static int IngressStreamIdId()
     {
-        return 7;
+        return 8;
     }
 
     public static int IngressStreamIdSinceVersion()
@@ -409,7 +463,7 @@ public class CncHeaderDecoder
 
     public static int IngressStreamIdEncodingOffset()
     {
-        return 28;
+        return 40;
     }
 
     public static int IngressStreamIdEncodingLength()
@@ -447,13 +501,13 @@ public class CncHeaderDecoder
 
     public int IngressStreamId()
     {
-        return _buffer.GetInt(_offset + 28, ByteOrder.LittleEndian);
+        return _buffer.GetInt(_offset + 40, ByteOrder.LittleEndian);
     }
 
 
     public static int MemberIdId()
     {
-        return 8;
+        return 9;
     }
 
     public static int MemberIdSinceVersion()
@@ -463,7 +517,7 @@ public class CncHeaderDecoder
 
     public static int MemberIdEncodingOffset()
     {
-        return 32;
+        return 44;
     }
 
     public static int MemberIdEncodingLength()
@@ -501,13 +555,13 @@ public class CncHeaderDecoder
 
     public int MemberId()
     {
-        return _buffer.GetInt(_offset + 32, ByteOrder.LittleEndian);
+        return _buffer.GetInt(_offset + 44, ByteOrder.LittleEndian);
     }
 
 
     public static int ServiceIdId()
     {
-        return 9;
+        return 10;
     }
 
     public static int ServiceIdSinceVersion()
@@ -517,7 +571,7 @@ public class CncHeaderDecoder
 
     public static int ServiceIdEncodingOffset()
     {
-        return 36;
+        return 48;
     }
 
     public static int ServiceIdEncodingLength()
@@ -555,13 +609,13 @@ public class CncHeaderDecoder
 
     public int ServiceId()
     {
-        return _buffer.GetInt(_offset + 36, ByteOrder.LittleEndian);
+        return _buffer.GetInt(_offset + 48, ByteOrder.LittleEndian);
     }
 
 
     public static int AeronDirectoryId()
     {
-        return 10;
+        return 11;
     }
 
     public static int AeronDirectorySinceVersion()
@@ -636,7 +690,7 @@ public class CncHeaderDecoder
 
     public static int ArchiveChannelId()
     {
-        return 11;
+        return 12;
     }
 
     public static int ArchiveChannelSinceVersion()
@@ -711,7 +765,7 @@ public class CncHeaderDecoder
 
     public static int ServiceControlChannelId()
     {
-        return 12;
+        return 13;
     }
 
     public static int ServiceControlChannelSinceVersion()
@@ -786,7 +840,7 @@ public class CncHeaderDecoder
 
     public static int IngressChannelId()
     {
-        return 13;
+        return 14;
     }
 
     public static int IngressChannelSinceVersion()
@@ -861,7 +915,7 @@ public class CncHeaderDecoder
 
     public static int ServiceNameId()
     {
-        return 14;
+        return 15;
     }
 
     public static int ServiceNameSinceVersion()
@@ -936,7 +990,7 @@ public class CncHeaderDecoder
 
     public static int AuthenticatorId()
     {
-        return 15;
+        return 16;
     }
 
     public static int AuthenticatorSinceVersion()
@@ -1019,7 +1073,7 @@ public class CncHeaderDecoder
     {
         int originalLimit = Limit();
         Limit(_offset + _actingBlockLength);
-        builder.Append("[CncHeader](sbeTemplateId=");
+        builder.Append("[MarkFileHeader](sbeTemplateId=");
         builder.Append(TEMPLATE_ID);
         builder.Append("|sbeSchemaId=");
         builder.Append(SCHEMA_ID);
@@ -1043,67 +1097,72 @@ public class CncHeaderDecoder
         builder.Append("Version=");
         builder.Append(Version());
         builder.Append('|');
-        //Token{signal=BEGIN_FIELD, name='fileType', referencedName='null', description='null', id=2, version=0, deprecated=0, encodedLength=0, offset=4, componentTokenCount=7, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=BEGIN_FIELD, name='componentType', referencedName='null', description='null', id=2, version=0, deprecated=0, encodedLength=0, offset=4, componentTokenCount=7, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
         //Token{signal=BEGIN_ENUM, name='ClusterComponentType', referencedName='null', description='Type of Cluster Component', id=-1, version=0, deprecated=0, encodedLength=4, offset=4, componentTokenCount=5, encoding=Encoding{presence=REQUIRED, primitiveType=INT32, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='null', timeUnit=null, semanticType='null'}}
-        builder.Append("FileType=");
-        builder.Append(FileType());
+        builder.Append("ComponentType=");
+        builder.Append(ComponentType());
         builder.Append('|');
         //Token{signal=BEGIN_FIELD, name='activityTimestamp', referencedName='null', description='null', id=3, version=0, deprecated=0, encodedLength=0, offset=8, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
         //Token{signal=ENCODING, name='time_t', referencedName='null', description='Epoch time in milliseconds since 1 Jan 1970 UTC', id=-1, version=0, deprecated=0, encodedLength=8, offset=8, componentTokenCount=1, encoding=Encoding{presence=REQUIRED, primitiveType=INT64, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
         builder.Append("ActivityTimestamp=");
         builder.Append(ActivityTimestamp());
         builder.Append('|');
-        //Token{signal=BEGIN_FIELD, name='pid', referencedName='null', description='null', id=4, version=0, deprecated=0, encodedLength=0, offset=16, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
-        //Token{signal=ENCODING, name='int32', referencedName='null', description='null', id=-1, version=0, deprecated=0, encodedLength=4, offset=16, componentTokenCount=1, encoding=Encoding{presence=REQUIRED, primitiveType=INT32, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=BEGIN_FIELD, name='startTimestamp', referencedName='null', description='null', id=4, version=0, deprecated=0, encodedLength=0, offset=16, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=ENCODING, name='time_t', referencedName='null', description='Epoch time in milliseconds since 1 Jan 1970 UTC', id=-1, version=0, deprecated=0, encodedLength=8, offset=16, componentTokenCount=1, encoding=Encoding{presence=REQUIRED, primitiveType=INT64, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        builder.Append("StartTimestamp=");
+        builder.Append(StartTimestamp());
+        builder.Append('|');
+        //Token{signal=BEGIN_FIELD, name='pid', referencedName='null', description='null', id=5, version=0, deprecated=0, encodedLength=0, offset=24, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=ENCODING, name='int64', referencedName='null', description='null', id=-1, version=0, deprecated=0, encodedLength=8, offset=24, componentTokenCount=1, encoding=Encoding{presence=REQUIRED, primitiveType=INT64, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
         builder.Append("Pid=");
         builder.Append(Pid());
         builder.Append('|');
-        //Token{signal=BEGIN_FIELD, name='archiveStreamId', referencedName='null', description='null', id=5, version=0, deprecated=0, encodedLength=0, offset=20, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
-        //Token{signal=ENCODING, name='int32', referencedName='null', description='null', id=-1, version=0, deprecated=0, encodedLength=4, offset=20, componentTokenCount=1, encoding=Encoding{presence=REQUIRED, primitiveType=INT32, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=BEGIN_FIELD, name='archiveStreamId', referencedName='null', description='null', id=6, version=0, deprecated=0, encodedLength=0, offset=32, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=ENCODING, name='int32', referencedName='null', description='null', id=-1, version=0, deprecated=0, encodedLength=4, offset=32, componentTokenCount=1, encoding=Encoding{presence=REQUIRED, primitiveType=INT32, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
         builder.Append("ArchiveStreamId=");
         builder.Append(ArchiveStreamId());
         builder.Append('|');
-        //Token{signal=BEGIN_FIELD, name='serviceControlStreamId', referencedName='null', description='null', id=6, version=0, deprecated=0, encodedLength=0, offset=24, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
-        //Token{signal=ENCODING, name='int32', referencedName='null', description='null', id=-1, version=0, deprecated=0, encodedLength=4, offset=24, componentTokenCount=1, encoding=Encoding{presence=REQUIRED, primitiveType=INT32, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=BEGIN_FIELD, name='serviceControlStreamId', referencedName='null', description='null', id=7, version=0, deprecated=0, encodedLength=0, offset=36, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=ENCODING, name='int32', referencedName='null', description='null', id=-1, version=0, deprecated=0, encodedLength=4, offset=36, componentTokenCount=1, encoding=Encoding{presence=REQUIRED, primitiveType=INT32, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
         builder.Append("ServiceControlStreamId=");
         builder.Append(ServiceControlStreamId());
         builder.Append('|');
-        //Token{signal=BEGIN_FIELD, name='ingressStreamId', referencedName='null', description='null', id=7, version=0, deprecated=0, encodedLength=0, offset=28, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
-        //Token{signal=ENCODING, name='int32', referencedName='null', description='null', id=-1, version=0, deprecated=0, encodedLength=4, offset=28, componentTokenCount=1, encoding=Encoding{presence=REQUIRED, primitiveType=INT32, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=BEGIN_FIELD, name='ingressStreamId', referencedName='null', description='null', id=8, version=0, deprecated=0, encodedLength=0, offset=40, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=ENCODING, name='int32', referencedName='null', description='null', id=-1, version=0, deprecated=0, encodedLength=4, offset=40, componentTokenCount=1, encoding=Encoding{presence=REQUIRED, primitiveType=INT32, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
         builder.Append("IngressStreamId=");
         builder.Append(IngressStreamId());
         builder.Append('|');
-        //Token{signal=BEGIN_FIELD, name='memberId', referencedName='null', description='null', id=8, version=0, deprecated=0, encodedLength=0, offset=32, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
-        //Token{signal=ENCODING, name='int32', referencedName='null', description='null', id=-1, version=0, deprecated=0, encodedLength=4, offset=32, componentTokenCount=1, encoding=Encoding{presence=REQUIRED, primitiveType=INT32, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=BEGIN_FIELD, name='memberId', referencedName='null', description='null', id=9, version=0, deprecated=0, encodedLength=0, offset=44, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=ENCODING, name='int32', referencedName='null', description='null', id=-1, version=0, deprecated=0, encodedLength=4, offset=44, componentTokenCount=1, encoding=Encoding{presence=REQUIRED, primitiveType=INT32, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
         builder.Append("MemberId=");
         builder.Append(MemberId());
         builder.Append('|');
-        //Token{signal=BEGIN_FIELD, name='serviceId', referencedName='null', description='null', id=9, version=0, deprecated=0, encodedLength=0, offset=36, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
-        //Token{signal=ENCODING, name='int32', referencedName='null', description='null', id=-1, version=0, deprecated=0, encodedLength=4, offset=36, componentTokenCount=1, encoding=Encoding{presence=REQUIRED, primitiveType=INT32, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=BEGIN_FIELD, name='serviceId', referencedName='null', description='null', id=10, version=0, deprecated=0, encodedLength=0, offset=48, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=ENCODING, name='int32', referencedName='null', description='null', id=-1, version=0, deprecated=0, encodedLength=4, offset=48, componentTokenCount=1, encoding=Encoding{presence=REQUIRED, primitiveType=INT32, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
         builder.Append("ServiceId=");
         builder.Append(ServiceId());
         builder.Append('|');
-        //Token{signal=BEGIN_VAR_DATA, name='aeronDirectory', referencedName='null', description='null', id=10, version=0, deprecated=0, encodedLength=0, offset=128, componentTokenCount=6, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=BEGIN_VAR_DATA, name='aeronDirectory', referencedName='null', description='null', id=11, version=0, deprecated=0, encodedLength=0, offset=128, componentTokenCount=6, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
         builder.Append("AeronDirectory=");
         builder.Append(AeronDirectory());
         builder.Append('|');
-        //Token{signal=BEGIN_VAR_DATA, name='archiveChannel', referencedName='null', description='null', id=11, version=0, deprecated=0, encodedLength=0, offset=-1, componentTokenCount=6, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=BEGIN_VAR_DATA, name='archiveChannel', referencedName='null', description='null', id=12, version=0, deprecated=0, encodedLength=0, offset=-1, componentTokenCount=6, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
         builder.Append("ArchiveChannel=");
         builder.Append(ArchiveChannel());
         builder.Append('|');
-        //Token{signal=BEGIN_VAR_DATA, name='serviceControlChannel', referencedName='null', description='null', id=12, version=0, deprecated=0, encodedLength=0, offset=-1, componentTokenCount=6, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=BEGIN_VAR_DATA, name='serviceControlChannel', referencedName='null', description='null', id=13, version=0, deprecated=0, encodedLength=0, offset=-1, componentTokenCount=6, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
         builder.Append("ServiceControlChannel=");
         builder.Append(ServiceControlChannel());
         builder.Append('|');
-        //Token{signal=BEGIN_VAR_DATA, name='ingressChannel', referencedName='null', description='null', id=13, version=0, deprecated=0, encodedLength=0, offset=-1, componentTokenCount=6, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=BEGIN_VAR_DATA, name='ingressChannel', referencedName='null', description='null', id=14, version=0, deprecated=0, encodedLength=0, offset=-1, componentTokenCount=6, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
         builder.Append("IngressChannel=");
         builder.Append(IngressChannel());
         builder.Append('|');
-        //Token{signal=BEGIN_VAR_DATA, name='serviceName', referencedName='null', description='null', id=14, version=0, deprecated=0, encodedLength=0, offset=-1, componentTokenCount=6, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=BEGIN_VAR_DATA, name='serviceName', referencedName='null', description='null', id=15, version=0, deprecated=0, encodedLength=0, offset=-1, componentTokenCount=6, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
         builder.Append("ServiceName=");
         builder.Append(ServiceName());
         builder.Append('|');
-        //Token{signal=BEGIN_VAR_DATA, name='authenticator', referencedName='null', description='null', id=15, version=0, deprecated=0, encodedLength=0, offset=-1, componentTokenCount=6, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=BEGIN_VAR_DATA, name='authenticator', referencedName='null', description='null', id=16, version=0, deprecated=0, encodedLength=0, offset=-1, componentTokenCount=6, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
         builder.Append("Authenticator=");
         builder.Append(Authenticator());
 

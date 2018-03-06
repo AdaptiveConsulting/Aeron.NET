@@ -7,21 +7,21 @@ using Adaptive.Agrona;
 
 namespace Adaptive.Cluster.Codecs {
 
-public class ServiceActionAckDecoder
+public class ClusterActionAckDecoder
 {
     public const ushort BLOCK_LENGTH = 24;
     public const ushort TEMPLATE_ID = 32;
     public const ushort SCHEMA_ID = 1;
     public const ushort SCHEMA_VERSION = 1;
 
-    private ServiceActionAckDecoder _parentMessage;
+    private ClusterActionAckDecoder _parentMessage;
     private IDirectBuffer _buffer;
     protected int _offset;
     protected int _limit;
     protected int _actingBlockLength;
     protected int _actingVersion;
 
-    public ServiceActionAckDecoder()
+    public ClusterActionAckDecoder()
     {
         _parentMessage = this;
     }
@@ -61,7 +61,7 @@ public class ServiceActionAckDecoder
         return _offset;
     }
 
-    public ServiceActionAckDecoder Wrap(
+    public ClusterActionAckDecoder Wrap(
         IDirectBuffer buffer, int offset, int actingBlockLength, int actingVersion)
     {
         this._buffer = buffer;
@@ -299,7 +299,7 @@ public class ServiceActionAckDecoder
     {
         int originalLimit = Limit();
         Limit(_offset + _actingBlockLength);
-        builder.Append("[ServiceActionAck](sbeTemplateId=");
+        builder.Append("[ClusterActionAck](sbeTemplateId=");
         builder.Append(TEMPLATE_ID);
         builder.Append("|sbeSchemaId=");
         builder.Append(SCHEMA_ID);

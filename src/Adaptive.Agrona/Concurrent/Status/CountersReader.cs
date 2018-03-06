@@ -77,6 +77,14 @@ namespace Adaptive.Agrona.Concurrent.Status
         /// <param name="keyBuffer"> for the counter.</param>
         /// <param name="label"> for the counter.</param>
         public delegate void MetaData(int counterId, int typeId, IDirectBuffer keyBuffer, string label);
+        
+        /// <summary>
+        /// Callback function for consuming basic counter details and value.
+        /// </summary>
+        /// <param name="value">     of the counter. </param>
+        /// <param name="counterId"> of the counter </param>
+        /// <param name="label">     for the counter. </param>
+        public delegate void CounterConsumer(long value, int counterId, string label);
 
         /// <summary>
         /// Can be used to representing a null counter id when passed as a argument.
@@ -235,6 +243,31 @@ namespace Adaptive.Agrona.Concurrent.Status
                 {
                     var label = LabelValue(i);
                     consumer(counterId, label);
+                }
+                else if (RECORD_UNUSED == recordStatus)
+                {
+                    break;
+                }
+
+                counterId++;
+            }
+        }
+        
+        /// <summary>
+        /// Iterate over the counters and provide the value and basic metadata.
+        /// </summary>
+        /// <param name="consumer"> for each allocated counter. </param>
+        public void ForEach(CounterConsumer consumer)
+        {
+            int counterId = 0;
+
+            for (int i = 0, capacity = MetaDataBuffer.Capacity; i < capacity; i += METADATA_LENGTH)
+            {
+                int recordStatus = MetaDataBuffer.GetIntVolatile(i);
+
+                if (RECORD_ALLOCATED == recordStatus)
+                {
+                    consumer(ValuesBuffer.GetLongVolatile(CounterOffset(counterId)), counterId, LabelValue(i));
                 }
                 else if (RECORD_UNUSED == recordStatus)
                 {

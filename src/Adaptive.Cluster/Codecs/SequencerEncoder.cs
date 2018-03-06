@@ -7,19 +7,19 @@ using Adaptive.Agrona;
 
 namespace Adaptive.Cluster.Codecs {
 
-public class ScheduleTimerRequestEncoder
+public class SequencerEncoder
 {
-    public const ushort BLOCK_LENGTH = 16;
-    public const ushort TEMPLATE_ID = 30;
+    public const ushort BLOCK_LENGTH = 8;
+    public const ushort TEMPLATE_ID = 105;
     public const ushort SCHEMA_ID = 1;
     public const ushort SCHEMA_VERSION = 1;
 
-    private ScheduleTimerRequestEncoder _parentMessage;
+    private SequencerEncoder _parentMessage;
     private IMutableDirectBuffer _buffer;
     protected int _offset;
     protected int _limit;
 
-    public ScheduleTimerRequestEncoder()
+    public SequencerEncoder()
     {
         _parentMessage = this;
     }
@@ -59,7 +59,7 @@ public class ScheduleTimerRequestEncoder
         return _offset;
     }
 
-    public ScheduleTimerRequestEncoder Wrap(IMutableDirectBuffer buffer, int offset)
+    public SequencerEncoder Wrap(IMutableDirectBuffer buffer, int offset)
     {
         this._buffer = buffer;
         this._offset = offset;
@@ -68,7 +68,7 @@ public class ScheduleTimerRequestEncoder
         return this;
     }
 
-    public ScheduleTimerRequestEncoder WrapAndApplyHeader(
+    public SequencerEncoder WrapAndApplyHeader(
         IMutableDirectBuffer buffer, int offset, MessageHeaderEncoder headerEncoder)
     {
         headerEncoder
@@ -96,66 +96,34 @@ public class ScheduleTimerRequestEncoder
         this._limit = limit;
     }
 
-    public static int CorrelationIdEncodingOffset()
+    public static int NextSessionIdEncodingOffset()
     {
         return 0;
     }
 
-    public static int CorrelationIdEncodingLength()
+    public static int NextSessionIdEncodingLength()
     {
         return 8;
     }
 
-    public static long CorrelationIdNullValue()
+    public static long NextSessionIdNullValue()
     {
         return -9223372036854775808L;
     }
 
-    public static long CorrelationIdMinValue()
+    public static long NextSessionIdMinValue()
     {
         return -9223372036854775807L;
     }
 
-    public static long CorrelationIdMaxValue()
+    public static long NextSessionIdMaxValue()
     {
         return 9223372036854775807L;
     }
 
-    public ScheduleTimerRequestEncoder CorrelationId(long value)
+    public SequencerEncoder NextSessionId(long value)
     {
         _buffer.PutLong(_offset + 0, value, ByteOrder.LittleEndian);
-        return this;
-    }
-
-
-    public static int DeadlineEncodingOffset()
-    {
-        return 8;
-    }
-
-    public static int DeadlineEncodingLength()
-    {
-        return 8;
-    }
-
-    public static long DeadlineNullValue()
-    {
-        return -9223372036854775808L;
-    }
-
-    public static long DeadlineMinValue()
-    {
-        return -9223372036854775807L;
-    }
-
-    public static long DeadlineMaxValue()
-    {
-        return 9223372036854775807L;
-    }
-
-    public ScheduleTimerRequestEncoder Deadline(long value)
-    {
-        _buffer.PutLong(_offset + 8, value, ByteOrder.LittleEndian);
         return this;
     }
 
@@ -168,7 +136,7 @@ public class ScheduleTimerRequestEncoder
 
     public StringBuilder AppendTo(StringBuilder builder)
     {
-        ScheduleTimerRequestDecoder writer = new ScheduleTimerRequestDecoder();
+        SequencerDecoder writer = new SequencerDecoder();
         writer.Wrap(_buffer, _offset, BLOCK_LENGTH, SCHEMA_VERSION);
 
         return writer.AppendTo(builder);

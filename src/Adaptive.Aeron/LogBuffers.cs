@@ -58,7 +58,7 @@ namespace Adaptive.Aeron
                 // if log length exceeds MAX_INT we need multiple mapped buffers, (see FileChannel.map doc).
                 if (logLength < int.MaxValue)
                 {
-                    var mappedBuffer = IoUtil.MapExistingFile(logFileName, MapMode.ReadWrite);
+                    var mappedBuffer = IoUtil.MapExistingFile(logFileName, MapMode.ReadWrite); // TODO Java has sparse hint
                     _mappedByteBuffers = new[] {mappedBuffer};
 
                     _logMetaDataBuffer = new UnsafeBuffer(mappedBuffer.Pointer,

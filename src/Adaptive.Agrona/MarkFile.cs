@@ -12,15 +12,15 @@ namespace Adaptive.Agrona
     /// The assumptions are: (1) the version field is an int in size, (2) the timestamp field is a long in size,
     /// and (3) the version field comes before the timestamp field.
     /// </summary>
-    public class CncFile : IDisposable
+    public class MarkFile : IDisposable
     {
         private readonly int versionFieldOffset;
         private readonly int timestampFieldOffset;
 
-        private readonly DirectoryInfo cncDir;
-        private readonly FileInfo cncFile;
-        private readonly MappedByteBuffer mappedCncBuffer;
-        private readonly UnsafeBuffer cncBuffer;
+        private readonly DirectoryInfo parentDir;
+        private readonly FileInfo markFile;
+        private readonly MappedByteBuffer mappedBuffer;
+        private readonly UnsafeBuffer buffer;
 
         private volatile bool isClosed = false;
 
@@ -41,7 +41,7 @@ namespace Adaptive.Agrona
         /// <param name="epochClock">            to use for time checks </param>
         /// <param name="versionCheck">          to use for existing CnC file and version field </param>
         /// <param name="logger">                to use to signal progress or null </param>
-        public CncFile(DirectoryInfo directory, string filename, bool warnIfDirectoryExists, bool dirDeleteOnStart,
+        public MarkFile(DirectoryInfo directory, string filename, bool warnIfDirectoryExists, bool dirDeleteOnStart,
             int versionFieldOffset, int timestampFieldOffset, int totalFileLength, long timeoutMs,
             IEpochClock epochClock, Action<int> versionCheck, Action<string> logger)
         {
@@ -50,10 +50,10 @@ namespace Adaptive.Agrona
             EnsureDirectoryExists(directory, filename, warnIfDirectoryExists, dirDeleteOnStart, versionFieldOffset,
                 timestampFieldOffset, timeoutMs, epochClock, versionCheck, logger);
 
-            this.cncDir = directory;
-            this.cncFile = new FileInfo(Path.Combine(directory.Name, filename));
-            this.mappedCncBuffer = MapNewFile(cncFile, totalFileLength);
-            this.cncBuffer = new UnsafeBuffer(mappedCncBuffer.Pointer, totalFileLength);
+            this.parentDir = directory;
+            this.markFile = new FileInfo(Path.Combine(directory.Name, filename));
+            this.mappedBuffer = MapNewFile(markFile, totalFileLength);
+            this.buffer = new UnsafeBuffer(mappedBuffer.Pointer, totalFileLength);
             this.versionFieldOffset = versionFieldOffset;
             this.timestampFieldOffset = timestampFieldOffset;
         }
@@ -64,7 +64,7 @@ namespace Adaptive.Agrona
         /// 
         /// Total length of CnC file will be mapped until <seealso cref="#close()"/> is called.
         /// </summary>
-        /// <param name="cncFile">               to use </param>
+        /// <param name="markFile">               to use </param>
         /// <param name="shouldPreExist">        or not </param>
         /// <param name="versionFieldOffset">    to use for version field access </param>
         /// <param name="timestampFieldOffset">  to use for timestamp field access </param>
@@ -73,18 +73,18 @@ namespace Adaptive.Agrona
         /// <param name="epochClock">            to use for time checks </param>
         /// <param name="versionCheck">          to use for existing CnC file and version field </param>
         /// <param name="logger">                to use to signal progress or null </param>
-        public CncFile(FileInfo cncFile, bool shouldPreExist, int versionFieldOffset, int timestampFieldOffset,
+        public MarkFile(FileInfo markFile, bool shouldPreExist, int versionFieldOffset, int timestampFieldOffset,
             int totalFileLength, long timeoutMs, IEpochClock epochClock, Action<int> versionCheck,
             Action<string> logger)
         {
             ValidateOffsets(versionFieldOffset, timestampFieldOffset);
 
-            this.cncDir = cncFile.Directory;
-            this.cncFile = cncFile;
-            this.mappedCncBuffer = MapNewOrExistingCncFile(cncFile, shouldPreExist, versionFieldOffset,
+            this.parentDir = markFile.Directory;
+            this.markFile = markFile;
+            this.mappedBuffer = MapNewOrExistingCncFile(markFile, shouldPreExist, versionFieldOffset,
                 timestampFieldOffset, totalFileLength, timeoutMs, epochClock, versionCheck, logger);
 
-            this.cncBuffer = new UnsafeBuffer(mappedCncBuffer.Pointer, totalFileLength);
+            this.buffer = new UnsafeBuffer(mappedBuffer.Pointer, totalFileLength);
             this.versionFieldOffset = versionFieldOffset;
             this.timestampFieldOffset = timestampFieldOffset;
         }
@@ -102,16 +102,16 @@ namespace Adaptive.Agrona
         /// <param name="epochClock">            to use for time checks </param>
         /// <param name="versionCheck">          to use for existing CnC file and version field </param>
         /// <param name="logger">                to use to signal progress or null </param>
-        public CncFile(DirectoryInfo directory, string filename, int versionFieldOffset, int timestampFieldOffset,
+        public MarkFile(DirectoryInfo directory, string filename, int versionFieldOffset, int timestampFieldOffset,
             long timeoutMs, IEpochClock epochClock, Action<int> versionCheck, Action<string> logger)
         {
             ValidateOffsets(versionFieldOffset, timestampFieldOffset);
 
-            this.cncDir = directory;
-            this.cncFile = new FileInfo(Path.Combine(directory.FullName, filename));
-            this.mappedCncBuffer = MapExistingCncFile(cncFile, versionFieldOffset, timestampFieldOffset, timeoutMs,
+            this.parentDir = directory;
+            this.markFile = new FileInfo(Path.Combine(directory.FullName, filename));
+            this.mappedBuffer = MapExistingCncFile(markFile, versionFieldOffset, timestampFieldOffset, timeoutMs,
                 epochClock, versionCheck, logger);
-            this.cncBuffer = new UnsafeBuffer(mappedCncBuffer);
+            this.buffer = new UnsafeBuffer(mappedBuffer);
             this.versionFieldOffset = versionFieldOffset;
             this.timestampFieldOffset = timestampFieldOffset;
         }
@@ -121,17 +121,17 @@ namespace Adaptive.Agrona
         /// 
         /// If mappedCncBuffer is not null, then it will be unmapped upon <seealso cref="#close()"/>.
         /// </summary>
-        /// <param name="mappedCncBuffer">      for the CnC fields </param>
+        /// <param name="mappedBuffer">      for the CnC fields </param>
         /// <param name="versionFieldOffset">   for the version field </param>
         /// <param name="timestampFieldOffset"> for the timestamp field </param>
-        public CncFile(MappedByteBuffer mappedCncBuffer, int versionFieldOffset, int timestampFieldOffset)
+        public MarkFile(MappedByteBuffer mappedBuffer, int versionFieldOffset, int timestampFieldOffset)
         {
             ValidateOffsets(versionFieldOffset, timestampFieldOffset);
 
-            this.cncDir = null;
-            this.cncFile = null;
-            this.mappedCncBuffer = mappedCncBuffer;
-            this.cncBuffer = new UnsafeBuffer(mappedCncBuffer);
+            this.parentDir = null;
+            this.markFile = null;
+            this.mappedBuffer = mappedBuffer;
+            this.buffer = new UnsafeBuffer(mappedBuffer);
             this.versionFieldOffset = versionFieldOffset;
             this.timestampFieldOffset = timestampFieldOffset;
         }
@@ -139,17 +139,17 @@ namespace Adaptive.Agrona
         /// <summary>
         /// Manage a CnC file given a buffer and offsets of version and timestamp.
         /// </summary>
-        /// <param name="cncBuffer">            for the CnC fields </param>
+        /// <param name="buffer">            for the CnC fields </param>
         /// <param name="versionFieldOffset">   for the version field </param>
         /// <param name="timestampFieldOffset"> for the timestamp field </param>
-        public CncFile(UnsafeBuffer cncBuffer, int versionFieldOffset, int timestampFieldOffset)
+        public MarkFile(UnsafeBuffer buffer, int versionFieldOffset, int timestampFieldOffset)
         {
             ValidateOffsets(versionFieldOffset, timestampFieldOffset);
 
-            this.cncDir = null;
-            this.cncFile = null;
-            this.mappedCncBuffer = null;
-            this.cncBuffer = cncBuffer;
+            this.parentDir = null;
+            this.markFile = null;
+            this.mappedBuffer = null;
+            this.buffer = buffer;
             this.versionFieldOffset = versionFieldOffset;
             this.timestampFieldOffset = timestampFieldOffset;
         }
@@ -163,68 +163,68 @@ namespace Adaptive.Agrona
         {
             if (!isClosed)
             {
-                if (null != mappedCncBuffer)
+                if (null != mappedBuffer)
                 {
-                    IoUtil.Unmap(mappedCncBuffer);
+                    IoUtil.Unmap(mappedBuffer);
                 }
 
                 isClosed = true;
             }
         }
 
-        public virtual void SignalCncReady(int version)
+        public virtual void SignalReady(int version)
         {
-            cncBuffer.PutIntOrdered(versionFieldOffset, version);
+            buffer.PutIntOrdered(versionFieldOffset, version);
         }
 
         public virtual int VersionVolatile()
         {
-            return cncBuffer.GetIntVolatile(versionFieldOffset);
+            return buffer.GetIntVolatile(versionFieldOffset);
         }
 
         public virtual int VersionWeak()
         {
-            return cncBuffer.GetInt(versionFieldOffset);
+            return buffer.GetInt(versionFieldOffset);
         }
 
         public virtual void TimestampOrdered(long timestamp)
         {
-            cncBuffer.PutLongOrdered(timestampFieldOffset, timestamp);
+            buffer.PutLongOrdered(timestampFieldOffset, timestamp);
         }
 
         public virtual long TimestampVolatile()
         {
-            return cncBuffer.GetLongVolatile(timestampFieldOffset);
+            return buffer.GetLongVolatile(timestampFieldOffset);
         }
 
         public virtual long TimestampWeak()
         {
-            return cncBuffer.GetLong(timestampFieldOffset);
+            return buffer.GetLong(timestampFieldOffset);
         }
 
         public virtual void DeleteDirectory(bool ignoreFailures)
         {
-            IoUtil.Delete(cncDir, ignoreFailures);
+            IoUtil.Delete(parentDir, ignoreFailures);
         }
 
         public virtual DirectoryInfo CncDirectory()
         {
-            return cncDir;
+            return parentDir;
         }
 
         public virtual FileInfo CncFileName()
         {
-            return cncFile;
+            return markFile;
         }
 
         public virtual MappedByteBuffer MappedByteBuffer()
         {
-            return mappedCncBuffer;
+            return mappedBuffer;
         }
 
         public virtual UnsafeBuffer Buffer()
         {
-            return cncBuffer;
+            return buffer;
         }
 
         public static void EnsureDirectoryExists(DirectoryInfo directory, string filename, bool warnIfDirectoryExists,

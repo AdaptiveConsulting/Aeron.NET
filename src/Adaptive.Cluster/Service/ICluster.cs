@@ -32,6 +32,13 @@ namespace Adaptive.Cluster.Service
         /// </summary>
         /// <returns> the <seealso cref="ClientSession"/>s. </returns>
         ICollection<ClientSession> GetClientSessions();
+        
+        /// <summary>
+        /// Close a cluster session.
+        /// </summary>
+        /// <param name="clusterSessionId"> to be closed. </param>
+        /// <returns> true if the instruction is successfully or false if the session id does not exist. </returns>
+        bool CloseSession(long clusterSessionId);
 
         /// <summary>
         /// Current Epoch time in milliseconds.

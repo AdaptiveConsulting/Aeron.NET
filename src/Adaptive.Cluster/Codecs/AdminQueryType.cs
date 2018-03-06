@@ -1,11 +1,10 @@
 /* Generated SBE (Simple Binary Encoding) message codec */
 namespace Adaptive.Cluster.Codecs {
 
-    public enum ClusterComponentType : int
+    public enum AdminQueryType : int
     {
-        NULL = 0,
-        CONSENSUS_MODULE = 1,
-        CONTAINER = 2,
+        ENDPOINTS = 0,
+        RECORDING_LOG = 1,
         NULL_VALUE = -2147483648
     }
 }

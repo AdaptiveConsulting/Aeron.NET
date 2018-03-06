@@ -14,6 +14,7 @@ namespace Adaptive.Cluster.Client
         private readonly NewLeaderEventDecoder newLeaderEventDecoder = new NewLeaderEventDecoder();
         private readonly SessionHeaderDecoder sessionHeaderDecoder = new SessionHeaderDecoder();
         private readonly ChallengeDecoder challengeDecoder = new ChallengeDecoder();
+        private readonly AdminResponseDecoder adminResponseDecoder = new AdminResponseDecoder();
         private readonly ControlledFragmentAssembler fragmentAssembler;
         private readonly Subscription subscription;
         private long clusterSessionId = -1;
@@ -23,6 +24,7 @@ namespace Adaptive.Cluster.Client
         private EventCode eventCode;
         private string detail = "";
         private byte[] challengeData;
+        private byte[] adminResponseData;
 
         public EgressPoller(Subscription subscription, int fragmentLimit)
         {
@@ -94,6 +96,15 @@ namespace Adaptive.Cluster.Client
         {
             return challengeData;
         }
+        
+        /// <summary>
+        /// Get the response data in the last admin response.
+        /// </summary>
+        /// <returns> the response data in the last admin response or null if last message was not an admin response. </returns>
+        public byte[] AdminResponseData()
+        {
+            return adminResponseData;
+        }
 
         /// <summary>
         /// Has the last polling action received a complete event?
@@ -121,6 +132,7 @@ namespace Adaptive.Cluster.Client
             eventCode = Codecs.EventCode.NULL_VALUE;
             detail = "";
             challengeData = null;
+            adminResponseData = null;
             pollComplete = false;
 
             return subscription.ControlledPoll(fragmentAssembler, fragmentLimit);
@@ -168,6 +180,21 @@ namespace Adaptive.Cluster.Client
                     clusterSessionId = challengeDecoder.ClusterSessionId();
                     correlationId = challengeDecoder.CorrelationId();
                     break;
+                
+                case AdminResponseDecoder.TEMPLATE_ID:
+                    adminResponseDecoder.Wrap(
+                        buffer, 
+                        offset + MessageHeaderDecoder.ENCODED_LENGTH, 
+                        messageHeaderDecoder.BlockLength(), 
+                        messageHeaderDecoder.Version());
+
+                    adminResponseData = new byte[adminResponseDecoder.ResponseDataLength()];
+                    adminResponseDecoder.GetResponseData(adminResponseData, 0, adminResponseDecoder.ResponseDataLength());
+
+                    clusterSessionId = adminResponseDecoder.ClusterSessionId();
+                    correlationId = adminResponseDecoder.CorrelationId();
+                    break;
+
 
                 default:
                     throw new InvalidOperationException("Unknown templateId: " + templateId);

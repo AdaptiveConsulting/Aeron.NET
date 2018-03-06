@@ -301,12 +301,12 @@ public class SessionOpenEventEncoder
         return this;
     }
 
-    public static int PrincipalDataId()
+    public static int EncodedPrincipalId()
     {
         return 6;
     }
 
-    public static string PrincipalDataMetaAttribute(MetaAttribute metaAttribute)
+    public static string EncodedPrincipalMetaAttribute(MetaAttribute metaAttribute)
     {
         switch (metaAttribute)
         {
@@ -319,12 +319,12 @@ public class SessionOpenEventEncoder
         return "";
     }
 
-    public static int PrincipalDataHeaderLength()
+    public static int EncodedPrincipalHeaderLength()
     {
         return 4;
     }
 
-    public SessionOpenEventEncoder PutPrincipalData(IDirectBuffer src, int srcOffset, int length)
+    public SessionOpenEventEncoder PutEncodedPrincipal(IDirectBuffer src, int srcOffset, int length)
     {
         if (length > 1073741824)
         {
@@ -340,7 +340,7 @@ public class SessionOpenEventEncoder
         return this;
     }
 
-    public SessionOpenEventEncoder PutPrincipalData(byte[] src, int srcOffset, int length)
+    public SessionOpenEventEncoder PutEncodedPrincipal(byte[] src, int srcOffset, int length)
     {
         if (length > 1073741824)
         {

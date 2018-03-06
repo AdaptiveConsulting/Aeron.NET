@@ -9,7 +9,7 @@ namespace Adaptive.Cluster.Codecs {
 
 public class ClusterSessionEncoder
 {
-    public const ushort BLOCK_LENGTH = 36;
+    public const ushort BLOCK_LENGTH = 40;
     public const ushort TEMPLATE_ID = 103;
     public const ushort SCHEMA_ID = 1;
     public const ushort SCHEMA_VERSION = 1;
@@ -224,9 +224,25 @@ public class ClusterSessionEncoder
     }
 
 
-    public static int ResponseStreamIdEncodingOffset()
+    public static int CloseReasonEncodingOffset()
     {
         return 32;
+    }
+
+    public static int CloseReasonEncodingLength()
+    {
+        return 4;
+    }
+
+    public ClusterSessionEncoder CloseReason(CloseReason value)
+    {
+        _buffer.PutInt(_offset + 32, (int)value, ByteOrder.LittleEndian);
+        return this;
+    }
+
+    public static int ResponseStreamIdEncodingOffset()
+    {
+        return 36;
     }
 
     public static int ResponseStreamIdEncodingLength()
@@ -251,14 +267,14 @@ public class ClusterSessionEncoder
 
     public ClusterSessionEncoder ResponseStreamId(int value)
     {
-        _buffer.PutInt(_offset + 32, value, ByteOrder.LittleEndian);
+        _buffer.PutInt(_offset + 36, value, ByteOrder.LittleEndian);
         return this;
     }
 
 
     public static int ResponseChannelId()
     {
-        return 6;
+        return 7;
     }
 
     public static string ResponseChannelCharacterEncoding()

@@ -271,17 +271,17 @@ public class ClientSessionDecoder
         return Encoding.ASCII.GetString(tmp);
     }
 
-    public static int PrincipalDataId()
+    public static int EncodedPrincipalId()
     {
         return 4;
     }
 
-    public static int PrincipalDataSinceVersion()
+    public static int EncodedPrincipalSinceVersion()
     {
         return 0;
     }
 
-    public static string PrincipalDataMetaAttribute(MetaAttribute metaAttribute)
+    public static string EncodedPrincipalMetaAttribute(MetaAttribute metaAttribute)
     {
         switch (metaAttribute)
         {
@@ -294,18 +294,18 @@ public class ClientSessionDecoder
         return "";
     }
 
-    public static int PrincipalDataHeaderLength()
+    public static int EncodedPrincipalHeaderLength()
     {
         return 4;
     }
 
-    public int PrincipalDataLength()
+    public int EncodedPrincipalLength()
     {
         int limit = _parentMessage.Limit();
         return (int)unchecked((uint)_buffer.GetInt(limit, ByteOrder.LittleEndian));
     }
 
-    public int GetPrincipalData(IMutableDirectBuffer dst, int dstOffset, int length)
+    public int GetEncodedPrincipal(IMutableDirectBuffer dst, int dstOffset, int length)
     {
         int headerLength = 4;
         int limit = _parentMessage.Limit();
@@ -317,7 +317,7 @@ public class ClientSessionDecoder
         return bytesCopied;
     }
 
-    public int GetPrincipalData(byte[] dst, int dstOffset, int length)
+    public int GetEncodedPrincipal(byte[] dst, int dstOffset, int length)
     {
         int headerLength = 4;
         int limit = _parentMessage.Limit();
@@ -372,9 +372,9 @@ public class ClientSessionDecoder
         builder.Append("ResponseChannel=");
         builder.Append(ResponseChannel());
         builder.Append('|');
-        //Token{signal=BEGIN_VAR_DATA, name='principalData', referencedName='null', description='null', id=4, version=0, deprecated=0, encodedLength=0, offset=-1, componentTokenCount=6, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
-        builder.Append("PrincipalData=");
-        builder.Append(PrincipalDataLength() + " raw bytes");
+        //Token{signal=BEGIN_VAR_DATA, name='encodedPrincipal', referencedName='null', description='null', id=4, version=0, deprecated=0, encodedLength=0, offset=-1, componentTokenCount=6, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        builder.Append("EncodedPrincipal=");
+        builder.Append(EncodedPrincipalLength() + " raw bytes");
 
         Limit(originalLimit);
 

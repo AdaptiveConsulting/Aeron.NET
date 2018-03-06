@@ -41,5 +41,11 @@ namespace Adaptive.Cluster.Service
         /// <param name="logStreamId">      to subscribe to for the log. </param>
         /// <param name="logChannel">       to subscribe to for the log. </param>
         void OnJoinLog(long leadershipTermId, int commitPositionId, int logSessionId, int logStreamId, string logChannel);
+
+        /// <summary>
+        /// Request that a cluster session be closed.
+        /// </summary>
+        /// <param name="clusterSessionId"> of the session to be closed. </param>
+        void OnServiceCloseSession(long clusterSessionId);
     }
 }

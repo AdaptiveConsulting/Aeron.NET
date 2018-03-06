@@ -83,10 +83,10 @@ namespace Adaptive.Cluster.Service
                     openEventDecoder.Wrap(buffer, offset + MessageHeaderDecoder.ENCODED_LENGTH, messageHeaderDecoder.BlockLength(), messageHeaderDecoder.Version());
 
                     string responseChannel = openEventDecoder.ResponseChannel();
-                    byte[] principalData = new byte[openEventDecoder.PrincipalDataLength()];
-                    openEventDecoder.GetPrincipalData(principalData, 0, principalData.Length);
+                    byte[] encodedPrincipal = new byte[openEventDecoder.EncodedPrincipalLength()];
+                    openEventDecoder.GetEncodedPrincipal(encodedPrincipal, 0, encodedPrincipal.Length);
 
-                    agent.OnSessionOpen(openEventDecoder.ClusterSessionId(), openEventDecoder.Timestamp(), openEventDecoder.ResponseStreamId(), responseChannel, principalData);
+                    agent.OnSessionOpen(openEventDecoder.ClusterSessionId(), openEventDecoder.Timestamp(), openEventDecoder.ResponseStreamId(), responseChannel, encodedPrincipal);
                     break;
                 }
 

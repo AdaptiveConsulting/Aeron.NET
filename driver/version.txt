@@ -1,0 +1,2 @@
+v1.8.2
+http://repo1.maven.org/maven2/io/aeron/aeron-all/1.8.2/

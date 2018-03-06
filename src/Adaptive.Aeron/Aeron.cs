@@ -157,6 +157,17 @@ namespace Adaptive.Aeron
         }
 
         /// <summary>
+        /// Print out the values from <seealso cref="#countersReader()"/> which can be useful for debugging.
+        /// </summary>
+        ///  <param name="out"> to where the counters get printed. </param>
+        public void PrintCounters(StreamWriter @out)
+        {
+            CountersReader counters = CountersReader();
+            counters.ForEach((value, id, label) => @out.WriteLine("{0,3}: {1:} - {2}", id, value, label));
+        }
+
+
+        /// <summary>
         /// Has the client been closed? If not then the CnC file may not be unmapped.
         /// </summary>
         /// <returns> true if the client has been explicitly closed otherwise false. </returns>
@@ -370,7 +381,7 @@ namespace Adaptive.Aeron
             private long _keepAliveInterval = KeepaliveIntervalNs;
             private long _interServiceTimeout = 0;
             private FileInfo _cncFile;
-            private string _aeronDirectoryName;
+            private string _aeronDirectoryName = GetAeronDirectoryName();
             private DirectoryInfo _aeronDirectory;
             private long _driverTimeoutMs = DRIVER_TIMEOUT_MS;
             private MappedByteBuffer _cncByteBuffer;
@@ -477,7 +488,7 @@ namespace Adaptive.Aeron
             /// Key for the linger timeout for a publication to wait around after draining in nanoseconds.
             /// </summary>
             public const string LINGER_PARAM_NAME = "linger";
-            
+
             /// <summary>
             /// Valid value for <seealso cref="MDC_CONTROL_MODE"/> when manual control is desired.
             /// </summary>
@@ -493,9 +504,14 @@ namespace Adaptive.Aeron
             /// </summary>
             public const string RELIABLE_STREAM_PARAM_NAME = "reliable";
 
-            public Context()
+            /// <summary>
+            /// Get the default directory name to be used if <seealso cref="AeronDirectoryName(String)"/> is not set. This will take
+            /// the <seealso cref="AERON_DIR_PROP_NAME"/> if set and if not then <seealso cref="AERON_DIR_PROP_DEFAULT"/>.
+            /// </summary>
+            /// <returns> the default directory name to be used if <seealso cref="AeronDirectoryName(String)"/> is not set. </returns>
+            public static string GetAeronDirectoryName()
             {
-                _aeronDirectoryName = Config.GetProperty(AERON_DIR_PROP_NAME, AERON_DIR_PROP_DEFAULT);
+                return Config.GetProperty(AERON_DIR_PROP_NAME, AERON_DIR_PROP_DEFAULT);
             }
 
             /// <summary>
@@ -510,6 +526,15 @@ namespace Adaptive.Aeron
                 }
 
                 return this;
+            }
+            
+            /// <summary>
+            /// Perform a shallow copy of the object.
+            /// </summary>
+            /// <returns> a shallow copy of the object. </returns>
+            public virtual Context Clone()
+            {
+                return (Context)MemberwiseClone();
             }
 
             /// <summary>

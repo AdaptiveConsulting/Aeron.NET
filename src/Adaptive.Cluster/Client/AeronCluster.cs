@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Security.Authentication;
+using System.Text;
 using Adaptive.Aeron;
 using Adaptive.Aeron.LogBuffer;
 using Adaptive.Agrona;
@@ -33,6 +34,7 @@ namespace Adaptive.Cluster.Client
         private readonly BufferClaim _bufferClaim = new BufferClaim();
         private readonly MessageHeaderEncoder _messageHeaderEncoder = new MessageHeaderEncoder();
         private readonly SessionKeepAliveRequestEncoder _keepAliveRequestEncoder = new SessionKeepAliveRequestEncoder();
+        private readonly AdminQueryEncoder _adminQueryEncoder = new AdminQueryEncoder();
 
         /// <summary>
         /// Connect to the cluster using default configuration.
@@ -199,6 +201,84 @@ namespace Adaptive.Cluster.Client
                 }
 
                 return false;
+            }
+            finally
+            {
+                _lock.Unlock();
+            }
+        }
+
+        /// <summary>
+        /// Query cluster member for endpoint information.
+        /// <para>
+        /// <code>
+        /// id=num,memberStatus=member-facing:port,log=log:port,archive=archive:port
+        /// </code>
+        ///     
+        /// </para>
+        /// </summary>
+        /// <returns> result of query. </returns>
+        public string QueryForEndpoints()
+        {
+            _lock.Lock();
+            try
+            {
+                long deadlineNs = _nanoClock.NanoTime() + _ctx.MessageTimeoutNs();
+                long correlationId = SendAdminQuery(AdminQueryType.ENDPOINTS, deadlineNs);
+                EgressPoller poller = new EgressPoller(_subscription, FRAGMENT_LIMIT);
+
+                while (true)
+                {
+                    PollNextResponse(deadlineNs, correlationId, poller);
+
+                    if (poller.CorrelationId() == correlationId)
+                    {
+                        if (poller.TemplateId() == AdminResponseDecoder.TEMPLATE_ID)
+                        {
+                            return Encoding.ASCII.GetString(poller.AdminResponseData()); // TODO check default charset for Java
+                        }
+                        else if (poller.EventCode() == EventCode.ERROR)
+                        {
+                            throw new InvalidOperationException(poller.Detail());
+                        }
+                    }
+                }
+            }
+            finally
+            {
+                _lock.Unlock();
+            }
+        }
+
+        /// <summary>
+        /// Query cluster member for recording log information.
+        /// </summary>
+        /// <returns> result of query. </returns>
+        public byte[] QueryForRecordingLog()
+        {
+            _lock.Lock();
+            try
+            {
+                long deadlineNs = _nanoClock.NanoTime() + _ctx.MessageTimeoutNs();
+                long correlationId = SendAdminQuery(AdminQueryType.RECORDING_LOG, deadlineNs);
+                EgressPoller poller = new EgressPoller(_subscription, FRAGMENT_LIMIT);
+
+                while (true)
+                {
+                    PollNextResponse(deadlineNs, correlationId, poller);
+
+                    if (poller.CorrelationId() == correlationId)
+                    {
+                        if (poller.TemplateId() == AdminResponseDecoder.TEMPLATE_ID)
+                        {
+                            return poller.AdminResponseData();
+                        }
+                        else if (poller.EventCode() == EventCode.ERROR)
+                        {
+                            throw new InvalidOperationException(poller.Detail());
+                        }
+                    }
+                }
             }
             finally
             {
@@ -415,6 +495,44 @@ namespace Adaptive.Cluster.Client
             return correlationId;
         }
 
+        private long SendAdminQuery(AdminQueryType queryType, long deadlineNs)
+        {
+            long correlationId = _aeron.NextCorrelationId();
+            int length = MessageHeaderEncoder.ENCODED_LENGTH + AdminQueryEncoder.BLOCK_LENGTH;
+            int attempts = SEND_ATTEMPTS;
+
+            _idleStrategy.Reset();
+
+            while (true)
+            {
+                long result = _publication.TryClaim(length, _bufferClaim);
+
+                if (result > 0)
+                {
+                    _adminQueryEncoder
+                        .WrapAndApplyHeader(_bufferClaim.Buffer, _bufferClaim.Offset, _messageHeaderEncoder)
+                        .CorrelationId(correlationId)
+                        .ClusterSessionId(_clusterSessionId)
+                        .QueryType(queryType);
+
+                    _bufferClaim.Commit();
+
+                    break;
+                }
+
+                CheckResult(result);
+
+                if (--attempts <= 0 || _nanoClock.NanoTime() > deadlineNs)
+                {
+                    throw new TimeoutException("Failed to send query");
+                }
+
+                _idleStrategy.Idle();
+            }
+
+            return correlationId;
+        }
+
         private long SendChallengeResponse(long sessionId, byte[] credentialData, long deadlineNs)
         {
             long correlationId = _aeron.NextCorrelationId();
@@ -481,7 +599,7 @@ namespace Adaptive.Cluster.Client
             public const string CLUSTER_MEMBER_ENDPOINTS_PROP_NAME = "aeron.cluster.member.endpoints";
 
             /// <summary>
-            /// Property name for the comma separated list of cluster member endpoints. Default of null is for multicast.
+            /// Property name for the comma separated list of cluster member endpoints.
             /// </summary>
             public const string CLUSTER_MEMBER_ENDPOINTS_DEFAULT = null;
 
@@ -492,7 +610,7 @@ namespace Adaptive.Cluster.Client
             public const string INGRESS_CHANNEL_PROP_NAME = "aeron.cluster.ingress.channel";
 
             /// <summary>
-            /// Channel for sending messages to a cluster. Default to localhost:9010 for testing.
+            /// Channel for sending messages to a cluster.
             /// </summary>
             public const string INGRESS_CHANNEL_DEFAULT = "aeron:udp?endpoint=localhost:9010";
 
@@ -502,7 +620,7 @@ namespace Adaptive.Cluster.Client
             public const string INGRESS_STREAM_ID_PROP_NAME = "aeron.cluster.ingress.stream.id";
 
             /// <summary>
-            /// Stream id within a channel for sending messages to a cluster. Default to stream id of 1.
+            /// Stream id within a channel for sending messages to a cluster.
             /// </summary>
             public const int INGRESS_STREAM_ID_DEFAULT = 1;
 
@@ -512,7 +630,7 @@ namespace Adaptive.Cluster.Client
             public const string EGRESS_CHANNEL_PROP_NAME = "aeron.cluster.egress.channel";
 
             /// <summary>
-            /// Channel for receiving response messages from a cluster. Default to localhost:9020 for testing.
+            /// Channel for receiving response messages from a cluster.
             /// </summary>
             public const string EGRESS_CHANNEL_DEFAULT = "aeron:udp?endpoint=localhost:9020";
 
@@ -522,7 +640,7 @@ namespace Adaptive.Cluster.Client
             public const string EGRESS_STREAM_ID_PROP_NAME = "aeron.archive.control.response.stream.id";
 
             /// <summary>
-            /// Stream id within a channel for receiving messages from a cluster. Default to stream id of 2.
+            /// Stream id within a channel for receiving messages from a cluster.
             /// </summary>
             public const int EGRESS_STREAM_ID_DEFAULT = 2;
 
@@ -607,24 +725,27 @@ namespace Adaptive.Cluster.Client
             private int _egressStreamId = Configuration.EgressStreamId();
             private IIdleStrategy _idleStrategy;
             private ILock _lock;
-            private string _aeronDirectoryName;
+            private string _aeronDirectoryName = Adaptive.Aeron.Aeron.Context.GetAeronDirectoryName();
             private Aeron.Aeron _aeron;
             private ICredentialsSupplier _credentialsSupplier;
-            private bool _ownsAeronClient = true;
+            private bool _ownsAeronClient = false;
             private bool _isIngressExclusive = true;
 
+            /// <summary>
+            /// Perform a shallow copy of the object.
+            /// </summary>
+            /// <returns> a shall copy of the object.</returns>
+            public Context Clone()
+            {
+                return (Context)MemberwiseClone();
+            }
+            
             public void Conclude()
             {
                 if (null == _aeron)
                 {
-                    var ctx = new Aeron.Aeron.Context();
-
-                    if (_aeronDirectoryName != null)
-                    {
-                        ctx.AeronDirectoryName(_aeronDirectoryName);
-                    }
-                    
-                    _aeron = Adaptive.Aeron.Aeron.Connect(ctx);
+                    _aeron = Adaptive.Aeron.Aeron.Connect(new Aeron.Aeron.Context().AeronDirectoryName(_aeronDirectoryName));
+                    _ownsAeronClient = true;
                 }
 
                 if (null == _idleStrategy)

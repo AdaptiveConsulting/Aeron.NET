@@ -6,6 +6,7 @@ using Adaptive.Agrona.Concurrent;
 using Adaptive.Agrona.Concurrent.Status;
 using Adaptive.Archiver;
 using Adaptive.Cluster.Codecs;
+using Adaptive.Cluster.Codecs.Mark;
 
 namespace Adaptive.Cluster.Service
 {
@@ -110,6 +111,12 @@ namespace Adaptive.Cluster.Service
             public const string SERVICE_NAME_DEFAULT = "clustered-service";
 
             /// <summary>
+            /// Class name for dynamically loading a <seealso cref="IClusteredService"/>. This is used if
+            /// <seealso cref="Context.ClusteredService()"/> is not set.
+            /// </summary>
+            public const string SERVICE_CLASS_NAME_PROP_NAME = "aeron.cluster.service.class.name";
+
+            /// <summary>
             /// Channel to be used for log or snapshot replay on startup.
             /// </summary>
             public const string REPLAY_CHANNEL_PROP_NAME = "aeron.cluster.replay.channel";
@@ -149,7 +156,7 @@ namespace Adaptive.Cluster.Service
             /// Default to stream id of 5.
             /// </summary>
             public const int CONSENSUS_MODULE_STREAM_ID_DEFAULT = 5;
-            
+
             /// <summary>
             /// Channel to be used for archiving snapshots.
             /// </summary>
@@ -188,7 +195,7 @@ namespace Adaptive.Cluster.Service
             {
                 return Config.GetInteger(SERVICE_ID_PROP_NAME, SERVICE_ID_DEFAULT);
             }
-            
+
             /// <summary>
             /// The value <seealso cref="#SERVICE_NAME_DEFAULT"/> or system property <seealso cref="#SERVICE_NAME_PROP_NAME"/> if set.
             /// </summary>
@@ -277,9 +284,11 @@ namespace Adaptive.Cluster.Service
             }
 
             /// <summary>
-            /// The value <seealso cref="#CLUSTERED_SERVICE_DIR_DEFAULT"/> or system property <seealso cref="#CLUSTERED_SERVICE_DIR_PROP_NAME"/> if set.
+            /// The value <seealso cref="CLUSTERED_SERVICE_DIR_DEFAULT"/> or system property
+            /// <seealso cref="CLUSTERED_SERVICE_DIR_PROP_NAME"/> if set.
             /// </summary>
-            /// <returns> <seealso cref="#CLUSTERED_SERVICE_DIR_DEFAULT"/> or system property <seealso cref="#CLUSTERED_SERVICE_DIR_PROP_NAME"/> if set. </returns>
+            /// <returns> <seealso cref="CLUSTERED_SERVICE_DIR_DEFAULT"/> or system property
+            /// <seealso cref="CLUSTERED_SERVICE_DIR_PROP_NAME"/> if set. </returns>
             public static string ClusteredServiceDirName()
             {
                 return Config.GetProperty(CLUSTERED_SERVICE_DIR_PROP_NAME, CLUSTERED_SERVICE_DIR_DEFAULT);
@@ -305,8 +314,9 @@ namespace Adaptive.Cluster.Service
             internal AtomicCounter errorCounter;
             internal CountedErrorHandler countedErrorHandler;
             internal AeronArchive.Context archiveContext;
+            private string clusteredServiceDirectoryName = Configuration.ClusteredServiceDirName();
             internal DirectoryInfo clusteredServiceDir;
-            internal string aeronDirectoryName;
+            internal string aeronDirectoryName = Adaptive.Aeron.Aeron.Context.GetAeronDirectoryName();
             internal Aeron.Aeron aeron;
             internal bool ownsAeronClient;
 
@@ -314,7 +324,16 @@ namespace Adaptive.Cluster.Service
             internal RecordingLog recordingLog;
             internal ShutdownSignalBarrier shutdownSignalBarrier;
             internal Action terminationHook;
-            internal ClusterCncFile cncFile;
+            internal ClusterMarkFile markFile;
+
+            /// <summary>
+            /// Perform a shallow copy of the object.
+            /// </summary>
+            /// <returns> a shallow copy of the object.</returns>
+            public Context Clone()
+            {
+                return (Context) MemberwiseClone();
+            }
 
             public void Conclude()
             {
@@ -338,25 +357,14 @@ namespace Adaptive.Cluster.Service
                     throw new InvalidOperationException("Error handler must be supplied");
                 }
 
-               
+
                 if (null == aeron)
                 {
-                    var context = new Aeron.Aeron.Context()
-                        .EpochClock(epochClock);
-
-                    if (aeronDirectoryName != null)
-                    {
-                        context.AeronDirectoryName(aeronDirectoryName);
-                    }
-
-                    if (countedErrorHandler != null)
-                    {
-                        context.ErrorHandler(countedErrorHandler.OnError);
-                    }
-
                     aeron = Adaptive.Aeron.Aeron.Connect(
-                        context
-                    );
+                        new Aeron.Aeron.Context()
+                            .AeronDirectoryName(aeronDirectoryName)
+                            .ErrorHandler(countedErrorHandler.OnError)
+                            .EpochClock(epochClock));
 
                     if (null == errorCounter)
                     {
@@ -371,7 +379,7 @@ namespace Adaptive.Cluster.Service
                 {
                     throw new InvalidOperationException("Error counter must be supplied");
                 }
-                
+
                 if (null == countedErrorHandler)
                 {
                     countedErrorHandler = new CountedErrorHandler(errorHandler, errorCounter);
@@ -383,10 +391,16 @@ namespace Adaptive.Cluster.Service
 
                 if (null == archiveContext)
                 {
-                    archiveContext = (new AeronArchive.Context()).AeronClient(aeron).OwnsAeronClient(false)
+                    archiveContext = new AeronArchive.Context()
                         .ControlRequestChannel(AeronArchive.Configuration.LocalControlChannel())
-                        .ControlRequestStreamId(AeronArchive.Configuration.LocalControlStreamId()).Lock(new NoOpLock());
+                        .ControlResponseChannel(AeronArchive.Configuration.LocalControlChannel())
+                        .ControlRequestStreamId(AeronArchive.Configuration.LocalControlStreamId());
                 }
+
+                archiveContext
+                    .AeronClient(aeron)
+                    .OwnsAeronClient(false)
+                    .Lock(new NoOpLock());
 
                 if (deleteDirOnStart)
                 {
@@ -402,7 +416,7 @@ namespace Adaptive.Cluster.Service
 
                 if (null == clusteredServiceDir)
                 {
-                    clusteredServiceDir = new DirectoryInfo(Configuration.ClusteredServiceDirName());
+                    clusteredServiceDir = new DirectoryInfo(clusteredServiceDirectoryName);
                 }
 
                 if (!clusteredServiceDir.Exists)
@@ -425,7 +439,18 @@ namespace Adaptive.Cluster.Service
                     terminationHook = () => shutdownSignalBarrier.Signal();
                 }
 
-                ConcludeCncFile();
+                if (null == clusteredService)
+                {
+                    string className = Config.GetProperty(Configuration.SERVICE_CLASS_NAME_PROP_NAME);
+                    if (null == className)
+                    {
+                        throw new InvalidOperationException("Either a ClusteredService instance or class name for the service must be provided");
+                    }
+
+                    clusteredService = (IClusteredService) Activator.CreateInstance(Type.GetType(className));
+                }
+
+                ConcludeMarkFile();
             }
 
             /// <summary>
@@ -850,6 +875,28 @@ namespace Adaptive.Cluster.Service
             }
 
             /// <summary>
+            /// Set the directory name to use for the clustered service container.
+            /// </summary>
+            /// <param name="clusteredServiceDirectoryName"> to use. </param>
+            /// <returns> this for a fluent API. </returns>
+            /// <seealso cref="Configuration.CLUSTERED_SERVICE_DIR_PROP_NAME"/>
+            public Context ClusteredServiceDirectoryName(string clusteredServiceDirectoryName)
+            {
+                this.clusteredServiceDirectoryName = clusteredServiceDirectoryName;
+                return this;
+            }
+
+            /// <summary>
+            /// The directory name used for the clustered service container.
+            /// </summary>
+            /// <returns> directory for the cluster container. </returns>
+            /// <seealso cref="Configuration.CLUSTERED_SERVICE_DIR_PROP_NAME"/>
+            public string ClusteredServiceDirectoryName()
+            {
+                return clusteredServiceDirectoryName;
+            }
+            
+            /// <summary>
             /// Set the directory to use for the clustered service container.
             /// </summary>
             /// <param name="dir"> to use. </param>
@@ -892,7 +939,7 @@ namespace Adaptive.Cluster.Service
             }
 
             /// <summary>
-            /// Set the <seealso cref="ShutdownSignalBarrier"/> that can be used to shutdown a clustered service.
+            /// Set the <seealso cref="Agrona.Concurrent.ShutdownSignalBarrier"/> that can be used to shutdown a clustered service.
             /// </summary>
             /// <param name="barrier"> that can be used to shutdown a clustered service. </param>
             /// <returns> this for a fluent API. </returns>
@@ -903,9 +950,9 @@ namespace Adaptive.Cluster.Service
             }
 
             /// <summary>
-            /// Get the <seealso cref="ShutdownSignalBarrier"/> that can be used to shutdown a clustered service.
+            /// Get the <seealso cref="Agrona.Concurrent.ShutdownSignalBarrier"/> that can be used to shutdown a clustered service.
             /// </summary>
-            /// <returns> the <seealso cref="ShutdownSignalBarrier"/> that can be used to shutdown a clustered service. </returns>
+            /// <returns> the <seealso cref="Agrona.Concurrent.ShutdownSignalBarrier"/> that can be used to shutdown a clustered service. </returns>
             public ShutdownSignalBarrier ShutdownSignalBarrier()
             {
                 return shutdownSignalBarrier;
@@ -936,25 +983,25 @@ namespace Adaptive.Cluster.Service
             {
                 return terminationHook;
             }
-            
+
             /// <summary>
-            /// Set the <seealso cref="ClusterCncFile"/> in use.
+            /// Set the <seealso cref="Cluster.ClusterMarkFile"/> in use.
             /// </summary>
             /// <param name="cncFile"> to use. </param>
             /// <returns> this for a fluent API. </returns>
-            public Context CncFile(ClusterCncFile cncFile)
+            public Context MarkFile(ClusterMarkFile cncFile)
             {
-                this.cncFile = cncFile;
+                this.markFile = cncFile;
                 return this;
             }
 
             /// <summary>
-            /// The <seealso cref="ClusterCncFile"/> in use.
+            /// The <seealso cref="Cluster.ClusterMarkFile"/> in use.
             /// </summary>
             /// <returns> CnC file in use. </returns>
-            public ClusterCncFile CncFile()
+            public ClusterMarkFile MarkFile()
             {
-                return cncFile;
+                return markFile;
             }
 
             /// <summary>
@@ -976,23 +1023,35 @@ namespace Adaptive.Cluster.Service
             /// </summary>
             public void Dispose()
             {
-                cncFile?.Dispose();
-                
+                markFile?.Dispose();
+
                 if (ownsAeronClient)
                 {
                     aeron?.Dispose();
                 }
             }
-            
-            private void ConcludeCncFile()
+
+            private void ConcludeMarkFile()
             {
-                if (null == cncFile)
+                if (null == markFile)
                 {
-                    int alignedTotalCncFileLength = ClusterCncFile.AlignedTotalFileLength(ClusterCncFile.ALIGNMENT, aeron.Ctx().AeronDirectoryName(), archiveContext.ControlRequestChannel(), ServiceControlChannel(), null, serviceName, null);
+                    int alignedTotalCncFileLength = ClusterMarkFile.AlignedTotalFileLength(
+                        ClusterMarkFile.ALIGNMENT, 
+                        aeron.Ctx().AeronDirectoryName(), 
+                        archiveContext.ControlRequestChannel(), 
+                        ServiceControlChannel(), 
+                        null, 
+                        serviceName, 
+                        null);
 
-                    cncFile = new ClusterCncFile(new FileInfo(Path.Combine(clusteredServiceDir.FullName, ClusterCncFile.FILENAME)), ClusterComponentType.CONTAINER, alignedTotalCncFileLength, epochClock, 0);
+                    markFile = new ClusterMarkFile(
+                        new FileInfo(Path.Combine(clusteredServiceDir.FullName, ClusterMarkFile.FILENAME)), 
+                        ClusterComponentType.CONTAINER, 
+                        alignedTotalCncFileLength, 
+                        epochClock, 
+                        0);
 
-                    CncHeaderEncoder cncEncoder = cncFile.Encoder();
+                    MarkFileHeaderEncoder cncEncoder = markFile.Encoder();
 
                     cncEncoder
                         .ArchiveStreamId(archiveContext.ControlRequestStreamId())
@@ -1007,11 +1066,10 @@ namespace Adaptive.Cluster.Service
                         .ServiceName(serviceName)
                         .Authenticator("");
 
-                    cncFile.SignalCncReady();
-                    cncFile.UpdateActivityTimestamp(epochClock.Time());
+                    markFile.UpdateActivityTimestamp(epochClock.Time());
+                    markFile.SignalReady();
                 }
             }
-
         }
     }
 }

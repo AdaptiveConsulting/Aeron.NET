@@ -9,7 +9,7 @@ namespace Adaptive.Cluster.Codecs {
 
 public class ClusterSessionDecoder
 {
-    public const ushort BLOCK_LENGTH = 36;
+    public const ushort BLOCK_LENGTH = 40;
     public const ushort TEMPLATE_ID = 103;
     public const ushort SCHEMA_ID = 1;
     public const ushort SCHEMA_VERSION = 1;
@@ -304,9 +304,48 @@ public class ClusterSessionDecoder
     }
 
 
-    public static int ResponseStreamIdId()
+    public static int CloseReasonId()
     {
         return 5;
+    }
+
+    public static int CloseReasonSinceVersion()
+    {
+        return 0;
+    }
+
+    public static int CloseReasonEncodingOffset()
+    {
+        return 32;
+    }
+
+    public static int CloseReasonEncodingLength()
+    {
+        return 4;
+    }
+
+    public static string CloseReasonMetaAttribute(MetaAttribute metaAttribute)
+    {
+        switch (metaAttribute)
+        {
+            case MetaAttribute.EPOCH: return "unix";
+            case MetaAttribute.TIME_UNIT: return "nanosecond";
+            case MetaAttribute.SEMANTIC_TYPE: return "";
+            case MetaAttribute.PRESENCE: return "required";
+        }
+
+        return "";
+    }
+
+    public CloseReason CloseReason()
+    {
+        return (CloseReason)_buffer.GetInt(_offset + 32, ByteOrder.LittleEndian);
+    }
+
+
+    public static int ResponseStreamIdId()
+    {
+        return 6;
     }
 
     public static int ResponseStreamIdSinceVersion()
@@ -316,7 +355,7 @@ public class ClusterSessionDecoder
 
     public static int ResponseStreamIdEncodingOffset()
     {
-        return 32;
+        return 36;
     }
 
     public static int ResponseStreamIdEncodingLength()
@@ -354,13 +393,13 @@ public class ClusterSessionDecoder
 
     public int ResponseStreamId()
     {
-        return _buffer.GetInt(_offset + 32, ByteOrder.LittleEndian);
+        return _buffer.GetInt(_offset + 36, ByteOrder.LittleEndian);
     }
 
 
     public static int ResponseChannelId()
     {
-        return 6;
+        return 7;
     }
 
     public static int ResponseChannelSinceVersion()
@@ -482,12 +521,17 @@ public class ClusterSessionDecoder
         builder.Append("TimeOfLastActivity=");
         builder.Append(TimeOfLastActivity());
         builder.Append('|');
-        //Token{signal=BEGIN_FIELD, name='responseStreamId', referencedName='null', description='null', id=5, version=0, deprecated=0, encodedLength=0, offset=32, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
-        //Token{signal=ENCODING, name='int32', referencedName='null', description='null', id=-1, version=0, deprecated=0, encodedLength=4, offset=32, componentTokenCount=1, encoding=Encoding{presence=REQUIRED, primitiveType=INT32, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=BEGIN_FIELD, name='closeReason', referencedName='null', description='null', id=5, version=0, deprecated=0, encodedLength=0, offset=32, componentTokenCount=7, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=BEGIN_ENUM, name='CloseReason', referencedName='null', description='Reason why a session was closed', id=-1, version=0, deprecated=0, encodedLength=4, offset=32, componentTokenCount=5, encoding=Encoding{presence=REQUIRED, primitiveType=INT32, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='null', timeUnit=null, semanticType='null'}}
+        builder.Append("CloseReason=");
+        builder.Append(CloseReason());
+        builder.Append('|');
+        //Token{signal=BEGIN_FIELD, name='responseStreamId', referencedName='null', description='null', id=6, version=0, deprecated=0, encodedLength=0, offset=36, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=ENCODING, name='int32', referencedName='null', description='null', id=-1, version=0, deprecated=0, encodedLength=4, offset=36, componentTokenCount=1, encoding=Encoding{presence=REQUIRED, primitiveType=INT32, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
         builder.Append("ResponseStreamId=");
         builder.Append(ResponseStreamId());
         builder.Append('|');
-        //Token{signal=BEGIN_VAR_DATA, name='responseChannel', referencedName='null', description='null', id=6, version=0, deprecated=0, encodedLength=0, offset=36, componentTokenCount=6, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=BEGIN_VAR_DATA, name='responseChannel', referencedName='null', description='null', id=7, version=0, deprecated=0, encodedLength=0, offset=40, componentTokenCount=6, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
         builder.Append("ResponseChannel=");
         builder.Append(ResponseChannel());
 

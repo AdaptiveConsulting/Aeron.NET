@@ -8,15 +8,18 @@ namespace Adaptive.Cluster.Service
     {
         private readonly ClientSessionEncoder _clientSessionEncoder = new ClientSessionEncoder();
 
-        internal ServiceSnapshotTaker(Publication publication, IIdleStrategy idleStrategy, AgentInvoker aeronClientInvoker) : base(publication, idleStrategy, aeronClientInvoker)
+        internal ServiceSnapshotTaker(Publication publication, IIdleStrategy idleStrategy, AgentInvoker aeronClientInvoker) 
+            : base(publication, idleStrategy, aeronClientInvoker)
         {
         }
 
         public void SnapshotSession(ClientSession session)
         {
             string responseChannel = session.ResponseChannel();
-            byte[] principalData = session.PrincipalData();
-            int length = MessageHeaderEncoder.ENCODED_LENGTH + ClientSessionEncoder.BLOCK_LENGTH + ClientSessionEncoder.ResponseChannelHeaderLength() + responseChannel.Length + ClientSessionEncoder.PrincipalDataHeaderLength() + principalData.Length;
+            byte[] encodedPrincipal = session.EncodedPrincipal();
+            int length = MessageHeaderEncoder.ENCODED_LENGTH + ClientSessionEncoder.BLOCK_LENGTH + 
+                         ClientSessionEncoder.ResponseChannelHeaderLength() + responseChannel.Length + 
+                         ClientSessionEncoder.EncodedPrincipalHeaderLength() + encodedPrincipal.Length;
 
             idleStrategy.Reset();
             while (true)
@@ -28,7 +31,7 @@ namespace Adaptive.Cluster.Service
                         .ClusterSessionId(session.Id())
                         .ResponseStreamId(session.ResponseStreamId())
                         .ResponseChannel(responseChannel)
-                        .PutPrincipalData(principalData, 0, principalData.Length);
+                        .PutEncodedPrincipal(encodedPrincipal, 0, encodedPrincipal.Length);
 
                     bufferClaim.Commit();
                     break;

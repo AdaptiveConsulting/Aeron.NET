@@ -5,21 +5,21 @@ using System.Collections.Generic;
 using Adaptive.Agrona;
 
 
-namespace Adaptive.Cluster.Codecs {
+namespace Adaptive.Cluster.Codecs.Mark {
 
-public class CncHeaderEncoder
+public class MarkFileHeaderEncoder
 {
     public const ushort BLOCK_LENGTH = 128;
     public const ushort TEMPLATE_ID = 200;
     public const ushort SCHEMA_ID = 1;
     public const ushort SCHEMA_VERSION = 1;
 
-    private CncHeaderEncoder _parentMessage;
+    private MarkFileHeaderEncoder _parentMessage;
     private IMutableDirectBuffer _buffer;
     protected int _offset;
     protected int _limit;
 
-    public CncHeaderEncoder()
+    public MarkFileHeaderEncoder()
     {
         _parentMessage = this;
     }
@@ -59,7 +59,7 @@ public class CncHeaderEncoder
         return _offset;
     }
 
-    public CncHeaderEncoder Wrap(IMutableDirectBuffer buffer, int offset)
+    public MarkFileHeaderEncoder Wrap(IMutableDirectBuffer buffer, int offset)
     {
         this._buffer = buffer;
         this._offset = offset;
@@ -68,7 +68,7 @@ public class CncHeaderEncoder
         return this;
     }
 
-    public CncHeaderEncoder WrapAndApplyHeader(
+    public MarkFileHeaderEncoder WrapAndApplyHeader(
         IMutableDirectBuffer buffer, int offset, MessageHeaderEncoder headerEncoder)
     {
         headerEncoder
@@ -121,24 +121,24 @@ public class CncHeaderEncoder
         return 2147483647;
     }
 
-    public CncHeaderEncoder Version(int value)
+    public MarkFileHeaderEncoder Version(int value)
     {
         _buffer.PutInt(_offset + 0, value, ByteOrder.LittleEndian);
         return this;
     }
 
 
-    public static int FileTypeEncodingOffset()
+    public static int ComponentTypeEncodingOffset()
     {
         return 4;
     }
 
-    public static int FileTypeEncodingLength()
+    public static int ComponentTypeEncodingLength()
     {
         return 4;
     }
 
-    public CncHeaderEncoder FileType(ClusterComponentType value)
+    public MarkFileHeaderEncoder ComponentType(ClusterComponentType value)
     {
         _buffer.PutInt(_offset + 4, (int)value, ByteOrder.LittleEndian);
         return this;
@@ -169,48 +169,80 @@ public class CncHeaderEncoder
         return 9223372036854775807L;
     }
 
-    public CncHeaderEncoder ActivityTimestamp(long value)
+    public MarkFileHeaderEncoder ActivityTimestamp(long value)
     {
         _buffer.PutLong(_offset + 8, value, ByteOrder.LittleEndian);
         return this;
     }
 
 
-    public static int PidEncodingOffset()
+    public static int StartTimestampEncodingOffset()
     {
         return 16;
     }
 
+    public static int StartTimestampEncodingLength()
+    {
+        return 8;
+    }
+
+    public static long StartTimestampNullValue()
+    {
+        return -9223372036854775808L;
+    }
+
+    public static long StartTimestampMinValue()
+    {
+        return -9223372036854775807L;
+    }
+
+    public static long StartTimestampMaxValue()
+    {
+        return 9223372036854775807L;
+    }
+
+    public MarkFileHeaderEncoder StartTimestamp(long value)
+    {
+        _buffer.PutLong(_offset + 16, value, ByteOrder.LittleEndian);
+        return this;
+    }
+
+
+    public static int PidEncodingOffset()
+    {
+        return 24;
+    }
+
     public static int PidEncodingLength()
     {
-        return 4;
+        return 8;
     }
 
-    public static int PidNullValue()
+    public static long PidNullValue()
     {
-        return -2147483648;
+        return -9223372036854775808L;
     }
 
-    public static int PidMinValue()
+    public static long PidMinValue()
     {
-        return -2147483647;
+        return -9223372036854775807L;
     }
 
-    public static int PidMaxValue()
+    public static long PidMaxValue()
     {
-        return 2147483647;
+        return 9223372036854775807L;
     }
 
-    public CncHeaderEncoder Pid(int value)
+    public MarkFileHeaderEncoder Pid(long value)
     {
-        _buffer.PutInt(_offset + 16, value, ByteOrder.LittleEndian);
+        _buffer.PutLong(_offset + 24, value, ByteOrder.LittleEndian);
         return this;
     }
 
 
     public static int ArchiveStreamIdEncodingOffset()
     {
-        return 20;
+        return 32;
     }
 
     public static int ArchiveStreamIdEncodingLength()
@@ -233,16 +265,16 @@ public class CncHeaderEncoder
         return 2147483647;
     }
 
-    public CncHeaderEncoder ArchiveStreamId(int value)
+    public MarkFileHeaderEncoder ArchiveStreamId(int value)
     {
-        _buffer.PutInt(_offset + 20, value, ByteOrder.LittleEndian);
+        _buffer.PutInt(_offset + 32, value, ByteOrder.LittleEndian);
         return this;
     }
 
 
     public static int ServiceControlStreamIdEncodingOffset()
     {
-        return 24;
+        return 36;
     }
 
     public static int ServiceControlStreamIdEncodingLength()
@@ -265,16 +297,16 @@ public class CncHeaderEncoder
         return 2147483647;
     }
 
-    public CncHeaderEncoder ServiceControlStreamId(int value)
+    public MarkFileHeaderEncoder ServiceControlStreamId(int value)
     {
-        _buffer.PutInt(_offset + 24, value, ByteOrder.LittleEndian);
+        _buffer.PutInt(_offset + 36, value, ByteOrder.LittleEndian);
         return this;
     }
 
 
     public static int IngressStreamIdEncodingOffset()
     {
-        return 28;
+        return 40;
     }
 
     public static int IngressStreamIdEncodingLength()
@@ -297,16 +329,16 @@ public class CncHeaderEncoder
         return 2147483647;
     }
 
-    public CncHeaderEncoder IngressStreamId(int value)
+    public MarkFileHeaderEncoder IngressStreamId(int value)
     {
-        _buffer.PutInt(_offset + 28, value, ByteOrder.LittleEndian);
+        _buffer.PutInt(_offset + 40, value, ByteOrder.LittleEndian);
         return this;
     }
 
 
     public static int MemberIdEncodingOffset()
     {
-        return 32;
+        return 44;
     }
 
     public static int MemberIdEncodingLength()
@@ -329,16 +361,16 @@ public class CncHeaderEncoder
         return 2147483647;
     }
 
-    public CncHeaderEncoder MemberId(int value)
+    public MarkFileHeaderEncoder MemberId(int value)
     {
-        _buffer.PutInt(_offset + 32, value, ByteOrder.LittleEndian);
+        _buffer.PutInt(_offset + 44, value, ByteOrder.LittleEndian);
         return this;
     }
 
 
     public static int ServiceIdEncodingOffset()
     {
-        return 36;
+        return 48;
     }
 
     public static int ServiceIdEncodingLength()
@@ -361,16 +393,16 @@ public class CncHeaderEncoder
         return 2147483647;
     }
 
-    public CncHeaderEncoder ServiceId(int value)
+    public MarkFileHeaderEncoder ServiceId(int value)
     {
-        _buffer.PutInt(_offset + 36, value, ByteOrder.LittleEndian);
+        _buffer.PutInt(_offset + 48, value, ByteOrder.LittleEndian);
         return this;
     }
 
 
     public static int AeronDirectoryId()
     {
-        return 10;
+        return 11;
     }
 
     public static string AeronDirectoryCharacterEncoding()
@@ -396,7 +428,7 @@ public class CncHeaderEncoder
         return 4;
     }
 
-    public CncHeaderEncoder PutAeronDirectory(IDirectBuffer src, int srcOffset, int length)
+    public MarkFileHeaderEncoder PutAeronDirectory(IDirectBuffer src, int srcOffset, int length)
     {
         if (length > 1073741824)
         {
@@ -412,7 +444,7 @@ public class CncHeaderEncoder
         return this;
     }
 
-    public CncHeaderEncoder PutAeronDirectory(byte[] src, int srcOffset, int length)
+    public MarkFileHeaderEncoder PutAeronDirectory(byte[] src, int srcOffset, int length)
     {
         if (length > 1073741824)
         {
@@ -428,7 +460,7 @@ public class CncHeaderEncoder
         return this;
     }
 
-    public CncHeaderEncoder AeronDirectory(string value)
+    public MarkFileHeaderEncoder AeronDirectory(string value)
     {
         int length = value.Length;
         if (length > 1073741824)
@@ -447,7 +479,7 @@ public class CncHeaderEncoder
 
     public static int ArchiveChannelId()
     {
-        return 11;
+        return 12;
     }
 
     public static string ArchiveChannelCharacterEncoding()
@@ -473,7 +505,7 @@ public class CncHeaderEncoder
         return 4;
     }
 
-    public CncHeaderEncoder PutArchiveChannel(IDirectBuffer src, int srcOffset, int length)
+    public MarkFileHeaderEncoder PutArchiveChannel(IDirectBuffer src, int srcOffset, int length)
     {
         if (length > 1073741824)
         {
@@ -489,7 +521,7 @@ public class CncHeaderEncoder
         return this;
     }
 
-    public CncHeaderEncoder PutArchiveChannel(byte[] src, int srcOffset, int length)
+    public MarkFileHeaderEncoder PutArchiveChannel(byte[] src, int srcOffset, int length)
     {
         if (length > 1073741824)
         {
@@ -505,7 +537,7 @@ public class CncHeaderEncoder
         return this;
     }
 
-    public CncHeaderEncoder ArchiveChannel(string value)
+    public MarkFileHeaderEncoder ArchiveChannel(string value)
     {
         int length = value.Length;
         if (length > 1073741824)
@@ -524,7 +556,7 @@ public class CncHeaderEncoder
 
     public static int ServiceControlChannelId()
     {
-        return 12;
+        return 13;
     }
 
     public static string ServiceControlChannelCharacterEncoding()
@@ -550,7 +582,7 @@ public class CncHeaderEncoder
         return 4;
     }
 
-    public CncHeaderEncoder PutServiceControlChannel(IDirectBuffer src, int srcOffset, int length)
+    public MarkFileHeaderEncoder PutServiceControlChannel(IDirectBuffer src, int srcOffset, int length)
     {
         if (length > 1073741824)
         {
@@ -566,7 +598,7 @@ public class CncHeaderEncoder
         return this;
     }
 
-    public CncHeaderEncoder PutServiceControlChannel(byte[] src, int srcOffset, int length)
+    public MarkFileHeaderEncoder PutServiceControlChannel(byte[] src, int srcOffset, int length)
     {
         if (length > 1073741824)
         {
@@ -582,7 +614,7 @@ public class CncHeaderEncoder
         return this;
     }
 
-    public CncHeaderEncoder ServiceControlChannel(string value)
+    public MarkFileHeaderEncoder ServiceControlChannel(string value)
     {
         int length = value.Length;
         if (length > 1073741824)
@@ -601,7 +633,7 @@ public class CncHeaderEncoder
 
     public static int IngressChannelId()
     {
-        return 13;
+        return 14;
     }
 
     public static string IngressChannelCharacterEncoding()
@@ -627,7 +659,7 @@ public class CncHeaderEncoder
         return 4;
     }
 
-    public CncHeaderEncoder PutIngressChannel(IDirectBuffer src, int srcOffset, int length)
+    public MarkFileHeaderEncoder PutIngressChannel(IDirectBuffer src, int srcOffset, int length)
     {
         if (length > 1073741824)
         {
@@ -643,7 +675,7 @@ public class CncHeaderEncoder
         return this;
     }
 
-    public CncHeaderEncoder PutIngressChannel(byte[] src, int srcOffset, int length)
+    public MarkFileHeaderEncoder PutIngressChannel(byte[] src, int srcOffset, int length)
     {
         if (length > 1073741824)
         {
@@ -659,7 +691,7 @@ public class CncHeaderEncoder
         return this;
     }
 
-    public CncHeaderEncoder IngressChannel(string value)
+    public MarkFileHeaderEncoder IngressChannel(string value)
     {
         int length = value.Length;
         if (length > 1073741824)
@@ -678,7 +710,7 @@ public class CncHeaderEncoder
 
     public static int ServiceNameId()
     {
-        return 14;
+        return 15;
     }
 
     public static string ServiceNameCharacterEncoding()
@@ -704,7 +736,7 @@ public class CncHeaderEncoder
         return 4;
     }
 
-    public CncHeaderEncoder PutServiceName(IDirectBuffer src, int srcOffset, int length)
+    public MarkFileHeaderEncoder PutServiceName(IDirectBuffer src, int srcOffset, int length)
     {
         if (length > 1073741824)
         {
@@ -720,7 +752,7 @@ public class CncHeaderEncoder
         return this;
     }
 
-    public CncHeaderEncoder PutServiceName(byte[] src, int srcOffset, int length)
+    public MarkFileHeaderEncoder PutServiceName(byte[] src, int srcOffset, int length)
     {
         if (length > 1073741824)
         {
@@ -736,7 +768,7 @@ public class CncHeaderEncoder
         return this;
     }
 
-    public CncHeaderEncoder ServiceName(string value)
+    public MarkFileHeaderEncoder ServiceName(string value)
     {
         int length = value.Length;
         if (length > 1073741824)
@@ -755,7 +787,7 @@ public class CncHeaderEncoder
 
     public static int AuthenticatorId()
     {
-        return 15;
+        return 16;
     }
 
     public static string AuthenticatorCharacterEncoding()
@@ -781,7 +813,7 @@ public class CncHeaderEncoder
         return 4;
     }
 
-    public CncHeaderEncoder PutAuthenticator(IDirectBuffer src, int srcOffset, int length)
+    public MarkFileHeaderEncoder PutAuthenticator(IDirectBuffer src, int srcOffset, int length)
     {
         if (length > 1073741824)
         {
@@ -797,7 +829,7 @@ public class CncHeaderEncoder
         return this;
     }
 
-    public CncHeaderEncoder PutAuthenticator(byte[] src, int srcOffset, int length)
+    public MarkFileHeaderEncoder PutAuthenticator(byte[] src, int srcOffset, int length)
     {
         if (length > 1073741824)
         {
@@ -813,7 +845,7 @@ public class CncHeaderEncoder
         return this;
     }
 
-    public CncHeaderEncoder Authenticator(string value)
+    public MarkFileHeaderEncoder Authenticator(string value)
     {
         int length = value.Length;
         if (length > 1073741824)
@@ -838,7 +870,7 @@ public class CncHeaderEncoder
 
     public StringBuilder AppendTo(StringBuilder builder)
     {
-        CncHeaderDecoder writer = new CncHeaderDecoder();
+        MarkFileHeaderDecoder writer = new MarkFileHeaderDecoder();
         writer.Wrap(_buffer, _offset, BLOCK_LENGTH, SCHEMA_VERSION);
 
         return writer.AppendTo(builder);

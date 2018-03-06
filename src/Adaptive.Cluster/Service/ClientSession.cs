@@ -20,18 +20,18 @@ namespace Adaptive.Cluster.Service
         private readonly int _responseStreamId;
         private readonly string _responseChannel;
         private Publication _responsePublication;
-        private readonly byte[] _principalData;
+        private readonly byte[] _encodedPrincipal;
         private readonly DirectBufferVector[] _vectors = new DirectBufferVector[2];
         private readonly DirectBufferVector _messageBuffer = new DirectBufferVector();
         private readonly SessionHeaderEncoder _sessionHeaderEncoder = new SessionHeaderEncoder();
         private readonly ICluster _cluster;
 
-        internal ClientSession(long sessionId, int responseStreamId, string responseChannel, byte[] principalData, ICluster cluster)
+        internal ClientSession(long sessionId, int responseStreamId, string responseChannel, byte[] encodedPrincipal, ICluster cluster)
         {
             _id = sessionId;
             _responseStreamId = responseStreamId;
             _responseChannel = responseChannel;
-            _principalData = principalData;
+            _encodedPrincipal = encodedPrincipal;
             _cluster = cluster;
 
             UnsafeBuffer headerBuffer = new UnsafeBuffer(new byte[SESSION_HEADER_LENGTH]);
@@ -69,13 +69,13 @@ namespace Adaptive.Cluster.Service
         }
 
         /// <summary>
-        /// Cluster session principal data passed from <seealso cref="io.aeron.cluster.Authenticator"/>
+        /// Cluster session encoded principal passed from <seealso cref="io.aeron.cluster.Authenticator"/>
         /// when the session was authenticated.
         /// </summary>
-        /// <returns> The Principal data passed. May be 0 length to indicate no data. </returns>
-        public byte[] PrincipalData()
+        /// <returns> The encoded Principal passed. May be 0 length to indicate none present. </returns>
+        public byte[] EncodedPrincipal()
         {
-            return _principalData;
+            return _encodedPrincipal;
         }
 
         /// <summary>
@@ -108,7 +108,7 @@ namespace Adaptive.Cluster.Service
                 throw new InvalidOperationException("Response publication already present");
             }
 
-            _responsePublication = aeron.AddExclusivePublication(_responseChannel, _responseStreamId);
+            _responsePublication = aeron.AddPublication(_responseChannel, _responseStreamId);
         }
 
         internal void Disconnect()

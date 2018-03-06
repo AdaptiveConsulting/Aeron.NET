@@ -299,7 +299,7 @@ namespace Adaptive.Archiver
             {
                 _lock.Unlock();
             }
-            
+
             return publication;
         }
 
@@ -589,7 +589,7 @@ namespace Adaptive.Archiver
         /// </summary>
         /// <param name="fromRecordingId"> at which to begin the listing. </param>
         /// <param name="recordCount">     to limit for each query. </param>
-        /// <param name="channel">         to match. </param>
+        /// <param name="channel">         for a contains match on the stripped channel stored with the archive descriptor. </param>
         /// <param name="streamId">        to match. </param>
         /// <param name="consumer">        to which the descriptors are dispatched. </param>
         /// <returns> the number of descriptors found and consumed. </returns>
@@ -818,7 +818,7 @@ namespace Adaptive.Archiver
             public const string MESSAGE_TIMEOUT_PROP_NAME = "aeron.archive.message.timeout";
 
             /// <summary>
-            /// Timeout when waiting on a message to be sent or received. Default to 5 seconds in nanoseconds.
+            /// Timeout when waiting on a message to be sent or received.
             /// </summary>
             public static readonly long MESSAGE_TIMEOUT_DEFAULT_NS = 5000000000;
 
@@ -828,7 +828,7 @@ namespace Adaptive.Archiver
             public const string CONTROL_CHANNEL_PROP_NAME = "aeron.archive.control.channel";
 
             /// <summary>
-            /// Channel for sending control messages to an archive. Default to localhost:8010.
+            /// Channel for sending control messages to an archive.
             /// </summary>
             public const string CONTROL_CHANNEL_DEFAULT = "aeron:udp?endpoint=localhost:8010";
 
@@ -838,9 +838,9 @@ namespace Adaptive.Archiver
             public const string CONTROL_STREAM_ID_PROP_NAME = "aeron.archive.control.stream.id";
 
             /// <summary>
-            /// Stream id within a channel for sending control messages to an archive. Default to stream id of 0.
+            /// Stream id within a channel for sending control messages to an archive.
             /// </summary>
-            public const int CONTROL_STREAM_ID_DEFAULT = 0;
+            public const int CONTROL_STREAM_ID_DEFAULT = 10;
 
             /// <summary>
             /// Channel for sending control messages to a driver local archive.
@@ -859,9 +859,8 @@ namespace Adaptive.Archiver
 
             /// <summary>
             /// Stream id within a channel for sending control messages to a driver local archive.
-            /// Default to stream id of 10.
             /// </summary>
-            public const int LOCAL_CONTROL_STREAM_ID_DEFAULT = 10;
+            public const int LOCAL_CONTROL_STREAM_ID_DEFAULT = 11;
 
             /// <summary>
             /// Channel for receiving control response messages from an archive.
@@ -869,7 +868,7 @@ namespace Adaptive.Archiver
             public const string CONTROL_RESPONSE_CHANNEL_PROP_NAME = "aeron.archive.control.response.channel";
 
             /// <summary>
-            /// Channel for receiving control response messages from an archive. Default to localhost:8020.
+            /// Channel for receiving control response messages from an archive.
             /// </summary>
             public const string CONTROL_RESPONSE_CHANNEL_DEFAULT = "aeron:udp?endpoint=localhost:8020";
 
@@ -879,9 +878,9 @@ namespace Adaptive.Archiver
             public const string CONTROL_RESPONSE_STREAM_ID_PROP_NAME = "aeron.archive.control.response.stream.id";
 
             /// <summary>
-            /// Stream id within a channel for receiving control messages from an archive. Default to stream id of 0.
+            /// Stream id within a channel for receiving control messages from an archive.
             /// </summary>
-            public const int CONTROL_RESPONSE_STREAM_ID_DEFAULT = 0;
+            public const int CONTROL_RESPONSE_STREAM_ID_DEFAULT = 20;
 
             /// <summary>
             /// Channel for receiving progress events of recordings from an archive.
@@ -889,11 +888,11 @@ namespace Adaptive.Archiver
             public const string RECORDING_EVENTS_CHANNEL_PROP_NAME = "aeron.archive.recording.events.channel";
 
             /// <summary>
-            /// Channel for receiving progress events of recordings from an archive. Defaults to localhost:8011.
+            /// Channel for receiving progress events of recordings from an archive.
             /// For production it is recommended that multicast or dynamic multi-destination-cast (MDC) is used to allow
             /// for dynamic subscribers.
             /// </summary>
-            public const string RECORDING_EVENTS_CHANNEL_DEFAULT = "aeron:udp?endpoint=localhost:8011";
+            public const string RECORDING_EVENTS_CHANNEL_DEFAULT = "aeron:udp?endpoint=localhost:8030";
 
             /// <summary>
             /// Stream id within a channel for receiving progress of recordings from an archive.
@@ -901,9 +900,9 @@ namespace Adaptive.Archiver
             public const string RECORDING_EVENTS_STREAM_ID_PROP_NAME = "aeron.archive.recording.events.stream.id";
 
             /// <summary>
-            /// Stream id within a channel for receiving progress of recordings from an archive. Default to a stream id of 0.
+            /// Stream id within a channel for receiving progress of recordings from an archive.
             /// </summary>
-            public const int RECORDING_EVENTS_STREAM_ID_DEFAULT = 0;
+            public const int RECORDING_EVENTS_STREAM_ID_DEFAULT = 30;
 
             /// <summary>
             /// Term length for control streams.
@@ -1061,9 +1060,14 @@ namespace Adaptive.Archiver
 
             internal IIdleStrategy idleStrategy;
             internal ILock _lock;
-            internal string aeronDirectoryName;
+            internal string aeronDirectoryName = Aeron.Aeron.Context.GetAeronDirectoryName();
             internal Aeron.Aeron aeron;
             internal bool ownsAeronClient = false;
+
+            public Context Clone()
+            {
+                return (Context) MemberwiseClone();
+            }
 
             /// <summary>
             /// Conclude configuration by setting up defaults when specifics are not provided.
@@ -1072,14 +1076,7 @@ namespace Adaptive.Archiver
             {
                 if (null == aeron)
                 {
-                    var ctx = new Aeron.Aeron.Context();
-
-                    if (aeronDirectoryName != null)
-                    {
-                        ctx.AeronDirectoryName(aeronDirectoryName);
-                    }
-
-                    aeron = Aeron.Aeron.Connect(ctx);
+                    aeron = Aeron.Aeron.Connect(new Aeron.Aeron.Context().AeronDirectoryName(aeronDirectoryName));
 
                     ownsAeronClient = true;
                 }

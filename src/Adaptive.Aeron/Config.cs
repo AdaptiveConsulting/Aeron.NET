@@ -37,7 +37,7 @@ namespace Adaptive.Aeron
             }
         }
 
-        public static string GetProperty(string propertyName, string defaultValue)
+        public static string GetProperty(string propertyName, string defaultValue = null)
         {
             string value;
             return Params.TryGetValue(propertyName, out value) ? value : defaultValue;

@@ -152,7 +152,7 @@ namespace Adaptive.Aeron.LogBuffer
             int termId,
             int termOffset,
             HeaderWriter header, 
-            UnsafeBuffer srcBuffer, 
+            IDirectBuffer srcBuffer, 
             int srcOffset, 
             int length, 
             ReservedValueSupplier reservedValueSupplier)
@@ -407,7 +407,7 @@ namespace Adaptive.Aeron.LogBuffer
                         int vectorRemaining = vector.length - vectorOffset;
                         int numBytes = Math.Min(bytesToWrite - bytesWritten, vectorRemaining);
 
-                        termBuffer.PutBytes(payloadOffset, vector.buffer, vectorOffset, numBytes);
+                        termBuffer.PutBytes(payloadOffset, vector.buffer, vector.offset + vectorOffset, numBytes);
 
                         bytesWritten += numBytes;
                         payloadOffset += numBytes;

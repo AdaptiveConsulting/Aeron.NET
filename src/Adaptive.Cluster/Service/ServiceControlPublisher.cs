@@ -11,10 +11,11 @@ namespace Adaptive.Cluster.Service
 
         private readonly BufferClaim _bufferClaim = new BufferClaim();
         private readonly MessageHeaderEncoder _messageHeaderEncoder = new MessageHeaderEncoder();
-        private readonly ScheduleTimerRequestEncoder _scheduleTimerRequestEncoder = new ScheduleTimerRequestEncoder();
-        private readonly CancelTimerRequestEncoder _cancelTimerRequestEncoder = new CancelTimerRequestEncoder();
-        private readonly ServiceActionAckEncoder _serviceActionAckEncoder = new ServiceActionAckEncoder();
-        private readonly JoinLogRequestEncoder _joinLogRequestEncoder = new JoinLogRequestEncoder();
+        private readonly ScheduleTimerEncoder _scheduleTimerEncoder = new ScheduleTimerEncoder();
+        private readonly CancelTimerEncoder _cancelTimerEncoder = new CancelTimerEncoder();
+        private readonly ClusterActionAckEncoder _clusterActionAckEncoder = new ClusterActionAckEncoder();
+        private readonly JoinLogEncoder _joinLogEncoder = new JoinLogEncoder();
+        private readonly CloseSessionEncoder _closeSessionEncoder = new CloseSessionEncoder();
         private readonly Publication _publication;
 
         internal ServiceControlPublisher(Publication publication)
@@ -29,7 +30,7 @@ namespace Adaptive.Cluster.Service
 
         public void ScheduleTimer(long correlationId, long deadlineMs)
         {
-            int length = MessageHeaderEncoder.ENCODED_LENGTH + ScheduleTimerRequestEncoder.BLOCK_LENGTH;
+            int length = MessageHeaderEncoder.ENCODED_LENGTH + ScheduleTimerEncoder.BLOCK_LENGTH;
 
             int attempts = SEND_ATTEMPTS;
             do
@@ -37,7 +38,7 @@ namespace Adaptive.Cluster.Service
                 long result = _publication.TryClaim(length, _bufferClaim);
                 if (result > 0)
                 {
-                    _scheduleTimerRequestEncoder
+                    _scheduleTimerEncoder
                         .WrapAndApplyHeader(_bufferClaim.Buffer, _bufferClaim.Offset, _messageHeaderEncoder)
                         .CorrelationId(correlationId)
                         .Deadline(deadlineMs);
@@ -55,7 +56,7 @@ namespace Adaptive.Cluster.Service
 
         public void CancelTimer(long correlationId)
         {
-            int length = MessageHeaderEncoder.ENCODED_LENGTH + CancelTimerRequestEncoder.BLOCK_LENGTH;
+            int length = MessageHeaderEncoder.ENCODED_LENGTH + CancelTimerEncoder.BLOCK_LENGTH;
 
             int attempts = SEND_ATTEMPTS;
             do
@@ -63,7 +64,7 @@ namespace Adaptive.Cluster.Service
                 long result = _publication.TryClaim(length, _bufferClaim);
                 if (result > 0)
                 {
-                    _cancelTimerRequestEncoder
+                    _cancelTimerEncoder
                         .WrapAndApplyHeader(_bufferClaim.Buffer, _bufferClaim.Offset, _messageHeaderEncoder)
                         .CorrelationId(correlationId);
 
@@ -80,7 +81,7 @@ namespace Adaptive.Cluster.Service
         
         public void AckAction(long logPosition, long leadershipTermId, int serviceId, ClusterAction action)
         {
-            int length = MessageHeaderEncoder.ENCODED_LENGTH + ServiceActionAckEncoder.BLOCK_LENGTH;
+            int length = MessageHeaderEncoder.ENCODED_LENGTH + ClusterActionAckEncoder.BLOCK_LENGTH;
 
             int attempts = SEND_ATTEMPTS;
             do
@@ -88,7 +89,7 @@ namespace Adaptive.Cluster.Service
                 long result = _publication.TryClaim(length, _bufferClaim);
                 if (result > 0)
                 {
-                    _serviceActionAckEncoder
+                    _clusterActionAckEncoder
                         .WrapAndApplyHeader(_bufferClaim.Buffer, _bufferClaim.Offset, _messageHeaderEncoder)
                         .LogPosition(logPosition)
                         .LeadershipTermId(leadershipTermId)
@@ -108,7 +109,7 @@ namespace Adaptive.Cluster.Service
 
         public void JoinLog(long leadershipTermId, int commitPositionId, int logSessionId, int logStreamId, string channel)
         {
-            int length = MessageHeaderEncoder.ENCODED_LENGTH + JoinLogRequestEncoder.BLOCK_LENGTH + JoinLogRequestEncoder.LogChannelHeaderLength() + channel.Length;
+            int length = MessageHeaderEncoder.ENCODED_LENGTH + JoinLogEncoder.BLOCK_LENGTH + JoinLogEncoder.LogChannelHeaderLength() + channel.Length;
 
             int attempts = SEND_ATTEMPTS * 2;
             do
@@ -116,7 +117,7 @@ namespace Adaptive.Cluster.Service
                 long result = _publication.TryClaim(length, _bufferClaim);
                 if (result > 0)
                 {
-                    _joinLogRequestEncoder
+                    _joinLogEncoder
                         .WrapAndApplyHeader(_bufferClaim.Buffer, _bufferClaim.Offset, _messageHeaderEncoder)
                         .LeadershipTermId(leadershipTermId)
                         .CommitPositionId(commitPositionId)
@@ -133,6 +134,31 @@ namespace Adaptive.Cluster.Service
             } while (--attempts > 0);
 
             throw new InvalidOperationException("Failed to send log connect request");
+        }
+
+        public void CloseSession(long clusterSessionId)
+        {
+            int length = MessageHeaderEncoder.ENCODED_LENGTH + CloseSessionEncoder.BLOCK_LENGTH;
+
+            int attempts = SEND_ATTEMPTS;
+            do
+            {
+                long result = _publication.TryClaim(length, _bufferClaim);
+                if (result > 0)
+                {
+                    _closeSessionEncoder
+                        .WrapAndApplyHeader(_bufferClaim.Buffer, _bufferClaim.Offset, _messageHeaderEncoder)
+                        .ClusterSessionId(clusterSessionId);
+
+                    _bufferClaim.Commit();
+
+                    return;
+                }
+
+                CheckResult(result);
+            } while (--attempts > 0);
+
+            throw new InvalidOperationException("Failed to schedule timer");
         }
 
         private static void CheckResult(long result)

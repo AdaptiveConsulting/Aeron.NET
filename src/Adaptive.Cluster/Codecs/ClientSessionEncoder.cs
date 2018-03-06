@@ -237,12 +237,12 @@ public class ClientSessionEncoder
         return this;
     }
 
-    public static int PrincipalDataId()
+    public static int EncodedPrincipalId()
     {
         return 4;
     }
 
-    public static string PrincipalDataMetaAttribute(MetaAttribute metaAttribute)
+    public static string EncodedPrincipalMetaAttribute(MetaAttribute metaAttribute)
     {
         switch (metaAttribute)
         {
@@ -255,12 +255,12 @@ public class ClientSessionEncoder
         return "";
     }
 
-    public static int PrincipalDataHeaderLength()
+    public static int EncodedPrincipalHeaderLength()
     {
         return 4;
     }
 
-    public ClientSessionEncoder PutPrincipalData(IDirectBuffer src, int srcOffset, int length)
+    public ClientSessionEncoder PutEncodedPrincipal(IDirectBuffer src, int srcOffset, int length)
     {
         if (length > 1073741824)
         {
@@ -276,7 +276,7 @@ public class ClientSessionEncoder
         return this;
     }
 
-    public ClientSessionEncoder PutPrincipalData(byte[] src, int srcOffset, int length)
+    public ClientSessionEncoder PutEncodedPrincipal(byte[] src, int srcOffset, int length)
     {
         if (length > 1073741824)
         {

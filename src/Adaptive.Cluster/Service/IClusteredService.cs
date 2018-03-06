@@ -90,5 +90,11 @@ namespace Adaptive.Cluster.Service
         /// </para>
         /// </summary>
         void OnReplayEnd();
+        
+        /// <summary>
+        /// Notify that the cluster node has changed role.
+        /// </summary>
+        /// <param name="newRole"> that the node has assumed. </param>
+        void OnRoleChange(ClusterRole newRole);
     }
 }

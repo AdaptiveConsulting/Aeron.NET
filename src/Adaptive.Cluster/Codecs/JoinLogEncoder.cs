@@ -7,19 +7,19 @@ using Adaptive.Agrona;
 
 namespace Adaptive.Cluster.Codecs {
 
-public class JoinLogRequestEncoder
+public class JoinLogEncoder
 {
     public const ushort BLOCK_LENGTH = 20;
     public const ushort TEMPLATE_ID = 33;
     public const ushort SCHEMA_ID = 1;
     public const ushort SCHEMA_VERSION = 1;
 
-    private JoinLogRequestEncoder _parentMessage;
+    private JoinLogEncoder _parentMessage;
     private IMutableDirectBuffer _buffer;
     protected int _offset;
     protected int _limit;
 
-    public JoinLogRequestEncoder()
+    public JoinLogEncoder()
     {
         _parentMessage = this;
     }
@@ -59,7 +59,7 @@ public class JoinLogRequestEncoder
         return _offset;
     }
 
-    public JoinLogRequestEncoder Wrap(IMutableDirectBuffer buffer, int offset)
+    public JoinLogEncoder Wrap(IMutableDirectBuffer buffer, int offset)
     {
         this._buffer = buffer;
         this._offset = offset;
@@ -68,7 +68,7 @@ public class JoinLogRequestEncoder
         return this;
     }
 
-    public JoinLogRequestEncoder WrapAndApplyHeader(
+    public JoinLogEncoder WrapAndApplyHeader(
         IMutableDirectBuffer buffer, int offset, MessageHeaderEncoder headerEncoder)
     {
         headerEncoder
@@ -121,7 +121,7 @@ public class JoinLogRequestEncoder
         return 9223372036854775807L;
     }
 
-    public JoinLogRequestEncoder LeadershipTermId(long value)
+    public JoinLogEncoder LeadershipTermId(long value)
     {
         _buffer.PutLong(_offset + 0, value, ByteOrder.LittleEndian);
         return this;
@@ -153,7 +153,7 @@ public class JoinLogRequestEncoder
         return 2147483647;
     }
 
-    public JoinLogRequestEncoder CommitPositionId(int value)
+    public JoinLogEncoder CommitPositionId(int value)
     {
         _buffer.PutInt(_offset + 8, value, ByteOrder.LittleEndian);
         return this;
@@ -185,7 +185,7 @@ public class JoinLogRequestEncoder
         return 2147483647;
     }
 
-    public JoinLogRequestEncoder LogSessionId(int value)
+    public JoinLogEncoder LogSessionId(int value)
     {
         _buffer.PutInt(_offset + 12, value, ByteOrder.LittleEndian);
         return this;
@@ -217,7 +217,7 @@ public class JoinLogRequestEncoder
         return 2147483647;
     }
 
-    public JoinLogRequestEncoder LogStreamId(int value)
+    public JoinLogEncoder LogStreamId(int value)
     {
         _buffer.PutInt(_offset + 16, value, ByteOrder.LittleEndian);
         return this;
@@ -252,7 +252,7 @@ public class JoinLogRequestEncoder
         return 4;
     }
 
-    public JoinLogRequestEncoder PutLogChannel(IDirectBuffer src, int srcOffset, int length)
+    public JoinLogEncoder PutLogChannel(IDirectBuffer src, int srcOffset, int length)
     {
         if (length > 1073741824)
         {
@@ -268,7 +268,7 @@ public class JoinLogRequestEncoder
         return this;
     }
 
-    public JoinLogRequestEncoder PutLogChannel(byte[] src, int srcOffset, int length)
+    public JoinLogEncoder PutLogChannel(byte[] src, int srcOffset, int length)
     {
         if (length > 1073741824)
         {
@@ -284,7 +284,7 @@ public class JoinLogRequestEncoder
         return this;
     }
 
-    public JoinLogRequestEncoder LogChannel(string value)
+    public JoinLogEncoder LogChannel(string value)
     {
         int length = value.Length;
         if (length > 1073741824)
@@ -309,7 +309,7 @@ public class JoinLogRequestEncoder
 
     public StringBuilder AppendTo(StringBuilder builder)
     {
-        JoinLogRequestDecoder writer = new JoinLogRequestDecoder();
+        JoinLogDecoder writer = new JoinLogDecoder();
         writer.Wrap(_buffer, _offset, BLOCK_LENGTH, SCHEMA_VERSION);
 
         return writer.AppendTo(builder);

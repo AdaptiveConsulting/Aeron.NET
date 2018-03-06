@@ -7,19 +7,19 @@ using Adaptive.Agrona;
 
 namespace Adaptive.Cluster.Codecs {
 
-public class CancelTimerRequestEncoder
+public class CancelTimerEncoder
 {
     public const ushort BLOCK_LENGTH = 8;
     public const ushort TEMPLATE_ID = 31;
     public const ushort SCHEMA_ID = 1;
     public const ushort SCHEMA_VERSION = 1;
 
-    private CancelTimerRequestEncoder _parentMessage;
+    private CancelTimerEncoder _parentMessage;
     private IMutableDirectBuffer _buffer;
     protected int _offset;
     protected int _limit;
 
-    public CancelTimerRequestEncoder()
+    public CancelTimerEncoder()
     {
         _parentMessage = this;
     }
@@ -59,7 +59,7 @@ public class CancelTimerRequestEncoder
         return _offset;
     }
 
-    public CancelTimerRequestEncoder Wrap(IMutableDirectBuffer buffer, int offset)
+    public CancelTimerEncoder Wrap(IMutableDirectBuffer buffer, int offset)
     {
         this._buffer = buffer;
         this._offset = offset;
@@ -68,7 +68,7 @@ public class CancelTimerRequestEncoder
         return this;
     }
 
-    public CancelTimerRequestEncoder WrapAndApplyHeader(
+    public CancelTimerEncoder WrapAndApplyHeader(
         IMutableDirectBuffer buffer, int offset, MessageHeaderEncoder headerEncoder)
     {
         headerEncoder
@@ -121,7 +121,7 @@ public class CancelTimerRequestEncoder
         return 9223372036854775807L;
     }
 
-    public CancelTimerRequestEncoder CorrelationId(long value)
+    public CancelTimerEncoder CorrelationId(long value)
     {
         _buffer.PutLong(_offset + 0, value, ByteOrder.LittleEndian);
         return this;
@@ -136,7 +136,7 @@ public class CancelTimerRequestEncoder
 
     public StringBuilder AppendTo(StringBuilder builder)
     {
-        CancelTimerRequestDecoder writer = new CancelTimerRequestDecoder();
+        CancelTimerDecoder writer = new CancelTimerDecoder();
         writer.Wrap(_buffer, _offset, BLOCK_LENGTH, SCHEMA_VERSION);
 
         return writer.AppendTo(builder);

@@ -74,13 +74,21 @@ namespace Adaptive.Cluster.Service
                     break;
 
                 case ClientSessionDecoder.TEMPLATE_ID:
-                    clientSessionDecoder.Wrap(buffer, offset + MessageHeaderDecoder.ENCODED_LENGTH, messageHeaderDecoder.BlockLength(), messageHeaderDecoder.Version());
+                    clientSessionDecoder.Wrap(
+                        buffer, 
+                        offset + MessageHeaderDecoder.ENCODED_LENGTH, 
+                        messageHeaderDecoder.BlockLength(), 
+                        messageHeaderDecoder.Version());
 
                     string responseChannel = clientSessionDecoder.ResponseChannel();
-                    byte[] principalData = new byte[clientSessionDecoder.PrincipalDataLength()];
-                    clientSessionDecoder.GetPrincipalData(principalData, 0, principalData.Length);
+                    byte[] encodedPrincipal = new byte[clientSessionDecoder.EncodedPrincipalLength()];
+                    clientSessionDecoder.GetEncodedPrincipal(encodedPrincipal, 0, encodedPrincipal.Length);
 
-                    agent.AddSession(clientSessionDecoder.ClusterSessionId(), clientSessionDecoder.ResponseStreamId(), responseChannel, principalData);
+                    agent.AddSession(
+                        clientSessionDecoder.ClusterSessionId(), 
+                        clientSessionDecoder.ResponseStreamId(), 
+                        responseChannel, 
+                        encodedPrincipal);
                     break;
 
                 default:
