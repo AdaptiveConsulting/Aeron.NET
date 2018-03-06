@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-using Adaptive.Agrona.Concurrent;
+using Adaptive.Agrona;
 
 namespace Adaptive.Aeron.LogBuffer
 {
@@ -26,5 +26,5 @@ namespace Adaptive.Aeron.LogBuffer
     /// <param name="offset"> at which the data begins. </param>
     /// <param name="length"> of the data in bytes. </param>
     /// <param name="header"> representing the meta data for the data. </param>
-    public delegate void FragmentHandler(UnsafeBuffer buffer, int offset, int length, Header header);
+    public delegate void FragmentHandler(IDirectBuffer buffer, int offset, int length, Header header);
 }

@@ -17,6 +17,7 @@
 using System;
 using Adaptive.Aeron.LogBuffer;
 using Adaptive.Aeron.Samples.Common;
+using Adaptive.Agrona;
 using Adaptive.Agrona.Concurrent;
 
 namespace Adaptive.Aeron.Samples.Pong
@@ -68,7 +69,7 @@ namespace Adaptive.Aeron.Samples.Pong
             }
         }
 
-        private static void PingHandler(Publication pongPublication, UnsafeBuffer buffer, int offset, int length)
+        private static void PingHandler(Publication pongPublication, IDirectBuffer buffer, int offset, int length)
         {
             if (pongPublication.Offer(buffer, offset, length) > 0L)
             {

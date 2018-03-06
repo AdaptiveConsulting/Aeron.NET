@@ -1,6 +1,6 @@
 ﻿using Adaptive.Aeron;
 using Adaptive.Aeron.LogBuffer;
-using Adaptive.Agrona.Concurrent;
+using Adaptive.Agrona;
 using Adaptive.Archiver.Codecs;
 
 namespace Adaptive.Archiver
@@ -111,7 +111,7 @@ namespace Adaptive.Archiver
             isDispatchComplete = false;
         }
 
-        public virtual ControlledFragmentHandlerAction OnFragment(UnsafeBuffer buffer, int offset, int length, Header header)
+        public virtual ControlledFragmentHandlerAction OnFragment(IDirectBuffer buffer, int offset, int length, Header header)
         {
             messageHeaderDecoder.Wrap(buffer, offset);
 

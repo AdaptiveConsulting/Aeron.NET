@@ -17,6 +17,7 @@
 using System;
 using System.Threading;
 using Adaptive.Aeron.LogBuffer;
+using Adaptive.Agrona;
 using Adaptive.Agrona.Concurrent;
 
 namespace Adaptive.Aeron.Samples.HelloWorld
@@ -59,7 +60,7 @@ namespace Adaptive.Aeron.Samples.HelloWorld
             }
         }
 
-        private static void PrintMessage(UnsafeBuffer buffer, int offset, int length, Header header)
+        private static void PrintMessage(IDirectBuffer buffer, int offset, int length, Header header)
         {
             var message = buffer.GetStringWithoutLengthUtf8(offset, length);
 

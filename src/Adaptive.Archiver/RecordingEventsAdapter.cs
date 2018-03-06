@@ -1,5 +1,6 @@
 ﻿using Adaptive.Aeron;
 using Adaptive.Aeron.LogBuffer;
+using Adaptive.Agrona;
 using Adaptive.Agrona.Concurrent;
 using Adaptive.Archiver.Codecs;
 
@@ -41,7 +42,7 @@ namespace Adaptive.Archiver
             return subscription.Poll(this, fragmentLimit);
         }
 
-        public virtual void OnFragment(UnsafeBuffer buffer, int offset, int length, Header header)
+        public virtual void OnFragment(IDirectBuffer buffer, int offset, int length, Header header)
         {
             messageHeaderDecoder.Wrap(buffer, offset);
 

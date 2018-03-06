@@ -39,7 +39,7 @@ namespace Adaptive.Aeron.Samples.IpcThroughput
             var running = new AtomicBoolean(true);
 
             using (var aeron = Aeron.Connect())
-            using (var publication = aeron.AddPublication(Channel, StreamID))
+            using (var publication = aeron.AddExclusivePublication(Channel, StreamID))
             using (var subscription = aeron.AddSubscription(Channel, StreamID))
             {
                 var subscriber = new Subscriber(running, subscription);
@@ -185,7 +185,7 @@ namespace Adaptive.Aeron.Samples.IpcThroughput
                 Console.WriteLine($"Subscriber poll failure ratio: {failureRatio}");
             }
 
-            public void OnFragment(UnsafeBuffer buffer, int offset, int length, Header header)
+            public void OnFragment(IDirectBuffer buffer, int offset, int length, Header header)
             {
                 _totalBytes.Set(_totalBytes.Get() + length);
             }

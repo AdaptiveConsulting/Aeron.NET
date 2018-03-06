@@ -1,7 +1,7 @@
 ﻿using System;
 using Adaptive.Aeron;
 using Adaptive.Aeron.LogBuffer;
-using Adaptive.Agrona.Concurrent;
+using Adaptive.Agrona;
 using Adaptive.Cluster.Codecs;
 
 namespace Adaptive.Cluster.Service
@@ -34,7 +34,7 @@ namespace Adaptive.Cluster.Service
             return image.ControlledPoll(this, FRAGMENT_LIMIT);
         }
 
-        public ControlledFragmentHandlerAction OnFragment(UnsafeBuffer buffer, int offset, int length, Header header)
+        public ControlledFragmentHandlerAction OnFragment(IDirectBuffer buffer, int offset, int length, Header header)
         {
             messageHeaderDecoder.Wrap(buffer, offset);
 

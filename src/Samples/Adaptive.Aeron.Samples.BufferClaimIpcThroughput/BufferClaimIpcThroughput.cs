@@ -187,7 +187,7 @@ namespace Adaptive.Aeron.Samples.BufferClaimIpcThroughput
                 Console.WriteLine($"Subscriber poll failure ratio: {failureRatio}");
             }
 
-            public void OnFragment(UnsafeBuffer buffer, int offset, int length, Header header)
+            public void OnFragment(IDirectBuffer buffer, int offset, int length, Header header)
             {
                 _totalBytes.Add(length);
             }

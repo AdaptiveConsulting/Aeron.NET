@@ -17,6 +17,7 @@
 using System;
 using System.Runtime.CompilerServices;
 using Adaptive.Aeron.LogBuffer;
+using Adaptive.Agrona;
 using Adaptive.Agrona.Concurrent;
 using Adaptive.Agrona.Concurrent.Status;
 
@@ -108,7 +109,7 @@ namespace Adaptive.Aeron
         /// <seealso cref="Publication.ADMIN_ACTION"/>, <seealso cref="Publication.CLOSED"/> or <see cref="Publication.MAX_POSITION_EXCEEDED"/>. </returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override long Offer(
-            UnsafeBuffer buffer,
+            IDirectBuffer buffer,
             int offset,
             int length,
             ReservedValueSupplier reservedValueSupplier = null)

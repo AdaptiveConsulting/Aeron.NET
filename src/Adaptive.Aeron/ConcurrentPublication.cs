@@ -1,4 +1,5 @@
 ﻿using Adaptive.Aeron.LogBuffer;
+using Adaptive.Agrona;
 using Adaptive.Agrona.Concurrent;
 using Adaptive.Agrona.Concurrent.Status;
 
@@ -55,7 +56,7 @@ namespace Adaptive.Aeron
 		}
 
 		/// <inheritdoc />
-		public override long Offer(UnsafeBuffer buffer, int offset, int length, ReservedValueSupplier reservedValueSupplier = null)
+		public override long Offer(IDirectBuffer buffer, int offset, int length, ReservedValueSupplier reservedValueSupplier = null)
 		{
 			long newPosition = CLOSED;
 			if (!_isClosed)

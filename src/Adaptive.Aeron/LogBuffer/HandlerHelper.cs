@@ -14,7 +14,7 @@ namespace Adaptive.Aeron.LogBuffer
                 _delegate = @delegate;
             }
 
-            public void OnFragment(UnsafeBuffer buffer, int offset, int length, Header header)
+            public void OnFragment(IDirectBuffer buffer, int offset, int length, Header header)
             {
                 _delegate(buffer, offset, length, header);
             }
@@ -29,7 +29,7 @@ namespace Adaptive.Aeron.LogBuffer
                 _delegate = @delegate;
             }
 
-            public ControlledFragmentHandlerAction OnFragment(UnsafeBuffer buffer, int offset, int length, Header header)
+            public ControlledFragmentHandlerAction OnFragment(IDirectBuffer buffer, int offset, int length, Header header)
             {
                 return _delegate(buffer, offset, length, header);
             }

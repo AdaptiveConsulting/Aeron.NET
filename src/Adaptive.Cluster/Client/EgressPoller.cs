@@ -1,6 +1,7 @@
-﻿using Adaptive.Aeron;
+﻿using System;
+using Adaptive.Aeron;
 using Adaptive.Aeron.LogBuffer;
-using Adaptive.Agrona.Concurrent;
+using Adaptive.Agrona;
 using Adaptive.Cluster.Codecs;
 
 namespace Adaptive.Cluster.Client
@@ -125,7 +126,7 @@ namespace Adaptive.Cluster.Client
             return subscription.ControlledPoll(fragmentAssembler, fragmentLimit);
         }
 
-        public ControlledFragmentHandlerAction OnFragment(UnsafeBuffer buffer, int offset, int length, Header header)
+        public ControlledFragmentHandlerAction OnFragment(IDirectBuffer buffer, int offset, int length, Header header)
         {
             messageHeaderDecoder.Wrap(buffer, offset);
 
@@ -169,7 +170,7 @@ namespace Adaptive.Cluster.Client
                     break;
 
                 default:
-                    throw new System.InvalidOperationException("Unknown templateId: " + templateId);
+                    throw new InvalidOperationException("Unknown templateId: " + templateId);
             }
 
             pollComplete = true;

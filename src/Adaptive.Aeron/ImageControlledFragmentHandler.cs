@@ -1,5 +1,5 @@
 ﻿using Adaptive.Aeron.LogBuffer;
-using Adaptive.Agrona.Concurrent;
+using Adaptive.Agrona;
 
 namespace Adaptive.Aeron
 {
@@ -56,7 +56,7 @@ namespace Adaptive.Aeron
         /// <param name="offset"> at which the data begins. </param>
         /// <param name="length"> of the data in bytes. </param>
         /// <param name="header"> representing the meta data for the data. </param>
-        public ControlledFragmentHandlerAction OnFragment(UnsafeBuffer buffer, int offset, int length, Header header)
+        public ControlledFragmentHandlerAction OnFragment(IDirectBuffer buffer, int offset, int length, Header header)
         {
             byte flags = header.Flags;
 

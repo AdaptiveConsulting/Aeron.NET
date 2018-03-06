@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-using Adaptive.Agrona.Concurrent;
+using Adaptive.Agrona;
 
 namespace Adaptive.Aeron.LogBuffer
 {
@@ -27,5 +27,5 @@ namespace Adaptive.Aeron.LogBuffer
     /// <param name="length"> of the data in bytes. </param>
     /// <param name="header"> representing the meta data for the data. </param>
     /// <returns> The action to be taken with regard to the stream position after the callback. </returns>
-    public delegate ControlledFragmentHandlerAction ControlledFragmentHandler(UnsafeBuffer buffer, int offset, int length, Header header);
+    public delegate ControlledFragmentHandlerAction ControlledFragmentHandler(IDirectBuffer buffer, int offset, int length, Header header);
 }

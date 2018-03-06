@@ -66,7 +66,7 @@ namespace Adaptive.Archiver
             consumer.OnRecordingDescriptor(decoder.ControlSessionId(), decoder.CorrelationId(), decoder.RecordingId(), decoder.StartTimestamp(), decoder.StopTimestamp(), decoder.StartPosition(), decoder.StopPosition(), decoder.InitialTermId(), decoder.SegmentFileLength(), decoder.TermBufferLength(), decoder.MtuLength(), decoder.SessionId(), decoder.StreamId(), decoder.StrippedChannel(), decoder.OriginalChannel(), decoder.SourceIdentity());
         }
 
-        public virtual void OnFragment(UnsafeBuffer buffer, int offset, int length, Header header)
+        public virtual void OnFragment(IDirectBuffer buffer, int offset, int length, Header header)
         {
             messageHeaderDecoder.Wrap(buffer, offset);
 

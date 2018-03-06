@@ -1,6 +1,7 @@
 ﻿using System;
 using Adaptive.Aeron;
 using Adaptive.Aeron.LogBuffer;
+using Adaptive.Agrona;
 using Adaptive.Agrona.Concurrent;
 using Adaptive.Cluster.Codecs;
 
@@ -33,7 +34,7 @@ namespace Adaptive.Cluster.Service
             return subscription.Poll(this, 1);
         }
 
-        public void OnFragment(UnsafeBuffer buffer, int offset, int length, Header header)
+        public void OnFragment(IDirectBuffer buffer, int offset, int length, Header header)
         {
             messageHeaderDecoder.Wrap(buffer, offset);
 

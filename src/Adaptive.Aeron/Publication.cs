@@ -330,7 +330,7 @@ namespace Adaptive.Aeron
         /// <seealso cref="ADMIN_ACTION"/>, <seealso cref="CLOSED"/> or <see cref="MAX_POSITION_EXCEEDED"/>. </returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public abstract long Offer(
-            UnsafeBuffer buffer,
+            IDirectBuffer buffer,
             int offset,
             int length,
             ReservedValueSupplier reservedValueSupplier = null);

@@ -161,7 +161,7 @@ namespace Adaptive.Aeron.LogBuffer
             int termId,
             int termOffset, 
             HeaderWriter header, 
-            UnsafeBuffer srcBuffer, 
+            IDirectBuffer srcBuffer, 
             int srcOffset, 
             int length, 
             ReservedValueSupplier reservedValueSupplier)
@@ -281,7 +281,7 @@ namespace Adaptive.Aeron.LogBuffer
             int termId,
             int termOffset, 
             HeaderWriter header, 
-            UnsafeBuffer srcBuffer, 
+            IDirectBuffer srcBuffer, 
             int srcOffset, 
             int length,
             int maxPayloadLength, 
