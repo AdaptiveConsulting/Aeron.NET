@@ -17,7 +17,6 @@
 using System;
 using System.Threading;
 using Adaptive.Aeron.LogBuffer;
-using Adaptive.Agrona;
 using Adaptive.Agrona.Concurrent;
 
 namespace Adaptive.Aeron.Samples.HelloWorld
@@ -30,7 +29,8 @@ namespace Adaptive.Aeron.Samples.HelloWorld
             const int streamId = 42;
 
             var buffer = new UnsafeBuffer(new byte[256]);
-
+            var handler = HandlerHelper.ToFragmentHandler(PrintMessage);
+            
             try
             {
                 using (var aeron = Aeron.Connect())
@@ -42,7 +42,7 @@ namespace Adaptive.Aeron.Samples.HelloWorld
                     publisher.Offer(buffer, 0, message);
                     Console.WriteLine("Message sent...");
 
-                    while (subscriber.Poll(PrintMessage, 1) == 0)
+                    while (subscriber.Poll(handler, 1) == 0)
                     {
                         Thread.Sleep(10);
                     }
@@ -59,7 +59,7 @@ namespace Adaptive.Aeron.Samples.HelloWorld
             }
         }
 
-        static void PrintMessage(IDirectBuffer buffer, int offset, int length, Header header)
+        private static void PrintMessage(UnsafeBuffer buffer, int offset, int length, Header header)
         {
             var message = buffer.GetStringWithoutLengthUtf8(offset, length);
 

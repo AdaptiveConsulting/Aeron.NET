@@ -47,7 +47,7 @@ namespace Adaptive.Aeron.Samples.Ping
             var ctx = new Aeron.Context()
                 .AvailableImageHandler(AvailablePongImageHandler);
 
-            var fragmentAssembler = new FragmentAssembler(PongHandler);
+            var fragmentAssembler = new FragmentAssembler(HandlerHelper.ToFragmentHandler(PongHandler));
 
             Console.WriteLine("Publishing Ping at " + PingChannel + " on stream Id " + PingStreamID);
             Console.WriteLine("Subscribing Pong at " + PongChannel + " on stream Id " + PongStreamID);
@@ -66,7 +66,7 @@ namespace Adaptive.Aeron.Samples.Ping
 
                     for (var i = 0; i < WarmupNumberOfIterations; i++)
                     {
-                        RoundTripMessages(atomicBuffer, fragmentAssembler.OnFragment, publication, subscription, WarmupNumberOfMessages);
+                        RoundTripMessages(atomicBuffer, fragmentAssembler, publication, subscription, WarmupNumberOfMessages);
                     }
 
                     Thread.Sleep(100);
@@ -76,7 +76,7 @@ namespace Adaptive.Aeron.Samples.Ping
                         Histogram.Reset();
                         Console.WriteLine("Pinging " + NumberOfMessages + " messages");
 
-                        RoundTripMessages(atomicBuffer, fragmentAssembler.OnFragment, publication, subscription, NumberOfMessages);
+                        RoundTripMessages(atomicBuffer, fragmentAssembler, publication, subscription, NumberOfMessages);
                         Console.WriteLine("Histogram of RTT latencies in microseconds.");
 
                         Histogram.OutputPercentileDistribution(Console.Out, outputValueUnitScalingRatio: 1000);
@@ -87,7 +87,7 @@ namespace Adaptive.Aeron.Samples.Ping
 
 
         private static void RoundTripMessages(UnsafeBuffer buffer,
-            FragmentHandler fragmentHandler, Publication publication, Subscription subscription, int count)
+            IFragmentHandler fragmentHandler, Publication publication, Subscription subscription, int count)
         {
             for (var i = 0; i < count; i++)
             {

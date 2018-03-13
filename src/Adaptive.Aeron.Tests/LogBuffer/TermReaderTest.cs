@@ -34,7 +34,7 @@ namespace Adaptive.Aeron.Tests.LogBuffer
         private Header header;
         private UnsafeBuffer termBuffer;
         private ErrorHandler errorHandler;
-        private FragmentHandler handler;
+        private IFragmentHandler handler;
         private IPosition subscriberPosition;
 
         [SetUp]
@@ -43,7 +43,7 @@ namespace Adaptive.Aeron.Tests.LogBuffer
             header = new Header(INITIAL_TERM_ID, TERM_BUFFER_CAPACITY);
             termBuffer = A.Fake<UnsafeBuffer>();
             errorHandler = A.Fake<ErrorHandler>();
-            handler = A.Fake<FragmentHandler>();
+            handler = A.Fake<IFragmentHandler>();
             subscriberPosition = A.Fake<IPosition>();
 
             A.CallTo(() => termBuffer.Capacity).Returns(TERM_BUFFER_CAPACITY);
@@ -66,7 +66,7 @@ namespace Adaptive.Aeron.Tests.LogBuffer
             Assert.That(TermReader.FragmentsRead(readOutcome), Is.EqualTo(1));
 
             A.CallTo(() => termBuffer.GetIntVolatile(0)).MustHaveHappened()
-                .Then(A.CallTo(() => handler(termBuffer, HEADER_LENGTH, msgLength, A<Header>._)).MustHaveHappened())
+                .Then(A.CallTo(() => handler.OnFragment(termBuffer, HEADER_LENGTH, msgLength, A<Header>._)).MustHaveHappened())
                 .Then(A.CallTo(() => subscriberPosition.SetOrdered(alignedFrameLength)).MustHaveHappened());
         }
 
@@ -81,7 +81,7 @@ namespace Adaptive.Aeron.Tests.LogBuffer
 
             A.CallTo(() => subscriberPosition.SetOrdered(A<long>._)).MustNotHaveHappened();
             A.CallTo(() => termBuffer.GetIntVolatile(0)).MustHaveHappened();
-            A.CallTo(() => handler(A<UnsafeBuffer>._, A<int>._, A<int>._, A<Header>._)).MustNotHaveHappened();
+            A.CallTo(() => handler.OnFragment(A<UnsafeBuffer>._, A<int>._, A<int>._, A<Header>._)).MustNotHaveHappened();
         }
 
         [Test]
@@ -101,7 +101,7 @@ namespace Adaptive.Aeron.Tests.LogBuffer
             Assert.That(readOutcome, Is.EqualTo(1));
 
             A.CallTo(() => termBuffer.GetIntVolatile(0)).MustHaveHappened()
-                .Then(A.CallTo(() => handler(termBuffer, HEADER_LENGTH, msgLength, A<Header>._)).MustHaveHappened())
+                .Then(A.CallTo(() => handler.OnFragment(termBuffer, HEADER_LENGTH, msgLength, A<Header>._)).MustHaveHappened())
                 .Then(A.CallTo(() => subscriberPosition.SetOrdered(alignedFrameLength)).MustHaveHappened());
         }
 
@@ -121,9 +121,9 @@ namespace Adaptive.Aeron.Tests.LogBuffer
             Assert.That(readOutcome, Is.EqualTo(2));
 
             A.CallTo(() => termBuffer.GetIntVolatile(0)).MustHaveHappened()
-                .Then(A.CallTo(() => handler(termBuffer, HEADER_LENGTH, msgLength, A<Header>._)).MustHaveHappened())
+                .Then(A.CallTo(() => handler.OnFragment(termBuffer, HEADER_LENGTH, msgLength, A<Header>._)).MustHaveHappened())
                 .Then(A.CallTo(() => termBuffer.GetIntVolatile(alignedFrameLength)).MustHaveHappened())
-                .Then(A.CallTo(() => handler(termBuffer, alignedFrameLength + HEADER_LENGTH, msgLength, A<Header>._)).MustHaveHappened())
+                .Then(A.CallTo(() => handler.OnFragment(termBuffer, alignedFrameLength + HEADER_LENGTH, msgLength, A<Header>._)).MustHaveHappened())
                 .Then(A.CallTo(() => subscriberPosition.SetOrdered(alignedFrameLength * 2)).MustHaveHappened());
         }
 
@@ -142,7 +142,7 @@ namespace Adaptive.Aeron.Tests.LogBuffer
             Assert.That(readOutcome, Is.EqualTo(1));
             
             A.CallTo(() => termBuffer.GetIntVolatile(frameOffset)).MustHaveHappened()
-                .Then(A.CallTo(() => handler(termBuffer, frameOffset + HEADER_LENGTH, msgLength, A<Header>._)).MustHaveHappened())
+                .Then(A.CallTo(() => handler.OnFragment(termBuffer, frameOffset + HEADER_LENGTH, msgLength, A<Header>._)).MustHaveHappened())
                 .Then(A.CallTo(() => subscriberPosition.SetOrdered(alignedFrameLength)).MustHaveHappened());
         }
 
@@ -163,7 +163,7 @@ namespace Adaptive.Aeron.Tests.LogBuffer
             A.CallTo(() => termBuffer.GetIntVolatile(frameOffset)).MustHaveHappened()
                 .Then(A.CallTo(() => subscriberPosition.SetOrdered(alignedFrameLength)).MustHaveHappened());
 
-            A.CallTo(() => handler(A<UnsafeBuffer>._, A<int>._, A<int>._, A<Header>._)).MustNotHaveHappened();
+            A.CallTo(() => handler.OnFragment(A<UnsafeBuffer>._, A<int>._, A<int>._, A<Header>._)).MustNotHaveHappened();
         }
     }
 }

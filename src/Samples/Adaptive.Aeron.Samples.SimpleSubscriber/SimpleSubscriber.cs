@@ -48,7 +48,7 @@ namespace Adaptive.Aeron.Samples.SimpleSubscriber
             Console.CancelKeyPress += (s, e) => running.Set(false);
 
             // dataHandler method is called for every new datagram received
-            FragmentHandler fragmentHandler = (buffer, offset, length, header) =>
+            var fragmentHandler = HandlerHelper.ToFragmentHandler((buffer, offset, length, header) =>
             {
                 var data = new byte[length];
                 buffer.GetBytes(offset, data);
@@ -57,7 +57,7 @@ namespace Adaptive.Aeron.Samples.SimpleSubscriber
 
                 // Received the intended message, time to exit the program
                 running.Set(false);
-            };
+            });
 
             // Create a context, needed for client connection to media driver
             // A separate media driver process need to run prior to running this application

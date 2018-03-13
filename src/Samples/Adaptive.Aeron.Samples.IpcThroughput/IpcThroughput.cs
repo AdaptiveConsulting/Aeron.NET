@@ -137,7 +137,7 @@ namespace Adaptive.Aeron.Samples.IpcThroughput
             }
         }
 
-        public class Subscriber
+        public class Subscriber : IFragmentHandler
         {
             internal readonly AtomicBoolean Running;
             internal readonly Subscription Subscription;
@@ -167,11 +167,10 @@ namespace Adaptive.Aeron.Samples.IpcThroughput
 
                 long failedPolls = 0;
                 long successfulPolls = 0;
-                FragmentHandler onFragment = OnFragment;
-                
+
                 while (Running)
                 {
-                    var fragmentsRead = image.Poll(onFragment, MessageCountLimit);
+                    var fragmentsRead = image.Poll(this, MessageCountLimit);
                     if (0 == fragmentsRead)
                     {
                         ++failedPolls;
@@ -182,11 +181,11 @@ namespace Adaptive.Aeron.Samples.IpcThroughput
                     }
                 }
 
-                var failureRatio = failedPolls/(double) (successfulPolls + failedPolls);
+                var failureRatio = failedPolls / (double) (successfulPolls + failedPolls);
                 Console.WriteLine($"Subscriber poll failure ratio: {failureRatio}");
             }
 
-            public void OnFragment(IDirectBuffer buffer, int offset, int length, Header header)
+            public void OnFragment(UnsafeBuffer buffer, int offset, int length, Header header)
             {
                 _totalBytes.Set(_totalBytes.Get() + length);
             }

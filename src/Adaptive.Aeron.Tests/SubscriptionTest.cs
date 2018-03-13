@@ -14,12 +14,9 @@
  * limitations under the License.
  */
 
-using Adaptive.Aeron;
 using Adaptive.Aeron.LogBuffer;
 using Adaptive.Aeron.Protocol;
-using Adaptive.Agrona;
 using Adaptive.Agrona.Concurrent;
-using Adaptive.Agrona.Concurrent.Broadcast;
 using FakeItEasy;
 using NUnit.Framework;
 
@@ -37,7 +34,7 @@ namespace Adaptive.Aeron.Tests
 
         private UnsafeBuffer AtomicReadBuffer;
         private ClientConductor Conductor;
-        private FragmentHandler FragmentHandler;
+        private IFragmentHandler FragmentHandler;
         private Image ImageOneMock;
         private Header Header;
         private Image ImageTwoMock;
@@ -57,7 +54,7 @@ namespace Adaptive.Aeron.Tests
 
             AtomicReadBuffer = new UnsafeBuffer(new byte[READ_BUFFER_CAPACITY]);
             Conductor = A.Fake<ClientConductor>();
-            FragmentHandler = A.Fake<FragmentHandler>();
+            FragmentHandler = A.Fake<IFragmentHandler>();
             Header = A.Fake<Header>();
             AvailableImageHandler = A.Fake<AvailableImageHandler>();
             UnavailableImageHandler = A.Fake<UnavailableImageHandler>();
@@ -96,7 +93,7 @@ namespace Adaptive.Aeron.Tests
             Subscription.AddImage(ImageOneMock);
 
 
-            A.CallTo(() => ImageOneMock.Poll(A<FragmentHandler>._, A<int>._)).Returns(0);
+            A.CallTo(() => ImageOneMock.Poll(A<IFragmentHandler>._, A<int>._)).Returns(0);
 
             Assert.AreEqual(Subscription.Poll(FragmentHandler, 1), 0);
         }
@@ -106,16 +103,16 @@ namespace Adaptive.Aeron.Tests
         {
             Subscription.AddImage(ImageOneMock);
 
-            A.CallTo(() => ImageOneMock.Poll(A<FragmentHandler>._, A<int>._)).ReturnsLazily(o =>
+            A.CallTo(() => ImageOneMock.Poll(A<IFragmentHandler>._, A<int>._)).ReturnsLazily(o =>
             {
-                var handler = (FragmentHandler) o.Arguments[0];
-                handler(AtomicReadBuffer, HEADER_LENGTH, READ_BUFFER_CAPACITY - HEADER_LENGTH, Header);
+                var handler = (IFragmentHandler) o.Arguments[0];
+                handler.OnFragment(AtomicReadBuffer, HEADER_LENGTH, READ_BUFFER_CAPACITY - HEADER_LENGTH, Header);
                 return 1;
             });
 
             Assert.AreEqual(Subscription.Poll(FragmentHandler, FRAGMENT_COUNT_LIMIT), 1);
 
-            A.CallTo(() => FragmentHandler(AtomicReadBuffer, HEADER_LENGTH, READ_BUFFER_CAPACITY - HEADER_LENGTH, A<Header>._)).MustHaveHappened();
+            A.CallTo(() => FragmentHandler.OnFragment(AtomicReadBuffer, HEADER_LENGTH, READ_BUFFER_CAPACITY - HEADER_LENGTH, A<Header>._)).MustHaveHappened();
         }
 
         [Test]
@@ -124,17 +121,17 @@ namespace Adaptive.Aeron.Tests
             Subscription.AddImage(ImageOneMock);
             Subscription.AddImage(ImageTwoMock);
 
-            A.CallTo(() => ImageOneMock.Poll(A<FragmentHandler>._, A<int>._)).ReturnsLazily(o =>
+            A.CallTo(() => ImageOneMock.Poll(A<IFragmentHandler>._, A<int>._)).ReturnsLazily(o =>
             {
-                var handler = (FragmentHandler) o.Arguments[0];
-                handler(AtomicReadBuffer, HEADER_LENGTH, READ_BUFFER_CAPACITY - HEADER_LENGTH, Header);
+                var handler = (IFragmentHandler) o.Arguments[0];
+                handler.OnFragment(AtomicReadBuffer, HEADER_LENGTH, READ_BUFFER_CAPACITY - HEADER_LENGTH, Header);
                 return 1;
             });
 
-            A.CallTo(() => ImageTwoMock.Poll(A<FragmentHandler>._, A<int>._)).ReturnsLazily(o =>
+            A.CallTo(() => ImageTwoMock.Poll(A<IFragmentHandler>._, A<int>._)).ReturnsLazily(o =>
             {
-                var handler = (FragmentHandler) o.Arguments[0];
-                handler(AtomicReadBuffer, HEADER_LENGTH, READ_BUFFER_CAPACITY - HEADER_LENGTH, Header);
+                var handler = (IFragmentHandler) o.Arguments[0];
+                handler.OnFragment(AtomicReadBuffer, HEADER_LENGTH, READ_BUFFER_CAPACITY - HEADER_LENGTH, Header);
                 return 1;
             });
 

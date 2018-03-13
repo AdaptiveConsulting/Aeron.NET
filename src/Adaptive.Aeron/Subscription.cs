@@ -161,7 +161,6 @@ namespace Adaptive.Aeron
             return numberEndOfStreams;
         }
 
-
         /// <summary>
         /// Poll the <seealso cref="Image"/>s under the subscription for available message fragments.
         /// <para>
@@ -177,6 +176,26 @@ namespace Adaptive.Aeron
         /// <param name="fragmentLimit">   number of message fragments to limit for the poll operation across multiple <seealso cref="Image"/>s. </param>
         /// <returns> the number of fragments received </returns>
         public int Poll(FragmentHandler fragmentHandler, int fragmentLimit)
+        {
+            var handler = HandlerHelper.ToFragmentHandler(fragmentHandler);
+            return Poll(handler, fragmentLimit);
+        }
+        
+        /// <summary>
+        /// Poll the <seealso cref="Image"/>s under the subscription for available message fragments.
+        /// <para>
+        /// Each fragment read will be a whole message if it is under MTU length. If larger than MTU then it will come
+        /// as a series of fragments ordered within a session.
+        /// </para>
+        /// <para>
+        /// To assemble messages that span multiple fragments then use <seealso cref="FragmentAssembler"/>.
+        /// 
+        /// </para>
+        /// </summary>
+        /// <param name="fragmentHandler"> callback for handling each message fragment as it is read. </param>
+        /// <param name="fragmentLimit">   number of message fragments to limit for the poll operation across multiple <seealso cref="Image"/>s. </param>
+        /// <returns> the number of fragments received </returns>
+        public int Poll(IFragmentHandler fragmentHandler, int fragmentLimit)
         {
             var images = _fields.images;
             var length = images.Length;
@@ -218,7 +237,7 @@ namespace Adaptive.Aeron
         /// <param name="fragmentLimit">   number of message fragments to limit for the poll operation across multiple <seealso cref="Image"/>s. </param>
         /// <returns> the number of fragments received </returns>
         /// <seealso cref="ControlledFragmentHandler" />
-        public int ControlledPoll(ControlledFragmentHandler fragmentHandler, int fragmentLimit)
+        public int ControlledPoll(IControlledFragmentHandler fragmentHandler, int fragmentLimit)
         {
             var images = _fields.images;
             var length = images.Length;
@@ -241,6 +260,29 @@ namespace Adaptive.Aeron
             }
 
             return fragmentsRead;
+        }
+
+        /// <summary>
+        /// Poll in a controlled manner the <seealso cref="Image"/>s under the subscription for available message fragments.
+        /// Control is applied to fragments in the stream. If more fragments can be read on another stream
+        /// they will even if BREAK or ABORT is returned from the fragment handler.
+        /// <para>
+        /// Each fragment read will be a whole message if it is under MTU length. If larger than MTU then it will come
+        /// as a series of fragments ordered within a session.
+        /// </para>
+        /// <para>
+        /// To assemble messages that span multiple fragments then use <seealso cref="ControlledFragmentAssembler"/>.
+        ///     
+        /// </para>
+        /// </summary>
+        /// <param name="fragmentHandler"> callback for handling each message fragment as it is read. </param>
+        /// <param name="fragmentLimit">   number of message fragments to limit for the poll operation across multiple <seealso cref="Image"/>s. </param>
+        /// <returns> the number of fragments received </returns>
+        /// <seealso cref="ControlledFragmentHandler" />
+        public int ControlledPoll(ControlledFragmentHandler fragmentHandler, int fragmentLimit)
+        {
+            var handler = HandlerHelper.ToControlledFragmentHandler(fragmentHandler);
+            return ControlledPoll(handler, fragmentLimit);
         }
 
         /// <summary>

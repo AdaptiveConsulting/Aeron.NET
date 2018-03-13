@@ -42,7 +42,7 @@ namespace Adaptive.Aeron.Samples.RateSubscriber
             var fragmentAssembler = new FragmentAssembler(SamplesUtil.RateReporterHandler(reporter));
             var running = new AtomicBoolean(true);
 
-            var t = new Thread(subscription => SamplesUtil.SubscriberLoop(fragmentAssembler.OnFragment, FragmentCountLimit, running)((Subscription) subscription));
+            var t = new Thread(subscription => SamplesUtil.SubscriberLoop(fragmentAssembler, FragmentCountLimit, running)((Subscription) subscription));
             var report = new Thread(reporter.Run);
 
             using (var aeron = Aeron.Connect(ctx))

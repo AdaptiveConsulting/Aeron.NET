@@ -1,5 +1,4 @@
 ﻿using Adaptive.Aeron.LogBuffer;
-using Adaptive.Agrona;
 using Adaptive.Agrona.Concurrent;
 
 namespace Adaptive.Aeron
@@ -18,7 +17,7 @@ namespace Adaptive.Aeron
     /// <see cref="Image.ControlledPeek(long, IControlledFragmentHandler, long)"/>
     public class ImageControlledFragmentAssembler
     {
-        private readonly ControlledFragmentHandler _delegate;
+        private readonly IControlledFragmentHandler _delegate;
         private readonly BufferBuilder _builder;
 
         /// <summary>
@@ -26,7 +25,7 @@ namespace Adaptive.Aeron
         /// </summary>
         /// <param name="delegate">            onto which whole messages are forwarded. </param>
         /// <param name="initialBufferLength"> to be used for each session. </param>
-        public ImageControlledFragmentAssembler(ControlledFragmentHandler @delegate, int initialBufferLength = BufferBuilder.MIN_ALLOCATED_CAPACITY)
+        public ImageControlledFragmentAssembler(IControlledFragmentHandler @delegate, int initialBufferLength = BufferBuilder.MIN_ALLOCATED_CAPACITY)
         {
             _delegate = @delegate;
             _builder = new BufferBuilder(initialBufferLength);
@@ -36,7 +35,7 @@ namespace Adaptive.Aeron
         /// Get the delegate unto which assembled messages are delegated.
         /// </summary>
         /// <returns>  the delegate unto which assembled messages are delegated. </returns>
-        public virtual ControlledFragmentHandler Delegate()
+        public virtual IControlledFragmentHandler Delegate()
         {
             return _delegate;
         }
@@ -51,7 +50,7 @@ namespace Adaptive.Aeron
         }
 
         /// <summary>
-        /// The implementation of <seealso cref="ControlledFragmentHandler"/> that reassembles and forwards whole messages.
+        /// The implementation of <seealso cref="IControlledFragmentHandler"/> that reassembles and forwards whole messages.
         /// </summary>
         /// <param name="buffer"> containing the data. </param>
         /// <param name="offset"> at which the data begins. </param>
@@ -65,7 +64,7 @@ namespace Adaptive.Aeron
 
             if ((flags & FrameDescriptor.UNFRAGMENTED) == FrameDescriptor.UNFRAGMENTED)
             {
-                action = _delegate(buffer, offset, length, header);
+                action = _delegate.OnFragment(buffer, offset, length, header);
             }
             else
             {
@@ -81,7 +80,7 @@ namespace Adaptive.Aeron
                     if ((flags & FrameDescriptor.END_FRAG_FLAG) == FrameDescriptor.END_FRAG_FLAG)
                     {
                         int msgLength = _builder.Limit();
-                        action = _delegate(_builder.Buffer(), 0, msgLength, header);
+                        action = _delegate.OnFragment(_builder.Buffer(), 0, msgLength, header);
 
                         if (ControlledFragmentHandlerAction.ABORT == action)
                         {

@@ -46,7 +46,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// <param name="subscriberPosition"> to be updated after reading with new position </param>
         /// <returns> the number of fragments read </returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int Read(UnsafeBuffer termBuffer, int termOffset, FragmentHandler handler, int fragmentsLimit, Header header, ErrorHandler errorHandler, long currentPosition, IPosition subscriberPosition)
+        public static int Read(UnsafeBuffer termBuffer, int termOffset, IFragmentHandler handler, int fragmentsLimit, Header header, ErrorHandler errorHandler, long currentPosition, IPosition subscriberPosition)
         {
             int fragmentsRead = 0;
             int offset = termOffset;
@@ -63,16 +63,14 @@ namespace Adaptive.Aeron.LogBuffer
                         break;
                     }
 
-                    //JAVA TO C# CONVERTER WARNING: The original Java variable was marked 'final':
-                    //ORIGINAL LINE: final int frameOffset = offset;
                     int frameOffset = offset;
                     offset += BitUtil.Align(frameLength, FrameDescriptor.FRAME_ALIGNMENT);
 
                     if (!FrameDescriptor.IsPaddingFrame(termBuffer, frameOffset))
                     {
-                        header.Offset= frameOffset;
+                        header.Offset = frameOffset;
 
-                        handler(termBuffer, frameOffset + DataHeaderFlyweight.HEADER_LENGTH, frameLength - DataHeaderFlyweight.HEADER_LENGTH, header);
+                        handler.OnFragment(termBuffer, frameOffset + DataHeaderFlyweight.HEADER_LENGTH, frameLength - DataHeaderFlyweight.HEADER_LENGTH, header);
 
                         ++fragmentsRead;
                     }
@@ -110,7 +108,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// <param name="errorHandler">   to be notified if an error occurs during the callback. </param>
         /// <returns> the number of fragments read </returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static long Read(UnsafeBuffer termBuffer, int offset, FragmentHandler handler, int fragmentsLimit, Header header, ErrorHandler errorHandler)
+        public static long Read(UnsafeBuffer termBuffer, int offset, IFragmentHandler handler, int fragmentsLimit, Header header, ErrorHandler errorHandler)
         {
             int fragmentsRead = 0;
             int capacity = termBuffer.Capacity;
@@ -132,7 +130,7 @@ namespace Adaptive.Aeron.LogBuffer
                     {
                         header.SetBuffer(termBuffer, termOffset);
 
-                        handler(termBuffer, termOffset + DataHeaderFlyweight.HEADER_LENGTH, frameLength - DataHeaderFlyweight.HEADER_LENGTH, header);
+                        handler.OnFragment(termBuffer, termOffset + DataHeaderFlyweight.HEADER_LENGTH, frameLength - DataHeaderFlyweight.HEADER_LENGTH, header);
 
                         ++fragmentsRead;
                     }
@@ -155,7 +153,7 @@ namespace Adaptive.Aeron.LogBuffer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static long Pack(int offset, int fragmentsRead)
         {
-            return ((long)offset << 32) | (uint)fragmentsRead;
+            return ((long) offset << 32) | (uint) fragmentsRead;
         }
 
         /// <summary>
@@ -166,7 +164,7 @@ namespace Adaptive.Aeron.LogBuffer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int FragmentsRead(long readOutcome)
         {
-            return (int)readOutcome;
+            return (int) readOutcome;
         }
 
         /// <summary>
@@ -177,7 +175,7 @@ namespace Adaptive.Aeron.LogBuffer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int Offset(long readOutcome)
         {
-            return (int)((long)((ulong)readOutcome >> 32));
+            return (int) ((long) ((ulong) readOutcome >> 32));
         }
     }
 }
