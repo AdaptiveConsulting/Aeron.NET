@@ -196,17 +196,17 @@ public class AdminResponseDecoder
     }
 
 
-    public static int ResponseDataId()
+    public static int EncodedResponseId()
     {
         return 3;
     }
 
-    public static int ResponseDataSinceVersion()
+    public static int EncodedResponseSinceVersion()
     {
         return 0;
     }
 
-    public static string ResponseDataMetaAttribute(MetaAttribute metaAttribute)
+    public static string EncodedResponseMetaAttribute(MetaAttribute metaAttribute)
     {
         switch (metaAttribute)
         {
@@ -219,18 +219,18 @@ public class AdminResponseDecoder
         return "";
     }
 
-    public static int ResponseDataHeaderLength()
+    public static int EncodedResponseHeaderLength()
     {
         return 4;
     }
 
-    public int ResponseDataLength()
+    public int EncodedResponseLength()
     {
         int limit = _parentMessage.Limit();
         return (int)unchecked((uint)_buffer.GetInt(limit, ByteOrder.LittleEndian));
     }
 
-    public int GetResponseData(IMutableDirectBuffer dst, int dstOffset, int length)
+    public int GetEncodedResponse(IMutableDirectBuffer dst, int dstOffset, int length)
     {
         int headerLength = 4;
         int limit = _parentMessage.Limit();
@@ -242,7 +242,7 @@ public class AdminResponseDecoder
         return bytesCopied;
     }
 
-    public int GetResponseData(byte[] dst, int dstOffset, int length)
+    public int GetEncodedResponse(byte[] dst, int dstOffset, int length)
     {
         int headerLength = 4;
         int limit = _parentMessage.Limit();
@@ -293,9 +293,9 @@ public class AdminResponseDecoder
         builder.Append("ClusterSessionId=");
         builder.Append(ClusterSessionId());
         builder.Append('|');
-        //Token{signal=BEGIN_VAR_DATA, name='responseData', referencedName='null', description='null', id=3, version=0, deprecated=0, encodedLength=0, offset=16, componentTokenCount=6, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
-        builder.Append("ResponseData=");
-        builder.Append(ResponseDataLength() + " raw bytes");
+        //Token{signal=BEGIN_VAR_DATA, name='encodedResponse', referencedName='null', description='null', id=3, version=0, deprecated=0, encodedLength=0, offset=16, componentTokenCount=6, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        builder.Append("EncodedResponse=");
+        builder.Append(EncodedResponseLength() + " raw bytes");
 
         Limit(originalLimit);
 

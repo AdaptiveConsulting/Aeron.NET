@@ -3,7 +3,7 @@
     <TargetFrameworks>netstandard2.0;net45</TargetFrameworks>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <PackageId>Agrona</PackageId>
-    <VersionPrefix>1.8.2</VersionPrefix>
+    <VersionPrefix>1.8.3</VersionPrefix>
     <Authors>Adaptive Financial Consulting Ltd.</Authors>
     <Company>Adaptive Financial Consulting Ltd.</Company>
     <Product>Agrona libraries initially included in Aeron Client</Product>
@@ -11,7 +11,7 @@
     <PackageLicenseUrl>https://github.com/AdaptiveConsulting/Aeron.NET/blob/master/LICENSE</PackageLicenseUrl>
     <PackageProjectUrl>https://github.com/AdaptiveConsulting/Aeron.NET/</PackageProjectUrl>
     <PackageIconUrl>https://raw.githubusercontent.com/AdaptiveConsulting/Aeron.NET/master/images/adaptive.png</PackageIconUrl>
-    <Description>Agrona libraries initially included in Aeron Client</Description>
+    <Description>Agrona provides a library of data structures and utility methods that are a common need when building high-performance applications in .NET</Description>
     <PackageTags>agrona high-performance primitives utilities</PackageTags>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <NoWarn>$(NoWarn);1591</NoWarn>

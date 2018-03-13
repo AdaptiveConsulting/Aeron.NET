@@ -6,6 +6,7 @@ using Adaptive.Aeron.LogBuffer;
 using Adaptive.Agrona;
 using Adaptive.Agrona.Concurrent;
 using Adaptive.Cluster.Codecs;
+using Adaptive.Cluster.Service;
 
 namespace Adaptive.Cluster.Client
 {
@@ -72,11 +73,11 @@ namespace Adaptive.Cluster.Client
                 _nanoClock = _aeron.Ctx().NanoClock();
                 _isUnicast = ctx.ClusterMemberEndpoints() != null;
 
-                publication = ConnectToCluster();
-                _publication = publication;
-
                 subscription = _aeron.AddSubscription(ctx.EgressChannel(), ctx.EgressStreamId());
                 _subscription = subscription;
+                
+                publication = ConnectToCluster();
+                _publication = publication;
 
                 _clusterSessionId = OpenSession();
             }
@@ -235,7 +236,7 @@ namespace Adaptive.Cluster.Client
                     {
                         if (poller.TemplateId() == AdminResponseDecoder.TEMPLATE_ID)
                         {
-                            return Encoding.ASCII.GetString(poller.AdminResponseData()); // TODO check default charset for Java
+                            return Encoding.ASCII.GetString(poller.EndcodedAminResponse()); // TODO check default charset for Java
                         }
                         else if (poller.EventCode() == EventCode.ERROR)
                         {
@@ -251,16 +252,17 @@ namespace Adaptive.Cluster.Client
         }
 
         /// <summary>
-        /// Query cluster member for recording log information.
+        /// Query cluster member for recovery plan information.
         /// </summary>
-        /// <returns> result of query. </returns>
+        /// <returns> serialized recovery plan. </returns>
+        /// <see cref="RecordingLog.RecoveryPlan"/>
         public byte[] QueryForRecordingLog()
         {
             _lock.Lock();
             try
             {
                 long deadlineNs = _nanoClock.NanoTime() + _ctx.MessageTimeoutNs();
-                long correlationId = SendAdminQuery(AdminQueryType.RECORDING_LOG, deadlineNs);
+                long correlationId = SendAdminQuery(AdminQueryType.RECOVERY_PLAN, deadlineNs);
                 EgressPoller poller = new EgressPoller(_subscription, FRAGMENT_LIMIT);
 
                 while (true)
@@ -271,7 +273,7 @@ namespace Adaptive.Cluster.Client
                     {
                         if (poller.TemplateId() == AdminResponseDecoder.TEMPLATE_ID)
                         {
-                            return poller.AdminResponseData();
+                            return poller.EndcodedAminResponse();
                         }
                         else if (poller.EventCode() == EventCode.ERROR)
                         {
@@ -408,7 +410,7 @@ namespace Adaptive.Cluster.Client
         private long OpenSession()
         {
             long deadlineNs = _nanoClock.NanoTime() + _ctx.MessageTimeoutNs();
-            long correlationId = SendConnectRequest(_ctx.CredentialsSupplier().ConnectRequestCredentialData(), deadlineNs);
+            long correlationId = SendConnectRequest(_ctx.CredentialsSupplier().EncodedCredentials(), deadlineNs);
             EgressPoller poller = new EgressPoller(_subscription, FRAGMENT_LIMIT);
 
             while (true)
@@ -417,10 +419,10 @@ namespace Adaptive.Cluster.Client
 
                 if (poller.CorrelationId() == correlationId)
                 {
-                    if (poller.Challenged())
+                    if (poller.IsChallenged())
                     {
-                        byte[] credentialData = _ctx.CredentialsSupplier().OnChallenge(poller.ChallengeData());
-                        correlationId = SendChallengeResponse(poller.ClusterSessionId(), credentialData, deadlineNs);
+                        byte[] encodedCredentials = _ctx.CredentialsSupplier().OnChallenge(poller.EncodedChallenge());
+                        correlationId = SendChallengeResponse(poller.ClusterSessionId(), encodedCredentials, deadlineNs);
                         continue;
                     }
 
@@ -454,12 +456,16 @@ namespace Adaptive.Cluster.Client
             }
         }
 
-        private long SendConnectRequest(byte[] credentialData, long deadlineNs)
+        private long SendConnectRequest(byte[] encodedCredentials, long deadlineNs)
         {
             long correlationId = _aeron.NextCorrelationId();
 
             SessionConnectRequestEncoder sessionConnectRequestEncoder = new SessionConnectRequestEncoder();
-            int length = MessageHeaderEncoder.ENCODED_LENGTH + SessionConnectRequestEncoder.BLOCK_LENGTH + SessionConnectRequestEncoder.ResponseChannelHeaderLength() + _ctx.EgressChannel().Length + SessionConnectRequestEncoder.CredentialDataHeaderLength() + credentialData.Length;
+            int length = MessageHeaderEncoder.ENCODED_LENGTH + 
+                         SessionConnectRequestEncoder.BLOCK_LENGTH + 
+                         SessionConnectRequestEncoder.ResponseChannelHeaderLength() + 
+                         _ctx.EgressChannel().Length + 
+                         SessionConnectRequestEncoder.EncodedCredentialsHeaderLength() + encodedCredentials.Length;
 
             _idleStrategy.Reset();
 
@@ -472,7 +478,7 @@ namespace Adaptive.Cluster.Client
                         .CorrelationId(correlationId)
                         .ResponseStreamId(_ctx.EgressStreamId())
                         .ResponseChannel(_ctx.EgressChannel())
-                        .PutCredentialData(credentialData, 0, credentialData.Length);
+                        .PutEncodedCredentials(encodedCredentials, 0, encodedCredentials.Length);
 
                     _bufferClaim.Commit();
 
@@ -533,12 +539,15 @@ namespace Adaptive.Cluster.Client
             return correlationId;
         }
 
-        private long SendChallengeResponse(long sessionId, byte[] credentialData, long deadlineNs)
+        private long SendChallengeResponse(long sessionId, byte[] encodedCredentials, long deadlineNs)
         {
             long correlationId = _aeron.NextCorrelationId();
 
             ChallengeResponseEncoder challengeResponseEncoder = new ChallengeResponseEncoder();
-            int length = MessageHeaderEncoder.ENCODED_LENGTH + ChallengeResponseEncoder.BLOCK_LENGTH + ChallengeResponseEncoder.CredentialDataHeaderLength() + credentialData.Length;
+            int length = MessageHeaderEncoder.ENCODED_LENGTH + 
+                         ChallengeResponseEncoder.BLOCK_LENGTH + 
+                         ChallengeResponseEncoder.EncodedCredentialsHeaderLength() + 
+                         encodedCredentials.Length;
 
             _idleStrategy.Reset();
 
@@ -547,7 +556,11 @@ namespace Adaptive.Cluster.Client
                 long result = _publication.TryClaim(length, _bufferClaim);
                 if (result > 0)
                 {
-                    challengeResponseEncoder.WrapAndApplyHeader(_bufferClaim.Buffer, _bufferClaim.Offset, _messageHeaderEncoder).CorrelationId(correlationId).ClusterSessionId(sessionId).PutCredentialData(credentialData, 0, credentialData.Length);
+                    challengeResponseEncoder
+                        .WrapAndApplyHeader(_bufferClaim.Buffer, _bufferClaim.Offset, _messageHeaderEncoder)
+                        .CorrelationId(correlationId)
+                        .ClusterSessionId(sessionId)
+                        .PutEncodedCredentials(encodedCredentials, 0, encodedCredentials.Length);
 
                     _bufferClaim.Commit();
 

@@ -29,7 +29,7 @@ namespace Adaptive.Cluster.Service
         private readonly CachedEpochClock cachedEpochClock = new CachedEpochClock();
         private readonly ClusterMarkFile markFile;
 
-        private long baseLogPosition = 0;
+        private long termBaseLogPosition;
         private long leadershipTermId;
         private long timestampMs;
         private BoundedLogAdapter logAdapter;
@@ -294,11 +294,11 @@ namespace Adaptive.Cluster.Service
                         "No snapshot available for term position: " + termPosition);
                 }
 
-                baseLogPosition = snapshotEntry.logPosition;
+                termBaseLogPosition = snapshotEntry.termBaseLogPosition + snapshotEntry.termPosition;
                 LoadSnapshot(snapshotEntry.recordingId);
             }
 
-            serviceControlPublisher.AckAction(baseLogPosition, leadershipTermId, serviceId, ClusterAction.INIT);
+            serviceControlPublisher.AckAction(termBaseLogPosition, leadershipTermId, serviceId, ClusterAction.INIT);
         }
 
 
@@ -317,23 +317,26 @@ namespace Adaptive.Cluster.Service
                 AwaitActiveLog();
 
                 int counterId = activeLog.commitPositionId;
-                baseLogPosition = CommitPos.GetBaseLogPosition(counters, counterId);
                 leadershipTermId = CommitPos.GetLeadershipTermId(counters, counterId);
+                termBaseLogPosition = CommitPos.GetTermBaseLogPosition(counters, counterId); // TODO MARK
 
-                using (Subscription subscription = aeron.AddSubscription(activeLog.channel, activeLog.streamId))
+                if (CommitPos.GetLeadershipTermLength(counters, counterId) > 0)
                 {
-                    serviceControlPublisher.AckAction(baseLogPosition, leadershipTermId, serviceId,
-                        ClusterAction.READY);
+                    using (Subscription subscription = aeron.AddSubscription(activeLog.channel, activeLog.streamId))
+                    {
+                        serviceControlPublisher.AckAction(termBaseLogPosition, leadershipTermId, serviceId, ClusterAction.READY);
 
-                    Image image = AwaitImage(activeLog.sessionId, subscription);
-                    ReadableCounter limit = new ReadableCounter(counters, counterId);
-                    BoundedLogAdapter adapter = new BoundedLogAdapter(image, limit, this);
+                        Image image = AwaitImage(activeLog.sessionId, subscription);
+                        ReadableCounter limit = new ReadableCounter(counters, counterId);
+                        BoundedLogAdapter adapter = new BoundedLogAdapter(image, limit, this);
 
-                    ConsumeImage(image, adapter);
+                        ConsumeImage(image, adapter);
 
-                    long logPosition = baseLogPosition + image.Position();
-                    serviceControlPublisher.AckAction(logPosition, leadershipTermId, serviceId, ClusterAction.REPLAY);
+                        termBaseLogPosition += image.Position();
+                    }
                 }
+
+                serviceControlPublisher.AckAction(termBaseLogPosition, leadershipTermId, serviceId, ClusterAction.REPLAY);
             }
 
             service.OnReplayEnd();
@@ -407,12 +410,12 @@ namespace Adaptive.Cluster.Service
 
             int logSessionId = activeLog.sessionId;
             leadershipTermId = activeLog.leadershipTermId;
-            baseLogPosition = CommitPos.GetBaseLogPosition(counters, commitPositionId);
+            termBaseLogPosition = CommitPos.GetTermBaseLogPosition(counters, commitPositionId);
 
             Subscription logSubscription = aeron.AddSubscription(activeLog.channel, activeLog.streamId);
             Image image = AwaitImage(logSessionId, logSubscription);
 
-            serviceControlPublisher.AckAction(baseLogPosition, leadershipTermId, serviceId, ClusterAction.READY);
+            serviceControlPublisher.AckAction(termBaseLogPosition, leadershipTermId, serviceId, ClusterAction.READY);
 
             logAdapter = new BoundedLogAdapter(image, new ReadableCounter(counters, commitPositionId), this);
             activeLog = null;
@@ -511,7 +514,7 @@ namespace Adaptive.Cluster.Service
                     int counterId = AwaitRecordingCounter(publication, counters);
 
                     recordingId = RecordingPos.GetRecordingId(counters, counterId);
-                    SnapshotState(publication, baseLogPosition + termPosition);
+                    SnapshotState(publication, termBaseLogPosition + termPosition);
                     service.OnTakeSnapshot(publication);
 
                     AwaitRecordingComplete(recordingId, publication.Position, counters, counterId, archive);
@@ -522,12 +525,12 @@ namespace Adaptive.Cluster.Service
                 }
             }
 
-            recordingLog.AppendSnapshot(recordingId, leadershipTermId, baseLogPosition, termPosition, timestampMs);
+            recordingLog.AppendSnapshot(recordingId, leadershipTermId, termBaseLogPosition, termPosition, timestampMs);
         }
 
         private void AwaitRecordingComplete(
-            long recordingId, 
-            long completePosition, 
+            long recordingId,
+            long completePosition,
             CountersReader counters,
             int counterId,
             AeronArchive archive)
@@ -544,7 +547,6 @@ namespace Adaptive.Cluster.Service
                 }
 
                 archive.CheckForErrorResponse();
-
             } while (counters.GetCounterValue(counterId) < completePosition);
         }
 
@@ -570,7 +572,7 @@ namespace Adaptive.Cluster.Service
                 return;
             }
 
-            long logPosition = baseLogPosition + termPosition;
+            long logPosition = termBaseLogPosition + termPosition;
 
             switch (action)
             {

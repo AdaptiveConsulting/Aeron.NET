@@ -160,12 +160,12 @@ public class AdminResponseEncoder
     }
 
 
-    public static int ResponseDataId()
+    public static int EncodedResponseId()
     {
         return 3;
     }
 
-    public static string ResponseDataMetaAttribute(MetaAttribute metaAttribute)
+    public static string EncodedResponseMetaAttribute(MetaAttribute metaAttribute)
     {
         switch (metaAttribute)
         {
@@ -178,12 +178,12 @@ public class AdminResponseEncoder
         return "";
     }
 
-    public static int ResponseDataHeaderLength()
+    public static int EncodedResponseHeaderLength()
     {
         return 4;
     }
 
-    public AdminResponseEncoder PutResponseData(IDirectBuffer src, int srcOffset, int length)
+    public AdminResponseEncoder PutEncodedResponse(IDirectBuffer src, int srcOffset, int length)
     {
         if (length > 1073741824)
         {
@@ -199,7 +199,7 @@ public class AdminResponseEncoder
         return this;
     }
 
-    public AdminResponseEncoder PutResponseData(byte[] src, int srcOffset, int length)
+    public AdminResponseEncoder PutEncodedResponse(byte[] src, int srcOffset, int length)
     {
         if (length > 1073741824)
         {

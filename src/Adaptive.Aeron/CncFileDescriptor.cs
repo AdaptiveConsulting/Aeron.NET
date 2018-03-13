@@ -42,7 +42,7 @@ namespace Adaptive.Aeron
     ///  +----------------------------+
     /// </pre>
     /// 
-    /// Meta Data Layout (CnC Version 6)
+    /// Meta Data Layout (CnC Version 13)
     /// <pre>
     ///  0                   1                   2                   3
     ///  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
@@ -62,13 +62,19 @@ namespace Adaptive.Aeron
     /// |                   Client Liveness Timeout                     |
     /// |                                                               |
     /// +---------------------------------------------------------------+
+    /// |                    Driver Start Timestamp                     |
+    /// |                                                               |
+    /// +---------------------------------------------------------------+
+    /// |                         Driver PID                            |
+    /// |                                                               |
+    /// +---------------------------------------------------------------+
     /// </pre>
     /// </summary>
     public class CncFileDescriptor
     {
         public const string CNC_FILE = "cnc.dat";
 
-        public const int CNC_VERSION = 12;
+        public const int CNC_VERSION = 13;
 
         public static readonly int CNC_VERSION_FIELD_OFFSET;
         public static readonly int TO_DRIVER_BUFFER_LENGTH_FIELD_OFFSET;
@@ -79,6 +85,8 @@ namespace Adaptive.Aeron
         public static readonly int ERROR_LOG_BUFFER_LENGTH_FIELD_OFFSET;
         public static readonly int META_DATA_LENGTH;
         public static readonly int END_OF_METADATA_OFFSET;
+        public static readonly int START_TIMESTAMP_FIELD_OFFSET;
+        public static readonly int PID_FIELD_OFFSET;
 
         static CncFileDescriptor()
         {
@@ -89,7 +97,10 @@ namespace Adaptive.Aeron
             COUNTERS_VALUES_BUFFER_LENGTH_FIELD_OFFSET = COUNTERS_METADATA_BUFFER_LENGTH_FIELD_OFFSET + BitUtil.SIZE_OF_INT;
             ERROR_LOG_BUFFER_LENGTH_FIELD_OFFSET = COUNTERS_VALUES_BUFFER_LENGTH_FIELD_OFFSET + BitUtil.SIZE_OF_INT;
             CLIENT_LIVENESS_TIMEOUT_FIELD_OFFSET = ERROR_LOG_BUFFER_LENGTH_FIELD_OFFSET + BitUtil.SIZE_OF_INT;
-            META_DATA_LENGTH = CLIENT_LIVENESS_TIMEOUT_FIELD_OFFSET + BitUtil.SIZE_OF_LONG;
+            START_TIMESTAMP_FIELD_OFFSET = CLIENT_LIVENESS_TIMEOUT_FIELD_OFFSET + BitUtil.SIZE_OF_LONG;
+            PID_FIELD_OFFSET = START_TIMESTAMP_FIELD_OFFSET + BitUtil.SIZE_OF_LONG;
+
+            META_DATA_LENGTH = PID_FIELD_OFFSET + BitUtil.SIZE_OF_LONG;
             END_OF_METADATA_OFFSET = BitUtil.Align(META_DATA_LENGTH, BitUtil.CACHE_LINE_LENGTH * 2);
         }
 
@@ -139,7 +150,26 @@ namespace Adaptive.Aeron
             return baseOffset + ERROR_LOG_BUFFER_LENGTH_FIELD_OFFSET;
         }
 
-        public static void FillMetaData(UnsafeBuffer cncMetaDataBuffer, int toDriverBufferLength, int toClientsBufferLength, int counterMetaDataBufferLength, int counterValuesBufferLength, long clientLivenessTimeout, int errorLogBufferLength)
+        public static int StartTimestampOffset(int baseOffset)
+        {
+            return baseOffset + START_TIMESTAMP_FIELD_OFFSET;
+        }
+
+        public static int PidOffset(int baseOffset)
+        {
+            return baseOffset + PID_FIELD_OFFSET;
+        }
+
+        public static void FillMetaData(
+            UnsafeBuffer cncMetaDataBuffer, 
+            int toDriverBufferLength, 
+            int toClientsBufferLength, 
+            int counterMetaDataBufferLength, 
+            int counterValuesBufferLength, 
+            long clientLivenessTimeout, 
+            int errorLogBufferLength,
+            long startTimestamp,
+            long pid)
         {
             cncMetaDataBuffer.PutInt(ToDriverBufferLengthOffset(0), toDriverBufferLength);
             cncMetaDataBuffer.PutInt(ToClientsBufferLengthOffset(0), toClientsBufferLength);
@@ -147,6 +177,8 @@ namespace Adaptive.Aeron
             cncMetaDataBuffer.PutInt(CountersValuesBufferLengthOffset(0), counterValuesBufferLength);
             cncMetaDataBuffer.PutInt(ErrorLogBufferLengthOffset(0), errorLogBufferLength);
             cncMetaDataBuffer.PutLong(ClientLivenessTimeoutOffset(0), clientLivenessTimeout);
+            cncMetaDataBuffer.PutLong(StartTimestampOffset(0), startTimestamp);
+            cncMetaDataBuffer.PutLong(PidOffset(0), pid);
         }
 
         public static void SignalCncReady(UnsafeBuffer cncMetaDataBuffer)
@@ -195,6 +227,16 @@ namespace Adaptive.Aeron
         public static long ClientLivenessTimeout(IDirectBuffer metaDataBuffer)
         {
             return metaDataBuffer.GetLong(ClientLivenessTimeoutOffset(0));
+        }
+
+        public static long StartTimestamp(IDirectBuffer metaDataBuffer)
+        {
+            return metaDataBuffer.GetLong(StartTimestampOffset(0));
+        }
+
+        public static long Pid(IDirectBuffer metaDataBuffer)
+        {
+            return metaDataBuffer.GetLong(PidOffset(0));
         }
     }
 }

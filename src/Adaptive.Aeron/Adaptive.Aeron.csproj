@@ -2,7 +2,7 @@
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;net45</TargetFrameworks>
     <PackageId>Aeron.Client</PackageId>
-    <VersionPrefix>1.8.2</VersionPrefix>
+    <VersionPrefix>1.8.3</VersionPrefix>
     <Authors>Adaptive Financial Consulting Ltd.</Authors>
     <Company>Adaptive Financial Consulting Ltd.</Company>
     <Product>Aeron Client</Product>

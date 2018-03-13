@@ -269,12 +269,12 @@ public class SessionConnectRequestEncoder
         return this;
     }
 
-    public static int CredentialDataId()
+    public static int EncodedCredentialsId()
     {
         return 5;
     }
 
-    public static string CredentialDataMetaAttribute(MetaAttribute metaAttribute)
+    public static string EncodedCredentialsMetaAttribute(MetaAttribute metaAttribute)
     {
         switch (metaAttribute)
         {
@@ -287,12 +287,12 @@ public class SessionConnectRequestEncoder
         return "";
     }
 
-    public static int CredentialDataHeaderLength()
+    public static int EncodedCredentialsHeaderLength()
     {
         return 4;
     }
 
-    public SessionConnectRequestEncoder PutCredentialData(IDirectBuffer src, int srcOffset, int length)
+    public SessionConnectRequestEncoder PutEncodedCredentials(IDirectBuffer src, int srcOffset, int length)
     {
         if (length > 1073741824)
         {
@@ -308,7 +308,7 @@ public class SessionConnectRequestEncoder
         return this;
     }
 
-    public SessionConnectRequestEncoder PutCredentialData(byte[] src, int srcOffset, int length)
+    public SessionConnectRequestEncoder PutEncodedCredentials(byte[] src, int srcOffset, int length)
     {
         if (length > 1073741824)
         {

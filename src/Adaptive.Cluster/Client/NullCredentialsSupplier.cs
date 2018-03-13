@@ -7,12 +7,12 @@
     {
         public static readonly byte[] NULL_CREDENTIAL = new byte[0];
 
-        public byte[] ConnectRequestCredentialData()
+        public byte[] EncodedCredentials()
         {
             return NULL_CREDENTIAL;
         }
 
-        public byte[] OnChallenge(byte[] challengeData)
+        public byte[] OnChallenge(byte[] endcodedChallenge)
         {
             return NULL_CREDENTIAL;
         }

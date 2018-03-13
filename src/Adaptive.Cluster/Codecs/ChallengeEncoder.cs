@@ -160,12 +160,12 @@ public class ChallengeEncoder
     }
 
 
-    public static int ChallengeDataId()
+    public static int EncodedChallengeId()
     {
         return 3;
     }
 
-    public static string ChallengeDataMetaAttribute(MetaAttribute metaAttribute)
+    public static string EncodedChallengeMetaAttribute(MetaAttribute metaAttribute)
     {
         switch (metaAttribute)
         {
@@ -178,12 +178,12 @@ public class ChallengeEncoder
         return "";
     }
 
-    public static int ChallengeDataHeaderLength()
+    public static int EncodedChallengeHeaderLength()
     {
         return 4;
     }
 
-    public ChallengeEncoder PutChallengeData(IDirectBuffer src, int srcOffset, int length)
+    public ChallengeEncoder PutEncodedChallenge(IDirectBuffer src, int srcOffset, int length)
     {
         if (length > 1073741824)
         {
@@ -199,7 +199,7 @@ public class ChallengeEncoder
         return this;
     }
 
-    public ChallengeEncoder PutChallengeData(byte[] src, int srcOffset, int length)
+    public ChallengeEncoder PutEncodedChallenge(byte[] src, int srcOffset, int length)
     {
         if (length > 1073741824)
         {

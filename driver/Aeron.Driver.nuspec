@@ -2,7 +2,7 @@
 <package >
   <metadata>
     <id>Aeron.Driver</id>
-    <version>1.8.2</version>
+    <version>1.8.3</version>
     <title>Aeron Driver</title>
     <authors>Adaptive Financial Consulting Ltd.</authors>
     <owners>Adaptive Financial Consulting Ltd.</owners>
@@ -11,13 +11,13 @@
     <iconUrl>https://raw.githubusercontent.com/AdaptiveConsulting/Aeron.NET/master/images/adaptive.png</iconUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>Aeron Media Driver for use with Aeron.Client.</description>
-    <releaseNotes>update aeron driver to 1.7.0.</releaseNotes>
     <copyright>Copyright 2018</copyright>
     <tags>aeron driver messaging networking transport udp ipc</tags>
   </metadata>
   <files>
     <file src="media-driver.jar" target="content\driver\media-driver.jar"/>
     <file src="start-media-driver.bat" target="content\driver\start-media-driver.bat"/>
+    <file src="start-clustered-media-driver.bat" target="content\driver\start-clustered-media-driver.bat"/>
     <file src="aeron-stat.bat" target="content\driver\aeron-stat.bat"/>
     <file src="errors.bat" target="content\driver\errors.bat"/>
     <file src="readme.txt" target=""/>

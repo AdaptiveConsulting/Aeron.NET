@@ -196,17 +196,17 @@ public class ChallengeDecoder
     }
 
 
-    public static int ChallengeDataId()
+    public static int EncodedChallengeId()
     {
         return 3;
     }
 
-    public static int ChallengeDataSinceVersion()
+    public static int EncodedChallengeSinceVersion()
     {
         return 0;
     }
 
-    public static string ChallengeDataMetaAttribute(MetaAttribute metaAttribute)
+    public static string EncodedChallengeMetaAttribute(MetaAttribute metaAttribute)
     {
         switch (metaAttribute)
         {
@@ -219,18 +219,18 @@ public class ChallengeDecoder
         return "";
     }
 
-    public static int ChallengeDataHeaderLength()
+    public static int EncodedChallengeHeaderLength()
     {
         return 4;
     }
 
-    public int ChallengeDataLength()
+    public int EncodedChallengeLength()
     {
         int limit = _parentMessage.Limit();
         return (int)unchecked((uint)_buffer.GetInt(limit, ByteOrder.LittleEndian));
     }
 
-    public int GetChallengeData(IMutableDirectBuffer dst, int dstOffset, int length)
+    public int GetEncodedChallenge(IMutableDirectBuffer dst, int dstOffset, int length)
     {
         int headerLength = 4;
         int limit = _parentMessage.Limit();
@@ -242,7 +242,7 @@ public class ChallengeDecoder
         return bytesCopied;
     }
 
-    public int GetChallengeData(byte[] dst, int dstOffset, int length)
+    public int GetEncodedChallenge(byte[] dst, int dstOffset, int length)
     {
         int headerLength = 4;
         int limit = _parentMessage.Limit();
@@ -293,9 +293,9 @@ public class ChallengeDecoder
         builder.Append("ClusterSessionId=");
         builder.Append(ClusterSessionId());
         builder.Append('|');
-        //Token{signal=BEGIN_VAR_DATA, name='challengeData', referencedName='null', description='null', id=3, version=0, deprecated=0, encodedLength=0, offset=16, componentTokenCount=6, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
-        builder.Append("ChallengeData=");
-        builder.Append(ChallengeDataLength() + " raw bytes");
+        //Token{signal=BEGIN_VAR_DATA, name='encodedChallenge', referencedName='null', description='null', id=3, version=0, deprecated=0, encodedLength=0, offset=16, componentTokenCount=6, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        builder.Append("EncodedChallenge=");
+        builder.Append(EncodedChallengeLength() + " raw bytes");
 
         Limit(originalLimit);
 

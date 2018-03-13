@@ -160,12 +160,12 @@ public class ChallengeResponseEncoder
     }
 
 
-    public static int CredentialDataId()
+    public static int EncodedCredentialsId()
     {
         return 3;
     }
 
-    public static string CredentialDataMetaAttribute(MetaAttribute metaAttribute)
+    public static string EncodedCredentialsMetaAttribute(MetaAttribute metaAttribute)
     {
         switch (metaAttribute)
         {
@@ -178,12 +178,12 @@ public class ChallengeResponseEncoder
         return "";
     }
 
-    public static int CredentialDataHeaderLength()
+    public static int EncodedCredentialsHeaderLength()
     {
         return 4;
     }
 
-    public ChallengeResponseEncoder PutCredentialData(IDirectBuffer src, int srcOffset, int length)
+    public ChallengeResponseEncoder PutEncodedCredentials(IDirectBuffer src, int srcOffset, int length)
     {
         if (length > 1073741824)
         {
@@ -199,7 +199,7 @@ public class ChallengeResponseEncoder
         return this;
     }
 
-    public ChallengeResponseEncoder PutCredentialData(byte[] src, int srcOffset, int length)
+    public ChallengeResponseEncoder PutEncodedCredentials(byte[] src, int srcOffset, int length)
     {
         if (length > 1073741824)
         {

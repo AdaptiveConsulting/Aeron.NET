@@ -325,17 +325,17 @@ public class SessionConnectRequestDecoder
         return Encoding.ASCII.GetString(tmp);
     }
 
-    public static int CredentialDataId()
+    public static int EncodedCredentialsId()
     {
         return 5;
     }
 
-    public static int CredentialDataSinceVersion()
+    public static int EncodedCredentialsSinceVersion()
     {
         return 0;
     }
 
-    public static string CredentialDataMetaAttribute(MetaAttribute metaAttribute)
+    public static string EncodedCredentialsMetaAttribute(MetaAttribute metaAttribute)
     {
         switch (metaAttribute)
         {
@@ -348,18 +348,18 @@ public class SessionConnectRequestDecoder
         return "";
     }
 
-    public static int CredentialDataHeaderLength()
+    public static int EncodedCredentialsHeaderLength()
     {
         return 4;
     }
 
-    public int CredentialDataLength()
+    public int EncodedCredentialsLength()
     {
         int limit = _parentMessage.Limit();
         return (int)unchecked((uint)_buffer.GetInt(limit, ByteOrder.LittleEndian));
     }
 
-    public int GetCredentialData(IMutableDirectBuffer dst, int dstOffset, int length)
+    public int GetEncodedCredentials(IMutableDirectBuffer dst, int dstOffset, int length)
     {
         int headerLength = 4;
         int limit = _parentMessage.Limit();
@@ -371,7 +371,7 @@ public class SessionConnectRequestDecoder
         return bytesCopied;
     }
 
-    public int GetCredentialData(byte[] dst, int dstOffset, int length)
+    public int GetEncodedCredentials(byte[] dst, int dstOffset, int length)
     {
         int headerLength = 4;
         int limit = _parentMessage.Limit();
@@ -431,9 +431,9 @@ public class SessionConnectRequestDecoder
         builder.Append("ResponseChannel=");
         builder.Append(ResponseChannel());
         builder.Append('|');
-        //Token{signal=BEGIN_VAR_DATA, name='credentialData', referencedName='null', description='null', id=5, version=0, deprecated=0, encodedLength=0, offset=-1, componentTokenCount=6, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
-        builder.Append("CredentialData=");
-        builder.Append(CredentialDataLength() + " raw bytes");
+        //Token{signal=BEGIN_VAR_DATA, name='encodedCredentials', referencedName='null', description='null', id=5, version=0, deprecated=0, encodedLength=0, offset=-1, componentTokenCount=6, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        builder.Append("EncodedCredentials=");
+        builder.Append(EncodedCredentialsLength() + " raw bytes");
 
         Limit(originalLimit);
 
