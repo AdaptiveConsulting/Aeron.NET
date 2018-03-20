@@ -7,19 +7,19 @@ using Adaptive.Agrona;
 
 namespace Adaptive.Cluster.Codecs {
 
-public class AdminResponseEncoder
+public class MembershipQueryResponseEncoder
 {
     public const ushort BLOCK_LENGTH = 16;
     public const ushort TEMPLATE_ID = 10;
     public const ushort SCHEMA_ID = 1;
     public const ushort SCHEMA_VERSION = 1;
 
-    private AdminResponseEncoder _parentMessage;
+    private MembershipQueryResponseEncoder _parentMessage;
     private IMutableDirectBuffer _buffer;
     protected int _offset;
     protected int _limit;
 
-    public AdminResponseEncoder()
+    public MembershipQueryResponseEncoder()
     {
         _parentMessage = this;
     }
@@ -59,7 +59,7 @@ public class AdminResponseEncoder
         return _offset;
     }
 
-    public AdminResponseEncoder Wrap(IMutableDirectBuffer buffer, int offset)
+    public MembershipQueryResponseEncoder Wrap(IMutableDirectBuffer buffer, int offset)
     {
         this._buffer = buffer;
         this._offset = offset;
@@ -68,7 +68,7 @@ public class AdminResponseEncoder
         return this;
     }
 
-    public AdminResponseEncoder WrapAndApplyHeader(
+    public MembershipQueryResponseEncoder WrapAndApplyHeader(
         IMutableDirectBuffer buffer, int offset, MessageHeaderEncoder headerEncoder)
     {
         headerEncoder
@@ -121,7 +121,7 @@ public class AdminResponseEncoder
         return 9223372036854775807L;
     }
 
-    public AdminResponseEncoder CorrelationId(long value)
+    public MembershipQueryResponseEncoder CorrelationId(long value)
     {
         _buffer.PutLong(_offset + 0, value, ByteOrder.LittleEndian);
         return this;
@@ -153,7 +153,7 @@ public class AdminResponseEncoder
         return 9223372036854775807L;
     }
 
-    public AdminResponseEncoder ClusterSessionId(long value)
+    public MembershipQueryResponseEncoder ClusterSessionId(long value)
     {
         _buffer.PutLong(_offset + 8, value, ByteOrder.LittleEndian);
         return this;
@@ -183,7 +183,7 @@ public class AdminResponseEncoder
         return 4;
     }
 
-    public AdminResponseEncoder PutEncodedResponse(IDirectBuffer src, int srcOffset, int length)
+    public MembershipQueryResponseEncoder PutEncodedResponse(IDirectBuffer src, int srcOffset, int length)
     {
         if (length > 1073741824)
         {
@@ -199,7 +199,7 @@ public class AdminResponseEncoder
         return this;
     }
 
-    public AdminResponseEncoder PutEncodedResponse(byte[] src, int srcOffset, int length)
+    public MembershipQueryResponseEncoder PutEncodedResponse(byte[] src, int srcOffset, int length)
     {
         if (length > 1073741824)
         {
@@ -223,7 +223,7 @@ public class AdminResponseEncoder
 
     public StringBuilder AppendTo(StringBuilder builder)
     {
-        AdminResponseDecoder writer = new AdminResponseDecoder();
+        MembershipQueryResponseDecoder writer = new MembershipQueryResponseDecoder();
         writer.Wrap(_buffer, _offset, BLOCK_LENGTH, SCHEMA_VERSION);
 
         return writer.AppendTo(builder);

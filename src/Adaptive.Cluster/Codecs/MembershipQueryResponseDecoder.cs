@@ -7,21 +7,21 @@ using Adaptive.Agrona;
 
 namespace Adaptive.Cluster.Codecs {
 
-public class AdminResponseDecoder
+public class MembershipQueryResponseDecoder
 {
     public const ushort BLOCK_LENGTH = 16;
     public const ushort TEMPLATE_ID = 10;
     public const ushort SCHEMA_ID = 1;
     public const ushort SCHEMA_VERSION = 1;
 
-    private AdminResponseDecoder _parentMessage;
+    private MembershipQueryResponseDecoder _parentMessage;
     private IDirectBuffer _buffer;
     protected int _offset;
     protected int _limit;
     protected int _actingBlockLength;
     protected int _actingVersion;
 
-    public AdminResponseDecoder()
+    public MembershipQueryResponseDecoder()
     {
         _parentMessage = this;
     }
@@ -61,7 +61,7 @@ public class AdminResponseDecoder
         return _offset;
     }
 
-    public AdminResponseDecoder Wrap(
+    public MembershipQueryResponseDecoder Wrap(
         IDirectBuffer buffer, int offset, int actingBlockLength, int actingVersion)
     {
         this._buffer = buffer;
@@ -264,7 +264,7 @@ public class AdminResponseDecoder
     {
         int originalLimit = Limit();
         Limit(_offset + _actingBlockLength);
-        builder.Append("[AdminResponse](sbeTemplateId=");
+        builder.Append("[MembershipQueryResponse](sbeTemplateId=");
         builder.Append(TEMPLATE_ID);
         builder.Append("|sbeSchemaId=");
         builder.Append(SCHEMA_ID);

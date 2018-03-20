@@ -7,21 +7,21 @@ using Adaptive.Agrona;
 
 namespace Adaptive.Cluster.Codecs {
 
-public class AdminQueryDecoder
+public class MembershipQueryDecoder
 {
     public const ushort BLOCK_LENGTH = 20;
     public const ushort TEMPLATE_ID = 9;
     public const ushort SCHEMA_ID = 1;
     public const ushort SCHEMA_VERSION = 1;
 
-    private AdminQueryDecoder _parentMessage;
+    private MembershipQueryDecoder _parentMessage;
     private IDirectBuffer _buffer;
     protected int _offset;
     protected int _limit;
     protected int _actingBlockLength;
     protected int _actingVersion;
 
-    public AdminQueryDecoder()
+    public MembershipQueryDecoder()
     {
         _parentMessage = this;
     }
@@ -61,7 +61,7 @@ public class AdminQueryDecoder
         return _offset;
     }
 
-    public AdminQueryDecoder Wrap(
+    public MembershipQueryDecoder Wrap(
         IDirectBuffer buffer, int offset, int actingBlockLength, int actingVersion)
     {
         this._buffer = buffer;
@@ -229,9 +229,9 @@ public class AdminQueryDecoder
         return "";
     }
 
-    public AdminQueryType QueryType()
+    public MembershipQueryType QueryType()
     {
-        return (AdminQueryType)_buffer.GetInt(_offset + 16, ByteOrder.LittleEndian);
+        return (MembershipQueryType)_buffer.GetInt(_offset + 16, ByteOrder.LittleEndian);
     }
 
 
@@ -245,7 +245,7 @@ public class AdminQueryDecoder
     {
         int originalLimit = Limit();
         Limit(_offset + _actingBlockLength);
-        builder.Append("[AdminQuery](sbeTemplateId=");
+        builder.Append("[MembershipQuery](sbeTemplateId=");
         builder.Append(TEMPLATE_ID);
         builder.Append("|sbeSchemaId=");
         builder.Append(SCHEMA_ID);
@@ -274,8 +274,8 @@ public class AdminQueryDecoder
         builder.Append("ClusterSessionId=");
         builder.Append(ClusterSessionId());
         builder.Append('|');
-        //Token{signal=BEGIN_FIELD, name='queryType', referencedName='null', description='null', id=3, version=0, deprecated=0, encodedLength=0, offset=16, componentTokenCount=6, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
-        //Token{signal=BEGIN_ENUM, name='AdminQueryType', referencedName='null', description='Type of admin qery', id=-1, version=0, deprecated=0, encodedLength=4, offset=16, componentTokenCount=4, encoding=Encoding{presence=REQUIRED, primitiveType=INT32, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='null', timeUnit=null, semanticType='null'}}
+        //Token{signal=BEGIN_FIELD, name='queryType', referencedName='null', description='null', id=3, version=0, deprecated=0, encodedLength=0, offset=16, componentTokenCount=7, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=BEGIN_ENUM, name='MembershipQueryType', referencedName='null', description='Type of cluster membership query', id=-1, version=0, deprecated=0, encodedLength=4, offset=16, componentTokenCount=5, encoding=Encoding{presence=REQUIRED, primitiveType=INT32, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='null', timeUnit=null, semanticType='null'}}
         builder.Append("QueryType=");
         builder.Append(QueryType());
 

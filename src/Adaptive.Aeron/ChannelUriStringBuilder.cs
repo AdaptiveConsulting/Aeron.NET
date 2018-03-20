@@ -66,7 +66,7 @@ namespace Adaptive.Aeron
                 throw new InvalidOperationException("media type is mandatory");
             }
 
-            if ("udp".Equals(_media) && (null == _endpoint && null == _controlEndpoint))
+            if (Aeron.Context.UDP_MEDIA.Equals(_media) && (null == _endpoint && null == _controlEndpoint))
             {
                 throw new InvalidOperationException("Either 'endpoint' or 'control' must be specified for UDP.");
             }
@@ -120,8 +120,8 @@ namespace Adaptive.Aeron
         {
             switch (media)
             {
-                case "udp":
-                case "ipc":
+                case Aeron.Context.UDP_MEDIA:
+                case Aeron.Context.IPC_MEDIA:
                     break;
 
                 default:

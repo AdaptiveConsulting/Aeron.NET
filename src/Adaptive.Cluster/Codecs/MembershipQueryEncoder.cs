@@ -7,19 +7,19 @@ using Adaptive.Agrona;
 
 namespace Adaptive.Cluster.Codecs {
 
-public class AdminQueryEncoder
+public class MembershipQueryEncoder
 {
     public const ushort BLOCK_LENGTH = 20;
     public const ushort TEMPLATE_ID = 9;
     public const ushort SCHEMA_ID = 1;
     public const ushort SCHEMA_VERSION = 1;
 
-    private AdminQueryEncoder _parentMessage;
+    private MembershipQueryEncoder _parentMessage;
     private IMutableDirectBuffer _buffer;
     protected int _offset;
     protected int _limit;
 
-    public AdminQueryEncoder()
+    public MembershipQueryEncoder()
     {
         _parentMessage = this;
     }
@@ -59,7 +59,7 @@ public class AdminQueryEncoder
         return _offset;
     }
 
-    public AdminQueryEncoder Wrap(IMutableDirectBuffer buffer, int offset)
+    public MembershipQueryEncoder Wrap(IMutableDirectBuffer buffer, int offset)
     {
         this._buffer = buffer;
         this._offset = offset;
@@ -68,7 +68,7 @@ public class AdminQueryEncoder
         return this;
     }
 
-    public AdminQueryEncoder WrapAndApplyHeader(
+    public MembershipQueryEncoder WrapAndApplyHeader(
         IMutableDirectBuffer buffer, int offset, MessageHeaderEncoder headerEncoder)
     {
         headerEncoder
@@ -121,7 +121,7 @@ public class AdminQueryEncoder
         return 9223372036854775807L;
     }
 
-    public AdminQueryEncoder CorrelationId(long value)
+    public MembershipQueryEncoder CorrelationId(long value)
     {
         _buffer.PutLong(_offset + 0, value, ByteOrder.LittleEndian);
         return this;
@@ -153,7 +153,7 @@ public class AdminQueryEncoder
         return 9223372036854775807L;
     }
 
-    public AdminQueryEncoder ClusterSessionId(long value)
+    public MembershipQueryEncoder ClusterSessionId(long value)
     {
         _buffer.PutLong(_offset + 8, value, ByteOrder.LittleEndian);
         return this;
@@ -170,7 +170,7 @@ public class AdminQueryEncoder
         return 4;
     }
 
-    public AdminQueryEncoder QueryType(AdminQueryType value)
+    public MembershipQueryEncoder QueryType(MembershipQueryType value)
     {
         _buffer.PutInt(_offset + 16, (int)value, ByteOrder.LittleEndian);
         return this;
@@ -184,7 +184,7 @@ public class AdminQueryEncoder
 
     public StringBuilder AppendTo(StringBuilder builder)
     {
-        AdminQueryDecoder writer = new AdminQueryDecoder();
+        MembershipQueryDecoder writer = new MembershipQueryDecoder();
         writer.Wrap(_buffer, _offset, BLOCK_LENGTH, SCHEMA_VERSION);
 
         return writer.AppendTo(builder);

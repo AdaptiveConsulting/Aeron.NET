@@ -77,7 +77,7 @@ namespace Adaptive.Cluster.Service
         }
 
         /// <summary>
-        /// Find the active counter id for a snapshot.
+        /// Find the active counter id for recovery state.
         /// </summary>
         /// <param name="counters"> to search within. </param>
         /// <returns> the counter id if found otherwise <seealso cref="CountersReader.NULL_COUNTER_ID"/>. </returns>
@@ -102,7 +102,7 @@ namespace Adaptive.Cluster.Service
         }
 
         /// <summary>
-        /// Get the leadership term id for the snapshot.
+        /// Get the leadership term id for the recovery state.
         /// </summary>
         /// <param name="counters">  to search within. </param>
         /// <param name="counterId"> for the active consensus position. </param>
@@ -125,7 +125,7 @@ namespace Adaptive.Cluster.Service
         }
         
         /// <summary>
-        /// Get the log position for the snapshot.
+        /// Get the term position for recovery within the leadership term.
         /// </summary>
         /// <param name="counters">  to search within. </param>
         /// <param name="counterId"> for the active consensus position. </param>
@@ -149,7 +149,7 @@ namespace Adaptive.Cluster.Service
 
 
         /// <summary>
-        /// Get the timestamp for when the snapshot was taken.
+        /// Get the timestamp at the beginning of recovery.
         /// </summary>
         /// <param name="counters">  to search within. </param>
         /// <param name="counterId"> for the active recovery counter. </param>

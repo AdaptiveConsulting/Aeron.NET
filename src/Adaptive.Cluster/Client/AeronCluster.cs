@@ -35,7 +35,7 @@ namespace Adaptive.Cluster.Client
         private readonly BufferClaim _bufferClaim = new BufferClaim();
         private readonly MessageHeaderEncoder _messageHeaderEncoder = new MessageHeaderEncoder();
         private readonly SessionKeepAliveRequestEncoder _keepAliveRequestEncoder = new SessionKeepAliveRequestEncoder();
-        private readonly AdminQueryEncoder _adminQueryEncoder = new AdminQueryEncoder();
+        private readonly MembershipQueryEncoder _membershipQueryEncoder = new MembershipQueryEncoder();
 
         /// <summary>
         /// Connect to the cluster using default configuration.
@@ -219,13 +219,13 @@ namespace Adaptive.Cluster.Client
         /// </para>
         /// </summary>
         /// <returns> result of query. </returns>
-        public string QueryForEndpoints()
+        public string GetMemberEndpoints()
         {
             _lock.Lock();
             try
             {
                 long deadlineNs = _nanoClock.NanoTime() + _ctx.MessageTimeoutNs();
-                long correlationId = SendAdminQuery(AdminQueryType.ENDPOINTS, deadlineNs);
+                long correlationId = SendMembershipQuery(MembershipQueryType.ENDPOINTS, deadlineNs);
                 EgressPoller poller = new EgressPoller(_subscription, FRAGMENT_LIMIT);
 
                 while (true)
@@ -234,9 +234,9 @@ namespace Adaptive.Cluster.Client
 
                     if (poller.CorrelationId() == correlationId)
                     {
-                        if (poller.TemplateId() == AdminResponseDecoder.TEMPLATE_ID)
+                        if (poller.TemplateId() == MembershipQueryResponseDecoder.TEMPLATE_ID)
                         {
-                            return Encoding.ASCII.GetString(poller.EndcodedAminResponse()); // TODO check default charset for Java
+                            return Encoding.ASCII.GetString(poller.EndcodedQueryResponse()); // TODO check default charset for Java
                         }
                         else if (poller.EventCode() == EventCode.ERROR)
                         {
@@ -252,17 +252,17 @@ namespace Adaptive.Cluster.Client
         }
 
         /// <summary>
-        /// Query cluster member for recovery plan information.
+        /// Query cluster member for encoded recovery plan.
         /// </summary>
-        /// <returns> serialized recovery plan. </returns>
+        /// <returns> encoded <see cref="RecordingLog.RecoveryPlan"/> </returns>
         /// <see cref="RecordingLog.RecoveryPlan"/>
-        public byte[] QueryForRecordingLog()
+        public byte[] GetRecoveryPlan()
         {
             _lock.Lock();
             try
             {
                 long deadlineNs = _nanoClock.NanoTime() + _ctx.MessageTimeoutNs();
-                long correlationId = SendAdminQuery(AdminQueryType.RECOVERY_PLAN, deadlineNs);
+                long correlationId = SendMembershipQuery(MembershipQueryType.RECOVERY_PLAN, deadlineNs);
                 EgressPoller poller = new EgressPoller(_subscription, FRAGMENT_LIMIT);
 
                 while (true)
@@ -271,9 +271,9 @@ namespace Adaptive.Cluster.Client
 
                     if (poller.CorrelationId() == correlationId)
                     {
-                        if (poller.TemplateId() == AdminResponseDecoder.TEMPLATE_ID)
+                        if (poller.TemplateId() == MembershipQueryResponseDecoder.TEMPLATE_ID)
                         {
-                            return poller.EndcodedAminResponse();
+                            return poller.EndcodedQueryResponse();
                         }
                         else if (poller.EventCode() == EventCode.ERROR)
                         {
@@ -501,10 +501,10 @@ namespace Adaptive.Cluster.Client
             return correlationId;
         }
 
-        private long SendAdminQuery(AdminQueryType queryType, long deadlineNs)
+        private long SendMembershipQuery(MembershipQueryType queryType, long deadlineNs)
         {
             long correlationId = _aeron.NextCorrelationId();
-            int length = MessageHeaderEncoder.ENCODED_LENGTH + AdminQueryEncoder.BLOCK_LENGTH;
+            int length = MessageHeaderEncoder.ENCODED_LENGTH + MembershipQueryEncoder.BLOCK_LENGTH;
             int attempts = SEND_ATTEMPTS;
 
             _idleStrategy.Reset();
@@ -515,7 +515,7 @@ namespace Adaptive.Cluster.Client
 
                 if (result > 0)
                 {
-                    _adminQueryEncoder
+                    _membershipQueryEncoder
                         .WrapAndApplyHeader(_bufferClaim.Buffer, _bufferClaim.Offset, _messageHeaderEncoder)
                         .CorrelationId(correlationId)
                         .ClusterSessionId(_clusterSessionId)

@@ -1,2 +1,2 @@
-Built from source 1.8.2-31-g973e767ec.
+Built from source 1.8.2-72-gf11c5af6a
 Modified aeron-all to include aeron-cluster.

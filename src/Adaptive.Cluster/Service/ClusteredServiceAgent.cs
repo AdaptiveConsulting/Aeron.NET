@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 using Adaptive.Aeron;
 using Adaptive.Aeron.LogBuffer;
@@ -35,6 +36,7 @@ namespace Adaptive.Cluster.Service
         private BoundedLogAdapter logAdapter;
         private ActiveLog activeLog;
         private ReadableCounter roleCounter;
+        private AtomicCounter heartbeatCounter;
         private ClusterRole role = ClusterRole.Follower;
 
         internal ClusteredServiceAgent(ClusteredServiceContainer.Context ctx)
@@ -52,13 +54,11 @@ namespace Adaptive.Cluster.Service
             markFile = ctx.MarkFile();
 
 
-            serviceControlPublisher = new ServiceControlPublisher(
-                aeron.AddPublication(ctx.ServiceControlChannel(), ctx.ServiceControlStreamId())
-            );
-
-            serviceControlAdapter = new ServiceControlAdapter(
-                aeron.AddSubscription(ctx.ServiceControlChannel(), ctx.ServiceControlStreamId()), this
-            );
+            var channel = ctx.ServiceControlChannel();
+            var streamId = ctx.ServiceControlStreamId();
+            
+            serviceControlPublisher = new ServiceControlPublisher(aeron.AddPublication(channel, streamId));
+            serviceControlAdapter = new ServiceControlAdapter(aeron.AddSubscription(channel, streamId), this);
         }
 
         public void OnStart()
@@ -67,12 +67,15 @@ namespace Adaptive.Cluster.Service
 
             CountersReader counters = aeron.CountersReader();
             int recoveryCounterId = AwaitRecoveryCounterId(counters);
+            FindHeartbeatCounter(counters);
 
             isRecovering = true;
             CheckForSnapshot(counters, recoveryCounterId);
             CheckForReplay(counters, recoveryCounterId);
             isRecovering = false;
 
+            service.OnReady();
+            
             JoinActiveLog(counters);
 
             roleCounter = AwaitClusterRoleCounter(counters);
@@ -109,6 +112,7 @@ namespace Adaptive.Cluster.Service
             {
                 markFile.UpdateActivityTimestamp(nowMs);
                 cachedEpochClock.Update(nowMs);
+                heartbeatCounter.SetOrdered(nowMs);
             }
 
             int workCount = logAdapter.Poll();
@@ -414,6 +418,7 @@ namespace Adaptive.Cluster.Service
 
             Subscription logSubscription = aeron.AddSubscription(activeLog.channel, activeLog.streamId);
             Image image = AwaitImage(logSessionId, logSubscription);
+            heartbeatCounter.SetOrdered(epochClock.Time());
 
             serviceControlPublisher.AckAction(termBaseLogPosition, leadershipTermId, serviceId, ClusterAction.READY);
 
@@ -543,7 +548,7 @@ namespace Adaptive.Cluster.Service
 
                 if (!RecordingPos.IsActive(counters, counterId, recordingId))
                 {
-                    throw new System.InvalidOperationException("Recording has stopped unexpectedly: " + recordingId);
+                    throw new InvalidOperationException("Recording has stopped unexpectedly: " + recordingId);
                 }
 
                 archive.CheckForErrorResponse();
@@ -608,6 +613,17 @@ namespace Adaptive.Cluster.Service
             return counterId;
         }
 
+        private void FindHeartbeatCounter(CountersReader counters)
+        {
+            var heartbeatCounterId = ServiceHeartbeat.FindCounterId(counters, ctx.ServiceId());
+
+            if (CountersReader.NULL_COUNTER_ID == heartbeatCounterId)
+            {
+                throw new InvalidOperationException("Failed to find heartbeat counter");
+            }
+            
+            heartbeatCounter = new AtomicCounter(counters.ValuesBuffer, heartbeatCounterId);
+        }
 
         private static void CheckInterruptedStatus()
         {

@@ -400,6 +400,16 @@ namespace Adaptive.Aeron
             /// </summary>
             public static readonly string AERON_DIR_PROP_DEFAULT =
                 Path.Combine(IoUtil.TmpDirName(), "aeron-" + Environment.UserName);
+            
+            /// <summary>
+            /// Media type used for IPC shared memory from <seealso cref="Publication"/> to <seealso cref="Subscription"/> channels.
+            /// </summary>
+            public const string IPC_MEDIA = "ipc";
+
+            /// <summary>
+            /// Media type used for UDP sockets from <seealso cref="Publication"/> to <seealso cref="Subscription"/> channels.
+            /// </summary>
+            public const string UDP_MEDIA = "udp";
 
             /// <summary>
             /// URI used for IPC <seealso cref="Publication"/>s and  <seealso cref="Subscription"/>s

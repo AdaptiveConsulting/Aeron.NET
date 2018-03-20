@@ -14,7 +14,7 @@ namespace Adaptive.Cluster.Client
         private readonly NewLeaderEventDecoder newLeaderEventDecoder = new NewLeaderEventDecoder();
         private readonly SessionHeaderDecoder sessionHeaderDecoder = new SessionHeaderDecoder();
         private readonly ChallengeDecoder challengeDecoder = new ChallengeDecoder();
-        private readonly AdminResponseDecoder adminResponseDecoder = new AdminResponseDecoder();
+        private readonly MembershipQueryResponseDecoder membershipQueryResponseDecoder = new MembershipQueryResponseDecoder();
         private readonly ControlledFragmentAssembler fragmentAssembler;
         private readonly Subscription subscription;
         private long clusterSessionId = -1;
@@ -24,7 +24,7 @@ namespace Adaptive.Cluster.Client
         private EventCode eventCode;
         private string detail = "";
         private byte[] encodedChallenge;
-        private byte[] encodedAdminResponse;
+        private byte[] encodedQueryResponse;
 
         public EgressPoller(Subscription subscription, int fragmentLimit)
         {
@@ -98,12 +98,12 @@ namespace Adaptive.Cluster.Client
         }
         
         /// <summary>
-        /// Get the response data in the last admin response.
+        //Get the encoded response from a membership query.
         /// </summary>
-        /// <returns> the response data in the last admin response or null if last message was not an admin response. </returns>
-        public byte[] EndcodedAminResponse()
+        /// <returns> the encoded response from a membership query or null if last message was not a query response. </returns>
+        public byte[] EndcodedQueryResponse()
         {
-            return encodedAdminResponse;
+            return encodedQueryResponse;
         }
 
         /// <summary>
@@ -132,7 +132,7 @@ namespace Adaptive.Cluster.Client
             eventCode = Codecs.EventCode.NULL_VALUE;
             detail = "";
             encodedChallenge = null;
-            encodedAdminResponse = null;
+            encodedQueryResponse = null;
             pollComplete = false;
 
             return subscription.ControlledPoll(fragmentAssembler, fragmentLimit);
@@ -181,18 +181,19 @@ namespace Adaptive.Cluster.Client
                     correlationId = challengeDecoder.CorrelationId();
                     break;
                 
-                case AdminResponseDecoder.TEMPLATE_ID:
-                    adminResponseDecoder.Wrap(
+                case MembershipQueryResponseDecoder.TEMPLATE_ID:
+                    membershipQueryResponseDecoder.Wrap(
                         buffer, 
                         offset + MessageHeaderDecoder.ENCODED_LENGTH, 
                         messageHeaderDecoder.BlockLength(), 
                         messageHeaderDecoder.Version());
 
-                    encodedAdminResponse = new byte[adminResponseDecoder.EncodedResponseLength()];
-                    adminResponseDecoder.GetEncodedResponse(encodedAdminResponse, 0, adminResponseDecoder.EncodedResponseLength());
+                    encodedQueryResponse = new byte[membershipQueryResponseDecoder.EncodedResponseLength()];
+                    membershipQueryResponseDecoder.GetEncodedResponse(
+                        encodedQueryResponse, 0, membershipQueryResponseDecoder.EncodedResponseLength());
 
-                    clusterSessionId = adminResponseDecoder.ClusterSessionId();
-                    correlationId = adminResponseDecoder.CorrelationId();
+                    clusterSessionId = membershipQueryResponseDecoder.ClusterSessionId();
+                    correlationId = membershipQueryResponseDecoder.CorrelationId();
                     break;
 
 

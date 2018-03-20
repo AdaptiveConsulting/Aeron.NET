@@ -400,9 +400,73 @@ public class MarkFileHeaderEncoder
     }
 
 
+    public static int HeaderLengthEncodingOffset()
+    {
+        return 52;
+    }
+
+    public static int HeaderLengthEncodingLength()
+    {
+        return 4;
+    }
+
+    public static int HeaderLengthNullValue()
+    {
+        return -2147483648;
+    }
+
+    public static int HeaderLengthMinValue()
+    {
+        return -2147483647;
+    }
+
+    public static int HeaderLengthMaxValue()
+    {
+        return 2147483647;
+    }
+
+    public MarkFileHeaderEncoder HeaderLength(int value)
+    {
+        _buffer.PutInt(_offset + 52, value, ByteOrder.LittleEndian);
+        return this;
+    }
+
+
+    public static int ErrorBufferLengthEncodingOffset()
+    {
+        return 56;
+    }
+
+    public static int ErrorBufferLengthEncodingLength()
+    {
+        return 4;
+    }
+
+    public static int ErrorBufferLengthNullValue()
+    {
+        return -2147483648;
+    }
+
+    public static int ErrorBufferLengthMinValue()
+    {
+        return -2147483647;
+    }
+
+    public static int ErrorBufferLengthMaxValue()
+    {
+        return 2147483647;
+    }
+
+    public MarkFileHeaderEncoder ErrorBufferLength(int value)
+    {
+        _buffer.PutInt(_offset + 56, value, ByteOrder.LittleEndian);
+        return this;
+    }
+
+
     public static int AeronDirectoryId()
     {
-        return 11;
+        return 13;
     }
 
     public static string AeronDirectoryCharacterEncoding()
@@ -479,7 +543,7 @@ public class MarkFileHeaderEncoder
 
     public static int ArchiveChannelId()
     {
-        return 12;
+        return 14;
     }
 
     public static string ArchiveChannelCharacterEncoding()
@@ -556,7 +620,7 @@ public class MarkFileHeaderEncoder
 
     public static int ServiceControlChannelId()
     {
-        return 13;
+        return 15;
     }
 
     public static string ServiceControlChannelCharacterEncoding()
@@ -633,7 +697,7 @@ public class MarkFileHeaderEncoder
 
     public static int IngressChannelId()
     {
-        return 14;
+        return 16;
     }
 
     public static string IngressChannelCharacterEncoding()
@@ -710,7 +774,7 @@ public class MarkFileHeaderEncoder
 
     public static int ServiceNameId()
     {
-        return 15;
+        return 17;
     }
 
     public static string ServiceNameCharacterEncoding()
@@ -787,7 +851,7 @@ public class MarkFileHeaderEncoder
 
     public static int AuthenticatorId()
     {
-        return 16;
+        return 18;
     }
 
     public static string AuthenticatorCharacterEncoding()
