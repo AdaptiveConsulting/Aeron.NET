@@ -17,4 +17,4 @@ script:
   - cd ../Adaptive.Aeron.Tests
   - dotnet test -f netcoreapp2.0
   # - FrameworkPathOverride=$MONO_BASE_PATH/4.5-api/ dotnet test -f net45
-  - mono ../testrunner/NUnit.ConsoleRunner.3.8.0/tools/nunit3-console.exe bin/Debug/net45/Adaptive.Aeron.Tests.dll
+  - mono ../testrunner/NUnit.ConsoleRunner.3.8.0/tools/nunit3-console.exe bin/Debug/net45/Adaptive.Aeron.Tests.dll --where "class != Adaptive.Aeron.Tests.ImageTest"
