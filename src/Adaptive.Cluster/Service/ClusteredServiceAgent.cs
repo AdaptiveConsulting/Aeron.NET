@@ -66,7 +66,7 @@ namespace Adaptive.Cluster.Service
             service.OnStart(this);
 
             CountersReader counters = aeron.CountersReader();
-            int recoveryCounterId = AwaitRecoveryCounterId(counters);
+            int recoveryCounterId = AwaitRecoveryCounter(counters);
             FindHeartbeatCounter(counters);
 
             isRecovering = true;
@@ -132,8 +132,7 @@ namespace Adaptive.Cluster.Service
             workCount += serviceControlAdapter.Poll();
             if (activeLog != null)
             {
-                // TODO: handle new log case
-                activeLog = null;
+                SwitchActiveLog();
             }
 
             return workCount;
@@ -386,8 +385,34 @@ namespace Adaptive.Cluster.Service
                 idleStrategy.Idle(workCount);
             }
         }
+        
+        private void SwitchActiveLog()
+        {
+            if (logAdapter.IsCaughtUp())
+            {
+                var counters = aeron.CountersReader();
+                var counterId = activeLog.commitPositionId;
 
-        private int AwaitRecoveryCounterId(CountersReader counters)
+                leadershipTermId = activeLog.leadershipTermId;
+                termBaseLogPosition = CommitPos.GetTermBaseLogPosition(counters, counterId);
+
+                if (CommitPos.GetLeadershipTermLength(counters, counterId) > 0)
+                {
+                    logAdapter.Dispose();
+
+                    Subscription subscription = aeron.AddSubscription(activeLog.channel, activeLog.streamId);
+                    Image image = AwaitImage(activeLog.sessionId, subscription);
+                    serviceControlPublisher.AckAction(termBaseLogPosition, leadershipTermId, serviceId, ClusterAction.READY);
+
+                    ReadableCounter limit = new ReadableCounter(counters, counterId);
+
+                    logAdapter = new BoundedLogAdapter(image, limit, this);
+                    activeLog = null;
+                }
+            }
+        }
+
+        private int AwaitRecoveryCounter(CountersReader counters)
         {
             idleStrategy.Reset();
             int counterId = RecoveryState.FindCounterId(counters);

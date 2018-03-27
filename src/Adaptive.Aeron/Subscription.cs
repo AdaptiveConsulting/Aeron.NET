@@ -121,7 +121,7 @@ namespace Adaptive.Aeron
         public int StreamId => _fields.streamId;
 
         /// <summary>
-        /// Return the registration id used to register this Publication with the media driver.
+        /// Return the registration id used to register this Subscription with the media driver.
         /// </summary>
         /// <returns> registration id </returns>
         public long RegistrationId => _fields.registrationId;

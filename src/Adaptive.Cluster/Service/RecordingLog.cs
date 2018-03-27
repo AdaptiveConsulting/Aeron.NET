@@ -533,7 +533,7 @@ namespace Adaptive.Cluster.Service
             {
                 Entry entry = entries[size - 1];
 
-                if (entry.leadershipTermId != leadershipTermId)
+                if (entry.type == ENTRY_TYPE_TERM && entry.leadershipTermId != leadershipTermId)
                 {
                     throw new InvalidOperationException("leadershipTermId out of sequence: previous " + entry.leadershipTermId + " this " + leadershipTermId);
                 }

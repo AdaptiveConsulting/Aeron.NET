@@ -49,6 +49,11 @@ namespace Adaptive.Cluster.Service
         {
             return upperBound.CounterId();
         }
+
+        public bool IsCaughtUp()
+        {
+            return image.Position() >= upperBound.Get();
+        }
         
         public int Poll()
         {

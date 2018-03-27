@@ -33,6 +33,7 @@ public class ArchiveProxy
 	private readonly ListRecordingsForUriRequestEncoder listRecordingsForUriRequestEncoder = new ListRecordingsForUriRequestEncoder();
 	private readonly ListRecordingRequestEncoder listRecordingRequestEncoder = new ListRecordingRequestEncoder();
 	private readonly ExtendRecordingRequestEncoder extendRecordingRequestEncoder = new ExtendRecordingRequestEncoder();
+	private readonly RecordingPositionRequestEncoder recordingPositionRequestEncoder = new RecordingPositionRequestEncoder();
 
 	/// <summary>
 	/// Create a proxy with a <seealso cref="Publication"/> for sending control message requests.
@@ -242,6 +243,20 @@ public class ArchiveProxy
 		extendRecordingRequestEncoder.WrapAndApplyHeader(buffer, 0, messageHeaderEncoder).ControlSessionId(controlSessionId).CorrelationId(correlationId).RecordingId(recordingId).StreamId(streamId).SourceLocation(sourceLocation).Channel(channel);
 
 		return Offer(extendRecordingRequestEncoder.EncodedLength());
+	}
+	
+	/// <summary>
+	/// Get the recorded position of an active recording.
+	/// </summary>
+	/// <param name="recordingId">      of the active recording that the position is being requested for. </param>
+	/// <param name="correlationId">    for this request. </param>
+	/// <param name="controlSessionId"> for this request. </param>
+	/// <returns> true if successfully offered otherwise false. </returns>
+	public bool GetRecordingPosition(long recordingId, long correlationId, long controlSessionId)
+	{
+		recordingPositionRequestEncoder.WrapAndApplyHeader(buffer, 0, messageHeaderEncoder).ControlSessionId(controlSessionId).CorrelationId(correlationId).RecordingId(recordingId);
+
+		return Offer(recordingPositionRequestEncoder.EncodedLength());
 	}
 
 	private bool Offer(int length)

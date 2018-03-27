@@ -98,7 +98,7 @@ namespace Adaptive.Cluster.Client
         }
         
         /// <summary>
-        //Get the encoded response from a membership query.
+        /// Get the encoded response from a membership query.
         /// </summary>
         /// <returns> the encoded response from a membership query or null if last message was not a query response. </returns>
         public byte[] EndcodedQueryResponse()
@@ -109,14 +109,14 @@ namespace Adaptive.Cluster.Client
         /// <summary>
         /// Has the last polling action received a complete event?
         /// </summary>
-        /// <returns> true of the last polling action received a complete event? </returns>
+        /// <returns> true if the last polling action received a complete event. </returns>
         public bool IsPollComplete()
         {
             return pollComplete;
         }
 
         /// <summary>
-        /// Was last message a challenge or not.
+        /// Was last message a challenge or not?
         /// </summary>
         /// <returns> true if last message was a challenge or false if not. </returns>
         public bool IsChallenged()

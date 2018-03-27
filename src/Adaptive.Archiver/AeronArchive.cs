@@ -644,7 +644,33 @@ namespace Adaptive.Archiver
                 _lock.Unlock();
             }
         }
+        
+        /// <summary>
+        /// Get the position recorded for an active recording.
+        /// </summary>
+        /// <param name="recordingId"> of the active recording for which the position is required. </param>
+        /// <returns> the recorded position for the active recording or <seealso cref="#NULL_POSITION"/> if recording not active. </returns>
+        public long GetRecordingPosition(long recordingId)
+        {
+            _lock.Lock();
+            try
+            {
+                long correlationId = aeron.NextCorrelationId();
 
+                if (!archiveProxy.GetRecordingPosition(recordingId, correlationId, controlSessionId))
+                {
+                    throw new InvalidOperationException("Failed to send get recording position request");
+                }
+
+                return PollForResponse(correlationId);
+            }
+            finally
+            {
+                _lock.Unlock();
+            }
+        }
+
+        
         private long AwaitSessionOpened(long correlationId)
         {
             long deadlineNs = nanoClock.NanoTime() + messageTimeoutNs;
