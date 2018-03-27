@@ -693,6 +693,7 @@ namespace Adaptive.Cluster.Service
                 if (ENTRY_TYPE_SNAPSHOT == entry.type)
                 {
                     snapshotIndex = i;
+                    break;
                 }
             }
 
