@@ -670,6 +670,31 @@ namespace Adaptive.Archiver
             }
         }
 
+        /// <summary>
+        /// Truncate a stopped recording to a given position that is less than the stopped position. The provided position
+        /// must be on a fragment boundary. Truncating a recording to the start position effectively deletes the recording.
+        /// </summary>
+        /// <param name="recordingId"> of the stopped recording to be truncated. </param>
+        /// <param name="position">    to which the recording will be truncated. </param>
+        public void TruncateRecording(long recordingId, long position)
+        {
+            _lock.Lock();
+            try
+            {
+                long correlationId = aeron.NextCorrelationId();
+
+                if (!archiveProxy.TruncateRecording(recordingId, position, correlationId, controlSessionId))
+                {
+                    throw new InvalidOperationException("Failed to send truncate recording request");
+                }
+
+                PollForResponse(correlationId);
+            }
+            finally
+            {
+                _lock.Unlock();
+            }
+        }
         
         private long AwaitSessionOpened(long correlationId)
         {

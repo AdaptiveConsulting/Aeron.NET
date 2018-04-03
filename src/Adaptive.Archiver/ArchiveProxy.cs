@@ -34,6 +34,7 @@ public class ArchiveProxy
 	private readonly ListRecordingRequestEncoder listRecordingRequestEncoder = new ListRecordingRequestEncoder();
 	private readonly ExtendRecordingRequestEncoder extendRecordingRequestEncoder = new ExtendRecordingRequestEncoder();
 	private readonly RecordingPositionRequestEncoder recordingPositionRequestEncoder = new RecordingPositionRequestEncoder();
+	private readonly TruncateRecordingRequestEncoder truncateRecordingRequestEncoder = new TruncateRecordingRequestEncoder();
 
 	/// <summary>
 	/// Create a proxy with a <seealso cref="Publication"/> for sending control message requests.
@@ -257,6 +258,26 @@ public class ArchiveProxy
 		recordingPositionRequestEncoder.WrapAndApplyHeader(buffer, 0, messageHeaderEncoder).ControlSessionId(controlSessionId).CorrelationId(correlationId).RecordingId(recordingId);
 
 		return Offer(recordingPositionRequestEncoder.EncodedLength());
+	}
+	
+	/// <summary>
+	/// Truncate a stopped recording to a given position that is less than the stopped position. The provided position
+	/// must be on a fragment boundary. Truncating a recording to the start position effectively deletes the recording.
+	/// </summary>
+	/// <param name="recordingId">      of the stopped recording to be truncated. </param>
+	/// <param name="position">         to which the recording will be truncated. </param>
+	/// <param name="correlationId">    for this request. </param>
+	/// <param name="controlSessionId"> for this request. </param>
+	/// <returns> true if successfully offered otherwise false. </returns>
+	public bool TruncateRecording(long recordingId, long position, long correlationId, long controlSessionId)
+	{
+		truncateRecordingRequestEncoder
+			.WrapAndApplyHeader(buffer, 0, messageHeaderEncoder)
+			.ControlSessionId(controlSessionId)
+			.CorrelationId(correlationId)
+			.RecordingId(recordingId).Position(position);
+
+		return Offer(truncateRecordingRequestEncoder.EncodedLength());
 	}
 
 	private bool Offer(int length)

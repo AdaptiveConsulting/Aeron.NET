@@ -439,6 +439,11 @@ namespace Adaptive.Aeron
             public const long DRIVER_TIMEOUT_MS = 10000;
 
             /// <summary>
+            /// Value to represent a sessionId that is not to be used.
+            /// </summary>
+            public const int NULL_SESSION_ID = -1;
+            
+            /// <summary>
             /// Initial term id to be used when creating an <seealso cref="ExclusivePublication"/>.
             /// </summary>
             public const string INITIAL_TERM_ID_PARAM_NAME = "init-term-id";

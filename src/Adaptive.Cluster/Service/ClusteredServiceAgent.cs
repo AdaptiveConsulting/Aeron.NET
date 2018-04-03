@@ -116,20 +116,8 @@ namespace Adaptive.Cluster.Service
             }
 
             int workCount = logAdapter.Poll();
-            if (0 == workCount)
-            {
-                if (logAdapter.Image().Closed)
-                {
-                    throw new AgentTerminationException("Image closed unexpectedly");
-                }
-
-                if (!CommitPos.IsActive(aeron.CountersReader(), logAdapter.UpperBoundCounterId()))
-                {
-                    throw new AgentTerminationException("Commit position is not active");
-                }
-            }
-
             workCount += serviceControlAdapter.Poll();
+            
             if (activeLog != null)
             {
                 SwitchActiveLog();
@@ -390,25 +378,21 @@ namespace Adaptive.Cluster.Service
         {
             if (logAdapter.IsCaughtUp())
             {
+                logAdapter.Dispose();
+
                 var counters = aeron.CountersReader();
                 var counterId = activeLog.commitPositionId;
 
                 leadershipTermId = activeLog.leadershipTermId;
                 termBaseLogPosition = CommitPos.GetTermBaseLogPosition(counters, counterId);
 
-                if (CommitPos.GetLeadershipTermLength(counters, counterId) > 0)
-                {
-                    logAdapter.Dispose();
+                Subscription subscription = aeron.AddSubscription(activeLog.channel, activeLog.streamId);
+                Image image = AwaitImage(activeLog.sessionId, subscription);
+                serviceControlPublisher.AckAction(termBaseLogPosition, leadershipTermId, serviceId, ClusterAction.READY);
 
-                    Subscription subscription = aeron.AddSubscription(activeLog.channel, activeLog.streamId);
-                    Image image = AwaitImage(activeLog.sessionId, subscription);
-                    serviceControlPublisher.AckAction(termBaseLogPosition, leadershipTermId, serviceId, ClusterAction.READY);
-
-                    ReadableCounter limit = new ReadableCounter(counters, counterId);
-
-                    logAdapter = new BoundedLogAdapter(image, limit, this);
-                    activeLog = null;
-                }
+                logAdapter = new BoundedLogAdapter(image, new ReadableCounter(counters, counterId), this);
+                activeLog = null;
+                Role((ClusterRole) roleCounter.Get());
             }
         }
 

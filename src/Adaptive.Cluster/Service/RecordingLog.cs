@@ -561,6 +561,16 @@ namespace Adaptive.Cluster.Service
         {
             CommitEntryValue(leadershipTermId, termPosition, TERM_POSITION_OFFSET);
         }
+        
+        /// <summary>
+        /// Commit the position for the base of a leadership term.
+        /// </summary>
+        /// <param name="leadershipTermId"> for committing the base position.. </param>
+        /// <param name="logPosition">      for the base of a leadership term. </param>
+        public void CommitLeadershipLogPosition(long leadershipTermId, long logPosition)
+        {
+            CommitEntryValue(leadershipTermId, logPosition, TERM_BASE_LOG_POSITION_OFFSET);
+        }
 
         /// <summary>
         /// Tombstone an entry in the log so it is no longer valid.
