@@ -1151,11 +1151,11 @@ namespace Adaptive.Aeron
 
                 while (true)
                 {
-                    while (!cncFile.Exists)
+                    while (!cncFile.Exists || cncFile.Length <= 0)
                     {
                         if (_epochClock.Time() > (startTimeMs + _driverTimeoutMs))
                         {
-                            throw new DriverTimeoutException("CnC file not found: " + cncFile.FullName);
+                            throw new DriverTimeoutException("CnC file not created: " + cncFile.FullName);
                         }
 
                         Sleep(16);

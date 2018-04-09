@@ -39,8 +39,15 @@ namespace Adaptive.Cluster.Service
         /// <param name="commitPositionId"> for counter that gives the bound for consumption of the log. </param>
         /// <param name="logSessionId">     for the log to confirm subscription. </param>
         /// <param name="logStreamId">      to subscribe to for the log. </param>
+        /// <param name="ackBeforeImage">   or after Image.</param>
         /// <param name="logChannel">       to subscribe to for the log. </param>
-        void OnJoinLog(long leadershipTermId, int commitPositionId, int logSessionId, int logStreamId, string logChannel);
+        void OnJoinLog(
+            long leadershipTermId,
+            int commitPositionId,
+            int logSessionId,
+            int logStreamId,
+            bool ackBeforeImage,
+            string logChannel);
 
         /// <summary>
         /// Request that a cluster session be closed.

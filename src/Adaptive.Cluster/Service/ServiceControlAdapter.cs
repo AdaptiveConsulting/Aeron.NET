@@ -69,9 +69,13 @@ namespace Adaptive.Cluster.Service
                     joinLogDecoder.Wrap(buffer, offset + MessageHeaderDecoder.ENCODED_LENGTH,
                         messageHeaderDecoder.BlockLength(), messageHeaderDecoder.Version());
 
-                    serviceControlListener.OnJoinLog(joinLogDecoder.LeadershipTermId(),
-                        joinLogDecoder.CommitPositionId(), joinLogDecoder.LogSessionId(),
-                        joinLogDecoder.LogStreamId(), joinLogDecoder.LogChannel());
+                    serviceControlListener.OnJoinLog(
+                        joinLogDecoder.LeadershipTermId(),
+                        joinLogDecoder.CommitPositionId(),
+                        joinLogDecoder.LogSessionId(),
+                        joinLogDecoder.LogStreamId(),
+                        joinLogDecoder.AckBeforeImage() == BooleanType.TRUE,
+                        joinLogDecoder.LogChannel());
                     break;
                 
                 case CloseSessionDecoder.TEMPLATE_ID:

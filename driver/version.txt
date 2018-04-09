@@ -1,2 +1,4 @@
-Built from source 1.8.2-127-g7c8855c28
-Modified aeron-all to include aeron-cluster.
+Driver built from source
+Agrona: 0.9.15-19-g492ed0c
+SBE:    1.7.9-30-g720f5c7f
+Aeron:  1.8.2-166-gcd044137f

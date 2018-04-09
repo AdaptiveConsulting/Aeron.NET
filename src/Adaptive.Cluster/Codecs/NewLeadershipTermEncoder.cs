@@ -7,19 +7,19 @@ using Adaptive.Agrona;
 
 namespace Adaptive.Cluster.Codecs {
 
-public class CommitPositionEncoder
+public class NewLeadershipTermEncoder
 {
-    public const ushort BLOCK_LENGTH = 20;
-    public const ushort TEMPLATE_ID = 54;
+    public const ushort BLOCK_LENGTH = 32;
+    public const ushort TEMPLATE_ID = 52;
     public const ushort SCHEMA_ID = 1;
     public const ushort SCHEMA_VERSION = 1;
 
-    private CommitPositionEncoder _parentMessage;
+    private NewLeadershipTermEncoder _parentMessage;
     private IMutableDirectBuffer _buffer;
     protected int _offset;
     protected int _limit;
 
-    public CommitPositionEncoder()
+    public NewLeadershipTermEncoder()
     {
         _parentMessage = this;
     }
@@ -59,7 +59,7 @@ public class CommitPositionEncoder
         return _offset;
     }
 
-    public CommitPositionEncoder Wrap(IMutableDirectBuffer buffer, int offset)
+    public NewLeadershipTermEncoder Wrap(IMutableDirectBuffer buffer, int offset)
     {
         this._buffer = buffer;
         this._offset = offset;
@@ -68,7 +68,7 @@ public class CommitPositionEncoder
         return this;
     }
 
-    public CommitPositionEncoder WrapAndApplyHeader(
+    public NewLeadershipTermEncoder WrapAndApplyHeader(
         IMutableDirectBuffer buffer, int offset, MessageHeaderEncoder headerEncoder)
     {
         headerEncoder
@@ -96,41 +96,73 @@ public class CommitPositionEncoder
         this._limit = limit;
     }
 
-    public static int TermPositionEncodingOffset()
+    public static int LastBaseLogPositionEncodingOffset()
     {
         return 0;
     }
 
-    public static int TermPositionEncodingLength()
+    public static int LastBaseLogPositionEncodingLength()
     {
         return 8;
     }
 
-    public static long TermPositionNullValue()
+    public static long LastBaseLogPositionNullValue()
     {
         return -9223372036854775808L;
     }
 
-    public static long TermPositionMinValue()
+    public static long LastBaseLogPositionMinValue()
     {
         return -9223372036854775807L;
     }
 
-    public static long TermPositionMaxValue()
+    public static long LastBaseLogPositionMaxValue()
     {
         return 9223372036854775807L;
     }
 
-    public CommitPositionEncoder TermPosition(long value)
+    public NewLeadershipTermEncoder LastBaseLogPosition(long value)
     {
         _buffer.PutLong(_offset + 0, value, ByteOrder.LittleEndian);
         return this;
     }
 
 
-    public static int LeadershipTermIdEncodingOffset()
+    public static int LastTermPositionEncodingOffset()
     {
         return 8;
+    }
+
+    public static int LastTermPositionEncodingLength()
+    {
+        return 8;
+    }
+
+    public static long LastTermPositionNullValue()
+    {
+        return -9223372036854775808L;
+    }
+
+    public static long LastTermPositionMinValue()
+    {
+        return -9223372036854775807L;
+    }
+
+    public static long LastTermPositionMaxValue()
+    {
+        return 9223372036854775807L;
+    }
+
+    public NewLeadershipTermEncoder LastTermPosition(long value)
+    {
+        _buffer.PutLong(_offset + 8, value, ByteOrder.LittleEndian);
+        return this;
+    }
+
+
+    public static int LeadershipTermIdEncodingOffset()
+    {
+        return 16;
     }
 
     public static int LeadershipTermIdEncodingLength()
@@ -153,16 +185,16 @@ public class CommitPositionEncoder
         return 9223372036854775807L;
     }
 
-    public CommitPositionEncoder LeadershipTermId(long value)
+    public NewLeadershipTermEncoder LeadershipTermId(long value)
     {
-        _buffer.PutLong(_offset + 8, value, ByteOrder.LittleEndian);
+        _buffer.PutLong(_offset + 16, value, ByteOrder.LittleEndian);
         return this;
     }
 
 
     public static int LeaderMemberIdEncodingOffset()
     {
-        return 16;
+        return 24;
     }
 
     public static int LeaderMemberIdEncodingLength()
@@ -185,9 +217,41 @@ public class CommitPositionEncoder
         return 2147483647;
     }
 
-    public CommitPositionEncoder LeaderMemberId(int value)
+    public NewLeadershipTermEncoder LeaderMemberId(int value)
     {
-        _buffer.PutInt(_offset + 16, value, ByteOrder.LittleEndian);
+        _buffer.PutInt(_offset + 24, value, ByteOrder.LittleEndian);
+        return this;
+    }
+
+
+    public static int LogSessionIdEncodingOffset()
+    {
+        return 28;
+    }
+
+    public static int LogSessionIdEncodingLength()
+    {
+        return 4;
+    }
+
+    public static int LogSessionIdNullValue()
+    {
+        return -2147483648;
+    }
+
+    public static int LogSessionIdMinValue()
+    {
+        return -2147483647;
+    }
+
+    public static int LogSessionIdMaxValue()
+    {
+        return 2147483647;
+    }
+
+    public NewLeadershipTermEncoder LogSessionId(int value)
+    {
+        _buffer.PutInt(_offset + 28, value, ByteOrder.LittleEndian);
         return this;
     }
 
@@ -200,7 +264,7 @@ public class CommitPositionEncoder
 
     public StringBuilder AppendTo(StringBuilder builder)
     {
-        CommitPositionDecoder writer = new CommitPositionDecoder();
+        NewLeadershipTermDecoder writer = new NewLeadershipTermDecoder();
         writer.Wrap(_buffer, _offset, BLOCK_LENGTH, SCHEMA_VERSION);
 
         return writer.AppendTo(builder);

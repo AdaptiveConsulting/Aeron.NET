@@ -375,7 +375,7 @@ namespace Adaptive.Cluster.Service
                 {
                     epochClock = new SystemEpochClock();
                 }
-                
+
                 if (deleteDirOnStart)
                 {
                     if (null != clusteredServiceDir)
@@ -397,11 +397,11 @@ namespace Adaptive.Cluster.Service
                 {
                     Directory.CreateDirectory(clusteredServiceDir.FullName);
                 }
-                
+
                 if (null == markFile)
                 {
                     markFile = new ClusterMarkFile(
-                        new FileInfo(Path.Combine(clusteredServiceDir.FullName, ClusterMarkFile.FILENAME)), 
+                        new FileInfo(Path.Combine(clusteredServiceDir.FullName, ClusterMarkFile.FILENAME)),
                         ClusterComponentType.CONTAINER,
                         errorBufferLength,
                         epochClock,
@@ -1081,7 +1081,7 @@ namespace Adaptive.Cluster.Service
             {
                 return errorLog;
             }
-            
+
             /// <summary>
             /// Delete the cluster container directory.
             /// </summary>
@@ -1120,7 +1120,7 @@ namespace Adaptive.Cluster.Service
                     null);
 
                 var encoder = markFile.Encoder();
-                
+
                 encoder
                     .ArchiveStreamId(archiveContext.ControlRequestStreamId())
                     .ServiceControlStreamId(serviceControlStreamId)

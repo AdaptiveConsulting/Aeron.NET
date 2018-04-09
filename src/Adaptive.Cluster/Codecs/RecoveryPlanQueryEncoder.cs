@@ -7,19 +7,19 @@ using Adaptive.Agrona;
 
 namespace Adaptive.Cluster.Codecs {
 
-public class MembershipQueryEncoder
+public class RecoveryPlanQueryEncoder
 {
-    public const ushort BLOCK_LENGTH = 20;
-    public const ushort TEMPLATE_ID = 9;
+    public const ushort BLOCK_LENGTH = 16;
+    public const ushort TEMPLATE_ID = 61;
     public const ushort SCHEMA_ID = 1;
     public const ushort SCHEMA_VERSION = 1;
 
-    private MembershipQueryEncoder _parentMessage;
+    private RecoveryPlanQueryEncoder _parentMessage;
     private IMutableDirectBuffer _buffer;
     protected int _offset;
     protected int _limit;
 
-    public MembershipQueryEncoder()
+    public RecoveryPlanQueryEncoder()
     {
         _parentMessage = this;
     }
@@ -59,7 +59,7 @@ public class MembershipQueryEncoder
         return _offset;
     }
 
-    public MembershipQueryEncoder Wrap(IMutableDirectBuffer buffer, int offset)
+    public RecoveryPlanQueryEncoder Wrap(IMutableDirectBuffer buffer, int offset)
     {
         this._buffer = buffer;
         this._offset = offset;
@@ -68,7 +68,7 @@ public class MembershipQueryEncoder
         return this;
     }
 
-    public MembershipQueryEncoder WrapAndApplyHeader(
+    public RecoveryPlanQueryEncoder WrapAndApplyHeader(
         IMutableDirectBuffer buffer, int offset, MessageHeaderEncoder headerEncoder)
     {
         headerEncoder
@@ -121,60 +121,76 @@ public class MembershipQueryEncoder
         return 9223372036854775807L;
     }
 
-    public MembershipQueryEncoder CorrelationId(long value)
+    public RecoveryPlanQueryEncoder CorrelationId(long value)
     {
         _buffer.PutLong(_offset + 0, value, ByteOrder.LittleEndian);
         return this;
     }
 
 
-    public static int ClusterSessionIdEncodingOffset()
+    public static int LeaderMemberIdEncodingOffset()
     {
         return 8;
     }
 
-    public static int ClusterSessionIdEncodingLength()
-    {
-        return 8;
-    }
-
-    public static long ClusterSessionIdNullValue()
-    {
-        return -9223372036854775808L;
-    }
-
-    public static long ClusterSessionIdMinValue()
-    {
-        return -9223372036854775807L;
-    }
-
-    public static long ClusterSessionIdMaxValue()
-    {
-        return 9223372036854775807L;
-    }
-
-    public MembershipQueryEncoder ClusterSessionId(long value)
-    {
-        _buffer.PutLong(_offset + 8, value, ByteOrder.LittleEndian);
-        return this;
-    }
-
-
-    public static int QueryTypeEncodingOffset()
-    {
-        return 16;
-    }
-
-    public static int QueryTypeEncodingLength()
+    public static int LeaderMemberIdEncodingLength()
     {
         return 4;
     }
 
-    public MembershipQueryEncoder QueryType(MembershipQueryType value)
+    public static int LeaderMemberIdNullValue()
     {
-        _buffer.PutInt(_offset + 16, (int)value, ByteOrder.LittleEndian);
+        return -2147483648;
+    }
+
+    public static int LeaderMemberIdMinValue()
+    {
+        return -2147483647;
+    }
+
+    public static int LeaderMemberIdMaxValue()
+    {
+        return 2147483647;
+    }
+
+    public RecoveryPlanQueryEncoder LeaderMemberId(int value)
+    {
+        _buffer.PutInt(_offset + 8, value, ByteOrder.LittleEndian);
         return this;
     }
+
+
+    public static int RequestMemberIdEncodingOffset()
+    {
+        return 12;
+    }
+
+    public static int RequestMemberIdEncodingLength()
+    {
+        return 4;
+    }
+
+    public static int RequestMemberIdNullValue()
+    {
+        return -2147483648;
+    }
+
+    public static int RequestMemberIdMinValue()
+    {
+        return -2147483647;
+    }
+
+    public static int RequestMemberIdMaxValue()
+    {
+        return 2147483647;
+    }
+
+    public RecoveryPlanQueryEncoder RequestMemberId(int value)
+    {
+        _buffer.PutInt(_offset + 12, value, ByteOrder.LittleEndian);
+        return this;
+    }
+
 
 
     public override string ToString()
@@ -184,7 +200,7 @@ public class MembershipQueryEncoder
 
     public StringBuilder AppendTo(StringBuilder builder)
     {
-        MembershipQueryDecoder writer = new MembershipQueryDecoder();
+        RecoveryPlanQueryDecoder writer = new RecoveryPlanQueryDecoder();
         writer.Wrap(_buffer, _offset, BLOCK_LENGTH, SCHEMA_VERSION);
 
         return writer.AppendTo(builder);

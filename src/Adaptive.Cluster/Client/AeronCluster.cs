@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Security.Authentication;
-using System.Text;
 using Adaptive.Aeron;
 using Adaptive.Aeron.LogBuffer;
 using Adaptive.Agrona;
 using Adaptive.Agrona.Concurrent;
 using Adaptive.Cluster.Codecs;
-using Adaptive.Cluster.Service;
 
 namespace Adaptive.Cluster.Client
 {
@@ -35,8 +33,7 @@ namespace Adaptive.Cluster.Client
         private readonly BufferClaim _bufferClaim = new BufferClaim();
         private readonly MessageHeaderEncoder _messageHeaderEncoder = new MessageHeaderEncoder();
         private readonly SessionKeepAliveRequestEncoder _keepAliveRequestEncoder = new SessionKeepAliveRequestEncoder();
-        private readonly MembershipQueryEncoder _membershipQueryEncoder = new MembershipQueryEncoder();
-
+        
         /// <summary>
         /// Connect to the cluster using default configuration.
         /// </summary>
@@ -202,85 +199,6 @@ namespace Adaptive.Cluster.Client
                 }
 
                 return false;
-            }
-            finally
-            {
-                _lock.Unlock();
-            }
-        }
-
-        /// <summary>
-        /// Query cluster member for endpoint information.
-        /// <para>
-        /// <code>
-        /// id=num,memberStatus=member-facing:port,log=log:port,archive=archive:port
-        /// </code>
-        ///     
-        /// </para>
-        /// </summary>
-        /// <returns> result of query. </returns>
-        public string GetMemberEndpoints()
-        {
-            _lock.Lock();
-            try
-            {
-                long deadlineNs = _nanoClock.NanoTime() + _ctx.MessageTimeoutNs();
-                long correlationId = SendMembershipQuery(MembershipQueryType.ENDPOINTS, deadlineNs);
-                EgressPoller poller = new EgressPoller(_subscription, FRAGMENT_LIMIT);
-
-                while (true)
-                {
-                    PollNextResponse(deadlineNs, correlationId, poller);
-
-                    if (poller.CorrelationId() == correlationId)
-                    {
-                        if (poller.TemplateId() == MembershipQueryResponseDecoder.TEMPLATE_ID)
-                        {
-                            return Encoding.ASCII.GetString(poller.EndcodedQueryResponse()); // TODO check default charset for Java
-                        }
-                        else if (poller.EventCode() == EventCode.ERROR)
-                        {
-                            throw new InvalidOperationException(poller.Detail());
-                        }
-                    }
-                }
-            }
-            finally
-            {
-                _lock.Unlock();
-            }
-        }
-
-        /// <summary>
-        /// Query cluster member for encoded recovery plan.
-        /// </summary>
-        /// <returns> encoded <see cref="RecordingLog.RecoveryPlan"/> </returns>
-        /// <see cref="RecordingLog.RecoveryPlan"/>
-        public byte[] GetRecoveryPlan()
-        {
-            _lock.Lock();
-            try
-            {
-                long deadlineNs = _nanoClock.NanoTime() + _ctx.MessageTimeoutNs();
-                long correlationId = SendMembershipQuery(MembershipQueryType.RECOVERY_PLAN, deadlineNs);
-                EgressPoller poller = new EgressPoller(_subscription, FRAGMENT_LIMIT);
-
-                while (true)
-                {
-                    PollNextResponse(deadlineNs, correlationId, poller);
-
-                    if (poller.CorrelationId() == correlationId)
-                    {
-                        if (poller.TemplateId() == MembershipQueryResponseDecoder.TEMPLATE_ID)
-                        {
-                            return poller.EndcodedQueryResponse();
-                        }
-                        else if (poller.EventCode() == EventCode.ERROR)
-                        {
-                            throw new InvalidOperationException(poller.Detail());
-                        }
-                    }
-                }
             }
             finally
             {
@@ -493,44 +411,6 @@ namespace Adaptive.Cluster.Client
                 if (_nanoClock.NanoTime() > deadlineNs)
                 {
                     throw new TimeoutException("Failed to connect to cluster");
-                }
-
-                _idleStrategy.Idle();
-            }
-
-            return correlationId;
-        }
-
-        private long SendMembershipQuery(MembershipQueryType queryType, long deadlineNs)
-        {
-            long correlationId = _aeron.NextCorrelationId();
-            int length = MessageHeaderEncoder.ENCODED_LENGTH + MembershipQueryEncoder.BLOCK_LENGTH;
-            int attempts = SEND_ATTEMPTS;
-
-            _idleStrategy.Reset();
-
-            while (true)
-            {
-                long result = _publication.TryClaim(length, _bufferClaim);
-
-                if (result > 0)
-                {
-                    _membershipQueryEncoder
-                        .WrapAndApplyHeader(_bufferClaim.Buffer, _bufferClaim.Offset, _messageHeaderEncoder)
-                        .CorrelationId(correlationId)
-                        .ClusterSessionId(_clusterSessionId)
-                        .QueryType(queryType);
-
-                    _bufferClaim.Commit();
-
-                    break;
-                }
-
-                CheckResult(result);
-
-                if (--attempts <= 0 || _nanoClock.NanoTime() > deadlineNs)
-                {
-                    throw new TimeoutException("Failed to send query");
                 }
 
                 _idleStrategy.Idle();

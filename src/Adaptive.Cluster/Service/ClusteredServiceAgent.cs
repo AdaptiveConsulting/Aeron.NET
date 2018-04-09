@@ -56,7 +56,7 @@ namespace Adaptive.Cluster.Service
 
             var channel = ctx.ServiceControlChannel();
             var streamId = ctx.ServiceControlStreamId();
-            
+
             serviceControlPublisher = new ServiceControlPublisher(aeron.AddPublication(channel, streamId));
             serviceControlAdapter = new ServiceControlAdapter(aeron.AddSubscription(channel, streamId), this);
         }
@@ -75,7 +75,7 @@ namespace Adaptive.Cluster.Service
             isRecovering = false;
 
             service.OnReady();
-            
+
             JoinActiveLog(counters);
 
             roleCounter = AwaitClusterRoleCounter(counters);
@@ -117,7 +117,7 @@ namespace Adaptive.Cluster.Service
 
             int workCount = logAdapter.Poll();
             workCount += serviceControlAdapter.Poll();
-            
+
             if (activeLog != null)
             {
                 SwitchActiveLog();
@@ -192,10 +192,16 @@ namespace Adaptive.Cluster.Service
             // Not Implemented
         }
 
-        public void OnJoinLog(long leadershipTermId, int commitPositionId, int logSessionId, int logStreamId,
+        public void OnJoinLog(
+            long leadershipTermId,
+            int commitPositionId,
+            int logSessionId,
+            int logStreamId,
+            bool ackBeforeImage,
             string logChannel)
         {
-            activeLog = new ActiveLog(leadershipTermId, commitPositionId, logSessionId, logStreamId, logChannel);
+            activeLog = new ActiveLog(
+                leadershipTermId, commitPositionId, logSessionId, logStreamId, ackBeforeImage, logChannel);
         }
 
         public void OnServiceCloseSession(long clusterSessionId)
@@ -373,7 +379,7 @@ namespace Adaptive.Cluster.Service
                 idleStrategy.Idle(workCount);
             }
         }
-        
+
         private void SwitchActiveLog()
         {
             if (logAdapter.IsCaughtUp())
@@ -426,10 +432,19 @@ namespace Adaptive.Cluster.Service
             termBaseLogPosition = CommitPos.GetTermBaseLogPosition(counters, commitPositionId);
 
             Subscription logSubscription = aeron.AddSubscription(activeLog.channel, activeLog.streamId);
+
+            if (activeLog.ackBeforeImage)
+            {
+                serviceControlPublisher.AckAction(termBaseLogPosition, leadershipTermId, serviceId, ClusterAction.READY);
+            }
+
             Image image = AwaitImage(logSessionId, logSubscription);
             heartbeatCounter.SetOrdered(epochClock.Time());
 
-            serviceControlPublisher.AckAction(termBaseLogPosition, leadershipTermId, serviceId, ClusterAction.READY);
+            if (!activeLog.ackBeforeImage)
+            {
+                serviceControlPublisher.AckAction(termBaseLogPosition, leadershipTermId, serviceId, ClusterAction.READY);
+            }
 
             logAdapter = new BoundedLogAdapter(image, new ReadableCounter(counters, commitPositionId), this);
             activeLog = null;
@@ -630,7 +645,7 @@ namespace Adaptive.Cluster.Service
             {
                 throw new InvalidOperationException("Failed to find heartbeat counter");
             }
-            
+
             heartbeatCounter = new AtomicCounter(counters.ValuesBuffer, heartbeatCounterId);
         }
 
@@ -652,14 +667,22 @@ namespace Adaptive.Cluster.Service
             internal readonly int commitPositionId;
             internal readonly int sessionId;
             internal readonly int streamId;
+            internal readonly bool ackBeforeImage;
             internal readonly string channel;
 
-            internal ActiveLog(long leadershipTermId, int commitPositionId, int sessionId, int streamId, string channel)
+            internal ActiveLog(
+                long leadershipTermId,
+                int commitPositionId,
+                int sessionId,
+                int streamId,
+                bool ackBeforeImage,
+                string channel)
             {
                 this.leadershipTermId = leadershipTermId;
                 this.commitPositionId = commitPositionId;
                 this.sessionId = sessionId;
                 this.streamId = streamId;
+                this.ackBeforeImage = ackBeforeImage;
                 this.channel = channel;
             }
         }

@@ -258,7 +258,7 @@ public class RecoveryPlanEncoder
             this._parentMessage = parentMessage;
             this._buffer = buffer;
             _dimensions.Wrap(buffer, parentMessage.Limit());
-            _dimensions.BlockLength((ushort)68);
+            _dimensions.BlockLength((ushort)72);
             _dimensions.NumInGroup((ushort)count);
             _index = -1;
             this._count = count;
@@ -272,7 +272,7 @@ public class RecoveryPlanEncoder
 
         public static int SbeBlockLength()
         {
-            return 68;
+            return 72;
         }
 
         public StepsEncoder Next()
@@ -605,6 +605,38 @@ public class RecoveryPlanEncoder
         public StepsEncoder EntryIndex(int value)
         {
             _buffer.PutInt(_offset + 64, value, ByteOrder.LittleEndian);
+            return this;
+        }
+
+
+        public static int RecordingSessionIdEncodingOffset()
+        {
+            return 68;
+        }
+
+        public static int RecordingSessionIdEncodingLength()
+        {
+            return 4;
+        }
+
+        public static int RecordingSessionIdNullValue()
+        {
+            return -2147483648;
+        }
+
+        public static int RecordingSessionIdMinValue()
+        {
+            return -2147483647;
+        }
+
+        public static int RecordingSessionIdMaxValue()
+        {
+            return 2147483647;
+        }
+
+        public StepsEncoder RecordingSessionId(int value)
+        {
+            _buffer.PutInt(_offset + 68, value, ByteOrder.LittleEndian);
             return this;
         }
 

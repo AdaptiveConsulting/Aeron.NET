@@ -7,19 +7,19 @@ using Adaptive.Agrona;
 
 namespace Adaptive.Cluster.Codecs {
 
-public class MembershipQueryResponseEncoder
+public class QueryResponseEncoder
 {
     public const ushort BLOCK_LENGTH = 16;
-    public const ushort TEMPLATE_ID = 10;
+    public const ushort TEMPLATE_ID = 60;
     public const ushort SCHEMA_ID = 1;
     public const ushort SCHEMA_VERSION = 1;
 
-    private MembershipQueryResponseEncoder _parentMessage;
+    private QueryResponseEncoder _parentMessage;
     private IMutableDirectBuffer _buffer;
     protected int _offset;
     protected int _limit;
 
-    public MembershipQueryResponseEncoder()
+    public QueryResponseEncoder()
     {
         _parentMessage = this;
     }
@@ -59,7 +59,7 @@ public class MembershipQueryResponseEncoder
         return _offset;
     }
 
-    public MembershipQueryResponseEncoder Wrap(IMutableDirectBuffer buffer, int offset)
+    public QueryResponseEncoder Wrap(IMutableDirectBuffer buffer, int offset)
     {
         this._buffer = buffer;
         this._offset = offset;
@@ -68,7 +68,7 @@ public class MembershipQueryResponseEncoder
         return this;
     }
 
-    public MembershipQueryResponseEncoder WrapAndApplyHeader(
+    public QueryResponseEncoder WrapAndApplyHeader(
         IMutableDirectBuffer buffer, int offset, MessageHeaderEncoder headerEncoder)
     {
         headerEncoder
@@ -121,48 +121,80 @@ public class MembershipQueryResponseEncoder
         return 9223372036854775807L;
     }
 
-    public MembershipQueryResponseEncoder CorrelationId(long value)
+    public QueryResponseEncoder CorrelationId(long value)
     {
         _buffer.PutLong(_offset + 0, value, ByteOrder.LittleEndian);
         return this;
     }
 
 
-    public static int ClusterSessionIdEncodingOffset()
+    public static int RequestMemberIdEncodingOffset()
     {
         return 8;
     }
 
-    public static int ClusterSessionIdEncodingLength()
+    public static int RequestMemberIdEncodingLength()
     {
-        return 8;
+        return 4;
     }
 
-    public static long ClusterSessionIdNullValue()
+    public static int RequestMemberIdNullValue()
     {
-        return -9223372036854775808L;
+        return -2147483648;
     }
 
-    public static long ClusterSessionIdMinValue()
+    public static int RequestMemberIdMinValue()
     {
-        return -9223372036854775807L;
+        return -2147483647;
     }
 
-    public static long ClusterSessionIdMaxValue()
+    public static int RequestMemberIdMaxValue()
     {
-        return 9223372036854775807L;
+        return 2147483647;
     }
 
-    public MembershipQueryResponseEncoder ClusterSessionId(long value)
+    public QueryResponseEncoder RequestMemberId(int value)
     {
-        _buffer.PutLong(_offset + 8, value, ByteOrder.LittleEndian);
+        _buffer.PutInt(_offset + 8, value, ByteOrder.LittleEndian);
+        return this;
+    }
+
+
+    public static int ResponseMemberIdEncodingOffset()
+    {
+        return 12;
+    }
+
+    public static int ResponseMemberIdEncodingLength()
+    {
+        return 4;
+    }
+
+    public static int ResponseMemberIdNullValue()
+    {
+        return -2147483648;
+    }
+
+    public static int ResponseMemberIdMinValue()
+    {
+        return -2147483647;
+    }
+
+    public static int ResponseMemberIdMaxValue()
+    {
+        return 2147483647;
+    }
+
+    public QueryResponseEncoder ResponseMemberId(int value)
+    {
+        _buffer.PutInt(_offset + 12, value, ByteOrder.LittleEndian);
         return this;
     }
 
 
     public static int EncodedResponseId()
     {
-        return 3;
+        return 4;
     }
 
     public static string EncodedResponseMetaAttribute(MetaAttribute metaAttribute)
@@ -183,7 +215,7 @@ public class MembershipQueryResponseEncoder
         return 4;
     }
 
-    public MembershipQueryResponseEncoder PutEncodedResponse(IDirectBuffer src, int srcOffset, int length)
+    public QueryResponseEncoder PutEncodedResponse(IDirectBuffer src, int srcOffset, int length)
     {
         if (length > 1073741824)
         {
@@ -199,7 +231,7 @@ public class MembershipQueryResponseEncoder
         return this;
     }
 
-    public MembershipQueryResponseEncoder PutEncodedResponse(byte[] src, int srcOffset, int length)
+    public QueryResponseEncoder PutEncodedResponse(byte[] src, int srcOffset, int length)
     {
         if (length > 1073741824)
         {
@@ -223,7 +255,7 @@ public class MembershipQueryResponseEncoder
 
     public StringBuilder AppendTo(StringBuilder builder)
     {
-        MembershipQueryResponseDecoder writer = new MembershipQueryResponseDecoder();
+        QueryResponseDecoder writer = new QueryResponseDecoder();
         writer.Wrap(_buffer, _offset, BLOCK_LENGTH, SCHEMA_VERSION);
 
         return writer.AppendTo(builder);

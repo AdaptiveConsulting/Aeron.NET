@@ -107,7 +107,13 @@ namespace Adaptive.Cluster.Service
             throw new InvalidOperationException("Failed to send ACK");
         }
 
-        public void JoinLog(long leadershipTermId, int commitPositionId, int logSessionId, int logStreamId, string channel)
+        public void JoinLog(
+            long leadershipTermId,
+            int commitPositionId,
+            int logSessionId,
+            int logStreamId,
+            bool ackBeforeImage,
+            string channel)
         {
             int length = MessageHeaderEncoder.ENCODED_LENGTH + JoinLogEncoder.BLOCK_LENGTH + JoinLogEncoder.LogChannelHeaderLength() + channel.Length;
 
@@ -123,6 +129,7 @@ namespace Adaptive.Cluster.Service
                         .CommitPositionId(commitPositionId)
                         .LogSessionId(logSessionId)
                         .LogStreamId(logStreamId)
+                        .AckBeforeImage(ackBeforeImage ? BooleanType.TRUE : BooleanType.FALSE)
                         .LogChannel(channel);
 
                     _bufferClaim.Commit();

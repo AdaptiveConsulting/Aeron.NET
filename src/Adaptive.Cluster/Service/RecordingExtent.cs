@@ -13,14 +13,31 @@ namespace Adaptive.Cluster.Service
         public long stopTimestamp;
         public long startPosition;
         public long stopPosition;
+        public int sessionId;
 
-        public void OnRecordingDescriptor(long controlSessionId, long correlationId, long recordingId, long startTimestamp, long stopTimestamp, long startPosition, long stopPosition, int initialTermId, int segmentFileLength, int termBufferLength, int mtuLength, int sessionId, int streamId, string strippedChannel, string originalChannel, string sourceIdentity)
+        public void OnRecordingDescriptor(long controlSessionId,
+            long correlationId,
+            long recordingId,
+            long startTimestamp,
+            long stopTimestamp,
+            long startPosition,
+            long stopPosition,
+            int initialTermId,
+            int segmentFileLength,
+            int termBufferLength,
+            int mtuLength,
+            int sessionId,
+            int streamId,
+            string strippedChannel,
+            string originalChannel,
+            string sourceIdentity)
         {
             this.recordingId = recordingId;
             this.startTimestamp = startTimestamp;
             this.stopTimestamp = stopTimestamp;
             this.startPosition = startPosition;
             this.stopPosition = stopPosition;
+            this.sessionId = sessionId;
         }
 
         public override string ToString()
@@ -31,6 +48,7 @@ namespace Adaptive.Cluster.Service
                    ", stopTimestamp=" + stopTimestamp + 
                    ", startPosition=" + startPosition + 
                    ", stopPosition=" + stopPosition + 
+                   ", sessionId=" + sessionId + 
                    '}';
         }
     }

@@ -9,7 +9,7 @@ namespace Adaptive.Cluster.Codecs {
 
 public class JoinLogDecoder
 {
-    public const ushort BLOCK_LENGTH = 20;
+    public const ushort BLOCK_LENGTH = 24;
     public const ushort TEMPLATE_ID = 33;
     public const ushort SCHEMA_ID = 1;
     public const ushort SCHEMA_VERSION = 1;
@@ -304,6 +304,45 @@ public class JoinLogDecoder
     }
 
 
+    public static int AckBeforeImageId()
+    {
+        return 5;
+    }
+
+    public static int AckBeforeImageSinceVersion()
+    {
+        return 0;
+    }
+
+    public static int AckBeforeImageEncodingOffset()
+    {
+        return 20;
+    }
+
+    public static int AckBeforeImageEncodingLength()
+    {
+        return 4;
+    }
+
+    public static string AckBeforeImageMetaAttribute(MetaAttribute metaAttribute)
+    {
+        switch (metaAttribute)
+        {
+            case MetaAttribute.EPOCH: return "unix";
+            case MetaAttribute.TIME_UNIT: return "nanosecond";
+            case MetaAttribute.SEMANTIC_TYPE: return "";
+            case MetaAttribute.PRESENCE: return "required";
+        }
+
+        return "";
+    }
+
+    public BooleanType AckBeforeImage()
+    {
+        return (BooleanType)_buffer.GetInt(_offset + 20, ByteOrder.LittleEndian);
+    }
+
+
     public static int LogChannelId()
     {
         return 5;
@@ -428,7 +467,12 @@ public class JoinLogDecoder
         builder.Append("LogStreamId=");
         builder.Append(LogStreamId());
         builder.Append('|');
-        //Token{signal=BEGIN_VAR_DATA, name='logChannel', referencedName='null', description='null', id=5, version=0, deprecated=0, encodedLength=0, offset=20, componentTokenCount=6, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=BEGIN_FIELD, name='ackBeforeImage', referencedName='null', description='null', id=5, version=0, deprecated=0, encodedLength=0, offset=20, componentTokenCount=6, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=BEGIN_ENUM, name='BooleanType', referencedName='null', description='null', id=-1, version=0, deprecated=0, encodedLength=4, offset=20, componentTokenCount=4, encoding=Encoding{presence=REQUIRED, primitiveType=INT32, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='null', timeUnit=null, semanticType='null'}}
+        builder.Append("AckBeforeImage=");
+        builder.Append(AckBeforeImage());
+        builder.Append('|');
+        //Token{signal=BEGIN_VAR_DATA, name='logChannel', referencedName='null', description='null', id=5, version=0, deprecated=0, encodedLength=0, offset=24, componentTokenCount=6, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
         builder.Append("LogChannel=");
         builder.Append(LogChannel());
 

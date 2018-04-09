@@ -14,7 +14,6 @@ namespace Adaptive.Cluster.Client
         private readonly NewLeaderEventDecoder newLeaderEventDecoder = new NewLeaderEventDecoder();
         private readonly SessionHeaderDecoder sessionHeaderDecoder = new SessionHeaderDecoder();
         private readonly ChallengeDecoder challengeDecoder = new ChallengeDecoder();
-        private readonly MembershipQueryResponseDecoder membershipQueryResponseDecoder = new MembershipQueryResponseDecoder();
         private readonly ControlledFragmentAssembler fragmentAssembler;
         private readonly Subscription subscription;
         private long clusterSessionId = -1;
@@ -24,7 +23,6 @@ namespace Adaptive.Cluster.Client
         private EventCode eventCode;
         private string detail = "";
         private byte[] encodedChallenge;
-        private byte[] encodedQueryResponse;
 
         public EgressPoller(Subscription subscription, int fragmentLimit)
         {
@@ -98,15 +96,6 @@ namespace Adaptive.Cluster.Client
         }
         
         /// <summary>
-        /// Get the encoded response from a membership query.
-        /// </summary>
-        /// <returns> the encoded response from a membership query or null if last message was not a query response. </returns>
-        public byte[] EndcodedQueryResponse()
-        {
-            return encodedQueryResponse;
-        }
-
-        /// <summary>
         /// Has the last polling action received a complete event?
         /// </summary>
         /// <returns> true if the last polling action received a complete event. </returns>
@@ -132,7 +121,6 @@ namespace Adaptive.Cluster.Client
             eventCode = Codecs.EventCode.NULL_VALUE;
             detail = "";
             encodedChallenge = null;
-            encodedQueryResponse = null;
             pollComplete = false;
 
             return subscription.ControlledPoll(fragmentAssembler, fragmentLimit);
@@ -181,22 +169,6 @@ namespace Adaptive.Cluster.Client
                     correlationId = challengeDecoder.CorrelationId();
                     break;
                 
-                case MembershipQueryResponseDecoder.TEMPLATE_ID:
-                    membershipQueryResponseDecoder.Wrap(
-                        buffer, 
-                        offset + MessageHeaderDecoder.ENCODED_LENGTH, 
-                        messageHeaderDecoder.BlockLength(), 
-                        messageHeaderDecoder.Version());
-
-                    encodedQueryResponse = new byte[membershipQueryResponseDecoder.EncodedResponseLength()];
-                    membershipQueryResponseDecoder.GetEncodedResponse(
-                        encodedQueryResponse, 0, membershipQueryResponseDecoder.EncodedResponseLength());
-
-                    clusterSessionId = membershipQueryResponseDecoder.ClusterSessionId();
-                    correlationId = membershipQueryResponseDecoder.CorrelationId();
-                    break;
-
-
                 default:
                     throw new InvalidOperationException("Unknown templateId: " + templateId);
             }

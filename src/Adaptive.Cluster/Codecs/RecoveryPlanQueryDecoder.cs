@@ -7,21 +7,21 @@ using Adaptive.Agrona;
 
 namespace Adaptive.Cluster.Codecs {
 
-public class MembershipQueryResponseDecoder
+public class RecoveryPlanQueryDecoder
 {
     public const ushort BLOCK_LENGTH = 16;
-    public const ushort TEMPLATE_ID = 10;
+    public const ushort TEMPLATE_ID = 61;
     public const ushort SCHEMA_ID = 1;
     public const ushort SCHEMA_VERSION = 1;
 
-    private MembershipQueryResponseDecoder _parentMessage;
+    private RecoveryPlanQueryDecoder _parentMessage;
     private IDirectBuffer _buffer;
     protected int _offset;
     protected int _limit;
     protected int _actingBlockLength;
     protected int _actingVersion;
 
-    public MembershipQueryResponseDecoder()
+    public RecoveryPlanQueryDecoder()
     {
         _parentMessage = this;
     }
@@ -61,7 +61,7 @@ public class MembershipQueryResponseDecoder
         return _offset;
     }
 
-    public MembershipQueryResponseDecoder Wrap(
+    public RecoveryPlanQueryDecoder Wrap(
         IDirectBuffer buffer, int offset, int actingBlockLength, int actingVersion)
     {
         this._buffer = buffer;
@@ -142,117 +142,113 @@ public class MembershipQueryResponseDecoder
     }
 
 
-    public static int ClusterSessionIdId()
+    public static int LeaderMemberIdId()
     {
         return 2;
     }
 
-    public static int ClusterSessionIdSinceVersion()
+    public static int LeaderMemberIdSinceVersion()
     {
         return 0;
     }
 
-    public static int ClusterSessionIdEncodingOffset()
+    public static int LeaderMemberIdEncodingOffset()
     {
         return 8;
     }
 
-    public static int ClusterSessionIdEncodingLength()
-    {
-        return 8;
-    }
-
-    public static string ClusterSessionIdMetaAttribute(MetaAttribute metaAttribute)
-    {
-        switch (metaAttribute)
-        {
-            case MetaAttribute.EPOCH: return "unix";
-            case MetaAttribute.TIME_UNIT: return "nanosecond";
-            case MetaAttribute.SEMANTIC_TYPE: return "";
-            case MetaAttribute.PRESENCE: return "required";
-        }
-
-        return "";
-    }
-
-    public static long ClusterSessionIdNullValue()
-    {
-        return -9223372036854775808L;
-    }
-
-    public static long ClusterSessionIdMinValue()
-    {
-        return -9223372036854775807L;
-    }
-
-    public static long ClusterSessionIdMaxValue()
-    {
-        return 9223372036854775807L;
-    }
-
-    public long ClusterSessionId()
-    {
-        return _buffer.GetLong(_offset + 8, ByteOrder.LittleEndian);
-    }
-
-
-    public static int EncodedResponseId()
-    {
-        return 3;
-    }
-
-    public static int EncodedResponseSinceVersion()
-    {
-        return 0;
-    }
-
-    public static string EncodedResponseMetaAttribute(MetaAttribute metaAttribute)
-    {
-        switch (metaAttribute)
-        {
-            case MetaAttribute.EPOCH: return "unix";
-            case MetaAttribute.TIME_UNIT: return "nanosecond";
-            case MetaAttribute.SEMANTIC_TYPE: return "";
-            case MetaAttribute.PRESENCE: return "required";
-        }
-
-        return "";
-    }
-
-    public static int EncodedResponseHeaderLength()
+    public static int LeaderMemberIdEncodingLength()
     {
         return 4;
     }
 
-    public int EncodedResponseLength()
+    public static string LeaderMemberIdMetaAttribute(MetaAttribute metaAttribute)
     {
-        int limit = _parentMessage.Limit();
-        return (int)unchecked((uint)_buffer.GetInt(limit, ByteOrder.LittleEndian));
+        switch (metaAttribute)
+        {
+            case MetaAttribute.EPOCH: return "unix";
+            case MetaAttribute.TIME_UNIT: return "nanosecond";
+            case MetaAttribute.SEMANTIC_TYPE: return "";
+            case MetaAttribute.PRESENCE: return "required";
+        }
+
+        return "";
     }
 
-    public int GetEncodedResponse(IMutableDirectBuffer dst, int dstOffset, int length)
+    public static int LeaderMemberIdNullValue()
     {
-        int headerLength = 4;
-        int limit = _parentMessage.Limit();
-        int dataLength = (int)unchecked((uint)_buffer.GetInt(limit, ByteOrder.LittleEndian));
-        int bytesCopied = Math.Min(length, dataLength);
-        _parentMessage.Limit(limit + headerLength + dataLength);
-        _buffer.GetBytes(limit + headerLength, dst, dstOffset, bytesCopied);
-
-        return bytesCopied;
+        return -2147483648;
     }
 
-    public int GetEncodedResponse(byte[] dst, int dstOffset, int length)
+    public static int LeaderMemberIdMinValue()
     {
-        int headerLength = 4;
-        int limit = _parentMessage.Limit();
-        int dataLength = (int)unchecked((uint)_buffer.GetInt(limit, ByteOrder.LittleEndian));
-        int bytesCopied = Math.Min(length, dataLength);
-        _parentMessage.Limit(limit + headerLength + dataLength);
-        _buffer.GetBytes(limit + headerLength, dst, dstOffset, bytesCopied);
-
-        return bytesCopied;
+        return -2147483647;
     }
+
+    public static int LeaderMemberIdMaxValue()
+    {
+        return 2147483647;
+    }
+
+    public int LeaderMemberId()
+    {
+        return _buffer.GetInt(_offset + 8, ByteOrder.LittleEndian);
+    }
+
+
+    public static int RequestMemberIdId()
+    {
+        return 3;
+    }
+
+    public static int RequestMemberIdSinceVersion()
+    {
+        return 0;
+    }
+
+    public static int RequestMemberIdEncodingOffset()
+    {
+        return 12;
+    }
+
+    public static int RequestMemberIdEncodingLength()
+    {
+        return 4;
+    }
+
+    public static string RequestMemberIdMetaAttribute(MetaAttribute metaAttribute)
+    {
+        switch (metaAttribute)
+        {
+            case MetaAttribute.EPOCH: return "unix";
+            case MetaAttribute.TIME_UNIT: return "nanosecond";
+            case MetaAttribute.SEMANTIC_TYPE: return "";
+            case MetaAttribute.PRESENCE: return "required";
+        }
+
+        return "";
+    }
+
+    public static int RequestMemberIdNullValue()
+    {
+        return -2147483648;
+    }
+
+    public static int RequestMemberIdMinValue()
+    {
+        return -2147483647;
+    }
+
+    public static int RequestMemberIdMaxValue()
+    {
+        return 2147483647;
+    }
+
+    public int RequestMemberId()
+    {
+        return _buffer.GetInt(_offset + 12, ByteOrder.LittleEndian);
+    }
+
 
 
     public override string ToString()
@@ -264,7 +260,7 @@ public class MembershipQueryResponseDecoder
     {
         int originalLimit = Limit();
         Limit(_offset + _actingBlockLength);
-        builder.Append("[MembershipQueryResponse](sbeTemplateId=");
+        builder.Append("[RecoveryPlanQuery](sbeTemplateId=");
         builder.Append(TEMPLATE_ID);
         builder.Append("|sbeSchemaId=");
         builder.Append(SCHEMA_ID);
@@ -288,14 +284,15 @@ public class MembershipQueryResponseDecoder
         builder.Append("CorrelationId=");
         builder.Append(CorrelationId());
         builder.Append('|');
-        //Token{signal=BEGIN_FIELD, name='clusterSessionId', referencedName='null', description='null', id=2, version=0, deprecated=0, encodedLength=0, offset=8, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
-        //Token{signal=ENCODING, name='int64', referencedName='null', description='null', id=-1, version=0, deprecated=0, encodedLength=8, offset=8, componentTokenCount=1, encoding=Encoding{presence=REQUIRED, primitiveType=INT64, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
-        builder.Append("ClusterSessionId=");
-        builder.Append(ClusterSessionId());
+        //Token{signal=BEGIN_FIELD, name='leaderMemberId', referencedName='null', description='null', id=2, version=0, deprecated=0, encodedLength=0, offset=8, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=ENCODING, name='int32', referencedName='null', description='null', id=-1, version=0, deprecated=0, encodedLength=4, offset=8, componentTokenCount=1, encoding=Encoding{presence=REQUIRED, primitiveType=INT32, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        builder.Append("LeaderMemberId=");
+        builder.Append(LeaderMemberId());
         builder.Append('|');
-        //Token{signal=BEGIN_VAR_DATA, name='encodedResponse', referencedName='null', description='null', id=3, version=0, deprecated=0, encodedLength=0, offset=16, componentTokenCount=6, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
-        builder.Append("EncodedResponse=");
-        builder.Append(EncodedResponseLength() + " raw bytes");
+        //Token{signal=BEGIN_FIELD, name='requestMemberId', referencedName='null', description='null', id=3, version=0, deprecated=0, encodedLength=0, offset=12, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=ENCODING, name='int32', referencedName='null', description='null', id=-1, version=0, deprecated=0, encodedLength=4, offset=12, componentTokenCount=1, encoding=Encoding{presence=REQUIRED, primitiveType=INT32, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        builder.Append("RequestMemberId=");
+        builder.Append(RequestMemberId());
 
         Limit(originalLimit);
 

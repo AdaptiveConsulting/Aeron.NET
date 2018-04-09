@@ -352,7 +352,7 @@ public class RecoveryPlanDecoder
 
         public static int SbeBlockLength()
         {
-            return 68;
+            return 72;
         }
 
         public int ActingBlockLength()
@@ -924,6 +924,60 @@ public class RecoveryPlanDecoder
         }
 
 
+        public static int RecordingSessionIdId()
+        {
+            return 16;
+        }
+
+        public static int RecordingSessionIdSinceVersion()
+        {
+            return 0;
+        }
+
+        public static int RecordingSessionIdEncodingOffset()
+        {
+            return 68;
+        }
+
+        public static int RecordingSessionIdEncodingLength()
+        {
+            return 4;
+        }
+
+        public static string RecordingSessionIdMetaAttribute(MetaAttribute metaAttribute)
+        {
+            switch (metaAttribute)
+            {
+                case MetaAttribute.EPOCH: return "unix";
+                case MetaAttribute.TIME_UNIT: return "nanosecond";
+                case MetaAttribute.SEMANTIC_TYPE: return "";
+                case MetaAttribute.PRESENCE: return "required";
+            }
+
+            return "";
+        }
+
+        public static int RecordingSessionIdNullValue()
+        {
+            return -2147483648;
+        }
+
+        public static int RecordingSessionIdMinValue()
+        {
+            return -2147483647;
+        }
+
+        public static int RecordingSessionIdMaxValue()
+        {
+            return 2147483647;
+        }
+
+        public int RecordingSessionId()
+        {
+            return _buffer.GetInt(_offset + 68, ByteOrder.LittleEndian);
+        }
+
+
 
         public override string ToString()
         {
@@ -982,6 +1036,11 @@ public class RecoveryPlanDecoder
             //Token{signal=ENCODING, name='int32', referencedName='null', description='null', id=-1, version=0, deprecated=0, encodedLength=4, offset=64, componentTokenCount=1, encoding=Encoding{presence=REQUIRED, primitiveType=INT32, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
             builder.Append("EntryIndex=");
             builder.Append(EntryIndex());
+            builder.Append('|');
+            //Token{signal=BEGIN_FIELD, name='recordingSessionId', referencedName='null', description='null', id=16, version=0, deprecated=0, encodedLength=0, offset=68, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+            //Token{signal=ENCODING, name='int32', referencedName='null', description='null', id=-1, version=0, deprecated=0, encodedLength=4, offset=68, componentTokenCount=1, encoding=Encoding{presence=REQUIRED, primitiveType=INT32, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+            builder.Append("RecordingSessionId=");
+            builder.Append(RecordingSessionId());
             builder.Append(')');
             return builder;
         }
@@ -1036,7 +1095,7 @@ public class RecoveryPlanDecoder
         builder.Append("LastTermPositionAppended=");
         builder.Append(LastTermPositionAppended());
         builder.Append('|');
-        //Token{signal=BEGIN_GROUP, name='steps', referencedName='null', description='null', id=5, version=0, deprecated=0, encodedLength=68, offset=32, componentTokenCount=36, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='null', timeUnit=null, semanticType='null'}}
+        //Token{signal=BEGIN_GROUP, name='steps', referencedName='null', description='null', id=5, version=0, deprecated=0, encodedLength=72, offset=32, componentTokenCount=39, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='null', timeUnit=null, semanticType='null'}}
         builder.Append("Steps=[");
         StepsDecoder Steps = this.Steps();
         if (Steps.Count() > 0)
