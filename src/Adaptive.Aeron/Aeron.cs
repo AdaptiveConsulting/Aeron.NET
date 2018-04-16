@@ -400,7 +400,7 @@ namespace Adaptive.Aeron
             /// </summary>
             public static readonly string AERON_DIR_PROP_DEFAULT =
                 Path.Combine(IoUtil.TmpDirName(), "aeron-" + Environment.UserName);
-            
+
             /// <summary>
             /// Media type used for IPC shared memory from <seealso cref="Publication"/> to <seealso cref="Subscription"/> channels.
             /// </summary>
@@ -442,7 +442,7 @@ namespace Adaptive.Aeron
             /// Value to represent a sessionId that is not to be used.
             /// </summary>
             public const int NULL_SESSION_ID = -1;
-            
+
             /// <summary>
             /// Initial term id to be used when creating an <seealso cref="ExclusivePublication"/>.
             /// </summary>
@@ -542,14 +542,14 @@ namespace Adaptive.Aeron
 
                 return this;
             }
-            
+
             /// <summary>
             /// Perform a shallow copy of the object.
             /// </summary>
             /// <returns> a shallow copy of the object. </returns>
             public virtual Context Clone()
             {
-                return (Context)MemberwiseClone();
+                return (Context) MemberwiseClone();
             }
 
             /// <summary>
@@ -1159,6 +1159,8 @@ namespace Adaptive.Aeron
                         }
 
                         Sleep(16);
+
+                        cncFile.Refresh();
                     }
 
                     _cncByteBuffer = IoUtil.MapExistingFile(CncFile(), CncFileDescriptor.CNC_FILE);
