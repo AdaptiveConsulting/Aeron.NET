@@ -15,7 +15,6 @@
  */
 
 using Adaptive.Aeron.LogBuffer;
-using Adaptive.Aeron.LogBuffer.io.aeron.logbuffer;
 using Adaptive.Aeron.Protocol;
 using Adaptive.Agrona.Concurrent;
 using NUnit.Framework;
