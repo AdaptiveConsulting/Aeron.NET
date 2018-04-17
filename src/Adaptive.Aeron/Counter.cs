@@ -53,7 +53,7 @@ namespace Adaptive.Aeron
         /// This method is idempotent.
         /// </para>
         /// </summary>
-        public virtual void Close()
+        public override void Dispose()
         {
             if (null != clientConductor)
             {

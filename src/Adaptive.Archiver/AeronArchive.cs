@@ -79,7 +79,7 @@ namespace Adaptive.Archiver
                 recordingDescriptorPoller =
                     new RecordingDescriptorPoller(subscription, FRAGMENT_LIMIT, controlSessionId);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 if (!ctx.OwnsAeronClient())
                 {
@@ -89,7 +89,7 @@ namespace Adaptive.Archiver
 
                 CloseHelper.QuietDispose(ctx);
 
-                throw ex;
+                throw;
             }
         }
 
@@ -198,11 +198,11 @@ namespace Adaptive.Archiver
             {
                 if (!ctx.OwnsAeronClient())
                 {
-                    subscription?.Dispose();
-                    publication?.Dispose();
+                    CloseHelper.QuietDispose(subscription);
+                    CloseHelper.QuietDispose(publication);
                 }
 
-                ctx.Dispose();
+                CloseHelper.QuietDispose(ctx);
 
                 throw;
             }
@@ -326,7 +326,7 @@ namespace Adaptive.Archiver
             }
             catch (Exception)
             {
-                publication?.Dispose();
+                CloseHelper.QuietDispose(publication);
                 throw;
             }
             finally
@@ -359,7 +359,7 @@ namespace Adaptive.Archiver
             }
             catch (Exception)
             {
-                publication?.Dispose();
+                CloseHelper.QuietDispose(publication);
                 throw;
             }
             finally
@@ -505,7 +505,7 @@ namespace Adaptive.Archiver
                 if (!archiveProxy.Replay(recordingId, position, length, replayChannel, replayStreamId, correlationId,
                     controlSessionId))
                 {
-                    throw new System.InvalidOperationException("failed to send replay request");
+                    throw new InvalidOperationException("failed to send replay request");
                 }
 
                 return PollForResponse(correlationId);
@@ -529,7 +529,7 @@ namespace Adaptive.Archiver
 
                 if (!archiveProxy.StopReplay(replaySessionId, correlationId, controlSessionId))
                 {
-                    throw new System.InvalidOperationException("failed to send stop recording request");
+                    throw new InvalidOperationException("failed to send stop recording request");
                 }
 
                 PollForResponse(correlationId);

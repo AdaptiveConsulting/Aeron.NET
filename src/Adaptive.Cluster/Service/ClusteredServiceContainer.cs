@@ -1101,7 +1101,7 @@ namespace Adaptive.Cluster.Service
             /// </summary>
             public void Dispose()
             {
-                markFile?.Dispose();
+                CloseHelper.QuietDispose(markFile);
 
                 if (ownsAeronClient)
                 {
