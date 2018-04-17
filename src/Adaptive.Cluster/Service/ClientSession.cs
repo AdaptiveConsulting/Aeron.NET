@@ -69,8 +69,7 @@ namespace Adaptive.Cluster.Service
         }
 
         /// <summary>
-        /// Cluster session encoded principal passed from <seealso cref="io.aeron.cluster.Authenticator"/>
-        /// when the session was authenticated.
+        /// Cluster session encoded principal from when the session was authenticated.
         /// </summary>
         /// <returns> The encoded Principal passed. May be 0 length to indicate none present. </returns>
         public byte[] EncodedPrincipal()

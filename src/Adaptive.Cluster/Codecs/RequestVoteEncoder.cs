@@ -96,41 +96,9 @@ public class RequestVoteEncoder
         this._limit = limit;
     }
 
-    public static int CandidateTermIdEncodingOffset()
-    {
-        return 0;
-    }
-
-    public static int CandidateTermIdEncodingLength()
-    {
-        return 8;
-    }
-
-    public static long CandidateTermIdNullValue()
-    {
-        return -9223372036854775808L;
-    }
-
-    public static long CandidateTermIdMinValue()
-    {
-        return -9223372036854775807L;
-    }
-
-    public static long CandidateTermIdMaxValue()
-    {
-        return 9223372036854775807L;
-    }
-
-    public RequestVoteEncoder CandidateTermId(long value)
-    {
-        _buffer.PutLong(_offset + 0, value, ByteOrder.LittleEndian);
-        return this;
-    }
-
-
     public static int LastBaseLogPositionEncodingOffset()
     {
-        return 8;
+        return 0;
     }
 
     public static int LastBaseLogPositionEncodingLength()
@@ -155,14 +123,14 @@ public class RequestVoteEncoder
 
     public RequestVoteEncoder LastBaseLogPosition(long value)
     {
-        _buffer.PutLong(_offset + 8, value, ByteOrder.LittleEndian);
+        _buffer.PutLong(_offset + 0, value, ByteOrder.LittleEndian);
         return this;
     }
 
 
     public static int LastTermPositionEncodingOffset()
     {
-        return 16;
+        return 8;
     }
 
     public static int LastTermPositionEncodingLength()
@@ -186,6 +154,38 @@ public class RequestVoteEncoder
     }
 
     public RequestVoteEncoder LastTermPosition(long value)
+    {
+        _buffer.PutLong(_offset + 8, value, ByteOrder.LittleEndian);
+        return this;
+    }
+
+
+    public static int CandidateTermIdEncodingOffset()
+    {
+        return 16;
+    }
+
+    public static int CandidateTermIdEncodingLength()
+    {
+        return 8;
+    }
+
+    public static long CandidateTermIdNullValue()
+    {
+        return -9223372036854775808L;
+    }
+
+    public static long CandidateTermIdMinValue()
+    {
+        return -9223372036854775807L;
+    }
+
+    public static long CandidateTermIdMaxValue()
+    {
+        return 9223372036854775807L;
+    }
+
+    public RequestVoteEncoder CandidateTermId(long value)
     {
         _buffer.PutLong(_offset + 16, value, ByteOrder.LittleEndian);
         return this;

@@ -8,6 +8,11 @@ using Adaptive.Cluster.Codecs.Mark;
 
 namespace Adaptive.Cluster
 {
+    
+    /// <summary>
+    /// Used to indicate if a cluster service is running and what configuration it is using. Errors encountered by
+    /// the service are recorded in within this file by a <see cref="DistinctErrorLog"/>
+    /// </summary>
     public class ClusterMarkFile : IDisposable
     {
         public const string FILENAME = "cluster-mark.dat";
