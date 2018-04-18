@@ -1084,6 +1084,8 @@ namespace Adaptive.Aeron
             /// <summary>
             /// Set the top level Aeron directory used for communication between the client and Media Driver, and the location
             /// of the data buffers.
+            /// Check this setting if there is a DriverTimeoutException
+            /// The default path for communicating between the driver and client is based on the process owner's temp directory. %localappdata%\temp\aeron-[username]
             /// </summary>
             /// <param name="dirName"> New top level Aeron directory. </param>
             /// <returns> this Object for method chaining. </returns>
