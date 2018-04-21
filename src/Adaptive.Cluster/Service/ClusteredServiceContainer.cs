@@ -437,7 +437,7 @@ namespace Adaptive.Cluster.Service
 
                 if (null == errorCounter)
                 {
-                    throw new InvalidOperationException("Error counter must be supplied");
+                    throw new InvalidOperationException("error counter must be supplied");
                 }
 
                 if (null == countedErrorHandler)

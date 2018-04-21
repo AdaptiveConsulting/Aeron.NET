@@ -7,21 +7,21 @@ using Adaptive.Agrona;
 
 namespace Adaptive.Cluster.Codecs {
 
-public class CommitPositionDecoder
+public class CanvassPositionDecoder
 {
     public const ushort BLOCK_LENGTH = 20;
-    public const ushort TEMPLATE_ID = 55;
+    public const ushort TEMPLATE_ID = 50;
     public const ushort SCHEMA_ID = 1;
     public const ushort SCHEMA_VERSION = 1;
 
-    private CommitPositionDecoder _parentMessage;
+    private CanvassPositionDecoder _parentMessage;
     private IDirectBuffer _buffer;
     protected int _offset;
     protected int _limit;
     protected int _actingBlockLength;
     protected int _actingVersion;
 
-    public CommitPositionDecoder()
+    public CanvassPositionDecoder()
     {
         _parentMessage = this;
     }
@@ -61,7 +61,7 @@ public class CommitPositionDecoder
         return _offset;
     }
 
-    public CommitPositionDecoder Wrap(
+    public CanvassPositionDecoder Wrap(
         IDirectBuffer buffer, int offset, int actingBlockLength, int actingVersion)
     {
         this._buffer = buffer;
@@ -196,27 +196,27 @@ public class CommitPositionDecoder
     }
 
 
-    public static int LeaderMemberIdId()
+    public static int FollowerMemberIdId()
     {
         return 3;
     }
 
-    public static int LeaderMemberIdSinceVersion()
+    public static int FollowerMemberIdSinceVersion()
     {
         return 0;
     }
 
-    public static int LeaderMemberIdEncodingOffset()
+    public static int FollowerMemberIdEncodingOffset()
     {
         return 16;
     }
 
-    public static int LeaderMemberIdEncodingLength()
+    public static int FollowerMemberIdEncodingLength()
     {
         return 4;
     }
 
-    public static string LeaderMemberIdMetaAttribute(MetaAttribute metaAttribute)
+    public static string FollowerMemberIdMetaAttribute(MetaAttribute metaAttribute)
     {
         switch (metaAttribute)
         {
@@ -229,22 +229,22 @@ public class CommitPositionDecoder
         return "";
     }
 
-    public static int LeaderMemberIdNullValue()
+    public static int FollowerMemberIdNullValue()
     {
         return -2147483648;
     }
 
-    public static int LeaderMemberIdMinValue()
+    public static int FollowerMemberIdMinValue()
     {
         return -2147483647;
     }
 
-    public static int LeaderMemberIdMaxValue()
+    public static int FollowerMemberIdMaxValue()
     {
         return 2147483647;
     }
 
-    public int LeaderMemberId()
+    public int FollowerMemberId()
     {
         return _buffer.GetInt(_offset + 16, ByteOrder.LittleEndian);
     }
@@ -260,7 +260,7 @@ public class CommitPositionDecoder
     {
         int originalLimit = Limit();
         Limit(_offset + _actingBlockLength);
-        builder.Append("[CommitPosition](sbeTemplateId=");
+        builder.Append("[CanvassPosition](sbeTemplateId=");
         builder.Append(TEMPLATE_ID);
         builder.Append("|sbeSchemaId=");
         builder.Append(SCHEMA_ID);
@@ -289,10 +289,10 @@ public class CommitPositionDecoder
         builder.Append("LeadershipTermId=");
         builder.Append(LeadershipTermId());
         builder.Append('|');
-        //Token{signal=BEGIN_FIELD, name='leaderMemberId', referencedName='null', description='null', id=3, version=0, deprecated=0, encodedLength=0, offset=16, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=BEGIN_FIELD, name='followerMemberId', referencedName='null', description='null', id=3, version=0, deprecated=0, encodedLength=0, offset=16, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
         //Token{signal=ENCODING, name='int32', referencedName='null', description='null', id=-1, version=0, deprecated=0, encodedLength=4, offset=16, componentTokenCount=1, encoding=Encoding{presence=REQUIRED, primitiveType=INT32, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
-        builder.Append("LeaderMemberId=");
-        builder.Append(LeaderMemberId());
+        builder.Append("FollowerMemberId=");
+        builder.Append(FollowerMemberId());
 
         Limit(originalLimit);
 

@@ -10,7 +10,7 @@ namespace Adaptive.Cluster.Codecs {
 public class AppendedPositionDecoder
 {
     public const ushort BLOCK_LENGTH = 20;
-    public const ushort TEMPLATE_ID = 53;
+    public const ushort TEMPLATE_ID = 54;
     public const ushort SCHEMA_ID = 1;
     public const ushort SCHEMA_VERSION = 1;
 
@@ -88,27 +88,27 @@ public class AppendedPositionDecoder
         this._limit = limit;
     }
 
-    public static int TermPositionId()
+    public static int LogPositionId()
     {
         return 1;
     }
 
-    public static int TermPositionSinceVersion()
+    public static int LogPositionSinceVersion()
     {
         return 0;
     }
 
-    public static int TermPositionEncodingOffset()
+    public static int LogPositionEncodingOffset()
     {
         return 0;
     }
 
-    public static int TermPositionEncodingLength()
+    public static int LogPositionEncodingLength()
     {
         return 8;
     }
 
-    public static string TermPositionMetaAttribute(MetaAttribute metaAttribute)
+    public static string LogPositionMetaAttribute(MetaAttribute metaAttribute)
     {
         switch (metaAttribute)
         {
@@ -121,22 +121,22 @@ public class AppendedPositionDecoder
         return "";
     }
 
-    public static long TermPositionNullValue()
+    public static long LogPositionNullValue()
     {
         return -9223372036854775808L;
     }
 
-    public static long TermPositionMinValue()
+    public static long LogPositionMinValue()
     {
         return -9223372036854775807L;
     }
 
-    public static long TermPositionMaxValue()
+    public static long LogPositionMaxValue()
     {
         return 9223372036854775807L;
     }
 
-    public long TermPosition()
+    public long LogPosition()
     {
         return _buffer.GetLong(_offset + 0, ByteOrder.LittleEndian);
     }
@@ -279,10 +279,10 @@ public class AppendedPositionDecoder
         }
         builder.Append(BLOCK_LENGTH);
         builder.Append("):");
-        //Token{signal=BEGIN_FIELD, name='termPosition', referencedName='null', description='null', id=1, version=0, deprecated=0, encodedLength=0, offset=0, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=BEGIN_FIELD, name='logPosition', referencedName='null', description='null', id=1, version=0, deprecated=0, encodedLength=0, offset=0, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
         //Token{signal=ENCODING, name='int64', referencedName='null', description='null', id=-1, version=0, deprecated=0, encodedLength=8, offset=0, componentTokenCount=1, encoding=Encoding{presence=REQUIRED, primitiveType=INT64, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
-        builder.Append("TermPosition=");
-        builder.Append(TermPosition());
+        builder.Append("LogPosition=");
+        builder.Append(LogPosition());
         builder.Append('|');
         //Token{signal=BEGIN_FIELD, name='leadershipTermId', referencedName='null', description='null', id=2, version=0, deprecated=0, encodedLength=0, offset=8, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
         //Token{signal=ENCODING, name='int64', referencedName='null', description='null', id=-1, version=0, deprecated=0, encodedLength=8, offset=8, componentTokenCount=1, encoding=Encoding{presence=REQUIRED, primitiveType=INT64, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}

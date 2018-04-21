@@ -45,7 +45,7 @@ namespace Adaptive.Cluster
                 {
                     if (version != MarkFileHeaderDecoder.SCHEMA_VERSION)
                     {
-                        throw new ArgumentException("Mark file version " + version + " does not match software:" + MarkFileHeaderDecoder.SCHEMA_VERSION);
+                        throw new ArgumentException("mark file version " + version + " does not match software:" + MarkFileHeaderDecoder.SCHEMA_VERSION);
                     }
                 },
                 null);
@@ -93,7 +93,7 @@ namespace Adaptive.Cluster
                 {
                     if (version != MarkFileHeaderDecoder.SCHEMA_VERSION)
                     {
-                        throw new ArgumentException("Mark file version " + version + " does not match software:" + MarkFileHeaderDecoder.SCHEMA_VERSION);
+                        throw new ArgumentException("mark file version " + version + " does not match software:" + MarkFileHeaderDecoder.SCHEMA_VERSION);
                     }
                 },
                 logger);

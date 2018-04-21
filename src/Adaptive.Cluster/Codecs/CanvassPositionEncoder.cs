@@ -7,19 +7,19 @@ using Adaptive.Agrona;
 
 namespace Adaptive.Cluster.Codecs {
 
-public class AppendedPositionEncoder
+public class CanvassPositionEncoder
 {
     public const ushort BLOCK_LENGTH = 20;
-    public const ushort TEMPLATE_ID = 54;
+    public const ushort TEMPLATE_ID = 50;
     public const ushort SCHEMA_ID = 1;
     public const ushort SCHEMA_VERSION = 1;
 
-    private AppendedPositionEncoder _parentMessage;
+    private CanvassPositionEncoder _parentMessage;
     private IMutableDirectBuffer _buffer;
     protected int _offset;
     protected int _limit;
 
-    public AppendedPositionEncoder()
+    public CanvassPositionEncoder()
     {
         _parentMessage = this;
     }
@@ -59,7 +59,7 @@ public class AppendedPositionEncoder
         return _offset;
     }
 
-    public AppendedPositionEncoder Wrap(IMutableDirectBuffer buffer, int offset)
+    public CanvassPositionEncoder Wrap(IMutableDirectBuffer buffer, int offset)
     {
         this._buffer = buffer;
         this._offset = offset;
@@ -68,7 +68,7 @@ public class AppendedPositionEncoder
         return this;
     }
 
-    public AppendedPositionEncoder WrapAndApplyHeader(
+    public CanvassPositionEncoder WrapAndApplyHeader(
         IMutableDirectBuffer buffer, int offset, MessageHeaderEncoder headerEncoder)
     {
         headerEncoder
@@ -121,7 +121,7 @@ public class AppendedPositionEncoder
         return 9223372036854775807L;
     }
 
-    public AppendedPositionEncoder LogPosition(long value)
+    public CanvassPositionEncoder LogPosition(long value)
     {
         _buffer.PutLong(_offset + 0, value, ByteOrder.LittleEndian);
         return this;
@@ -153,7 +153,7 @@ public class AppendedPositionEncoder
         return 9223372036854775807L;
     }
 
-    public AppendedPositionEncoder LeadershipTermId(long value)
+    public CanvassPositionEncoder LeadershipTermId(long value)
     {
         _buffer.PutLong(_offset + 8, value, ByteOrder.LittleEndian);
         return this;
@@ -185,7 +185,7 @@ public class AppendedPositionEncoder
         return 2147483647;
     }
 
-    public AppendedPositionEncoder FollowerMemberId(int value)
+    public CanvassPositionEncoder FollowerMemberId(int value)
     {
         _buffer.PutInt(_offset + 16, value, ByteOrder.LittleEndian);
         return this;
@@ -200,7 +200,7 @@ public class AppendedPositionEncoder
 
     public StringBuilder AppendTo(StringBuilder builder)
     {
-        AppendedPositionDecoder writer = new AppendedPositionDecoder();
+        CanvassPositionDecoder writer = new CanvassPositionDecoder();
         writer.Wrap(_buffer, _offset, BLOCK_LENGTH, SCHEMA_VERSION);
 
         return writer.AppendTo(builder);

@@ -654,7 +654,7 @@ namespace Adaptive.Cluster.Service
 
             if (-1 == index)
             {
-                throw new System.ArgumentException("Unknown entry index: " + entryIndex);
+                throw new ArgumentException("unknown entry index: " + entryIndex);
             }
 
             buffer.PutInt(0, NULL_VALUE, ByteOrder.LittleEndian);
@@ -733,7 +733,7 @@ namespace Adaptive.Cluster.Service
         {
             if (archive.ListRecording(entry.recordingId, recordingExtent) == 0)
             {
-                throw new InvalidOperationException("Unknown recording id: " + entry.recordingId);
+                throw new InvalidOperationException("unknown recording id: " + entry.recordingId);
             }
         }
 
@@ -748,7 +748,7 @@ namespace Adaptive.Cluster.Service
                 }
             }
 
-            throw new ArgumentException("Unknown leadershipTermId: " + leadershipTermId);
+            throw new ArgumentException("unknown leadershipTermId: " + leadershipTermId);
         }
 
         private static ReplayStep PlanRecovery(List<ReplayStep> steps, List<Entry> entries, AeronArchive archive)

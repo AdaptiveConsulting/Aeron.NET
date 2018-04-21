@@ -56,7 +56,7 @@ using(Publication publisher = aeron.AddPublication(channel, streamId)) {
 #### Fragment Handler
 A fragment handler is a delegate used for processing data that is has been received. The buffer will either contain a whole message or a fragment of a message to be reassembled.
 ```csharp
-static void PrintMessage(UnsafeBuffer buffer, int offset, int length, Header header)
+static void PrintMessage(IDirectBuffer buffer, int offset, int length, Header header)
 {
   var message = buffer.GetStringWithoutLengthUtf8(offset, length);
   Console.WriteLine($"Message Received: '{message}'");

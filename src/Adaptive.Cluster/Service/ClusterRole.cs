@@ -3,7 +3,7 @@
     public enum ClusterRole : long
     {
         /// <summary>
-        /// The cluster node is a follower of the current leader.
+        /// The cluster node is a follower in the current leadership term.
         /// </summary>
         Follower = 0,
         
@@ -13,7 +13,7 @@
         Candidate = 1,
 
         /// <summary>
-        /// The cluster node is the leader of the current leadership term.
+        /// The cluster node is the leader for the current leadership term.
         /// </summary>
         Leader = 2
     }

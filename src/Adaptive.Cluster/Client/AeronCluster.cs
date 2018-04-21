@@ -288,7 +288,12 @@ namespace Adaptive.Cluster.Client
 
                     if (_nanoClock.NanoTime() > deadlineNs)
                     {
-                        throw new TimeoutException("Awaiting connection to cluster");
+                        for (int i = 0; i < memberCount; i++)
+                        {
+                            publications[i].Dispose();
+                        }
+                        
+                        throw new TimeoutException("awaiting connection to cluster");
                     }
 
                     _idleStrategy.Idle();
@@ -303,7 +308,7 @@ namespace Adaptive.Cluster.Client
                 {
                     if (_nanoClock.NanoTime() > deadlineNs)
                     {
-                        throw new TimeoutException("Awaiting connection to cluster");
+                        throw new TimeoutException("awaiting connection to cluster");
                     }
 
                     _idleStrategy.Idle();
@@ -367,7 +372,7 @@ namespace Adaptive.Cluster.Client
             {
                 if (_nanoClock.NanoTime() > deadlineNs)
                 {
-                    throw new TimeoutException("Awaiting response for correlationId=" + correlationId);
+                    throw new TimeoutException("awaiting response for correlationId=" + correlationId);
                 }
 
                 _idleStrategy.Idle();
@@ -405,12 +410,12 @@ namespace Adaptive.Cluster.Client
 
                 if (Publication.CLOSED == result)
                 {
-                    throw new InvalidOperationException("Unexpected close from cluster");
+                    throw new InvalidOperationException("unexpected close from cluster");
                 }
 
                 if (_nanoClock.NanoTime() > deadlineNs)
                 {
-                    throw new TimeoutException("Failed to connect to cluster");
+                    throw new TimeoutException("failed to connect to cluster");
                 }
 
                 _idleStrategy.Idle();
@@ -451,7 +456,7 @@ namespace Adaptive.Cluster.Client
 
                 if (_nanoClock.NanoTime() > deadlineNs)
                 {
-                    throw new TimeoutException("Failed to connect to cluster");
+                    throw new TimeoutException("failed to connect to cluster");
                 }
 
                 _idleStrategy.Idle();
@@ -464,7 +469,7 @@ namespace Adaptive.Cluster.Client
         {
             if (result == Publication.NOT_CONNECTED || result == Publication.CLOSED || result == Publication.MAX_POSITION_EXCEEDED)
             {
-                throw new InvalidOperationException("Unexpected publication state: " + result);
+                throw new InvalidOperationException("unexpected publication state: " + result);
             }
         }
 

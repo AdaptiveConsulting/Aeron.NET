@@ -89,7 +89,7 @@ namespace Adaptive.Cluster.Service
                     break;
 
                 default:
-                    throw new ArgumentException("Unknown template id: " + templateId);
+                    throw new ArgumentException("unknown template id: " + templateId);
             }
         }
     }

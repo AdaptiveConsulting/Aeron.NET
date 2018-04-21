@@ -47,7 +47,7 @@ namespace Adaptive.Cluster.Service
                     long typeId = snapshotMarkerDecoder.TypeId();
                     if (typeId != ClusteredServiceContainer.SNAPSHOT_TYPE_ID)
                     {
-                        throw new InvalidOperationException("Unexpected snapshot type: " + typeId);
+                        throw new InvalidOperationException("unexpected snapshot type: " + typeId);
                     }
 
                     switch (snapshotMarkerDecoder.Mark())
@@ -55,7 +55,7 @@ namespace Adaptive.Cluster.Service
                         case SnapshotMark.BEGIN:
                             if (inSnapshot)
                             {
-                                throw new InvalidOperationException("Already in snapshot");
+                                throw new InvalidOperationException("already in snapshot");
                             }
 
                             inSnapshot = true;
@@ -64,7 +64,7 @@ namespace Adaptive.Cluster.Service
                         case SnapshotMark.END:
                             if (!inSnapshot)
                             {
-                                throw new InvalidOperationException("Missing begin snapshot");
+                                throw new InvalidOperationException("missing begin snapshot");
                             }
 
                             isDone = true;
@@ -92,7 +92,7 @@ namespace Adaptive.Cluster.Service
                     break;
 
                 default:
-                    throw new InvalidOperationException("Unknown template id: " + templateId);
+                    throw new InvalidOperationException("unknown template id: " + templateId);
             }
 
             return ControlledFragmentHandlerAction.CONTINUE;

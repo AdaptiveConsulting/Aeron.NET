@@ -1,6 +1,6 @@
 @echo off
 pushd %~dp0..
-SET suffix=pre8
+SET suffix=alpha
 SET nuget_source=https://www.myget.org/F/aeron/api/v2/package
 
 del nupkgs\*.nupkg

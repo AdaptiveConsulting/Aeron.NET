@@ -112,7 +112,7 @@ namespace Adaptive.Cluster.Service
             {
                 markFile.UpdateActivityTimestamp(nowMs);
                 cachedEpochClock.Update(nowMs);
-                heartbeatCounter.SetOrdered(nowMs);
+                CheckHealthAndUpdateHeartbeat(nowMs);
             }
 
             int workCount = logAdapter.Poll();
@@ -153,9 +153,21 @@ namespace Adaptive.Cluster.Service
 
         public bool CloseSession(long clusterSessionId)
         {
-            if (sessionByIdMap.ContainsKey(clusterSessionId))
+            if (!sessionByIdMap.ContainsKey(clusterSessionId))
             {
-                serviceControlPublisher.CloseSession(clusterSessionId);
+                throw new ArgumentException("unknown clusterSessionId: " + clusterSessionId);
+            }
+
+            ClientSession clientSession = sessionByIdMap[clusterSessionId];
+
+            if (clientSession.IsClosing)
+            {
+                return true;
+            }
+
+            if (serviceControlPublisher.CloseSession(clusterSessionId))
+            {
+                clientSession.MarkClosing();
                 return true;
             }
 
@@ -167,14 +179,14 @@ namespace Adaptive.Cluster.Service
             return timestampMs;
         }
 
-        public void ScheduleTimer(long correlationId, long deadlineMs)
+        public bool ScheduleTimer(long correlationId, long deadlineMs)
         {
-            serviceControlPublisher.ScheduleTimer(correlationId, deadlineMs);
+            return serviceControlPublisher.ScheduleTimer(correlationId, deadlineMs);
         }
 
-        public void CancelTimer(long correlationId)
+        public bool CancelTimer(long correlationId)
         {
-            serviceControlPublisher.CancelTimer(correlationId);
+            return serviceControlPublisher.CancelTimer(correlationId);
         }
 
         public void OnScheduleTimer(long correlationId, long deadline)
@@ -267,6 +279,14 @@ namespace Adaptive.Cluster.Service
             sessionByIdMap[clusterSessionId] = session;
         }
 
+        private void CheckHealthAndUpdateHeartbeat(long nowMs)
+        {
+            if (null != logAdapter && !logAdapter.Image().Closed)
+            {
+                heartbeatCounter.SetOrdered(nowMs);
+            }
+        }
+
         private void Role(ClusterRole newRole)
         {
             if (newRole != role)
@@ -287,8 +307,8 @@ namespace Adaptive.Cluster.Service
                 RecordingLog.Entry snapshotEntry = recordingLog.GetSnapshot(leadershipTermId, termPosition);
                 if (null == snapshotEntry)
                 {
-                    throw new System.InvalidOperationException(
-                        "No snapshot available for term position: " + termPosition);
+                    throw new InvalidOperationException(
+                        "no snapshot available for term position: " + termPosition);
                 }
 
                 termBaseLogPosition = snapshotEntry.termBaseLogPosition + snapshotEntry.termPosition;
@@ -312,7 +332,6 @@ namespace Adaptive.Cluster.Service
             for (int i = 0; i < replayTermCount; i++)
             {
                 AwaitActiveLog();
-
                 int counterId = activeLog.commitPositionId;
                 leadershipTermId = CommitPos.GetLeadershipTermId(counters, counterId);
                 termBaseLogPosition = CommitPos.GetTermBaseLogPosition(counters, counterId); // TODO MARK
@@ -367,7 +386,7 @@ namespace Adaptive.Cluster.Service
                     {
                         if (!image.IsEndOfStream())
                         {
-                            throw new System.InvalidOperationException("Unexpected close of replay");
+                            throw new InvalidOperationException("unexpected close of replay");
                         }
 
                         break;
@@ -424,7 +443,7 @@ namespace Adaptive.Cluster.Service
             int commitPositionId = activeLog.commitPositionId;
             if (!CommitPos.IsActive(counters, commitPositionId))
             {
-                throw new System.InvalidOperationException("CommitPos counter not active: " + commitPositionId);
+                throw new InvalidOperationException("CommitPos counter not active: " + commitPositionId);
             }
 
             int logSessionId = activeLog.sessionId;
@@ -484,7 +503,7 @@ namespace Adaptive.Cluster.Service
                 RecordingExtent recordingExtent = new RecordingExtent();
                 if (0 == archive.ListRecording(recordingId, recordingExtent))
                 {
-                    throw new System.InvalidOperationException("Could not find recordingId: " + recordingId);
+                    throw new InvalidOperationException("could not find recordingId: " + recordingId);
                 }
 
                 string channel = ctx.ReplayChannel();
@@ -520,7 +539,7 @@ namespace Adaptive.Cluster.Service
 
                     if (image.Closed)
                     {
-                        throw new System.InvalidOperationException("Snapshot ended unexpectedly");
+                        throw new InvalidOperationException("snapshot ended unexpectedly");
                     }
 
                     idleStrategy.Idle(fragments);
@@ -572,7 +591,7 @@ namespace Adaptive.Cluster.Service
 
                 if (!RecordingPos.IsActive(counters, counterId, recordingId))
                 {
-                    throw new InvalidOperationException("Recording has stopped unexpectedly: " + recordingId);
+                    throw new InvalidOperationException("recording has stopped unexpectedly: " + recordingId);
                 }
 
                 archive.CheckForErrorResponse();
@@ -643,7 +662,7 @@ namespace Adaptive.Cluster.Service
 
             if (CountersReader.NULL_COUNTER_ID == heartbeatCounterId)
             {
-                throw new InvalidOperationException("Failed to find heartbeat counter");
+                throw new InvalidOperationException("failed to find heartbeat counter");
             }
 
             heartbeatCounter = new AtomicCounter(counters.ValuesBuffer, heartbeatCounterId);
@@ -657,7 +676,7 @@ namespace Adaptive.Cluster.Service
             }
             catch (ThreadInterruptedException)
             {
-                throw new AgentTerminationException("Unexpected interrupt during operation");
+                throw new AgentTerminationException("unexpected interrupt during operation");
             }
         }
 

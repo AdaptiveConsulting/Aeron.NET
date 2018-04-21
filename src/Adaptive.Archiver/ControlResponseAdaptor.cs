@@ -82,7 +82,7 @@ namespace Adaptive.Archiver
                     break;
 
                 default:
-                    throw new InvalidOperationException("Unknown templateId: " + templateId);
+                    throw new InvalidOperationException("unknown templateId: " + templateId);
             }
         }
 

@@ -2,7 +2,6 @@
 using Adaptive.Aeron;
 using Adaptive.Aeron.LogBuffer;
 using Adaptive.Agrona;
-using Adaptive.Agrona.Concurrent;
 using Adaptive.Cluster.Codecs;
 
 namespace Adaptive.Cluster.Client
@@ -44,9 +43,17 @@ namespace Adaptive.Cluster.Client
             switch (templateId)
             {
                 case SessionEventDecoder.TEMPLATE_ID:
-                    _sessionEventDecoder.Wrap(buffer, offset + MessageHeaderDecoder.ENCODED_LENGTH, _messageHeaderDecoder.BlockLength(), _messageHeaderDecoder.Version());
+                    _sessionEventDecoder.Wrap(
+                        buffer,
+                        offset + MessageHeaderDecoder.ENCODED_LENGTH,
+                        _messageHeaderDecoder.BlockLength(),
+                        _messageHeaderDecoder.Version());
 
-                    _listener.SessionEvent(_sessionEventDecoder.CorrelationId(), _sessionEventDecoder.ClusterSessionId(), _sessionEventDecoder.Code(), _sessionEventDecoder.Detail());
+                    _listener.SessionEvent(
+                        _sessionEventDecoder.CorrelationId(),
+                        _sessionEventDecoder.ClusterSessionId(),
+                        _sessionEventDecoder.Code(),
+                        _sessionEventDecoder.Detail());
                     break;
 
                 case NewLeaderEventDecoder.TEMPLATE_ID:
@@ -56,13 +63,27 @@ namespace Adaptive.Cluster.Client
                     break;
 
                 case SessionHeaderDecoder.TEMPLATE_ID:
-                    _sessionHeaderDecoder.Wrap(buffer, offset + MessageHeaderDecoder.ENCODED_LENGTH, _messageHeaderDecoder.BlockLength(), _messageHeaderDecoder.Version());
+                    _sessionHeaderDecoder.Wrap(
+                        buffer,
+                        offset + MessageHeaderDecoder.ENCODED_LENGTH,
+                        _messageHeaderDecoder.BlockLength(),
+                        _messageHeaderDecoder.Version());
 
-                    _listener.OnMessage(_sessionHeaderDecoder.CorrelationId(), _sessionHeaderDecoder.ClusterSessionId(), _sessionHeaderDecoder.Timestamp(), buffer, offset + SESSION_HEADER_LENGTH, length - SESSION_HEADER_LENGTH, header);
+                    _listener.OnMessage(
+                        _sessionHeaderDecoder.CorrelationId(),
+                        _sessionHeaderDecoder.ClusterSessionId(),
+                        _sessionHeaderDecoder.Timestamp(),
+                        buffer,
+                        offset + SESSION_HEADER_LENGTH,
+                        length - SESSION_HEADER_LENGTH,
+                        header);
+                    break;
+                
+                case ChallengeDecoder.TEMPLATE_ID:
                     break;
 
                 default:
-                    throw new InvalidOperationException("Unknown templateId: " + templateId);
+                    throw new InvalidOperationException("unknown templateId: " + templateId);
             }
         }
     }

@@ -170,7 +170,7 @@ namespace Adaptive.Cluster.Client
                     break;
                 
                 default:
-                    throw new InvalidOperationException("Unknown templateId: " + templateId);
+                    throw new InvalidOperationException("unknown templateId: " + templateId);
             }
 
             pollComplete = true;

@@ -59,7 +59,7 @@ namespace Adaptive.Cluster.Service
             }
             catch (ThreadInterruptedException)
             {
-                throw new AgentTerminationException("Unexpected interrupt during operation");
+                throw new AgentTerminationException("unexpected interrupt during operation");
             }
         }
 
@@ -67,7 +67,7 @@ namespace Adaptive.Cluster.Service
         {
             if (result == Publication.NOT_CONNECTED || result == Publication.CLOSED || result == Publication.MAX_POSITION_EXCEEDED)
             {
-                throw new System.InvalidOperationException("Unexpected publication state: " + result);
+                throw new System.InvalidOperationException("unexpected publication state: " + result);
             }
         }
 

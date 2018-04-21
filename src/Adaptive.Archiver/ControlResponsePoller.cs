@@ -163,7 +163,7 @@ namespace Adaptive.Archiver
                     break;
 
                 default:
-                    throw new System.InvalidOperationException("Unknown templateId: " + templateId);
+                    throw new System.InvalidOperationException("unknown templateId: " + templateId);
             }
 
             pollComplete = true;

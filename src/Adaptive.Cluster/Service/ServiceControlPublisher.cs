@@ -28,7 +28,7 @@ namespace Adaptive.Cluster.Service
             _publication?.Dispose();
         }
 
-        public void ScheduleTimer(long correlationId, long deadlineMs)
+        public bool ScheduleTimer(long correlationId, long deadlineMs)
         {
             int length = MessageHeaderEncoder.ENCODED_LENGTH + ScheduleTimerEncoder.BLOCK_LENGTH;
 
@@ -45,16 +45,16 @@ namespace Adaptive.Cluster.Service
 
                     _bufferClaim.Commit();
 
-                    return;
+                    return true;
                 }
 
                 CheckResult(result);
             } while (--attempts > 0);
 
-            throw new InvalidOperationException("Failed to schedule timer");
+            return false;
         }
 
-        public void CancelTimer(long correlationId)
+        public bool CancelTimer(long correlationId)
         {
             int length = MessageHeaderEncoder.ENCODED_LENGTH + CancelTimerEncoder.BLOCK_LENGTH;
 
@@ -70,13 +70,13 @@ namespace Adaptive.Cluster.Service
 
                     _bufferClaim.Commit();
 
-                    return;
+                    return true;
                 }
 
                 CheckResult(result);
             } while (--attempts > 0);
 
-            throw new InvalidOperationException("Failed to schedule timer");
+            return false;
         }
         
         public void AckAction(long logPosition, long leadershipTermId, int serviceId, ClusterAction action)
@@ -104,7 +104,7 @@ namespace Adaptive.Cluster.Service
                 CheckResult(result);
             } while (--attempts > 0);
 
-            throw new InvalidOperationException("Failed to send ACK");
+            throw new InvalidOperationException("failed to send ACK");
         }
 
         public void JoinLog(
@@ -140,10 +140,10 @@ namespace Adaptive.Cluster.Service
                 CheckResult(result);
             } while (--attempts > 0);
 
-            throw new InvalidOperationException("Failed to send log connect request");
+            throw new InvalidOperationException("failed to send log connect request");
         }
 
-        public void CloseSession(long clusterSessionId)
+        public bool CloseSession(long clusterSessionId)
         {
             int length = MessageHeaderEncoder.ENCODED_LENGTH + CloseSessionEncoder.BLOCK_LENGTH;
 
@@ -159,20 +159,20 @@ namespace Adaptive.Cluster.Service
 
                     _bufferClaim.Commit();
 
-                    return;
+                    return true;
                 }
 
                 CheckResult(result);
             } while (--attempts > 0);
 
-            throw new InvalidOperationException("Failed to schedule timer");
+            return false;
         }
 
         private static void CheckResult(long result)
         {
             if (result == Publication.NOT_CONNECTED || result == Publication.CLOSED || result == Publication.MAX_POSITION_EXCEEDED)
             {
-                throw new InvalidOperationException("Unexpected publication state: " + result);
+                throw new InvalidOperationException("unexpected publication state: " + result);
             }
         }
     }

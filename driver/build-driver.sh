@@ -40,7 +40,6 @@ git fetch -q
 [ -z "$AERON_VERSION" ] && AERON_VERSION=`git describe --tags origin/master`
 echo Building Aeron $AERON_VERSION
 git checkout -qf $AERON_VERSION
-git apply $AERON_PATCH
 ./gradlew -x test
 cd $WD
 
@@ -48,3 +47,5 @@ echo "Driver built from source" > $VERSION_FILE
 echo "Agrona: $AGRONA_VERSION" >> $VERSION_FILE
 echo "SBE:    $SBE_VERSION" >> $VERSION_FILE
 echo "Aeron:  $AERON_VERSION" >> $VERSION_FILE
+
+cp $AERON_BUILD_DIR/aeron-all/build/libs/aeron-all-*-SNAPSHOT.jar $WD/media-driver.jar
