@@ -279,7 +279,8 @@ namespace Adaptive.Cluster.Client
                             }
                             else
                             {
-                                publications[i].Dispose();
+                            
+                                publications[i]?.Dispose();
                             }
                         }
 
@@ -290,7 +291,7 @@ namespace Adaptive.Cluster.Client
                     {
                         for (int i = 0; i < memberCount; i++)
                         {
-                            publications[i].Dispose();
+                            CloseHelper.QuietDispose(publications[i]);
                         }
                         
                         throw new TimeoutException("awaiting connection to cluster");
@@ -308,6 +309,8 @@ namespace Adaptive.Cluster.Client
                 {
                     if (_nanoClock.NanoTime() > deadlineNs)
                     {
+                        CloseHelper.QuietDispose(publication);
+                        
                         throw new TimeoutException("awaiting connection to cluster");
                     }
 
