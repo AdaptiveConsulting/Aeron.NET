@@ -180,7 +180,7 @@ namespace Adaptive.Aeron
 
             _subscriberPosition.SetOrdered(newPosition);
         }
-        
+
         /// <summary>
         /// The counter id for the subscriber position counter.
         /// </summary>
@@ -405,7 +405,7 @@ namespace Adaptive.Aeron
             var initialOffset = (int) initialPosition & _termLengthMask;
             var resultingOffset = initialOffset;
             var termBuffer = ActiveTermBuffer(initialPosition);
-            var endOffset = Math.Min(termBuffer.Capacity, (int) (maxPosition - initialPosition + initialOffset));
+            var endOffset = (int) Math.Min(termBuffer.Capacity, (maxPosition - initialPosition + initialOffset));
             _header.Buffer = termBuffer;
 
             try
