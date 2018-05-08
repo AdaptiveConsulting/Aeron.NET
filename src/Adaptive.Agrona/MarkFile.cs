@@ -322,7 +322,7 @@ namespace Adaptive.Agrona
 
             try
             {
-                cncByteBuffer = IoUtil.MapNewOrExixtingFile(cncFile, totalFileLength);
+                cncByteBuffer = IoUtil.MapNewOrExistingFile(cncFile, totalFileLength);
 
                 UnsafeBuffer cncBuffer = new UnsafeBuffer(cncByteBuffer);
 

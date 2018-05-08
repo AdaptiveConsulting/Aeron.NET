@@ -15,7 +15,6 @@
  */
 
 using System;
-using System.ComponentModel;
 using System.IO;
 using System.IO.MemoryMappedFiles;
 using Adaptive.Agrona.Util;
@@ -78,7 +77,7 @@ namespace Adaptive.Agrona
         }
 
 
-        public static MappedByteBuffer MapNewOrExixtingFile(FileInfo cncFile, long length)
+        public static MappedByteBuffer MapNewOrExistingFile(FileInfo cncFile, long length)
         {
             var fileAccess = FileAccess.ReadWrite;
             var fileShare = FileShare.ReadWrite | FileShare.Delete;
@@ -111,11 +110,15 @@ namespace Adaptive.Agrona
 
             var fileAccess = FileAccess.ReadWrite;
             var fileShare = FileShare.ReadWrite | FileShare.Delete;
-            var memoryMappedFileAccess = MemoryMappedFileAccess.ReadWrite;
-
 
             var f = new FileStream(path, FileMode.Open, fileAccess, fileShare);
 
+            return OpenMemoryMappedFile(f);
+        }
+
+        private static MemoryMappedFile OpenMemoryMappedFile(FileStream f)
+        {
+            var memoryMappedFileAccess = MemoryMappedFileAccess.ReadWrite;
 #if NETFULL
             return MemoryMappedFile.CreateFromFile(f, null, 0, memoryMappedFileAccess, new MemoryMappedFileSecurity(), HandleInheritability.None, false);
 #else
@@ -123,6 +126,21 @@ namespace Adaptive.Agrona
                 false);
 #endif
         }
+
+        /// <summary>
+        /// Return MappedByteBuffer for entire file
+        /// <para>
+        /// The file itself will be closed, but the mapping will persist.
+        /// 
+        /// </para>
+        /// </summary>
+        /// <param name="fileStream">         of the file to map </param>
+        /// <returns> <seealso cref="MappedByteBuffer"/> for the file </returns>
+        public static MappedByteBuffer MapExistingFile(FileStream fileStream)
+        {
+            return new MappedByteBuffer(OpenMemoryMappedFile(fileStream));
+        }
+
 
         /// <summary>
         /// Check that file exists, open file, and return MappedByteBuffer for entire file

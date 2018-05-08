@@ -45,11 +45,6 @@ namespace Adaptive.Cluster.Service
             return image;
         }
 
-        public int UpperBoundCounterId()
-        {
-            return upperBound.CounterId();
-        }
-
         public bool IsCaughtUp()
         {
             return image.Position() >= upperBound.Get();

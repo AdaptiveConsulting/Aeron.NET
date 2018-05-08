@@ -1147,29 +1147,32 @@ namespace Adaptive.Aeron
             private void ConnectToDriver()
             {
                 long startTimeMs = _epochClock.Time();
+                long deadLineMs = startTimeMs + DriverTimeoutMs();
                 FileInfo cncFile = CncFile();
 
-                while (true)
+                while (null == _toDriverBuffer)
                 {
+                    cncFile.Refresh();
+                    
                     while (!cncFile.Exists || cncFile.Length <= 0)
                     {
-                        if (_epochClock.Time() > (startTimeMs + _driverTimeoutMs))
+                        if (_epochClock.Time() > deadLineMs)
                         {
                             throw new DriverTimeoutException("CnC file not created: " + cncFile.FullName);
                         }
 
-                        Sleep(16);
+                        Sleep(IdleSleepMs);
 
                         cncFile.Refresh();
                     }
 
-                    _cncByteBuffer = IoUtil.MapExistingFile(CncFile(), CncFileDescriptor.CNC_FILE);
+                    _cncByteBuffer = WaitForFileMapping(cncFile, deadLineMs, _epochClock);
                     _cncMetaDataBuffer = CncFileDescriptor.CreateMetaDataBuffer(_cncByteBuffer);
 
                     int cncVersion;
                     while (0 == (cncVersion = _cncMetaDataBuffer.GetIntVolatile(CncFileDescriptor.CncVersionOffset(0))))
                     {
-                        if (_epochClock.Time() > (startTimeMs + DriverTimeoutMs()))
+                        if (_epochClock.Time() > deadLineMs)
                         {
                             throw new DriverTimeoutException("CnC file is created but not initialised.");
                         }
@@ -1188,7 +1191,7 @@ namespace Adaptive.Aeron
 
                     while (0 == ringBuffer.ConsumerHeartbeatTime())
                     {
-                        if (_epochClock.Time() > (startTimeMs + DriverTimeoutMs()))
+                        if (_epochClock.Time() > deadLineMs)
                         {
                             throw new DriverTimeoutException("No driver heartbeat detected.");
                         }
@@ -1199,7 +1202,7 @@ namespace Adaptive.Aeron
                     long timeMs = _epochClock.Time();
                     if (ringBuffer.ConsumerHeartbeatTime() < (timeMs - DriverTimeoutMs()))
                     {
-                        if (timeMs > (startTimeMs + DriverTimeoutMs()))
+                        if (timeMs > deadLineMs)
                         {
                             throw new DriverTimeoutException("No driver heartbeat detected.");
                         }
@@ -1212,12 +1215,34 @@ namespace Adaptive.Aeron
                         continue;
                     }
 
-                    if (null == _toDriverBuffer)
+                    _toDriverBuffer = ringBuffer;
+                }
+            }
+
+            private static MappedByteBuffer WaitForFileMapping(FileInfo cncFile, long deadLineMs, IEpochClock epochClock)
+            {
+                try
+                {
+                    var fileAccess = FileAccess.ReadWrite;
+                    var fileShare = FileShare.ReadWrite | FileShare.Delete;
+
+                    var fileStream = cncFile.Open(FileMode.Open, fileAccess, fileShare);
+
+                    while (fileStream.Length < CncFileDescriptor.CNC_VERSION_FIELD_OFFSET + BitUtil.SIZE_OF_INT)
                     {
-                        _toDriverBuffer = ringBuffer;
+                        if (epochClock.Time() > deadLineMs)
+                        {
+                            throw new InvalidOperationException("CnC file is created but not populated.");
+                        }
+
+                        Sleep(IdleSleepMs);
                     }
 
-                    break;
+                    return IoUtil.MapExistingFile(fileStream);
+                }
+                catch (Exception ex)
+                {
+                    throw new InvalidOperationException("cannot open CnC file", ex);
                 }
             }
 
@@ -1235,7 +1260,7 @@ namespace Adaptive.Aeron
             {
                 FileInfo cncFile = new FileInfo(Path.Combine(_aeronDirectory.FullName, CncFileDescriptor.CNC_FILE));
 
-                if (cncFile.Exists)
+                if (cncFile.Exists && cncFile.Length > 0)
                 {
                     if (null != logProgress)
                     {
@@ -1259,7 +1284,7 @@ namespace Adaptive.Aeron
             {
                 FileInfo cncFile = new FileInfo(Path.Combine(directory.FullName, CncFileDescriptor.CNC_FILE));
 
-                if (cncFile.Exists)
+                if (cncFile.Exists && cncFile.Length > 0)
                 {
                     logger("INFO: Aeron CnC file " + cncFile + " exists");
 

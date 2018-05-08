@@ -29,6 +29,11 @@ namespace Adaptive.Archiver
         /// Represents a position that has not been set. Can be used when the position is not known.
         /// </summary>
         public const long NULL_POSITION = -1L;
+        
+        /// <summary>
+        /// Represents a length that has not been set. If null length is provided then replay the whole recorded stream.
+        /// </summary>
+        public const long NULL_LENGTH = -1L;
 
         private const int FRAGMENT_LIMIT = 10;
 
@@ -489,7 +494,7 @@ namespace Adaptive.Archiver
         /// </summary>
         /// <param name="recordingId">    to be replayed. </param>
         /// <param name="position">       from which the replay should begin or <seealso cref="#NULL_POSITION"/> if from the start. </param>
-        /// <param name="length">         of the stream to be replayed. Use <seealso cref="Long#MAX_VALUE"/> to follow a live recording. </param>
+        /// <param name="length">         of the stream to be replayed. Use <seealso cref="Long#MAX_VALUE"/> to follow a live recording or <see cref="NULL_LENGTH"/> to replay the whole stream of unknown length. </param>
         /// <param name="replayChannel">  to which the replay should be sent. </param>
         /// <param name="replayStreamId"> to which the replay should be sent. </param>
         /// <returns> the id of the replay session which will be the same as the <seealso cref="Image#sessionId()"/> of the received

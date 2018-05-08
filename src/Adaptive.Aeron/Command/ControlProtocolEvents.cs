@@ -77,6 +77,16 @@ namespace Adaptive.Aeron.Command
         /// Close indication from Client.
         /// </summary>
         public const int CLIENT_CLOSE = 0x0B;
+        
+        /// <summary>
+        /// Add Destination for existing Subscription.
+        /// </summary>
+        public const int ADD_RCV_DESTINATION = 0x0C;
+
+        /// <summary>
+        /// Remove Destination for existing Subscription.
+        /// </summary>
+        public const int REMOVE_RCV_DESTINATION = 0x0D;
 
         // Media Driver to Clients
 

@@ -181,7 +181,7 @@ namespace Adaptive.Cluster.Service
             /// <summary>
             /// Directory to use for the clustered service.
             /// </summary>
-            public const string CLUSTERED_SERVICE_DIR_PROP_NAME = "aeron.clustered.service.dir";
+            public const string CLUSTERED_SERVICE_DIR_PROP_NAME = "aeron.cluster.service.dir";
 
             /// <summary>
             /// Directory to use for the cluster container.

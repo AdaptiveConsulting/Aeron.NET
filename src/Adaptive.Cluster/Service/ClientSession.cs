@@ -114,12 +114,10 @@ namespace Adaptive.Cluster.Service
 
         internal void Connect(Aeron.Aeron aeron)
         {
-            if (null != _responsePublication)
+            if (null == _responsePublication)
             {
-                throw new InvalidOperationException("response publication already present");
+                _responsePublication = aeron.AddPublication(_responseChannel, _responseStreamId);
             }
-
-            _responsePublication = aeron.AddPublication(_responseChannel, _responseStreamId);
         }
 
         internal void MarkClosing()
