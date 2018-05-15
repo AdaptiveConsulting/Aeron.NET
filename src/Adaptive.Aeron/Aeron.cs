@@ -16,7 +16,6 @@
 
 using System;
 using System.IO;
-using System.Text;
 using System.Threading;
 using Adaptive.Aeron.Exceptions;
 using Adaptive.Aeron.LogBuffer;
@@ -82,7 +81,7 @@ namespace Adaptive.Aeron
          */
         public static readonly long KeepaliveIntervalNs = NanoUtil.FromMilliseconds(500);
 
-        private static readonly AtomicBoolean _isClosed = new AtomicBoolean(false);
+        private readonly AtomicBoolean _isClosed = new AtomicBoolean(false);
         private readonly long _clientId;
         private readonly ClientConductor _conductor;
         private readonly IRingBuffer _commandBuffer;
