@@ -23,9 +23,10 @@ using Adaptive.Agrona.Concurrent;
 namespace Adaptive.Aeron.Protocol
 {
     /// <summary>
-    /// HeaderFlyweight for Data Header
+    /// HeaderFlyweight for Data Frame header of a message fragment.
     /// 
-    /// <a href="https://github.com/real-logic/Aeron/wiki/Protocol-Specification#data-frame">Data Frame</a>
+    /// <a target="_blank" href="https://github.com/real-logic/aeron/wiki/Protocol-Specification#data-frame">Data Frame</a>
+    /// wiki page.
     /// </summary>
     public class DataHeaderFlyweight : HeaderFlyweight
     {

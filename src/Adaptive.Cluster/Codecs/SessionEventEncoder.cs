@@ -9,8 +9,8 @@ namespace Adaptive.Cluster.Codecs {
 
 public class SessionEventEncoder
 {
-    public const ushort BLOCK_LENGTH = 20;
-    public const ushort TEMPLATE_ID = 1;
+    public const ushort BLOCK_LENGTH = 24;
+    public const ushort TEMPLATE_ID = 2;
     public const ushort SCHEMA_ID = 1;
     public const ushort SCHEMA_VERSION = 1;
 
@@ -160,9 +160,41 @@ public class SessionEventEncoder
     }
 
 
-    public static int CodeEncodingOffset()
+    public static int LeaderMemberIdEncodingOffset()
     {
         return 16;
+    }
+
+    public static int LeaderMemberIdEncodingLength()
+    {
+        return 4;
+    }
+
+    public static int LeaderMemberIdNullValue()
+    {
+        return -2147483648;
+    }
+
+    public static int LeaderMemberIdMinValue()
+    {
+        return -2147483647;
+    }
+
+    public static int LeaderMemberIdMaxValue()
+    {
+        return 2147483647;
+    }
+
+    public SessionEventEncoder LeaderMemberId(int value)
+    {
+        _buffer.PutInt(_offset + 16, value, ByteOrder.LittleEndian);
+        return this;
+    }
+
+
+    public static int CodeEncodingOffset()
+    {
+        return 20;
     }
 
     public static int CodeEncodingLength()
@@ -172,13 +204,13 @@ public class SessionEventEncoder
 
     public SessionEventEncoder Code(EventCode value)
     {
-        _buffer.PutInt(_offset + 16, (int)value, ByteOrder.LittleEndian);
+        _buffer.PutInt(_offset + 20, (int)value, ByteOrder.LittleEndian);
         return this;
     }
 
     public static int DetailId()
     {
-        return 4;
+        return 5;
     }
 
     public static string DetailCharacterEncoding()

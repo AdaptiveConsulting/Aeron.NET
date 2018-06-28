@@ -40,7 +40,7 @@ namespace Adaptive.Archiver
         /// <returns> the number of fragments read during the operation. Zero if no events are available. </returns>
         public virtual int Poll()
         {
-            templateId = -1;
+            templateId = Aeron.Aeron.NULL_VALUE;
             pollComplete = false;
 
             return subscription.Poll(this, 1);
@@ -113,7 +113,7 @@ namespace Adaptive.Archiver
                     recordingId = recordingStartedDecoder.RecordingId();
                     recordingStartPosition = recordingStartedDecoder.StartPosition();
                     recordingPosition = recordingStartPosition;
-                    recordingStopPosition = -1;
+                    recordingStopPosition = Aeron.Aeron.NULL_VALUE;
                     break;
 
                 case RecordingProgressDecoder.TEMPLATE_ID:
@@ -122,7 +122,7 @@ namespace Adaptive.Archiver
                     recordingId = recordingProgressDecoder.RecordingId();
                     recordingStartPosition = recordingProgressDecoder.StartPosition();
                     recordingPosition = recordingProgressDecoder.Position();
-                    recordingStopPosition = -1;
+                    recordingStopPosition = Aeron.Aeron.NULL_VALUE;
                     break;
 
                 case RecordingStoppedDecoder.TEMPLATE_ID:
@@ -135,7 +135,7 @@ namespace Adaptive.Archiver
                     break;
 
                 default:
-                    throw new System.InvalidOperationException("unknown templateId: " + templateId);
+                    throw new ArchiveException("unknown templateId: " + templateId);
             }
 
             pollComplete = true;

@@ -10,7 +10,7 @@ namespace Adaptive.Cluster.Codecs {
 public class CancelTimerDecoder
 {
     public const ushort BLOCK_LENGTH = 8;
-    public const ushort TEMPLATE_ID = 31;
+    public const ushort TEMPLATE_ID = 32;
     public const ushort SCHEMA_ID = 1;
     public const ushort SCHEMA_VERSION = 1;
 

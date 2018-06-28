@@ -7,19 +7,19 @@ using Adaptive.Agrona;
 
 namespace Adaptive.Cluster.Codecs {
 
-public class SequencerEncoder
+public class CatchupPositionEncoder
 {
-    public const ushort BLOCK_LENGTH = 8;
-    public const ushort TEMPLATE_ID = 105;
+    public const ushort BLOCK_LENGTH = 20;
+    public const ushort TEMPLATE_ID = 56;
     public const ushort SCHEMA_ID = 1;
     public const ushort SCHEMA_VERSION = 1;
 
-    private SequencerEncoder _parentMessage;
+    private CatchupPositionEncoder _parentMessage;
     private IMutableDirectBuffer _buffer;
     protected int _offset;
     protected int _limit;
 
-    public SequencerEncoder()
+    public CatchupPositionEncoder()
     {
         _parentMessage = this;
     }
@@ -59,7 +59,7 @@ public class SequencerEncoder
         return _offset;
     }
 
-    public SequencerEncoder Wrap(IMutableDirectBuffer buffer, int offset)
+    public CatchupPositionEncoder Wrap(IMutableDirectBuffer buffer, int offset)
     {
         this._buffer = buffer;
         this._offset = offset;
@@ -68,7 +68,7 @@ public class SequencerEncoder
         return this;
     }
 
-    public SequencerEncoder WrapAndApplyHeader(
+    public CatchupPositionEncoder WrapAndApplyHeader(
         IMutableDirectBuffer buffer, int offset, MessageHeaderEncoder headerEncoder)
     {
         headerEncoder
@@ -96,34 +96,98 @@ public class SequencerEncoder
         this._limit = limit;
     }
 
-    public static int NextSessionIdEncodingOffset()
+    public static int LeadershipTermIdEncodingOffset()
     {
         return 0;
     }
 
-    public static int NextSessionIdEncodingLength()
+    public static int LeadershipTermIdEncodingLength()
     {
         return 8;
     }
 
-    public static long NextSessionIdNullValue()
+    public static long LeadershipTermIdNullValue()
     {
         return -9223372036854775808L;
     }
 
-    public static long NextSessionIdMinValue()
+    public static long LeadershipTermIdMinValue()
     {
         return -9223372036854775807L;
     }
 
-    public static long NextSessionIdMaxValue()
+    public static long LeadershipTermIdMaxValue()
     {
         return 9223372036854775807L;
     }
 
-    public SequencerEncoder NextSessionId(long value)
+    public CatchupPositionEncoder LeadershipTermId(long value)
     {
         _buffer.PutLong(_offset + 0, value, ByteOrder.LittleEndian);
+        return this;
+    }
+
+
+    public static int LogPositionEncodingOffset()
+    {
+        return 8;
+    }
+
+    public static int LogPositionEncodingLength()
+    {
+        return 8;
+    }
+
+    public static long LogPositionNullValue()
+    {
+        return -9223372036854775808L;
+    }
+
+    public static long LogPositionMinValue()
+    {
+        return -9223372036854775807L;
+    }
+
+    public static long LogPositionMaxValue()
+    {
+        return 9223372036854775807L;
+    }
+
+    public CatchupPositionEncoder LogPosition(long value)
+    {
+        _buffer.PutLong(_offset + 8, value, ByteOrder.LittleEndian);
+        return this;
+    }
+
+
+    public static int FollowerMemberIdEncodingOffset()
+    {
+        return 16;
+    }
+
+    public static int FollowerMemberIdEncodingLength()
+    {
+        return 4;
+    }
+
+    public static int FollowerMemberIdNullValue()
+    {
+        return -2147483648;
+    }
+
+    public static int FollowerMemberIdMinValue()
+    {
+        return -2147483647;
+    }
+
+    public static int FollowerMemberIdMaxValue()
+    {
+        return 2147483647;
+    }
+
+    public CatchupPositionEncoder FollowerMemberId(int value)
+    {
+        _buffer.PutInt(_offset + 16, value, ByteOrder.LittleEndian);
         return this;
     }
 
@@ -136,7 +200,7 @@ public class SequencerEncoder
 
     public StringBuilder AppendTo(StringBuilder builder)
     {
-        SequencerDecoder writer = new SequencerDecoder();
+        CatchupPositionDecoder writer = new CatchupPositionDecoder();
         writer.Wrap(_buffer, _offset, BLOCK_LENGTH, SCHEMA_VERSION);
 
         return writer.AppendTo(builder);

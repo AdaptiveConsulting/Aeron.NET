@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using Adaptive.Aeron.LogBuffer;
+using Adaptive.Agrona.Collections;
+using Adaptive.Agrona.Concurrent;
 
 namespace Adaptive.Aeron
 {
@@ -37,11 +40,17 @@ namespace Adaptive.Aeron
         /// </summary>
         public const string SPY_QUALIFIER = "aeron-spy";
 
+        public const long INVALID_TAG = Aeron.NULL_VALUE;
+
+        private const int CHANNEL_TAG_INDEX = 0;
+        private const int ENTITY_TAG_INDEX = 1;
+
         private static readonly string AERON_PREFIX = AERON_SCHEME + ":";
 
         private string _prefix;
         private string _media;
         private readonly IDictionary<string, string> _params;
+        private string[] _tags;
 
         /// <summary>
         /// Construct with the components provided to avoid parsing.
@@ -54,6 +63,8 @@ namespace Adaptive.Aeron
             _prefix = prefix;
             _media = media;
             _params = @params;
+
+            _tags = SplitTags(_params[Aeron.Context.TAGS_PARAM_NAME]);
         }
 
         /// <summary>
@@ -151,6 +162,24 @@ namespace Adaptive.Aeron
         {
             return _params[key] = value;
         }
+        
+        /// <summary>
+        /// Remove a key pair in the map of params.
+        /// </summary>
+        /// <param name="key"> of the param to be removed. </param>
+        /// <returns> the previous value of the param or null. </returns>
+        public string Remove(string key)
+        {
+            String ret = null;
+            
+            if (_params.ContainsKey(key))
+            {
+                ret = _params[key];
+            }
+            
+            _params.Remove(key);
+            return ret;
+        }
 
         /// <summary>
         /// Does the URI contain a value for the given key.
@@ -160,6 +189,24 @@ namespace Adaptive.Aeron
         public bool ContainsKey(string key)
         {
             return _params.ContainsKey(key);
+        }
+
+        /// <summary>
+        /// Get the channel tag.
+        /// </summary>
+        /// <returns> channel tag. </returns>
+        public string ChannelTag()
+        {
+            return (_tags.Length > CHANNEL_TAG_INDEX) ? _tags[CHANNEL_TAG_INDEX] : null;
+        }
+
+        /// <summary>
+        /// Get the entity tag.
+        /// </summary>
+        /// <returns> entity tag. </returns>
+        public string EntityTag()
+        {
+            return (_tags.Length > ENTITY_TAG_INDEX) ? _tags[ENTITY_TAG_INDEX] : null;
         }
 
         /// <summary>
@@ -201,6 +248,25 @@ namespace Adaptive.Aeron
             return sb.ToString();
         }
 
+        /// <summary>
+        /// Initialise a channel for restarting a publication at a given position.
+        /// </summary>
+        /// <param name="position">      at which the publication should be started. </param>
+        /// <param name="initialTermId"> what which the stream would start. </param>
+        /// <param name="termLength">    for the stream. </param>
+        public void InitialPosition(long position, int initialTermId, int termLength)
+        {
+            int bitsToShift = LogBufferDescriptor.PositionBitsToShift(termLength);
+            int termId = LogBufferDescriptor.ComputeTermIdFromPosition(position, bitsToShift, initialTermId);
+            int termOffset = (int)(position & (termLength - 1));
+
+            Put(Aeron.Context.INITIAL_TERM_ID_PARAM_NAME, Convert.ToString(initialTermId));
+            Put(Aeron.Context.TERM_ID_PARAM_NAME, Convert.ToString(termId));
+            Put(Aeron.Context.TERM_OFFSET_PARAM_NAME, Convert.ToString(termOffset));
+            Put(Aeron.Context.TERM_LENGTH_PARAM_NAME, Convert.ToString(termLength));
+        }
+
+        
         /// <summary>
         /// Parse a <seealso cref="string"/> which contains an Aeron URI.
         /// </summary>
@@ -322,11 +388,30 @@ namespace Adaptive.Aeron
         /// <returns> new string that represents channel with sessionId added. </returns>
         public static string AddSessionId(string channel, int sessionId)
         {
-            ChannelUri channelUri = ChannelUri.Parse(channel);
-
+            ChannelUri channelUri = Parse(channel);
             channelUri.Put(Aeron.Context.SESSION_ID_PARAM_NAME, Convert.ToString(sessionId));
 
             return channelUri.ToString();
+        }
+        
+        /// <summary>
+        /// Is the param tagged? That is does it start with the "tag:" prefix.
+        /// </summary>
+        /// <param name="paramValue"> to check if tagged. </param>
+        /// <returns> true if tagged or false if not. </returns>
+        public static bool IsTagged(string paramValue)
+        {
+            return StartsWith(paramValue, "tag:");
+        }
+
+        /// <summary>
+        /// Get the value of the tag from a given parameter.
+        /// </summary>
+        /// <param name="paramValue"> to extra the tag value from. </param>
+        /// <returns> the value of the tag or <seealso cref="INVALID_TAG"/> if not tagged. </returns>
+        public static long GetTag(string paramValue)
+        {
+            return IsTagged(paramValue) ? long.Parse(paramValue.Substring(4, paramValue.Length - 4)) : INVALID_TAG;
         }
 
         private static bool StartsWith(string input, int position, string prefix)
@@ -350,6 +435,45 @@ namespace Adaptive.Aeron
         private static bool StartsWith(string input, string prefix)
         {
             return StartsWith(input, 0, prefix);
+        }
+        
+        private static string[] SplitTags(string tags)
+        {
+            string[] stringArray = new string[0];
+
+            if (null != tags)
+            {
+                int currentStartIndex = 0;
+                int tagIndex = 0;
+                stringArray = new string[2];
+                int length = tags.Length;
+
+                for (int i = 0; i < length; i++)
+                {
+                    if (tags[i] == ',')
+                    {
+                        string tag = null;
+
+                        if (i - currentStartIndex > 0)
+                        {
+                            tag = tags.Substring(currentStartIndex, i - currentStartIndex);
+                            currentStartIndex = i + 1;
+                        }
+
+                        stringArray = ArrayUtil.EnsureCapacity(stringArray, tagIndex + 1);
+                        stringArray[tagIndex] = tag;
+                        tagIndex++;
+                    }
+                }
+
+                if ((length - currentStartIndex) > 0)
+                {
+                    stringArray = ArrayUtil.EnsureCapacity(stringArray, tagIndex + 1);
+                    stringArray[tagIndex] = tags.Substring(currentStartIndex, length - currentStartIndex);
+                }
+            }
+
+            return stringArray;
         }
     }
 }

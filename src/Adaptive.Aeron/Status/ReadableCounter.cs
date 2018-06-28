@@ -27,7 +27,7 @@ namespace Adaptive.Aeron.Status
         /// Construct a view of an existing counter.
         /// </summary>
         /// <param name="countersReader"> for getting access to the buffers. </param>
-        /// <param name="registrationId"> assigned by the driver for the counter or -1 if not known. </param>
+        /// <param name="registrationId"> assigned by the driver for the counter or <see cref="Aeron.NULL_VALUE"/> if not known. </param>
         /// <param name="counterId">      for the counter to be viewed. </param>
         /// <exception cref="InvalidOperationException"> if the id has for the counter has not been allocated. </exception>
         public ReadableCounter(CountersReader countersReader, long registrationId, int counterId)
@@ -55,7 +55,7 @@ namespace Adaptive.Aeron.Status
         /// <param name="countersReader"> for getting access to the buffers. </param>
         /// <param name="counterId">      for the counter to be viewed. </param>
         /// <exception cref="InvalidOperationException"> if the id has for the counter has not been allocated. </exception>
-        public ReadableCounter(CountersReader countersReader, int counterId) : this(countersReader, -1, counterId)
+        public ReadableCounter(CountersReader countersReader, int counterId) : this(countersReader, Aeron.NULL_VALUE, counterId)
         {
         }
 

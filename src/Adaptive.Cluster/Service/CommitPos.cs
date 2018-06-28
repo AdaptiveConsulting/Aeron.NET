@@ -1,7 +1,8 @@
-﻿using System;
-using Adaptive.Aeron;
+﻿using Adaptive.Aeron;
 using Adaptive.Agrona;
+using Adaptive.Agrona.Concurrent;
 using Adaptive.Agrona.Concurrent.Status;
+using Adaptive.Cluster.Client;
 
 namespace Adaptive.Cluster.Service
 {
@@ -17,13 +18,11 @@ namespace Adaptive.Cluster.Service
     ///  |             Recording ID for the leadership term              |
     ///  |                                                               |
     ///  +---------------------------------------------------------------+
-    ///  |            Log Position at base of leadership term            |
+    ///  |                        Log Position                           |
     ///  |                                                               |
     ///  +---------------------------------------------------------------+
-    ///  |                     Leadership Term ID                        |
+    ///  |                       Max Log Position                        |
     ///  |                                                               |
-    ///  +---------------------------------------------------------------+
-    ///  |                      Log Session ID                           |
     ///  +---------------------------------------------------------------+
     /// 
     /// </summary>
@@ -35,19 +34,14 @@ namespace Adaptive.Cluster.Service
         public const int COMMIT_POSITION_TYPE_ID = 203;
 
         /// <summary>
-        /// Represents a null value if the counter is not found.
-        /// </summary>
-        public const long NULL_VALUE = -1;
-
-        /// <summary>
         /// Human readable name for the counter.
         /// </summary>
         public const string NAME = "commit-pos: leadershipTermId=";
 
-        public static readonly int TERM_BASE_LOG_POSITION_OFFSET = 0;
-        public static readonly int LEADERSHIP_TERM_ID_OFFSET = TERM_BASE_LOG_POSITION_OFFSET + BitUtil.SIZE_OF_LONG;
-        public static readonly int LEADERSHIP_TERM_LENGTH_OFFSET = LEADERSHIP_TERM_ID_OFFSET + BitUtil.SIZE_OF_LONG;
-        public static readonly int KEY_LENGTH = LEADERSHIP_TERM_LENGTH_OFFSET + BitUtil.SIZE_OF_INT;
+        public static readonly int LEADERSHIP_TERM_ID_OFFSET = 0;
+        public static readonly int LOG_POSITION_OFFSET = LEADERSHIP_TERM_ID_OFFSET + BitUtil.SIZE_OF_LONG;
+        public static readonly int MAX_LOG_POSITION_OFFSET = LOG_POSITION_OFFSET + BitUtil.SIZE_OF_LONG;
+        public static readonly int KEY_LENGTH = MAX_LOG_POSITION_OFFSET + BitUtil.SIZE_OF_LONG;
 
         /// <summary>
         /// Allocate a counter to represent the commit position on stream for the current leadership term.
@@ -55,19 +49,19 @@ namespace Adaptive.Cluster.Service
         /// <param name="aeron">                to allocate the counter. </param>
         /// <param name="tempBuffer">           to use for building the key and label without allocation. </param>
         /// <param name="leadershipTermId">     of the log at the beginning of the leadership term. </param>
-        /// <param name="termBaseLogPosition">  of the log at the beginning of the leadership term. </param>
-        /// <param name="leadershipTermLength"> length in bytes of the leadership term for the log. </param>
+        /// <param name="logPosition">  of the log at the beginning of the leadership term. </param>
+        /// <param name="maxLogPosition"> length in bytes of the leadership term for the log. </param>
         /// <returns> the <seealso cref="Counter"/> for the commit position. </returns>
         public static Counter Allocate(
             Aeron.Aeron aeron,
             IMutableDirectBuffer tempBuffer,
             long leadershipTermId,
-            long termBaseLogPosition,
-            long leadershipTermLength)
+            long logPosition,
+            long maxLogPosition)
         {
             tempBuffer.PutLong(LEADERSHIP_TERM_ID_OFFSET, leadershipTermId);
-            tempBuffer.PutLong(TERM_BASE_LOG_POSITION_OFFSET, termBaseLogPosition);
-            tempBuffer.PutLong(LEADERSHIP_TERM_LENGTH_OFFSET, leadershipTermLength);
+            tempBuffer.PutLong(LOG_POSITION_OFFSET, logPosition);
+            tempBuffer.PutLong(MAX_LOG_POSITION_OFFSET, maxLogPosition);
 
 
             int labelOffset = 0;
@@ -82,7 +76,7 @@ namespace Adaptive.Cluster.Service
         /// </summary>
         /// <param name="counters">  to search within. </param>
         /// <param name="counterId"> for the active commit position. </param>
-        /// <returns> the leadership term id if found otherwise <seealso cref="NULL_VALUE"/>. </returns>
+        /// <returns> the leadership term id if found otherwise <see cref="Aeron.NULL_VALUE"/>. </returns>
         public static long GetLeadershipTermId(CountersReader counters, int counterId)
         {
             IDirectBuffer buffer = counters.MetaDataBuffer;
@@ -97,16 +91,16 @@ namespace Adaptive.Cluster.Service
                 }
             }
 
-            return NULL_VALUE;
+            return Aeron.Aeron.NULL_VALUE;
         }
 
         /// <summary>
-        /// Get the accumulated log position as a base for this leadership term.
+        /// Get the log position at which the commit tracking will begin.
         /// </summary>
         /// <param name="counters">  to search within. </param>
         /// <param name="counterId"> for the active commit position. </param>
-        /// <returns> the base log position if found otherwise <seealso cref="NULL_VALUE"/>. </returns>
-        public static long GetTermBaseLogPosition(CountersReader counters, int counterId)
+        /// <returns> the base log position if found otherwise <see cref="Aeron.NULL_VALUE"/>. </returns>
+        public static long GetLogPosition(CountersReader counters, int counterId)
         {
             IDirectBuffer buffer = counters.MetaDataBuffer;
 
@@ -116,22 +110,22 @@ namespace Adaptive.Cluster.Service
 
                 if (buffer.GetInt(recordOffset + CountersReader.TYPE_ID_OFFSET) == COMMIT_POSITION_TYPE_ID)
                 {
-                    return buffer.GetLong(recordOffset + CountersReader.KEY_OFFSET + TERM_BASE_LOG_POSITION_OFFSET);
+                    return buffer.GetLong(recordOffset + CountersReader.KEY_OFFSET + LOG_POSITION_OFFSET);
                 }
             }
 
-            return NULL_VALUE;
+            return Aeron.Aeron.NULL_VALUE;
         }
 
         /// <summary>
-        /// Get the length in bytes for the leadership term.
+        /// Get the maximum log position that a tracking session can reach. The get operation has volatile semantics.
         /// </summary>
         /// <param name="counters">  to search within. </param>
         /// <param name="counterId"> for the active commit position. </param>
-        /// <returns> the base log position if found otherwise <seealso cref="#NULL_VALUE"/>. </returns>
-        public static long GetLeadershipTermLength(CountersReader counters, int counterId)
+        /// <returns> the log position if found otherwise <see cref="Aeron.NULL_VALUE"/>. </returns>
+        public static long GetMaxLogPosition(CountersReader counters, int counterId)
         {
-            IDirectBuffer buffer = counters.MetaDataBuffer;
+            IAtomicBuffer buffer = counters.MetaDataBuffer;
 
             if (counters.GetCounterState(counterId) == CountersReader.RECORD_ALLOCATED)
             {
@@ -139,12 +133,38 @@ namespace Adaptive.Cluster.Service
 
                 if (buffer.GetInt(recordOffset + CountersReader.TYPE_ID_OFFSET) == COMMIT_POSITION_TYPE_ID)
                 {
-                    return buffer.GetLong(recordOffset + CountersReader.KEY_OFFSET + LEADERSHIP_TERM_LENGTH_OFFSET);
+                    return buffer.GetLongVolatile(recordOffset + CountersReader.KEY_OFFSET + MAX_LOG_POSITION_OFFSET);
                 }
             }
 
-            return NULL_VALUE;
+            return Aeron.Aeron.NULL_VALUE;
         }
+
+        /// <summary>
+        /// Set the maximum log position that a tracking session can reach. The set operation has volatile semantics.
+        /// </summary>
+        /// <param name="counters">  to search within. </param>
+        /// <param name="counterId"> for the active commit position. </param>
+        /// <param name="value">     to set for the new max position. </param>
+        /// <exception cref="ClusterException"> if the counter id is not valid. </exception>
+        public static void SetMaxLogPosition(CountersReader counters, int counterId, long value)
+        {
+            IAtomicBuffer buffer = counters.MetaDataBuffer;
+
+            if (counters.GetCounterState(counterId) == CountersReader.RECORD_ALLOCATED)
+            {
+                int recordOffset = CountersReader.MetaDataOffset(counterId);
+
+                if (buffer.GetInt(recordOffset + CountersReader.TYPE_ID_OFFSET) == COMMIT_POSITION_TYPE_ID)
+                {
+                    buffer.PutLongVolatile(recordOffset + CountersReader.KEY_OFFSET + MAX_LOG_POSITION_OFFSET, value);
+                    return;
+                }
+            }
+
+            throw new ClusterException("Counter id not valid: " + counterId);
+        }
+
 
         /// <summary>
         /// Is the counter still active and log still recording?

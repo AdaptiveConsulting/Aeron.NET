@@ -12,6 +12,8 @@ namespace Adaptive.Aeron
     /// <seealso cref="ChannelUri"/>
     public class ChannelUriStringBuilder
     {
+        public const string TAG_PREFIX = "tag:";
+
         private readonly StringBuilder _sb = new StringBuilder(64);
 
         private string _prefix;
@@ -20,6 +22,7 @@ namespace Adaptive.Aeron
         private string _networkInterface;
         private string _controlEndpoint;
         private string _controlMode;
+        private string _tags;
         private bool? _reliable;
         private int? _ttl;
         private int? _mtu;
@@ -29,6 +32,7 @@ namespace Adaptive.Aeron
         private int? _termOffset;
         private int? _sessionId;
         private int? _linger;
+        private bool _isSessionIdTagged;
 
         /// <summary>
         /// Clear out all the values thus setting back to the initial state.
@@ -42,6 +46,7 @@ namespace Adaptive.Aeron
             _networkInterface = null;
             _controlEndpoint = null;
             _controlMode = null;
+            _tags = null;
             _reliable = null;
             _ttl = null;
             _mtu = null;
@@ -50,6 +55,7 @@ namespace Adaptive.Aeron
             _termId = null;
             _termOffset = null;
             _sessionId = null;
+            _isSessionIdTagged = false;
 
             return this;
         }
@@ -460,7 +466,7 @@ namespace Adaptive.Aeron
         {
             return _sessionId;
         }
-        
+
         /// <summary>
         /// Set the time a publication will linger in nanoseconds after being drained. This time is so that tail loss
         /// can be recovered.
@@ -490,6 +496,66 @@ namespace Adaptive.Aeron
             return _linger;
         }
 
+        /// <summary>
+        /// Set the tags for a channel, and/or publication or subscription.
+        /// </summary>
+        /// <param name="tags"> for the channel, publication or subscription. </param>
+        /// <returns> this for a fluent API. </returns>
+        /// <seealso cref="Aeron.Context#TAGS_PARAM_NAME"/>
+        public ChannelUriStringBuilder Tags(string tags)
+        {
+            _tags = tags;
+            return this;
+        }
+
+        /// <summary>
+        /// Get the tags for a channel, and/or publication or subscription.
+        /// </summary>
+        /// <returns> the tags for a channel, publication or subscription. </returns>
+        /// <seealso cref="Aeron.Context#TAGS_PARAM_NAME"/>
+        public string Tags()
+        {
+            return _tags;
+        }
+
+        /// <summary>
+        /// Toggle the value for <seealso cref="SessionId()"/> being tagged or not.
+        /// </summary>
+        /// <param name="isSessionIdTagged"> for session id </param>
+        /// <returns> this for a fluent API. </returns>
+        public ChannelUriStringBuilder IsSessionIdTagged(bool isSessionIdTagged)
+        {
+            _isSessionIdTagged = isSessionIdTagged;
+            return this;
+        }
+
+        /// <summary>
+        /// Is the value for <seealso cref="SessionId()"/> a tagged.
+        /// </summary>
+        /// <returns> whether the value for <seealso cref="SessionId()"/> a tag reference or not. </returns>
+        public bool IsSessionIdTagged()
+        {
+            return _isSessionIdTagged;
+        }
+
+        /// <summary>
+        /// Initialise a channel for restarting a publication at a given position.
+        /// </summary>
+        /// <param name="position">      at which the publication should be started. </param>
+        /// <param name="initialTermId"> what which the stream would start. </param>
+        /// <param name="termLength">    for the stream. </param>
+        /// <returns> this for a fluent API. </returns>
+        public ChannelUriStringBuilder InitialPosition(long position, int initialTermId, int termLength)
+        {
+            int bitsToShift = LogBufferDescriptor.PositionBitsToShift(termLength);
+
+            _initialTermId = initialTermId;
+            _termId = LogBufferDescriptor.ComputeTermIdFromPosition(position, bitsToShift, initialTermId);
+            _termOffset = (int) (position & (termLength - 1));
+            _termLength = termLength;
+
+            return this;
+        }
 
         /// <summary>
         /// Build a channel URI String for the given parameters.
@@ -506,6 +572,11 @@ namespace Adaptive.Aeron
 
             _sb.Append(ChannelUri.AERON_SCHEME).Append(':').Append(_media).Append('?');
 
+            if (null != _tags)
+            {
+                _sb.Append(Aeron.Context.TAGS_PARAM_NAME).Append('=').Append(_tags).Append('|');
+            }
+            
             if (null != _endpoint)
             {
                 _sb.Append(Aeron.Context.ENDPOINT_PARAM_NAME).Append('=').Append(_endpoint).Append('|');
@@ -565,14 +636,14 @@ namespace Adaptive.Aeron
 
             if (null != _sessionId)
             {
-                _sb.Append(Aeron.Context.SESSION_ID_PARAM_NAME).Append('=').Append(_sessionId.Value).Append('|');
+                _sb.Append(Aeron.Context.SESSION_ID_PARAM_NAME).Append('=').Append(PrefixTag(_isSessionIdTagged, _sessionId.Value)).Append('|');
             }
-            
+
             if (null != _linger)
             {
                 _sb.Append(Aeron.Context.LINGER_PARAM_NAME).Append('=').Append(_linger.Value).Append('|');
             }
-           
+
             char lastChar = _sb[_sb.Length - 1];
             if (lastChar == '|' || lastChar == '?')
             {
@@ -590,6 +661,11 @@ namespace Adaptive.Aeron
         public static int? IntegerValueOf(string value)
         {
             return null == value ? (int?) null : Convert.ToInt32(value);
+        }
+
+        private static string PrefixTag(bool isTagged, int value)
+        {
+            return isTagged ? TAG_PREFIX + value : value.ToString();
         }
     }
 }

@@ -31,7 +31,7 @@ namespace Adaptive.Aeron.Status
         /// <summary>
         /// No counter ID is allocated yet.
         /// </summary>
-        public const int NO_ID_ALLOCATED = -1;
+        public const int NO_ID_ALLOCATED = Aeron.NULL_VALUE;
 
         /// <summary>
         /// Offset in the key meta data for the channel of the counter.

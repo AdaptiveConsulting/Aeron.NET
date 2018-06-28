@@ -7,19 +7,19 @@ using Adaptive.Agrona;
 
 namespace Adaptive.Cluster.Codecs {
 
-public class QueryResponseEncoder
+public class RecordingLogQueryEncoder
 {
-    public const ushort BLOCK_LENGTH = 16;
-    public const ushort TEMPLATE_ID = 60;
+    public const ushort BLOCK_LENGTH = 32;
+    public const ushort TEMPLATE_ID = 63;
     public const ushort SCHEMA_ID = 1;
     public const ushort SCHEMA_VERSION = 1;
 
-    private QueryResponseEncoder _parentMessage;
+    private RecordingLogQueryEncoder _parentMessage;
     private IMutableDirectBuffer _buffer;
     protected int _offset;
     protected int _limit;
 
-    public QueryResponseEncoder()
+    public RecordingLogQueryEncoder()
     {
         _parentMessage = this;
     }
@@ -59,7 +59,7 @@ public class QueryResponseEncoder
         return _offset;
     }
 
-    public QueryResponseEncoder Wrap(IMutableDirectBuffer buffer, int offset)
+    public RecordingLogQueryEncoder Wrap(IMutableDirectBuffer buffer, int offset)
     {
         this._buffer = buffer;
         this._offset = offset;
@@ -68,7 +68,7 @@ public class QueryResponseEncoder
         return this;
     }
 
-    public QueryResponseEncoder WrapAndApplyHeader(
+    public RecordingLogQueryEncoder WrapAndApplyHeader(
         IMutableDirectBuffer buffer, int offset, MessageHeaderEncoder headerEncoder)
     {
         headerEncoder
@@ -121,7 +121,7 @@ public class QueryResponseEncoder
         return 9223372036854775807L;
     }
 
-    public QueryResponseEncoder CorrelationId(long value)
+    public RecordingLogQueryEncoder CorrelationId(long value)
     {
         _buffer.PutLong(_offset + 0, value, ByteOrder.LittleEndian);
         return this;
@@ -153,97 +153,122 @@ public class QueryResponseEncoder
         return 2147483647;
     }
 
-    public QueryResponseEncoder RequestMemberId(int value)
+    public RecordingLogQueryEncoder RequestMemberId(int value)
     {
         _buffer.PutInt(_offset + 8, value, ByteOrder.LittleEndian);
         return this;
     }
 
 
-    public static int ResponseMemberIdEncodingOffset()
+    public static int LeaderMemberIdEncodingOffset()
     {
         return 12;
     }
 
-    public static int ResponseMemberIdEncodingLength()
+    public static int LeaderMemberIdEncodingLength()
     {
         return 4;
     }
 
-    public static int ResponseMemberIdNullValue()
+    public static int LeaderMemberIdNullValue()
     {
         return -2147483648;
     }
 
-    public static int ResponseMemberIdMinValue()
+    public static int LeaderMemberIdMinValue()
     {
         return -2147483647;
     }
 
-    public static int ResponseMemberIdMaxValue()
+    public static int LeaderMemberIdMaxValue()
     {
         return 2147483647;
     }
 
-    public QueryResponseEncoder ResponseMemberId(int value)
+    public RecordingLogQueryEncoder LeaderMemberId(int value)
     {
         _buffer.PutInt(_offset + 12, value, ByteOrder.LittleEndian);
         return this;
     }
 
 
-    public static int EncodedResponseId()
+    public static int FromLeadershipTermIdEncodingOffset()
     {
-        return 4;
+        return 16;
     }
 
-    public static string EncodedResponseMetaAttribute(MetaAttribute metaAttribute)
+    public static int FromLeadershipTermIdEncodingLength()
     {
-        switch (metaAttribute)
-        {
-            case MetaAttribute.EPOCH: return "unix";
-            case MetaAttribute.TIME_UNIT: return "nanosecond";
-            case MetaAttribute.SEMANTIC_TYPE: return "";
-            case MetaAttribute.PRESENCE: return "required";
-        }
-
-        return "";
+        return 8;
     }
 
-    public static int EncodedResponseHeaderLength()
+    public static long FromLeadershipTermIdNullValue()
     {
-        return 4;
+        return -9223372036854775808L;
     }
 
-    public QueryResponseEncoder PutEncodedResponse(IDirectBuffer src, int srcOffset, int length)
+    public static long FromLeadershipTermIdMinValue()
     {
-        if (length > 1073741824)
-        {
-            throw new InvalidOperationException("length > maxValue for type: " + length);
-        }
+        return -9223372036854775807L;
+    }
 
-        int headerLength = 4;
-        int limit = _parentMessage.Limit();
-        _parentMessage.Limit(limit + headerLength + length);
-        _buffer.PutInt(limit, unchecked((int)length), ByteOrder.LittleEndian);
-        _buffer.PutBytes(limit + headerLength, src, srcOffset, length);
+    public static long FromLeadershipTermIdMaxValue()
+    {
+        return 9223372036854775807L;
+    }
 
+    public RecordingLogQueryEncoder FromLeadershipTermId(long value)
+    {
+        _buffer.PutLong(_offset + 16, value, ByteOrder.LittleEndian);
         return this;
     }
 
-    public QueryResponseEncoder PutEncodedResponse(byte[] src, int srcOffset, int length)
+
+    public static int CountEncodingOffset()
     {
-        if (length > 1073741824)
-        {
-            throw new InvalidOperationException("length > maxValue for type: " + length);
-        }
+        return 24;
+    }
 
-        int headerLength = 4;
-        int limit = _parentMessage.Limit();
-        _parentMessage.Limit(limit + headerLength + length);
-        _buffer.PutInt(limit, unchecked((int)length), ByteOrder.LittleEndian);
-        _buffer.PutBytes(limit + headerLength, src, srcOffset, length);
+    public static int CountEncodingLength()
+    {
+        return 4;
+    }
 
+    public static int CountNullValue()
+    {
+        return -2147483648;
+    }
+
+    public static int CountMinValue()
+    {
+        return -2147483647;
+    }
+
+    public static int CountMaxValue()
+    {
+        return 2147483647;
+    }
+
+    public RecordingLogQueryEncoder Count(int value)
+    {
+        _buffer.PutInt(_offset + 24, value, ByteOrder.LittleEndian);
+        return this;
+    }
+
+
+    public static int IncludeSnapshotsEncodingOffset()
+    {
+        return 28;
+    }
+
+    public static int IncludeSnapshotsEncodingLength()
+    {
+        return 4;
+    }
+
+    public RecordingLogQueryEncoder IncludeSnapshots(BooleanType value)
+    {
+        _buffer.PutInt(_offset + 28, (int)value, ByteOrder.LittleEndian);
         return this;
     }
 
@@ -255,7 +280,7 @@ public class QueryResponseEncoder
 
     public StringBuilder AppendTo(StringBuilder builder)
     {
-        QueryResponseDecoder writer = new QueryResponseDecoder();
+        RecordingLogQueryDecoder writer = new RecordingLogQueryDecoder();
         writer.Wrap(_buffer, _offset, BLOCK_LENGTH, SCHEMA_VERSION);
 
         return writer.AppendTo(builder);

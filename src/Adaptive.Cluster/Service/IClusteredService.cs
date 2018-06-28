@@ -37,14 +37,21 @@ namespace Adaptive.Cluster.Service
         /// <summary>
         /// A message has been received to be processed by a clustered service.
         /// </summary>
-        /// <param name="clusterSessionId"> identifying the client which sent the message. </param>
+        /// <param name="session">           for the client which sent the message. </param>
         /// <param name="correlationId">    to associate any response. </param>
         /// <param name="timestampMs">      for when the message was received. </param>
         /// <param name="buffer">           containing the message. </param>
         /// <param name="offset">           in the buffer at which the message is encoded. </param>
         /// <param name="length">           of the encoded message. </param>
         /// <param name="header">           aeron header for the incoming message. </param>
-        void OnSessionMessage(long clusterSessionId, long correlationId, long timestampMs, IDirectBuffer buffer, int offset, int length, Header header);
+        void OnSessionMessage(
+            ClientSession session,
+            long correlationId,
+            long timestampMs,
+            IDirectBuffer buffer,
+            int offset,
+            int length,
+            Header header);
 
         /// <summary>
         /// A scheduled timer has expired.

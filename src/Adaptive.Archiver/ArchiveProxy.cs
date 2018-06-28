@@ -373,17 +373,17 @@ namespace Adaptive.Archiver
 
                 if (result == Publication.CLOSED)
                 {
-                    throw new System.InvalidOperationException("connection to the archive has been closed");
+                    throw new ArchiveException("connection to the archive has been closed");
                 }
 
                 if (result == Publication.NOT_CONNECTED)
                 {
-                    throw new System.InvalidOperationException("connection to the archive is no longer available");
+                    throw new ArchiveException("connection to the archive is no longer available");
                 }
 
                 if (result == Publication.MAX_POSITION_EXCEEDED)
                 {
-                    throw new System.InvalidOperationException("publication failed due to max position being reached");
+                    throw new ArchiveException("offer failed due to max position being reached");
                 }
 
                 if (--attempts <= 0)
@@ -415,12 +415,12 @@ namespace Adaptive.Archiver
 
                 if (result == Publication.CLOSED)
                 {
-                    throw new System.InvalidOperationException("connection to the archive has been closed");
+                    throw new ArchiveException("connection to the archive has been closed");
                 }
 
                 if (result == Publication.MAX_POSITION_EXCEEDED)
                 {
-                    throw new System.InvalidOperationException("publication failed due to max position being reached");
+                    throw new ArchiveException("offer failed due to max position being reached");
                 }
 
                 if (nanoClock.NanoTime() > deadlineNs)

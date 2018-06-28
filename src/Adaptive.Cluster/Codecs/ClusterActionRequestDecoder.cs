@@ -333,8 +333,8 @@ public class ClusterActionRequestDecoder
         builder.Append("Timestamp=");
         builder.Append(Timestamp());
         builder.Append('|');
-        //Token{signal=BEGIN_FIELD, name='action', referencedName='null', description='null', id=4, version=0, deprecated=0, encodedLength=0, offset=24, componentTokenCount=12, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
-        //Token{signal=BEGIN_ENUM, name='ClusterAction', referencedName='null', description='Action to be taken by a cluster nodes', id=-1, version=0, deprecated=0, encodedLength=4, offset=24, componentTokenCount=10, encoding=Encoding{presence=REQUIRED, primitiveType=INT32, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='null', timeUnit=null, semanticType='null'}}
+        //Token{signal=BEGIN_FIELD, name='action', referencedName='null', description='null', id=4, version=0, deprecated=0, encodedLength=0, offset=24, componentTokenCount=9, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=BEGIN_ENUM, name='ClusterAction', referencedName='null', description='Action to be taken by a cluster nodes', id=-1, version=0, deprecated=0, encodedLength=4, offset=24, componentTokenCount=7, encoding=Encoding{presence=REQUIRED, primitiveType=INT32, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='null', timeUnit=null, semanticType='null'}}
         builder.Append("Action=");
         builder.Append(Action());
 

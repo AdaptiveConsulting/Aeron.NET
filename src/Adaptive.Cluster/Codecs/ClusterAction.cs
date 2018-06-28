@@ -3,14 +3,11 @@ namespace Adaptive.Cluster.Codecs {
 
     public enum ClusterAction : int
     {
-        INIT = 0,
-        SNAPSHOT = 1,
-        READY = 2,
-        REPLAY = 3,
-        SUSPEND = 4,
-        RESUME = 5,
-        SHUTDOWN = 6,
-        ABORT = 7,
+        SUSPEND = 0,
+        RESUME = 1,
+        SNAPSHOT = 2,
+        SHUTDOWN = 3,
+        ABORT = 4,
         NULL_VALUE = -2147483648
     }
 }

@@ -128,41 +128,9 @@ public class RecoveryPlanQueryEncoder
     }
 
 
-    public static int LeaderMemberIdEncodingOffset()
-    {
-        return 8;
-    }
-
-    public static int LeaderMemberIdEncodingLength()
-    {
-        return 4;
-    }
-
-    public static int LeaderMemberIdNullValue()
-    {
-        return -2147483648;
-    }
-
-    public static int LeaderMemberIdMinValue()
-    {
-        return -2147483647;
-    }
-
-    public static int LeaderMemberIdMaxValue()
-    {
-        return 2147483647;
-    }
-
-    public RecoveryPlanQueryEncoder LeaderMemberId(int value)
-    {
-        _buffer.PutInt(_offset + 8, value, ByteOrder.LittleEndian);
-        return this;
-    }
-
-
     public static int RequestMemberIdEncodingOffset()
     {
-        return 12;
+        return 8;
     }
 
     public static int RequestMemberIdEncodingLength()
@@ -186,6 +154,38 @@ public class RecoveryPlanQueryEncoder
     }
 
     public RecoveryPlanQueryEncoder RequestMemberId(int value)
+    {
+        _buffer.PutInt(_offset + 8, value, ByteOrder.LittleEndian);
+        return this;
+    }
+
+
+    public static int LeaderMemberIdEncodingOffset()
+    {
+        return 12;
+    }
+
+    public static int LeaderMemberIdEncodingLength()
+    {
+        return 4;
+    }
+
+    public static int LeaderMemberIdNullValue()
+    {
+        return -2147483648;
+    }
+
+    public static int LeaderMemberIdMinValue()
+    {
+        return -2147483647;
+    }
+
+    public static int LeaderMemberIdMaxValue()
+    {
+        return 2147483647;
+    }
+
+    public RecoveryPlanQueryEncoder LeaderMemberId(int value)
     {
         _buffer.PutInt(_offset + 12, value, ByteOrder.LittleEndian);
         return this;

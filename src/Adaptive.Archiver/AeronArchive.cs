@@ -23,17 +23,17 @@ namespace Adaptive.Archiver
         /// <summary>
         /// Represents a timestamp that has not been set. Can be used when the time is not known.
         /// </summary>
-        public const long NULL_TIMESTAMP = -1L;
+        public const long NULL_TIMESTAMP = Aeron.Aeron.NULL_VALUE;
 
         /// <summary>
         /// Represents a position that has not been set. Can be used when the position is not known.
         /// </summary>
-        public const long NULL_POSITION = -1L;
-        
+        public const long NULL_POSITION = Aeron.Aeron.NULL_VALUE;
+
         /// <summary>
         /// Represents a length that has not been set. If null length is provided then replay the whole recorded stream.
         /// </summary>
-        public const long NULL_LENGTH = -1L;
+        public const long NULL_LENGTH = Aeron.Aeron.NULL_VALUE;
 
         private const int FRAGMENT_LIMIT = 10;
 
@@ -76,7 +76,7 @@ namespace Adaptive.Archiver
                 if (!archiveProxy.Connect(ctx.ControlResponseChannel(), ctx.ControlResponseStreamId(), correlationId,
                     aeronClientInvoker))
                 {
-                    throw new InvalidOperationException(
+                    throw new ArchiveException(
                         "cannot connect to aeron archive: " + ctx.ControlRequestChannel());
                 }
 
@@ -293,16 +293,27 @@ namespace Adaptive.Archiver
         ///  <seealso cref="PollForErrorResponse()"/>
         public virtual void CheckForErrorResponse()
         {
-            var errorMessage = PollForErrorResponse();
-            if (null != errorMessage)
+            _lock.Lock();
+            try
             {
-                throw new ArchiveException(errorMessage);
+                if (controlResponsePoller.Poll() != 0 && controlResponsePoller.IsPollComplete())
+                {
+                    if (controlResponsePoller.TemplateId() == ControlResponseDecoder.TEMPLATE_ID &&
+                        controlResponsePoller.Code() == ControlResponseCode.ERROR)
+                    {
+                        throw new ArchiveException(controlResponsePoller.ErrorMessage(), (int) controlResponsePoller.RelevantId());
+                    }
+                }
+            }
+            finally
+            {
+                _lock.Unlock();
             }
         }
 
         /// <summary>
         /// Add a <seealso cref="Publication"/> and set it up to be recorded. If this is not the first,
-        /// i.e. <seealso cref="Publication#isOriginal()"/> is true,  then an <seealso cref="IllegalStateException"/>
+        /// i.e. <seealso cref="Publication#isOriginal()"/> is true,  then an <seealso cref="ArchiveException"/>
         /// will be thrown and the recording not initiated.
         /// <para>
         /// This is a sessionId specific recording.
@@ -323,7 +334,7 @@ namespace Adaptive.Archiver
                 {
                     publication.Dispose();
 
-                    throw new InvalidOperationException(
+                    throw new ArchiveException(
                         "publication already added for channel=" + channel + " streamId=" + streamId);
                 }
 
@@ -397,7 +408,7 @@ namespace Adaptive.Archiver
 
                 if (!archiveProxy.StartRecording(channel, streamId, sourceLocation, correlationId, controlSessionId))
                 {
-                    throw new InvalidOperationException("failed to send start recording request");
+                    throw new ArchiveException("failed to send start recording request");
                 }
 
                 PollForResponse(correlationId);
@@ -433,7 +444,7 @@ namespace Adaptive.Archiver
                 if (!archiveProxy.ExtendRecording(channel, streamId, sourceLocation, recordingId, correlationId,
                     controlSessionId))
                 {
-                    throw new InvalidOperationException("failed to send extend recording request");
+                    throw new ArchiveException("failed to send extend recording request");
                 }
 
                 PollForResponse(correlationId);
@@ -466,7 +477,7 @@ namespace Adaptive.Archiver
 
                 if (!archiveProxy.StopRecording(channel, streamId, correlationId, controlSessionId))
                 {
-                    throw new InvalidOperationException("failed to send stop recording request");
+                    throw new ArchiveException("failed to send stop recording request");
                 }
 
                 PollForResponse(correlationId);
@@ -510,7 +521,7 @@ namespace Adaptive.Archiver
                 if (!archiveProxy.Replay(recordingId, position, length, replayChannel, replayStreamId, correlationId,
                     controlSessionId))
                 {
-                    throw new InvalidOperationException("failed to send replay request");
+                    throw new ArchiveException("failed to send replay request");
                 }
 
                 return PollForResponse(correlationId);
@@ -534,7 +545,7 @@ namespace Adaptive.Archiver
 
                 if (!archiveProxy.StopReplay(replaySessionId, correlationId, controlSessionId))
                 {
-                    throw new InvalidOperationException("failed to send stop recording request");
+                    throw new ArchiveException("failed to send stop recording request");
                 }
 
                 PollForResponse(correlationId);
@@ -547,11 +558,11 @@ namespace Adaptive.Archiver
 
         /// <summary>
         /// Replay a length in bytes of a recording from a position and for convenience create a <seealso cref="Subscription"/>
-        /// to receive the replay. If the position is <seealso cref="#NULL_POSITION"/> then the stream will be replayed from the start.
+        /// to receive the replay. If the position is <seealso cref="NULL_POSITION"/> then the stream will be replayed from the start.
         /// </summary>
         /// <param name="recordingId">    to be replayed. </param>
-        /// <param name="position">       from which the replay should begin or <seealso cref="#NULL_POSITION"/> if from the start. </param>
-        /// <param name="length">         of the stream to be replayed or <seealso cref="Long#MAX_VALUE"/> to follow a live recording. </param>
+        /// <param name="position">       from which the replay should begin or <seealso cref="NULL_POSITION"/> if from the start. </param>
+        /// <param name="length">         of the stream to be replayed or <seealso cref="long.MaxValue"/> to follow a live recording. </param>
         /// <param name="replayChannel">  to which the replay should be sent. </param>
         /// <param name="replayStreamId"> to which the replay should be sent. </param>
         /// <returns> the <seealso cref="Subscription"/> for consuming the replay. </returns>
@@ -567,7 +578,7 @@ namespace Adaptive.Archiver
                 if (!archiveProxy.Replay(recordingId, position, length, replayChannel, replayStreamId, correlationId,
                     controlSessionId))
                 {
-                    throw new InvalidOperationException("failed to send replay request");
+                    throw new ArchiveException("failed to send replay request");
                 }
 
                 int replaySessionId = (int) PollForResponse(correlationId);
@@ -606,7 +617,7 @@ namespace Adaptive.Archiver
                 if (!archiveProxy.Replay(recordingId, position, length, replayChannel, replayStreamId, correlationId,
                     controlSessionId))
                 {
-                    throw new InvalidOperationException("failed to send replay request");
+                    throw new ArchiveException("failed to send replay request");
                 }
 
                 int replaySessionId = (int) PollForResponse(correlationId);
@@ -641,7 +652,7 @@ namespace Adaptive.Archiver
 
                 if (!archiveProxy.ListRecordings(fromRecordingId, recordCount, correlationId, controlSessionId))
                 {
-                    throw new InvalidOperationException("failed to send list recordings request");
+                    throw new ArchiveException("failed to send list recordings request");
                 }
 
                 return PollForDescriptors(correlationId, recordCount, consumer);
@@ -676,7 +687,7 @@ namespace Adaptive.Archiver
                 if (!archiveProxy.ListRecordingsForUri(fromRecordingId, recordCount, channel, streamId, correlationId,
                     controlSessionId))
                 {
-                    throw new InvalidOperationException("failed to send list recordings request");
+                    throw new ArchiveException("failed to send list recordings request");
                 }
 
                 return PollForDescriptors(correlationId, recordCount, consumer);
@@ -706,7 +717,7 @@ namespace Adaptive.Archiver
 
                 if (!archiveProxy.ListRecording(recordingId, correlationId, controlSessionId))
                 {
-                    throw new InvalidOperationException("failed to send list recording request");
+                    throw new ArchiveException("failed to send list recording request");
                 }
 
                 return PollForDescriptors(correlationId, 1, consumer);
@@ -731,7 +742,7 @@ namespace Adaptive.Archiver
 
                 if (!archiveProxy.GetRecordingPosition(recordingId, correlationId, controlSessionId))
                 {
-                    throw new InvalidOperationException("failed to send get recording position request");
+                    throw new ArchiveException("failed to send get recording position request");
                 }
 
                 return PollForResponse(correlationId);
@@ -757,7 +768,7 @@ namespace Adaptive.Archiver
 
                 if (!archiveProxy.TruncateRecording(recordingId, position, correlationId, controlSessionId))
                 {
-                    throw new InvalidOperationException("failed to send truncate recording request");
+                    throw new ArchiveException("failed to send truncate recording request");
                 }
 
                 PollForResponse(correlationId);
@@ -791,10 +802,10 @@ namespace Adaptive.Archiver
                 {
                     if (code == ControlResponseCode.ERROR)
                     {
-                        throw new InvalidOperationException("error: " + poller.ErrorMessage());
+                        throw new ArchiveException("error: " + poller.ErrorMessage(), (int) poller.RelevantId());
                     }
 
-                    throw new InvalidOperationException("unexpected response: code=" + code);
+                    throw new ArchiveException("unexpected response: code=" + code);
                 }
 
                 return poller.ControlSessionId();
@@ -835,14 +846,14 @@ namespace Adaptive.Archiver
 
                 if (poller.Code() == ControlResponseCode.ERROR)
                 {
-                    throw new InvalidOperationException("response for correlationId=" + correlationId + ", error: " +
-                                                        poller.ErrorMessage());
+                    throw new ArchiveException("response for correlationId=" + correlationId + ", error: " +
+                                               poller.ErrorMessage(), (int) poller.RelevantId());
                 }
 
                 ControlResponseCode code = poller.Code();
                 if (ControlResponseCode.OK != code)
                 {
-                    throw new InvalidOperationException("unexpected response code: " + code);
+                    throw new ArchiveException("unexpected response code: " + code);
                 }
 
                 if (poller.CorrelationId() == correlationId)
@@ -872,7 +883,7 @@ namespace Adaptive.Archiver
 
                 if (!poller.Subscription().IsConnected)
                 {
-                    throw new InvalidOperationException("subscription to archive is not connected");
+                    throw new ArchiveException("subscription to archive is not connected");
                 }
 
                 if (nanoClock.NanoTime() > deadlineNs)
@@ -910,7 +921,7 @@ namespace Adaptive.Archiver
 
                 if (!poller.Subscription().IsConnected)
                 {
-                    throw new InvalidOperationException("subscription to archive is not connected");
+                    throw new ArchiveException("subscription to archive is not connected");
                 }
 
                 if (nanoClock.NanoTime() > deadlineNs)
@@ -1563,7 +1574,7 @@ namespace Adaptive.Archiver
             private readonly Context ctx;
             private readonly ControlResponsePoller controlResponsePoller;
             private readonly ArchiveProxy archiveProxy;
-            private long connectCorrelationId = -1;
+            private long connectCorrelationId = Aeron.Aeron.NULL_VALUE;
             private int step = 0;
 
             internal AsyncConnect(Context ctx, ControlResponsePoller controlResponsePoller, ArchiveProxy archiveProxy)
@@ -1635,10 +1646,10 @@ namespace Adaptive.Archiver
                     {
                         if (code == ControlResponseCode.ERROR)
                         {
-                            throw new InvalidOperationException("error: " + controlResponsePoller.ErrorMessage());
+                            throw new ArchiveException("error: " + controlResponsePoller.ErrorMessage(), (int) controlResponsePoller.RelevantId());
                         }
 
-                        throw new InvalidOperationException("unexpected response: code=" + code);
+                        throw new ArchiveException("unexpected response: code=" + code);
                     }
 
                     long controlSessionId = controlResponsePoller.ControlSessionId();

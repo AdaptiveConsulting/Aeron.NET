@@ -128,32 +128,32 @@ public class ClusterSessionEncoder
     }
 
 
-    public static int OpenedTermPositionEncodingOffset()
+    public static int OpenedLogPositionEncodingOffset()
     {
         return 8;
     }
 
-    public static int OpenedTermPositionEncodingLength()
+    public static int OpenedLogPositionEncodingLength()
     {
         return 8;
     }
 
-    public static long OpenedTermPositionNullValue()
+    public static long OpenedLogPositionNullValue()
     {
         return -9223372036854775808L;
     }
 
-    public static long OpenedTermPositionMinValue()
+    public static long OpenedLogPositionMinValue()
     {
         return -9223372036854775807L;
     }
 
-    public static long OpenedTermPositionMaxValue()
+    public static long OpenedLogPositionMaxValue()
     {
         return 9223372036854775807L;
     }
 
-    public ClusterSessionEncoder OpenedTermPosition(long value)
+    public ClusterSessionEncoder OpenedLogPosition(long value)
     {
         _buffer.PutLong(_offset + 8, value, ByteOrder.LittleEndian);
         return this;

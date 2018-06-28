@@ -9,7 +9,7 @@ namespace Adaptive.Cluster.Codecs {
 
 public class NewLeaderEventEncoder
 {
-    public const ushort BLOCK_LENGTH = 44;
+    public const ushort BLOCK_LENGTH = 12;
     public const ushort TEMPLATE_ID = 6;
     public const ushort SCHEMA_ID = 1;
     public const ushort SCHEMA_VERSION = 1;
@@ -128,137 +128,9 @@ public class NewLeaderEventEncoder
     }
 
 
-    public static int LastCorrelationIdEncodingOffset()
-    {
-        return 8;
-    }
-
-    public static int LastCorrelationIdEncodingLength()
-    {
-        return 8;
-    }
-
-    public static long LastCorrelationIdNullValue()
-    {
-        return -9223372036854775808L;
-    }
-
-    public static long LastCorrelationIdMinValue()
-    {
-        return -9223372036854775807L;
-    }
-
-    public static long LastCorrelationIdMaxValue()
-    {
-        return 9223372036854775807L;
-    }
-
-    public NewLeaderEventEncoder LastCorrelationId(long value)
-    {
-        _buffer.PutLong(_offset + 8, value, ByteOrder.LittleEndian);
-        return this;
-    }
-
-
-    public static int LastMessageTimestampEncodingOffset()
-    {
-        return 16;
-    }
-
-    public static int LastMessageTimestampEncodingLength()
-    {
-        return 8;
-    }
-
-    public static long LastMessageTimestampNullValue()
-    {
-        return -9223372036854775808L;
-    }
-
-    public static long LastMessageTimestampMinValue()
-    {
-        return -9223372036854775807L;
-    }
-
-    public static long LastMessageTimestampMaxValue()
-    {
-        return 9223372036854775807L;
-    }
-
-    public NewLeaderEventEncoder LastMessageTimestamp(long value)
-    {
-        _buffer.PutLong(_offset + 16, value, ByteOrder.LittleEndian);
-        return this;
-    }
-
-
-    public static int LeadershipTimestampEncodingOffset()
-    {
-        return 24;
-    }
-
-    public static int LeadershipTimestampEncodingLength()
-    {
-        return 8;
-    }
-
-    public static long LeadershipTimestampNullValue()
-    {
-        return -9223372036854775808L;
-    }
-
-    public static long LeadershipTimestampMinValue()
-    {
-        return -9223372036854775807L;
-    }
-
-    public static long LeadershipTimestampMaxValue()
-    {
-        return 9223372036854775807L;
-    }
-
-    public NewLeaderEventEncoder LeadershipTimestamp(long value)
-    {
-        _buffer.PutLong(_offset + 24, value, ByteOrder.LittleEndian);
-        return this;
-    }
-
-
-    public static int LeadershipTermIdEncodingOffset()
-    {
-        return 32;
-    }
-
-    public static int LeadershipTermIdEncodingLength()
-    {
-        return 8;
-    }
-
-    public static long LeadershipTermIdNullValue()
-    {
-        return -9223372036854775808L;
-    }
-
-    public static long LeadershipTermIdMinValue()
-    {
-        return -9223372036854775807L;
-    }
-
-    public static long LeadershipTermIdMaxValue()
-    {
-        return 9223372036854775807L;
-    }
-
-    public NewLeaderEventEncoder LeadershipTermId(long value)
-    {
-        _buffer.PutLong(_offset + 32, value, ByteOrder.LittleEndian);
-        return this;
-    }
-
-
     public static int LeaderMemberIdEncodingOffset()
     {
-        return 40;
+        return 8;
     }
 
     public static int LeaderMemberIdEncodingLength()
@@ -283,14 +155,14 @@ public class NewLeaderEventEncoder
 
     public NewLeaderEventEncoder LeaderMemberId(int value)
     {
-        _buffer.PutInt(_offset + 40, value, ByteOrder.LittleEndian);
+        _buffer.PutInt(_offset + 8, value, ByteOrder.LittleEndian);
         return this;
     }
 
 
     public static int MemberEndpointsId()
     {
-        return 7;
+        return 3;
     }
 
     public static string MemberEndpointsCharacterEncoding()

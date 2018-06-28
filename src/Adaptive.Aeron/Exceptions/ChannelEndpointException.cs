@@ -1,8 +1,6 @@
-﻿using System;
-
-namespace Adaptive.Aeron.Exceptions
+﻿namespace Adaptive.Aeron.Exceptions
 {
-    public class ChannelEndpointException : Exception
+    public class ChannelEndpointException : AeronException
     {
         public ChannelEndpointException(int statusIndicatorId, string message) : base(message)
         {

@@ -9,7 +9,7 @@ namespace Adaptive.Cluster.Codecs {
 
 public class VoteEncoder
 {
-    public const ushort BLOCK_LENGTH = 20;
+    public const ushort BLOCK_LENGTH = 36;
     public const ushort TEMPLATE_ID = 52;
     public const ushort SCHEMA_ID = 1;
     public const ushort SCHEMA_VERSION = 1;
@@ -128,9 +128,73 @@ public class VoteEncoder
     }
 
 
-    public static int CandidateMemberIdEncodingOffset()
+    public static int LogLeaderhipTermIdEncodingOffset()
     {
         return 8;
+    }
+
+    public static int LogLeaderhipTermIdEncodingLength()
+    {
+        return 8;
+    }
+
+    public static long LogLeaderhipTermIdNullValue()
+    {
+        return -9223372036854775808L;
+    }
+
+    public static long LogLeaderhipTermIdMinValue()
+    {
+        return -9223372036854775807L;
+    }
+
+    public static long LogLeaderhipTermIdMaxValue()
+    {
+        return 9223372036854775807L;
+    }
+
+    public VoteEncoder LogLeaderhipTermId(long value)
+    {
+        _buffer.PutLong(_offset + 8, value, ByteOrder.LittleEndian);
+        return this;
+    }
+
+
+    public static int LogPositionEncodingOffset()
+    {
+        return 16;
+    }
+
+    public static int LogPositionEncodingLength()
+    {
+        return 8;
+    }
+
+    public static long LogPositionNullValue()
+    {
+        return -9223372036854775808L;
+    }
+
+    public static long LogPositionMinValue()
+    {
+        return -9223372036854775807L;
+    }
+
+    public static long LogPositionMaxValue()
+    {
+        return 9223372036854775807L;
+    }
+
+    public VoteEncoder LogPosition(long value)
+    {
+        _buffer.PutLong(_offset + 16, value, ByteOrder.LittleEndian);
+        return this;
+    }
+
+
+    public static int CandidateMemberIdEncodingOffset()
+    {
+        return 24;
     }
 
     public static int CandidateMemberIdEncodingLength()
@@ -155,14 +219,14 @@ public class VoteEncoder
 
     public VoteEncoder CandidateMemberId(int value)
     {
-        _buffer.PutInt(_offset + 8, value, ByteOrder.LittleEndian);
+        _buffer.PutInt(_offset + 24, value, ByteOrder.LittleEndian);
         return this;
     }
 
 
     public static int FollowerMemberIdEncodingOffset()
     {
-        return 12;
+        return 28;
     }
 
     public static int FollowerMemberIdEncodingLength()
@@ -187,14 +251,14 @@ public class VoteEncoder
 
     public VoteEncoder FollowerMemberId(int value)
     {
-        _buffer.PutInt(_offset + 12, value, ByteOrder.LittleEndian);
+        _buffer.PutInt(_offset + 28, value, ByteOrder.LittleEndian);
         return this;
     }
 
 
     public static int VoteEncodingOffset()
     {
-        return 16;
+        return 32;
     }
 
     public static int VoteEncodingLength()
@@ -204,7 +268,7 @@ public class VoteEncoder
 
     public VoteEncoder Vote(BooleanType value)
     {
-        _buffer.PutInt(_offset + 16, (int)value, ByteOrder.LittleEndian);
+        _buffer.PutInt(_offset + 32, (int)value, ByteOrder.LittleEndian);
         return this;
     }
 

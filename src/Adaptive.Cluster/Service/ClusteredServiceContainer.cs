@@ -6,6 +6,7 @@ using Adaptive.Agrona.Concurrent;
 using Adaptive.Agrona.Concurrent.Errors;
 using Adaptive.Agrona.Concurrent.Status;
 using Adaptive.Archiver;
+using Adaptive.Cluster.Client;
 using Adaptive.Cluster.Codecs;
 using Adaptive.Cluster.Codecs.Mark;
 
@@ -33,7 +34,7 @@ namespace Adaptive.Cluster.Service
             {
                 container.Ctx().ShutdownSignalBarrier().Await();
 
-                Console.WriteLine("Shutdown ClusteredMediaDriver...");
+                Console.WriteLine("Shutdown ClusteredServiceContainer...");
             }
         }
 
@@ -97,7 +98,7 @@ namespace Adaptive.Cluster.Service
             public const string SERVICE_ID_PROP_NAME = "aeron.cluster.service.id";
 
             /// <summary>
-            /// Identity for a clustered service. Default to 0.
+            /// Default identity for a clustered service.
             /// </summary>
             public const int SERVICE_ID_DEFAULT = 0;
 
@@ -107,7 +108,7 @@ namespace Adaptive.Cluster.Service
             public const string SERVICE_NAME_PROP_NAME = "aeron.cluster.service.name";
 
             /// <summary>
-            /// Name for a clustered service to be the role of the <seealso cref="IAgent"/>. Default to "clustered-service".
+            /// Name for a clustered service to be the role of the <seealso cref="IAgent"/>.
             /// </summary>
             public const string SERVICE_NAME_DEFAULT = "clustered-service";
 
@@ -118,7 +119,7 @@ namespace Adaptive.Cluster.Service
             public const string SERVICE_CLASS_NAME_PROP_NAME = "aeron.cluster.service.class.name";
 
             /// <summary>
-            /// Channel to be used for log or snapshot replay on startup.
+            /// Default channel to be used for log or snapshot replay on startup.
             /// </summary>
             public const string REPLAY_CHANNEL_PROP_NAME = "aeron.cluster.replay.channel";
 
@@ -133,33 +134,42 @@ namespace Adaptive.Cluster.Service
             public const string REPLAY_STREAM_ID_PROP_NAME = "aeron.cluster.replay.stream.id";
 
             /// <summary>
-            /// Stream id for the log or snapshot replay within a channel.
+            /// Default stream id for the log or snapshot replay within a channel.
             /// </summary>
-            public const int REPLAY_STREAM_ID_DEFAULT = 4;
+            public const int REPLAY_STREAM_ID_DEFAULT = 103;
 
             /// <summary>
-            /// Channel for bi-directional communications between the consensus module and services.
+            /// Channel for communications between the local consensus module and services.
             /// </summary>
             public const string SERVICE_CONTROL_CHANNEL_PROP_NAME = "aeron.cluster.service.control.channel";
 
             /// <summary>
-            /// Channel for for bi-directional communications between the consensus module and services. This should be IPC.
+            ///  Default channel for communications between the local consensus module and services. This should be IPC.
             /// </summary>
-            public const string SERVICE_CONTROL_CHANNEL_DEFAULT = "aeron:ipc?term-length=64k";
+            public const string SERVICE_CONTROL_CHANNEL_DEFAULT = "aeron:ipc?term-length=64k|mtu=8k";
 
             /// <summary>
-            /// Stream id within a channel for bi-directional communications between the consensus module and services.
+            /// Stream id within a channel for communications from the consensus module to the services.
             /// </summary>
-            public const string SERVICE_CONTROL_STREAM_ID_PROP_NAME = "aeron.cluster.service.control.stream.id";
+            public const string SERVICE_STREAM_ID_PROP_NAME = "aeron.cluster.service.stream.id";
 
             /// <summary>
-            /// Stream id within a channel for bi-directional communications between the consensus module and services.
-            /// Default to stream id of 5.
+            /// Default stream id within a channel for communications from the consensus module to the services.
             /// </summary>
-            public const int CONSENSUS_MODULE_STREAM_ID_DEFAULT = 5;
+            public const int SERVICE_CONTROL_STREAM_ID_DEFAULT = 104;
 
             /// <summary>
-            /// Channel to be used for archiving snapshots.
+            /// Stream id within a channel for communications from the services to the consensus module.
+            /// </summary>
+            public const string CONSENSUS_MODULE_STREAM_ID_PROP_NAME = "aeron.cluster.consensus.module.stream.id";
+
+            /// <summary>
+            /// Default stream id within a channel for communications from the services to the consensus module.
+            /// </summary>
+            public const int CONSENSUS_MODULE_STREAM_ID_DEFAULT = 105;
+            
+            /// <summary>
+            /// Default channel to be used for archiving snapshots.
             /// </summary>
             public const string SNAPSHOT_CHANNEL_PROP_NAME = "aeron.cluster.snapshot.channel";
 
@@ -174,28 +184,27 @@ namespace Adaptive.Cluster.Service
             public const string SNAPSHOT_STREAM_ID_PROP_NAME = "aeron.cluster.snapshot.stream.id";
 
             /// <summary>
-            /// Stream id for the archived snapshots within a channel.
+            ///  Default stream id for the archived snapshots within a channel.
             /// </summary>
-            public const int SNAPSHOT_STREAM_ID_DEFAULT = 7;
+            public const int SNAPSHOT_STREAM_ID_DEFAULT = 106;
 
             /// <summary>
-            /// Directory to use for the clustered service.
+            /// Directory to use for the aeron cluster.
             /// </summary>
-            public const string CLUSTERED_SERVICE_DIR_PROP_NAME = "aeron.cluster.service.dir";
+            public const string CLUSTER_DIR_PROP_NAME = "aeron.cluster.dir";
 
             /// <summary>
-            /// Directory to use for the cluster container.
+            /// Default directory to use for the aeron cluster.
             /// </summary>
-            public const string CLUSTERED_SERVICE_DIR_DEFAULT = "clustered-service";
+            public const string CLUSTER_DIR_DEFAULT = "aeron-cluster";
 
             /// <summary>
-            /// Size in bytes of the error buffer for the cluster container.
+            /// Length in bytes of the error buffer for the cluster container.
             /// </summary>
             public const string ERROR_BUFFER_LENGTH_PROP_NAME = "aeron.cluster.service.error.buffer.length";
 
             /// <summary>
-            /// Size in bytes of the error buffer for the cluster container.
-            /// Default to 1MB.
+            /// Default length in bytes of the error buffer for the cluster container.
             /// </summary>
             public const int ERROR_BUFFER_LENGTH_DEFAULT = 1024 * 1024;
 
@@ -247,18 +256,29 @@ namespace Adaptive.Cluster.Service
             {
                 return Config.GetProperty(SERVICE_CONTROL_CHANNEL_PROP_NAME, SERVICE_CONTROL_CHANNEL_DEFAULT);
             }
-
+            
             /// <summary>
             /// The value <seealso cref="#CONSENSUS_MODULE_STREAM_ID_DEFAULT"/> or system property
-            /// <seealso cref="#SERVICE_CONTROL_STREAM_ID_PROP_NAME"/> if set.
+            /// <seealso cref="#CONSENSUS_MODULE_STREAM_ID_PROP_NAME"/> if set.
             /// </summary>
             /// <returns> <seealso cref="#CONSENSUS_MODULE_STREAM_ID_DEFAULT"/> or system property
-            /// <seealso cref="#SERVICE_CONTROL_STREAM_ID_PROP_NAME"/> if set. </returns>
-            public static int ServiceControlStreamId()
+            /// <seealso cref="#CONSENSUS_MODULE_STREAM_ID_PROP_NAME"/> if set. </returns>
+            public static int ConsensusModuleStreamId()
             {
-                return Config.GetInteger(SERVICE_CONTROL_STREAM_ID_PROP_NAME, CONSENSUS_MODULE_STREAM_ID_DEFAULT);
+                return Config.GetInteger(CONSENSUS_MODULE_STREAM_ID_PROP_NAME, CONSENSUS_MODULE_STREAM_ID_DEFAULT);
             }
 
+            /// <summary>
+            /// The value <seealso cref="#SERVICE_CONTROL_STREAM_ID_DEFAULT"/> or system property
+            /// <seealso cref="#SERVICE_STREAM_ID_PROP_NAME"/> if set.
+            /// </summary>
+            /// <returns> <seealso cref="#SERVICE_CONTROL_STREAM_ID_DEFAULT"/> or system property
+            /// <seealso cref="#SERVICE_STREAM_ID_PROP_NAME"/> if set. </returns>
+            public static int ServiceStreamId()
+            {
+                return Config.GetInteger(SERVICE_STREAM_ID_PROP_NAME, SERVICE_CONTROL_STREAM_ID_DEFAULT);
+            }
+            
             /// <summary>
             /// The value <seealso cref="#SNAPSHOT_CHANNEL_DEFAULT"/> or system property <seealso cref="#SNAPSHOT_CHANNEL_PROP_NAME"/> if set.
             /// </summary>
@@ -296,14 +316,12 @@ namespace Adaptive.Cluster.Service
             }
 
             /// <summary>
-            /// The value <seealso cref="CLUSTERED_SERVICE_DIR_DEFAULT"/> or system property
-            /// <seealso cref="CLUSTERED_SERVICE_DIR_PROP_NAME"/> if set.
+            /// The value <seealso cref="#CLUSTER_DIR_DEFAULT"/> or system property <seealso cref="#CLUSTER_DIR_PROP_NAME"/> if set.
             /// </summary>
-            /// <returns> <seealso cref="CLUSTERED_SERVICE_DIR_DEFAULT"/> or system property
-            /// <seealso cref="CLUSTERED_SERVICE_DIR_PROP_NAME"/> if set. </returns>
-            public static string ClusteredServiceDirName()
+            /// <returns> <seealso cref="#CLUSTER_DIR_DEFAULT"/> or system property <seealso cref="#CLUSTER_DIR_PROP_NAME"/> if set. </returns>
+            public static string ClusterDirName()
             {
-                return Config.GetProperty(CLUSTERED_SERVICE_DIR_PROP_NAME, CLUSTERED_SERVICE_DIR_DEFAULT);
+                return Config.GetProperty(CLUSTER_DIR_PROP_NAME, CLUSTER_DIR_DEFAULT);
             }
 
             /// <summary>
@@ -324,12 +342,12 @@ namespace Adaptive.Cluster.Service
             private string replayChannel = Configuration.ReplayChannel();
             private int replayStreamId = Configuration.ReplayStreamId();
             private string serviceControlChannel = Configuration.ServiceControlChannel();
-            private int serviceControlStreamId = Configuration.ServiceControlStreamId();
+            private int consensusModuleStreamId = Configuration.ConsensusModuleStreamId();
+            private int serviceStreamId = Configuration.ServiceStreamId();
             private string snapshotChannel = Configuration.SnapshotChannel();
             private int snapshotStreamId = Configuration.SnapshotStreamId();
             private int errorBufferLength = Configuration.ErrorBufferLength();
-            private bool deleteDirOnStart = false;
-
+            
             private IThreadFactory threadFactory;
             private Func<IIdleStrategy> idleStrategySupplier;
             private IEpochClock epochClock;
@@ -338,14 +356,13 @@ namespace Adaptive.Cluster.Service
             private AtomicCounter errorCounter;
             private CountedErrorHandler countedErrorHandler;
             private AeronArchive.Context archiveContext;
-            private string clusteredServiceDirectoryName = Configuration.ClusteredServiceDirName();
-            private DirectoryInfo clusteredServiceDir;
+            private string clusteredServiceDirectoryName = Configuration.ClusterDirName();
+            private DirectoryInfo clusterDir;
             private string aeronDirectoryName = Adaptive.Aeron.Aeron.Context.GetAeronDirectoryName();
             private Aeron.Aeron aeron;
             private bool ownsAeronClient;
 
             private IClusteredService clusteredService;
-            private RecordingLog recordingLog;
             private ShutdownSignalBarrier shutdownSignalBarrier;
             private Action terminationHook;
             private ClusterMarkFile markFile;
@@ -376,32 +393,20 @@ namespace Adaptive.Cluster.Service
                     epochClock = new SystemEpochClock();
                 }
 
-                if (deleteDirOnStart)
+                if (null == clusterDir)
                 {
-                    if (null != clusteredServiceDir)
-                    {
-                        IoUtil.Delete(clusteredServiceDir, true);
-                    }
-                    else
-                    {
-                        IoUtil.Delete(new DirectoryInfo(Configuration.ClusteredServiceDirName()), true);
-                    }
+                    clusterDir = new DirectoryInfo(clusteredServiceDirectoryName);
                 }
 
-                if (null == clusteredServiceDir)
+                if (!clusterDir.Exists)
                 {
-                    clusteredServiceDir = new DirectoryInfo(clusteredServiceDirectoryName);
-                }
-
-                if (!clusteredServiceDir.Exists)
-                {
-                    Directory.CreateDirectory(clusteredServiceDir.FullName);
+                    Directory.CreateDirectory(clusterDir.FullName);
                 }
 
                 if (null == markFile)
                 {
                     markFile = new ClusterMarkFile(
-                        new FileInfo(Path.Combine(clusteredServiceDir.FullName, ClusterMarkFile.FILENAME)),
+                        new FileInfo(Path.Combine(clusterDir.FullName, ClusterMarkFile.MarkFilenameForService(serviceId))),
                         ClusterComponentType.CONTAINER,
                         errorBufferLength,
                         epochClock,
@@ -426,18 +431,12 @@ namespace Adaptive.Cluster.Service
                             .ErrorHandler(errorHandler)
                             .EpochClock(epochClock));
 
-                    if (null == errorCounter)
-                    {
-                        errorCounter = aeron.AddCounter(SYSTEM_COUNTER_TYPE_ID,
-                            "Cluster errors - service " + serviceId);
-                    }
-
                     ownsAeronClient = true;
                 }
 
                 if (null == errorCounter)
                 {
-                    throw new InvalidOperationException("error counter must be supplied");
+                    errorCounter = aeron.AddCounter(SYSTEM_COUNTER_TYPE_ID, "Cluster errors - service " + serviceId);
                 }
 
                 if (null == countedErrorHandler)
@@ -462,11 +461,6 @@ namespace Adaptive.Cluster.Service
                     .OwnsAeronClient(false)
                     .Lock(new NoOpLock());
 
-                if (null == recordingLog)
-                {
-                    recordingLog = new RecordingLog(clusteredServiceDir);
-                }
-
                 if (null == shutdownSignalBarrier)
                 {
                     shutdownSignalBarrier = new ShutdownSignalBarrier();
@@ -482,7 +476,7 @@ namespace Adaptive.Cluster.Service
                     string className = Config.GetProperty(Configuration.SERVICE_CLASS_NAME_PROP_NAME);
                     if (null == className)
                     {
-                        throw new InvalidOperationException("Either a ClusteredService instance or class name for the service must be provided");
+                        throw new ClusterException("either a ClusteredService instance or class name for the service must be provided");
                     }
 
                     clusteredService = (IClusteredService) Activator.CreateInstance(Type.GetType(className));
@@ -603,27 +597,49 @@ namespace Adaptive.Cluster.Service
             }
 
             /// <summary>
-            /// Set the stream id for sending messages to the Consensus Module.
+            /// Set the stream id for communications from the consensus module and to the services.
             /// </summary>
-            /// <param name="streamId"> for sending messages to the Consensus Module. </param>
+            /// <param name="streamId"> for communications from the consensus module and to the services. </param>
             /// <returns> this for a fluent API </returns>
-            /// <seealso cref= Configuration#CONSENSUS_MODULE_STREAM_ID_PROP_NAME </seealso>
-            public Context ServiceControlStreamId(int streamId)
+            /// <seealso cref= Configuration#SERVICE_STREAM_ID_PROP_NAME </seealso>
+            public Context ServiceStreamId(int streamId)
             {
-                serviceControlStreamId = streamId;
+                serviceStreamId = streamId;
                 return this;
             }
 
             /// <summary>
-            /// Get the stream id for sending messages to the Consensus Module.
+            /// Get the stream id for communications from the consensus module and to the services.
             /// </summary>
-            /// <returns> the stream id for sending messages to the Consensus Module. </returns>
-            /// <seealso cref= Configuration#CONSENSUS_MODULE_STREAM_ID_PROP_NAME </seealso>
-            public int ServiceControlStreamId()
+            /// <returns> the stream id for communications from the consensus module and to the services. </returns>
+            /// <seealso cref= Configuration#SERVICE_STREAM_ID_PROP_NAME </seealso>
+            public int ServiceStreamId()
             {
-                return serviceControlStreamId;
+                return serviceStreamId;
             }
 
+            /// <summary>
+            /// Set the stream id for communications from the services to the consensus module.
+            /// </summary>
+            /// <param name="streamId"> for communications from the services to the consensus module. </param>
+            /// <returns> this for a fluent API </returns>
+            /// <seealso cref= Configuration#CONSENSUS_MODULE_STREAM_ID_PROP_NAME </seealso>
+            public Context ConsensusModuleStreamId(int streamId)
+            {
+                consensusModuleStreamId = streamId;
+                return this;
+            }
+
+            /// <summary>
+            /// Get the stream id for communications from the services to the consensus module.
+            /// </summary>
+            /// <returns> the stream id for communications from the services to the consensus module. </returns>
+            /// <seealso cref= Configuration#CONSENSUS_MODULE_STREAM_ID_PROP_NAME </seealso>
+            public int ConsensusModuleStreamId()
+            {
+                return consensusModuleStreamId;
+            }
+           
             /// <summary>
             /// Set the channel parameter for snapshot recordings.
             /// </summary>
@@ -893,87 +909,47 @@ namespace Adaptive.Cluster.Service
             }
 
             /// <summary>
-            /// Should the container attempt to immediately delete <seealso cref="#clusteredServiceDir()"/> on startup.
+            /// Set the directory name to use for the consensus module directory..
             /// </summary>
-            /// <param name="deleteDirOnStart"> Attempt deletion. </param>
+            /// <param name="clusterDirectoryName"> to use. </param>
             /// <returns> this for a fluent API. </returns>
-            public Context DeleteDirOnStart(bool deleteDirOnStart)
+            /// <seealso cref="Configuration.CLUSTER_DIR_PROP_NAME"/>
+            public Context ClusterDirectoryName(string clusterDirectoryName)
             {
-                this.deleteDirOnStart = deleteDirOnStart;
+                this.clusteredServiceDirectoryName = clusterDirectoryName;
                 return this;
             }
 
             /// <summary>
-            /// Will the container attempt to immediately delete <seealso cref="#clusteredServiceDir()"/> on startup.
+            /// The directory name to use for the cluster directory.
             /// </summary>
-            /// <returns> true when directory will be deleted, otherwise false. </returns>
-            public bool DeleteDirOnStart()
-            {
-                return deleteDirOnStart;
-            }
-
-            /// <summary>
-            /// Set the directory name to use for the clustered service container.
-            /// </summary>
-            /// <param name="clusteredServiceDirectoryName"> to use. </param>
-            /// <returns> this for a fluent API. </returns>
-            /// <seealso cref="Configuration.CLUSTERED_SERVICE_DIR_PROP_NAME"/>
-            public Context ClusteredServiceDirectoryName(string clusteredServiceDirectoryName)
-            {
-                this.clusteredServiceDirectoryName = clusteredServiceDirectoryName;
-                return this;
-            }
-
-            /// <summary>
-            /// The directory name used for the clustered service container.
-            /// </summary>
-            /// <returns> directory for the cluster container. </returns>
-            /// <seealso cref="Configuration.CLUSTERED_SERVICE_DIR_PROP_NAME"/>
-            public string ClusteredServiceDirectoryName()
+            /// <returns> directory name for the cluster directory. </returns>
+            /// <seealso cref="Configuration.CLUSTER_DIR_PROP_NAME"/>
+            public string ClusterDirectoryName()
             {
                 return clusteredServiceDirectoryName;
             }
 
             /// <summary>
-            /// Set the directory to use for the clustered service container.
+            /// Set the directory to use for the cluster directory.
             /// </summary>
-            /// <param name="dir"> to use. </param>
+            /// <param name="clusterDir"> to use. </param>
             /// <returns> this for a fluent API. </returns>
             /// <seealso cref= Configuration#CLUSTERED_SERVICE_DIR_PROP_NAME </seealso>
-            public Context ClusteredServiceDir(DirectoryInfo dir)
+            public Context ClusterDir(DirectoryInfo clusterDir)
             {
-                this.clusteredServiceDir = dir;
+                this.clusterDir = clusterDir;
                 return this;
             }
 
             /// <summary>
-            /// The directory used for the clustered service container.
+            /// The directory used for for the cluster directory.
             /// </summary>
-            /// <returns> directory for the cluster container. </returns>
+            /// <returns>  directory for for the cluster directory. </returns>
             /// <seealso cref= Configuration#CLUSTERED_SERVICE_DIR_PROP_NAME </seealso>
-            public DirectoryInfo ClusteredServiceDir()
+            public DirectoryInfo ClusterDir()
             {
-                return clusteredServiceDir;
-            }
-
-            /// <summary>
-            /// Set the <seealso cref="Service.RecordingLog"/> for the  log terms and snapshots.
-            /// </summary>
-            /// <param name="recordingLog"> to use. </param>
-            /// <returns> this for a fluent API. </returns>
-            public Context RecordingLog(RecordingLog recordingLog)
-            {
-                this.recordingLog = recordingLog;
-                return this;
-            }
-
-            /// <summary>
-            /// The <seealso cref="Service.RecordingLog"/> for the  log terms and snapshots.
-            /// </summary>
-            /// <returns> <seealso cref="Service.RecordingLog"/> for the  log terms and snapshots. </returns>
-            public RecordingLog RecordingLog()
-            {
-                return recordingLog;
+                return clusterDir;
             }
 
             /// <summary>
@@ -1087,9 +1063,9 @@ namespace Adaptive.Cluster.Service
             /// </summary>
             public void DeleteDirectory()
             {
-                if (null != clusteredServiceDir)
+                if (null != clusterDir)
                 {
-                    IoUtil.Delete(clusteredServiceDir, false);
+                    IoUtil.Delete(clusterDir, false);
                 }
             }
 
@@ -1123,9 +1099,10 @@ namespace Adaptive.Cluster.Service
 
                 encoder
                     .ArchiveStreamId(archiveContext.ControlRequestStreamId())
-                    .ServiceControlStreamId(serviceControlStreamId)
+                    .ServiceStreamId(serviceStreamId)
+                    .ConsensusModuleStreamId(consensusModuleStreamId)
                     .IngressStreamId(0)
-                    .MemberId(-1)
+                    .MemberId(Adaptive.Aeron.Aeron.NULL_VALUE)
                     .ServiceId(serviceId)
                     .AeronDirectory(aeron.Ctx().AeronDirectoryName())
                     .ArchiveChannel(archiveContext.ControlRequestChannel())

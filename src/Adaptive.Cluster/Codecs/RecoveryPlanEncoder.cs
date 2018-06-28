@@ -9,8 +9,8 @@ namespace Adaptive.Cluster.Codecs {
 
 public class RecoveryPlanEncoder
 {
-    public const ushort BLOCK_LENGTH = 32;
-    public const ushort TEMPLATE_ID = 110;
+    public const ushort BLOCK_LENGTH = 48;
+    public const ushort TEMPLATE_ID = 62;
     public const ushort SCHEMA_ID = 1;
     public const ushort SCHEMA_VERSION = 1;
 
@@ -96,9 +96,105 @@ public class RecoveryPlanEncoder
         this._limit = limit;
     }
 
-    public static int LastLeadershipTermIdEncodingOffset()
+    public static int CorrelationIdEncodingOffset()
     {
         return 0;
+    }
+
+    public static int CorrelationIdEncodingLength()
+    {
+        return 8;
+    }
+
+    public static long CorrelationIdNullValue()
+    {
+        return -9223372036854775808L;
+    }
+
+    public static long CorrelationIdMinValue()
+    {
+        return -9223372036854775807L;
+    }
+
+    public static long CorrelationIdMaxValue()
+    {
+        return 9223372036854775807L;
+    }
+
+    public RecoveryPlanEncoder CorrelationId(long value)
+    {
+        _buffer.PutLong(_offset + 0, value, ByteOrder.LittleEndian);
+        return this;
+    }
+
+
+    public static int RequestMemberIdEncodingOffset()
+    {
+        return 8;
+    }
+
+    public static int RequestMemberIdEncodingLength()
+    {
+        return 4;
+    }
+
+    public static int RequestMemberIdNullValue()
+    {
+        return -2147483648;
+    }
+
+    public static int RequestMemberIdMinValue()
+    {
+        return -2147483647;
+    }
+
+    public static int RequestMemberIdMaxValue()
+    {
+        return 2147483647;
+    }
+
+    public RecoveryPlanEncoder RequestMemberId(int value)
+    {
+        _buffer.PutInt(_offset + 8, value, ByteOrder.LittleEndian);
+        return this;
+    }
+
+
+    public static int LeaderMemberIdEncodingOffset()
+    {
+        return 12;
+    }
+
+    public static int LeaderMemberIdEncodingLength()
+    {
+        return 4;
+    }
+
+    public static int LeaderMemberIdNullValue()
+    {
+        return -2147483648;
+    }
+
+    public static int LeaderMemberIdMinValue()
+    {
+        return -2147483647;
+    }
+
+    public static int LeaderMemberIdMaxValue()
+    {
+        return 2147483647;
+    }
+
+    public RecoveryPlanEncoder LeaderMemberId(int value)
+    {
+        _buffer.PutInt(_offset + 12, value, ByteOrder.LittleEndian);
+        return this;
+    }
+
+
+    public static int LastLeadershipTermIdEncodingOffset()
+    {
+        return 16;
     }
 
     public static int LastLeadershipTermIdEncodingLength()
@@ -123,14 +219,14 @@ public class RecoveryPlanEncoder
 
     public RecoveryPlanEncoder LastLeadershipTermId(long value)
     {
-        _buffer.PutLong(_offset + 0, value, ByteOrder.LittleEndian);
+        _buffer.PutLong(_offset + 16, value, ByteOrder.LittleEndian);
         return this;
     }
 
 
     public static int LastTermBaseLogPositionEncodingOffset()
     {
-        return 8;
+        return 24;
     }
 
     public static int LastTermBaseLogPositionEncodingLength()
@@ -155,89 +251,89 @@ public class RecoveryPlanEncoder
 
     public RecoveryPlanEncoder LastTermBaseLogPosition(long value)
     {
-        _buffer.PutLong(_offset + 8, value, ByteOrder.LittleEndian);
-        return this;
-    }
-
-
-    public static int LastTermPositionCommittedEncodingOffset()
-    {
-        return 16;
-    }
-
-    public static int LastTermPositionCommittedEncodingLength()
-    {
-        return 8;
-    }
-
-    public static long LastTermPositionCommittedNullValue()
-    {
-        return -9223372036854775808L;
-    }
-
-    public static long LastTermPositionCommittedMinValue()
-    {
-        return -9223372036854775807L;
-    }
-
-    public static long LastTermPositionCommittedMaxValue()
-    {
-        return 9223372036854775807L;
-    }
-
-    public RecoveryPlanEncoder LastTermPositionCommitted(long value)
-    {
-        _buffer.PutLong(_offset + 16, value, ByteOrder.LittleEndian);
-        return this;
-    }
-
-
-    public static int LastTermPositionAppendedEncodingOffset()
-    {
-        return 24;
-    }
-
-    public static int LastTermPositionAppendedEncodingLength()
-    {
-        return 8;
-    }
-
-    public static long LastTermPositionAppendedNullValue()
-    {
-        return -9223372036854775808L;
-    }
-
-    public static long LastTermPositionAppendedMinValue()
-    {
-        return -9223372036854775807L;
-    }
-
-    public static long LastTermPositionAppendedMaxValue()
-    {
-        return 9223372036854775807L;
-    }
-
-    public RecoveryPlanEncoder LastTermPositionAppended(long value)
-    {
         _buffer.PutLong(_offset + 24, value, ByteOrder.LittleEndian);
         return this;
     }
 
 
-    private StepsEncoder _Steps = new StepsEncoder();
-
-    public static long StepsId()
+    public static int AppendedLogPositionEncodingOffset()
     {
-        return 5;
+        return 32;
     }
 
-    public StepsEncoder StepsCount(int count)
+    public static int AppendedLogPositionEncodingLength()
     {
-        _Steps.Wrap(_parentMessage, _buffer, count);
-        return _Steps;
+        return 8;
     }
 
-    public class StepsEncoder
+    public static long AppendedLogPositionNullValue()
+    {
+        return -9223372036854775808L;
+    }
+
+    public static long AppendedLogPositionMinValue()
+    {
+        return -9223372036854775807L;
+    }
+
+    public static long AppendedLogPositionMaxValue()
+    {
+        return 9223372036854775807L;
+    }
+
+    public RecoveryPlanEncoder AppendedLogPosition(long value)
+    {
+        _buffer.PutLong(_offset + 32, value, ByteOrder.LittleEndian);
+        return this;
+    }
+
+
+    public static int CommittedLogPositionEncodingOffset()
+    {
+        return 40;
+    }
+
+    public static int CommittedLogPositionEncodingLength()
+    {
+        return 8;
+    }
+
+    public static long CommittedLogPositionNullValue()
+    {
+        return -9223372036854775808L;
+    }
+
+    public static long CommittedLogPositionMinValue()
+    {
+        return -9223372036854775807L;
+    }
+
+    public static long CommittedLogPositionMaxValue()
+    {
+        return 9223372036854775807L;
+    }
+
+    public RecoveryPlanEncoder CommittedLogPosition(long value)
+    {
+        _buffer.PutLong(_offset + 40, value, ByteOrder.LittleEndian);
+        return this;
+    }
+
+
+    private SnapshotsEncoder _Snapshots = new SnapshotsEncoder();
+
+    public static long SnapshotsId()
+    {
+        return 8;
+    }
+
+    public SnapshotsEncoder SnapshotsCount(int count)
+    {
+        _Snapshots.Wrap(_parentMessage, _buffer, count);
+        return _Snapshots;
+    }
+
+    public class SnapshotsEncoder
     {
         private static int HEADER_SIZE = 4;
         private GroupSizeEncodingEncoder _dimensions = new GroupSizeEncodingEncoder();
@@ -258,7 +354,7 @@ public class RecoveryPlanEncoder
             this._parentMessage = parentMessage;
             this._buffer = buffer;
             _dimensions.Wrap(buffer, parentMessage.Limit());
-            _dimensions.BlockLength((ushort)72);
+            _dimensions.BlockLength((ushort)44);
             _dimensions.NumInGroup((ushort)count);
             _index = -1;
             this._count = count;
@@ -272,10 +368,10 @@ public class RecoveryPlanEncoder
 
         public static int SbeBlockLength()
         {
-            return 72;
+            return 44;
         }
 
-        public StepsEncoder Next()
+        public SnapshotsEncoder Next()
         {
             if (_index + 1 >= _count)
             {
@@ -289,73 +385,9 @@ public class RecoveryPlanEncoder
             return this;
         }
 
-        public static int RecordingStartPositionEncodingOffset()
-        {
-            return 0;
-        }
-
-        public static int RecordingStartPositionEncodingLength()
-        {
-            return 8;
-        }
-
-        public static long RecordingStartPositionNullValue()
-        {
-            return -9223372036854775808L;
-        }
-
-        public static long RecordingStartPositionMinValue()
-        {
-            return -9223372036854775807L;
-        }
-
-        public static long RecordingStartPositionMaxValue()
-        {
-            return 9223372036854775807L;
-        }
-
-        public StepsEncoder RecordingStartPosition(long value)
-        {
-            _buffer.PutLong(_offset + 0, value, ByteOrder.LittleEndian);
-            return this;
-        }
-
-
-        public static int RecordingStopPositionEncodingOffset()
-        {
-            return 8;
-        }
-
-        public static int RecordingStopPositionEncodingLength()
-        {
-            return 8;
-        }
-
-        public static long RecordingStopPositionNullValue()
-        {
-            return -9223372036854775808L;
-        }
-
-        public static long RecordingStopPositionMinValue()
-        {
-            return -9223372036854775807L;
-        }
-
-        public static long RecordingStopPositionMaxValue()
-        {
-            return 9223372036854775807L;
-        }
-
-        public StepsEncoder RecordingStopPosition(long value)
-        {
-            _buffer.PutLong(_offset + 8, value, ByteOrder.LittleEndian);
-            return this;
-        }
-
-
         public static int RecordingIdEncodingOffset()
         {
-            return 16;
+            return 0;
         }
 
         public static int RecordingIdEncodingLength()
@@ -378,16 +410,16 @@ public class RecoveryPlanEncoder
             return 9223372036854775807L;
         }
 
-        public StepsEncoder RecordingId(long value)
+        public SnapshotsEncoder RecordingId(long value)
         {
-            _buffer.PutLong(_offset + 16, value, ByteOrder.LittleEndian);
+            _buffer.PutLong(_offset + 0, value, ByteOrder.LittleEndian);
             return this;
         }
 
 
         public static int LeadershipTermIdEncodingOffset()
         {
-            return 24;
+            return 8;
         }
 
         public static int LeadershipTermIdEncodingLength()
@@ -410,16 +442,16 @@ public class RecoveryPlanEncoder
             return 9223372036854775807L;
         }
 
-        public StepsEncoder LeadershipTermId(long value)
+        public SnapshotsEncoder LeadershipTermId(long value)
         {
-            _buffer.PutLong(_offset + 24, value, ByteOrder.LittleEndian);
+            _buffer.PutLong(_offset + 8, value, ByteOrder.LittleEndian);
             return this;
         }
 
 
         public static int TermBaseLogPositionEncodingOffset()
         {
-            return 32;
+            return 16;
         }
 
         public static int TermBaseLogPositionEncodingLength()
@@ -442,48 +474,48 @@ public class RecoveryPlanEncoder
             return 9223372036854775807L;
         }
 
-        public StepsEncoder TermBaseLogPosition(long value)
+        public SnapshotsEncoder TermBaseLogPosition(long value)
         {
-            _buffer.PutLong(_offset + 32, value, ByteOrder.LittleEndian);
+            _buffer.PutLong(_offset + 16, value, ByteOrder.LittleEndian);
             return this;
         }
 
 
-        public static int TermPositionEncodingOffset()
+        public static int LogPositionEncodingOffset()
         {
-            return 40;
+            return 24;
         }
 
-        public static int TermPositionEncodingLength()
+        public static int LogPositionEncodingLength()
         {
             return 8;
         }
 
-        public static long TermPositionNullValue()
+        public static long LogPositionNullValue()
         {
             return -9223372036854775808L;
         }
 
-        public static long TermPositionMinValue()
+        public static long LogPositionMinValue()
         {
             return -9223372036854775807L;
         }
 
-        public static long TermPositionMaxValue()
+        public static long LogPositionMaxValue()
         {
             return 9223372036854775807L;
         }
 
-        public StepsEncoder TermPosition(long value)
+        public SnapshotsEncoder LogPosition(long value)
         {
-            _buffer.PutLong(_offset + 40, value, ByteOrder.LittleEndian);
+            _buffer.PutLong(_offset + 24, value, ByteOrder.LittleEndian);
             return this;
         }
 
 
         public static int TimestampEncodingOffset()
         {
-            return 48;
+            return 32;
         }
 
         public static int TimestampEncodingLength()
@@ -506,137 +538,427 @@ public class RecoveryPlanEncoder
             return 9223372036854775807L;
         }
 
-        public StepsEncoder Timestamp(long value)
+        public SnapshotsEncoder Timestamp(long value)
         {
-            _buffer.PutLong(_offset + 48, value, ByteOrder.LittleEndian);
+            _buffer.PutLong(_offset + 32, value, ByteOrder.LittleEndian);
             return this;
         }
 
 
-        public static int VotedForMemberIdEncodingOffset()
+        public static int ServiceIdEncodingOffset()
         {
-            return 56;
+            return 40;
         }
 
-        public static int VotedForMemberIdEncodingLength()
+        public static int ServiceIdEncodingLength()
         {
             return 4;
         }
 
-        public static int VotedForMemberIdNullValue()
+        public static int ServiceIdNullValue()
         {
             return -2147483648;
         }
 
-        public static int VotedForMemberIdMinValue()
+        public static int ServiceIdMinValue()
         {
             return -2147483647;
         }
 
-        public static int VotedForMemberIdMaxValue()
+        public static int ServiceIdMaxValue()
         {
             return 2147483647;
         }
 
-        public StepsEncoder VotedForMemberId(int value)
+        public SnapshotsEncoder ServiceId(int value)
+        {
+            _buffer.PutInt(_offset + 40, value, ByteOrder.LittleEndian);
+            return this;
+        }
+
+    }
+
+    private LogsEncoder _Logs = new LogsEncoder();
+
+    public static long LogsId()
+    {
+        return 15;
+    }
+
+    public LogsEncoder LogsCount(int count)
+    {
+        _Logs.Wrap(_parentMessage, _buffer, count);
+        return _Logs;
+    }
+
+    public class LogsEncoder
+    {
+        private static int HEADER_SIZE = 4;
+        private GroupSizeEncodingEncoder _dimensions = new GroupSizeEncodingEncoder();
+        private RecoveryPlanEncoder _parentMessage;
+        private IMutableDirectBuffer _buffer;
+        private int _count;
+        private int _index;
+        private int _offset;
+
+        public void Wrap(
+            RecoveryPlanEncoder parentMessage, IMutableDirectBuffer buffer, int count)
+        {
+            if (count < 0 || count > 65534)
+            {
+                throw new ArgumentException("count outside allowed range: count=" + count);
+            }
+
+            this._parentMessage = parentMessage;
+            this._buffer = buffer;
+            _dimensions.Wrap(buffer, parentMessage.Limit());
+            _dimensions.BlockLength((ushort)64);
+            _dimensions.NumInGroup((ushort)count);
+            _index = -1;
+            this._count = count;
+            parentMessage.Limit(parentMessage.Limit() + HEADER_SIZE);
+        }
+
+        public static int SbeHeaderSize()
+        {
+            return HEADER_SIZE;
+        }
+
+        public static int SbeBlockLength()
+        {
+            return 64;
+        }
+
+        public LogsEncoder Next()
+        {
+            if (_index + 1 >= _count)
+            {
+                throw new IndexOutOfRangeException();
+            }
+
+            _offset = _parentMessage.Limit();
+            _parentMessage.Limit(_offset + SbeBlockLength());
+            ++_index;
+
+            return this;
+        }
+
+        public static int RecordingIdEncodingOffset()
+        {
+            return 0;
+        }
+
+        public static int RecordingIdEncodingLength()
+        {
+            return 8;
+        }
+
+        public static long RecordingIdNullValue()
+        {
+            return -9223372036854775808L;
+        }
+
+        public static long RecordingIdMinValue()
+        {
+            return -9223372036854775807L;
+        }
+
+        public static long RecordingIdMaxValue()
+        {
+            return 9223372036854775807L;
+        }
+
+        public LogsEncoder RecordingId(long value)
+        {
+            _buffer.PutLong(_offset + 0, value, ByteOrder.LittleEndian);
+            return this;
+        }
+
+
+        public static int LeadershipTermIdEncodingOffset()
+        {
+            return 8;
+        }
+
+        public static int LeadershipTermIdEncodingLength()
+        {
+            return 8;
+        }
+
+        public static long LeadershipTermIdNullValue()
+        {
+            return -9223372036854775808L;
+        }
+
+        public static long LeadershipTermIdMinValue()
+        {
+            return -9223372036854775807L;
+        }
+
+        public static long LeadershipTermIdMaxValue()
+        {
+            return 9223372036854775807L;
+        }
+
+        public LogsEncoder LeadershipTermId(long value)
+        {
+            _buffer.PutLong(_offset + 8, value, ByteOrder.LittleEndian);
+            return this;
+        }
+
+
+        public static int TermBaseLogPositionEncodingOffset()
+        {
+            return 16;
+        }
+
+        public static int TermBaseLogPositionEncodingLength()
+        {
+            return 8;
+        }
+
+        public static long TermBaseLogPositionNullValue()
+        {
+            return -9223372036854775808L;
+        }
+
+        public static long TermBaseLogPositionMinValue()
+        {
+            return -9223372036854775807L;
+        }
+
+        public static long TermBaseLogPositionMaxValue()
+        {
+            return 9223372036854775807L;
+        }
+
+        public LogsEncoder TermBaseLogPosition(long value)
+        {
+            _buffer.PutLong(_offset + 16, value, ByteOrder.LittleEndian);
+            return this;
+        }
+
+
+        public static int LogPositionEncodingOffset()
+        {
+            return 24;
+        }
+
+        public static int LogPositionEncodingLength()
+        {
+            return 8;
+        }
+
+        public static long LogPositionNullValue()
+        {
+            return -9223372036854775808L;
+        }
+
+        public static long LogPositionMinValue()
+        {
+            return -9223372036854775807L;
+        }
+
+        public static long LogPositionMaxValue()
+        {
+            return 9223372036854775807L;
+        }
+
+        public LogsEncoder LogPosition(long value)
+        {
+            _buffer.PutLong(_offset + 24, value, ByteOrder.LittleEndian);
+            return this;
+        }
+
+
+        public static int StartPositionEncodingOffset()
+        {
+            return 32;
+        }
+
+        public static int StartPositionEncodingLength()
+        {
+            return 8;
+        }
+
+        public static long StartPositionNullValue()
+        {
+            return -9223372036854775808L;
+        }
+
+        public static long StartPositionMinValue()
+        {
+            return -9223372036854775807L;
+        }
+
+        public static long StartPositionMaxValue()
+        {
+            return 9223372036854775807L;
+        }
+
+        public LogsEncoder StartPosition(long value)
+        {
+            _buffer.PutLong(_offset + 32, value, ByteOrder.LittleEndian);
+            return this;
+        }
+
+
+        public static int StopPositionEncodingOffset()
+        {
+            return 40;
+        }
+
+        public static int StopPositionEncodingLength()
+        {
+            return 8;
+        }
+
+        public static long StopPositionNullValue()
+        {
+            return -9223372036854775808L;
+        }
+
+        public static long StopPositionMinValue()
+        {
+            return -9223372036854775807L;
+        }
+
+        public static long StopPositionMaxValue()
+        {
+            return 9223372036854775807L;
+        }
+
+        public LogsEncoder StopPosition(long value)
+        {
+            _buffer.PutLong(_offset + 40, value, ByteOrder.LittleEndian);
+            return this;
+        }
+
+
+        public static int InitialTermIdEncodingOffset()
+        {
+            return 48;
+        }
+
+        public static int InitialTermIdEncodingLength()
+        {
+            return 4;
+        }
+
+        public static int InitialTermIdNullValue()
+        {
+            return -2147483648;
+        }
+
+        public static int InitialTermIdMinValue()
+        {
+            return -2147483647;
+        }
+
+        public static int InitialTermIdMaxValue()
+        {
+            return 2147483647;
+        }
+
+        public LogsEncoder InitialTermId(int value)
+        {
+            _buffer.PutInt(_offset + 48, value, ByteOrder.LittleEndian);
+            return this;
+        }
+
+
+        public static int TermBufferLengthEncodingOffset()
+        {
+            return 52;
+        }
+
+        public static int TermBufferLengthEncodingLength()
+        {
+            return 4;
+        }
+
+        public static int TermBufferLengthNullValue()
+        {
+            return -2147483648;
+        }
+
+        public static int TermBufferLengthMinValue()
+        {
+            return -2147483647;
+        }
+
+        public static int TermBufferLengthMaxValue()
+        {
+            return 2147483647;
+        }
+
+        public LogsEncoder TermBufferLength(int value)
+        {
+            _buffer.PutInt(_offset + 52, value, ByteOrder.LittleEndian);
+            return this;
+        }
+
+
+        public static int MtuLengthEncodingOffset()
+        {
+            return 56;
+        }
+
+        public static int MtuLengthEncodingLength()
+        {
+            return 4;
+        }
+
+        public static int MtuLengthNullValue()
+        {
+            return -2147483648;
+        }
+
+        public static int MtuLengthMinValue()
+        {
+            return -2147483647;
+        }
+
+        public static int MtuLengthMaxValue()
+        {
+            return 2147483647;
+        }
+
+        public LogsEncoder MtuLength(int value)
         {
             _buffer.PutInt(_offset + 56, value, ByteOrder.LittleEndian);
             return this;
         }
 
 
-        public static int EntryTypeEncodingOffset()
+        public static int SessionIdEncodingOffset()
         {
             return 60;
         }
 
-        public static int EntryTypeEncodingLength()
+        public static int SessionIdEncodingLength()
         {
             return 4;
         }
 
-        public static int EntryTypeNullValue()
+        public static int SessionIdNullValue()
         {
             return -2147483648;
         }
 
-        public static int EntryTypeMinValue()
+        public static int SessionIdMinValue()
         {
             return -2147483647;
         }
 
-        public static int EntryTypeMaxValue()
+        public static int SessionIdMaxValue()
         {
             return 2147483647;
         }
 
-        public StepsEncoder EntryType(int value)
+        public LogsEncoder SessionId(int value)
         {
             _buffer.PutInt(_offset + 60, value, ByteOrder.LittleEndian);
-            return this;
-        }
-
-
-        public static int EntryIndexEncodingOffset()
-        {
-            return 64;
-        }
-
-        public static int EntryIndexEncodingLength()
-        {
-            return 4;
-        }
-
-        public static int EntryIndexNullValue()
-        {
-            return -2147483648;
-        }
-
-        public static int EntryIndexMinValue()
-        {
-            return -2147483647;
-        }
-
-        public static int EntryIndexMaxValue()
-        {
-            return 2147483647;
-        }
-
-        public StepsEncoder EntryIndex(int value)
-        {
-            _buffer.PutInt(_offset + 64, value, ByteOrder.LittleEndian);
-            return this;
-        }
-
-
-        public static int RecordingSessionIdEncodingOffset()
-        {
-            return 68;
-        }
-
-        public static int RecordingSessionIdEncodingLength()
-        {
-            return 4;
-        }
-
-        public static int RecordingSessionIdNullValue()
-        {
-            return -2147483648;
-        }
-
-        public static int RecordingSessionIdMinValue()
-        {
-            return -2147483647;
-        }
-
-        public static int RecordingSessionIdMaxValue()
-        {
-            return 2147483647;
-        }
-
-        public StepsEncoder RecordingSessionId(int value)
-        {
-            _buffer.PutInt(_offset + 68, value, ByteOrder.LittleEndian);
             return this;
         }
 

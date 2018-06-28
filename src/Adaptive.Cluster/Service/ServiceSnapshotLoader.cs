@@ -2,6 +2,7 @@
 using Adaptive.Aeron;
 using Adaptive.Aeron.LogBuffer;
 using Adaptive.Agrona;
+using Adaptive.Cluster.Client;
 using Adaptive.Cluster.Codecs;
 
 namespace Adaptive.Cluster.Service
@@ -42,12 +43,16 @@ namespace Adaptive.Cluster.Service
             switch (templateId)
             {
                 case SnapshotMarkerDecoder.TEMPLATE_ID:
-                    snapshotMarkerDecoder.Wrap(buffer, offset + MessageHeaderDecoder.ENCODED_LENGTH, messageHeaderDecoder.BlockLength(), messageHeaderDecoder.Version());
+                    snapshotMarkerDecoder.Wrap(
+                        buffer,
+                        offset + MessageHeaderDecoder.ENCODED_LENGTH,
+                        messageHeaderDecoder.BlockLength(),
+                        messageHeaderDecoder.Version());
 
                     long typeId = snapshotMarkerDecoder.TypeId();
                     if (typeId != ClusteredServiceContainer.SNAPSHOT_TYPE_ID)
                     {
-                        throw new InvalidOperationException("unexpected snapshot type: " + typeId);
+                        throw new ClusterException("unexpected snapshot type: " + typeId);
                     }
 
                     switch (snapshotMarkerDecoder.Mark())
@@ -55,7 +60,7 @@ namespace Adaptive.Cluster.Service
                         case SnapshotMark.BEGIN:
                             if (inSnapshot)
                             {
-                                throw new InvalidOperationException("already in snapshot");
+                                throw new ClusterException("already in snapshot");
                             }
 
                             inSnapshot = true;
@@ -64,7 +69,7 @@ namespace Adaptive.Cluster.Service
                         case SnapshotMark.END:
                             if (!inSnapshot)
                             {
-                                throw new InvalidOperationException("missing begin snapshot");
+                                throw new ClusterException("missing begin snapshot");
                             }
 
                             isDone = true;
@@ -75,9 +80,9 @@ namespace Adaptive.Cluster.Service
 
                 case ClientSessionDecoder.TEMPLATE_ID:
                     clientSessionDecoder.Wrap(
-                        buffer, 
-                        offset + MessageHeaderDecoder.ENCODED_LENGTH, 
-                        messageHeaderDecoder.BlockLength(), 
+                        buffer,
+                        offset + MessageHeaderDecoder.ENCODED_LENGTH,
+                        messageHeaderDecoder.BlockLength(),
                         messageHeaderDecoder.Version());
 
                     string responseChannel = clientSessionDecoder.ResponseChannel();
@@ -85,14 +90,15 @@ namespace Adaptive.Cluster.Service
                     clientSessionDecoder.GetEncodedPrincipal(encodedPrincipal, 0, encodedPrincipal.Length);
 
                     agent.AddSession(
-                        clientSessionDecoder.ClusterSessionId(), 
-                        clientSessionDecoder.ResponseStreamId(), 
-                        responseChannel, 
+                        clientSessionDecoder.ClusterSessionId(),
+                        clientSessionDecoder.LastCorrelationId(),
+                        clientSessionDecoder.ResponseStreamId(),
+                        responseChannel,
                         encodedPrincipal);
                     break;
 
                 default:
-                    throw new InvalidOperationException("unknown template id: " + templateId);
+                    throw new ClusterException("unknown template id: " + templateId);
             }
 
             return ControlledFragmentHandlerAction.CONTINUE;

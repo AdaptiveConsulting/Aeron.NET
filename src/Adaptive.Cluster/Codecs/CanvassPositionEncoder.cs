@@ -96,9 +96,41 @@ public class CanvassPositionEncoder
         this._limit = limit;
     }
 
-    public static int LogPositionEncodingOffset()
+    public static int LogLeadershipTermIdEncodingOffset()
     {
         return 0;
+    }
+
+    public static int LogLeadershipTermIdEncodingLength()
+    {
+        return 8;
+    }
+
+    public static long LogLeadershipTermIdNullValue()
+    {
+        return -9223372036854775808L;
+    }
+
+    public static long LogLeadershipTermIdMinValue()
+    {
+        return -9223372036854775807L;
+    }
+
+    public static long LogLeadershipTermIdMaxValue()
+    {
+        return 9223372036854775807L;
+    }
+
+    public CanvassPositionEncoder LogLeadershipTermId(long value)
+    {
+        _buffer.PutLong(_offset + 0, value, ByteOrder.LittleEndian);
+        return this;
+    }
+
+
+    public static int LogPositionEncodingOffset()
+    {
+        return 8;
     }
 
     public static int LogPositionEncodingLength()
@@ -122,38 +154,6 @@ public class CanvassPositionEncoder
     }
 
     public CanvassPositionEncoder LogPosition(long value)
-    {
-        _buffer.PutLong(_offset + 0, value, ByteOrder.LittleEndian);
-        return this;
-    }
-
-
-    public static int LeadershipTermIdEncodingOffset()
-    {
-        return 8;
-    }
-
-    public static int LeadershipTermIdEncodingLength()
-    {
-        return 8;
-    }
-
-    public static long LeadershipTermIdNullValue()
-    {
-        return -9223372036854775808L;
-    }
-
-    public static long LeadershipTermIdMinValue()
-    {
-        return -9223372036854775807L;
-    }
-
-    public static long LeadershipTermIdMaxValue()
-    {
-        return 9223372036854775807L;
-    }
-
-    public CanvassPositionEncoder LeadershipTermId(long value)
     {
         _buffer.PutLong(_offset + 8, value, ByteOrder.LittleEndian);
         return this;

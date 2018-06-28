@@ -14,21 +14,19 @@
  * limitations under the License.
  */
 
-using System;
-
 namespace Adaptive.Aeron.Exceptions
 {
     /// <summary>
     /// Caused when a error occurs during addition or release of <seealso cref="Publication"/>s
     /// or <seealso cref="Subscription"/>s
     /// </summary>
-    public class RegistrationException : Exception
+    public class RegistrationException : AeronException
     {
         private readonly ErrorCode _code;
 
         public RegistrationException(ErrorCode code, string msg) : base(msg)
         {
-            this._code = code;
+            _code = code;
         }
 
         /// <summary>

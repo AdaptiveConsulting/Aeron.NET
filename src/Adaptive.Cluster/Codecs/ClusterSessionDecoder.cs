@@ -142,27 +142,27 @@ public class ClusterSessionDecoder
     }
 
 
-    public static int OpenedTermPositionId()
+    public static int OpenedLogPositionId()
     {
         return 2;
     }
 
-    public static int OpenedTermPositionSinceVersion()
+    public static int OpenedLogPositionSinceVersion()
     {
         return 0;
     }
 
-    public static int OpenedTermPositionEncodingOffset()
+    public static int OpenedLogPositionEncodingOffset()
     {
         return 8;
     }
 
-    public static int OpenedTermPositionEncodingLength()
+    public static int OpenedLogPositionEncodingLength()
     {
         return 8;
     }
 
-    public static string OpenedTermPositionMetaAttribute(MetaAttribute metaAttribute)
+    public static string OpenedLogPositionMetaAttribute(MetaAttribute metaAttribute)
     {
         switch (metaAttribute)
         {
@@ -175,22 +175,22 @@ public class ClusterSessionDecoder
         return "";
     }
 
-    public static long OpenedTermPositionNullValue()
+    public static long OpenedLogPositionNullValue()
     {
         return -9223372036854775808L;
     }
 
-    public static long OpenedTermPositionMinValue()
+    public static long OpenedLogPositionMinValue()
     {
         return -9223372036854775807L;
     }
 
-    public static long OpenedTermPositionMaxValue()
+    public static long OpenedLogPositionMaxValue()
     {
         return 9223372036854775807L;
     }
 
-    public long OpenedTermPosition()
+    public long OpenedLogPosition()
     {
         return _buffer.GetLong(_offset + 8, ByteOrder.LittleEndian);
     }
@@ -506,10 +506,10 @@ public class ClusterSessionDecoder
         builder.Append("ClusterSessionId=");
         builder.Append(ClusterSessionId());
         builder.Append('|');
-        //Token{signal=BEGIN_FIELD, name='openedTermPosition', referencedName='null', description='null', id=2, version=0, deprecated=0, encodedLength=0, offset=8, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=BEGIN_FIELD, name='openedLogPosition', referencedName='null', description='null', id=2, version=0, deprecated=0, encodedLength=0, offset=8, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
         //Token{signal=ENCODING, name='int64', referencedName='null', description='null', id=-1, version=0, deprecated=0, encodedLength=8, offset=8, componentTokenCount=1, encoding=Encoding{presence=REQUIRED, primitiveType=INT64, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
-        builder.Append("OpenedTermPosition=");
-        builder.Append(OpenedTermPosition());
+        builder.Append("OpenedLogPosition=");
+        builder.Append(OpenedLogPosition());
         builder.Append('|');
         //Token{signal=BEGIN_FIELD, name='lastCorrelationId', referencedName='null', description='null', id=3, version=0, deprecated=0, encodedLength=0, offset=16, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
         //Token{signal=ENCODING, name='int64', referencedName='null', description='null', id=-1, version=0, deprecated=0, encodedLength=8, offset=16, componentTokenCount=1, encoding=Encoding{presence=REQUIRED, primitiveType=INT64, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}

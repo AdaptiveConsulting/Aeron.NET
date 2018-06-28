@@ -1,8 +1,6 @@
-﻿using System;
-using Adaptive.Aeron;
+﻿using Adaptive.Aeron;
 using Adaptive.Aeron.LogBuffer;
 using Adaptive.Agrona;
-using Adaptive.Agrona.Concurrent;
 using Adaptive.Archiver.Codecs;
 
 namespace Adaptive.Archiver
@@ -82,7 +80,7 @@ namespace Adaptive.Archiver
                     break;
 
                 default:
-                    throw new InvalidOperationException("unknown templateId: " + templateId);
+                    throw new ArchiveException("unknown templateId: " + templateId);
             }
         }
 

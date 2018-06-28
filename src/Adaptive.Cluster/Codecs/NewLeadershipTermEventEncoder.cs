@@ -7,19 +7,19 @@ using Adaptive.Agrona;
 
 namespace Adaptive.Cluster.Codecs {
 
-public class ClusterActionAckEncoder
+public class NewLeadershipTermEventEncoder
 {
-    public const ushort BLOCK_LENGTH = 24;
-    public const ushort TEMPLATE_ID = 32;
+    public const ushort BLOCK_LENGTH = 32;
+    public const ushort TEMPLATE_ID = 24;
     public const ushort SCHEMA_ID = 1;
     public const ushort SCHEMA_VERSION = 1;
 
-    private ClusterActionAckEncoder _parentMessage;
+    private NewLeadershipTermEventEncoder _parentMessage;
     private IMutableDirectBuffer _buffer;
     protected int _offset;
     protected int _limit;
 
-    public ClusterActionAckEncoder()
+    public NewLeadershipTermEventEncoder()
     {
         _parentMessage = this;
     }
@@ -59,7 +59,7 @@ public class ClusterActionAckEncoder
         return _offset;
     }
 
-    public ClusterActionAckEncoder Wrap(IMutableDirectBuffer buffer, int offset)
+    public NewLeadershipTermEventEncoder Wrap(IMutableDirectBuffer buffer, int offset)
     {
         this._buffer = buffer;
         this._offset = offset;
@@ -68,7 +68,7 @@ public class ClusterActionAckEncoder
         return this;
     }
 
-    public ClusterActionAckEncoder WrapAndApplyHeader(
+    public NewLeadershipTermEventEncoder WrapAndApplyHeader(
         IMutableDirectBuffer buffer, int offset, MessageHeaderEncoder headerEncoder)
     {
         headerEncoder
@@ -96,41 +96,9 @@ public class ClusterActionAckEncoder
         this._limit = limit;
     }
 
-    public static int LogPositionEncodingOffset()
-    {
-        return 0;
-    }
-
-    public static int LogPositionEncodingLength()
-    {
-        return 8;
-    }
-
-    public static long LogPositionNullValue()
-    {
-        return -9223372036854775808L;
-    }
-
-    public static long LogPositionMinValue()
-    {
-        return -9223372036854775807L;
-    }
-
-    public static long LogPositionMaxValue()
-    {
-        return 9223372036854775807L;
-    }
-
-    public ClusterActionAckEncoder LogPosition(long value)
-    {
-        _buffer.PutLong(_offset + 0, value, ByteOrder.LittleEndian);
-        return this;
-    }
-
-
     public static int LeadershipTermIdEncodingOffset()
     {
-        return 8;
+        return 0;
     }
 
     public static int LeadershipTermIdEncodingLength()
@@ -153,60 +121,140 @@ public class ClusterActionAckEncoder
         return 9223372036854775807L;
     }
 
-    public ClusterActionAckEncoder LeadershipTermId(long value)
+    public NewLeadershipTermEventEncoder LeadershipTermId(long value)
+    {
+        _buffer.PutLong(_offset + 0, value, ByteOrder.LittleEndian);
+        return this;
+    }
+
+
+    public static int LogPositionEncodingOffset()
+    {
+        return 8;
+    }
+
+    public static int LogPositionEncodingLength()
+    {
+        return 8;
+    }
+
+    public static long LogPositionNullValue()
+    {
+        return -9223372036854775808L;
+    }
+
+    public static long LogPositionMinValue()
+    {
+        return -9223372036854775807L;
+    }
+
+    public static long LogPositionMaxValue()
+    {
+        return 9223372036854775807L;
+    }
+
+    public NewLeadershipTermEventEncoder LogPosition(long value)
     {
         _buffer.PutLong(_offset + 8, value, ByteOrder.LittleEndian);
         return this;
     }
 
 
-    public static int ServiceIdEncodingOffset()
+    public static int TimestampEncodingOffset()
     {
         return 16;
     }
 
-    public static int ServiceIdEncodingLength()
+    public static int TimestampEncodingLength()
+    {
+        return 8;
+    }
+
+    public static long TimestampNullValue()
+    {
+        return -9223372036854775808L;
+    }
+
+    public static long TimestampMinValue()
+    {
+        return -9223372036854775807L;
+    }
+
+    public static long TimestampMaxValue()
+    {
+        return 9223372036854775807L;
+    }
+
+    public NewLeadershipTermEventEncoder Timestamp(long value)
+    {
+        _buffer.PutLong(_offset + 16, value, ByteOrder.LittleEndian);
+        return this;
+    }
+
+
+    public static int LeaderMemberIdEncodingOffset()
+    {
+        return 24;
+    }
+
+    public static int LeaderMemberIdEncodingLength()
     {
         return 4;
     }
 
-    public static int ServiceIdNullValue()
+    public static int LeaderMemberIdNullValue()
     {
         return -2147483648;
     }
 
-    public static int ServiceIdMinValue()
+    public static int LeaderMemberIdMinValue()
     {
         return -2147483647;
     }
 
-    public static int ServiceIdMaxValue()
+    public static int LeaderMemberIdMaxValue()
     {
         return 2147483647;
     }
 
-    public ClusterActionAckEncoder ServiceId(int value)
+    public NewLeadershipTermEventEncoder LeaderMemberId(int value)
     {
-        _buffer.PutInt(_offset + 16, value, ByteOrder.LittleEndian);
+        _buffer.PutInt(_offset + 24, value, ByteOrder.LittleEndian);
         return this;
     }
 
 
-    public static int ActionEncodingOffset()
+    public static int LogSessionIdEncodingOffset()
     {
-        return 20;
+        return 28;
     }
 
-    public static int ActionEncodingLength()
+    public static int LogSessionIdEncodingLength()
     {
         return 4;
     }
 
-    public ClusterActionAckEncoder Action(ClusterAction value)
+    public static int LogSessionIdNullValue()
     {
-        _buffer.PutInt(_offset + 20, (int)value, ByteOrder.LittleEndian);
+        return -2147483648;
+    }
+
+    public static int LogSessionIdMinValue()
+    {
+        return -2147483647;
+    }
+
+    public static int LogSessionIdMaxValue()
+    {
+        return 2147483647;
+    }
+
+    public NewLeadershipTermEventEncoder LogSessionId(int value)
+    {
+        _buffer.PutInt(_offset + 28, value, ByteOrder.LittleEndian);
         return this;
     }
+
 
 
     public override string ToString()
@@ -216,7 +264,7 @@ public class ClusterActionAckEncoder
 
     public StringBuilder AppendTo(StringBuilder builder)
     {
-        ClusterActionAckDecoder writer = new ClusterActionAckDecoder();
+        NewLeadershipTermEventDecoder writer = new NewLeadershipTermEventDecoder();
         writer.Wrap(_buffer, _offset, BLOCK_LENGTH, SCHEMA_VERSION);
 
         return writer.AppendTo(builder);

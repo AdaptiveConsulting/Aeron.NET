@@ -1,5 +1,6 @@
 ﻿using System.Threading;
 using Adaptive.Aeron;
+using Adaptive.Aeron.Exceptions;
 using Adaptive.Aeron.LogBuffer;
 using Adaptive.Agrona.Concurrent;
 using Adaptive.Cluster.Codecs;
@@ -41,7 +42,12 @@ namespace Adaptive.Cluster.Service
                 long result = publication.TryClaim(ENCODED_MARKER_LENGTH, bufferClaim);
                 if (result > 0)
                 {
-                    snapshotMarkerEncoder.WrapAndApplyHeader(bufferClaim.Buffer, bufferClaim.Offset, messageHeaderEncoder).TypeId(snapshotTypeId).LogPosition(logPosition).LeadershipTermId(leadershipTermId).Index(snapshotIndex).Mark(snapshotMark);
+                    snapshotMarkerEncoder.WrapAndApplyHeader(bufferClaim.Buffer, bufferClaim.Offset, messageHeaderEncoder)
+                        .TypeId(snapshotTypeId)
+                        .LogPosition(logPosition)
+                        .LeadershipTermId(leadershipTermId)
+                        .Index(snapshotIndex)
+                        .Mark(snapshotMark);
 
                     bufferClaim.Commit();
                     break;
@@ -67,7 +73,7 @@ namespace Adaptive.Cluster.Service
         {
             if (result == Publication.NOT_CONNECTED || result == Publication.CLOSED || result == Publication.MAX_POSITION_EXCEEDED)
             {
-                throw new System.InvalidOperationException("unexpected publication state: " + result);
+                throw new AeronException("unexpected publication state: " + result);
             }
         }
 
@@ -81,10 +87,7 @@ namespace Adaptive.Cluster.Service
 
         protected void InvokeAeronClient()
         {
-            if (null != aeronClientInvoker)
-            {
-                aeronClientInvoker.Invoke();
-            }
+            aeronClientInvoker?.Invoke();
         }
     }
 }

@@ -4,6 +4,7 @@ using System.IO;
 using Adaptive.Agrona;
 using Adaptive.Agrona.Concurrent;
 using Adaptive.Agrona.Concurrent.Errors;
+using Adaptive.Cluster.Client;
 using Adaptive.Cluster.Codecs.Mark;
 
 namespace Adaptive.Cluster
@@ -15,7 +16,10 @@ namespace Adaptive.Cluster
     /// </summary>
     public class ClusterMarkFile : IDisposable
     {
-        public const string FILENAME = "cluster-mark.dat";
+        public const string FILE_EXTENSION = ".dat";
+        public const string FILENAME = "cluster-mark" + FILE_EXTENSION;
+        public const string SERVICE_FILE_NAME_PREFIX = "cluster-mark-service-";
+        public const string SERVICE_FILE_NAME_FORMAT = SERVICE_FILE_NAME_PREFIX + "{0}" + FILE_EXTENSION;
         public const int HEADER_LENGTH = 8 * 1024;
 
         private readonly MarkFileHeaderDecoder headerDecoder = new MarkFileHeaderDecoder();
@@ -45,7 +49,7 @@ namespace Adaptive.Cluster
                 {
                     if (version != MarkFileHeaderDecoder.SCHEMA_VERSION)
                     {
-                        throw new ArgumentException("mark file version " + version + " does not match software:" + MarkFileHeaderDecoder.SCHEMA_VERSION);
+                        throw new ClusterException("mark file version " + version + " does not match software:" + MarkFileHeaderDecoder.SCHEMA_VERSION);
                     }
                 },
                 null);
@@ -66,6 +70,10 @@ namespace Adaptive.Cluster
 
                 errorBuffer.SetMemory(0, errorBufferLength, 0);
             }
+            else
+            {
+                headerEncoder.CandidateTermId(Aeron.Aeron.NULL_VALUE);
+            }
 
             var existingType = headerDecoder.ComponentType();
 
@@ -78,6 +86,7 @@ namespace Adaptive.Cluster
             headerEncoder.HeaderLength(HEADER_LENGTH);
             headerEncoder.ErrorBufferLength(errorBufferLength);
             headerEncoder.Pid(Process.GetCurrentProcess().Id);
+            headerEncoder.StartTimestamp(epochClock.Time());
         }
 
         public ClusterMarkFile(DirectoryInfo directory, string filename, IEpochClock epochClock, long timeoutMs, Action<string> logger)
@@ -107,6 +116,27 @@ namespace Adaptive.Cluster
         {
             markFile?.Dispose();
         }
+        
+        /// <summary>
+        /// Get the current value of a candidate term id if a vote is placed in an election.
+        /// </summary>
+        /// <returns> the current candidate term id within an election after voting or <seealso cref="Aeron#NULL_VALUE"/> if
+        /// no voting phase of an election is currently active. </returns>
+        public long CandidateTermId()
+        {
+            return buffer.GetLongVolatile(MarkFileHeaderDecoder.CandidateTermIdEncodingOffset());
+        }
+
+        /// <summary>
+        /// Record the fact that a node has voted in a current election for a candidate so it can survive a restart.
+        /// </summary>
+        /// <param name="candidateTermId"> to record that a vote has taken place. </param>
+        public void CandidateTermId(long candidateTermId)
+        {
+            buffer.PutLongVolatile(MarkFileHeaderEncoder.CandidateTermIdEncodingOffset(), candidateTermId);
+            //markFile.MappedByteBuffer().Force(); How to do this?
+        }
+
 
         public void SignalReady()
         {
@@ -198,8 +228,13 @@ namespace Adaptive.Cluster
 
             if (lengthRequired > HEADER_LENGTH)
             {
-                throw new ArgumentException($"MarkFile length required {lengthRequired} great than {HEADER_LENGTH}.");
+                throw new ClusterException($"MarkFile length required {lengthRequired} great than {HEADER_LENGTH}.");
             }
+        }
+
+        public static string MarkFilenameForService(int serviceId)
+        {
+            return string.Format(SERVICE_FILE_NAME_FORMAT, serviceId);
         }
     }
 }

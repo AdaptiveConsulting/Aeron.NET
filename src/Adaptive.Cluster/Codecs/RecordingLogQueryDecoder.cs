@@ -7,21 +7,21 @@ using Adaptive.Agrona;
 
 namespace Adaptive.Cluster.Codecs {
 
-public class QueryResponseDecoder
+public class RecordingLogQueryDecoder
 {
-    public const ushort BLOCK_LENGTH = 16;
-    public const ushort TEMPLATE_ID = 60;
+    public const ushort BLOCK_LENGTH = 32;
+    public const ushort TEMPLATE_ID = 63;
     public const ushort SCHEMA_ID = 1;
     public const ushort SCHEMA_VERSION = 1;
 
-    private QueryResponseDecoder _parentMessage;
+    private RecordingLogQueryDecoder _parentMessage;
     private IDirectBuffer _buffer;
     protected int _offset;
     protected int _limit;
     protected int _actingBlockLength;
     protected int _actingVersion;
 
-    public QueryResponseDecoder()
+    public RecordingLogQueryDecoder()
     {
         _parentMessage = this;
     }
@@ -61,7 +61,7 @@ public class QueryResponseDecoder
         return _offset;
     }
 
-    public QueryResponseDecoder Wrap(
+    public RecordingLogQueryDecoder Wrap(
         IDirectBuffer buffer, int offset, int actingBlockLength, int actingVersion)
     {
         this._buffer = buffer;
@@ -196,27 +196,27 @@ public class QueryResponseDecoder
     }
 
 
-    public static int ResponseMemberIdId()
+    public static int LeaderMemberIdId()
     {
         return 3;
     }
 
-    public static int ResponseMemberIdSinceVersion()
+    public static int LeaderMemberIdSinceVersion()
     {
         return 0;
     }
 
-    public static int ResponseMemberIdEncodingOffset()
+    public static int LeaderMemberIdEncodingOffset()
     {
         return 12;
     }
 
-    public static int ResponseMemberIdEncodingLength()
+    public static int LeaderMemberIdEncodingLength()
     {
         return 4;
     }
 
-    public static string ResponseMemberIdMetaAttribute(MetaAttribute metaAttribute)
+    public static string LeaderMemberIdMetaAttribute(MetaAttribute metaAttribute)
     {
         switch (metaAttribute)
         {
@@ -229,38 +229,48 @@ public class QueryResponseDecoder
         return "";
     }
 
-    public static int ResponseMemberIdNullValue()
+    public static int LeaderMemberIdNullValue()
     {
         return -2147483648;
     }
 
-    public static int ResponseMemberIdMinValue()
+    public static int LeaderMemberIdMinValue()
     {
         return -2147483647;
     }
 
-    public static int ResponseMemberIdMaxValue()
+    public static int LeaderMemberIdMaxValue()
     {
         return 2147483647;
     }
 
-    public int ResponseMemberId()
+    public int LeaderMemberId()
     {
         return _buffer.GetInt(_offset + 12, ByteOrder.LittleEndian);
     }
 
 
-    public static int EncodedResponseId()
+    public static int FromLeadershipTermIdId()
     {
         return 4;
     }
 
-    public static int EncodedResponseSinceVersion()
+    public static int FromLeadershipTermIdSinceVersion()
     {
         return 0;
     }
 
-    public static string EncodedResponseMetaAttribute(MetaAttribute metaAttribute)
+    public static int FromLeadershipTermIdEncodingOffset()
+    {
+        return 16;
+    }
+
+    public static int FromLeadershipTermIdEncodingLength()
+    {
+        return 8;
+    }
+
+    public static string FromLeadershipTermIdMetaAttribute(MetaAttribute metaAttribute)
     {
         switch (metaAttribute)
         {
@@ -273,40 +283,119 @@ public class QueryResponseDecoder
         return "";
     }
 
-    public static int EncodedResponseHeaderLength()
+    public static long FromLeadershipTermIdNullValue()
+    {
+        return -9223372036854775808L;
+    }
+
+    public static long FromLeadershipTermIdMinValue()
+    {
+        return -9223372036854775807L;
+    }
+
+    public static long FromLeadershipTermIdMaxValue()
+    {
+        return 9223372036854775807L;
+    }
+
+    public long FromLeadershipTermId()
+    {
+        return _buffer.GetLong(_offset + 16, ByteOrder.LittleEndian);
+    }
+
+
+    public static int CountId()
+    {
+        return 5;
+    }
+
+    public static int CountSinceVersion()
+    {
+        return 0;
+    }
+
+    public static int CountEncodingOffset()
+    {
+        return 24;
+    }
+
+    public static int CountEncodingLength()
     {
         return 4;
     }
 
-    public int EncodedResponseLength()
+    public static string CountMetaAttribute(MetaAttribute metaAttribute)
     {
-        int limit = _parentMessage.Limit();
-        return (int)unchecked((uint)_buffer.GetInt(limit, ByteOrder.LittleEndian));
+        switch (metaAttribute)
+        {
+            case MetaAttribute.EPOCH: return "unix";
+            case MetaAttribute.TIME_UNIT: return "nanosecond";
+            case MetaAttribute.SEMANTIC_TYPE: return "";
+            case MetaAttribute.PRESENCE: return "required";
+        }
+
+        return "";
     }
 
-    public int GetEncodedResponse(IMutableDirectBuffer dst, int dstOffset, int length)
+    public static int CountNullValue()
     {
-        int headerLength = 4;
-        int limit = _parentMessage.Limit();
-        int dataLength = (int)unchecked((uint)_buffer.GetInt(limit, ByteOrder.LittleEndian));
-        int bytesCopied = Math.Min(length, dataLength);
-        _parentMessage.Limit(limit + headerLength + dataLength);
-        _buffer.GetBytes(limit + headerLength, dst, dstOffset, bytesCopied);
-
-        return bytesCopied;
+        return -2147483648;
     }
 
-    public int GetEncodedResponse(byte[] dst, int dstOffset, int length)
+    public static int CountMinValue()
     {
-        int headerLength = 4;
-        int limit = _parentMessage.Limit();
-        int dataLength = (int)unchecked((uint)_buffer.GetInt(limit, ByteOrder.LittleEndian));
-        int bytesCopied = Math.Min(length, dataLength);
-        _parentMessage.Limit(limit + headerLength + dataLength);
-        _buffer.GetBytes(limit + headerLength, dst, dstOffset, bytesCopied);
-
-        return bytesCopied;
+        return -2147483647;
     }
+
+    public static int CountMaxValue()
+    {
+        return 2147483647;
+    }
+
+    public int Count()
+    {
+        return _buffer.GetInt(_offset + 24, ByteOrder.LittleEndian);
+    }
+
+
+    public static int IncludeSnapshotsId()
+    {
+        return 6;
+    }
+
+    public static int IncludeSnapshotsSinceVersion()
+    {
+        return 0;
+    }
+
+    public static int IncludeSnapshotsEncodingOffset()
+    {
+        return 28;
+    }
+
+    public static int IncludeSnapshotsEncodingLength()
+    {
+        return 4;
+    }
+
+    public static string IncludeSnapshotsMetaAttribute(MetaAttribute metaAttribute)
+    {
+        switch (metaAttribute)
+        {
+            case MetaAttribute.EPOCH: return "unix";
+            case MetaAttribute.TIME_UNIT: return "nanosecond";
+            case MetaAttribute.SEMANTIC_TYPE: return "";
+            case MetaAttribute.PRESENCE: return "required";
+        }
+
+        return "";
+    }
+
+    public BooleanType IncludeSnapshots()
+    {
+        return (BooleanType)_buffer.GetInt(_offset + 28, ByteOrder.LittleEndian);
+    }
+
 
 
     public override string ToString()
@@ -318,7 +407,7 @@ public class QueryResponseDecoder
     {
         int originalLimit = Limit();
         Limit(_offset + _actingBlockLength);
-        builder.Append("[QueryResponse](sbeTemplateId=");
+        builder.Append("[RecordingLogQuery](sbeTemplateId=");
         builder.Append(TEMPLATE_ID);
         builder.Append("|sbeSchemaId=");
         builder.Append(SCHEMA_ID);
@@ -347,14 +436,25 @@ public class QueryResponseDecoder
         builder.Append("RequestMemberId=");
         builder.Append(RequestMemberId());
         builder.Append('|');
-        //Token{signal=BEGIN_FIELD, name='responseMemberId', referencedName='null', description='null', id=3, version=0, deprecated=0, encodedLength=0, offset=12, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=BEGIN_FIELD, name='leaderMemberId', referencedName='null', description='null', id=3, version=0, deprecated=0, encodedLength=0, offset=12, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
         //Token{signal=ENCODING, name='int32', referencedName='null', description='null', id=-1, version=0, deprecated=0, encodedLength=4, offset=12, componentTokenCount=1, encoding=Encoding{presence=REQUIRED, primitiveType=INT32, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
-        builder.Append("ResponseMemberId=");
-        builder.Append(ResponseMemberId());
+        builder.Append("LeaderMemberId=");
+        builder.Append(LeaderMemberId());
         builder.Append('|');
-        //Token{signal=BEGIN_VAR_DATA, name='encodedResponse', referencedName='null', description='null', id=4, version=0, deprecated=0, encodedLength=0, offset=16, componentTokenCount=6, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
-        builder.Append("EncodedResponse=");
-        builder.Append(EncodedResponseLength() + " raw bytes");
+        //Token{signal=BEGIN_FIELD, name='fromLeadershipTermId', referencedName='null', description='null', id=4, version=0, deprecated=0, encodedLength=0, offset=16, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=ENCODING, name='int64', referencedName='null', description='null', id=-1, version=0, deprecated=0, encodedLength=8, offset=16, componentTokenCount=1, encoding=Encoding{presence=REQUIRED, primitiveType=INT64, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        builder.Append("FromLeadershipTermId=");
+        builder.Append(FromLeadershipTermId());
+        builder.Append('|');
+        //Token{signal=BEGIN_FIELD, name='count', referencedName='null', description='null', id=5, version=0, deprecated=0, encodedLength=0, offset=24, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=ENCODING, name='int32', referencedName='null', description='null', id=-1, version=0, deprecated=0, encodedLength=4, offset=24, componentTokenCount=1, encoding=Encoding{presence=REQUIRED, primitiveType=INT32, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        builder.Append("Count=");
+        builder.Append(Count());
+        builder.Append('|');
+        //Token{signal=BEGIN_FIELD, name='includeSnapshots', referencedName='null', description='null', id=6, version=0, deprecated=0, encodedLength=0, offset=28, componentTokenCount=6, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=BEGIN_ENUM, name='BooleanType', referencedName='null', description='null', id=-1, version=0, deprecated=0, encodedLength=4, offset=28, componentTokenCount=4, encoding=Encoding{presence=REQUIRED, primitiveType=INT32, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='null', timeUnit=null, semanticType='null'}}
+        builder.Append("IncludeSnapshots=");
+        builder.Append(IncludeSnapshots());
 
         Limit(originalLimit);
 

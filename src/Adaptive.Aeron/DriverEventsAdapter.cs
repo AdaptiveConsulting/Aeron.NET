@@ -51,7 +51,7 @@ namespace Adaptive.Aeron
         public int Receive(long activeCorrelationId)
         {
             _activeCorrelationId = activeCorrelationId;
-            _lastReceivedCorrelationId = -1;
+            _lastReceivedCorrelationId = Aeron.NULL_VALUE;
             
             return _broadcastReceiver.Receive(_messageHandler);
         }

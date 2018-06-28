@@ -1,2 +1,4 @@
-Driver source:
-http://repo1.maven.org/maven2/io/aeron/aeron-all/1.9.3/aeron-all-1.9.3.jar
+Driver built from source
+Agrona: 0.9.18-11-gcbee425
+SBE:    1.8.1-31-g337ef8bb
+Aeron:  1.9.2-308-gb795fd261

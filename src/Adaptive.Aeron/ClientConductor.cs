@@ -35,7 +35,7 @@ namespace Adaptive.Aeron
     /// </summary>
     internal class ClientConductor : IAgent, IDriverEventsListener
     {
-        private const long NO_CORRELATION_ID = -1;
+        private const long NO_CORRELATION_ID = Aeron.NULL_VALUE;
         private static readonly long RESOURCE_CHECK_INTERVAL_NS = 1;
         private static readonly long RESOURCE_LINGER_NS = 3;
 
@@ -496,6 +496,37 @@ namespace Adaptive.Aeron
                 _clientLock.Unlock();
             }
         }
+        
+        internal void AddRcvDestination(long registrationId, string endpointChannel)
+        {
+            _clientLock.Lock();
+            try
+            {
+                EnsureOpen();
+
+                AwaitResponse(_driverProxy.AddRcvDestination(registrationId, endpointChannel));
+            }
+            finally
+            {
+                _clientLock.Unlock();
+            }
+        }
+
+        internal void RemoveRcvDestination(long registrationId, string endpointChannel)
+        {
+            _clientLock.Lock();
+            try
+            {
+                EnsureOpen();
+
+                AwaitResponse(_driverProxy.RemoveRcvDestination(registrationId, endpointChannel));
+            }
+            finally
+            {
+                _clientLock.Unlock();
+            }
+        }
+
 
         internal virtual Counter AddCounter(int typeId, IDirectBuffer keyBuffer, int keyOffset, int keyLength, IDirectBuffer labelBuffer, int labelOffset, int labelLength)
         {

@@ -16,9 +16,10 @@ namespace Adaptive.Cluster.Client
         private readonly ChallengeDecoder challengeDecoder = new ChallengeDecoder();
         private readonly ControlledFragmentAssembler fragmentAssembler;
         private readonly Subscription subscription;
-        private long clusterSessionId = -1;
-        private long correlationId = -1;
-        private int templateId = -1;
+        private long clusterSessionId = Aeron.Aeron.NULL_VALUE;
+        private long correlationId = Aeron.Aeron.NULL_VALUE;
+        private int templateId = Aeron.Aeron.NULL_VALUE;
+        private int leaderMemberId = Aeron.Aeron.NULL_VALUE;
         private bool pollComplete;
         private EventCode eventCode;
         private string detail = "";
@@ -51,21 +52,30 @@ namespace Adaptive.Cluster.Client
         }
 
         /// <summary>
-        /// Cluster session id of the last polled event or -1 if poll returned nothing.
+        /// Cluster session id of the last polled event or <see cref="Aeron.NULL_VALUE"/> if poll returned nothing.
         /// </summary>
-        /// <returns> cluster session id of the last polled event or -1 if unrecognised template. </returns>
+        /// <returns> cluster session id of the last polled event or <see cref="Aeron.NULL_VALUE"/> if unrecognised template. </returns>
         public long ClusterSessionId()
         {
             return clusterSessionId;
         }
 
         /// <summary>
-        /// Correlation id of the last polled event or -1 if poll returned nothing.
+        /// Correlation id of the last polled event or <see cref="Aeron.NULL_VALUE"/> if poll returned nothing.
         /// </summary>
-        /// <returns> correlation id of the last polled event or -1 if unrecognised template. </returns>
+        /// <returns> correlation id of the last polled event or <see cref="Aeron.NULL_VALUE"/> if unrecognised template. </returns>
         public long CorrelationId()
         {
             return correlationId;
+        }
+        
+        /// <summary>
+        /// Leader cluster member id of the last polled event or <seealso cref="Aeron#NULL_VALUE"/> if poll returned nothing.
+        /// </summary>
+        /// <returns> leader cluster member id of the last polled event or <seealso cref="Aeron#NULL_VALUE"/> if poll returned nothing. </returns>
+        public int LeaderMemberId()
+        {
+            return leaderMemberId;
         }
 
         /// <summary>
@@ -115,9 +125,10 @@ namespace Adaptive.Cluster.Client
 
         public int Poll()
         {
-            clusterSessionId = -1;
-            correlationId = -1;
-            templateId = -1;
+            clusterSessionId = Aeron.Aeron.NULL_VALUE;
+            correlationId = Aeron.Aeron.NULL_VALUE;
+            templateId = Aeron.Aeron.NULL_VALUE;
+            leaderMemberId = Aeron.Aeron.NULL_VALUE;
             eventCode = Codecs.EventCode.NULL_VALUE;
             detail = "";
             encodedChallenge = null;
@@ -139,6 +150,7 @@ namespace Adaptive.Cluster.Client
 
                     clusterSessionId = sessionEventDecoder.ClusterSessionId();
                     correlationId = sessionEventDecoder.CorrelationId();
+                    leaderMemberId = sessionEventDecoder.LeaderMemberId();
                     eventCode = sessionEventDecoder.Code();
                     detail = sessionEventDecoder.Detail();
                     break;
@@ -170,7 +182,7 @@ namespace Adaptive.Cluster.Client
                     break;
                 
                 default:
-                    throw new InvalidOperationException("unknown templateId: " + templateId);
+                    throw new ClusterException("unknown templateId: " + templateId);
             }
 
             pollComplete = true;

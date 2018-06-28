@@ -136,7 +136,7 @@ namespace Adaptive.Aeron
         public long AddSubscription(string channel, int streamId)
 #endif
         {
-            const long registrationId = -1;
+            const long registrationId = Aeron.NULL_VALUE;
             long correlationId = _toDriverCommandBuffer.NextCorrelationId();
 
             _subscriptionMessage.CorrelationId(correlationId);
@@ -206,6 +206,35 @@ namespace Adaptive.Aeron
 
             return correlationId;
         }
+        
+        public long AddRcvDestination(long registrationId, string endpointChannel)
+        {
+            long correlationId = _toDriverCommandBuffer.NextCorrelationId();
+
+            _destinationMessage.RegistrationCorrelationId(registrationId).Channel(endpointChannel).CorrelationId(correlationId);
+
+            if (!_toDriverCommandBuffer.Write(ControlProtocolEvents.ADD_RCV_DESTINATION, _buffer, 0, _destinationMessage.Length()))
+            {
+                throw new InvalidOperationException("Could not write rcv destination command");
+            }
+
+            return correlationId;
+        }
+
+        public long RemoveRcvDestination(long registrationId, string endpointChannel)
+        {
+            long correlationId = _toDriverCommandBuffer.NextCorrelationId();
+
+            _destinationMessage.RegistrationCorrelationId(registrationId).Channel(endpointChannel).CorrelationId(correlationId);
+
+            if (!_toDriverCommandBuffer.Write(ControlProtocolEvents.REMOVE_RCV_DESTINATION, _buffer, 0, _destinationMessage.Length()))
+            {
+                throw new InvalidOperationException("Could not write rcv destination command");
+            }
+
+            return correlationId;
+        }
+
         
         public long AddCounter(int typeId, IDirectBuffer keyBuffer, int keyOffset, int keyLength, IDirectBuffer labelBuffer, int labelOffset, int labelLength)
         {

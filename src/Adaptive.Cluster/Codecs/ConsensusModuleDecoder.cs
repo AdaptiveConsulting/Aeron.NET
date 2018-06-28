@@ -7,21 +7,21 @@ using Adaptive.Agrona;
 
 namespace Adaptive.Cluster.Codecs {
 
-public class SequencerDecoder
+public class ConsensusModuleDecoder
 {
     public const ushort BLOCK_LENGTH = 8;
     public const ushort TEMPLATE_ID = 105;
     public const ushort SCHEMA_ID = 1;
     public const ushort SCHEMA_VERSION = 1;
 
-    private SequencerDecoder _parentMessage;
+    private ConsensusModuleDecoder _parentMessage;
     private IDirectBuffer _buffer;
     protected int _offset;
     protected int _limit;
     protected int _actingBlockLength;
     protected int _actingVersion;
 
-    public SequencerDecoder()
+    public ConsensusModuleDecoder()
     {
         _parentMessage = this;
     }
@@ -61,7 +61,7 @@ public class SequencerDecoder
         return _offset;
     }
 
-    public SequencerDecoder Wrap(
+    public ConsensusModuleDecoder Wrap(
         IDirectBuffer buffer, int offset, int actingBlockLength, int actingVersion)
     {
         this._buffer = buffer;
@@ -152,7 +152,7 @@ public class SequencerDecoder
     {
         int originalLimit = Limit();
         Limit(_offset + _actingBlockLength);
-        builder.Append("[Sequencer](sbeTemplateId=");
+        builder.Append("[ConsensusModule](sbeTemplateId=");
         builder.Append(TEMPLATE_ID);
         builder.Append("|sbeSchemaId=");
         builder.Append(SCHEMA_ID);

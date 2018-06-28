@@ -136,7 +136,7 @@ namespace Adaptive.Archiver
 
                     if (ControlResponseCode.ERROR == code)
                     {
-                        throw new System.InvalidOperationException("response for expectedCorrelationId=" + expectedCorrelationId + ", error: " + controlResponseDecoder.ErrorMessage());
+                        throw new ArchiveException("response for expectedCorrelationId=" + expectedCorrelationId + ", error: " + controlResponseDecoder.ErrorMessage());
                     }
 
                     break;
@@ -161,7 +161,7 @@ namespace Adaptive.Archiver
                     break;
 
                 default:
-                    throw new System.InvalidOperationException("unknown templateId: " + templateId);
+                    throw new ArchiveException("unknown templateId: " + templateId);
             }
 
             return ControlledFragmentHandlerAction.CONTINUE;

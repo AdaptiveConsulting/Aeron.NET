@@ -48,52 +48,6 @@ namespace Adaptive.Cluster.Client
             int templateId = _messageHeaderDecoder.TemplateId();
             switch (templateId)
             {
-                case SessionEventDecoder.TEMPLATE_ID:
-                {
-                    _sessionEventDecoder.Wrap(
-                        buffer,
-                        offset + MessageHeaderDecoder.ENCODED_LENGTH,
-                        _messageHeaderDecoder.BlockLength(),
-                        _messageHeaderDecoder.Version());
-
-                    var sessionId = _sessionEventDecoder.ClusterSessionId();
-                    if (sessionId == _clusterSessionId)
-                    {
-
-                        _listener.SessionEvent(
-                            _sessionEventDecoder.CorrelationId(),
-                            _sessionEventDecoder.ClusterSessionId(),
-                            _sessionEventDecoder.Code(),
-                            _sessionEventDecoder.Detail());
-                    }
-
-                    break;
-                }
-
-                case NewLeaderEventDecoder.TEMPLATE_ID:
-                {
-                    _newLeaderEventDecoder.Wrap(
-                        buffer,
-                        offset + MessageHeaderDecoder.ENCODED_LENGTH,
-                        _messageHeaderDecoder.BlockLength(),
-                        _messageHeaderDecoder.Version());
-
-                    var sessionId = _newLeaderEventDecoder.ClusterSessionId();
-                    if (sessionId == _clusterSessionId)
-                    {
-                        _listener.NewLeader(
-                            _newLeaderEventDecoder.LastCorrelationId(),
-                            _newLeaderEventDecoder.ClusterSessionId(),
-                            _newLeaderEventDecoder.LastMessageTimestamp(),
-                            _newLeaderEventDecoder.LeadershipTimestamp(),
-                            _newLeaderEventDecoder.LeadershipTermId(),
-                            _newLeaderEventDecoder.LeaderMemberId(),
-                            _newLeaderEventDecoder.MemberEndpoints());
-                    }
-
-                    break;
-                }
-
                 case SessionHeaderDecoder.TEMPLATE_ID:
                 {
                     _sessionHeaderDecoder.Wrap(
@@ -116,12 +70,55 @@ namespace Adaptive.Cluster.Client
                     }
                     break;
                 }
+                
+                case SessionEventDecoder.TEMPLATE_ID:
+                {
+                    _sessionEventDecoder.Wrap(
+                        buffer,
+                        offset + MessageHeaderDecoder.ENCODED_LENGTH,
+                        _messageHeaderDecoder.BlockLength(),
+                        _messageHeaderDecoder.Version());
+
+                    var sessionId = _sessionEventDecoder.ClusterSessionId();
+                    if (sessionId == _clusterSessionId)
+                    {
+
+                        _listener.SessionEvent(
+                            _sessionEventDecoder.CorrelationId(),
+                            sessionId,
+                            _sessionEventDecoder.LeaderMemberId(),
+                            _sessionEventDecoder.Code(),
+                            _sessionEventDecoder.Detail());
+                    }
+
+                    break;
+                }
+
+                case NewLeaderEventDecoder.TEMPLATE_ID:
+                {
+                    _newLeaderEventDecoder.Wrap(
+                        buffer,
+                        offset + MessageHeaderDecoder.ENCODED_LENGTH,
+                        _messageHeaderDecoder.BlockLength(),
+                        _messageHeaderDecoder.Version());
+
+                    var sessionId = _newLeaderEventDecoder.ClusterSessionId();
+                    if (sessionId == _clusterSessionId)
+                    {
+                        _listener.NewLeader(
+                            sessionId,
+                            _newLeaderEventDecoder.LeaderMemberId(),
+                            _newLeaderEventDecoder.MemberEndpoints());
+                    }
+
+                    break;
+                }
 
                 case ChallengeDecoder.TEMPLATE_ID:
                     break;
 
                 default:
-                    throw new InvalidOperationException("unknown templateId: " + templateId);
+                    throw new ClusterException("unknown templateId: " + templateId);
             }
         }
     }

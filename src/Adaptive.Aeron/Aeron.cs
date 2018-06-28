@@ -42,6 +42,11 @@ namespace Adaptive.Aeron
     public sealed class Aeron : IDisposable
     {
         /// <summary>
+        /// Used to represent a null value for when some value is not yet set.
+        /// </summary>
+        public const int NULL_VALUE = -1;
+        
+        /// <summary>
         /// The Default handler for Aeron runtime exceptions.
         /// When a <seealso cref="DriverTimeoutException"/> is encountered, this handler will
         /// exit the program.
@@ -440,7 +445,7 @@ namespace Adaptive.Aeron
             /// <summary>
             /// Value to represent a sessionId that is not to be used.
             /// </summary>
-            public const int NULL_SESSION_ID = -1;
+            public const int NULL_SESSION_ID = Aeron.NULL_VALUE;
 
             /// <summary>
             /// Initial term id to be used when creating an <seealso cref="ExclusivePublication"/>.
@@ -518,6 +523,11 @@ namespace Adaptive.Aeron
             /// </summary>
             public const string RELIABLE_STREAM_PARAM_NAME = "reliable";
 
+            /// <summary>
+            /// Key for the tags for a channel
+            /// </summary>
+            public const string TAGS_PARAM_NAME = "tags";
+            
             /// <summary>
             /// Get the default directory name to be used if <seealso cref="AeronDirectoryName(String)"/> is not set. This will take
             /// the <seealso cref="AERON_DIR_PROP_NAME"/> if set and if not then <seealso cref="AERON_DIR_PROP_DEFAULT"/>.

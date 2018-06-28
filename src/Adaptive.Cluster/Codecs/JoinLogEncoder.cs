@@ -9,8 +9,8 @@ namespace Adaptive.Cluster.Codecs {
 
 public class JoinLogEncoder
 {
-    public const ushort BLOCK_LENGTH = 24;
-    public const ushort TEMPLATE_ID = 33;
+    public const ushort BLOCK_LENGTH = 20;
+    public const ushort TEMPLATE_ID = 40;
     public const ushort SCHEMA_ID = 1;
     public const ushort SCHEMA_VERSION = 1;
 
@@ -223,22 +223,6 @@ public class JoinLogEncoder
         return this;
     }
 
-
-    public static int AckBeforeImageEncodingOffset()
-    {
-        return 20;
-    }
-
-    public static int AckBeforeImageEncodingLength()
-    {
-        return 4;
-    }
-
-    public JoinLogEncoder AckBeforeImage(BooleanType value)
-    {
-        _buffer.PutInt(_offset + 20, (int)value, ByteOrder.LittleEndian);
-        return this;
-    }
 
     public static int LogChannelId()
     {

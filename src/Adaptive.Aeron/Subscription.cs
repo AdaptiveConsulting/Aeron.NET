@@ -440,7 +440,36 @@ namespace Adaptive.Aeron
 
             return _fields.conductor.ChannelStatus(ChannelStatusId);
         }
+        
+        /// <summary>
+        /// Add a destination manually to a multi-destination Subscription.
+        /// </summary>
+        /// <param name="endpointChannel"> for the destination to add </param>
+        public void AddDestination(string endpointChannel)
+        {
+            if (_fields.isClosed)
+            {
+                throw new InvalidOperationException("Subscription is closed");
+            }
 
+            _fields.conductor.AddRcvDestination(_fields.registrationId, endpointChannel);
+        }
+
+        /// <summary>
+        /// Remove a previously added destination from a multi-destination Subscription.
+        /// </summary>
+        /// <param name="endpointChannel"> for the destination to remove </param>
+        public void RemoveDestination(string endpointChannel)
+        {
+            if (_fields.isClosed)
+            {
+                throw new InvalidOperationException("Subscription is closed");
+            }
+
+            _fields.conductor.RemoveRcvDestination(_fields.registrationId, endpointChannel);
+        }
+
+        
         internal int ChannelStatusId
         {
             get => _fields.channelStatusId;

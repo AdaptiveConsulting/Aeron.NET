@@ -16,15 +16,7 @@ namespace Adaptive.Archiver
     ///  |                        Recording ID                           |
     ///  |                                                               |
     ///  +---------------------------------------------------------------+
-    ///  |                     Control Session ID                        |
-    ///  |                                                               |
-    ///  +---------------------------------------------------------------+
-    ///  |                       Correlation ID                          |
-    ///  |                                                               |
-    ///  +---------------------------------------------------------------+
     ///  |                         Session ID                            |
-    ///  +---------------------------------------------------------------+
-    ///  |                         Stream ID                             |
     ///  +---------------------------------------------------------------+
     /// 
     /// </summary>
@@ -38,7 +30,7 @@ namespace Adaptive.Archiver
         /// <summary>
         /// Represents a null recording id when not found.
         /// </summary>
-        public const long NULL_RECORDING_ID = -1L;
+        public const long NULL_RECORDING_ID = Aeron.Aeron.NULL_VALUE;
 
         /// <summary>
         /// Human readable name for the counter.
@@ -46,21 +38,14 @@ namespace Adaptive.Archiver
         public const string NAME = "rec-pos";
 
         public const int RECORDING_ID_OFFSET = 0;
-        public static readonly int CONTROL_SESSION_ID_OFFSET = RECORDING_ID_OFFSET + BitUtil.SIZE_OF_LONG;
-        public static readonly int CORRELATION_ID_OFFSET = CONTROL_SESSION_ID_OFFSET + BitUtil.SIZE_OF_LONG;
-        public static readonly int SESSION_ID_OFFSET = CORRELATION_ID_OFFSET + BitUtil.SIZE_OF_LONG;
-        public static readonly int STREAM_ID_OFFSET = SESSION_ID_OFFSET + BitUtil.SIZE_OF_INT;
-        public static readonly int KEY_LENGTH = STREAM_ID_OFFSET + BitUtil.SIZE_OF_INT;
+        public static readonly int SESSION_ID_OFFSET = RECORDING_ID_OFFSET + BitUtil.SIZE_OF_LONG;
+        public static readonly int KEY_LENGTH = SESSION_ID_OFFSET + BitUtil.SIZE_OF_INT;
 
         public static Counter Allocate(Aeron.Aeron aeron, UnsafeBuffer tempBuffer, long recordingId,
-            long controlSessionId,
-            long correlationId, int sessionId, int streamId, string strippedChannel)
+             int sessionId, int streamId, string strippedChannel)
         {
             tempBuffer.PutLong(RECORDING_ID_OFFSET, recordingId);
-            tempBuffer.PutLong(CONTROL_SESSION_ID_OFFSET, controlSessionId);
-            tempBuffer.PutLong(CORRELATION_ID_OFFSET, correlationId);
             tempBuffer.PutInt(SESSION_ID_OFFSET, sessionId);
-            tempBuffer.PutInt(STREAM_ID_OFFSET, streamId);
 
             int labelLength = 0;
             labelLength += tempBuffer.PutStringWithoutLengthAscii(KEY_LENGTH, NAME + ": ");
@@ -102,35 +87,6 @@ namespace Adaptive.Archiver
             }
 
             return CountersReader.NULL_COUNTER_ID;
-        }
-
-        /// <summary>
-        /// Count the number of counters for a given session. It is possible for different recording to exist on the
-        /// same session if there are images under subscriptions with different channel and stream id.
-        /// </summary>
-        /// <param name="countersReader"> to search within. </param>
-        /// <param name="sessionId">      to search for. </param>
-        /// <returns> the count of recordings matching a session id. </returns>
-        public static int CountBySession(CountersReader countersReader, int sessionId)
-        {
-            int count = 0;
-            IDirectBuffer buffer = countersReader.MetaDataBuffer;
-
-            for (int i = 0, size = countersReader.MaxCounterId; i < size; i++)
-            {
-                if (countersReader.GetCounterState(i) == CountersReader.RECORD_ALLOCATED)
-                {
-                    int recordOffset = CountersReader.MetaDataOffset(i);
-
-                    if (buffer.GetInt(recordOffset + CountersReader.TYPE_ID_OFFSET) == RECORDING_POSITION_TYPE_ID &&
-                        buffer.GetInt(recordOffset + CountersReader.KEY_OFFSET + SESSION_ID_OFFSET) == sessionId)
-                    {
-                        ++count;
-                    }
-                }
-            }
-
-            return count;
         }
 
         /// <summary>

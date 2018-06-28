@@ -2,6 +2,7 @@
 using Adaptive.Aeron;
 using Adaptive.Agrona;
 using Adaptive.Agrona.Concurrent;
+using Adaptive.Cluster.Client;
 using Adaptive.Cluster.Codecs;
 
 namespace Adaptive.Cluster.Service
@@ -14,7 +15,8 @@ namespace Adaptive.Cluster.Service
         /// <summary>
         /// Length of the session header that will be prepended to the message.
         /// </summary>
-        public static readonly int SESSION_HEADER_LENGTH = MessageHeaderEncoder.ENCODED_LENGTH + SessionHeaderEncoder.BLOCK_LENGTH;
+        public static readonly int SESSION_HEADER_LENGTH = 
+            MessageHeaderEncoder.ENCODED_LENGTH + SessionHeaderEncoder.BLOCK_LENGTH;
 
         /// <summary>
         /// Return value to indicate egress to a session is mocked out by the cluster when in follower mode.
@@ -22,6 +24,7 @@ namespace Adaptive.Cluster.Service
         public const long MOCKED_OFFER = 1;
         
         private readonly long _id;
+        private long _lastCorrelationId;
         private readonly int _responseStreamId;
         private readonly string _responseChannel;
         private Publication _responsePublication;
@@ -29,12 +32,19 @@ namespace Adaptive.Cluster.Service
         private readonly DirectBufferVector[] _vectors = new DirectBufferVector[2];
         private readonly DirectBufferVector _messageBuffer = new DirectBufferVector();
         private readonly SessionHeaderEncoder _sessionHeaderEncoder = new SessionHeaderEncoder();
-        private readonly ICluster _cluster;
+        private readonly ClusteredServiceAgent _cluster;
         private bool _isClosing;
 
-        internal ClientSession(long sessionId, int responseStreamId, string responseChannel, byte[] encodedPrincipal, ICluster cluster)
+        internal ClientSession(
+            long sessionId,
+            long correlationId,
+            int responseStreamId,
+            string responseChannel,
+            byte[] encodedPrincipal,
+            ClusteredServiceAgent cluster)
         {
             _id = sessionId;
+            _lastCorrelationId = correlationId;
             _responseStreamId = responseStreamId;
             _responseChannel = responseChannel;
             _encodedPrincipal = encodedPrincipal;
@@ -88,6 +98,15 @@ namespace Adaptive.Cluster.Service
         /// </summary>
         /// <returns> whether a request to close this session has been made. </returns>
         public bool IsClosing => _isClosing;
+        
+        /// <summary>
+        /// Get the last correlation id processed on this session.
+        /// </summary>
+        /// <returns> the last correlation id processed on this session. </returns>
+        public long LastCorrelationId()
+        {
+            return _lastCorrelationId;
+        }
 
         /// <summary>
         /// Non-blocking publish of a partial buffer containing a message to a cluster.
@@ -98,15 +117,62 @@ namespace Adaptive.Cluster.Service
         /// <param name="length">        in bytes of the encoded message. </param>
         /// <returns> the same as <seealso cref="Publication#offer(DirectBuffer, int, int)"/> when in <seealso cref="Cluster.Role#LEADER"/>
         /// otherwise <see cref="MOCKED_OFFER"/>. </returns>
-        public long Offer(long correlationId, IDirectBuffer buffer, int offset, int length)
+        public long Offer(
+            long correlationId, 
+            IDirectBuffer buffer, 
+            int offset, 
+            int length)
         {
             if (_cluster.Role() != ClusterRole.Leader)
             {
                 return MOCKED_OFFER;
             }
 
-            _sessionHeaderEncoder.CorrelationId(correlationId);
-            _sessionHeaderEncoder.Timestamp(_cluster.TimeMs());
+            if (null == _responsePublication)
+            {
+                throw new ClusterException("session not connected id=" + _id);
+            }
+
+            _sessionHeaderEncoder
+                .CorrelationId(correlationId)
+                .Timestamp(_cluster.TimeMs());
+            
+            _messageBuffer.Reset(buffer, offset, length);
+
+            return _responsePublication.Offer(_vectors);
+        }
+
+        /// <summary>
+        /// Non-blocking publish of a partial buffer containing a message to a cluster.
+        /// </summary>
+        /// <param name="correlationId"> to be used to identify the message to the cluster. </param>
+        /// <param name="timestampMs">   to be used for when the response was generated.</param>
+        /// <param name="buffer">        containing message. </param>
+        /// <param name="offset">        offset in the buffer at which the encoded message begins. </param>
+        /// <param name="length">        in bytes of the encoded message. </param>
+        /// <returns> the same as <seealso cref="Publication.Offer(IDirectBuffer, int, int)"/> when in <seealso cref="ClusterRole.Leader"/>
+        /// otherwise <see cref="MOCKED_OFFER"/>. </returns>
+        public long Offer(
+            long correlationId,
+            long timestampMs,
+            IDirectBuffer buffer, 
+            int offset, 
+            int length)
+        {
+            if (_cluster.Role() != ClusterRole.Leader)
+            {
+                return MOCKED_OFFER;
+            }
+
+            if (null == _responsePublication)
+            {
+                throw new ClusterException("session not connected id=" + _id);
+            }
+
+            _sessionHeaderEncoder
+                .CorrelationId(correlationId)
+                .Timestamp(timestampMs);
+            
             _messageBuffer.Reset(buffer, offset, length);
 
             return _responsePublication.Offer(_vectors);
@@ -125,10 +191,20 @@ namespace Adaptive.Cluster.Service
             _isClosing = true;
         }
 
+        internal void ResetClosing()
+        {
+            _isClosing = false;
+        }
+
         internal void Disconnect()
         {
             _responsePublication?.Dispose();
             _responsePublication = null;
+        }
+
+        internal void LastCorrelationId(long correlationId)
+        {
+            _lastCorrelationId = correlationId;
         }
     }
 }

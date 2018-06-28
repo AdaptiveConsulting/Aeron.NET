@@ -9,7 +9,7 @@ namespace Adaptive.Cluster.Codecs {
 
 public class VoteDecoder
 {
-    public const ushort BLOCK_LENGTH = 20;
+    public const ushort BLOCK_LENGTH = 36;
     public const ushort TEMPLATE_ID = 52;
     public const ushort SCHEMA_ID = 1;
     public const ushort SCHEMA_VERSION = 1;
@@ -142,9 +142,117 @@ public class VoteDecoder
     }
 
 
-    public static int CandidateMemberIdId()
+    public static int LogLeaderhipTermIdId()
     {
         return 2;
+    }
+
+    public static int LogLeaderhipTermIdSinceVersion()
+    {
+        return 0;
+    }
+
+    public static int LogLeaderhipTermIdEncodingOffset()
+    {
+        return 8;
+    }
+
+    public static int LogLeaderhipTermIdEncodingLength()
+    {
+        return 8;
+    }
+
+    public static string LogLeaderhipTermIdMetaAttribute(MetaAttribute metaAttribute)
+    {
+        switch (metaAttribute)
+        {
+            case MetaAttribute.EPOCH: return "unix";
+            case MetaAttribute.TIME_UNIT: return "nanosecond";
+            case MetaAttribute.SEMANTIC_TYPE: return "";
+            case MetaAttribute.PRESENCE: return "required";
+        }
+
+        return "";
+    }
+
+    public static long LogLeaderhipTermIdNullValue()
+    {
+        return -9223372036854775808L;
+    }
+
+    public static long LogLeaderhipTermIdMinValue()
+    {
+        return -9223372036854775807L;
+    }
+
+    public static long LogLeaderhipTermIdMaxValue()
+    {
+        return 9223372036854775807L;
+    }
+
+    public long LogLeaderhipTermId()
+    {
+        return _buffer.GetLong(_offset + 8, ByteOrder.LittleEndian);
+    }
+
+
+    public static int LogPositionId()
+    {
+        return 3;
+    }
+
+    public static int LogPositionSinceVersion()
+    {
+        return 0;
+    }
+
+    public static int LogPositionEncodingOffset()
+    {
+        return 16;
+    }
+
+    public static int LogPositionEncodingLength()
+    {
+        return 8;
+    }
+
+    public static string LogPositionMetaAttribute(MetaAttribute metaAttribute)
+    {
+        switch (metaAttribute)
+        {
+            case MetaAttribute.EPOCH: return "unix";
+            case MetaAttribute.TIME_UNIT: return "nanosecond";
+            case MetaAttribute.SEMANTIC_TYPE: return "";
+            case MetaAttribute.PRESENCE: return "required";
+        }
+
+        return "";
+    }
+
+    public static long LogPositionNullValue()
+    {
+        return -9223372036854775808L;
+    }
+
+    public static long LogPositionMinValue()
+    {
+        return -9223372036854775807L;
+    }
+
+    public static long LogPositionMaxValue()
+    {
+        return 9223372036854775807L;
+    }
+
+    public long LogPosition()
+    {
+        return _buffer.GetLong(_offset + 16, ByteOrder.LittleEndian);
+    }
+
+
+    public static int CandidateMemberIdId()
+    {
+        return 4;
     }
 
     public static int CandidateMemberIdSinceVersion()
@@ -154,7 +262,7 @@ public class VoteDecoder
 
     public static int CandidateMemberIdEncodingOffset()
     {
-        return 8;
+        return 24;
     }
 
     public static int CandidateMemberIdEncodingLength()
@@ -192,13 +300,13 @@ public class VoteDecoder
 
     public int CandidateMemberId()
     {
-        return _buffer.GetInt(_offset + 8, ByteOrder.LittleEndian);
+        return _buffer.GetInt(_offset + 24, ByteOrder.LittleEndian);
     }
 
 
     public static int FollowerMemberIdId()
     {
-        return 3;
+        return 5;
     }
 
     public static int FollowerMemberIdSinceVersion()
@@ -208,7 +316,7 @@ public class VoteDecoder
 
     public static int FollowerMemberIdEncodingOffset()
     {
-        return 12;
+        return 28;
     }
 
     public static int FollowerMemberIdEncodingLength()
@@ -246,13 +354,13 @@ public class VoteDecoder
 
     public int FollowerMemberId()
     {
-        return _buffer.GetInt(_offset + 12, ByteOrder.LittleEndian);
+        return _buffer.GetInt(_offset + 28, ByteOrder.LittleEndian);
     }
 
 
     public static int VoteId()
     {
-        return 4;
+        return 6;
     }
 
     public static int VoteSinceVersion()
@@ -262,7 +370,7 @@ public class VoteDecoder
 
     public static int VoteEncodingOffset()
     {
-        return 16;
+        return 32;
     }
 
     public static int VoteEncodingLength()
@@ -285,7 +393,7 @@ public class VoteDecoder
 
     public BooleanType Vote()
     {
-        return (BooleanType)_buffer.GetInt(_offset + 16, ByteOrder.LittleEndian);
+        return (BooleanType)_buffer.GetInt(_offset + 32, ByteOrder.LittleEndian);
     }
 
 
@@ -323,18 +431,28 @@ public class VoteDecoder
         builder.Append("CandidateTermId=");
         builder.Append(CandidateTermId());
         builder.Append('|');
-        //Token{signal=BEGIN_FIELD, name='candidateMemberId', referencedName='null', description='null', id=2, version=0, deprecated=0, encodedLength=0, offset=8, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
-        //Token{signal=ENCODING, name='int32', referencedName='null', description='null', id=-1, version=0, deprecated=0, encodedLength=4, offset=8, componentTokenCount=1, encoding=Encoding{presence=REQUIRED, primitiveType=INT32, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=BEGIN_FIELD, name='logLeaderhipTermId', referencedName='null', description='null', id=2, version=0, deprecated=0, encodedLength=0, offset=8, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=ENCODING, name='int64', referencedName='null', description='null', id=-1, version=0, deprecated=0, encodedLength=8, offset=8, componentTokenCount=1, encoding=Encoding{presence=REQUIRED, primitiveType=INT64, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        builder.Append("LogLeaderhipTermId=");
+        builder.Append(LogLeaderhipTermId());
+        builder.Append('|');
+        //Token{signal=BEGIN_FIELD, name='logPosition', referencedName='null', description='null', id=3, version=0, deprecated=0, encodedLength=0, offset=16, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=ENCODING, name='int64', referencedName='null', description='null', id=-1, version=0, deprecated=0, encodedLength=8, offset=16, componentTokenCount=1, encoding=Encoding{presence=REQUIRED, primitiveType=INT64, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        builder.Append("LogPosition=");
+        builder.Append(LogPosition());
+        builder.Append('|');
+        //Token{signal=BEGIN_FIELD, name='candidateMemberId', referencedName='null', description='null', id=4, version=0, deprecated=0, encodedLength=0, offset=24, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=ENCODING, name='int32', referencedName='null', description='null', id=-1, version=0, deprecated=0, encodedLength=4, offset=24, componentTokenCount=1, encoding=Encoding{presence=REQUIRED, primitiveType=INT32, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
         builder.Append("CandidateMemberId=");
         builder.Append(CandidateMemberId());
         builder.Append('|');
-        //Token{signal=BEGIN_FIELD, name='followerMemberId', referencedName='null', description='null', id=3, version=0, deprecated=0, encodedLength=0, offset=12, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
-        //Token{signal=ENCODING, name='int32', referencedName='null', description='null', id=-1, version=0, deprecated=0, encodedLength=4, offset=12, componentTokenCount=1, encoding=Encoding{presence=REQUIRED, primitiveType=INT32, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=BEGIN_FIELD, name='followerMemberId', referencedName='null', description='null', id=5, version=0, deprecated=0, encodedLength=0, offset=28, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=ENCODING, name='int32', referencedName='null', description='null', id=-1, version=0, deprecated=0, encodedLength=4, offset=28, componentTokenCount=1, encoding=Encoding{presence=REQUIRED, primitiveType=INT32, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
         builder.Append("FollowerMemberId=");
         builder.Append(FollowerMemberId());
         builder.Append('|');
-        //Token{signal=BEGIN_FIELD, name='vote', referencedName='null', description='null', id=4, version=0, deprecated=0, encodedLength=0, offset=16, componentTokenCount=6, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
-        //Token{signal=BEGIN_ENUM, name='BooleanType', referencedName='null', description='null', id=-1, version=0, deprecated=0, encodedLength=4, offset=16, componentTokenCount=4, encoding=Encoding{presence=REQUIRED, primitiveType=INT32, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='null', timeUnit=null, semanticType='null'}}
+        //Token{signal=BEGIN_FIELD, name='vote', referencedName='null', description='null', id=6, version=0, deprecated=0, encodedLength=0, offset=32, componentTokenCount=6, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=BEGIN_ENUM, name='BooleanType', referencedName='null', description='null', id=-1, version=0, deprecated=0, encodedLength=4, offset=32, componentTokenCount=4, encoding=Encoding{presence=REQUIRED, primitiveType=INT32, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='null', timeUnit=null, semanticType='null'}}
         builder.Append("Vote=");
         builder.Append(Vote());
 

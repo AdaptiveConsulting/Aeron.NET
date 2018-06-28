@@ -3,6 +3,7 @@ using Adaptive.Aeron;
 using Adaptive.Aeron.LogBuffer;
 using Adaptive.Aeron.Status;
 using Adaptive.Agrona;
+using Adaptive.Agrona.Concurrent.Status;
 using Adaptive.Cluster.Codecs;
 
 namespace Adaptive.Cluster.Service
@@ -22,6 +23,7 @@ namespace Adaptive.Cluster.Service
         private readonly SessionHeaderDecoder sessionHeaderDecoder = new SessionHeaderDecoder();
         private readonly TimerEventDecoder timerEventDecoder = new TimerEventDecoder();
         private readonly ClusterActionRequestDecoder actionRequestDecoder = new ClusterActionRequestDecoder();
+        private readonly NewLeadershipTermEventDecoder newLeadershipTermEventDecoder = new NewLeadershipTermEventDecoder();
 
         private readonly Image image;
         private readonly ReadableCounter upperBound;
@@ -39,17 +41,22 @@ namespace Adaptive.Cluster.Service
         {
             image.Subscription?.Dispose();
         }
-        
-        public Image Image()
+
+        public bool IsImageClosed()
         {
-            return image;
+            return image.Closed;
         }
 
-        public bool IsCaughtUp()
+        public long Position()
         {
-            return image.Position() >= upperBound.Get();
+            return image.Position();
         }
-        
+
+        public bool IsConsumed(CountersReader counters)
+        {
+            return image.Position() >= CommitPos.GetMaxLogPosition(counters, upperBound.CounterId());
+        }
+
         public int Poll()
         {
             return image.BoundedControlledPoll(fragmentAssembler, upperBound.Get(), FRAGMENT_LIMIT);
@@ -58,53 +65,102 @@ namespace Adaptive.Cluster.Service
         public ControlledFragmentHandlerAction OnFragment(IDirectBuffer buffer, int offset, int length, Header header)
         {
             messageHeaderDecoder.Wrap(buffer, offset);
+            int templateId = messageHeaderDecoder.TemplateId();
 
-            switch (messageHeaderDecoder.TemplateId())
+            if (templateId == SessionHeaderDecoder.TEMPLATE_ID)
             {
-                case SessionHeaderDecoder.TEMPLATE_ID:
-                {
-                    sessionHeaderDecoder.Wrap(buffer, offset + MessageHeaderDecoder.ENCODED_LENGTH, messageHeaderDecoder.BlockLength(), messageHeaderDecoder.Version());
+                sessionHeaderDecoder.Wrap(
+                    buffer,
+                    offset + MessageHeaderDecoder.ENCODED_LENGTH,
+                    messageHeaderDecoder.BlockLength(),
+                    messageHeaderDecoder.Version());
+                
+                agent.OnSessionMessage(
+                    sessionHeaderDecoder.ClusterSessionId(),
+                    sessionHeaderDecoder.CorrelationId(),
+                    sessionHeaderDecoder.Timestamp(),
+                    buffer,
+                    offset + ClientSession.SESSION_HEADER_LENGTH,
+                    length - ClientSession.SESSION_HEADER_LENGTH,
+                    header);
 
-                    agent.OnSessionMessage(sessionHeaderDecoder.ClusterSessionId(), sessionHeaderDecoder.CorrelationId(), sessionHeaderDecoder.Timestamp(), buffer, offset + ClientSession.SESSION_HEADER_LENGTH, length - ClientSession.SESSION_HEADER_LENGTH, header);
+                return ControlledFragmentHandlerAction.CONTINUE;
+            }
 
-                    break;
-                }
 
+            switch (templateId)
+            {
                 case TimerEventDecoder.TEMPLATE_ID:
-                {
-                    timerEventDecoder.Wrap(buffer, offset + MessageHeaderDecoder.ENCODED_LENGTH, messageHeaderDecoder.BlockLength(), messageHeaderDecoder.Version());
+                    timerEventDecoder.Wrap(
+                        buffer,
+                        offset + MessageHeaderDecoder.ENCODED_LENGTH,
+                        messageHeaderDecoder.BlockLength(),
+                        messageHeaderDecoder.Version());
 
                     agent.OnTimerEvent(timerEventDecoder.CorrelationId(), timerEventDecoder.Timestamp());
                     break;
-                }
 
                 case SessionOpenEventDecoder.TEMPLATE_ID:
-                {
-                    openEventDecoder.Wrap(buffer, offset + MessageHeaderDecoder.ENCODED_LENGTH, messageHeaderDecoder.BlockLength(), messageHeaderDecoder.Version());
+                    openEventDecoder.Wrap(
+                        buffer,
+                        offset + MessageHeaderDecoder.ENCODED_LENGTH,
+                        messageHeaderDecoder.BlockLength(),
+                        messageHeaderDecoder.Version());
 
                     string responseChannel = openEventDecoder.ResponseChannel();
                     byte[] encodedPrincipal = new byte[openEventDecoder.EncodedPrincipalLength()];
                     openEventDecoder.GetEncodedPrincipal(encodedPrincipal, 0, encodedPrincipal.Length);
 
-                    agent.OnSessionOpen(openEventDecoder.ClusterSessionId(), openEventDecoder.Timestamp(), openEventDecoder.ResponseStreamId(), responseChannel, encodedPrincipal);
+                    agent.OnSessionOpen(
+                        openEventDecoder.ClusterSessionId(),
+                        openEventDecoder.CorrelationId(),
+                        openEventDecoder.Timestamp(),
+                        openEventDecoder.ResponseStreamId(),
+                        responseChannel,
+                        encodedPrincipal);
                     break;
-                }
 
                 case SessionCloseEventDecoder.TEMPLATE_ID:
-                {
-                    closeEventDecoder.Wrap(buffer, offset + MessageHeaderDecoder.ENCODED_LENGTH, messageHeaderDecoder.BlockLength(), messageHeaderDecoder.Version());
+                    closeEventDecoder.Wrap(
+                        buffer,
+                        offset + MessageHeaderDecoder.ENCODED_LENGTH,
+                        messageHeaderDecoder.BlockLength(),
+                        messageHeaderDecoder.Version());
 
-                    agent.OnSessionClose(closeEventDecoder.ClusterSessionId(), closeEventDecoder.Timestamp(), closeEventDecoder.CloseReason());
+                    agent.OnSessionClose(
+                        closeEventDecoder.ClusterSessionId(),
+                        closeEventDecoder.Timestamp(),
+                        closeEventDecoder.CloseReason());
                     break;
-                }
 
                 case ClusterActionRequestDecoder.TEMPLATE_ID:
-                {
-                    actionRequestDecoder.Wrap(buffer, offset + MessageHeaderDecoder.ENCODED_LENGTH, messageHeaderDecoder.BlockLength(), messageHeaderDecoder.Version());
+                    actionRequestDecoder.Wrap(
+                        buffer,
+                        offset + MessageHeaderDecoder.ENCODED_LENGTH,
+                        messageHeaderDecoder.BlockLength(),
+                        messageHeaderDecoder.Version());
 
-                    agent.OnServiceAction(header.Position(), actionRequestDecoder.Timestamp(), actionRequestDecoder.Action());
+                    agent.OnServiceAction(
+                        actionRequestDecoder.LogPosition(),
+                        actionRequestDecoder.LeadershipTermId(),
+                        actionRequestDecoder.Timestamp(),
+                        actionRequestDecoder.Action());
                     break;
-                }
+                
+                case NewLeadershipTermEventDecoder.TEMPLATE_ID:
+                    newLeadershipTermEventDecoder.Wrap(
+                        buffer,
+                        offset + MessageHeaderDecoder.ENCODED_LENGTH,
+                        messageHeaderDecoder.BlockLength(),
+                        messageHeaderDecoder.Version());
+
+                    agent.OnNewLeadershipTermEvent(
+                        newLeadershipTermEventDecoder.LeadershipTermId(),
+                        newLeadershipTermEventDecoder.LogPosition(),
+                        newLeadershipTermEventDecoder.Timestamp(),
+                        newLeadershipTermEventDecoder.LeaderMemberId(),
+                        newLeadershipTermEventDecoder.LogSessionId());
+                    break;
             }
 
             return ControlledFragmentHandlerAction.CONTINUE;

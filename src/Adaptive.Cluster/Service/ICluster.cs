@@ -56,7 +56,7 @@ namespace Adaptive.Cluster.Service
         ///    
         /// </summary>
         /// <param name="correlationId"> to identify the timer when it expires. </param>
-        /// <param name="deadlineMs"> after which the timer will fire. </param>
+        /// <param name="deadlineMs">  Epoch time in milliseconds after which the timer will fire. </param>
         /// <returns> true if the event to schedule a timer has been sent or false if back pressure is applied. </returns>
         /// <see cref="CancelTimer(long)"/>
         bool ScheduleTimer(long correlationId, long deadlineMs);
@@ -69,5 +69,10 @@ namespace Adaptive.Cluster.Service
         /// <see cref="ScheduleTimer(long, long)"/>
         bool CancelTimer(long correlationId);
 
+        /// <summary>
+        /// Should be called by the service when it experiences back pressure on egress, closing sessions, or making
+        /// timer requests.
+        /// </summary>
+        void Idle();
     }
 }
