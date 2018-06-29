@@ -395,7 +395,7 @@ namespace Adaptive.Aeron
         }
         
         /// <summary>
-        /// Is the param tagged? That is does it start with the "tag:" prefix.
+        /// Is the param tagged? (starts with the "tag:" prefix)
         /// </summary>
         /// <param name="paramValue"> to check if tagged. </param>
         /// <returns> true if tagged or false if not. </returns>
@@ -407,7 +407,7 @@ namespace Adaptive.Aeron
         /// <summary>
         /// Get the value of the tag from a given parameter.
         /// </summary>
-        /// <param name="paramValue"> to extra the tag value from. </param>
+        /// <param name="paramValue"> to extract the tag value from. </param>
         /// <returns> the value of the tag or <seealso cref="INVALID_TAG"/> if not tagged. </returns>
         public static long GetTag(string paramValue)
         {

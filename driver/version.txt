@@ -1,4 +1,4 @@
 Driver built from source
-Agrona: 0.9.18-11-gcbee425
-SBE:    1.8.1-31-g337ef8bb
-Aeron:  1.9.2-308-gb795fd261
+Agrona: 0.9.18-13-g0378ffa
+SBE:    1.8.1-48-gdbf2031e
+Aeron:  1.9.2-341-gf6b702d9c
