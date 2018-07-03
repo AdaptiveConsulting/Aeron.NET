@@ -25,25 +25,37 @@ namespace Adaptive.Aeron
         /// Aeron encountered an error condition. 
         /// </summary>
         GENERIC_ERROR = 0,
+
         /// <summary>
         /// A failure occurred creating a new channel or parsing the channel string. 
         /// </summary>
         INVALID_CHANNEL = 1,
+
         /// <summary>
         /// Attempted to remove a subscription, but it was not found 
         /// </summary>
         UNKNOWN_SUBSCRIPTION = 2,
+
         /// <summary>
         /// Attempted to remove a publication, but it was not found. 
         /// </summary>
         UNKNOWN_PUBLICATION = 3,
+
         /// <summary>
         /// Channel Endpoint could not be successfully opened.
         /// </summary>
         CHANNEL_ENDPOINT_ERROR = 4,
+
         /// <summary>
         /// Attempted to remove a counter, but it was not found.
         /// </summary>
-        UNKNOWN_COUNTER = 5
+        UNKNOWN_COUNTER = 5,
+
+        /// <summary>
+        /// A code value returned was not known.
+        /// </summary>
+        UNKNOWN_CODE_VALUE = -1
+
+        // Note: ErrorCode has option for unknown value in Java 
     }
 }

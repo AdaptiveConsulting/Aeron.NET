@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using Adaptive.Aeron;
+using Adaptive.Aeron.Exceptions;
 using Adaptive.Agrona;
 using Adaptive.Agrona.Concurrent;
 using Adaptive.Agrona.Concurrent.Errors;
@@ -93,7 +94,7 @@ namespace Adaptive.Cluster.Service
         public class Configuration
         {
             /// <summary>
-            /// Identity for a clustered service.
+            /// Identity for a clustered service. Services should be numbered from 0 and be contiguous.
             /// </summary>
             public const string SERVICE_ID_PROP_NAME = "aeron.cluster.service.id";
 
@@ -378,6 +379,11 @@ namespace Adaptive.Cluster.Service
 
             public void Conclude()
             {
+                if (serviceId < 0)
+                {
+                    throw new ConfigurationException("service id must be not be negative: " + serviceId);
+                }
+                
                 if (null == threadFactory)
                 {
                     threadFactory = new DefaultThreadFactory();
@@ -486,7 +492,7 @@ namespace Adaptive.Cluster.Service
             }
 
             /// <summary>
-            /// Set the id for this clustered service.
+            /// Set the id for this clustered service. Services should be numbered from 0 and be contiguous.
             /// </summary>
             /// <param name="serviceId"> for this clustered service. </param>
             /// <returns> this for a fluent API </returns>
@@ -498,7 +504,7 @@ namespace Adaptive.Cluster.Service
             }
 
             /// <summary>
-            /// Get the id for this clustered service.
+            /// Get the id for this clustered service. Services should be numbered from 0 and be contiguous.
             /// </summary>
             /// <returns> the id for this clustered service. </returns>
             /// <seealso cref= ClusteredServiceContainer.Configuration#SERVICE_ID_PROP_NAME </seealso>
@@ -508,9 +514,9 @@ namespace Adaptive.Cluster.Service
             }
 
             /// <summary>
-            /// Set the name for a clustered service to be the role of the <seealso cref="IAgent"/>.
+            /// Set the name for a clustered service to be the <see cref="IAgent.RoleName"/> for the <seealso cref="IAgent"/>.
             /// </summary>
-            /// <param name="serviceName"> for a clustered service to be the role of the <seealso cref="IAgent"/>. </param>
+            /// <param name="serviceName"> for a clustered service to be the role for the <seealso cref="IAgent"/>. </param>
             /// <returns> this for a fluent API. </returns>
             /// <seealso cref="Configuration.SERVICE_NAME_PROP_NAME"></seealso>
             public Context ServiceName(string serviceName)
@@ -520,7 +526,7 @@ namespace Adaptive.Cluster.Service
             }
 
             /// <summary>
-            /// Get the name for a clustered service to be the role of the <seealso cref="IAgent"/>.
+            /// Get the name for a clustered service to be the <see cref="IAgent.RoleName"/> for the <seealso cref="IAgent"/>.
             /// </summary>
             /// <returns> the name for a clustered service to be the role of the <seealso cref="IAgent"/>. </returns>
             /// <seealso cref="Configuration.SERVICE_NAME_PROP_NAME"></seealso>

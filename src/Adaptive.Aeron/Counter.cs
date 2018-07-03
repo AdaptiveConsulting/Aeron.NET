@@ -1,4 +1,4 @@
-﻿using System;
+﻿using Adaptive.Aeron.Exceptions;
 using Adaptive.Agrona.Concurrent;
 using Adaptive.Agrona.Concurrent.Status;
 
@@ -26,13 +26,13 @@ namespace Adaptive.Aeron
         /// <param name="countersReader"> for getting access to the buffers. </param>
         /// <param name="registrationId"> assigned by the driver for the counter or <see cref="Aeron.NULL_VALUE"/> if not known. </param>
         /// <param name="counterId">      for the counter to be viewed. </param>
-        /// <exception cref="InvalidOperationException"> if the id has for the counter has not been allocated. </exception>
+        /// <exception cref="AeronException"> if the id has for the counter has not been allocated. </exception>
         internal Counter(CountersReader countersReader, long registrationId, int counterId) : base(
             countersReader.ValuesBuffer, counterId)
         {
             if (countersReader.GetCounterState(counterId) != CountersReader.RECORD_ALLOCATED)
             {
-                throw new InvalidOperationException("Counter id has not been allocated: " + counterId);
+                throw new AeronException("Counter id has not been allocated: " + counterId);
             }
 
             this.registrationId = registrationId;

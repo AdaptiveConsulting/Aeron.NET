@@ -297,7 +297,7 @@ namespace Adaptive.Aeron
         {
             if (_conductor.IsClosed())
             {
-                throw new InvalidOperationException("Client is closed");
+                throw new AeronException("Client is closed");
             }
 
             return _commandBuffer.NextCorrelationId();
@@ -311,7 +311,7 @@ namespace Adaptive.Aeron
         {
             if (_conductor.IsClosed())
             {
-                throw new InvalidOperationException("Client is closed");
+                throw new AeronException("Client is closed");
             }
 
             return _conductor.CountersReader();
@@ -1191,7 +1191,7 @@ namespace Adaptive.Aeron
 
                     if (CncFileDescriptor.CNC_VERSION != cncVersion)
                     {
-                        throw new InvalidOperationException("CnC file version not supported: version=" + cncVersion);
+                        throw new AeronException("CnC file version not supported: version=" + cncVersion);
                     }
 
                     ManyToOneRingBuffer ringBuffer =
@@ -1241,7 +1241,7 @@ namespace Adaptive.Aeron
                     {
                         if (epochClock.Time() > deadLineMs)
                         {
-                            throw new InvalidOperationException("CnC file is created but not populated.");
+                            throw new AeronException("CnC file is created but not populated.");
                         }
 
                         Sleep(IdleSleepMs);
@@ -1251,7 +1251,7 @@ namespace Adaptive.Aeron
                 }
                 catch (Exception ex)
                 {
-                    throw new InvalidOperationException("cannot open CnC file", ex);
+                    throw new AeronException("cannot open CnC file", ex);
                 }
             }
 
@@ -1361,7 +1361,7 @@ namespace Adaptive.Aeron
 
                 if (CncFileDescriptor.CNC_VERSION != cncVersion)
                 {
-                    throw new InvalidOperationException("Aeron CnC version does not match: version=" + cncVersion +
+                    throw new AeronException("Aeron CnC version does not match: version=" + cncVersion +
                                                         " required=" + CncFileDescriptor.CNC_VERSION);
                 }
 
@@ -1414,7 +1414,7 @@ namespace Adaptive.Aeron
 
                 if (CncFileDescriptor.CNC_VERSION != cncVersion)
                 {
-                    throw new InvalidOperationException(
+                    throw new AeronException(
                         "Aeron CnC version does not match: required=" + CncFileDescriptor.CNC_VERSION + " version=" +
                         cncVersion);
                 }

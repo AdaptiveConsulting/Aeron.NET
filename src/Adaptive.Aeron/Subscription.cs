@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Runtime.InteropServices;
+using Adaptive.Aeron.Exceptions;
 using Adaptive.Aeron.LogBuffer;
 using Adaptive.Aeron.Status;
 using Adaptive.Agrona;
@@ -449,7 +450,7 @@ namespace Adaptive.Aeron
         {
             if (_fields.isClosed)
             {
-                throw new InvalidOperationException("Subscription is closed");
+                throw new AeronException("Subscription is closed");
             }
 
             _fields.conductor.AddRcvDestination(_fields.registrationId, endpointChannel);
@@ -463,7 +464,7 @@ namespace Adaptive.Aeron
         {
             if (_fields.isClosed)
             {
-                throw new InvalidOperationException("Subscription is closed");
+                throw new AeronException("Subscription is closed");
             }
 
             _fields.conductor.RemoveRcvDestination(_fields.registrationId, endpointChannel);

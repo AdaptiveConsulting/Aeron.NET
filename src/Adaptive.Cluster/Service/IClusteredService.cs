@@ -83,30 +83,11 @@ namespace Adaptive.Cluster.Service
         /// </summary>
         /// <param name="snapshotImage"> to which the service should store its state. </param>
         void OnLoadSnapshot(Image snapshotImage);
-        
-        /// <summary>
-        /// Notify the service that a replay of existing logs is about to begin.
-        /// </summary>
-        void OnReplayBegin();
-
-        /// <summary>
-        /// Notify the service that a replay of existing logs has ended.
-        /// </summary>
-        void OnReplayEnd();
-        
+     
         /// <summary>
         /// Notify that the cluster node has changed role.
         /// </summary>
         /// <param name="newRole"> that the node has assumed. </param>
         void OnRoleChange(ClusterRole newRole);
-        
-        /// <summary>
-        /// Notify the service that recovery has finished so that it can check external state is consistent.
-        ///
-        /// If the service is in an invalid state and wished to terminate operation it can throw a
-        /// <seealso cref="AgentTerminationException"/>.
-        ///
-        /// </summary>
-        void OnReady();
     }
 }

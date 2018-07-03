@@ -21,7 +21,7 @@ namespace Adaptive.Aeron
     /// </summary>
     internal interface IDriverEventsListener
     {
-        void OnError(long correlationId, ErrorCode errorCode, string message);
+        void OnError(long correlationId, int codeValue, ErrorCode errorCode, string message);
 
         void OnAvailableImage(
             long correlationId, 

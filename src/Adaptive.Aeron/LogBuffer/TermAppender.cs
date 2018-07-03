@@ -16,6 +16,7 @@
 
 using System;
 using System.Runtime.CompilerServices;
+using Adaptive.Aeron.Exceptions;
 using Adaptive.Aeron.Protocol;
 using Adaptive.Agrona;
 using Adaptive.Agrona.Concurrent;
@@ -68,9 +69,9 @@ namespace Adaptive.Aeron.LogBuffer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public long RawTailVolatile()
         {
-            return _metaDataBuffer.GetLongVolatile((int)_tailAddressOffset);
+            return _metaDataBuffer.GetLongVolatile((int) _tailAddressOffset);
         }
-        
+
         /// <summary>
         /// Claim length of a the term buffer for writing in the message with zero copy semantics.
         /// </summary>
@@ -81,9 +82,9 @@ namespace Adaptive.Aeron.LogBuffer
         /// <returns> the resulting offset of the term after the append on success otherwise <seealso cref="FAILED"/></returns> 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int Claim(
-            HeaderWriter header, 
-            int length, 
-            BufferClaim bufferClaim, 
+            HeaderWriter header,
+            int length,
+            BufferClaim bufferClaim,
             int activeTermId)
         {
             int frameLength = length + DataHeaderFlyweight.HEADER_LENGTH;
@@ -95,7 +96,7 @@ namespace Adaptive.Aeron.LogBuffer
             int termLength = termBuffer.Capacity;
 
             CheckTerm(activeTermId, termId);
-            
+
             long resultingOffset = termOffset + alignedLength;
             if (resultingOffset > termLength)
             {
@@ -108,7 +109,7 @@ namespace Adaptive.Aeron.LogBuffer
                 bufferClaim.Wrap(termBuffer, frameOffset, frameLength);
             }
 
-            return (int)resultingOffset;
+            return (int) resultingOffset;
         }
 
         /// <summary>
@@ -137,7 +138,7 @@ namespace Adaptive.Aeron.LogBuffer
             int termLength = termBuffer.Capacity;
 
             CheckTerm(activeTermId, termId);
-            
+
             long resultingOffset = termOffset + alignedLength;
             if (resultingOffset > termLength)
             {
@@ -158,9 +159,9 @@ namespace Adaptive.Aeron.LogBuffer
                 FrameDescriptor.FrameLengthOrdered(termBuffer, frameOffset, frameLength);
             }
 
-            return (int)resultingOffset;
+            return (int) resultingOffset;
         }
-        
+
         /// <summary>
         /// Append an unfragmented message to the the term buffer.
         /// </summary>
@@ -186,7 +187,7 @@ namespace Adaptive.Aeron.LogBuffer
             int termLength = termBuffer.Capacity;
 
             CheckTerm(activeTermId, termId);
-            
+
             long resultingOffset = termOffset + alignedLength;
             if (resultingOffset > termLength)
             {
@@ -204,7 +205,7 @@ namespace Adaptive.Aeron.LogBuffer
                     termBuffer.PutBytes(offset, vector.buffer, vector.offset, vector.length);
                     offset += vector.length;
                 }
-                
+
                 if (null != reservedValueSupplier)
                 {
                     long reservedValue = reservedValueSupplier(termBuffer, frameOffset, frameLength);
@@ -214,10 +215,9 @@ namespace Adaptive.Aeron.LogBuffer
                 FrameDescriptor.FrameLengthOrdered(termBuffer, frameOffset, frameLength);
             }
 
-            return (int)resultingOffset;
+            return (int) resultingOffset;
         }
-        
-        
+
 
         /// <summary>
         /// Append a fragmented message to the the term buffer.
@@ -235,10 +235,10 @@ namespace Adaptive.Aeron.LogBuffer
         public int AppendFragmentedMessage(HeaderWriter header, IDirectBuffer srcBuffer, int srcOffset, int length,
             int maxPayloadLength, ReservedValueSupplier reservedValueSupplier, int activeTermId)
         {
-            int numMaxPayloads = length/maxPayloadLength;
-            int remainingPayload = length%maxPayloadLength;
+            int numMaxPayloads = length / maxPayloadLength;
+            int remainingPayload = length % maxPayloadLength;
             int lastFrameLength = remainingPayload > 0 ? BitUtil.Align(remainingPayload + DataHeaderFlyweight.HEADER_LENGTH, FrameDescriptor.FRAME_ALIGNMENT) : 0;
-            int requiredLength = (numMaxPayloads*(maxPayloadLength + DataHeaderFlyweight.HEADER_LENGTH)) + lastFrameLength;
+            int requiredLength = (numMaxPayloads * (maxPayloadLength + DataHeaderFlyweight.HEADER_LENGTH)) + lastFrameLength;
             long rawTail = GetAndAddRawTail(requiredLength);
             int termId = LogBufferDescriptor.TermId(rawTail);
             long termOffset = rawTail & 0xFFFFFFFFL;
@@ -246,7 +246,7 @@ namespace Adaptive.Aeron.LogBuffer
             int termLength = termBuffer.Capacity;
 
             CheckTerm(activeTermId, termId);
-            
+
             long resultingOffset = termOffset + requiredLength;
             if (resultingOffset > termLength)
             {
@@ -257,7 +257,7 @@ namespace Adaptive.Aeron.LogBuffer
                 int frameOffset = (int) termOffset;
                 byte flags = FrameDescriptor.BEGIN_FRAG_FLAG;
                 int remaining = length;
-                
+
                 do
                 {
                     int bytesToWrite = Math.Min(remaining, maxPayloadLength);
@@ -289,9 +289,9 @@ namespace Adaptive.Aeron.LogBuffer
                 } while (remaining > 0);
             }
 
-            return (int)resultingOffset;
+            return (int) resultingOffset;
         }
-        
+
         /// <summary>
         /// Append a fragmented message to the the term buffer.
         /// The message will be split up into fragments of MTU length minus header.
@@ -307,10 +307,10 @@ namespace Adaptive.Aeron.LogBuffer
         public int AppendFragmentedMessage(HeaderWriter header, DirectBufferVector[] vectors, int length,
             int maxPayloadLength, ReservedValueSupplier reservedValueSupplier, int activeTermId)
         {
-            int numMaxPayloads = length/maxPayloadLength;
-            int remainingPayload = length%maxPayloadLength;
+            int numMaxPayloads = length / maxPayloadLength;
+            int remainingPayload = length % maxPayloadLength;
             int lastFrameLength = remainingPayload > 0 ? BitUtil.Align(remainingPayload + DataHeaderFlyweight.HEADER_LENGTH, FrameDescriptor.FRAME_ALIGNMENT) : 0;
-            int requiredLength = (numMaxPayloads*(maxPayloadLength + DataHeaderFlyweight.HEADER_LENGTH)) + lastFrameLength;
+            int requiredLength = (numMaxPayloads * (maxPayloadLength + DataHeaderFlyweight.HEADER_LENGTH)) + lastFrameLength;
             long rawTail = GetAndAddRawTail(requiredLength);
             int termId = LogBufferDescriptor.TermId(rawTail);
             long termOffset = rawTail & 0xFFFFFFFFL;
@@ -318,7 +318,7 @@ namespace Adaptive.Aeron.LogBuffer
             int termLength = termBuffer.Capacity;
 
             CheckTerm(activeTermId, termId);
-            
+
             long resultingOffset = termOffset + requiredLength;
             if (resultingOffset > termLength)
             {
@@ -331,7 +331,7 @@ namespace Adaptive.Aeron.LogBuffer
                 int remaining = length;
                 int vectorIndex = 0;
                 int vectorOffset = 0;
-                
+
                 do
                 {
                     int bytesToWrite = Math.Min(remaining, maxPayloadLength);
@@ -348,7 +348,7 @@ namespace Adaptive.Aeron.LogBuffer
                         var vector = vectors[vectorIndex];
                         int vectorRemaining = vector.length - vectorOffset;
                         int numBytes = Math.Min(bytesToWrite - bytesWritten, vectorRemaining);
-                        
+
                         termBuffer.PutBytes(payloadOffset, vector.buffer, vector.offset + vectorOffset, numBytes);
 
                         bytesWritten += numBytes;
@@ -360,9 +360,8 @@ namespace Adaptive.Aeron.LogBuffer
                             vectorIndex++;
                             vectorOffset = 0;
                         }
-                        
                     } while (bytesWritten < bytesToWrite);
-                    
+
                     if (remaining <= maxPayloadLength)
                     {
                         flags |= FrameDescriptor.END_FRAG_FLAG;
@@ -384,14 +383,14 @@ namespace Adaptive.Aeron.LogBuffer
                 } while (remaining > 0);
             }
 
-            return (int)resultingOffset;
+            return (int) resultingOffset;
         }
 
         private static void CheckTerm(int expectedTermId, int termId)
         {
             if (termId != expectedTermId)
             {
-                throw new InvalidOperationException($"Action possibly delayed: expectedTermId={expectedTermId} termId={termId}");
+                throw new AeronException($"Action possibly delayed: expectedTermId={expectedTermId} termId={termId}");
             }
         }
 
@@ -415,7 +414,7 @@ namespace Adaptive.Aeron.LogBuffer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private long GetAndAddRawTail(int alignedLength)
         {
-            return _metaDataBuffer.GetAndAddLong((int)_tailAddressOffset, alignedLength);
+            return _metaDataBuffer.GetAndAddLong((int) _tailAddressOffset, alignedLength);
         }
     }
 }

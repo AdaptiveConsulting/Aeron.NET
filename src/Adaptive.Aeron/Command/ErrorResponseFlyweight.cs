@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+using System;
 using Adaptive.Agrona;
 
 namespace Adaptive.Aeron.Command
@@ -86,7 +87,18 @@ namespace Adaptive.Aeron.Command
         /// <returns> error code for the command </returns>
         public ErrorCode ErrorCode()
         {
+            
+            
             return (ErrorCode)_buffer.GetInt(_offset + ERROR_CODE_OFFSET);
+        }
+        
+        /// <summary>
+        /// Error code value for the command.
+        /// </summary>
+        /// <returns>error code value for the command </returns>
+        public int ErrorCodeValue()
+        {
+            return _buffer.GetInt(_offset + ERROR_CODE_OFFSET);
         }
 
         /// <summary>

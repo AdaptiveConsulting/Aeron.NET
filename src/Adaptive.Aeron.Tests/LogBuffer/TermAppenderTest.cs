@@ -15,6 +15,7 @@
  */
 
 using System;
+using Adaptive.Aeron.Exceptions;
 using Adaptive.Aeron.LogBuffer;
 using Adaptive.Aeron.Protocol;
 using Adaptive.Agrona;
@@ -254,7 +255,7 @@ namespace Adaptive.Aeron.Tests.LogBuffer
                 .Then(A.CallTo(() => _termBuffer.PutLong(tail2 + DataHeaderFlyweight.RESERVED_VALUE_OFFSET, RV, ByteOrder.LittleEndian)).MustHaveHappened())
                 .Then(A.CallTo(() => _termBuffer.PutIntOrdered(tail2, frameTwoLength)).MustHaveHappened());
         }
-        
+
         [Test]
         public void ShouldAppendFragmentedFromVectorsWithNonZeroOffsetToEmptyLog()
         {
@@ -301,7 +302,7 @@ namespace Adaptive.Aeron.Tests.LogBuffer
         }
 
         [Test]
-        [ExpectedException(typeof(InvalidOperationException))]
+        [ExpectedException(typeof(AeronException))]
         public void ShouldDetectInvalidTerm()
         {
             var length = 128;

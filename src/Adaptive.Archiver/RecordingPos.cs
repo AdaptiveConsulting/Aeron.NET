@@ -1,4 +1,5 @@
-﻿using Adaptive.Aeron;
+﻿using System;
+using Adaptive.Aeron;
 using Adaptive.Agrona;
 using Adaptive.Agrona.Concurrent;
 using Adaptive.Agrona.Concurrent.Status;
@@ -17,6 +18,10 @@ namespace Adaptive.Archiver
     ///  |                                                               |
     ///  +---------------------------------------------------------------+
     ///  |                         Session ID                            |
+    ///  +---------------------------------------------------------------+
+    ///  |                Source Identity for the Image                  |
+    ///  |                                                              ...
+    /// ...                                                              |
     ///  +---------------------------------------------------------------+
     /// 
     /// </summary>
@@ -39,27 +44,33 @@ namespace Adaptive.Archiver
 
         public const int RECORDING_ID_OFFSET = 0;
         public static readonly int SESSION_ID_OFFSET = RECORDING_ID_OFFSET + BitUtil.SIZE_OF_LONG;
-        public static readonly int KEY_LENGTH = SESSION_ID_OFFSET + BitUtil.SIZE_OF_INT;
+        public static readonly int SOURCE_IDENTITY_LENGTH_OFFSET = SESSION_ID_OFFSET + BitUtil.SIZE_OF_INT;
+        public static readonly int SOURCE_IDENTITY_OFFSET = SOURCE_IDENTITY_LENGTH_OFFSET + BitUtil.SIZE_OF_INT;
+
 
         public static Counter Allocate(Aeron.Aeron aeron, UnsafeBuffer tempBuffer, long recordingId,
-             int sessionId, int streamId, string strippedChannel)
+            int sessionId, int streamId, string strippedChannel, string sourceIdentity)
         {
             tempBuffer.PutLong(RECORDING_ID_OFFSET, recordingId);
             tempBuffer.PutInt(SESSION_ID_OFFSET, sessionId);
 
-            int labelLength = 0;
-            labelLength += tempBuffer.PutStringWithoutLengthAscii(KEY_LENGTH, NAME + ": ");
-            labelLength += tempBuffer.PutLongAscii(KEY_LENGTH + labelLength, recordingId);
-            labelLength += tempBuffer.PutStringWithoutLengthAscii(KEY_LENGTH + labelLength, " ");
-            labelLength += tempBuffer.PutIntAscii(KEY_LENGTH + labelLength, sessionId);
-            labelLength += tempBuffer.PutStringWithoutLengthAscii(KEY_LENGTH + labelLength, " ");
-            labelLength += tempBuffer.PutIntAscii(KEY_LENGTH + labelLength, streamId);
-            labelLength += tempBuffer.PutStringWithoutLengthAscii(KEY_LENGTH + labelLength, " ");
-            labelLength += tempBuffer.PutStringWithoutLengthAscii(KEY_LENGTH + labelLength, strippedChannel, 0,
-                CountersReader.MAX_LABEL_LENGTH - labelLength);
+            var sourceIdentityLength = Math.Min(sourceIdentity.Length, CountersReader.MAX_KEY_LENGTH - SOURCE_IDENTITY_OFFSET);
+            tempBuffer.PutStringAscii(SOURCE_IDENTITY_LENGTH_OFFSET, sourceIdentity);
+            var keyLength = SOURCE_IDENTITY_OFFSET + sourceIdentityLength;
 
-            return aeron.AddCounter(RECORDING_POSITION_TYPE_ID, tempBuffer, 0, KEY_LENGTH, tempBuffer, KEY_LENGTH,
-                labelLength);
+            int labelLength = 0;
+            labelLength += tempBuffer.PutStringWithoutLengthAscii(keyLength, NAME + ": ");
+            labelLength += tempBuffer.PutLongAscii(keyLength + labelLength, recordingId);
+            labelLength += tempBuffer.PutStringWithoutLengthAscii(keyLength + labelLength, " ");
+            labelLength += tempBuffer.PutIntAscii(keyLength + labelLength, sessionId);
+            labelLength += tempBuffer.PutStringWithoutLengthAscii(keyLength + labelLength, " ");
+            labelLength += tempBuffer.PutIntAscii(keyLength + labelLength, streamId);
+            labelLength += tempBuffer.PutStringWithoutLengthAscii(keyLength + labelLength, " ");
+            labelLength += tempBuffer.PutStringWithoutLengthAscii(
+                keyLength + labelLength, strippedChannel, 0, CountersReader.MAX_LABEL_LENGTH - labelLength);
+
+            return aeron.AddCounter(
+                RECORDING_POSITION_TYPE_ID, tempBuffer, 0, keyLength, tempBuffer, keyLength, labelLength);
         }
 
         /// <summary>
@@ -137,6 +148,29 @@ namespace Adaptive.Archiver
             }
 
             return NULL_RECORDING_ID;
+        }
+
+        /// <summary>
+        /// Get the <seealso cref="Image.SourceIdentity()"/> for the recording.
+        /// </summary>
+        /// <param name="countersReader"> to search within. </param>
+        /// <param name="counterId">      for the active recording. </param>
+        /// <returns> <seealso cref="Image.SourceIdentity()"/> for the recording or null if not found. </returns>
+        public static string GetSourceIdentity(CountersReader countersReader, int counterId)
+        {
+            IDirectBuffer buffer = countersReader.MetaDataBuffer;
+
+            if (countersReader.GetCounterState(counterId) == CountersReader.RECORD_ALLOCATED)
+            {
+                int recordOffset = CountersReader.MetaDataOffset(counterId);
+
+                if (buffer.GetInt(recordOffset + CountersReader.TYPE_ID_OFFSET) == RECORDING_POSITION_TYPE_ID)
+                {
+                    return buffer.GetStringAscii(recordOffset + CountersReader.KEY_OFFSET + SOURCE_IDENTITY_LENGTH_OFFSET);
+                }
+            }
+
+            return null;
         }
 
         /// <summary>

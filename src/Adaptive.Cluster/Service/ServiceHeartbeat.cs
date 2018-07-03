@@ -52,7 +52,7 @@ namespace Adaptive.Cluster.Service
         /// </summary>
         /// <param name="counters">  to search within. </param>
         /// <param name="serviceId"> to search for. </param>
-        /// <returns> the counter id if found otherwise <seealso cref="CountersReader#NULL_COUNTER_ID"/>. </returns>
+        /// <returns> the counter id if found otherwise <seealso cref="CountersReader.NULL_COUNTER_ID"/>. </returns>
         public static int FindCounterId(CountersReader counters, int serviceId)
         {
             IDirectBuffer buffer = counters.MetaDataBuffer;

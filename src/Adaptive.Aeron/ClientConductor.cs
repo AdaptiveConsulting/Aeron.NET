@@ -122,7 +122,7 @@ namespace Adaptive.Aeron
 
                     if (_lingeringResources.Count > lingeringResourcesSize)
                     {
-                        Aeron.Sleep(1);
+                        Aeron.Sleep(15);
                     }
 
                     for (int i = 0, size = _lingeringResources.Count; i < size; i++)
@@ -171,9 +171,9 @@ namespace Adaptive.Aeron
             return _isClosed;
         }
 
-        public void OnError(long correlationId, ErrorCode errorCode, string message)
+        public void OnError(long correlationId, int codeValue, ErrorCode errorCode, string message)
         {
-            _driverException = new RegistrationException(errorCode, message);
+            _driverException = new RegistrationException(codeValue, errorCode, message);
         }
 
         public void OnChannelEndpointError(int statusIndicatorId, string message)
@@ -642,7 +642,7 @@ namespace Adaptive.Aeron
         {
             if (_isClosed)
             {
-                throw new InvalidOperationException("Aeron client conductor is closed");
+                throw new AeronException("Aeron client conductor is closed");
             }
         }
 
@@ -699,7 +699,7 @@ namespace Adaptive.Aeron
 
                 Service(correlationId);
 
-                if (_driverEventsAdapter.LastReceivedCorrelationId() == correlationId)
+                if (_driverEventsAdapter.ReceivedCorrelationId() == correlationId)
                 {
                     if (null != _driverException)
                     {

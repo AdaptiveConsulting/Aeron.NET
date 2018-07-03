@@ -173,7 +173,7 @@ namespace Adaptive.Aeron
         {
             if (_isClosed)
             {
-                ThrowHelper.ThrowInvalidOperationException("Image is closed");
+                AeronThrowHelper.ThrowAeronException("Image is closed");
             }
 
             ValidatePosition(newPosition);

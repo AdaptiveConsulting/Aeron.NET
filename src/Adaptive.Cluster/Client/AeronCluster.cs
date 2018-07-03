@@ -211,7 +211,7 @@ namespace Adaptive.Cluster.Client
         }
 
         /// <summary>
-        /// Get the last correlation id generated for this session. Starts with <seealso cref="Aeron#NULL_VALUE"/>.
+        /// Get the last correlation id generated for this session. Starts with <seealso cref="Aeron.NULL_VALUE"/>.
         /// </summary>
         /// <returns> the last correlation id generated for this session. </returns>
         /// <seealso cref="NextCorrelationId"/>
@@ -222,7 +222,7 @@ namespace Adaptive.Cluster.Client
 
         /// <summary>
         /// Generate a new correlation id to be used for this session. This is not threadsafe. If you require a threadsafe
-        /// correlation id generation then use <seealso cref="Aeron#nextCorrelationId()"/>.
+        /// correlation id generation then use <seealso cref="Aeron.NextCorrelationId()"/>.
         /// </summary>
         /// <returns> a new correlation id to be used for this session. </returns>
         /// <seealso cref="LastCorrelationId"/>

@@ -16,6 +16,7 @@
 
 using System;
 using System.Runtime.CompilerServices;
+using Adaptive.Aeron.Exceptions;
 using Adaptive.Aeron.LogBuffer;
 using Adaptive.Aeron.Protocol;
 using Adaptive.Aeron.Status;
@@ -261,8 +262,7 @@ namespace Adaptive.Aeron
         /// <summary>
         /// Get the current position to which the publication has advanced for this stream.
         /// </summary>
-        /// <returns> the current position to which the publication has advanced for this stream. </returns>
-        /// <exception cref="InvalidOperationException"> if the publication is closed. </exception>
+        /// <returns> the current position to which the publication has advanced for this stream or <see cref="CLOSED"/>. </returns>
         public long Position
         {
             get
@@ -392,7 +392,7 @@ namespace Adaptive.Aeron
         {
             if (_isClosed)
             {
-                throw new InvalidOperationException("Publication is closed.");
+                throw new AeronException("Publication is closed.");
             }
             
             _conductor.AddDestination(RegistrationId, endpointChannel);
@@ -406,7 +406,7 @@ namespace Adaptive.Aeron
         {
             if (_isClosed)
             {
-                throw new InvalidOperationException("Publication is closed.");
+                throw new AeronException("Publication is closed.");
             }
             
             _conductor.RemoveDestination(RegistrationId, endpointChannel);

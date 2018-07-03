@@ -47,7 +47,7 @@ namespace Adaptive.Agrona.Util
         {
             throw GetInvalidCastException();
         }
-
+  
         [MethodImpl(MethodImplOptions.NoInlining)]
         public static void ThrowInvalidOperationException(string message)
         {
@@ -145,7 +145,7 @@ namespace Adaptive.Agrona.Util
         {
             return new InvalidOperationException(message);
         }
-
+     
         [MethodImpl(MethodImplOptions.NoInlining)]
         private static InvalidOperationException GetInvalidOperationException_ForVariantTypeMissmatch()
         {

@@ -62,13 +62,15 @@ namespace Adaptive.Cluster.Service
             heartbeatCounter = AwaitHeartbeatCounter(counters);
 
             service.OnStart(this);
+            
             isRecovering = true;
+            
             int recoveryCounterId = AwaitRecoveryCounter(counters);
             heartbeatCounter.SetOrdered(epochClock.Time());
             CheckForSnapshot(counters, recoveryCounterId);
             CheckForReplay(counters, recoveryCounterId);
+
             isRecovering = false;
-            service.OnReady();
         }
 
         public void OnClose()
@@ -90,30 +92,12 @@ namespace Adaptive.Cluster.Service
         {
             int workCount = 0;
 
-            long nowMs = epochClock.Time();
-            if (cachedTimeMs != nowMs)
+            if (CheckForClockTick())
             {
-                cachedTimeMs = nowMs;
-
-                if (_consensusModuleProxy.IsConnected())
-                {
-                    markFile.UpdateActivityTimestamp(nowMs);
-                    heartbeatCounter.SetOrdered(nowMs);
-                }
-                else
-                {
-                    ctx.ErrorHandler()(new ClusterException("Consensus Module not connected"));
-                    ctx.TerminationHook().Invoke();
-                }
-
-                workCount += _serviceAdapter.Poll();
-
-                if (null != _activeLogEvent && null == logAdapter)
-                {
-                    JoinActiveLog();
-                }
+                PollServiceAdapter();
+                workCount += 1;
             }
-
+           
             if (null != logAdapter)
             {
                 int polled = logAdapter.Poll();
@@ -204,8 +188,11 @@ namespace Adaptive.Cluster.Service
 
         public void Idle()
         {
-            CheckInterruptedStatus();
-            idleStrategy.Idle();
+            if (!CheckForClockTick())
+            {
+                CheckInterruptedStatus();
+                idleStrategy.Idle();
+            }
         }
 
         public void OnJoinLog(
@@ -332,7 +319,6 @@ namespace Adaptive.Cluster.Service
         {
             if (RecoveryState.HasReplay(counters, recoveryCounterId))
             {
-                service.OnReplayBegin();
                 AwaitActiveLog();
 
                 int counterId = _activeLogEvent.commitPositionId;
@@ -350,7 +336,6 @@ namespace Adaptive.Cluster.Service
 
                 _activeLogEvent = null;
                 heartbeatCounter.SetOrdered(epochClock.Time());
-                service.OnReplayEnd();
             }
         }
 
@@ -635,6 +620,41 @@ namespace Adaptive.Cluster.Service
             catch (ThreadInterruptedException)
             {
                 throw new AgentTerminationException("unexpected interrupt during operation");
+            }
+        }
+
+        private bool CheckForClockTick()
+        {
+            long nowMs = epochClock.Time();
+            
+            if (cachedTimeMs != nowMs)
+            {
+                cachedTimeMs = nowMs;
+
+                if (_consensusModuleProxy.IsConnected())
+                {
+                    markFile.UpdateActivityTimestamp(nowMs);
+                    heartbeatCounter.SetOrdered(nowMs);
+                }
+                else
+                {
+                    ctx.ErrorHandler()(new ClusterException("Consensus Module not connected"));
+                    ctx.TerminationHook().Invoke();
+                }
+
+                return true;
+            }
+
+            return false;
+        }
+
+        private void PollServiceAdapter()
+        {
+            _serviceAdapter.Poll();
+
+            if (null != _activeLogEvent && null == logAdapter)
+            {
+                JoinActiveLog();
             }
         }
     }

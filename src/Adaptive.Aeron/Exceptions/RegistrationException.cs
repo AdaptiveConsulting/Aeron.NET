@@ -22,10 +22,12 @@ namespace Adaptive.Aeron.Exceptions
     /// </summary>
     public class RegistrationException : AeronException
     {
+        private readonly int _errorCodeValue;
         private readonly ErrorCode _code;
 
-        public RegistrationException(ErrorCode code, string msg) : base(msg)
+        public RegistrationException(int errorCodeValue, ErrorCode code, string msg) : base(msg)
         {
+            _errorCodeValue = errorCodeValue;
             _code = code;
         }
 
@@ -37,5 +39,17 @@ namespace Adaptive.Aeron.Exceptions
         {
             return _code;
         }
+
+        /// <summary>
+        /// Value of the errorCode encoded. This can provide additional information when a
+        /// <seealso cref="ErrorCode#UNKNOWN_CODE_VALUE"/> is returned.
+        /// </summary>
+        /// <returns> value of the errorCode encoded as an int. </returns>
+        public int ErrorCodeValue()
+        {
+            return _errorCodeValue;
+        }
+
+        public override string Message => "errorCodeValue=" + _errorCodeValue + " " + base.Message;
     }
 }
