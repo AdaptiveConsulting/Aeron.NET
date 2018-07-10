@@ -6,6 +6,7 @@ using Adaptive.Aeron.LogBuffer;
 using Adaptive.Agrona;
 using Adaptive.Agrona.Concurrent;
 using Adaptive.Cluster.Codecs;
+using Adaptive.Aeron.Security;
 
 namespace Adaptive.Cluster.Client
 {
@@ -40,7 +41,7 @@ namespace Adaptive.Cluster.Client
         private readonly BufferClaim _bufferClaim = new BufferClaim();
         private readonly MessageHeaderEncoder _messageHeaderEncoder = new MessageHeaderEncoder();
         private readonly SessionKeepAliveRequestEncoder _keepAliveRequestEncoder = new SessionKeepAliveRequestEncoder();
-        
+
         private readonly SessionHeaderEncoder _sessionHeaderEncoder = new SessionHeaderEncoder();
         private readonly DirectBufferVector[] _vectors = new DirectBufferVector[2];
         private readonly DirectBufferVector _messageBuffer = new DirectBufferVector();
@@ -52,7 +53,7 @@ namespace Adaptive.Cluster.Client
             private readonly MessageHeaderDecoder _messageHeaderDecoder = new MessageHeaderDecoder();
             private readonly SessionHeaderDecoder _sessionHeaderDecoder = new SessionHeaderDecoder();
             private readonly NewLeaderEventDecoder _newLeaderEventDecoder = new NewLeaderEventDecoder();
-            
+
             private readonly ISessionMessageListener _sessionMessageListener;
             private readonly long _clusterSessionId;
             private readonly AeronCluster _cluster;
@@ -63,7 +64,7 @@ namespace Adaptive.Cluster.Client
                 _clusterSessionId = clusterSessionId;
                 _cluster = cluster;
             }
-            
+
             public void OnFragment(IDirectBuffer buffer, int offset, int length, Header header)
             {
                 _messageHeaderDecoder.Wrap(buffer, offset);
@@ -147,7 +148,7 @@ namespace Adaptive.Cluster.Client
 
                 _vectors[0] = new DirectBufferVector(headerBuffer, 0, SessionDecorator.SESSION_HEADER_LENGTH);
                 _vectors[1] = _messageBuffer;
-                
+
                 _poller = new Poller(ctx.SessionMessageListener(), _clusterSessionId, this);
                 _fragmentAssembler = new FragmentAssembler(_poller);
             }
@@ -432,7 +433,7 @@ namespace Adaptive.Cluster.Client
                     string channel = channelUri.ToString();
                     publications[entry.Key] = AddIngressPublication(channel, ingressStreamId);
                 }
-                
+
                 int connectedIndex = -1;
                 while (true)
                 {
@@ -814,7 +815,7 @@ namespace Adaptive.Cluster.Client
                     throw new ConfigurationException("sessionMessageListener must be specified on AeronCluster.Context");
                 }
             }
-            
+
             private long _messageTimeoutNs = Configuration.MessageTimeoutNs();
             private string _clusterMemberEndpoints = Configuration.ClusterMemberEndpoints();
             private string _ingressChannel = Configuration.IngressChannel();
@@ -859,7 +860,7 @@ namespace Adaptive.Cluster.Client
                 {
                     _credentialsSupplier = new NullCredentialsSupplier();
                 }
-                
+
                 if (null == _sessionMessageListener)
                 {
                     _sessionMessageListener = new MissingSessionMessageListner();
@@ -1143,7 +1144,7 @@ namespace Adaptive.Cluster.Client
                 _credentialsSupplier = credentialsSupplier;
                 return this;
             }
-            
+
             /// <summary>
             /// Get the <seealso cref="ErrorHandler"/> to be used for handling any exceptions.
             /// </summary>

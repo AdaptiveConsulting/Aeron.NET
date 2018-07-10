@@ -1,4 +1,4 @@
-﻿namespace Adaptive.Cluster.Client
+﻿namespace Adaptive.Aeron.Security
 {
     /// <summary>
     /// Null provider of credentials when no authentication is required.

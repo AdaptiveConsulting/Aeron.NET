@@ -2,10 +2,10 @@
 using System.Runtime.Serialization;
 using Adaptive.Aeron.Exceptions;
 
-namespace Adaptive.Cluster.Client
+namespace Adaptive.Aeron.Security
 {
     /// <summary>
-    /// Used to indicated a failed authentication attempt when connecting to the cluster.
+    /// Used to indicated a failed authentication attempt when connecting to a system.
     /// </summary>
     public class AuthenticationException : AeronException
     {

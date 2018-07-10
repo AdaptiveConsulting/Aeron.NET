@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Text;
 using Adaptive.Aeron.LogBuffer;
 using Adaptive.Agrona.Collections;
-using Adaptive.Agrona.Concurrent;
 
 namespace Adaptive.Aeron
 {
@@ -64,7 +63,7 @@ namespace Adaptive.Aeron
             _media = media;
             _params = @params;
 
-            _tags = SplitTags(_params[Aeron.Context.TAGS_PARAM_NAME]);
+            _tags = SplitTags(_params.GetOrDefault(Aeron.Context.TAGS_PARAM_NAME));
         }
 
         /// <summary>

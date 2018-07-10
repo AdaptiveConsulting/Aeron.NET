@@ -128,32 +128,32 @@ public class VoteEncoder
     }
 
 
-    public static int LogLeaderhipTermIdEncodingOffset()
+    public static int LogLeadershipTermIdEncodingOffset()
     {
         return 8;
     }
 
-    public static int LogLeaderhipTermIdEncodingLength()
+    public static int LogLeadershipTermIdEncodingLength()
     {
         return 8;
     }
 
-    public static long LogLeaderhipTermIdNullValue()
+    public static long LogLeadershipTermIdNullValue()
     {
         return -9223372036854775808L;
     }
 
-    public static long LogLeaderhipTermIdMinValue()
+    public static long LogLeadershipTermIdMinValue()
     {
         return -9223372036854775807L;
     }
 
-    public static long LogLeaderhipTermIdMaxValue()
+    public static long LogLeadershipTermIdMaxValue()
     {
         return 9223372036854775807L;
     }
 
-    public VoteEncoder LogLeaderhipTermId(long value)
+    public VoteEncoder LogLeadershipTermId(long value)
     {
         _buffer.PutLong(_offset + 8, value, ByteOrder.LittleEndian);
         return this;
