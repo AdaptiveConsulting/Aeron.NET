@@ -47,6 +47,7 @@ namespace Adaptive.Aeron
         private long _timeOfLastResourcesCheckNs;
         private long _timeOfLastServiceNs;
         private bool _isClosed;
+        private bool _isInCallback;
         private string _stashedChannel;
         private RegistrationException _driverException;
 
@@ -270,6 +271,8 @@ namespace Adaptive.Aeron
                 AvailableImageHandler handler = subscription.AvailableImageHandler();
                 if (null != handler)
                 {
+                    _isInCallback = true;
+
                     try
                     {
                         handler(image);
@@ -277,6 +280,10 @@ namespace Adaptive.Aeron
                     catch (Exception ex)
                     {
                         HandleError(ex);
+                    }
+                    finally
+                    {
+                        _isInCallback = false;
                     }
                 }
 
@@ -295,6 +302,8 @@ namespace Adaptive.Aeron
                     UnavailableImageHandler handler = subscription.UnavailableImageHandler();
                     if (null != handler)
                     {
+                        _isInCallback = true;
+
                         try
                         {
                             handler(image);
@@ -302,6 +311,10 @@ namespace Adaptive.Aeron
                         catch (Exception ex)
                         {
                             HandleError(ex);
+                        }
+                        finally
+                        {
+                            _isInCallback = false;
                         }
                     }
                 }
@@ -318,6 +331,8 @@ namespace Adaptive.Aeron
         {
             if (null != _availableCounterHandler)
             {
+                _isInCallback = true;
+                
                 try
                 {
                     _availableCounterHandler(_countersReader, registrationId, counterId);
@@ -326,6 +341,10 @@ namespace Adaptive.Aeron
                 {
                     HandleError(ex);
                 }
+                finally
+                {
+                    _isInCallback = false;
+                }
             }
         }
 
@@ -333,6 +352,8 @@ namespace Adaptive.Aeron
         {
             if (null != _unavailableCounterHandler)
             {
+                _isInCallback = true;
+                
                 try
                 {
                     _unavailableCounterHandler(_countersReader, registrationId, counterId);
@@ -340,6 +361,10 @@ namespace Adaptive.Aeron
                 catch (Exception ex)
                 {
                     HandleError(ex);
+                }
+                finally
+                {
+                    _isInCallback = false;
                 }
             }
         }
@@ -360,6 +385,7 @@ namespace Adaptive.Aeron
             try
             {
                 EnsureOpen();
+                EnsureNotReentrant();
 
                 _stashedChannel = channel;
                 long registrationId = _driverProxy.AddPublication(channel, streamId);
@@ -379,6 +405,7 @@ namespace Adaptive.Aeron
             try
             {
                 EnsureOpen();
+                EnsureNotReentrant();
 
                 _stashedChannel = channel;
                 long registrationId = _driverProxy.AddExclusivePublication(channel, streamId);
@@ -402,6 +429,7 @@ namespace Adaptive.Aeron
                     publication.InternalClose();
 
                     EnsureOpen();
+                    EnsureNotReentrant();
 
                     var removedPublication = _resourceByRegIdMap[publication.RegistrationId];
 
@@ -429,6 +457,7 @@ namespace Adaptive.Aeron
             try
             {
                 EnsureOpen();
+                EnsureNotReentrant();
 
                 long correlationId = _driverProxy.AddSubscription(channel, streamId);
                 Subscription subscription = new Subscription(this, channel, streamId, correlationId, availableImageHandler, unavailableImageHandler);
@@ -455,6 +484,7 @@ namespace Adaptive.Aeron
                     subscription.InternalClose();
 
                     EnsureOpen();
+                    EnsureNotReentrant();
 
                     long registrationId = subscription.RegistrationId;
                     AwaitResponse(_driverProxy.RemoveSubscription(registrationId));
@@ -473,6 +503,7 @@ namespace Adaptive.Aeron
             try
             {
                 EnsureOpen();
+                EnsureNotReentrant();
 
                 AwaitResponse(_driverProxy.AddDestination(registrationId, endpointChannel));
             }
@@ -488,6 +519,7 @@ namespace Adaptive.Aeron
             try
             {
                 EnsureOpen();
+                EnsureNotReentrant();
 
                 AwaitResponse(_driverProxy.RemoveDestination(registrationId, endpointChannel));
             }
@@ -503,6 +535,7 @@ namespace Adaptive.Aeron
             try
             {
                 EnsureOpen();
+                EnsureNotReentrant();
 
                 AwaitResponse(_driverProxy.AddRcvDestination(registrationId, endpointChannel));
             }
@@ -518,7 +551,8 @@ namespace Adaptive.Aeron
             try
             {
                 EnsureOpen();
-
+                EnsureNotReentrant();
+                
                 AwaitResponse(_driverProxy.RemoveRcvDestination(registrationId, endpointChannel));
             }
             finally
@@ -534,6 +568,7 @@ namespace Adaptive.Aeron
             try
             {
                 EnsureOpen();
+                EnsureNotReentrant();
 
                 if (keyLength < 0 || keyLength > CountersManager.MAX_KEY_LENGTH)
                 {
@@ -563,6 +598,7 @@ namespace Adaptive.Aeron
             try
             {
                 EnsureOpen();
+                EnsureNotReentrant();
 
                 if (label.Length > CountersManager.MAX_LABEL_LENGTH)
                 {
@@ -591,6 +627,7 @@ namespace Adaptive.Aeron
                     counter.InternalClose();
 
                     EnsureOpen();
+                    EnsureNotReentrant();
 
                     long registrationId = counter.RegistrationId();
                     AwaitResponse(_driverProxy.RemoveCounter(registrationId));
@@ -643,6 +680,14 @@ namespace Adaptive.Aeron
             if (_isClosed)
             {
                 throw new AeronException("Aeron client conductor is closed");
+            }
+        }
+
+        private void EnsureNotReentrant()
+        {
+            if (_isInCallback)
+            {
+                throw new AeronException("Reentrant calls not permitted during callbacks");
             }
         }
 

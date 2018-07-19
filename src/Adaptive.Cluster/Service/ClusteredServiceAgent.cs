@@ -8,6 +8,7 @@ using Adaptive.Agrona;
 using Adaptive.Agrona.Concurrent;
 using Adaptive.Agrona.Concurrent.Status;
 using Adaptive.Archiver;
+using Adaptive.Archiver.Codecs;
 using Adaptive.Cluster.Client;
 using Adaptive.Cluster.Codecs;
 
@@ -513,8 +514,11 @@ namespace Adaptive.Cluster.Service
             long recordingId;
 
             using (AeronArchive archive = AeronArchive.Connect(archiveCtx)) 
-            using(Publication publication = archive.AddRecordedExclusivePublication(ctx.SnapshotChannel(), ctx.SnapshotStreamId()))
+            using(Publication publication = aeron.AddExclusivePublication(ctx.SnapshotChannel(), ctx.SnapshotStreamId()))
             {
+                var channel = ChannelUri.AddSessionId(ctx.SnapshotChannel(), publication.SessionId);
+                long subscriptionId = archive.StartRecording(channel, ctx.SnapshotStreamId(), SourceLocation.LOCAL);
+                
                 try
                 {
                     CountersReader counters = aeron.CountersReader();
@@ -528,7 +532,7 @@ namespace Adaptive.Cluster.Service
                 }
                 finally
                 {
-                    archive.StopRecording(publication);
+                    archive.StopRecording(subscriptionId);
                 }
             }
 

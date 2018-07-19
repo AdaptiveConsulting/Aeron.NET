@@ -29,6 +29,10 @@ namespace Adaptive.Archiver
         private readonly ReplayRequestEncoder replayRequestEncoder = new ReplayRequestEncoder();
         private readonly StopReplayRequestEncoder stopReplayRequestEncoder = new StopReplayRequestEncoder();
         private readonly StopRecordingRequestEncoder stopRecordingRequestEncoder = new StopRecordingRequestEncoder();
+
+        private readonly StopRecordingSubscriptionRequestEncoder stopRecordingSubscriptionRequestEncoder =
+            new StopRecordingSubscriptionRequestEncoder();
+
         private readonly ListRecordingsRequestEncoder listRecordingsRequestEncoder = new ListRecordingsRequestEncoder();
         private readonly ListRecordingsForUriRequestEncoder listRecordingsForUriRequestEncoder = new ListRecordingsForUriRequestEncoder();
         private readonly ListRecordingRequestEncoder listRecordingRequestEncoder = new ListRecordingRequestEncoder();
@@ -188,6 +192,24 @@ namespace Adaptive.Archiver
                 .Channel(channel);
 
             return Offer(stopRecordingRequestEncoder.EncodedLength());
+        }
+
+        /// <summary>
+        /// Stop an active recording by the <seealso cref="Subscription#registrationId()"/> it was registered with.
+        /// </summary>
+        /// <param name="subscriptionId">   that identifies the subscription in the archive doing the recording. </param>
+        /// <param name="correlationId">    for this request. </param>
+        /// <param name="controlSessionId"> for this request. </param>
+        /// <returns> true if successfully offered otherwise false. </returns>
+        public bool StopRecording(long subscriptionId, long correlationId, long controlSessionId)
+        {
+            stopRecordingSubscriptionRequestEncoder
+                .WrapAndApplyHeader(buffer, 0, messageHeaderEncoder)
+                .ControlSessionId(controlSessionId)
+                .CorrelationId(correlationId)
+                .SubscriptionId(subscriptionId);
+
+            return Offer(stopRecordingSubscriptionRequestEncoder.EncodedLength());
         }
 
         /// <summary>

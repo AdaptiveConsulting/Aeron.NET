@@ -398,7 +398,7 @@ namespace Adaptive.Archiver
         /// <param name="channel">        to be recorded. </param>
         /// <param name="streamId">       to be recorded. </param>
         /// <param name="sourceLocation"> of the publication to be recorded. </param>
-        /// <returns> the correlationId used to identify the request. </returns>
+        /// <returns> the subscriptionId of the recording. </returns>
         public long StartRecording(string channel, int streamId, SourceLocation sourceLocation)
         {
             _lock.Lock();
@@ -411,9 +411,7 @@ namespace Adaptive.Archiver
                     throw new ArchiveException("failed to send start recording request");
                 }
 
-                PollForResponse(correlationId);
-
-                return correlationId;
+                return PollForResponse(correlationId);
             }
             finally
             {
@@ -432,7 +430,7 @@ namespace Adaptive.Archiver
         /// <param name="channel">        to be recorded. </param>
         /// <param name="streamId">       to be recorded. </param>
         /// <param name="sourceLocation"> of the publication to be recorded. </param>
-        /// <returns> the correlationId used to identify the request. </returns>
+        /// <returns> the subscriptionId of the recording. </returns>
         public long ExtendRecording(long recordingId, string channel, int streamId,
             SourceLocation sourceLocation)
         {
@@ -447,9 +445,7 @@ namespace Adaptive.Archiver
                     throw new ArchiveException("failed to send extend recording request");
                 }
 
-                PollForResponse(correlationId);
-
-                return correlationId;
+                return PollForResponse(correlationId);
             }
             finally
             {
@@ -500,16 +496,48 @@ namespace Adaptive.Archiver
         }
 
         /// <summary>
-        /// Start a replay for a length in bytes of a recording from a position. If the position is <seealso cref="#NULL_POSITION"/>
+        /// Stop recording for a subscriptionId that has been returned from
+        /// <seealso cref="#startRecording(String, int, SourceLocation)"/> or
+        /// <seealso cref="#extendRecording(long, String, int, SourceLocation)"/>.
+        /// </summary>
+        /// <param name="subscriptionId"> the subscription was registered with for the recording. </param>
+        public void StopRecording(long subscriptionId)
+        {
+            _lock.Lock();
+            try
+            {
+                long correlationId = aeron.NextCorrelationId();
+
+                if (!archiveProxy.StopRecording(subscriptionId, correlationId, controlSessionId))
+                {
+                    throw new ArchiveException("failed to send stop recording request");
+                }
+
+                PollForResponse(correlationId);
+            }
+            finally
+            {
+                _lock.Unlock();
+            }
+        }
+
+
+        /// <summary>
+        /// Start a replay for a length in bytes of a recording from a position. If the position is <seealso cref="NULL_POSITION"/>
         /// then the stream will be replayed from the start.
+        ///
+        /// The lower 32-bits of the returned value contain the <see cref="Image.SessionId"/> of the received replay. All
+        /// 64-bits are required to uniquely identify the replay when calling <see cref="StopReplay(long)"/>. The lower 32-bits
+        /// can be obtained by casting the <see cref="long"/> value to an <see cref="int"/>.
+        /// 
         /// </summary>
         /// <param name="recordingId">    to be replayed. </param>
-        /// <param name="position">       from which the replay should begin or <seealso cref="#NULL_POSITION"/> if from the start. </param>
-        /// <param name="length">         of the stream to be replayed. Use <seealso cref="Long#MAX_VALUE"/> to follow a live recording or <see cref="NULL_LENGTH"/> to replay the whole stream of unknown length. </param>
+        /// <param name="position">       from which the replay should begin or <seealso cref="NULL_POSITION"/> if from the start. </param>
+        /// <param name="length">         of the stream to be replayed. Use <seealso cref="long.MaxValue"/> to follow a live recording or <see cref="NULL_LENGTH"/> to replay the whole stream of unknown length. </param>
         /// <param name="replayChannel">  to which the replay should be sent. </param>
         /// <param name="replayStreamId"> to which the replay should be sent. </param>
-        /// <returns> the id of the replay session which will be the same as the <seealso cref="Image#sessionId()"/> of the received
-        /// replay for correlation with the matching channel and stream id. </returns>
+        /// <returns> the id of the replay session which will be the same as the <seealso cref="Image.SessionId"/> of the received
+        /// replay for correlation with the matching channel and stream id in the lower 32 bits. </returns>
         public long StartReplay(long recordingId, long position, long length, string replayChannel,
             int replayStreamId)
         {

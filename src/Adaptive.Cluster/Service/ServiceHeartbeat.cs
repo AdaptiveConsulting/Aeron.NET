@@ -24,12 +24,14 @@ namespace Adaptive.Cluster.Service
         /// </summary>
         public const int SERVICE_HEARTBEAT_TYPE_ID = 206;
 
+        public const int SERVICE_ID_OFFSET = 0;
+        
         /// <summary>
         /// Human readable name for the counter.
         /// </summary>
         public const string NAME = "service-heartbeat: serviceId=";
 
-        public static readonly int KEY_LENGTH = BitUtil.SIZE_OF_INT;
+        public static readonly int KEY_LENGTH = SERVICE_ID_OFFSET + BitUtil.SIZE_OF_INT;
 
         /// <summary>
         /// Allocate a counter to represent the heartbeat of a clustered service.
@@ -40,6 +42,8 @@ namespace Adaptive.Cluster.Service
         /// <returns> the <seealso cref="Counter"/> for the commit position. </returns>
         public static Counter Allocate(Aeron.Aeron aeron, IMutableDirectBuffer tempBuffer, int serviceId)
         {
+            tempBuffer.PutInt(SERVICE_ID_OFFSET, serviceId);
+            
             int labelOffset = 0;
             labelOffset += tempBuffer.PutStringWithoutLengthAscii(KEY_LENGTH + labelOffset, NAME);
             labelOffset += tempBuffer.PutIntAscii(KEY_LENGTH + labelOffset, serviceId);
@@ -64,7 +68,7 @@ namespace Adaptive.Cluster.Service
                     int recordOffset = CountersReader.MetaDataOffset(i);
 
                     if (buffer.GetInt(recordOffset + CountersReader.TYPE_ID_OFFSET) == SERVICE_HEARTBEAT_TYPE_ID &&
-                        buffer.GetInt(recordOffset + CountersReader.KEY_OFFSET) == serviceId)
+                        buffer.GetInt(recordOffset + CountersReader.KEY_OFFSET + SERVICE_ID_OFFSET) == serviceId)
                     {
                         return i;
                     }

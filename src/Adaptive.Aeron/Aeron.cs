@@ -120,7 +120,6 @@ namespace Adaptive.Aeron
         /// 
         /// Threads required for interacting with the media driver are created and managed within the Aeron instance.
         /// 
-        /// </para>
         /// </summary>
         /// <returns> the new <seealso cref="Aeron"/> instance connected to the Media Driver. </returns>
         public static Aeron Connect()
