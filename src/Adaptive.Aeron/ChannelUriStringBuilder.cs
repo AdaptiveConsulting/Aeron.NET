@@ -24,6 +24,7 @@ namespace Adaptive.Aeron
         private string _controlMode;
         private string _tags;
         private bool? _reliable;
+        private bool? _sparse;
         private int? _ttl;
         private int? _mtu;
         private int? _termLength;
@@ -272,6 +273,30 @@ namespace Adaptive.Aeron
             return _reliable;
         }
 
+        /// <summary>
+        /// Set to indicate if a term log buffer should be sparse on disk or not. Sparse saves space at the potential
+        /// expense of latency.
+        /// </summary>
+        /// <param name="isSparse"> true if the term buffer log is sparse on disk. </param>
+        /// <returns> this for a fluent API. </returns>
+        /// <see cref="Aeron.Context.SPARSE_PARAM_NAME"/>
+        public ChannelUriStringBuilder Sparse(bool? isSparse)
+        {
+            _sparse = isSparse;
+            return this;
+        }
+
+        /// <summary>
+        /// Get if a term log buffer should be sparse on disk or not. Sparse saves space at the potential expense of latency.
+        /// </summary>
+        /// <returns> true if the term buffer log is sparse on disk. </returns>
+        /// <see cref="Aeron.Context.SPARSE_PARAM_NAME"/>
+        public bool? Sparse()
+        {
+            return _sparse;
+        }
+
+        
         /// <summary>
         /// Set the Time To Live (TTL) for a multicast datagram. Valid values are 0-255 for the number of hops the datagram
         /// can progress along.
@@ -601,6 +626,11 @@ namespace Adaptive.Aeron
             if (null != _reliable)
             {
                 _sb.Append(Aeron.Context.RELIABLE_STREAM_PARAM_NAME).Append('=').Append(_reliable).Append('|');
+            }
+
+            if (null != _sparse)
+            {
+                _sb.Append(Aeron.Context.SPARSE_PARAM_NAME).Append('=').Append(_sparse).Append('|');
             }
 
             if (null != _ttl)

@@ -71,7 +71,7 @@ namespace Adaptive.Aeron
         /// The offer failed due to reaching the maximum position of the stream given term buffer length times the total
         /// possible number of terms.
         /// <para>
-        /// If this happen then the publication should be closed and a new one added. To make it less likely to happen then
+        /// If this happens then the publication should be closed and a new one added. To make it less likely to happen then
         /// increase the term buffer length.
         /// </para>
         /// </summary>

@@ -526,6 +526,11 @@ namespace Adaptive.Aeron
             /// Key for the tags for a channel
             /// </summary>
             public const string TAGS_PARAM_NAME = "tags";
+
+            /// <summary>
+            /// Parameter name for channel URI param to indicate if term buffers should be sparse. Value is boolean.
+            /// </summary>
+            public const string SPARSE_PARAM_NAME = "sparse";
             
             /// <summary>
             /// Get the default directory name to be used if <seealso cref="AeronDirectoryName(String)"/> is not set. This will take
@@ -1418,12 +1423,16 @@ namespace Adaptive.Aeron
                         cncVersion);
                 }
 
+                int distinctErrorCount = 0;
                 UnsafeBuffer buffer = CncFileDescriptor.CreateErrorLogBuffer(cncByteBuffer, cncMetaDataBuffer);
 
-                void ErrorConsumer(int count, long firstTimestamp, long lastTimestamp, string ex)
-                    => FormatError(writer, count, firstTimestamp, lastTimestamp, ex);
+                if (ErrorLogReader.HasErrors(buffer))
+                {
+                    void ErrorConsumer(int count, long firstTimestamp, long lastTimestamp, string ex)
+                        => FormatError(writer, count, firstTimestamp, lastTimestamp, ex);
 
-                var distinctErrorCount = ErrorLogReader.Read(buffer, ErrorConsumer);
+                    distinctErrorCount = ErrorLogReader.Read(buffer, ErrorConsumer);
+                }
 
                 writer.WriteLine();
                 writer.WriteLine("{0} distinct errors observed.", distinctErrorCount);

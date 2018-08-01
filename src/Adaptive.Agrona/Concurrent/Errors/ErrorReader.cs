@@ -24,6 +24,16 @@ namespace Adaptive.Agrona.Concurrent.Errors
     public class ErrorLogReader
     {
         /// <summary>
+        /// Has the error buffer any recorded errors?
+        /// </summary>
+        /// <param name="buffer"> containing the <seealso cref="DistinctErrorLog"/>. </param>
+        /// <returns> true if there is at least one error. </returns>
+        public static bool HasErrors(IAtomicBuffer buffer)
+        {
+            return 0 != buffer.GetIntVolatile(DistinctErrorLog.LengthOffset);
+        }
+        
+        /// <summary>
         /// Read all the errors in a log since the creation of the log.
         /// </summary>
         /// <param name="buffer">   containing the <seealso cref="DistinctErrorLog"/>. </param>

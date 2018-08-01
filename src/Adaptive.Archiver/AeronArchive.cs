@@ -301,7 +301,8 @@ namespace Adaptive.Archiver
                     if (controlResponsePoller.TemplateId() == ControlResponseDecoder.TEMPLATE_ID &&
                         controlResponsePoller.Code() == ControlResponseCode.ERROR)
                     {
-                        throw new ArchiveException(controlResponsePoller.ErrorMessage(), (int) controlResponsePoller.RelevantId());
+                        throw new ArchiveException(controlResponsePoller.ErrorMessage(),
+                            (int) controlResponsePoller.RelevantId());
                     }
                 }
             }
@@ -1067,6 +1068,16 @@ namespace Adaptive.Archiver
             public const int RECORDING_EVENTS_STREAM_ID_DEFAULT = 30;
 
             /// <summary>
+            /// Sparse term buffer indicator for control streams.
+            /// </summary>
+            private const string CONTROL_TERM_BUFFER_SPARSE_PARAM_NAME = "aeron.archive.control.term.buffer.sparse";
+
+            /// <summary>
+            /// Overrides driver's sparse term buffer indicator for control streams.
+            /// </summary>
+            private const bool CONTROL_TERM_BUFFER_SPARSE_DEFAULT = true;
+
+            /// <summary>
             /// Term length for control streams.
             /// </summary>
             internal const string CONTROL_TERM_BUFFER_LENGTH_PARAM_NAME = "aeron.archive.control.term.buffer.length";
@@ -1077,12 +1088,12 @@ namespace Adaptive.Archiver
             internal const int CONTROL_TERM_BUFFER_LENGTH_DEFAULT = 64 * 1024;
 
             /// <summary>
-            /// Term length for control streams.
+            /// MTU length for control streams.
             /// </summary>
             internal const string CONTROL_MTU_LENGTH_PARAM_NAME = "aeron.archive.control.mtu.length";
 
             /// <summary>
-            /// MTU to reflect default control term length.
+            ///  MTU to reflect default for the control streams.
             /// </summary>
             internal const int CONTROL_MTU_LENGTH_DEFAULT = 4 * 1024;
 
@@ -1097,10 +1108,21 @@ namespace Adaptive.Archiver
             }
 
             /// <summary>
+            /// Should term buffer files be sparse for control request and response streams.
+            /// </summary>
+            /// <returns> true if term buffer files should be sparse for control request and response streams. </returns>
+            /// <seealso cref="CONTROL_TERM_BUFFER_SPARSE_PARAM_NAME"/>
+            public static bool ControlTermBufferSparse()
+            {
+                string propValue = Config.GetProperty(CONTROL_TERM_BUFFER_SPARSE_PARAM_NAME);
+                return null != propValue ? "true".Equals(propValue) : CONTROL_TERM_BUFFER_SPARSE_DEFAULT;
+            }
+
+            /// <summary>
             /// Term buffer length to be used for control request and response streams.
             /// </summary>
             /// <returns> term buffer length to be used for control request and response streams. </returns>
-            /// <seealso cref= #CONTROL_TERM_BUFFER_LENGTH_PARAM_NAME </seealso>
+            /// <seealso cref="CONTROL_TERM_BUFFER_LENGTH_PARAM_NAME"></seealso>
             public static int ControlTermBufferLength()
             {
                 return Config.GetSizeAsInt(CONTROL_TERM_BUFFER_LENGTH_PARAM_NAME, CONTROL_TERM_BUFFER_LENGTH_DEFAULT);
@@ -1217,6 +1239,7 @@ namespace Adaptive.Archiver
             internal int controlRequestStreamId = Configuration.ControlStreamId();
             internal string controlResponseChannel = Configuration.ControlResponseChannel();
             internal int controlResponseStreamId = Configuration.ControlResponseStreamId();
+            internal bool controlTermBufferSparse = Configuration.ControlTermBufferSparse();
             internal int controlTermBufferLength = Configuration.ControlTermBufferLength();
             internal int controlMtuLength = Configuration.ControlMtuLength();
 
@@ -1260,6 +1283,7 @@ namespace Adaptive.Archiver
                 ChannelUri uri = ChannelUri.Parse(controlRequestChannel);
                 uri.Put(Aeron.Aeron.Context.TERM_LENGTH_PARAM_NAME, Convert.ToString(controlTermBufferLength));
                 uri.Put(Aeron.Aeron.Context.MTU_LENGTH_PARAM_NAME, Convert.ToString(controlMtuLength));
+                uri.Put(Aeron.Aeron.Context.SPARSE_PARAM_NAME, Convert.ToString(controlTermBufferSparse));
                 controlRequestChannel = uri.ToString();
             }
 
@@ -1418,9 +1442,31 @@ namespace Adaptive.Archiver
             {
                 return controlResponseStreamId;
             }
+            
+            /// <summary>
+            /// Should the control streams use sparse file term buffers.
+            /// </summary>
+            /// <param name="controlTermBufferSparse"> for the control stream. </param>
+            /// <returns> this for a fluent API. </returns>
+            /// <seealso cref="Configuration.CONTROL_TERM_BUFFER_SPARSE_PARAM_NAME"></seealso>
+            public Context ControlTermBufferSparse(bool controlTermBufferSparse)
+            {
+                this.controlTermBufferSparse = controlTermBufferSparse;
+                return this;
+            }
 
             /// <summary>
-            /// Set the term buffer length for the control stream.
+            /// Should the control streams use sparse file term buffers.
+            /// </summary>
+            /// <returns> true if the control stream should use sparse file term buffers. </returns>
+            /// <seealso cref="Configuration.CONTROL_TERM_BUFFER_SPARSE_PARAM_NAME"></seealso>
+            public bool ControlTermBufferSparse()
+            {
+                return controlTermBufferSparse;
+            }
+
+            /// <summary>
+            /// Set the term buffer length for the control streams.
             /// </summary>
             /// <param name="controlTermBufferLength"> for the control stream. </param>
             /// <returns> this for a fluent API. </returns>
@@ -1432,9 +1478,9 @@ namespace Adaptive.Archiver
             }
 
             /// <summary>
-            /// Get the term buffer length for the control steam.
+            /// Get the term buffer length for the control streams.
             /// </summary>
-            /// <returns> the term buffer length for the control steam. </returns>
+            /// <returns> the term buffer length for the control streams. </returns>
             /// <seealso cref= Configuration#CONTROL_TERM_BUFFER_LENGTH_PARAM_NAME </seealso>
             public int ControlTermBufferLength()
             {
@@ -1442,9 +1488,9 @@ namespace Adaptive.Archiver
             }
 
             /// <summary>
-            /// Set the MTU length for the control stream.
+            /// Set the MTU length for the control streams.
             /// </summary>
-            /// <param name="controlMtuLength"> for the control stream. </param>
+            /// <param name="controlMtuLength"> for the control streams. </param>
             /// <returns> this for a fluent API. </returns>
             /// <seealso cref= Configuration#CONTROL_MTU_LENGTH_PARAM_NAME </seealso>
             public Context ControlMtuLength(int controlMtuLength)
@@ -1454,9 +1500,9 @@ namespace Adaptive.Archiver
             }
 
             /// <summary>
-            /// Get the MTU length for the control steam.
+            /// Get the MTU length for the control steams.
             /// </summary>
-            /// <returns> the MTU length for the control steam. </returns>
+            /// <returns> the MTU length for the control steams. </returns>
             /// <seealso cref= Configuration#CONTROL_MTU_LENGTH_PARAM_NAME </seealso>
             public int ControlMtuLength()
             {
@@ -1648,7 +1694,8 @@ namespace Adaptive.Archiver
 
                 if (2 == step)
                 {
-                    if (!archiveProxy.TryConnect(ctx.ControlResponseChannel(), ctx.ControlResponseStreamId(), connectCorrelationId))
+                    if (!archiveProxy.TryConnect(ctx.ControlResponseChannel(), ctx.ControlResponseStreamId(),
+                        connectCorrelationId))
                     {
                         return null;
                     }
@@ -1667,14 +1714,17 @@ namespace Adaptive.Archiver
                 }
 
                 controlResponsePoller.Poll();
-                if (controlResponsePoller.IsPollComplete() && controlResponsePoller.CorrelationId() == connectCorrelationId && controlResponsePoller.TemplateId() == ControlResponseDecoder.TEMPLATE_ID)
+                if (controlResponsePoller.IsPollComplete() &&
+                    controlResponsePoller.CorrelationId() == connectCorrelationId &&
+                    controlResponsePoller.TemplateId() == ControlResponseDecoder.TEMPLATE_ID)
                 {
                     ControlResponseCode code = controlResponsePoller.Code();
                     if (code != ControlResponseCode.OK)
                     {
                         if (code == ControlResponseCode.ERROR)
                         {
-                            throw new ArchiveException("error: " + controlResponsePoller.ErrorMessage(), (int) controlResponsePoller.RelevantId());
+                            throw new ArchiveException("error: " + controlResponsePoller.ErrorMessage(),
+                                (int) controlResponsePoller.RelevantId());
                         }
 
                         throw new ArchiveException("unexpected response: code=" + code);
@@ -1682,7 +1732,9 @@ namespace Adaptive.Archiver
 
                     long controlSessionId = controlResponsePoller.ControlSessionId();
                     Subscription subscription = controlResponsePoller.Subscription();
-                    return new AeronArchive(ctx, controlResponsePoller, archiveProxy, new RecordingDescriptorPoller(subscription, FRAGMENT_LIMIT, controlSessionId), controlSessionId);
+                    return new AeronArchive(ctx, controlResponsePoller, archiveProxy,
+                        new RecordingDescriptorPoller(subscription, FRAGMENT_LIMIT, controlSessionId),
+                        controlSessionId);
                 }
 
                 return null;
