@@ -30,26 +30,13 @@ namespace Adaptive.Aeron
     /// </summary>
     public class BufferBuilder
     {
-        /// <summary>
-        /// Maximum capcity to which the buffer can grow.
-        /// </summary>
-        public const int MAX_CAPACITY = int.MaxValue - 8;
-
-        /// <summary>
-        /// Initial minimum capacity for the internal buffer when used, zero if not used.
-        /// </summary>
-        public const int MIN_ALLOCATED_CAPACITY = 4096;
-
-        private readonly UnsafeBuffer _mutableDirectBuffer;
-
-        private byte[] _buffer;
+        private readonly UnsafeBuffer _buffer;
         private int _limit;
-        private int _capacity;
 
         /// <summary>
-        /// Construct a buffer builder with a default growth increment of <seealso cref="MIN_ALLOCATED_CAPACITY"/>
+        /// Construct a buffer builder with an initial capacity of zero and isDirect false.
         /// </summary>
-        public BufferBuilder() : this(MIN_ALLOCATED_CAPACITY)
+        public BufferBuilder() : this(0)
         {
         }
 
@@ -59,9 +46,7 @@ namespace Adaptive.Aeron
         /// <param name="initialCapacity"> at which the capacity will start. </param>
         public BufferBuilder(int initialCapacity)
         {
-            _capacity = BitUtil.FindNextPositivePowerOfTwo(initialCapacity);
-            _buffer = new byte[_capacity];
-            _mutableDirectBuffer = new UnsafeBuffer(_buffer);
+            _buffer = new UnsafeBuffer(new byte[initialCapacity]);
         }
 
         /// <summary>
@@ -70,7 +55,7 @@ namespace Adaptive.Aeron
         /// <returns> the current capacity of the buffer. </returns>
         public int Capacity()
         {
-            return _capacity;
+            return _buffer.Capacity;
         }
 
         /// <summary>
@@ -89,9 +74,9 @@ namespace Adaptive.Aeron
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Limit(int limit)
         {
-            if (limit < 0 || limit >= _capacity)
+            if (limit < 0 || limit >= _buffer.Capacity)
             {
-                ThrowHelper.ThrowArgumentException($"Limit outside range: capacity={_capacity:D} limit={limit:D}");
+                ThrowHelper.ThrowArgumentException($"limit outside range: capacity={_buffer.Capacity:D} limit={limit:D}");
             }
 
             _limit = limit;
@@ -101,9 +86,9 @@ namespace Adaptive.Aeron
         /// The <seealso cref="IMutableDirectBuffer"/> that encapsulates the internal buffer.
         /// </summary>
         /// <returns> the <seealso cref="IMutableDirectBuffer"/> that encapsulates the internal buffer. </returns>
-        public UnsafeBuffer Buffer()
+        public IMutableDirectBuffer Buffer()
         {
-            return _mutableDirectBuffer;
+            return _buffer;
         }
 
         /// <summary>
@@ -122,10 +107,7 @@ namespace Adaptive.Aeron
         /// <returns> the builder for fluent API usage. </returns>
 	    public BufferBuilder Compact()
         {
-            _capacity = Math.Max(MIN_ALLOCATED_CAPACITY, BitUtil.FindNextPositivePowerOfTwo(_limit));
-            _buffer = CopyOf(_buffer, _capacity);
-            _mutableDirectBuffer.Wrap(_buffer);
-
+            Resize(Math.Max(BufferBuilderUtil.MIN_ALLOCATED_CAPACITY, _limit));
             return this;
         }
 
@@ -148,52 +130,30 @@ namespace Adaptive.Aeron
 
         private void EnsureCapacity(int additionalCapacity)
         {
-            int requiredCapacity = _limit + additionalCapacity;
+            long requiredCapacity = (long)_limit + additionalCapacity;
 
-            if (requiredCapacity < 0)
+            if (requiredCapacity > BufferBuilderUtil.MAX_CAPACITY)
             {
-                string s = $"Insufficient capacity: limit={_limit:D} additional={additionalCapacity:D}";
+                string s = $"max capacity exceeded: limit={_limit:D} required={requiredCapacity:D}";
                 ThrowHelper.ThrowInvalidOperationException(s);
             }
 
-            if (requiredCapacity > _capacity)
+            int capacity = _buffer.Capacity;
+            if (requiredCapacity > capacity)
             {
-                int newCapacity = FindSuitableCapacity(_capacity, requiredCapacity);
-                byte[] newBuffer = CopyOf(_buffer, newCapacity);
-
-                _capacity = newCapacity;
-                _buffer = newBuffer;
-                _mutableDirectBuffer.Wrap(newBuffer);
+                int newCapacity = BufferBuilderUtil.FindSuitableCapacity(capacity, (int)requiredCapacity);
+                Resize(newCapacity);
             }
         }
 
-        private static int FindSuitableCapacity(int capacity, int requiredCapacity)
+        private void Resize(int newCapacity)
         {
-            do
-            {
-                int newCapacity = Math.Max(capacity + (capacity >> 1), MIN_ALLOCATED_CAPACITY);
-
-                if (newCapacity < 0 || newCapacity > MAX_CAPACITY)
-                {
-                    if (capacity == MAX_CAPACITY)
-                    {
-                        ThrowHelper.ThrowInvalidOperationException("Max capacity reached: " + MAX_CAPACITY);
-                    }
-
-                    capacity = MAX_CAPACITY;
-                }
-                else
-                {
-                    capacity = newCapacity;
-                }
-            } while (capacity < requiredCapacity);
-
-            return capacity;
+            _buffer.Wrap(CopyOf(_buffer.ByteArray, newCapacity));
         }
 
-        internal static T[] CopyOf<T>(T[] original, int newLength)
+        private static T[] CopyOf<T>(T[] original, int newLength)
         {
-            T[] dest = new T[newLength];
+            var dest = new T[newLength];
             Array.Copy(original, 0, dest, 0, Math.Min(original.Length, newLength));
             return dest;
         }

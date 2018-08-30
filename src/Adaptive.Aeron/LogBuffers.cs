@@ -58,7 +58,7 @@ namespace Adaptive.Aeron
                 // if log length exceeds MAX_INT we need multiple mapped buffers, (see FileChannel.map doc).
                 if (logLength < int.MaxValue)
                 {
-                    var mappedBuffer = IoUtil.MapExistingFile(logFileName, MapMode.ReadWrite); // TODO Java has sparse hint
+                    var mappedBuffer = IoUtil.MapExistingFile(logFileName, MapMode.ReadWrite); // TODO Java has sparse hint & Little Endian
                     _mappedByteBuffers = new[] {mappedBuffer};
 
                     _logMetaDataBuffer = new UnsafeBuffer(mappedBuffer.Pointer,
@@ -89,8 +89,9 @@ namespace Adaptive.Aeron
                     var memoryMappedFile = IoUtil.OpenMemoryMappedFile(logFileName);
 
                     var metaDataMappedBuffer =
-                        new MappedByteBuffer(memoryMappedFile, metaDataSectionOffset, metaDataMappingLength);
-                    _mappedByteBuffers[_mappedByteBuffers.Length - 1] = metaDataMappedBuffer;
+                        new MappedByteBuffer(memoryMappedFile, metaDataSectionOffset, metaDataMappingLength);  // Little Endian
+                    
+                    _mappedByteBuffers[LogBufferDescriptor.LOG_META_DATA_SECTION_INDEX] = metaDataMappedBuffer;
                     _logMetaDataBuffer = new UnsafeBuffer(
                         metaDataMappedBuffer.Pointer,
                         (int) metaDataMappingLength - LogBufferDescriptor.LOG_META_DATA_LENGTH,
@@ -103,7 +104,7 @@ namespace Adaptive.Aeron
                     if (metaDataTermLength != assumedTermLength)
                     {
                         throw new InvalidOperationException(
-                            $"Assumed term length {assumedTermLength} does not match metadta: termLength = {metaDataTermLength}");
+                            $"assumed term length {assumedTermLength} does not match metadta: termLength = {metaDataTermLength}");
                     }
 
                     _termLength = assumedTermLength;
@@ -112,7 +113,7 @@ namespace Adaptive.Aeron
                     {
                         long position = assumedTermLength * (long) i;
 
-                        _mappedByteBuffers[i] = new MappedByteBuffer(memoryMappedFile, position, assumedTermLength);
+                        _mappedByteBuffers[i] = new MappedByteBuffer(memoryMappedFile, position, assumedTermLength); // Little Endian
                         _termBuffers[i] = new UnsafeBuffer(_mappedByteBuffers[i].Pointer, 0, assumedTermLength);
                     }
                 }

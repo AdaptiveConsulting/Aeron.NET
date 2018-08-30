@@ -6,10 +6,10 @@ namespace Adaptive.Cluster.Client
     /// <summary>
     /// Interface for consuming messages on a given session from the cluster.
     /// </summary>
-    public interface ISessionMessageListener
+    public interface IEgressMessageListener
     {
         /// <summary>
-        /// Message event returned from the cluster.
+        /// Message event returned from the clustered service.
         /// </summary>
         /// <param name="correlationId">    to associate with the ingress message to which it is correlated. </param>
         /// <param name="clusterSessionId"> to which the message belongs. </param>

@@ -10,7 +10,7 @@ namespace Adaptive.Cluster.Codecs {
 public class SessionHeaderDecoder
 {
     public const ushort BLOCK_LENGTH = 24;
-    public const ushort TEMPLATE_ID = 1;
+    public const ushort TEMPLATE_ID = 20;
     public const ushort SCHEMA_ID = 1;
     public const ushort SCHEMA_VERSION = 1;
 

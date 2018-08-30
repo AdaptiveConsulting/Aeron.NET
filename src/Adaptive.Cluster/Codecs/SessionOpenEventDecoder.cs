@@ -10,7 +10,7 @@ namespace Adaptive.Cluster.Codecs {
 public class SessionOpenEventDecoder
 {
     public const ushort BLOCK_LENGTH = 28;
-    public const ushort TEMPLATE_ID = 21;
+    public const ushort TEMPLATE_ID = 22;
     public const ushort SCHEMA_ID = 1;
     public const ushort SCHEMA_VERSION = 1;
 

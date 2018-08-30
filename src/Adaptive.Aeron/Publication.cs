@@ -220,7 +220,10 @@ namespace Adaptive.Aeron
         /// </summary>
         public void Dispose()
         {
-            _conductor.ReleasePublication(this);
+            if (!_isClosed)
+            {
+                _conductor.ReleasePublication(this);
+            }
         }
 
         /// <summary>
@@ -395,7 +398,7 @@ namespace Adaptive.Aeron
                 throw new AeronException("Publication is closed.");
             }
             
-            _conductor.AddDestination(RegistrationId, endpointChannel);
+            _conductor.AddDestination(_originalRegistrationId, endpointChannel);
         }
 
         /// <summary>
@@ -409,7 +412,7 @@ namespace Adaptive.Aeron
                 throw new AeronException("Publication is closed.");
             }
             
-            _conductor.RemoveDestination(RegistrationId, endpointChannel);
+            _conductor.RemoveDestination(_originalRegistrationId, endpointChannel);
         }
 
         internal void InternalClose()
@@ -444,7 +447,7 @@ namespace Adaptive.Aeron
             if (length > MaxPayloadLength)
             {
                 ThrowHelper.ThrowArgumentException(
-                    $"Claim exceeds maxPayloadLength of {MaxPayloadLength:D}, length={length:D}");
+                    $"claim exceeds maxPayloadLength of {MaxPayloadLength:D}, length={length:D}");
             }
         }
 
@@ -454,7 +457,7 @@ namespace Adaptive.Aeron
             if (length > MaxMessageLength)
             {
                 ThrowHelper.ThrowArgumentException(
-                    $"Mssage exceeds maxMessageLength of {MaxMessageLength:D}, length={length:D}");
+                    $"message exceeds maxMessageLength of {MaxMessageLength:D}, length={length:D}");
             }
         }
     }

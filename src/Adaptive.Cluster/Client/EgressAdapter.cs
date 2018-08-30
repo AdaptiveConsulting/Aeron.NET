@@ -18,7 +18,7 @@ namespace Adaptive.Cluster.Client
         private readonly MessageHeaderDecoder _messageHeaderDecoder = new MessageHeaderDecoder();
         private readonly SessionEventDecoder _sessionEventDecoder = new SessionEventDecoder();
         private readonly NewLeaderEventDecoder _newLeaderEventDecoder = new NewLeaderEventDecoder();
-        private readonly SessionHeaderDecoder _sessionHeaderDecoder = new SessionHeaderDecoder();
+        private readonly EgressMessageHeaderDecoder _egressMessageHeaderDecoder = new EgressMessageHeaderDecoder();
         private readonly FragmentAssembler _fragmentAssembler;
         private readonly IEgressListener _listener;
         private readonly Subscription _subscription;
@@ -48,21 +48,21 @@ namespace Adaptive.Cluster.Client
             int templateId = _messageHeaderDecoder.TemplateId();
             switch (templateId)
             {
-                case SessionHeaderDecoder.TEMPLATE_ID:
+                case EgressMessageHeaderDecoder.TEMPLATE_ID:
                 {
-                    _sessionHeaderDecoder.Wrap(
+                    _egressMessageHeaderDecoder.Wrap(
                         buffer,
                         offset + MessageHeaderDecoder.ENCODED_LENGTH,
                         _messageHeaderDecoder.BlockLength(),
                         _messageHeaderDecoder.Version());
 
-                    var sessionId = _sessionHeaderDecoder.ClusterSessionId();
+                    var sessionId = _egressMessageHeaderDecoder.ClusterSessionId();
                     if (sessionId == _clusterSessionId)
                     {
                         _listener.OnMessage(
-                            _sessionHeaderDecoder.CorrelationId(),
-                            _sessionHeaderDecoder.ClusterSessionId(),
-                            _sessionHeaderDecoder.Timestamp(),
+                            _egressMessageHeaderDecoder.CorrelationId(),
+                            _egressMessageHeaderDecoder.ClusterSessionId(),
+                            _egressMessageHeaderDecoder.Timestamp(),
                             buffer,
                             offset + SESSION_HEADER_LENGTH,
                             length - SESSION_HEADER_LENGTH,
@@ -86,6 +86,7 @@ namespace Adaptive.Cluster.Client
                         _listener.SessionEvent(
                             _sessionEventDecoder.CorrelationId(),
                             sessionId,
+                            _sessionEventDecoder.LeadershipTermId(),
                             _sessionEventDecoder.LeaderMemberId(),
                             _sessionEventDecoder.Code(),
                             _sessionEventDecoder.Detail());
@@ -107,6 +108,7 @@ namespace Adaptive.Cluster.Client
                     {
                         _listener.NewLeader(
                             sessionId,
+                            _sessionEventDecoder.LeadershipTermId(),
                             _newLeaderEventDecoder.LeaderMemberId(),
                             _newLeaderEventDecoder.MemberEndpoints());
                     }

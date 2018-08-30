@@ -7,19 +7,19 @@ using Adaptive.Agrona;
 
 namespace Adaptive.Cluster.Codecs {
 
-public class SessionKeepAliveRequestEncoder
+public class IngressMessageHeaderEncoder
 {
-    public const ushort BLOCK_LENGTH = 16;
-    public const ushort TEMPLATE_ID = 5;
+    public const ushort BLOCK_LENGTH = 24;
+    public const ushort TEMPLATE_ID = 1;
     public const ushort SCHEMA_ID = 1;
     public const ushort SCHEMA_VERSION = 1;
 
-    private SessionKeepAliveRequestEncoder _parentMessage;
+    private IngressMessageHeaderEncoder _parentMessage;
     private IMutableDirectBuffer _buffer;
     protected int _offset;
     protected int _limit;
 
-    public SessionKeepAliveRequestEncoder()
+    public IngressMessageHeaderEncoder()
     {
         _parentMessage = this;
     }
@@ -59,7 +59,7 @@ public class SessionKeepAliveRequestEncoder
         return _offset;
     }
 
-    public SessionKeepAliveRequestEncoder Wrap(IMutableDirectBuffer buffer, int offset)
+    public IngressMessageHeaderEncoder Wrap(IMutableDirectBuffer buffer, int offset)
     {
         this._buffer = buffer;
         this._offset = offset;
@@ -68,7 +68,7 @@ public class SessionKeepAliveRequestEncoder
         return this;
     }
 
-    public SessionKeepAliveRequestEncoder WrapAndApplyHeader(
+    public IngressMessageHeaderEncoder WrapAndApplyHeader(
         IMutableDirectBuffer buffer, int offset, MessageHeaderEncoder headerEncoder)
     {
         headerEncoder
@@ -121,7 +121,7 @@ public class SessionKeepAliveRequestEncoder
         return 9223372036854775807L;
     }
 
-    public SessionKeepAliveRequestEncoder CorrelationId(long value)
+    public IngressMessageHeaderEncoder CorrelationId(long value)
     {
         _buffer.PutLong(_offset + 0, value, ByteOrder.LittleEndian);
         return this;
@@ -153,9 +153,41 @@ public class SessionKeepAliveRequestEncoder
         return 9223372036854775807L;
     }
 
-    public SessionKeepAliveRequestEncoder ClusterSessionId(long value)
+    public IngressMessageHeaderEncoder ClusterSessionId(long value)
     {
         _buffer.PutLong(_offset + 8, value, ByteOrder.LittleEndian);
+        return this;
+    }
+
+
+    public static int LeadershipTermIdEncodingOffset()
+    {
+        return 16;
+    }
+
+    public static int LeadershipTermIdEncodingLength()
+    {
+        return 8;
+    }
+
+    public static long LeadershipTermIdNullValue()
+    {
+        return -9223372036854775808L;
+    }
+
+    public static long LeadershipTermIdMinValue()
+    {
+        return -9223372036854775807L;
+    }
+
+    public static long LeadershipTermIdMaxValue()
+    {
+        return 9223372036854775807L;
+    }
+
+    public IngressMessageHeaderEncoder LeadershipTermId(long value)
+    {
+        _buffer.PutLong(_offset + 16, value, ByteOrder.LittleEndian);
         return this;
     }
 
@@ -168,7 +200,7 @@ public class SessionKeepAliveRequestEncoder
 
     public StringBuilder AppendTo(StringBuilder builder)
     {
-        SessionKeepAliveRequestDecoder writer = new SessionKeepAliveRequestDecoder();
+        IngressMessageHeaderDecoder writer = new IngressMessageHeaderDecoder();
         writer.Wrap(_buffer, _offset, BLOCK_LENGTH, SCHEMA_VERSION);
 
         return writer.AppendTo(builder);

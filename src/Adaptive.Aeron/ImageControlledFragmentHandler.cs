@@ -25,7 +25,7 @@ namespace Adaptive.Aeron
         /// </summary>
         /// <param name="delegate">            onto which whole messages are forwarded. </param>
         /// <param name="initialBufferLength"> to be used for each session. </param>
-        public ImageControlledFragmentAssembler(IControlledFragmentHandler @delegate, int initialBufferLength = BufferBuilder.MIN_ALLOCATED_CAPACITY, bool isDirect = false)
+        public ImageControlledFragmentAssembler(IControlledFragmentHandler @delegate, int initialBufferLength = 0, bool isDirect = false)
         {
             _delegate = @delegate;
             _builder = new BufferBuilder(initialBufferLength);

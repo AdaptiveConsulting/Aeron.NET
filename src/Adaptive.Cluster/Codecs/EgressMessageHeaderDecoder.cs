@@ -7,21 +7,21 @@ using Adaptive.Agrona;
 
 namespace Adaptive.Cluster.Codecs {
 
-public class SessionKeepAliveRequestDecoder
+public class EgressMessageHeaderDecoder
 {
-    public const ushort BLOCK_LENGTH = 16;
-    public const ushort TEMPLATE_ID = 5;
+    public const ushort BLOCK_LENGTH = 24;
+    public const ushort TEMPLATE_ID = 2;
     public const ushort SCHEMA_ID = 1;
     public const ushort SCHEMA_VERSION = 1;
 
-    private SessionKeepAliveRequestDecoder _parentMessage;
+    private EgressMessageHeaderDecoder _parentMessage;
     private IDirectBuffer _buffer;
     protected int _offset;
     protected int _limit;
     protected int _actingBlockLength;
     protected int _actingVersion;
 
-    public SessionKeepAliveRequestDecoder()
+    public EgressMessageHeaderDecoder()
     {
         _parentMessage = this;
     }
@@ -61,7 +61,7 @@ public class SessionKeepAliveRequestDecoder
         return _offset;
     }
 
-    public SessionKeepAliveRequestDecoder Wrap(
+    public EgressMessageHeaderDecoder Wrap(
         IDirectBuffer buffer, int offset, int actingBlockLength, int actingVersion)
     {
         this._buffer = buffer;
@@ -196,6 +196,60 @@ public class SessionKeepAliveRequestDecoder
     }
 
 
+    public static int TimestampId()
+    {
+        return 3;
+    }
+
+    public static int TimestampSinceVersion()
+    {
+        return 0;
+    }
+
+    public static int TimestampEncodingOffset()
+    {
+        return 16;
+    }
+
+    public static int TimestampEncodingLength()
+    {
+        return 8;
+    }
+
+    public static string TimestampMetaAttribute(MetaAttribute metaAttribute)
+    {
+        switch (metaAttribute)
+        {
+            case MetaAttribute.EPOCH: return "unix";
+            case MetaAttribute.TIME_UNIT: return "nanosecond";
+            case MetaAttribute.SEMANTIC_TYPE: return "";
+            case MetaAttribute.PRESENCE: return "required";
+        }
+
+        return "";
+    }
+
+    public static long TimestampNullValue()
+    {
+        return -9223372036854775808L;
+    }
+
+    public static long TimestampMinValue()
+    {
+        return -9223372036854775807L;
+    }
+
+    public static long TimestampMaxValue()
+    {
+        return 9223372036854775807L;
+    }
+
+    public long Timestamp()
+    {
+        return _buffer.GetLong(_offset + 16, ByteOrder.LittleEndian);
+    }
+
+
 
     public override string ToString()
     {
@@ -206,7 +260,7 @@ public class SessionKeepAliveRequestDecoder
     {
         int originalLimit = Limit();
         Limit(_offset + _actingBlockLength);
-        builder.Append("[SessionKeepAliveRequest](sbeTemplateId=");
+        builder.Append("[EgressMessageHeader](sbeTemplateId=");
         builder.Append(TEMPLATE_ID);
         builder.Append("|sbeSchemaId=");
         builder.Append(SCHEMA_ID);
@@ -234,6 +288,11 @@ public class SessionKeepAliveRequestDecoder
         //Token{signal=ENCODING, name='int64', referencedName='null', description='null', id=-1, version=0, deprecated=0, encodedLength=8, offset=8, componentTokenCount=1, encoding=Encoding{presence=REQUIRED, primitiveType=INT64, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
         builder.Append("ClusterSessionId=");
         builder.Append(ClusterSessionId());
+        builder.Append('|');
+        //Token{signal=BEGIN_FIELD, name='timestamp', referencedName='null', description='null', id=3, version=0, deprecated=0, encodedLength=0, offset=16, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=ENCODING, name='time_t', referencedName='null', description='Epoch time in milliseconds since 1 Jan 1970 UTC', id=-1, version=0, deprecated=0, encodedLength=8, offset=16, componentTokenCount=1, encoding=Encoding{presence=REQUIRED, primitiveType=INT64, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        builder.Append("Timestamp=");
+        builder.Append(Timestamp());
 
         Limit(originalLimit);
 

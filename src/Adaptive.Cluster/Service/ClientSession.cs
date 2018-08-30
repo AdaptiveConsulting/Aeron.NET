@@ -1,9 +1,5 @@
-﻿using System;
-using Adaptive.Aeron;
+﻿using Adaptive.Aeron;
 using Adaptive.Agrona;
-using Adaptive.Agrona.Concurrent;
-using Adaptive.Cluster.Client;
-using Adaptive.Cluster.Codecs;
 
 namespace Adaptive.Cluster.Service
 {
@@ -13,26 +9,18 @@ namespace Adaptive.Cluster.Service
     public class ClientSession
     {
         /// <summary>
-        /// Length of the session header that will be prepended to the message.
-        /// </summary>
-        public static readonly int SESSION_HEADER_LENGTH = 
-            MessageHeaderEncoder.ENCODED_LENGTH + SessionHeaderEncoder.BLOCK_LENGTH;
-
-        /// <summary>
         /// Return value to indicate egress to a session is mocked out by the cluster when in follower mode.
         /// </summary>
         public const long MOCKED_OFFER = 1;
-        
+
         private readonly long _id;
         private long _lastCorrelationId;
         private readonly int _responseStreamId;
         private readonly string _responseChannel;
-        private Publication _responsePublication;
         private readonly byte[] _encodedPrincipal;
-        private readonly DirectBufferVector[] _vectors = new DirectBufferVector[2];
-        private readonly DirectBufferVector _messageBuffer = new DirectBufferVector();
-        private readonly SessionHeaderEncoder _sessionHeaderEncoder = new SessionHeaderEncoder();
+
         private readonly ClusteredServiceAgent _cluster;
+        private Publication _responsePublication;
         private bool _isClosing;
 
         internal ClientSession(
@@ -49,12 +37,6 @@ namespace Adaptive.Cluster.Service
             _responseChannel = responseChannel;
             _encodedPrincipal = encodedPrincipal;
             _cluster = cluster;
-
-            UnsafeBuffer headerBuffer = new UnsafeBuffer(new byte[SESSION_HEADER_LENGTH]);
-            _sessionHeaderEncoder.WrapAndApplyHeader(headerBuffer, 0, new MessageHeaderEncoder()).ClusterSessionId(sessionId);
-
-            _vectors[0] = new DirectBufferVector(headerBuffer, 0, SESSION_HEADER_LENGTH);
-            _vectors[1] = _messageBuffer;
         }
 
         /// <summary>
@@ -98,7 +80,7 @@ namespace Adaptive.Cluster.Service
         /// </summary>
         /// <returns> whether a request to close this session has been made. </returns>
         public bool IsClosing => _isClosing;
-        
+
         /// <summary>
         /// Get the last correlation id processed on this session.
         /// </summary>
@@ -115,74 +97,22 @@ namespace Adaptive.Cluster.Service
         /// <param name="buffer">        containing message. </param>
         /// <param name="offset">        offset in the buffer at which the encoded message begins. </param>
         /// <param name="length">        in bytes of the encoded message. </param>
-        /// <returns> the same as <seealso cref="Publication#offer(DirectBuffer, int, int)"/> when in <seealso cref="Cluster.Role#LEADER"/>
-        /// otherwise <see cref="MOCKED_OFFER"/>. </returns>
-        public long Offer(
-            long correlationId, 
-            IDirectBuffer buffer, 
-            int offset, 
-            int length)
-        {
-            if (_cluster.Role() != ClusterRole.Leader)
-            {
-                return MOCKED_OFFER;
-            }
-
-            if (null == _responsePublication)
-            {
-                throw new ClusterException("session not connected id=" + _id);
-            }
-
-            _sessionHeaderEncoder
-                .CorrelationId(correlationId)
-                .Timestamp(_cluster.TimeMs());
-            
-            _messageBuffer.Reset(buffer, offset, length);
-
-            return _responsePublication.Offer(_vectors);
-        }
-
-        /// <summary>
-        /// Non-blocking publish of a partial buffer containing a message to a cluster.
-        /// </summary>
-        /// <param name="correlationId"> to be used to identify the message to the cluster. </param>
-        /// <param name="timestampMs">   to be used for when the response was generated.</param>
-        /// <param name="buffer">        containing message. </param>
-        /// <param name="offset">        offset in the buffer at which the encoded message begins. </param>
-        /// <param name="length">        in bytes of the encoded message. </param>
         /// <returns> the same as <seealso cref="Publication.Offer(IDirectBuffer, int, int)"/> when in <seealso cref="ClusterRole.Leader"/>
         /// otherwise <see cref="MOCKED_OFFER"/>. </returns>
         public long Offer(
             long correlationId,
-            long timestampMs,
-            IDirectBuffer buffer, 
-            int offset, 
+            IDirectBuffer buffer,
+            int offset,
             int length)
         {
-            if (_cluster.Role() != ClusterRole.Leader)
-            {
-                return MOCKED_OFFER;
-            }
-
-            if (null == _responsePublication)
-            {
-                throw new ClusterException("session not connected id=" + _id);
-            }
-
-            _sessionHeaderEncoder
-                .CorrelationId(correlationId)
-                .Timestamp(timestampMs);
-            
-            _messageBuffer.Reset(buffer, offset, length);
-
-            return _responsePublication.Offer(_vectors);
+            return _cluster.Offer(correlationId, _id, _responsePublication, buffer, offset, length);
         }
 
         internal void Connect(Aeron.Aeron aeron)
         {
             if (null == _responsePublication)
             {
-                _responsePublication = aeron.AddPublication(_responseChannel, _responseStreamId);
+                _responsePublication = aeron.AddExclusivePublication(_responseChannel, _responseStreamId);
             }
         }
 

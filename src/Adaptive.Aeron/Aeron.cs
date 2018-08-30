@@ -36,7 +36,7 @@ namespace Adaptive.Aeron
     /// A client application requires only one Aeron object per Media Driver.
     /// 
     /// <b>Note:</b> If <seealso cref="Context.ErrorHandler(ErrorHandler)"/> is not set and a <seealso cref="DriverTimeoutException"/>
-    /// occurs then the process will face the wrath of <seealso cref="Environment.Exit"/>. See <seealso cref="DEFAULT_ERROR_HANDLER"/>.
+    /// occurs then the process will face the wrath of <seealso cref="Environment.Exit"/>. See <seealso cref="Configuration.DEFAULT_ERROR_HANDLER"/>.
     /// 
     /// </summary>
     public sealed class Aeron : IDisposable
@@ -45,46 +45,6 @@ namespace Adaptive.Aeron
         /// Used to represent a null value for when some value is not yet set.
         /// </summary>
         public const int NULL_VALUE = -1;
-        
-        /// <summary>
-        /// The Default handler for Aeron runtime exceptions.
-        /// When a <seealso cref="DriverTimeoutException"/> is encountered, this handler will
-        /// exit the program.
-        /// <para>
-        /// The error handler can be overridden by supplying an <seealso cref="Context"/> with a custom handler.
-        /// 
-        /// </para>
-        /// </summary>
-        /// <seealso cref="Context.ErrorHandler(ErrorHandler)" />
-        public static readonly ErrorHandler DEFAULT_ERROR_HANDLER = (throwable) =>
-        {
-            Console.WriteLine(throwable);
-
-            if (throwable is DriverTimeoutException)
-            {
-                Console.WriteLine("***");
-                Console.WriteLine("***");
-                Console.WriteLine("Timeout from the MediaDriver - is it currently running? Exiting.");
-                Console.WriteLine("***");
-                Console.WriteLine("***");
-                Environment.Exit(-1);
-            }
-        };
-
-        /*
-         * Duration in milliseconds for which the client conductor will sleep between duty cycles.
-         */
-        public static readonly int IdleSleepMs = 16;
-
-        /*
-        * Duration in nanoseconds for which the client conductor will sleep between duty cycles.
-        */
-        public static readonly long IdleSleepNs = NanoUtil.FromMilliseconds(IdleSleepMs);
-
-        /*
-         * Default interval between sending keepalive control messages to the driver.
-         */
-        public static readonly long KeepaliveIntervalNs = NanoUtil.FromMilliseconds(500);
 
         private readonly AtomicBoolean _isClosed = new AtomicBoolean(false);
         private readonly long _clientId;
@@ -220,10 +180,18 @@ namespace Adaptive.Aeron
                 if (null != _conductorRunner)
                 {
                     _conductorRunner.Dispose();
+                    if (!_conductorRunner.IsClosed)
+                    {
+                        throw new AeronException("failed to close Aeron client");
+                    }
                 }
                 else
                 {
                     _conductorInvoker.Dispose();
+                    if (!_conductorInvoker.IsClosed)
+                    {
+                        throw new AeronException("failed to close Aeron client");
+                    }
                 }
 
                 _ctx.Dispose();
@@ -296,7 +264,7 @@ namespace Adaptive.Aeron
         {
             if (_conductor.IsClosed())
             {
-                throw new AeronException("Client is closed");
+                throw new AeronException("client is closed");
             }
 
             return _commandBuffer.NextCorrelationId();
@@ -310,7 +278,7 @@ namespace Adaptive.Aeron
         {
             if (_conductor.IsClosed())
             {
-                throw new AeronException("Client is closed");
+                throw new AeronException("client is closed");
             }
 
             return _conductor.CountersReader();
@@ -354,6 +322,71 @@ namespace Adaptive.Aeron
             return _conductor.AddCounter(typeId, label);
         }
 
+        public static class Configuration
+        {
+            /*
+             * Duration in milliseconds for which the client conductor will sleep between duty cycles.
+             */
+            public static readonly int IdleSleepMs = 16;
+
+            /*
+            * Duration in nanoseconds for which the client conductor will sleep between duty cycles.
+            */
+            public static readonly long IdleSleepNs = NanoUtil.FromMilliseconds(IdleSleepMs);
+
+            /*
+             * Default interval between sending keepalive control messages to the driver.
+             */
+            public static readonly long KeepaliveIntervalNs = NanoUtil.FromMilliseconds(500);
+
+            /// <summary>
+            /// Duration to wait while lingering a entity such as an <seealso cref="Image"/> before deleting underlying resources
+            /// such as memory mapped files.
+            /// </summary>
+            public const string RESOURCE_LINGER_DURATION_PROP_NAME = "aeron.client.resource.linger.duration";
+
+            /// <summary>
+            /// Default duration a resource should linger before deletion.
+            /// </summary>
+            public static readonly long RESOURCE_LINGER_DURATION_DEFAULT = NanoUtil.FromSeconds(3);
+
+            /// <summary>
+            /// The Default handler for Aeron runtime exceptions.
+            /// When a <seealso cref="DriverTimeoutException"/> is encountered, this handler will
+            /// exit the program.
+            /// <para>
+            /// The error handler can be overridden by supplying an <seealso cref="Context"/> with a custom handler.
+            /// 
+            /// </para>
+            /// </summary>
+            /// <seealso cref="Context.ErrorHandler(ErrorHandler)" />
+            public static readonly ErrorHandler DEFAULT_ERROR_HANDLER = (throwable) =>
+            {
+                Console.WriteLine(throwable);
+
+                if (throwable is DriverTimeoutException)
+                {
+                    Console.WriteLine("***");
+                    Console.WriteLine("***");
+                    Console.WriteLine("Timeout from the MediaDriver - is it currently running? Exiting.");
+                    Console.WriteLine("***");
+                    Console.WriteLine("***");
+                    Environment.Exit(-1);
+                }
+            };
+
+            /// <summary>
+            /// Duration to wait while lingering a entity such as an <seealso cref="Image"/> before deleting underlying resources
+            /// such as memory mapped files.
+            /// </summary>
+            /// <returns> duration in nanoseconds to wait before deleting a expired resource. </returns>
+            /// <seealso cref="RESOURCE_LINGER_DURATION_PROP_NAME"/>
+            public static long ResourceLingerDurationNs()
+            {
+                return Config.GetDurationInNanos(RESOURCE_LINGER_DURATION_PROP_NAME, RESOURCE_LINGER_DURATION_DEFAULT);
+            }
+        }
+
         /// <summary>
         /// This class provides configuration for the <seealso cref="Aeron"/> class via the <seealso cref="Aeron.Connect(Aeron.Context)"/>
         /// method and its overloads. It gives applications some control over the interactions with the Aeron Media Driver.
@@ -381,8 +414,9 @@ namespace Adaptive.Aeron
             private UnavailableImageHandler _unavailableImageHandler;
             private AvailableCounterHandler _availableCounterHandler;
             private UnavailableCounterHandler _unavailableCounterHandler;
-            private long _keepAliveInterval = KeepaliveIntervalNs;
+            private long _keepAliveInterval = Configuration.KeepaliveIntervalNs;
             private long _interServiceTimeout = 0;
+            private long _resourceLingerDurationNs = Configuration.ResourceLingerDurationNs();
             private FileInfo _cncFile;
             private string _aeronDirectoryName = GetAeronDirectoryName();
             private DirectoryInfo _aeronDirectory;
@@ -531,7 +565,7 @@ namespace Adaptive.Aeron
             /// Parameter name for channel URI param to indicate if term buffers should be sparse. Value is boolean.
             /// </summary>
             public const string SPARSE_PARAM_NAME = "sparse";
-            
+
             /// <summary>
             /// Get the default directory name to be used if <seealso cref="AeronDirectoryName(String)"/> is not set. This will take
             /// the <seealso cref="AERON_DIR_PROP_NAME"/> if set and if not then <seealso cref="AERON_DIR_PROP_DEFAULT"/>.
@@ -594,7 +628,7 @@ namespace Adaptive.Aeron
 
                 if (_idleStrategy == null)
                 {
-                    _idleStrategy = new SleepingIdleStrategy(IdleSleepMs);
+                    _idleStrategy = new SleepingIdleStrategy(Configuration.IdleSleepMs);
                 }
 
                 if (CncFile() != null)
@@ -636,7 +670,7 @@ namespace Adaptive.Aeron
 
                 if (_errorHandler == null)
                 {
-                    _errorHandler = DEFAULT_ERROR_HANDLER;
+                    _errorHandler = Configuration.DEFAULT_ERROR_HANDLER;
                 }
 
                 if (_availableImageHandler == null)
@@ -867,12 +901,13 @@ namespace Adaptive.Aeron
 
             /// <summary>
             /// Handle Aeron exceptions in a callback method. The default behavior is defined by
-            /// <seealso cref="Aeron.DEFAULT_ERROR_HANDLER"/>. This is the error handler which will be used if an error occurs
+            /// <seealso cref="Configuration.DEFAULT_ERROR_HANDLER"/>. This is the error handler which will be used if an error occurs
             /// during the callback for poll operations such as <seealso cref="Subscription.Poll(FragmentHandler, int)"/>.
             /// 
             /// The error handler can be reset after <seealso cref="Aeron.Connect()"/> and the latest version will always be used
             /// so that the boot strapping process can be performed such as replacing the default one with a
             /// <seealso cref="CountedErrorHandler"/>.
+            /// </summary>
             /// <param name="errorHandler"> Method to handle objects of type Throwable. </param>
             /// <returns> this Aeron.Context for method chaining. </returns>
             /// <seealso cref="DriverTimeoutException" />
@@ -1060,7 +1095,7 @@ namespace Adaptive.Aeron
             }
 
             /// <summary>
-            /// Set the timeout between service calls the to <seealso cref="ClientConductor"/> duty cycles.
+            /// Set the timeout between service calls the to <seealso cref="ClientConductor"/> duty cycles in nanoseconds.
             /// </summary>
             /// <param name="interServiceTimeout"> the timeout (ns) between service calls the to <seealso cref="ClientConductor"/> duty cycle. </param>
             /// <returns> this Aeron.Context for method chaining. </returns>
@@ -1085,6 +1120,31 @@ namespace Adaptive.Aeron
                 return _interServiceTimeout;
             }
 
+            /// <summary>
+            /// Duration to wait while lingering a entity such as an <seealso cref="Image"/> before deleting underlying resources
+            /// such as memory mapped files.
+            /// </summary>
+            /// <param name="resourceLingerDurationNs"> to wait before deleting a expired resource. </param>
+            /// <returns> this for a fluent API. </returns>
+            /// <seealso cref="Configuration.RESOURCE_LINGER_DURATION_PROP_NAME"></seealso>
+            public Context ResourceLingerDurationNs(long resourceLingerDurationNs)
+            {
+                _resourceLingerDurationNs = resourceLingerDurationNs;
+                return this;
+            }
+
+            /// <summary>
+            /// Duration to wait while lingering a entity such as an <seealso cref="Image"/> before deleting underlying resources
+            /// such as memory mapped files.
+            /// </summary>
+            /// <returns> duration in nanoseconds to wait before deleting a expired resource. </returns>
+            /// <seealso cref="Configuration.RESOURCE_LINGER_DURATION_PROP_NAME"></seealso>
+            public long ResourceLingerDurationNs()
+            {
+                return _resourceLingerDurationNs;
+            }
+
+            
             /// <summary>
             /// Get the top level Aeron directory used for communication between the client and Media Driver, and
             /// the location of the data buffers.
@@ -1166,7 +1226,7 @@ namespace Adaptive.Aeron
                 while (null == _toDriverBuffer)
                 {
                     cncFile.Refresh();
-                    
+
                     while (!cncFile.Exists || cncFile.Length <= 0)
                     {
                         if (_epochClock.Time() > deadLineMs)
@@ -1174,7 +1234,7 @@ namespace Adaptive.Aeron
                             throw new DriverTimeoutException("CnC file not created: " + cncFile.FullName);
                         }
 
-                        Sleep(IdleSleepMs);
+                        Sleep(Configuration.IdleSleepMs);
 
                         cncFile.Refresh();
                     }
@@ -1187,7 +1247,7 @@ namespace Adaptive.Aeron
                     {
                         if (_epochClock.Time() > deadLineMs)
                         {
-                            throw new DriverTimeoutException("CnC file is created but not initialised.");
+                            throw new DriverTimeoutException("CnC file is created but not initialised");
                         }
 
                         Sleep(1);
@@ -1206,7 +1266,7 @@ namespace Adaptive.Aeron
                     {
                         if (_epochClock.Time() > deadLineMs)
                         {
-                            throw new DriverTimeoutException("No driver heartbeat detected.");
+                            throw new DriverTimeoutException("no driver heartbeat detected.");
                         }
 
                         Sleep(1);
@@ -1217,7 +1277,7 @@ namespace Adaptive.Aeron
                     {
                         if (timeMs > deadLineMs)
                         {
-                            throw new DriverTimeoutException("No driver heartbeat detected.");
+                            throw new DriverTimeoutException("no driver heartbeat detected.");
                         }
 
                         IoUtil.Unmap(_cncByteBuffer);
@@ -1248,7 +1308,7 @@ namespace Adaptive.Aeron
                             throw new AeronException("CnC file is created but not populated.");
                         }
 
-                        Sleep(IdleSleepMs);
+                        Sleep(Configuration.IdleSleepMs);
                     }
 
                     return IoUtil.MapExistingFile(fileStream);
@@ -1366,7 +1426,7 @@ namespace Adaptive.Aeron
                 if (CncFileDescriptor.CNC_VERSION != cncVersion)
                 {
                     throw new AeronException("Aeron CnC version does not match: version=" + cncVersion +
-                                                        " required=" + CncFileDescriptor.CNC_VERSION);
+                                             " required=" + CncFileDescriptor.CNC_VERSION);
                 }
 
                 ManyToOneRingBuffer toDriverBuffer =

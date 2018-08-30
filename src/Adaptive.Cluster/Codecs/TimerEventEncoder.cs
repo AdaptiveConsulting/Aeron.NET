@@ -10,7 +10,7 @@ namespace Adaptive.Cluster.Codecs {
 public class TimerEventEncoder
 {
     public const ushort BLOCK_LENGTH = 16;
-    public const ushort TEMPLATE_ID = 20;
+    public const ushort TEMPLATE_ID = 21;
     public const ushort SCHEMA_ID = 1;
     public const ushort SCHEMA_VERSION = 1;
 

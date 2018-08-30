@@ -7,19 +7,19 @@ using Adaptive.Agrona;
 
 namespace Adaptive.Cluster.Codecs {
 
-public class ClusterActionRequestEncoder
+public class SessionKeepAliveEncoder
 {
-    public const ushort BLOCK_LENGTH = 28;
-    public const ushort TEMPLATE_ID = 24;
+    public const ushort BLOCK_LENGTH = 16;
+    public const ushort TEMPLATE_ID = 6;
     public const ushort SCHEMA_ID = 1;
     public const ushort SCHEMA_VERSION = 1;
 
-    private ClusterActionRequestEncoder _parentMessage;
+    private SessionKeepAliveEncoder _parentMessage;
     private IMutableDirectBuffer _buffer;
     protected int _offset;
     protected int _limit;
 
-    public ClusterActionRequestEncoder()
+    public SessionKeepAliveEncoder()
     {
         _parentMessage = this;
     }
@@ -59,7 +59,7 @@ public class ClusterActionRequestEncoder
         return _offset;
     }
 
-    public ClusterActionRequestEncoder Wrap(IMutableDirectBuffer buffer, int offset)
+    public SessionKeepAliveEncoder Wrap(IMutableDirectBuffer buffer, int offset)
     {
         this._buffer = buffer;
         this._offset = offset;
@@ -68,7 +68,7 @@ public class ClusterActionRequestEncoder
         return this;
     }
 
-    public ClusterActionRequestEncoder WrapAndApplyHeader(
+    public SessionKeepAliveEncoder WrapAndApplyHeader(
         IMutableDirectBuffer buffer, int offset, MessageHeaderEncoder headerEncoder)
     {
         headerEncoder
@@ -96,9 +96,41 @@ public class ClusterActionRequestEncoder
         this._limit = limit;
     }
 
-    public static int LeadershipTermIdEncodingOffset()
+    public static int ClusterSessionIdEncodingOffset()
     {
         return 0;
+    }
+
+    public static int ClusterSessionIdEncodingLength()
+    {
+        return 8;
+    }
+
+    public static long ClusterSessionIdNullValue()
+    {
+        return -9223372036854775808L;
+    }
+
+    public static long ClusterSessionIdMinValue()
+    {
+        return -9223372036854775807L;
+    }
+
+    public static long ClusterSessionIdMaxValue()
+    {
+        return 9223372036854775807L;
+    }
+
+    public SessionKeepAliveEncoder ClusterSessionId(long value)
+    {
+        _buffer.PutLong(_offset + 0, value, ByteOrder.LittleEndian);
+        return this;
+    }
+
+
+    public static int LeadershipTermIdEncodingOffset()
+    {
+        return 8;
     }
 
     public static int LeadershipTermIdEncodingLength()
@@ -121,92 +153,12 @@ public class ClusterActionRequestEncoder
         return 9223372036854775807L;
     }
 
-    public ClusterActionRequestEncoder LeadershipTermId(long value)
-    {
-        _buffer.PutLong(_offset + 0, value, ByteOrder.LittleEndian);
-        return this;
-    }
-
-
-    public static int LogPositionEncodingOffset()
-    {
-        return 8;
-    }
-
-    public static int LogPositionEncodingLength()
-    {
-        return 8;
-    }
-
-    public static long LogPositionNullValue()
-    {
-        return -9223372036854775808L;
-    }
-
-    public static long LogPositionMinValue()
-    {
-        return -9223372036854775807L;
-    }
-
-    public static long LogPositionMaxValue()
-    {
-        return 9223372036854775807L;
-    }
-
-    public ClusterActionRequestEncoder LogPosition(long value)
+    public SessionKeepAliveEncoder LeadershipTermId(long value)
     {
         _buffer.PutLong(_offset + 8, value, ByteOrder.LittleEndian);
         return this;
     }
 
-
-    public static int TimestampEncodingOffset()
-    {
-        return 16;
-    }
-
-    public static int TimestampEncodingLength()
-    {
-        return 8;
-    }
-
-    public static long TimestampNullValue()
-    {
-        return -9223372036854775808L;
-    }
-
-    public static long TimestampMinValue()
-    {
-        return -9223372036854775807L;
-    }
-
-    public static long TimestampMaxValue()
-    {
-        return 9223372036854775807L;
-    }
-
-    public ClusterActionRequestEncoder Timestamp(long value)
-    {
-        _buffer.PutLong(_offset + 16, value, ByteOrder.LittleEndian);
-        return this;
-    }
-
-
-    public static int ActionEncodingOffset()
-    {
-        return 24;
-    }
-
-    public static int ActionEncodingLength()
-    {
-        return 4;
-    }
-
-    public ClusterActionRequestEncoder Action(ClusterAction value)
-    {
-        _buffer.PutInt(_offset + 24, (int)value, ByteOrder.LittleEndian);
-        return this;
-    }
 
 
     public override string ToString()
@@ -216,7 +168,7 @@ public class ClusterActionRequestEncoder
 
     public StringBuilder AppendTo(StringBuilder builder)
     {
-        ClusterActionRequestDecoder writer = new ClusterActionRequestDecoder();
+        SessionKeepAliveDecoder writer = new SessionKeepAliveDecoder();
         writer.Wrap(_buffer, _offset, BLOCK_LENGTH, SCHEMA_VERSION);
 
         return writer.AppendTo(builder);

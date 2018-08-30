@@ -48,7 +48,7 @@ namespace Adaptive.Aeron
         /// </summary>
         /// <param name="fragmentHandler">            onto which whole messages are forwarded. </param>
         /// <param name="initialBufferLength"> to be used for each session. </param>
-        public FragmentAssembler(IFragmentHandler fragmentHandler, int initialBufferLength = BufferBuilder.MIN_ALLOCATED_CAPACITY)
+        public FragmentAssembler(IFragmentHandler fragmentHandler, int initialBufferLength = 0)
         {
             _initialBufferLength = initialBufferLength;
             _delegate = fragmentHandler;
@@ -59,7 +59,7 @@ namespace Adaptive.Aeron
         /// </summary>
         /// <param name="fragmentHandler">            onto which whole messages are forwarded. </param>
         /// <param name="initialBufferLength"> to be used for each session. </param>
-        public FragmentAssembler(FragmentHandler fragmentHandler, int initialBufferLength = BufferBuilder.MIN_ALLOCATED_CAPACITY)
+        public FragmentAssembler(FragmentHandler fragmentHandler, int initialBufferLength = 0)
         {
             _initialBufferLength = initialBufferLength;
             _delegate = HandlerHelper.ToFragmentHandler(fragmentHandler);
