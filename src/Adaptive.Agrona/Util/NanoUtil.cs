@@ -27,5 +27,10 @@ namespace Adaptive.Agrona.Util
         {
             return milliseconds * 1000 * 1000;
         }
+
+        public static int ToMillis(long resourceLingerDurationNs)
+        {
+            return (int)(resourceLingerDurationNs / (1000 * 1000));
+        }
     }
 }

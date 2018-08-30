@@ -11,15 +11,16 @@ namespace Adaptive.Cluster.Client
         private readonly int fragmentLimit;
         private readonly MessageHeaderDecoder messageHeaderDecoder = new MessageHeaderDecoder();
         private readonly SessionEventDecoder sessionEventDecoder = new SessionEventDecoder();
-        private readonly NewLeaderEventDecoder newLeaderEventDecoder = new NewLeaderEventDecoder();
-        private readonly SessionHeaderDecoder sessionHeaderDecoder = new SessionHeaderDecoder();
         private readonly ChallengeDecoder challengeDecoder = new ChallengeDecoder();
+        private readonly NewLeaderEventDecoder newLeaderEventDecoder = new NewLeaderEventDecoder();
+        private readonly EgressMessageHeaderDecoder egressMessageHeaderDecoder = new EgressMessageHeaderDecoder();
         private readonly ControlledFragmentAssembler fragmentAssembler;
         private readonly Subscription subscription;
         private long clusterSessionId = Aeron.Aeron.NULL_VALUE;
         private long correlationId = Aeron.Aeron.NULL_VALUE;
-        private int templateId = Aeron.Aeron.NULL_VALUE;
+        private long leadershipTermId = Aeron.Aeron.NULL_VALUE;
         private int leaderMemberId = Aeron.Aeron.NULL_VALUE;
+        private int templateId = Aeron.Aeron.NULL_VALUE;
         private bool pollComplete;
         private EventCode eventCode;
         private string detail = "";
@@ -54,7 +55,7 @@ namespace Adaptive.Cluster.Client
         /// <summary>
         /// Cluster session id of the last polled event or <see cref="Aeron.NULL_VALUE"/> if poll returned nothing.
         /// </summary>
-        /// <returns> cluster session id of the last polled event or <see cref="Aeron.NULL_VALUE"/> if unrecognised template. </returns>
+        /// <returns> cluster session id of the last polled event or <see cref="Aeron.NULL_VALUE"/> if not returned. </returns>
         public long ClusterSessionId()
         {
             return clusterSessionId;
@@ -63,10 +64,19 @@ namespace Adaptive.Cluster.Client
         /// <summary>
         /// Correlation id of the last polled event or <see cref="Aeron.NULL_VALUE"/> if poll returned nothing.
         /// </summary>
-        /// <returns> correlation id of the last polled event or <see cref="Aeron.NULL_VALUE"/> if unrecognised template. </returns>
+        /// <returns> correlation id of the last polled event or <see cref="Aeron.NULL_VALUE"/> if not returned. </returns>
         public long CorrelationId()
         {
             return correlationId;
+        }
+        
+        /// <summary>
+        /// Leadership term id of the last polled event or <seealso cref="Aeron.NULL_VALUE"/> if poll returned nothing.
+        /// </summary>
+        /// <returns> leadership term id of the last polled event or <seealso cref="Aeron.NULL_VALUE"/> if not returned. </returns>
+        public long LeadershipTermId()
+        {
+            return leadershipTermId;
         }
         
         /// <summary>
@@ -127,8 +137,9 @@ namespace Adaptive.Cluster.Client
         {
             clusterSessionId = Aeron.Aeron.NULL_VALUE;
             correlationId = Aeron.Aeron.NULL_VALUE;
-            templateId = Aeron.Aeron.NULL_VALUE;
+            leadershipTermId = Aeron.Aeron.NULL_VALUE;
             leaderMemberId = Aeron.Aeron.NULL_VALUE;
+            templateId = Aeron.Aeron.NULL_VALUE;
             eventCode = Codecs.EventCode.NULL_VALUE;
             detail = "";
             encodedChallenge = null;
@@ -150,6 +161,7 @@ namespace Adaptive.Cluster.Client
 
                     clusterSessionId = sessionEventDecoder.ClusterSessionId();
                     correlationId = sessionEventDecoder.CorrelationId();
+                    leadershipTermId = sessionEventDecoder.LeadershipTermId();
                     leaderMemberId = sessionEventDecoder.LeaderMemberId();
                     eventCode = sessionEventDecoder.Code();
                     detail = sessionEventDecoder.Detail();
@@ -160,14 +172,17 @@ namespace Adaptive.Cluster.Client
                         messageHeaderDecoder.BlockLength(), messageHeaderDecoder.Version());
 
                     clusterSessionId = newLeaderEventDecoder.ClusterSessionId();
+                    leadershipTermId = newLeaderEventDecoder.LeadershipTermId();
+                    leaderMemberId = newLeaderEventDecoder.LeaderMemberId();
+                    detail = newLeaderEventDecoder.MemberEndpoints();
                     break;
 
-                case SessionHeaderDecoder.TEMPLATE_ID:
-                    sessionHeaderDecoder.Wrap(buffer, offset + MessageHeaderDecoder.ENCODED_LENGTH,
+                case EgressMessageHeaderDecoder.TEMPLATE_ID:
+                    egressMessageHeaderDecoder.Wrap(buffer, offset + MessageHeaderDecoder.ENCODED_LENGTH,
                         messageHeaderDecoder.BlockLength(), messageHeaderDecoder.Version());
 
-                    clusterSessionId = sessionHeaderDecoder.ClusterSessionId();
-                    correlationId = sessionHeaderDecoder.CorrelationId();
+                    clusterSessionId = egressMessageHeaderDecoder.ClusterSessionId();
+                    correlationId = egressMessageHeaderDecoder.CorrelationId();
                     break;
 
                 case ChallengeDecoder.TEMPLATE_ID:

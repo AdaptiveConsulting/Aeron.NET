@@ -10,7 +10,7 @@ namespace Adaptive.Cluster.Codecs {
 public class NewLeadershipTermEventDecoder
 {
     public const ushort BLOCK_LENGTH = 32;
-    public const ushort TEMPLATE_ID = 24;
+    public const ushort TEMPLATE_ID = 25;
     public const ushort SCHEMA_ID = 1;
     public const ushort SCHEMA_VERSION = 1;
 

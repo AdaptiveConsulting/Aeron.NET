@@ -316,7 +316,7 @@ namespace Adaptive.Aeron
                                 break;
 
                             case ':':
-                                throw new ArgumentException("Encountered ':' within media definition");
+                                throw new ArgumentException("encountered ':' within media definition");
 
                             default:
                                 builder.Append(c);
@@ -358,7 +358,7 @@ namespace Adaptive.Aeron
                         break;
 
                     default:
-                        throw new InvalidOperationException("Que? state=" + state);
+                        throw new InvalidOperationException("unexpected state=" + state);
                 }
             }
 
@@ -373,7 +373,7 @@ namespace Adaptive.Aeron
                     break;
 
                 default:
-                    throw new ArgumentException("No more input found, but was in state: " + state);
+                    throw new ArgumentException("no more input found, but was in state: " + state);
             }
 
             return new ChannelUri(prefix, media, @params);

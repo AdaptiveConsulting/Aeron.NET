@@ -11,11 +11,15 @@ using Adaptive.Archiver;
 using Adaptive.Archiver.Codecs;
 using Adaptive.Cluster.Client;
 using Adaptive.Cluster.Codecs;
+using MessageHeaderEncoder = Adaptive.Cluster.Codecs.MessageHeaderEncoder;
 
 namespace Adaptive.Cluster.Service
 {
     internal sealed class ClusteredServiceAgent : IAgent, ICluster
     {
+        public static readonly int SESSION_HEADER_LENGTH = 
+            MessageHeaderEncoder.ENCODED_LENGTH + SessionHeaderEncoder.BLOCK_LENGTH;
+        
         private readonly int serviceId;
         private bool isRecovering;
         private readonly AeronArchive.Context archiveCtx;
@@ -28,10 +32,14 @@ namespace Adaptive.Cluster.Service
         private readonly IIdleStrategy idleStrategy;
         private readonly IEpochClock epochClock;
         private readonly ClusterMarkFile markFile;
+        private readonly DirectBufferVector[] _vectors = new DirectBufferVector[2];
+        private readonly DirectBufferVector _messageVector = new DirectBufferVector();
+        private readonly EgressMessageHeaderEncoder _egressMessageHeaderEncoder = new EgressMessageHeaderEncoder();
 
         private long ackId = 0;
         private long clusterTimeMs;
         private long cachedTimeMs;
+        private int memberId;
         private BoundedLogAdapter logAdapter;
         private ActiveLogEvent _activeLogEvent;
         private AtomicCounter heartbeatCounter;
@@ -54,6 +62,12 @@ namespace Adaptive.Cluster.Service
             var channel = ctx.ServiceControlChannel();
             _consensusModuleProxy = new ConsensusModuleProxy(aeron.AddPublication(channel, ctx.ConsensusModuleStreamId()));
             _serviceAdapter = new ServiceAdapter(aeron.AddSubscription(channel, ctx.ServiceStreamId()), this);
+            
+            UnsafeBuffer headerBuffer = new UnsafeBuffer(new byte[SESSION_HEADER_LENGTH]);
+            _egressMessageHeaderEncoder.WrapAndApplyHeader(headerBuffer, 0, new MessageHeaderEncoder());
+
+            _vectors[0] = new DirectBufferVector(headerBuffer, 0, SESSION_HEADER_LENGTH);
+            _vectors[1] = _messageVector;
         }
 
         public void OnStart()
@@ -134,6 +148,11 @@ namespace Adaptive.Cluster.Service
             return role;
         }
 
+        public int MemberId()
+        {
+            return memberId;
+        }
+
         public Aeron.Aeron Aeron()
         {
             return aeron;
@@ -195,6 +214,30 @@ namespace Adaptive.Cluster.Service
                 idleStrategy.Idle();
             }
         }
+        
+        public long Offer(
+            long correlationId,
+            long clusterSessionId,
+            Publication publication,
+            IDirectBuffer buffer,
+            int offset,
+            int length)
+        {
+            if (role != ClusterRole.Leader)
+            {
+                return ClientSession.MOCKED_OFFER;
+            }
+
+            _egressMessageHeaderEncoder
+                .CorrelationId(correlationId)
+                .ClusterSessionId(clusterSessionId)
+                .Timestamp(clusterTimeMs);
+
+            _messageVector.Reset(buffer, offset, length);
+
+            return publication.Offer(_vectors);
+        }
+
 
         public void OnJoinLog(
             long leadershipTermId,
@@ -243,7 +286,7 @@ namespace Adaptive.Cluster.Service
             ClientSession session = new ClientSession(
                 clusterSessionId, correlationId, responseStreamId, responseChannel, encodedPrincipal, this);
 
-            if (ClusterRole.Leader == role)
+            if (ClusterRole.Leader == role && ctx.IsRespondingService())
             {
                 session.Connect(aeron);
             }
@@ -415,7 +458,11 @@ namespace Adaptive.Cluster.Service
             {
                 if (ClusterRole.Leader == role)
                 {
-                    session.Connect(aeron);
+                    if (ctx.IsRespondingService())
+                    {
+                        session.Connect(aeron);                        
+                    }
+                    
                     session.ResetClosing();
                 }
                 else
@@ -462,6 +509,8 @@ namespace Adaptive.Cluster.Service
                 idleStrategy.Idle();
                 counterId = ServiceHeartbeat.FindCounterId(counters, ctx.ServiceId());
             }
+
+            memberId = ServiceHeartbeat.GetClusterMemberId(counters, counterId);
 
             return new AtomicCounter(counters.ValuesBuffer, counterId);
         }

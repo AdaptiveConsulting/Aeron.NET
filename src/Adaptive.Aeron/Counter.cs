@@ -56,13 +56,16 @@ namespace Adaptive.Aeron
         /// </summary>
         public override void Dispose()
         {
-            if (null != clientConductor)
+            if (!isClosed)
             {
-                clientConductor.ReleaseCounter(this);
-            }
-            else
-            {
-                isClosed = true;
+                if (null != clientConductor)
+                {
+                    clientConductor.ReleaseCounter(this);
+                }
+                else
+                {
+                    isClosed = true;
+                }
             }
         }
 

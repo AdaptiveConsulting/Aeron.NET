@@ -210,6 +210,16 @@ namespace Adaptive.Cluster.Service
             public const int ERROR_BUFFER_LENGTH_DEFAULT = 1024 * 1024;
 
             /// <summary>
+            /// Is this a responding service to client requests property.
+            /// </summary>
+            public const string RESPONDER_SERVICE_PROP_NAME = "aeron.cluster.service.responder";
+
+            /// <summary>
+            /// Default to true that this a responding service to client requests.
+            /// </summary>
+            public const bool RESPONDER_SERVICE_DEFAULT = true;
+            
+            /// <summary>
             /// The value <seealso cref="#SERVICE_ID_DEFAULT"/> or system property <seealso cref="#SERVICE_ID_PROP_NAME"/> if set.
             /// </summary>
             /// <returns> <seealso cref="#SERVICE_ID_DEFAULT"/> or system property <seealso cref="#SERVICE_ID_PROP_NAME"/> if set. </returns>
@@ -334,6 +344,21 @@ namespace Adaptive.Cluster.Service
             {
                 return Config.GetSizeAsInt(ERROR_BUFFER_LENGTH_PROP_NAME, ERROR_BUFFER_LENGTH_DEFAULT);
             }
+            
+            /// <summary>
+            /// The value <seealso cref="RESPONDER_SERVICE_DEFAULT"/> or system property <seealso cref="RESPONDER_SERVICE_PROP_NAME"/> if set.
+            /// </summary>
+            /// <returns> <seealso cref="RESPONDER_SERVICE_DEFAULT"/> or system property <seealso cref="RESPONDER_SERVICE_PROP_NAME"/> if set. </returns>
+            public static bool IsRespondingService()
+            {
+                var property = Config.GetProperty(RESPONDER_SERVICE_PROP_NAME);
+                if (null == property)
+                {
+                    return RESPONDER_SERVICE_DEFAULT;
+                }
+
+                return "true".Equals(property);
+            }
         }
 
         public class Context : IDisposable
@@ -348,6 +373,7 @@ namespace Adaptive.Cluster.Service
             private string snapshotChannel = Configuration.SnapshotChannel();
             private int snapshotStreamId = Configuration.SnapshotStreamId();
             private int errorBufferLength = Configuration.ErrorBufferLength();
+            private bool isRespondingService = Configuration.IsRespondingService();
             
             private IThreadFactory threadFactory;
             private Func<IIdleStrategy> idleStrategySupplier;
@@ -688,6 +714,28 @@ namespace Adaptive.Cluster.Service
             public int SnapshotStreamId()
             {
                 return snapshotStreamId;
+            }
+            
+            /// <summary>
+            /// Set if this a service that responds to client requests.
+            /// </summary>
+            /// <param name="isRespondingService"> true if this service responds to client requests, otherwise false. </param>
+            /// <returns> this for a fluent API. </returns>
+            /// <seealso cref="Configuration.RESPONDER_SERVICE_PROP_NAME"></seealso>
+            public Context IsRespondingService(bool isRespondingService)
+            {
+                this.isRespondingService = isRespondingService;
+                return this;
+            }
+
+            /// <summary>
+            /// Is this a service that responds to client requests?
+            /// </summary>
+            /// <returns> true if this service responds to client requests, otherwise false. </returns>
+            /// <seealso cref="Configuration.RESPONDER_SERVICE_PROP_NAME"></seealso>
+            public bool IsRespondingService()
+            {
+                return isRespondingService;
             }
 
             /// <summary>

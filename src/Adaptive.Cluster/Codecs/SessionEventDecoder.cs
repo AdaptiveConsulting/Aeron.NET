@@ -9,8 +9,8 @@ namespace Adaptive.Cluster.Codecs {
 
 public class SessionEventDecoder
 {
-    public const ushort BLOCK_LENGTH = 24;
-    public const ushort TEMPLATE_ID = 2;
+    public const ushort BLOCK_LENGTH = 32;
+    public const ushort TEMPLATE_ID = 3;
     public const ushort SCHEMA_ID = 1;
     public const ushort SCHEMA_VERSION = 1;
 
@@ -196,9 +196,63 @@ public class SessionEventDecoder
     }
 
 
-    public static int LeaderMemberIdId()
+    public static int LeadershipTermIdId()
     {
         return 3;
+    }
+
+    public static int LeadershipTermIdSinceVersion()
+    {
+        return 0;
+    }
+
+    public static int LeadershipTermIdEncodingOffset()
+    {
+        return 16;
+    }
+
+    public static int LeadershipTermIdEncodingLength()
+    {
+        return 8;
+    }
+
+    public static string LeadershipTermIdMetaAttribute(MetaAttribute metaAttribute)
+    {
+        switch (metaAttribute)
+        {
+            case MetaAttribute.EPOCH: return "unix";
+            case MetaAttribute.TIME_UNIT: return "nanosecond";
+            case MetaAttribute.SEMANTIC_TYPE: return "";
+            case MetaAttribute.PRESENCE: return "required";
+        }
+
+        return "";
+    }
+
+    public static long LeadershipTermIdNullValue()
+    {
+        return -9223372036854775808L;
+    }
+
+    public static long LeadershipTermIdMinValue()
+    {
+        return -9223372036854775807L;
+    }
+
+    public static long LeadershipTermIdMaxValue()
+    {
+        return 9223372036854775807L;
+    }
+
+    public long LeadershipTermId()
+    {
+        return _buffer.GetLong(_offset + 16, ByteOrder.LittleEndian);
+    }
+
+
+    public static int LeaderMemberIdId()
+    {
+        return 4;
     }
 
     public static int LeaderMemberIdSinceVersion()
@@ -208,7 +262,7 @@ public class SessionEventDecoder
 
     public static int LeaderMemberIdEncodingOffset()
     {
-        return 16;
+        return 24;
     }
 
     public static int LeaderMemberIdEncodingLength()
@@ -246,13 +300,13 @@ public class SessionEventDecoder
 
     public int LeaderMemberId()
     {
-        return _buffer.GetInt(_offset + 16, ByteOrder.LittleEndian);
+        return _buffer.GetInt(_offset + 24, ByteOrder.LittleEndian);
     }
 
 
     public static int CodeId()
     {
-        return 4;
+        return 5;
     }
 
     public static int CodeSinceVersion()
@@ -262,7 +316,7 @@ public class SessionEventDecoder
 
     public static int CodeEncodingOffset()
     {
-        return 20;
+        return 28;
     }
 
     public static int CodeEncodingLength()
@@ -285,13 +339,13 @@ public class SessionEventDecoder
 
     public EventCode Code()
     {
-        return (EventCode)_buffer.GetInt(_offset + 20, ByteOrder.LittleEndian);
+        return (EventCode)_buffer.GetInt(_offset + 28, ByteOrder.LittleEndian);
     }
 
 
     public static int DetailId()
     {
-        return 5;
+        return 6;
     }
 
     public static int DetailSinceVersion()
@@ -403,17 +457,22 @@ public class SessionEventDecoder
         builder.Append("CorrelationId=");
         builder.Append(CorrelationId());
         builder.Append('|');
-        //Token{signal=BEGIN_FIELD, name='leaderMemberId', referencedName='null', description='current leader of the cluster', id=3, version=0, deprecated=0, encodedLength=0, offset=16, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
-        //Token{signal=ENCODING, name='int32', referencedName='null', description='null', id=-1, version=0, deprecated=0, encodedLength=4, offset=16, componentTokenCount=1, encoding=Encoding{presence=REQUIRED, primitiveType=INT32, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=BEGIN_FIELD, name='leadershipTermId', referencedName='null', description='Current leadership term identifier', id=3, version=0, deprecated=0, encodedLength=0, offset=16, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=ENCODING, name='int64', referencedName='null', description='null', id=-1, version=0, deprecated=0, encodedLength=8, offset=16, componentTokenCount=1, encoding=Encoding{presence=REQUIRED, primitiveType=INT64, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        builder.Append("LeadershipTermId=");
+        builder.Append(LeadershipTermId());
+        builder.Append('|');
+        //Token{signal=BEGIN_FIELD, name='leaderMemberId', referencedName='null', description='current leader of the cluster', id=4, version=0, deprecated=0, encodedLength=0, offset=24, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=ENCODING, name='int32', referencedName='null', description='null', id=-1, version=0, deprecated=0, encodedLength=4, offset=24, componentTokenCount=1, encoding=Encoding{presence=REQUIRED, primitiveType=INT32, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
         builder.Append("LeaderMemberId=");
         builder.Append(LeaderMemberId());
         builder.Append('|');
-        //Token{signal=BEGIN_FIELD, name='code', referencedName='null', description='code type of the response', id=4, version=0, deprecated=0, encodedLength=0, offset=20, componentTokenCount=8, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
-        //Token{signal=BEGIN_ENUM, name='EventCode', referencedName='null', description='Type of event for a response', id=-1, version=0, deprecated=0, encodedLength=4, offset=20, componentTokenCount=6, encoding=Encoding{presence=REQUIRED, primitiveType=INT32, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='null', timeUnit=null, semanticType='null'}}
+        //Token{signal=BEGIN_FIELD, name='code', referencedName='null', description='code type of the response', id=5, version=0, deprecated=0, encodedLength=0, offset=28, componentTokenCount=8, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=BEGIN_ENUM, name='EventCode', referencedName='null', description='Type of event for a response', id=-1, version=0, deprecated=0, encodedLength=4, offset=28, componentTokenCount=6, encoding=Encoding{presence=REQUIRED, primitiveType=INT32, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='null', timeUnit=null, semanticType='null'}}
         builder.Append("Code=");
         builder.Append(Code());
         builder.Append('|');
-        //Token{signal=BEGIN_VAR_DATA, name='detail', referencedName='null', description='Further detail such as an error message or list of cluster member endpoints', id=5, version=0, deprecated=0, encodedLength=0, offset=24, componentTokenCount=6, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=BEGIN_VAR_DATA, name='detail', referencedName='null', description='Further detail such as an error message or list of cluster member endpoints', id=6, version=0, deprecated=0, encodedLength=0, offset=32, componentTokenCount=6, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
         builder.Append("Detail=");
         builder.Append(Detail());
 

@@ -75,7 +75,7 @@ namespace Adaptive.Aeron
 
             if (Aeron.Context.UDP_MEDIA.Equals(_media) && (null == _endpoint && null == _controlEndpoint))
             {
-                throw new InvalidOperationException("Either 'endpoint' or 'control' must be specified for UDP.");
+                throw new InvalidOperationException("either 'endpoint' or 'control' must be specified for UDP.");
             }
 
             int count = 0;
@@ -86,7 +86,7 @@ namespace Adaptive.Aeron
             if (count > 0 && count < 3)
             {
                 throw new InvalidOperationException(
-                    "If any of then a complete set of 'initialTermId', 'termId', and 'termOffset' must be provided");
+                    "if any of then a complete set of 'initialTermId', 'termId', and 'termOffset' must be provided");
             }
 
             return this;
@@ -102,7 +102,7 @@ namespace Adaptive.Aeron
         {
             if (null != prefix && !prefix.Equals("") && !prefix.Equals(ChannelUri.SPY_QUALIFIER))
             {
-                throw new ArgumentException("Invalid prefix: " + prefix);
+                throw new ArgumentException("invalid prefix: " + prefix);
             }
 
             _prefix = prefix;
@@ -132,7 +132,7 @@ namespace Adaptive.Aeron
                     break;
 
                 default:
-                    throw new ArgumentException("Invalid media: " + media);
+                    throw new ArgumentException("invalid media: " + media);
             }
 
             _media = media;
@@ -232,7 +232,7 @@ namespace Adaptive.Aeron
                 !controlMode.Equals(Aeron.Context.MDC_CONTROL_MODE_DYNAMIC)
             )
             {
-                throw new ArgumentException("Invalid control mode: " + controlMode);
+                throw new ArgumentException("invalid control mode: " + controlMode);
             }
 
             _controlMode = controlMode;
@@ -447,12 +447,12 @@ namespace Adaptive.Aeron
             {
                 if ((termOffset < 0 || termOffset > LogBufferDescriptor.TERM_MAX_LENGTH))
                 {
-                    throw new ArgumentException("Term offset not in range 0-1g: " + termOffset);
+                    throw new ArgumentException("term offset not in range 0-1g: " + termOffset);
                 }
 
                 if (0 != (termOffset & (FrameDescriptor.FRAME_ALIGNMENT - 1)))
                 {
-                    throw new ArgumentException("Term offset not multiple of FRAME_ALIGNMENT: " + termOffset);
+                    throw new ArgumentException("term offset not multiple of FRAME_ALIGNMENT: " + termOffset);
                 }
             }
 
@@ -503,7 +503,7 @@ namespace Adaptive.Aeron
         {
             if (null != lingerNs && lingerNs < 0)
             {
-                throw new ArgumentException("Linger value cannot be negative: " + lingerNs);
+                throw new ArgumentException("linger value cannot be negative: " + lingerNs);
             }
 
             _linger = lingerNs;

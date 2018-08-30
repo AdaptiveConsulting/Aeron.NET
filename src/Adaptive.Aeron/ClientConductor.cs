@@ -24,6 +24,7 @@ using Adaptive.Agrona;
 using Adaptive.Agrona.Collections;
 using Adaptive.Agrona.Concurrent;
 using Adaptive.Agrona.Concurrent.Status;
+using Adaptive.Agrona.Util;
 
 [assembly: InternalsVisibleTo("Adaptive.Aeron.Tests")]
 
@@ -36,15 +37,12 @@ namespace Adaptive.Aeron
     internal class ClientConductor : IAgent, IDriverEventsListener
     {
         private const long NO_CORRELATION_ID = Aeron.NULL_VALUE;
-        private static readonly long RESOURCE_CHECK_INTERVAL_NS = 1;
-        private static readonly long RESOURCE_LINGER_NS = 3;
 
         private readonly long _keepAliveIntervalNs;
         private readonly long _driverTimeoutMs;
         private readonly long _driverTimeoutNs;
         private readonly long _interServiceTimeoutNs;
         private long _timeOfLastKeepAliveNs;
-        private long _timeOfLastResourcesCheckNs;
         private long _timeOfLastServiceNs;
         private bool _isClosed;
         private bool _isInCallback;
@@ -98,7 +96,6 @@ namespace Adaptive.Aeron
 
             long nowNs = _nanoClock.NanoTime();
             _timeOfLastKeepAliveNs = nowNs;
-            _timeOfLastResourcesCheckNs = nowNs;
             _timeOfLastServiceNs = nowNs;
         }
 
@@ -119,7 +116,6 @@ namespace Adaptive.Aeron
 
                     int lingeringResourcesSize = _lingeringResources.Count;
                     ForceCloseResources();
-                    _driverProxy.ClientClose();
 
                     if (_lingeringResources.Count > lingeringResourcesSize)
                     {
@@ -130,6 +126,8 @@ namespace Adaptive.Aeron
                     {
                         _lingeringResources[i].Delete();
                     }
+                    
+                    _driverProxy.ClientClose();
                 }
             }
             finally
@@ -262,7 +260,7 @@ namespace Adaptive.Aeron
             string sourceIdentity)
         {
             Subscription subscription = (Subscription) _resourceByRegIdMap[subscriptionRegistrationId];
-            if (null != subscription && !subscription.ContainsImage(correlationId))
+            if (null != subscription)
             {
                 Image image = new Image(subscription, sessionId,
                     new UnsafeBufferPosition(_counterValuesBuffer, subscriberPositionId),
@@ -426,11 +424,11 @@ namespace Adaptive.Aeron
             {
                 if (!publication.IsClosed)
                 {
-                    publication.InternalClose();
-
                     EnsureOpen();
                     EnsureNotReentrant();
 
+                    publication.InternalClose();
+                    
                     var removedPublication = _resourceByRegIdMap[publication.RegistrationId];
 
                     if (_resourceByRegIdMap.Remove(publication.RegistrationId) && publication == removedPublication)
@@ -481,14 +479,14 @@ namespace Adaptive.Aeron
             {
                 if (!subscription.Closed)
                 {
-                    subscription.InternalClose();
-
                     EnsureOpen();
                     EnsureNotReentrant();
+                    
+                    subscription.InternalClose();
 
                     long registrationId = subscription.RegistrationId;
-                    AwaitResponse(_driverProxy.RemoveSubscription(registrationId));
                     _resourceByRegIdMap.Remove(registrationId);
+                    AwaitResponse(_driverProxy.RemoveSubscription(registrationId));
                 }
             }
             finally
@@ -581,7 +579,6 @@ namespace Adaptive.Aeron
                 }
 
                 long registrationId = _driverProxy.AddCounter(typeId, keyBuffer, keyOffset, keyLength, labelBuffer, labelOffset, labelLength);
-
                 AwaitResponse(registrationId);
 
                 return (Counter) _resourceByRegIdMap[registrationId];
@@ -624,11 +621,10 @@ namespace Adaptive.Aeron
             {
                 if (!counter.IsClosed())
                 {
-                    counter.InternalClose();
-
                     EnsureOpen();
                     EnsureNotReentrant();
-
+                    
+                    counter.InternalClose();
                     long registrationId = counter.RegistrationId();
                     AwaitResponse(_driverProxy.RemoveCounter(registrationId));
                     _resourceByRegIdMap.Remove(registrationId);
@@ -638,11 +634,6 @@ namespace Adaptive.Aeron
             {
                 _clientLock.Unlock();
             }
-        }
-
-        internal virtual void ReleaseImage(Image image)
-        {
-            ReleaseLogBuffers(image.LogBuffers(), image.CorrelationId);
         }
 
         internal virtual void ReleaseLogBuffers(LogBuffers logBuffers, long registrationId)
@@ -687,7 +678,7 @@ namespace Adaptive.Aeron
         {
             if (_isInCallback)
             {
-                throw new AeronException("Reentrant calls not permitted during callbacks");
+                throw new AeronException("reentrant calls not permitted during callbacks");
             }
         }
 
@@ -755,7 +746,7 @@ namespace Adaptive.Aeron
                 }
             } while (_nanoClock.NanoTime() < deadlineNs);
 
-            throw new DriverTimeoutException("No response from MediaDriver within (ms):" + _driverTimeoutMs);
+            throw new DriverTimeoutException("no response from MediaDriver within (ms):" + _driverTimeoutMs);
         }
 
         private int OnCheckTimeouts()
@@ -763,7 +754,7 @@ namespace Adaptive.Aeron
             int workCount = 0;
             long nowNs = _nanoClock.NanoTime();
 
-            if (nowNs > (_timeOfLastServiceNs + Aeron.IdleSleepNs))
+            if (nowNs > (_timeOfLastServiceNs + Aeron.Configuration.IdleSleepNs))
             {
                 checkServiceInterval(nowNs);
                 _timeOfLastServiceNs = nowNs;
@@ -785,12 +776,12 @@ namespace Adaptive.Aeron
 
                 if (_lingeringResources.Count > lingeringResourcesSize)
                 {
-                    Aeron.Sleep(1000);
+                    Aeron.Sleep(NanoUtil.ToMillis(_ctx.ResourceLingerDurationNs()));
                 }
 
                 OnClose();
 
-                throw new ConductorServiceTimeoutException("Exceeded (ns): " + _interServiceTimeoutNs);
+                throw new ConductorServiceTimeoutException("service interval exceeded (ns): " + _interServiceTimeoutNs);
             }
         }
 
@@ -816,26 +807,23 @@ namespace Adaptive.Aeron
 
         private int checkLingeringResources(long nowNs)
         {
-            if (nowNs > (_timeOfLastResourcesCheckNs + RESOURCE_CHECK_INTERVAL_NS))
+            int workCount = 0;
+
+            var lingeringResources = _lingeringResources;
+
+            for (int lastIndex = lingeringResources.Count - 1, i = lastIndex; i >= 0; i--)
             {
-                List<IManagedResource> lingeringResources = _lingeringResources;
-                for (int lastIndex = lingeringResources.Count - 1, i = lastIndex; i >= 0; i--)
+                IManagedResource resource = lingeringResources[i];
+                
+                if (nowNs > (resource.TimeOfLastStateChange() + _ctx.ResourceLingerDurationNs()))
                 {
-                    IManagedResource resource = lingeringResources[i];
-
-                    if (nowNs > (resource.TimeOfLastStateChange() + RESOURCE_LINGER_NS))
-                    {
-                        ListUtil.FastUnorderedRemove(lingeringResources, i, lastIndex--);
-                        resource.Delete();
-                    }
+                    ListUtil.FastUnorderedRemove(lingeringResources, i, lastIndex--);
+                    resource.Delete();
+                    workCount++;
                 }
-
-                _timeOfLastResourcesCheckNs = nowNs;
-
-                return 1;
             }
 
-            return 0;
+            return workCount;
         }
 
         private void ForceCloseResources()

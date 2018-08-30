@@ -15,6 +15,8 @@ namespace Adaptive.Cluster.Service
     {
         private const int FRAGMENT_LIMIT = 10;
         private const int INITIAL_BUFFER_LENGTH = 4096;
+        private static readonly int SESSION_HEADER_LENGTH =
+            MessageHeaderEncoder.ENCODED_LENGTH + SessionHeaderEncoder.BLOCK_LENGTH;
 
         private readonly ImageControlledFragmentAssembler fragmentAssembler;
         private readonly MessageHeaderDecoder messageHeaderDecoder = new MessageHeaderDecoder();
@@ -80,8 +82,8 @@ namespace Adaptive.Cluster.Service
                     sessionHeaderDecoder.CorrelationId(),
                     sessionHeaderDecoder.Timestamp(),
                     buffer,
-                    offset + ClientSession.SESSION_HEADER_LENGTH,
-                    length - ClientSession.SESSION_HEADER_LENGTH,
+                    offset + SESSION_HEADER_LENGTH,
+                    length - SESSION_HEADER_LENGTH,
                     header);
 
                 return ControlledFragmentHandlerAction.CONTINUE;

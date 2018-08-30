@@ -39,7 +39,6 @@ namespace Adaptive.Aeron
         internal readonly int streamId;
         internal volatile bool isClosed;
         internal volatile Image[] images;
-        internal readonly HashSet<long> imageIdSet;
         internal readonly ClientConductor conductor;
         internal readonly string channel;
         internal readonly AvailableImageHandler availableImageHandler;
@@ -69,7 +68,6 @@ namespace Adaptive.Aeron
             roundRobinIndex = 0;
             isClosed = false;
             images = EMPTY_ARRAY;
-            imageIdSet = new HashSet<long>();
             channelStatusId = 0;
         }
     }
@@ -181,7 +179,7 @@ namespace Adaptive.Aeron
             var handler = HandlerHelper.ToFragmentHandler(fragmentHandler);
             return Poll(handler, fragmentLimit);
         }
-        
+
         /// <summary>
         /// Poll the <seealso cref="Image"/>s under the subscription for available message fragments.
         /// <para>
@@ -330,30 +328,44 @@ namespace Adaptive.Aeron
         //}
 
         /// <summary>
-        /// Is this subscription connected by having at least one publication <seealso cref="Image"/>.
+        /// Is this subscription connected by having at least one open publication <seealso cref="Image"/>.
         /// </summary>
-        /// <returns> true if this subscription connected by having at least one publication <seealso cref="Image"/>. </returns>
-        public bool IsConnected => _fields.images.Length > 0;
+        /// <returns> true if this subscription connected by having at least one open publication  <seealso cref="Image"/>. </returns>
+        public bool IsConnected
+        {
+            get
+            {
+                foreach (var image in _fields.images)
+                {
+                    if (!image.Closed)
+                    {
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+        }
 
         /// <summary>
-        /// Has the subscription currently no images connected to it?
+        /// Has this subscription currently no <see cref="Image"/>s?
         /// </summary>
-        /// <returns> he subscription currently no images connected to it? </returns>
+        /// <returns> Has this subscription currently no <see cref="Image"/>s? </returns>
         public bool HasNoImages()
         {
             return _fields.images.Length == 0;
         }
 
         /// <summary>
-        /// Count of images connected to this subscription.
+        /// Count of <see cref="Image"/>s associated to this subscription.
         /// </summary>
-        /// <returns> count of images connected to this subscription. </returns>
+        /// <returns> count of <see cref="Image"/>s associated to this subscription. </returns>
         public int ImageCount => _fields.images.Length;
 
         /// <summary>
         /// Return the <seealso cref="Image"/> associated with the given sessionId.
         /// </summary>
-        /// <param name="sessionId"> associated with the Image. </param>
+        /// <param name="sessionId"> associated with the <see cref="Image"/>. </param>
         /// <returns> Image associated with the given sessionId or null if no Image exist. </returns>
         public Image ImageBySessionId(int sessionId)
         {
@@ -372,7 +384,7 @@ namespace Adaptive.Aeron
         }
 
         /// <summary>
-        /// Get the image at the given index from the images array.
+        /// Get the <see cref="Image"/> at the given index from the images array.
         /// </summary>
         /// <param name="index"> in the array</param>
         /// <returns> image at given index</returns>
@@ -411,7 +423,10 @@ namespace Adaptive.Aeron
         public void Dispose()
 #endif
         {
-            _fields.conductor.ReleaseSubscription(this);
+            if (!_fields.isClosed)
+            {
+                _fields.conductor.ReleaseSubscription(this);
+            }
         }
 
         /// <summary>
@@ -420,7 +435,7 @@ namespace Adaptive.Aeron
         /// <returns> true if it has been closed otherwise false. </returns>
         public bool Closed => _fields.isClosed;
 
-        
+
         /// <summary>
         /// Get the status of the media channel for this Subscription.
         /// <para>
@@ -441,7 +456,7 @@ namespace Adaptive.Aeron
 
             return _fields.conductor.ChannelStatus(ChannelStatusId);
         }
-        
+
         /// <summary>
         /// Add a destination manually to a multi-destination Subscription.
         /// </summary>
@@ -470,38 +485,22 @@ namespace Adaptive.Aeron
             _fields.conductor.RemoveRcvDestination(_fields.registrationId, endpointChannel);
         }
 
-        
+
         internal int ChannelStatusId
         {
             get => _fields.channelStatusId;
             set => _fields.channelStatusId = value;
         }
-       
+
         internal void InternalClose()
         {
             _fields.isClosed = true;
             CloseImages();
         }
 
-        internal virtual bool ContainsImage(long correlationId)
-        {
-            return _fields.imageIdSet.Contains(correlationId);
-        }
-
         internal void AddImage(Image image)
         {
-            if (_fields.isClosed)
-            {
-                image.Close();
-                _fields.conductor.ReleaseImage(image);
-            }
-            else
-            {
-                if (_fields.imageIdSet.Add(image.CorrelationId))
-                {
-                    _fields.images = ArrayUtil.Add(_fields.images, image);
-                }
-            }
+            _fields.images = ArrayUtil.Add(_fields.images, image);
         }
 
         internal Image RemoveImage(long correlationId)
@@ -509,25 +508,27 @@ namespace Adaptive.Aeron
             var oldArray = _fields.images;
             Image removedImage = null;
 
-            if (_fields.imageIdSet.Remove(correlationId))
-            {
-                int i = 0;
-                foreach (var image in oldArray)
-                {
-                    if (image.CorrelationId == correlationId)
-                    {
-                        removedImage = image;
-                        break;
-                    }
 
-                    i++;
+            int i = 0;
+
+            foreach (var image in oldArray)
+            {
+                if (image.CorrelationId == correlationId)
+                {
+                    image.Close();
+                    removedImage = image;
+                    break;
                 }
-                
-                _fields.images = ArrayUtil.Remove(oldArray, removedImage);
-                removedImage.Close();
-                _fields.conductor.ReleaseImage(removedImage);
+
+                i++;
             }
-          
+
+            if (null != removedImage)
+            {
+                _fields.images = ArrayUtil.Remove(oldArray, i);
+                _fields.conductor.ReleaseLogBuffers(removedImage.LogBuffers(), removedImage.CorrelationId);
+            }
+            
             return removedImage;
         }
 
@@ -541,11 +542,9 @@ namespace Adaptive.Aeron
                 image.Close();
             }
 
-            _fields.imageIdSet.Clear();
-
             foreach (Image image in _fields.images)
             {
-                _fields.conductor.ReleaseImage(image);
+                _fields.conductor.ReleaseLogBuffers(image.LogBuffers(), image.CorrelationId);
 
                 try
                 {

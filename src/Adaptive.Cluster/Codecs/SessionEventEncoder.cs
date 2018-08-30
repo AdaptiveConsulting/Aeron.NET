@@ -9,8 +9,8 @@ namespace Adaptive.Cluster.Codecs {
 
 public class SessionEventEncoder
 {
-    public const ushort BLOCK_LENGTH = 24;
-    public const ushort TEMPLATE_ID = 2;
+    public const ushort BLOCK_LENGTH = 32;
+    public const ushort TEMPLATE_ID = 3;
     public const ushort SCHEMA_ID = 1;
     public const ushort SCHEMA_VERSION = 1;
 
@@ -160,9 +160,41 @@ public class SessionEventEncoder
     }
 
 
-    public static int LeaderMemberIdEncodingOffset()
+    public static int LeadershipTermIdEncodingOffset()
     {
         return 16;
+    }
+
+    public static int LeadershipTermIdEncodingLength()
+    {
+        return 8;
+    }
+
+    public static long LeadershipTermIdNullValue()
+    {
+        return -9223372036854775808L;
+    }
+
+    public static long LeadershipTermIdMinValue()
+    {
+        return -9223372036854775807L;
+    }
+
+    public static long LeadershipTermIdMaxValue()
+    {
+        return 9223372036854775807L;
+    }
+
+    public SessionEventEncoder LeadershipTermId(long value)
+    {
+        _buffer.PutLong(_offset + 16, value, ByteOrder.LittleEndian);
+        return this;
+    }
+
+
+    public static int LeaderMemberIdEncodingOffset()
+    {
+        return 24;
     }
 
     public static int LeaderMemberIdEncodingLength()
@@ -187,14 +219,14 @@ public class SessionEventEncoder
 
     public SessionEventEncoder LeaderMemberId(int value)
     {
-        _buffer.PutInt(_offset + 16, value, ByteOrder.LittleEndian);
+        _buffer.PutInt(_offset + 24, value, ByteOrder.LittleEndian);
         return this;
     }
 
 
     public static int CodeEncodingOffset()
     {
-        return 20;
+        return 28;
     }
 
     public static int CodeEncodingLength()
@@ -204,13 +236,13 @@ public class SessionEventEncoder
 
     public SessionEventEncoder Code(EventCode value)
     {
-        _buffer.PutInt(_offset + 20, (int)value, ByteOrder.LittleEndian);
+        _buffer.PutInt(_offset + 28, (int)value, ByteOrder.LittleEndian);
         return this;
     }
 
     public static int DetailId()
     {
-        return 5;
+        return 6;
     }
 
     public static string DetailCharacterEncoding()

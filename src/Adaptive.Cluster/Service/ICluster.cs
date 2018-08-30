@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 
 namespace Adaptive.Cluster.Service
 {
@@ -9,6 +8,12 @@ namespace Adaptive.Cluster.Service
     /// </summary>
     public interface ICluster
     {
+        /// <summary>
+        /// The unique id for the hosting member of the cluster. Useful only for debugging purposes.
+        /// </summary>
+        /// <returns> unique id for the hosting member of the cluster. </returns>
+        int MemberId();
+        
         /// <summary>
         /// The role the cluster node is playing.
         /// </summary>

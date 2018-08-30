@@ -9,8 +9,8 @@ namespace Adaptive.Cluster.Codecs {
 
 public class NewLeaderEventEncoder
 {
-    public const ushort BLOCK_LENGTH = 12;
-    public const ushort TEMPLATE_ID = 6;
+    public const ushort BLOCK_LENGTH = 20;
+    public const ushort TEMPLATE_ID = 7;
     public const ushort SCHEMA_ID = 1;
     public const ushort SCHEMA_VERSION = 1;
 
@@ -128,9 +128,41 @@ public class NewLeaderEventEncoder
     }
 
 
-    public static int LeaderMemberIdEncodingOffset()
+    public static int LeadershipTermIdEncodingOffset()
     {
         return 8;
+    }
+
+    public static int LeadershipTermIdEncodingLength()
+    {
+        return 8;
+    }
+
+    public static long LeadershipTermIdNullValue()
+    {
+        return -9223372036854775808L;
+    }
+
+    public static long LeadershipTermIdMinValue()
+    {
+        return -9223372036854775807L;
+    }
+
+    public static long LeadershipTermIdMaxValue()
+    {
+        return 9223372036854775807L;
+    }
+
+    public NewLeaderEventEncoder LeadershipTermId(long value)
+    {
+        _buffer.PutLong(_offset + 8, value, ByteOrder.LittleEndian);
+        return this;
+    }
+
+
+    public static int LeaderMemberIdEncodingOffset()
+    {
+        return 16;
     }
 
     public static int LeaderMemberIdEncodingLength()
@@ -155,14 +187,14 @@ public class NewLeaderEventEncoder
 
     public NewLeaderEventEncoder LeaderMemberId(int value)
     {
-        _buffer.PutInt(_offset + 8, value, ByteOrder.LittleEndian);
+        _buffer.PutInt(_offset + 16, value, ByteOrder.LittleEndian);
         return this;
     }
 
 
     public static int MemberEndpointsId()
     {
-        return 3;
+        return 4;
     }
 
     public static string MemberEndpointsCharacterEncoding()

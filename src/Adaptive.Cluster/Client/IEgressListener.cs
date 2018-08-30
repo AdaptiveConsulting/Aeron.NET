@@ -5,10 +5,16 @@ namespace Adaptive.Cluster.Client
     /// <summary>
     /// Interface for consuming messages coming from the cluster that also include administrative events.
     /// </summary>
-    public interface IEgressListener : ISessionMessageListener
+    public interface IEgressListener : IEgressMessageListener
     {
-        void SessionEvent(long correlationId, long clusterSessionId, int leaderMemberId, EventCode code, string detail);
+        void SessionEvent(
+            long correlationId,
+            long clusterSessionId,
+            long leadershipTermId,
+            int leaderMemberId,
+            EventCode code,
+            string detail);
         
-        void NewLeader(long clusterSessionId, int leaderMemberId, string memberEndpoints);
+        void NewLeader(long clusterSessionId, long leadershipTermId, int leaderMemberId, string memberEndpoints);
     }
 }

@@ -573,7 +573,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// <summary>
         /// Compute the total length of a log file given the term length.
         ///     
-        /// Assumes TERM_MAX_LENGTH is 1GB and that filePageSize is 1GB or less and a power of 2.
+        /// Assumes <see cref="TERM_MAX_LENGTH"/> is 1GB and that filePageSize is 1GB or less and a power of 2.
         /// </summary>
         /// <param name="termLength"> on which to base the calculation. </param>
         /// <param name="filePageSize"> to use for log. </param>
@@ -585,7 +585,7 @@ namespace Adaptive.Aeron.LogBuffer
                 return BitUtil.Align((termLength * PARTITION_COUNT) + LOG_META_DATA_LENGTH, filePageSize);
             }
 
-            return (PARTITION_COUNT * termLength) + BitUtil.Align(LOG_META_DATA_LENGTH, filePageSize);
+            return (PARTITION_COUNT * (long)termLength) + BitUtil.Align(LOG_META_DATA_LENGTH, filePageSize);
         }
 
 
