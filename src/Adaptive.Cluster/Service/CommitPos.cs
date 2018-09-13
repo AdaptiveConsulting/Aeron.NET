@@ -63,12 +63,12 @@ namespace Adaptive.Cluster.Service
             tempBuffer.PutLong(LOG_POSITION_OFFSET, logPosition);
             tempBuffer.PutLong(MAX_LOG_POSITION_OFFSET, maxLogPosition);
 
+            int labelOffset = BitUtil.Align(KEY_LENGTH, BitUtil.SIZE_OF_INT);
+            int labelLength = 0;
+            labelLength += tempBuffer.PutStringWithoutLengthAscii(labelOffset + labelLength, NAME);
+            labelLength += tempBuffer.PutLongAscii(labelOffset + labelLength, leadershipTermId);
 
-            int labelOffset = 0;
-            labelOffset += tempBuffer.PutStringWithoutLengthAscii(KEY_LENGTH + labelOffset, NAME);
-            labelOffset += tempBuffer.PutLongAscii(KEY_LENGTH + labelOffset, leadershipTermId);
-
-            return aeron.AddCounter(COMMIT_POSITION_TYPE_ID, tempBuffer, 0, KEY_LENGTH, tempBuffer, KEY_LENGTH, labelOffset);
+            return aeron.AddCounter(COMMIT_POSITION_TYPE_ID, tempBuffer, 0, KEY_LENGTH, tempBuffer, labelOffset, labelLength);
         }
 
         /// <summary>

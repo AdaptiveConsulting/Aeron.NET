@@ -95,15 +95,16 @@ namespace Adaptive.Cluster.Service
                 tempBuffer.PutLong(SNAPSHOT_RECORDING_IDS_OFFSET + (i * BitUtil.SIZE_OF_LONG), snapshotRecordingIds[i]);
             }
 
+            int labelOffset = BitUtil.Align(keyLength, BitUtil.SIZE_OF_INT);
+            int labelLength = 0;
+            labelLength += tempBuffer.PutStringWithoutLengthAscii(labelOffset + labelLength, NAME);
+            labelLength += tempBuffer.PutLongAscii(keyLength + labelLength, leadershipTermId);
+            labelLength += tempBuffer.PutStringWithoutLengthAscii(labelOffset + labelLength, " logPosition=");
+            labelLength += tempBuffer.PutLongAscii(labelOffset + labelLength, logPosition);
+            labelLength += tempBuffer.PutStringWithoutLengthAscii(labelOffset + labelLength, " hasReplay=" + hasReplay);
 
-            int labelOffset = 0;
-            labelOffset += tempBuffer.PutStringWithoutLengthAscii(keyLength + labelOffset, NAME);
-            labelOffset += tempBuffer.PutLongAscii(keyLength + labelOffset, leadershipTermId);
-            labelOffset += tempBuffer.PutStringWithoutLengthAscii(keyLength + labelOffset, " logPosition=");
-            labelOffset += tempBuffer.PutLongAscii(keyLength + labelOffset, logPosition);
-            labelOffset += tempBuffer.PutStringWithoutLengthAscii(keyLength + labelOffset, " hasReplay=" + hasReplay);
+            return aeron.AddCounter(RECOVERY_STATE_TYPE_ID, tempBuffer, 0, keyLength, tempBuffer, labelOffset, labelLength);
 
-            return aeron.AddCounter(RECOVERY_STATE_TYPE_ID, tempBuffer, 0, keyLength, tempBuffer, keyLength, labelOffset);
         }
 
         /// <summary>

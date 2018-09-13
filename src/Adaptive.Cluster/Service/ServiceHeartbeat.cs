@@ -50,11 +50,13 @@ namespace Adaptive.Cluster.Service
             tempBuffer.PutInt(SERVICE_ID_OFFSET, serviceId);
             tempBuffer.PutInt(MEMBER_ID_OFFSET, clusterMemberId);
             
-            int labelOffset = 0;
-            labelOffset += tempBuffer.PutStringWithoutLengthAscii(KEY_LENGTH + labelOffset, NAME);
-            labelOffset += tempBuffer.PutIntAscii(KEY_LENGTH + labelOffset, serviceId);
+            int labelOffset = BitUtil.Align(KEY_LENGTH, BitUtil.SIZE_OF_INT);
+            int labelLength = 0;
+            labelLength += tempBuffer.PutStringWithoutLengthAscii(labelOffset + labelLength, NAME);
+            labelLength += tempBuffer.PutIntAscii(labelOffset + labelLength, serviceId);
 
-            return aeron.AddCounter(SERVICE_HEARTBEAT_TYPE_ID, tempBuffer, 0, KEY_LENGTH, tempBuffer, KEY_LENGTH, labelOffset);
+            return aeron.AddCounter(SERVICE_HEARTBEAT_TYPE_ID, tempBuffer, 0, KEY_LENGTH, tempBuffer, labelOffset, labelLength);
+
         }
 
         /// <summary>

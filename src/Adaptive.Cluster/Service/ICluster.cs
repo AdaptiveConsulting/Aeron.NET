@@ -75,9 +75,16 @@ namespace Adaptive.Cluster.Service
         bool CancelTimer(long correlationId);
 
         /// <summary>
-        /// Should be called by the service when it experiences back pressure on egress, closing sessions, or making
+        /// Should be called by the service when it experiences back-pressure on egress, closing sessions, or making
         /// timer requests.
         /// </summary>
         void Idle();
+        
+        /// <summary>
+        /// Should be called by the service when it experiences back-pressure on egress, closing sessions, or making
+        /// timer requests.
+        /// </summary>
+        /// <param name="workCount"> a value of 0 will reset the idle strategy is a progressive back-off has been applied. </param>
+        void Idle(int workCount);
     }
 }

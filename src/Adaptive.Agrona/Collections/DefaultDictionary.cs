@@ -8,7 +8,7 @@ namespace Adaptive.Agrona.Collections
         private readonly IDictionary<TKey, TValue> _dictionaryImplementation = new Dictionary<TKey, TValue>();
         private readonly TValue _defaultValue;
 
-        public DefaultDictionary(TValue defaultValue)
+        public DefaultDictionary(TValue defaultValue = default(TValue))
         {
             this._defaultValue = defaultValue;
         }
