@@ -58,19 +58,18 @@ namespace Adaptive.Archiver
             tempBuffer.PutStringAscii(SOURCE_IDENTITY_LENGTH_OFFSET, sourceIdentity);
             var keyLength = SOURCE_IDENTITY_OFFSET + sourceIdentityLength;
 
+            int labelOffset = BitUtil.Align(keyLength, BitUtil.SIZE_OF_INT);
             int labelLength = 0;
-            labelLength += tempBuffer.PutStringWithoutLengthAscii(keyLength, NAME + ": ");
-            labelLength += tempBuffer.PutLongAscii(keyLength + labelLength, recordingId);
-            labelLength += tempBuffer.PutStringWithoutLengthAscii(keyLength + labelLength, " ");
-            labelLength += tempBuffer.PutIntAscii(keyLength + labelLength, sessionId);
-            labelLength += tempBuffer.PutStringWithoutLengthAscii(keyLength + labelLength, " ");
-            labelLength += tempBuffer.PutIntAscii(keyLength + labelLength, streamId);
-            labelLength += tempBuffer.PutStringWithoutLengthAscii(keyLength + labelLength, " ");
-            labelLength += tempBuffer.PutStringWithoutLengthAscii(
-                keyLength + labelLength, strippedChannel, 0, CountersReader.MAX_LABEL_LENGTH - labelLength);
+            labelLength += tempBuffer.PutStringWithoutLengthAscii(labelOffset, NAME + ": ");
+            labelLength += tempBuffer.PutLongAscii(labelOffset + labelLength, recordingId);
+            labelLength += tempBuffer.PutStringWithoutLengthAscii(labelOffset + labelLength, " ");
+            labelLength += tempBuffer.PutIntAscii(labelOffset + labelLength, sessionId);
+            labelLength += tempBuffer.PutStringWithoutLengthAscii(labelOffset + labelLength, " ");
+            labelLength += tempBuffer.PutIntAscii(labelOffset + labelLength, streamId);
+            labelLength += tempBuffer.PutStringWithoutLengthAscii(labelOffset + labelLength, " ");
+            labelLength += tempBuffer.PutStringWithoutLengthAscii(labelOffset + labelLength, strippedChannel, 0, CountersReader.MAX_LABEL_LENGTH - labelLength);
 
-            return aeron.AddCounter(
-                RECORDING_POSITION_TYPE_ID, tempBuffer, 0, keyLength, tempBuffer, keyLength, labelLength);
+            return aeron.AddCounter(RECORDING_POSITION_TYPE_ID, tempBuffer, 0, keyLength, tempBuffer, labelOffset, labelLength);
         }
 
         /// <summary>

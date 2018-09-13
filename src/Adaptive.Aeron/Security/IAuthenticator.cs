@@ -1,7 +1,7 @@
 namespace Adaptive.Aeron.Security
 {
     /// <summary>
-    /// Interface for Authenticator to handle authentication of clients to a system.
+    /// Interface for an Authenticator to handle authentication of clients to a system.
     /// <para>
     /// The session-id refers to the authentication session and not the Aeron transport session assigned to a publication.
     /// </para>
@@ -30,7 +30,7 @@ namespace Adaptive.Aeron.Security
         /// </summary>
         /// <param name="sessionProxy"> to use to inform client of status. </param>
         /// <param name="nowMs">        current epoch time in milliseconds. </param>
-        /// <seealso cref= SessionProxy </seealso>
+        /// <seealso cref="ISessionProxy"/>
         void OnConnectedSession(ISessionProxy sessionProxy, long nowMs);
 
         /// <summary>
@@ -46,7 +46,7 @@ namespace Adaptive.Aeron.Security
         /// </summary>
         /// <param name="sessionProxy"> to use to inform client of status. </param>
         /// <param name="nowMs">        current epoch time in milliseconds. </param>
-        /// <seealso cref= SessionProxy </seealso>
+        /// <seealso cref="ISessionProxy"/>
         void OnChallengedSession(ISessionProxy sessionProxy, long nowMs);
     }
 }

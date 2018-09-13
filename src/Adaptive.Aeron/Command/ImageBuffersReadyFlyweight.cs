@@ -21,7 +21,7 @@ namespace Adaptive.Aeron.Command
     /// <summary>
     /// Message to denote that new buffers for a publication image are ready for a subscription.
     /// 
-    /// NOTE: Layout should be SBE compliant
+    /// <b>Note:</b> Layout should be SBE 2.0 compliant so that the source identity length is aligned.
     /// </summary>
     /// <seealso cref="ControlProtocolEvents" />
     /// 
@@ -235,7 +235,9 @@ namespace Adaptive.Aeron.Command
         
         private int SourceIdentityOffset()
         {
-            return LOG_FILE_NAME_OFFSET + _buffer.GetInt(_offset + LOG_FILE_NAME_OFFSET) + BitUtil.SIZE_OF_INT;
+            int alignedLength = BitUtil.Align(_buffer.GetInt(_offset + LOG_FILE_NAME_OFFSET), BitUtil.SIZE_OF_INT);
+            
+            return LOG_FILE_NAME_OFFSET + BitUtil.SIZE_OF_INT + alignedLength;
         }
     }
 }

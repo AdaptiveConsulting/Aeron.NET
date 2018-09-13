@@ -208,11 +208,16 @@ namespace Adaptive.Cluster.Service
 
         public void Idle()
         {
-            if (!CheckForClockTick())
-            {
-                CheckInterruptedStatus();
-                idleStrategy.Idle();
-            }
+            CheckInterruptedStatus();
+            CheckForClockTick();
+            idleStrategy.Idle();
+        }
+
+        public void Idle(int workCount)
+        {
+            CheckInterruptedStatus();
+            CheckForClockTick();
+            idleStrategy.Idle(workCount);
         }
         
         public long Offer(
@@ -321,6 +326,17 @@ namespace Adaptive.Cluster.Service
         {
             clusterTimeMs = timestampMs;
         }
+        
+        internal void OnClusterChange(
+            long leadershipTermId,
+            long logPosition,
+            long timestampMs,
+            int leaderMemberId,
+            int clusterSize,
+            string clusterMembers)
+        {
+            clusterTimeMs = timestampMs;
+        }
 
         internal void AddSession(
             long clusterSessionId,
@@ -414,8 +430,7 @@ namespace Adaptive.Cluster.Service
                     }
                 }
 
-                CheckInterruptedStatus();
-                idleStrategy.Idle(workCount);
+                Idle(workCount);
             }
         }
 

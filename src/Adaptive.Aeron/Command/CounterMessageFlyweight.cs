@@ -20,6 +20,9 @@ namespace Adaptive.Aeron.Command
 {
 	/// <summary>
 	/// Message to denote a new counter.
+	///
+	/// <b>Note:</b> Layout should be SBE 2.0 compliant so that the label length is aligned.
+	/// 
 	/// </summary>
 	/// <seealso cref="ControlProtocolEvents">
 	/// <pre>
@@ -166,7 +169,8 @@ namespace Adaptive.Aeron.Command
 
 		private int LabelOffset()
 		{
-			return KEY_LENGTH_OFFSET + buffer.GetInt(offset + KEY_LENGTH_OFFSET) + BitUtil.SIZE_OF_INT;
+			return KEY_LENGTH_OFFSET + BitUtil.SIZE_OF_INT
+			                         + BitUtil.Align(buffer.GetInt(offset + KEY_LENGTH_OFFSET), BitUtil.SIZE_OF_INT);
 		}
 	}
 }

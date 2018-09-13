@@ -13,8 +13,9 @@ namespace Adaptive.Cluster.Service
     /// </summary>
     internal sealed class BoundedLogAdapter : IControlledFragmentHandler, IDisposable
     {
-        private const int FRAGMENT_LIMIT = 10;
+        private const int FRAGMENT_LIMIT = 100;
         private const int INITIAL_BUFFER_LENGTH = 4096;
+
         private static readonly int SESSION_HEADER_LENGTH =
             MessageHeaderEncoder.ENCODED_LENGTH + SessionHeaderEncoder.BLOCK_LENGTH;
 
@@ -26,6 +27,7 @@ namespace Adaptive.Cluster.Service
         private readonly TimerEventDecoder timerEventDecoder = new TimerEventDecoder();
         private readonly ClusterActionRequestDecoder actionRequestDecoder = new ClusterActionRequestDecoder();
         private readonly NewLeadershipTermEventDecoder newLeadershipTermEventDecoder = new NewLeadershipTermEventDecoder();
+        private readonly ClusterChangeDecoder clusterChangeDecoder = new ClusterChangeDecoder();
 
         private readonly Image image;
         private readonly ReadableCounter upperBound;
@@ -76,7 +78,7 @@ namespace Adaptive.Cluster.Service
                     offset + MessageHeaderDecoder.ENCODED_LENGTH,
                     messageHeaderDecoder.BlockLength(),
                     messageHeaderDecoder.Version());
-                
+
                 agent.OnSessionMessage(
                     sessionHeaderDecoder.ClusterSessionId(),
                     sessionHeaderDecoder.CorrelationId(),
@@ -148,7 +150,7 @@ namespace Adaptive.Cluster.Service
                         actionRequestDecoder.Timestamp(),
                         actionRequestDecoder.Action());
                     break;
-                
+
                 case NewLeadershipTermEventDecoder.TEMPLATE_ID:
                     newLeadershipTermEventDecoder.Wrap(
                         buffer,
@@ -162,6 +164,24 @@ namespace Adaptive.Cluster.Service
                         newLeadershipTermEventDecoder.Timestamp(),
                         newLeadershipTermEventDecoder.LeaderMemberId(),
                         newLeadershipTermEventDecoder.LogSessionId());
+                    break;
+
+                case ClusterChangeDecoder.TEMPLATE_ID:
+                    clusterChangeDecoder.Wrap(
+                        buffer,
+                        offset + MessageHeaderDecoder.ENCODED_LENGTH,
+                        messageHeaderDecoder.BlockLength(),
+                        messageHeaderDecoder.Version()
+                    );
+
+                    agent.OnClusterChange(
+                        clusterChangeDecoder.LeaderMemberId(),
+                        clusterChangeDecoder.LogPosition(),
+                        clusterChangeDecoder.Timestamp(),
+                        clusterChangeDecoder.LeaderMemberId(),
+                        clusterChangeDecoder.ClusterSize(),
+                        clusterChangeDecoder.ClusterMembers()
+                    );
                     break;
             }
 
