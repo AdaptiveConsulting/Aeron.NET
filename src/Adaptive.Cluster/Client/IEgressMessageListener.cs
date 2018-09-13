@@ -13,7 +13,7 @@ namespace Adaptive.Cluster.Client
         /// </summary>
         /// <param name="correlationId">    to associate with the ingress message to which it is correlated. </param>
         /// <param name="clusterSessionId"> to which the message belongs. </param>
-        /// <param name="timestamp">        at which the correlated ingress was sequenced in the cluster. </param>
+        /// <param name="timestampMs">        at which the correlated ingress was sequenced in the cluster. </param>
         /// <param name="buffer">           containing the message. </param>
         /// <param name="offset">           at which the message begins. </param>
         /// <param name="length">           of the message in bytes. </param>
@@ -21,7 +21,7 @@ namespace Adaptive.Cluster.Client
         void OnMessage(
             long correlationId,
             long clusterSessionId,
-            long timestamp,
+            long timestampMs,
             IDirectBuffer buffer,
             int offset,
             int length,

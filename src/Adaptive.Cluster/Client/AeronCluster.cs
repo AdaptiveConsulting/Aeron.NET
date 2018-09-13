@@ -856,7 +856,7 @@ namespace Adaptive.Cluster.Client
                 public void OnMessage(
                     long correlationId,
                     long clusterSessionId,
-                    long timestamp,
+                    long timestampMs,
                     IDirectBuffer buffer,
                     int offset,
                     int length,
