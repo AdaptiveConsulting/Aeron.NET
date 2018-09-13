@@ -235,3 +235,5 @@ _Pvt_Extensions
 
 # FAKE - F# Make
 .fake/
+
+cluster-mark-service-*.dat
