@@ -2,7 +2,7 @@
 <package >
   <metadata>
     <id>Aeron.Driver</id>
-    <version>1.11.0</version>
+    <version>1.11.1</version>
     <title>Aeron Driver</title>
     <authors>Adaptive Financial Consulting Ltd.</authors>
     <owners>Adaptive Financial Consulting Ltd.</owners>

@@ -59,6 +59,11 @@ namespace Adaptive.Agrona.Util
 
         public long Capacity { get; }
 
+        public void Flush()
+        {
+            _view.Flush();
+        }
+        
         public void Dispose()
         {
             Dispose(true);

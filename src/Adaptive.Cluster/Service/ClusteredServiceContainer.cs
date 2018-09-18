@@ -42,7 +42,20 @@ namespace Adaptive.Cluster.Service
         private ClusteredServiceContainer(Context ctx)
         {
             this.ctx = ctx;
-            ctx.Conclude();
+            
+            try
+            {
+                ctx.Conclude();
+            }
+            catch (Exception)
+            {
+                if (null != ctx.MarkFile())
+                {
+                    ctx.MarkFile().SignalFailedStart();
+                }
+
+                throw;
+            }
 
             ClusteredServiceAgent agent = new ClusteredServiceAgent(ctx);
             serviceAgentRunner = new AgentRunner(ctx.IdleStrategy(), ctx.ErrorHandler(), ctx.ErrorCounter(), agent);

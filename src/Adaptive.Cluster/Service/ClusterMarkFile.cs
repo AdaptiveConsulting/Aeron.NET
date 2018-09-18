@@ -21,6 +21,8 @@ namespace Adaptive.Cluster
         public const string SERVICE_FILE_NAME_PREFIX = "cluster-mark-service-";
         public const string SERVICE_FILE_NAME_FORMAT = SERVICE_FILE_NAME_PREFIX + "{0}" + FILE_EXTENSION;
         public const int HEADER_LENGTH = 8 * 1024;
+        public const int VERSION_READY = MarkFileHeaderDecoder.SCHEMA_VERSION;
+        public const int VERSION_FAILED = -1;
 
         private readonly MarkFileHeaderDecoder headerDecoder = new MarkFileHeaderDecoder();
         private readonly MarkFileHeaderEncoder headerEncoder = new MarkFileHeaderEncoder();
@@ -49,10 +51,18 @@ namespace Adaptive.Cluster
                 {
                     if (version != MarkFileHeaderDecoder.SCHEMA_VERSION)
                     {
-                        throw new ClusterException("mark file version " + version + " does not match software:" + MarkFileHeaderDecoder.SCHEMA_VERSION);
+                        if (VERSION_FAILED == version && markFileExists)
+                        {
+                            Console.WriteLine("mark file version -1 indicates error on previous startup.");
+                        }
+                        else
+                        {
+                            throw new ClusterException("mark file version " + version + " does not match software:" +
+                                                       MarkFileHeaderDecoder.SCHEMA_VERSION);
+                        }
                     }
                 },
-                null);
+                null);    
 
             buffer = markFile.Buffer();
             errorBuffer = new UnsafeBuffer(buffer, HEADER_LENGTH, errorBufferLength);
@@ -134,13 +144,20 @@ namespace Adaptive.Cluster
         public void CandidateTermId(long candidateTermId)
         {
             buffer.PutLongVolatile(MarkFileHeaderEncoder.CandidateTermIdEncodingOffset(), candidateTermId);
-            //markFile.MappedByteBuffer().Force(); How to do this?
+            markFile.MappedByteBuffer().Flush();
         }
 
 
         public void SignalReady()
         {
             markFile.SignalReady(MarkFileHeaderDecoder.SCHEMA_VERSION);
+            markFile.MappedByteBuffer().Flush();
+        }
+        
+        public void SignalFailedStart()
+        {
+            markFile.SignalReady(VERSION_FAILED);
+            markFile.MappedByteBuffer().Flush();
         }
 
         public void UpdateActivityTimestamp(long nowMs)
