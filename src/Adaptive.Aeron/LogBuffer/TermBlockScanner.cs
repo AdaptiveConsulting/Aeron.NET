@@ -20,14 +20,14 @@ using Adaptive.Agrona.Concurrent;
 namespace Adaptive.Aeron.LogBuffer
 {
     /// <summary>
-    /// Scan a term buffer for a block of messages including padding. The block must include complete messages.
+    /// Scan a term buffer for a block of message fragments including padding. The block must include complete fragments.
     /// </summary>
     public class TermBlockScanner
     {
         /// <summary>
-        /// Scan a term buffer for a block of messages from and offset up to a limit.
+        /// Scan a term buffer for a block of message fragments from and offset up to a limit.
         /// </summary>
-        /// <param name="termBuffer"> to scan for messages. </param>
+        /// <param name="termBuffer"> to scan for message fragments. </param>
         /// <param name="termOffset">     at which the scan should begin. </param>
         /// <param name="limit">      at which the scan should stop. </param>
         /// <returns> the offset at which the scan terminated. </returns>

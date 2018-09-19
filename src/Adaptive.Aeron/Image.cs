@@ -276,12 +276,12 @@ namespace Adaptive.Aeron
         /// Use a <see cref="ControlledFragmentAssembler"/>. to assemble messages which span multiple fragments.
         /// 
         /// </summary>
-        /// <param name="fragmentHandler"> to which message fragments are delivered. </param>
+        /// <param name="handler"> to which message fragments are delivered. </param>
         /// <param name="fragmentLimit">   for the number of fragments to be consumed during one polling operation. </param>
         /// <returns> the number of fragments that have been consumed. </returns>
         /// <seealso cref="ControlledFragmentAssembler" />
         /// <seealso cref="ImageControlledFragmentAssembler" />
-        public int ControlledPoll(IControlledFragmentHandler fragmentHandler, int fragmentLimit)
+        public int ControlledPoll(IControlledFragmentHandler handler, int fragmentLimit)
         {
             if (_isClosed)
             {
@@ -298,7 +298,7 @@ namespace Adaptive.Aeron
 
             try
             {
-                do
+                while (fragmentsRead < fragmentLimit && resultingOffset < capacity)
                 {
                     var length = FrameDescriptor.FrameLengthVolatile(termBuffer, resultingOffset);
                     if (length <= 0)
@@ -317,7 +317,7 @@ namespace Adaptive.Aeron
 
                     _header.Offset = frameOffset;
 
-                    var action = fragmentHandler.OnFragment(
+                    var action = handler.OnFragment(
                         termBuffer,
                         frameOffset + DataHeaderFlyweight.HEADER_LENGTH,
                         length - DataHeaderFlyweight.HEADER_LENGTH,
@@ -341,7 +341,7 @@ namespace Adaptive.Aeron
                         initialOffset = resultingOffset;
                         _subscriberPosition.SetOrdered(initialPosition);
                     }
-                } while (fragmentsRead < fragmentLimit && resultingOffset < capacity);
+                }
             }
             catch (Exception t)
             {
@@ -366,15 +366,15 @@ namespace Adaptive.Aeron
         /// Use a <see cref="ControlledFragmentAssembler"/>. to assemble messages which span multiple fragments.
         /// 
         /// </summary>
-        /// <param name="fragmentHandler"> to which message fragments are delivered. </param>
+        /// <param name="handler"> to which message fragments are delivered. </param>
         /// <param name="fragmentLimit">   for the number of fragments to be consumed during one polling operation. </param>
         /// <returns> the number of fragments that have been consumed. </returns>
         /// <seealso cref="ControlledFragmentAssembler" />
         /// <seealso cref="ImageControlledFragmentAssembler" />
-        public int ControlledPoll(ControlledFragmentHandler fragmentHandler, int fragmentLimit)
+        public int ControlledPoll(ControlledFragmentHandler handler, int fragmentLimit)
         {
-            var handler = HandlerHelper.ToControlledFragmentHandler(fragmentHandler);
-            return ControlledPoll(handler, fragmentLimit);
+            var fragmentHandler = HandlerHelper.ToControlledFragmentHandler(handler);
+            return ControlledPoll(fragmentHandler, fragmentLimit);
         }
 
         /// <summary>
@@ -386,13 +386,13 @@ namespace Adaptive.Aeron
         ///     
         /// </para>
         /// </summary>
-        /// <param name="fragmentHandler"> to which message fragments are delivered. </param>
+        /// <param name="handler"> to which message fragments are delivered. </param>
         /// <param name="maxPosition">     to consume messages up to. </param>
         /// <param name="fragmentLimit">   for the number of fragments to be consumed during one polling operation. </param>
         /// <returns> the number of fragments that have been consumed. </returns>
         /// <seealso cref="ControlledFragmentAssembler"/>
         /// <seealso cref="ImageControlledFragmentAssembler"/>
-        public virtual int BoundedControlledPoll(IControlledFragmentHandler fragmentHandler, long maxPosition,
+        public virtual int BoundedControlledPoll(IControlledFragmentHandler handler, long maxPosition,
             int fragmentLimit)
         {
             if (_isClosed)
@@ -429,7 +429,7 @@ namespace Adaptive.Aeron
 
                     _header.Offset = frameOffset;
 
-                    var action = fragmentHandler.OnFragment(termBuffer,
+                    var action = handler.OnFragment(termBuffer,
                         frameOffset + DataHeaderFlyweight.HEADER_LENGTH,
                         length - DataHeaderFlyweight.HEADER_LENGTH, _header);
 
@@ -478,17 +478,17 @@ namespace Adaptive.Aeron
         ///     
         /// </para>
         /// </summary>
-        /// <param name="fragmentHandler"> to which message fragments are delivered. </param>
+        /// <param name="handler"> to which message fragments are delivered. </param>
         /// <param name="maxPosition">     to consume messages up to. </param>
         /// <param name="fragmentLimit">   for the number of fragments to be consumed during one polling operation. </param>
         /// <returns> the number of fragments that have been consumed. </returns>
         /// <seealso cref="ControlledFragmentAssembler"/>
         /// <seealso cref="ImageControlledFragmentAssembler"/>
-        public virtual int BoundedControlledPoll(ControlledFragmentHandler fragmentHandler, long maxPosition,
+        public virtual int BoundedControlledPoll(ControlledFragmentHandler handler, long maxPosition,
             int fragmentLimit)
         {
-            var handler = HandlerHelper.ToControlledFragmentHandler(fragmentHandler);
-            return BoundedControlledPoll(handler, maxPosition, fragmentLimit);
+            var fragmentHandler = HandlerHelper.ToControlledFragmentHandler(handler);
+            return BoundedControlledPoll(fragmentHandler, maxPosition, fragmentLimit);
         }
 
         /// <summary>
@@ -500,12 +500,12 @@ namespace Adaptive.Aeron
         /// 
         /// </summary>
         /// <param name="initialPosition"> from which to peek forward. </param>
-        /// <param name="fragmentHandler"> to which message fragments are delivered. </param>
+        /// <param name="handler"> to which message fragments are delivered. </param>
         /// <param name="limitPosition">   up to which can be scanned. </param>
         /// <returns> the resulting position after the scan terminates which is a complete message. </returns>
         /// <seealso cref="ControlledFragmentAssembler"/>
         /// <seealso cref="ImageControlledFragmentAssembler"/>
-        public virtual long ControlledPeek(long initialPosition, IControlledFragmentHandler fragmentHandler, long limitPosition)
+        public virtual long ControlledPeek(long initialPosition, IControlledFragmentHandler handler, long limitPosition)
         {
             if (_isClosed)
             {
@@ -524,7 +524,7 @@ namespace Adaptive.Aeron
 
             try
             {
-                do
+                while (position < limitPosition && offset < capacity)
                 {
                     int length = FrameDescriptor.FrameLengthVolatile(termBuffer, offset);
                     if (length <= 0)
@@ -538,13 +538,17 @@ namespace Adaptive.Aeron
 
                     if (FrameDescriptor.IsPaddingFrame(termBuffer, frameOffset))
                     {
+                        position += (offset - initialOffset);
+                        initialOffset = offset;
+                        resultingPosition = position;
+                        
                         continue;
                     }
 
                     _header.Offset = frameOffset;
 
 
-                    var action = fragmentHandler.OnFragment(
+                    var action = handler.OnFragment(
                         termBuffer,
                         frameOffset + DataHeaderFlyweight.HEADER_LENGTH,
                         length - DataHeaderFlyweight.HEADER_LENGTH,
@@ -567,7 +571,7 @@ namespace Adaptive.Aeron
                     {
                         break;
                     }
-                } while (position < limitPosition && offset < capacity);
+                }
             }
             catch (Exception t)
             {
@@ -577,20 +581,20 @@ namespace Adaptive.Aeron
             return resultingPosition;
         }
 
-        public virtual long ControlledPeek(long initialPosition, ControlledFragmentHandler fragmentHandler, long limitPosition)
+        public virtual long ControlledPeek(long initialPosition, ControlledFragmentHandler handler, long limitPosition)
         {
-            var handler = HandlerHelper.ToControlledFragmentHandler(fragmentHandler);
-            return ControlledPeek(initialPosition, handler, limitPosition);
+            var fragmentHandler = HandlerHelper.ToControlledFragmentHandler(handler);
+            return ControlledPeek(initialPosition, fragmentHandler, limitPosition);
         }
 
         /// <summary>
         /// Poll for new messages in a stream. If new messages are found beyond the last consumed position then they
         /// will be delivered to the <seealso cref="IBlockHandler"/> up to a limited number of bytes.
         /// </summary>
-        /// <param name="blockHandler">     to which block is delivered. </param>
+        /// <param name="handler">     to which block is delivered. </param>
         /// <param name="blockLengthLimit"> up to which a block may be in length. </param>
         /// <returns> the number of bytes that have been consumed. </returns>
-        public int BlockPoll(BlockHandler blockHandler, int blockLengthLimit)
+        public int BlockPoll(BlockHandler handler, int blockLengthLimit)
         {
             if (_isClosed)
             {
@@ -611,7 +615,7 @@ namespace Adaptive.Aeron
                 {
                     var termId = termBuffer.GetInt(termOffset + DataHeaderFlyweight.TERM_ID_FIELD_OFFSET);
 
-                    blockHandler(termBuffer, termOffset, bytesConsumed, SessionId, termId);
+                    handler(termBuffer, termOffset, bytesConsumed, SessionId, termId);
                 }
                 catch (Exception t)
                 {
