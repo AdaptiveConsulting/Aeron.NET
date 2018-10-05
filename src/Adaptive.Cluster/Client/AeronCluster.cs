@@ -772,7 +772,7 @@ namespace Adaptive.Cluster.Client
             /// <summary>
             /// Stream id within a channel for receiving messages from a cluster.
             /// </summary>
-            public const string EGRESS_STREAM_ID_PROP_NAME = "aeron.archive.control.response.stream.id";
+            public const string EGRESS_STREAM_ID_PROP_NAME = "aeron.cluster.egress.stream.id";
 
             /// <summary>
             /// Default stream id within a channel for receiving messages from a cluster.

@@ -7,21 +7,21 @@ using Adaptive.Agrona;
 
 namespace Adaptive.Cluster.Codecs {
 
-public class ClusterChangeDecoder
+public class ClusterChangeEventDecoder
 {
-    public const ushort BLOCK_LENGTH = 32;
+    public const ushort BLOCK_LENGTH = 40;
     public const ushort TEMPLATE_ID = 26;
     public const ushort SCHEMA_ID = 1;
     public const ushort SCHEMA_VERSION = 1;
 
-    private ClusterChangeDecoder _parentMessage;
+    private ClusterChangeEventDecoder _parentMessage;
     private IDirectBuffer _buffer;
     protected int _offset;
     protected int _limit;
     protected int _actingBlockLength;
     protected int _actingVersion;
 
-    public ClusterChangeDecoder()
+    public ClusterChangeEventDecoder()
     {
         _parentMessage = this;
     }
@@ -61,7 +61,7 @@ public class ClusterChangeDecoder
         return _offset;
     }
 
-    public ClusterChangeDecoder Wrap(
+    public ClusterChangeEventDecoder Wrap(
         IDirectBuffer buffer, int offset, int actingBlockLength, int actingVersion)
     {
         this._buffer = buffer;
@@ -358,9 +358,102 @@ public class ClusterChangeDecoder
     }
 
 
-    public static int ClusterMembersId()
+    public static int EventTypeId()
     {
         return 6;
+    }
+
+    public static int EventTypeSinceVersion()
+    {
+        return 0;
+    }
+
+    public static int EventTypeEncodingOffset()
+    {
+        return 32;
+    }
+
+    public static int EventTypeEncodingLength()
+    {
+        return 4;
+    }
+
+    public static string EventTypeMetaAttribute(MetaAttribute metaAttribute)
+    {
+        switch (metaAttribute)
+        {
+            case MetaAttribute.EPOCH: return "unix";
+            case MetaAttribute.TIME_UNIT: return "nanosecond";
+            case MetaAttribute.SEMANTIC_TYPE: return "";
+            case MetaAttribute.PRESENCE: return "required";
+        }
+
+        return "";
+    }
+
+    public ChangeType EventType()
+    {
+        return (ChangeType)_buffer.GetInt(_offset + 32, ByteOrder.LittleEndian);
+    }
+
+
+    public static int MemberIdId()
+    {
+        return 7;
+    }
+
+    public static int MemberIdSinceVersion()
+    {
+        return 0;
+    }
+
+    public static int MemberIdEncodingOffset()
+    {
+        return 36;
+    }
+
+    public static int MemberIdEncodingLength()
+    {
+        return 4;
+    }
+
+    public static string MemberIdMetaAttribute(MetaAttribute metaAttribute)
+    {
+        switch (metaAttribute)
+        {
+            case MetaAttribute.EPOCH: return "unix";
+            case MetaAttribute.TIME_UNIT: return "nanosecond";
+            case MetaAttribute.SEMANTIC_TYPE: return "";
+            case MetaAttribute.PRESENCE: return "required";
+        }
+
+        return "";
+    }
+
+    public static int MemberIdNullValue()
+    {
+        return -2147483648;
+    }
+
+    public static int MemberIdMinValue()
+    {
+        return -2147483647;
+    }
+
+    public static int MemberIdMaxValue()
+    {
+        return 2147483647;
+    }
+
+    public int MemberId()
+    {
+        return _buffer.GetInt(_offset + 36, ByteOrder.LittleEndian);
+    }
+
+
+    public static int ClusterMembersId()
+    {
+        return 8;
     }
 
     public static int ClusterMembersSinceVersion()
@@ -443,7 +536,7 @@ public class ClusterChangeDecoder
     {
         int originalLimit = Limit();
         Limit(_offset + _actingBlockLength);
-        builder.Append("[ClusterChange](sbeTemplateId=");
+        builder.Append("[ClusterChangeEvent](sbeTemplateId=");
         builder.Append(TEMPLATE_ID);
         builder.Append("|sbeSchemaId=");
         builder.Append(SCHEMA_ID);
@@ -487,7 +580,17 @@ public class ClusterChangeDecoder
         builder.Append("ClusterSize=");
         builder.Append(ClusterSize());
         builder.Append('|');
-        //Token{signal=BEGIN_VAR_DATA, name='clusterMembers', referencedName='null', description='null', id=6, version=0, deprecated=0, encodedLength=0, offset=32, componentTokenCount=6, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=BEGIN_FIELD, name='eventType', referencedName='null', description='null', id=6, version=0, deprecated=0, encodedLength=0, offset=32, componentTokenCount=6, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=BEGIN_ENUM, name='ChangeType', referencedName='null', description='Type of Cluster Change Event', id=-1, version=0, deprecated=0, encodedLength=4, offset=32, componentTokenCount=4, encoding=Encoding{presence=REQUIRED, primitiveType=INT32, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='null', timeUnit=null, semanticType='null'}}
+        builder.Append("EventType=");
+        builder.Append(EventType());
+        builder.Append('|');
+        //Token{signal=BEGIN_FIELD, name='memberId', referencedName='null', description='null', id=7, version=0, deprecated=0, encodedLength=0, offset=36, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=ENCODING, name='int32', referencedName='null', description='null', id=-1, version=0, deprecated=0, encodedLength=4, offset=36, componentTokenCount=1, encoding=Encoding{presence=REQUIRED, primitiveType=INT32, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        builder.Append("MemberId=");
+        builder.Append(MemberId());
+        builder.Append('|');
+        //Token{signal=BEGIN_VAR_DATA, name='clusterMembers', referencedName='null', description='null', id=8, version=0, deprecated=0, encodedLength=0, offset=40, componentTokenCount=6, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
         builder.Append("ClusterMembers=");
         builder.Append(ClusterMembers());
 

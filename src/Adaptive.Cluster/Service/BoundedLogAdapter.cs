@@ -27,7 +27,7 @@ namespace Adaptive.Cluster.Service
         private readonly TimerEventDecoder timerEventDecoder = new TimerEventDecoder();
         private readonly ClusterActionRequestDecoder actionRequestDecoder = new ClusterActionRequestDecoder();
         private readonly NewLeadershipTermEventDecoder newLeadershipTermEventDecoder = new NewLeadershipTermEventDecoder();
-        private readonly ClusterChangeDecoder clusterChangeDecoder = new ClusterChangeDecoder();
+        private readonly ClusterChangeEventDecoder clusterChangeEventDecoder = new ClusterChangeEventDecoder();
 
         private readonly Image image;
         private readonly ReadableCounter upperBound;
@@ -166,8 +166,8 @@ namespace Adaptive.Cluster.Service
                         newLeadershipTermEventDecoder.LogSessionId());
                     break;
 
-                case ClusterChangeDecoder.TEMPLATE_ID:
-                    clusterChangeDecoder.Wrap(
+                case ClusterChangeEventDecoder.TEMPLATE_ID:
+                    clusterChangeEventDecoder.Wrap(
                         buffer,
                         offset + MessageHeaderDecoder.ENCODED_LENGTH,
                         messageHeaderDecoder.BlockLength(),
@@ -175,13 +175,14 @@ namespace Adaptive.Cluster.Service
                     );
 
                     agent.OnClusterChange(
-                        clusterChangeDecoder.LeaderMemberId(),
-                        clusterChangeDecoder.LogPosition(),
-                        clusterChangeDecoder.Timestamp(),
-                        clusterChangeDecoder.LeaderMemberId(),
-                        clusterChangeDecoder.ClusterSize(),
-                        clusterChangeDecoder.ClusterMembers()
-                    );
+                        clusterChangeEventDecoder.LeaderMemberId(),
+                        clusterChangeEventDecoder.LogPosition(),
+                        clusterChangeEventDecoder.Timestamp(),
+                        clusterChangeEventDecoder.LeaderMemberId(),
+                        clusterChangeEventDecoder.ClusterSize(),
+                        clusterChangeEventDecoder.EventType(),
+                        clusterChangeEventDecoder.MemberId(),
+                        clusterChangeEventDecoder.ClusterMembers());
                     break;
             }
 

@@ -1,0 +1,254 @@
+/* Generated SBE (Simple Binary Encoding) message codec */
+using System;
+using System.Text;
+using System.Collections.Generic;
+using Adaptive.Agrona;
+
+
+namespace Adaptive.Cluster.Codecs {
+
+public class ClusterMembersEncoder
+{
+    public const ushort BLOCK_LENGTH = 8;
+    public const ushort TEMPLATE_ID = 106;
+    public const ushort SCHEMA_ID = 1;
+    public const ushort SCHEMA_VERSION = 1;
+
+    private ClusterMembersEncoder _parentMessage;
+    private IMutableDirectBuffer _buffer;
+    protected int _offset;
+    protected int _limit;
+
+    public ClusterMembersEncoder()
+    {
+        _parentMessage = this;
+    }
+
+    public ushort SbeBlockLength()
+    {
+        return BLOCK_LENGTH;
+    }
+
+    public ushort SbeTemplateId()
+    {
+        return TEMPLATE_ID;
+    }
+
+    public ushort SbeSchemaId()
+    {
+        return SCHEMA_ID;
+    }
+
+    public ushort SbeSchemaVersion()
+    {
+        return SCHEMA_VERSION;
+    }
+
+    public string SbeSemanticType()
+    {
+        return "";
+    }
+
+    public IMutableDirectBuffer Buffer()
+    {
+        return _buffer;
+    }
+
+    public int Offset()
+    {
+        return _offset;
+    }
+
+    public ClusterMembersEncoder Wrap(IMutableDirectBuffer buffer, int offset)
+    {
+        this._buffer = buffer;
+        this._offset = offset;
+        Limit(offset + BLOCK_LENGTH);
+
+        return this;
+    }
+
+    public ClusterMembersEncoder WrapAndApplyHeader(
+        IMutableDirectBuffer buffer, int offset, MessageHeaderEncoder headerEncoder)
+    {
+        headerEncoder
+            .Wrap(buffer, offset)
+            .BlockLength(BLOCK_LENGTH)
+            .TemplateId(TEMPLATE_ID)
+            .SchemaId(SCHEMA_ID)
+            .Version(SCHEMA_VERSION);
+
+        return Wrap(buffer, offset + MessageHeaderEncoder.ENCODED_LENGTH);
+    }
+
+    public int EncodedLength()
+    {
+        return _limit - _offset;
+    }
+
+    public int Limit()
+    {
+        return _limit;
+    }
+
+    public void Limit(int limit)
+    {
+        this._limit = limit;
+    }
+
+    public static int MemberIdEncodingOffset()
+    {
+        return 0;
+    }
+
+    public static int MemberIdEncodingLength()
+    {
+        return 4;
+    }
+
+    public static int MemberIdNullValue()
+    {
+        return -2147483648;
+    }
+
+    public static int MemberIdMinValue()
+    {
+        return -2147483647;
+    }
+
+    public static int MemberIdMaxValue()
+    {
+        return 2147483647;
+    }
+
+    public ClusterMembersEncoder MemberId(int value)
+    {
+        _buffer.PutInt(_offset + 0, value, ByteOrder.LittleEndian);
+        return this;
+    }
+
+
+    public static int HighMemberIdEncodingOffset()
+    {
+        return 4;
+    }
+
+    public static int HighMemberIdEncodingLength()
+    {
+        return 4;
+    }
+
+    public static int HighMemberIdNullValue()
+    {
+        return -2147483648;
+    }
+
+    public static int HighMemberIdMinValue()
+    {
+        return -2147483647;
+    }
+
+    public static int HighMemberIdMaxValue()
+    {
+        return 2147483647;
+    }
+
+    public ClusterMembersEncoder HighMemberId(int value)
+    {
+        _buffer.PutInt(_offset + 4, value, ByteOrder.LittleEndian);
+        return this;
+    }
+
+
+    public static int ClusterMembersId()
+    {
+        return 1;
+    }
+
+    public static string ClusterMembersCharacterEncoding()
+    {
+        return "US-ASCII";
+    }
+
+    public static string ClusterMembersMetaAttribute(MetaAttribute metaAttribute)
+    {
+        switch (metaAttribute)
+        {
+            case MetaAttribute.EPOCH: return "unix";
+            case MetaAttribute.TIME_UNIT: return "nanosecond";
+            case MetaAttribute.SEMANTIC_TYPE: return "";
+            case MetaAttribute.PRESENCE: return "required";
+        }
+
+        return "";
+    }
+
+    public static int ClusterMembersHeaderLength()
+    {
+        return 4;
+    }
+
+    public ClusterMembersEncoder PutClusterMembers(IDirectBuffer src, int srcOffset, int length)
+    {
+        if (length > 1073741824)
+        {
+            throw new InvalidOperationException("length > maxValue for type: " + length);
+        }
+
+        int headerLength = 4;
+        int limit = _parentMessage.Limit();
+        _parentMessage.Limit(limit + headerLength + length);
+        _buffer.PutInt(limit, unchecked((int)length), ByteOrder.LittleEndian);
+        _buffer.PutBytes(limit + headerLength, src, srcOffset, length);
+
+        return this;
+    }
+
+    public ClusterMembersEncoder PutClusterMembers(byte[] src, int srcOffset, int length)
+    {
+        if (length > 1073741824)
+        {
+            throw new InvalidOperationException("length > maxValue for type: " + length);
+        }
+
+        int headerLength = 4;
+        int limit = _parentMessage.Limit();
+        _parentMessage.Limit(limit + headerLength + length);
+        _buffer.PutInt(limit, unchecked((int)length), ByteOrder.LittleEndian);
+        _buffer.PutBytes(limit + headerLength, src, srcOffset, length);
+
+        return this;
+    }
+
+    public ClusterMembersEncoder ClusterMembers(string value)
+    {
+        int length = value.Length;
+        if (length > 1073741824)
+        {
+            throw new InvalidOperationException("length > maxValue for type: " + length);
+        }
+
+        int headerLength = 4;
+        int limit = _parentMessage.Limit();
+        _parentMessage.Limit(limit + headerLength + length);
+        _buffer.PutInt(limit, unchecked((int)length), ByteOrder.LittleEndian);
+        _buffer.PutStringWithoutLengthAscii(limit + headerLength, value);
+
+        return this;
+    }
+
+
+    public override string ToString()
+    {
+        return AppendTo(new StringBuilder(100)).ToString();
+    }
+
+    public StringBuilder AppendTo(StringBuilder builder)
+    {
+        ClusterMembersDecoder writer = new ClusterMembersDecoder();
+        writer.Wrap(_buffer, _offset, BLOCK_LENGTH, SCHEMA_VERSION);
+
+        return writer.AppendTo(builder);
+    }
+}
+}

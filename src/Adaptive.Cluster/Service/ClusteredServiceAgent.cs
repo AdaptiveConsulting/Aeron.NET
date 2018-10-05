@@ -333,9 +333,19 @@ namespace Adaptive.Cluster.Service
             long timestampMs,
             int leaderMemberId,
             int clusterSize,
+            ChangeType eventType,
+            int memberId,
             string clusterMembers)
         {
             clusterTimeMs = timestampMs;
+
+            // TODO: inform service of cluster membership change
+
+            if (memberId == this.memberId && eventType == ChangeType.LEAVE)
+            {
+                _consensusModuleProxy.Ack(logPosition, ackId++, serviceId);
+                ctx.TerminationHook().Invoke();
+            }
         }
 
         internal void AddSession(
