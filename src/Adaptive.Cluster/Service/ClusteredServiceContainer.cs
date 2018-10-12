@@ -31,6 +31,8 @@ namespace Adaptive.Cluster.Service
         /// <param name="args"> command line argument which is a list for properties files as URLs or filenames. </param>
         public static void Main(string[] args)
         {
+            loadPropertiesFiles(args);
+
             using (ClusteredServiceContainer container = Launch())
             {
                 container.Ctx().ShutdownSignalBarrier().Await();
@@ -65,6 +67,25 @@ namespace Adaptive.Cluster.Service
         {
             AgentRunner.StartOnThread(serviceAgentRunner, ctx.ThreadFactory());
             return this;
+        }
+
+        private static void loadPropertiesFiles(string[] args)
+        {
+            foreach (string arg in args)
+            {
+                if (File.Exists(arg))
+                {
+                    var lines = File.ReadAllLines(arg);
+                    foreach (string line in lines)
+                    {
+                        if (line.Contains("="))
+                        {
+                            var keyValue = line.Split("=", 2);
+                            System.Environment.SetEnvironmentVariable(keyValue[0], keyValue[1]);
+                        }
+                    }
+                }
+            }
         }
 
         /// <summary>
