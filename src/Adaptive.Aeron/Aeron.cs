@@ -103,7 +103,7 @@ namespace Adaptive.Aeron
                 var aeron = new Aeron(ctx);
                 if (ctx.UseConductorAgentInvoker())
                 {
-                    aeron.ConductorAgentInvoker().Start();
+                    aeron.ConductorAgentInvoker.Start();
                 }
                 else
                 {
@@ -125,7 +125,7 @@ namespace Adaptive.Aeron
         ///  <param name="out"> to where the counters get printed. </param>
         public void PrintCounters(StreamWriter @out)
         {
-            CountersReader counters = CountersReader();
+            CountersReader counters = CountersReader;
             counters.ForEach((value, id, label) => @out.WriteLine("{0,3}: {1:} - {2}", id, value, label));
         }
 
@@ -134,37 +134,25 @@ namespace Adaptive.Aeron
         /// Has the client been closed? If not then the CnC file may not be unmapped.
         /// </summary>
         /// <returns> true if the client has been explicitly closed otherwise false. </returns>
-        public bool IsClosed()
-        {
-            return _isClosed.Get();
-        }
+        public bool IsClosed => _isClosed.Get();
 
         /// <summary>
         /// Get the <seealso cref="Context"/> that is used by this client.
         /// </summary>
         /// <returns> the <seealso cref="Context"/> that is use by this client. </returns>
-        public Context Ctx()
-        {
-            return _ctx;
-        }
+        public Context Ctx => _ctx;
 
         /// <summary>
         /// Get the client identity that has been allocated for communicating with the media driver.
         /// </summary>
         /// <returns> the client identity that has been allocated for communicating with the media driver. </returns>
-        public long ClientId()
-        {
-            return _clientId;
-        }
+        public long ClientId => _clientId;
 
         /// <summary>
         /// Get the <seealso cref="AgentInvoker"/> for the client conductor.
         /// </summary>
         /// <returns> the <seealso cref="AgentInvoker"/> for the client conductor. </returns>
-        public AgentInvoker ConductorAgentInvoker()
-        {
-            return _conductorInvoker;
-        }
+        public AgentInvoker ConductorAgentInvoker => _conductorInvoker;
 
         /// <summary>
         /// Clean up and release all Aeron client resources and shutdown conducator thread if not using
@@ -274,14 +262,17 @@ namespace Adaptive.Aeron
         /// Get the <see cref="CountersReader"/> for the Aeron media driver counters.
         /// </summary>
         /// <returns> new <see cref="CountersReader"/> for the Aeron media driver in use.</returns>
-        public CountersReader CountersReader()
+        public CountersReader CountersReader
         {
-            if (_conductor.IsClosed())
+            get
             {
-                throw new AeronException("client is closed");
-            }
+                if (_conductor.IsClosed())
+                {
+                    throw new AeronException("client is closed");
+                }
 
-            return _conductor.CountersReader();
+                return _conductor.CountersReader();
+            }
         }
 
         /// <summary>
@@ -1144,7 +1135,7 @@ namespace Adaptive.Aeron
                 return _resourceLingerDurationNs;
             }
 
-            
+
             /// <summary>
             /// Get the top level Aeron directory used for communication between the client and Media Driver, and
             /// the location of the data buffers.

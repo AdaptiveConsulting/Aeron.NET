@@ -489,7 +489,7 @@ namespace Adaptive.Cluster.Service
                     countedErrorHandler = new CountedErrorHandler(errorHandler, errorCounter);
                     if (ownsAeronClient)
                     {
-                        aeron.Ctx().ErrorHandler(countedErrorHandler.OnError);
+                        aeron.Ctx.ErrorHandler(countedErrorHandler.OnError);
                     }
                 }
 
@@ -1155,7 +1155,7 @@ namespace Adaptive.Cluster.Service
             private void ConcludeMarkFile()
             {
                 ClusterMarkFile.CheckHeaderLength(
-                    aeron.Ctx().AeronDirectoryName(),
+                    aeron.Ctx.AeronDirectoryName(),
                     archiveContext.ControlRequestChannel(),
                     ServiceControlChannel(),
                     null,
@@ -1171,7 +1171,7 @@ namespace Adaptive.Cluster.Service
                     .IngressStreamId(0)
                     .MemberId(Adaptive.Aeron.Aeron.NULL_VALUE)
                     .ServiceId(serviceId)
-                    .AeronDirectory(aeron.Ctx().AeronDirectoryName())
+                    .AeronDirectory(aeron.Ctx.AeronDirectoryName())
                     .ArchiveChannel(archiveContext.ControlRequestChannel())
                     .ServiceControlChannel(serviceControlChannel)
                     .IngressChannel("")

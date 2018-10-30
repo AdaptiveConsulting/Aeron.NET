@@ -163,7 +163,7 @@ namespace Adaptive.Cluster.Client
 
                 _aeron = ctx.Aeron();
                 _idleStrategy = ctx.IdleStrategy();
-                _nanoClock = _aeron.Ctx().NanoClock();
+                _nanoClock = _aeron.Ctx.NanoClock();
                 _isUnicast = ctx.ClusterMemberEndpoints() != null;
 
                 subscription = _aeron.AddSubscription(ctx.EgressChannel(), ctx.EgressStreamId());

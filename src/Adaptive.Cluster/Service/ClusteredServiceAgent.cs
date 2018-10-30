@@ -74,7 +74,7 @@ namespace Adaptive.Cluster.Service
 
         public void OnStart()
         {
-            CountersReader counters = aeron.CountersReader();
+            CountersReader counters = aeron.CountersReader;
             roleCounter = AwaitClusterRoleCounter(counters);
             heartbeatCounter = AwaitHeartbeatCounter(counters);
             commitPosition = AwaitCommitPositionCounter(counters);
@@ -599,7 +599,7 @@ namespace Adaptive.Cluster.Service
                 
                 try
                 {
-                    CountersReader counters = aeron.CountersReader();
+                    CountersReader counters = aeron.CountersReader;
                     int counterId = AwaitRecordingCounter(publication.SessionId, counters);
 
                     recordingId = RecordingPos.GetRecordingId(counters, counterId);

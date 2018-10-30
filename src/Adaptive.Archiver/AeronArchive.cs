@@ -60,11 +60,11 @@ namespace Adaptive.Archiver
 
                 context = ctx;
                 aeron = ctx.AeronClient();
-                aeronClientInvoker = aeron.ConductorAgentInvoker();
+                aeronClientInvoker = aeron.ConductorAgentInvoker;
                 idleStrategy = ctx.IdleStrategy();
                 messageTimeoutNs = ctx.MessageTimeoutNs();
                 _lock = ctx.Lock();
-                nanoClock = aeron.Ctx().NanoClock();
+                nanoClock = aeron.Ctx.NanoClock();
 
                 subscription = aeron.AddSubscription(ctx.ControlResponseChannel(), ctx.ControlResponseStreamId());
                 controlResponsePoller = new ControlResponsePoller(subscription);
@@ -193,8 +193,7 @@ namespace Adaptive.Archiver
                 publication = aeron.AddExclusivePublication(ctx.ControlRequestChannel(), ctx.ControlRequestStreamId());
                 ArchiveProxy archiveProxy = new ArchiveProxy(publication,
                     ctx.IdleStrategy(),
-                    aeron.Ctx()
-                        .NanoClock(),
+                    aeron.Ctx.NanoClock(),
                     messageTimeoutNs,
                     ArchiveProxy.DEFAULT_RETRY_ATTEMPTS);
 
