@@ -332,7 +332,7 @@ namespace Adaptive.Archiver
             try
             {
                 publication = aeron.AddPublication(channel, streamId);
-                if (!publication.IsOriginal())
+                if (!publication.IsOriginal)
                 {
                     publication.Dispose();
 

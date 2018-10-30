@@ -292,7 +292,7 @@ namespace Adaptive.Aeron
                 return _termBeginPosition + resultingOffset;
             }
 
-            if ((_termBeginPosition + TermBufferLength) >= MaxPossiblePosition())
+            if ((_termBeginPosition + TermBufferLength) >= MaxPossiblePosition)
             {
                 return MAX_POSITION_EXCEEDED;
             }

@@ -90,13 +90,13 @@ namespace Adaptive.Aeron
         internal readonly ClientConductor _conductor;
 
         internal Publication(
-            ClientConductor clientConductor, 
-            string channel, 
-            int streamId, 
-            int sessionId, 
+            ClientConductor clientConductor,
+            string channel,
+            int streamId,
+            int sessionId,
             IReadablePosition positionLimit,
             int channelStatusId,
-            LogBuffers logBuffers, 
+            LogBuffers logBuffers,
             long originalRegistrationId,
             long registrationId)
         {
@@ -124,7 +124,7 @@ namespace Adaptive.Aeron
         /// </summary>
         /// <returns> the length in bytes for each term partition in the log buffer. </returns>
         public int TermBufferLength { get; }
-        
+
         /// <summary>
         /// The maximum possible position this stream can reach due to its term buffer length.
         /// 
@@ -132,23 +132,20 @@ namespace Adaptive.Aeron
         /// 
         /// </summary>
         /// <returns> the maximum possible position this stream can reach due to it term buffer length. </returns>
-        public long MaxPossiblePosition()
-        {
-            return _maxPossiblePosition;
-        }
+        public long MaxPossiblePosition => _maxPossiblePosition;
 
         /// <summary>
         /// Media address for delivery to the channel.
         /// </summary>
         /// <returns> Media address for delivery to the channel. </returns>
         public string Channel { get; }
-        
+
         /// <summary>
         /// Stream identity for scoping within the channel media address.
         /// </summary>
         /// <returns> Stream identity for scoping within the channel media address. </returns>
         public int StreamId { get; }
-        
+
         /// <summary>
         /// Session under which messages are published. Identifies this Publication instance. Sessions are unique across
         /// all active publications on a driver instance.
@@ -183,20 +180,14 @@ namespace Adaptive.Aeron
         /// Get the registration used to register this Publication with the media driver by the first publisher.
         /// </summary>
         /// <returns> original registration id </returns>
-        public long OriginalRegistrationId()
-        {
-            return _originalRegistrationId;
-        }
+        public long OriginalRegistrationId => _originalRegistrationId;
 
         /// <summary>
         /// Is this Publication the original instance added to the driver? If not then it was added after another client
         /// has already added the publication.
         /// </summary>
         /// <returns> true if this instance is the first added otherwise false. </returns>
-        public bool IsOriginal()
-        {
-            return _originalRegistrationId == RegistrationId;
-        }
+        public bool IsOriginal => _originalRegistrationId == RegistrationId;
 
         /// <summary>
         /// Get the registration id used to register this Publication with the media driver.
@@ -242,24 +233,24 @@ namespace Adaptive.Aeron
         /// <returns> status for the channel as one of the constants from <seealso cref="ChannelEndpointStatus"/> with it being
         /// <seealso cref="ChannelEndpointStatus.NO_ID_ALLOCATED"/> if the publication is closed. </returns>
         /// <seealso cref="ChannelEndpointStatus"/>
-        public long ChannelStatus()
+        public long ChannelStatus
         {
-            if (_isClosed)
+            get
             {
-                return ChannelEndpointStatus.NO_ID_ALLOCATED;
-            }
+                if (_isClosed)
+                {
+                    return ChannelEndpointStatus.NO_ID_ALLOCATED;
+                }
 
-            return _conductor.ChannelStatus(_channelStatusId);
+                return _conductor.ChannelStatus(_channelStatusId);
+            }
         }
-        
+
         /// <summary>
         /// Get the counter used to represent the channel status for this publication.
         /// </summary>
         /// <returns> the counter used to represent the channel status for this publication. </returns>
-        public int ChannelStatusId()
-        {
-            return _channelStatusId;
-        }
+        public int ChannelStatusId => _channelStatusId;
 
         /// <summary>
         /// Get the current position to which the publication has advanced for this stream.
@@ -299,15 +290,12 @@ namespace Adaptive.Aeron
                 return _positionLimit.GetVolatile();
             }
         }
-        
+
         /// <summary>
         /// Get the counter id for the position limit after which the publication will be back pressured.
         /// </summary>
         /// <returns> the counter id for the position limit after which the publication will be back pressured. </returns>
-        public int PositionLimitId()
-        {
-            return _positionLimit.Id();
-        }
+        public int PositionLimitId => _positionLimit.Id();
 
         /// <summary>
         /// Non-blocking publish of a buffer containing a message.
@@ -385,8 +373,8 @@ namespace Adaptive.Aeron
         /// <seealso cref="BufferClaim.Abort()" />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public abstract long TryClaim(int length, BufferClaim bufferClaim);
-        
-       /// <summary>
+
+        /// <summary>
         /// Add a destination manually to a multi-destination-cast Publication.
         /// </summary>
         /// <param name="endpointChannel"> for the destination to add </param>
@@ -396,7 +384,7 @@ namespace Adaptive.Aeron
             {
                 throw new AeronException("Publication is closed.");
             }
-            
+
             _conductor.AddDestination(_originalRegistrationId, endpointChannel);
         }
 
@@ -410,7 +398,7 @@ namespace Adaptive.Aeron
             {
                 throw new AeronException("Publication is closed.");
             }
-            
+
             _conductor.RemoveDestination(_originalRegistrationId, endpointChannel);
         }
 
@@ -419,11 +407,8 @@ namespace Adaptive.Aeron
             _isClosed = true;
         }
 
-        internal LogBuffers LogBuffers()
-        {
-            return _logBuffers;
-        }
-        
+        internal LogBuffers LogBuffers => _logBuffers;
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected long BackPressureStatus(long currentPosition, int messageLength)
         {
