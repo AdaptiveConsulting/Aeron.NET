@@ -111,10 +111,7 @@ namespace Adaptive.Aeron
         /// The length in bytes of the MTU (Maximum Transmission Unit) the Sender used for the datagram.
         /// </summary>
         /// <returns> length in bytes of the MTU (Maximum Transmission Unit) the Sender used for the datagram. </returns>
-        public int MtuLength()
-        {
-            return LogBufferDescriptor.MtuLength(_logBuffers.MetaDataBuffer());
-        }
+        public int MtuLength => LogBufferDescriptor.MtuLength(_logBuffers.MetaDataBuffer());
 
         /// <summary>
         /// The initial term at which the stream started for this session.
@@ -144,64 +141,60 @@ namespace Adaptive.Aeron
         /// Get the position the subscriber joined this stream at.
         /// </summary>
         /// <returns> the position the subscriber joined this stream at.</returns>
-        public long JoinPosition()
-        {
-            return _joinPosition;
-        }
+        public long JoinPosition => _joinPosition;
 
         /// <summary>
         /// The position this <seealso cref="Image"/> has been consumed to by the subscriber.
         /// </summary>
         /// <returns> the position this <seealso cref="Image"/> has been consumed to by the subscriber. </returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public long Position()
+        public long Position
         {
-            if (_isClosed)
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get
             {
-                return _finalPosition;
+                if (_isClosed)
+                {
+                    return _finalPosition;
+                }
+
+                return _subscriberPosition.Get();
             }
 
-            return _subscriberPosition.Get();
-        }
-
-        /// <summary>
-        /// Set the subscriber position for this <seealso cref="Image"/> to indicate where it has been consumed to.
-        /// </summary>
-        /// <param name="newPosition"> for the consumption point. </param>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Position(long newPosition)
-        {
-            if (_isClosed)
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            set
             {
-                AeronThrowHelper.ThrowAeronException("Image is closed");
+                if (_isClosed)
+                {
+                    AeronThrowHelper.ThrowAeronException("Image is closed");
+                }
+
+                ValidatePosition(value);
+
+                _subscriberPosition.SetOrdered(value);
             }
-
-            ValidatePosition(newPosition);
-
-            _subscriberPosition.SetOrdered(newPosition);
         }
 
         /// <summary>
         /// The counter id for the subscriber position counter.
         /// </summary>
         /// <returns> the id for the subscriber position counter. </returns>
-        public int SubscriberPositionId()
-        {
-            return _subscriberPosition.Id();
-        }
+        public int SubscriberPositionId => _subscriberPosition.Id();
 
         /// <summary>
         /// Is the current consumed position at the end of the stream?
         /// </summary>
         /// <returns> true if at the end of the stream or false if not. </returns>
-        public bool IsEndOfStream()
+        public bool IsEndOfStream
         {
-            if (_isClosed)
+            get
             {
-                return _isEos;
-            }
+                if (_isClosed)
+                {
+                    return _isEos;
+                }
 
-            return _subscriberPosition.Get() >= LogBufferDescriptor.EndOfStreamPosition(_logBuffers.MetaDataBuffer());
+                return _subscriberPosition.Get() >= LogBufferDescriptor.EndOfStreamPosition(_logBuffers.MetaDataBuffer());
+            }
         }
 
         ///// <summary>
@@ -541,7 +534,7 @@ namespace Adaptive.Aeron
                         position += (offset - initialOffset);
                         initialOffset = offset;
                         resultingPosition = position;
-                        
+
                         continue;
                     }
 
@@ -696,11 +689,8 @@ namespace Adaptive.Aeron
             }
         }
 
-        internal LogBuffers LogBuffers()
-        {
-            return _logBuffers;
-        }
-
+        internal LogBuffers LogBuffers => _logBuffers;
+        
         internal void Close()
         {
             _finalPosition = _subscriberPosition.GetVolatile();

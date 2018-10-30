@@ -423,7 +423,7 @@ namespace Adaptive.Cluster.Service
                 {
                     if (adapter.Position() >= maxLogPosition)
                     {
-                        _consensusModuleProxy.Ack(image.Position(), ackId++, serviceId);
+                        _consensusModuleProxy.Ack(image.Position, ackId++, serviceId);
                         break;
                     }
 

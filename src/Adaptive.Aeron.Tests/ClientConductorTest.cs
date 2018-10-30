@@ -447,7 +447,7 @@ namespace Adaptive.Aeron.Tests
                 SESSION_ID_1 + "-log", 
                 SOURCE_INFO);
 
-            Assert.False(subscription.HasNoImages());
+            Assert.False(subscription.HasNoImages);
             Assert.True(subscription.IsConnected);
 
             A.CallTo(() => MockAvailableImageHandler(A<Image>._)).MustHaveHappened();
@@ -456,7 +456,7 @@ namespace Adaptive.Aeron.Tests
 
             A.CallTo(() => MockUnavailableImageHandler(A<Image>._)).MustHaveHappened();
 
-            Assert.True(subscription.HasNoImages());
+            Assert.True(subscription.HasNoImages);
             Assert.False(subscription.IsConnected);
         }
 

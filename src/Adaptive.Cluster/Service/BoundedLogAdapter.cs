@@ -47,12 +47,12 @@ namespace Adaptive.Cluster.Service
 
         public bool IsDone()
         {
-            return image.IsEndOfStream() || image.Closed;
+            return image.IsEndOfStream || image.Closed;
         }
 
         public long Position()
         {
-            return image.Position();
+            return image.Position;
         }
 
         public int Poll()

@@ -267,7 +267,7 @@ namespace Adaptive.Aeron
                     new UnsafeBufferPosition(_counterValuesBuffer, subscriberPositionId),
                     LogBuffers(correlationId, logFileName), _ctx.ErrorHandler(), sourceIdentity, correlationId);
 
-                AvailableImageHandler handler = subscription.AvailableImageHandler();
+                AvailableImageHandler handler = subscription.AvailableImageHandler;
                 if (null != handler)
                 {
                     _isInCallback = true;
@@ -298,7 +298,7 @@ namespace Adaptive.Aeron
                 Image image = subscription.RemoveImage(correlationId);
                 if (null != image)
                 {
-                    UnavailableImageHandler handler = subscription.UnavailableImageHandler();
+                    UnavailableImageHandler handler = subscription.UnavailableImageHandler;
                     if (null != handler)
                     {
                         _isInCallback = true;

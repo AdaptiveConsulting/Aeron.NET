@@ -129,20 +129,13 @@ namespace Adaptive.Aeron
         /// Callback used to indicate when an <see cref="Image"/> becomes available under this <see cref="Subscription"/>
         /// </summary>
         /// <returns> callback used to indicate when an <see cref="Image"/> becomes available under this <see cref="Subscription"/>.</returns>
-        public AvailableImageHandler AvailableImageHandler()
-        {
-            return _fields.availableImageHandler;
-        }
+        public AvailableImageHandler AvailableImageHandler => _fields.availableImageHandler;
 
         /// <summary>
         /// Callback used to indicate when an <see cref="Image"/> goes unavailable under this <see cref="Subscription"/>
         /// </summary>
         /// <returns> callback used to indicate when an <see cref="Image"/> goes unavailable under this <see cref="Subscription"/>.</returns>
-        public UnavailableImageHandler UnavailableImageHandler()
-        {
-            return _fields.unavailableImageHandler;
-        }
-
+        public UnavailableImageHandler UnavailableImageHandler => _fields.unavailableImageHandler;
 
         public int PollEndOfStreams(EndOfStreamHandler endOfStreamHandler)
         {
@@ -150,7 +143,7 @@ namespace Adaptive.Aeron
 
             foreach (var image in Images)
             {
-                if (image.IsEndOfStream())
+                if (image.IsEndOfStream)
                 {
                     numberEndOfStreams++;
                     endOfStreamHandler(image);
@@ -351,10 +344,7 @@ namespace Adaptive.Aeron
         /// Has this subscription currently no <see cref="Image"/>s?
         /// </summary>
         /// <returns> Has this subscription currently no <see cref="Image"/>s? </returns>
-        public bool HasNoImages()
-        {
-            return _fields.images.Length == 0;
-        }
+        public bool HasNoImages => _fields.images.Length == 0;
 
         /// <summary>
         /// Count of <see cref="Image"/>s associated to this subscription.
@@ -447,14 +437,17 @@ namespace Adaptive.Aeron
         /// <returns> status for the channel as one of the constants from <seealso cref="ChannelEndpointStatus"/> with it being
         /// <seealso cref="ChannelEndpointStatus.NO_ID_ALLOCATED"/> if the subscription is closed. </returns>
         /// <seealso cref="ChannelEndpointStatus"></seealso>
-        public long ChannelStatus()
+        public long ChannelStatus
         {
-            if (_fields.isClosed)
+            get
             {
-                return ChannelEndpointStatus.NO_ID_ALLOCATED;
-            }
+                if (_fields.isClosed)
+                {
+                    return ChannelEndpointStatus.NO_ID_ALLOCATED;
+                }
 
-            return _fields.conductor.ChannelStatus(ChannelStatusId);
+                return _fields.conductor.ChannelStatus(ChannelStatusId);
+            }
         }
 
         /// <summary>
@@ -526,9 +519,9 @@ namespace Adaptive.Aeron
             if (null != removedImage)
             {
                 _fields.images = ArrayUtil.Remove(oldArray, i);
-                _fields.conductor.ReleaseLogBuffers(removedImage.LogBuffers(), removedImage.CorrelationId);
+                _fields.conductor.ReleaseLogBuffers(removedImage.LogBuffers, removedImage.CorrelationId);
             }
-            
+
             return removedImage;
         }
 
@@ -544,7 +537,7 @@ namespace Adaptive.Aeron
 
             foreach (Image image in _fields.images)
             {
-                _fields.conductor.ReleaseLogBuffers(image.LogBuffers(), image.CorrelationId);
+                _fields.conductor.ReleaseLogBuffers(image.LogBuffers, image.CorrelationId);
 
                 try
                 {
