@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Threading;
 using Adaptive.Aeron.Exceptions;
 using Adaptive.Aeron.Status;
 using Adaptive.Agrona;
@@ -126,7 +127,7 @@ namespace Adaptive.Aeron
                     {
                         _lingeringResources[i].Delete();
                     }
-                    
+
                     _driverProxy.ClientClose();
                 }
             }
@@ -216,7 +217,7 @@ namespace Adaptive.Aeron
                 registrationId,
                 correlationId
             );
-            
+
             _resourceByRegIdMap[correlationId] = publication;
         }
 
@@ -240,7 +241,7 @@ namespace Adaptive.Aeron
                 registrationId,
                 correlationId
             );
-            
+
             _resourceByRegIdMap[correlationId] = publication;
         }
 
@@ -330,7 +331,7 @@ namespace Adaptive.Aeron
             if (null != _availableCounterHandler)
             {
                 _isInCallback = true;
-                
+
                 try
                 {
                     _availableCounterHandler(_countersReader, registrationId, counterId);
@@ -351,7 +352,7 @@ namespace Adaptive.Aeron
             if (null != _unavailableCounterHandler)
             {
                 _isInCallback = true;
-                
+
                 try
                 {
                     _unavailableCounterHandler(_countersReader, registrationId, counterId);
@@ -428,7 +429,7 @@ namespace Adaptive.Aeron
                     EnsureNotReentrant();
 
                     publication.InternalClose();
-                    
+
                     var removedPublication = _resourceByRegIdMap[publication.RegistrationId];
 
                     if (_resourceByRegIdMap.Remove(publication.RegistrationId) && publication == removedPublication)
@@ -481,7 +482,7 @@ namespace Adaptive.Aeron
                 {
                     EnsureOpen();
                     EnsureNotReentrant();
-                    
+
                     subscription.InternalClose();
 
                     long registrationId = subscription.RegistrationId;
@@ -526,7 +527,7 @@ namespace Adaptive.Aeron
                 _clientLock.Unlock();
             }
         }
-        
+
         internal void AddRcvDestination(long registrationId, string endpointChannel)
         {
             _clientLock.Lock();
@@ -550,7 +551,7 @@ namespace Adaptive.Aeron
             {
                 EnsureOpen();
                 EnsureNotReentrant();
-                
+
                 AwaitResponse(_driverProxy.RemoveRcvDestination(registrationId, endpointChannel));
             }
             finally
@@ -623,11 +624,14 @@ namespace Adaptive.Aeron
                 {
                     EnsureOpen();
                     EnsureNotReentrant();
-                    
+
                     counter.InternalClose();
                     long registrationId = counter.RegistrationId();
-                    AwaitResponse(_driverProxy.RemoveCounter(registrationId));
-                    _resourceByRegIdMap.Remove(registrationId);
+
+                    if (_resourceByRegIdMap.Remove(registrationId))
+                    {
+                        AwaitResponse(_driverProxy.RemoveCounter(registrationId));
+                    }
                 }
             }
             finally
@@ -731,7 +735,15 @@ namespace Adaptive.Aeron
 
             do
             {
-                Aeron.Sleep(1);
+                try
+                {
+                    Thread.Sleep(1);
+                }
+                catch (ThreadInterruptedException)
+                {
+                    Thread.CurrentThread.Interrupt();
+                    throw;
+                }
 
                 Service(correlationId);
 
@@ -744,7 +756,10 @@ namespace Adaptive.Aeron
 
                     return;
                 }
-            } while (_nanoClock.NanoTime() < deadlineNs);
+
+                Thread.Sleep(0); // check interrupt
+                
+            } while (deadlineNs - _nanoClock.NanoTime() > 0);
 
             throw new DriverTimeoutException("no response from MediaDriver within (ms):" + _driverTimeoutMs);
         }
@@ -754,21 +769,21 @@ namespace Adaptive.Aeron
             int workCount = 0;
             long nowNs = _nanoClock.NanoTime();
 
-            if (nowNs > (_timeOfLastServiceNs + Aeron.Configuration.IdleSleepNs))
+            if ((_timeOfLastServiceNs + Aeron.Configuration.IdleSleepNs) - nowNs < 0)
             {
-                checkServiceInterval(nowNs);
+                CheckServiceInterval(nowNs);
                 _timeOfLastServiceNs = nowNs;
 
-                workCount += checkLiveness(nowNs);
-                workCount += checkLingeringResources(nowNs);
+                workCount += CheckLiveness(nowNs);
+                workCount += CheckLingeringResources(nowNs);
             }
 
             return workCount;
         }
 
-        private void checkServiceInterval(long nowNs)
+        private void CheckServiceInterval(long nowNs)
         {
-            if (nowNs > (_timeOfLastServiceNs + _interServiceTimeoutNs))
+            if ((_timeOfLastServiceNs + _interServiceTimeoutNs) - nowNs < 0)
             {
                 int lingeringResourcesSize = _lingeringResources.Count;
 
@@ -785,9 +800,9 @@ namespace Adaptive.Aeron
             }
         }
 
-        private int checkLiveness(long nowNs)
+        private int CheckLiveness(long nowNs)
         {
-            if (nowNs > (_timeOfLastKeepAliveNs + _keepAliveIntervalNs))
+            if ((_timeOfLastKeepAliveNs + _keepAliveIntervalNs) - nowNs < 0)
             {
                 if (_epochClock.Time() > (_driverProxy.TimeOfLastDriverKeepaliveMs() + _driverTimeoutMs))
                 {
@@ -805,7 +820,7 @@ namespace Adaptive.Aeron
             return 0;
         }
 
-        private int checkLingeringResources(long nowNs)
+        private int CheckLingeringResources(long nowNs)
         {
             int workCount = 0;
 
@@ -814,8 +829,8 @@ namespace Adaptive.Aeron
             for (int lastIndex = lingeringResources.Count - 1, i = lastIndex; i >= 0; i--)
             {
                 IManagedResource resource = lingeringResources[i];
-                
-                if (nowNs > (resource.TimeOfLastStateChange() + _ctx.ResourceLingerDurationNs()))
+
+                if ((resource.TimeOfLastStateChange() + _ctx.ResourceLingerDurationNs()) - nowNs < 0)
                 {
                     ListUtil.FastUnorderedRemove(lingeringResources, i, lastIndex--);
                     resource.Delete();

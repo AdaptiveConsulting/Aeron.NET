@@ -5,21 +5,27 @@
     /// </summary>
     internal class ActiveLogEvent
     {
-        public long leadershipTermId { get; }
-        public int commitPositionId { get; }
-        public int sessionId { get; }
-        public int streamId { get; }
-        public string channel { get; }
+        public readonly long leadershipTermId;
+        public readonly long logPosition;
+        public readonly long maxLogPosition;
+        public readonly int memberId;
+        public readonly int sessionId;
+        public readonly int streamId;
+        public readonly string channel;
 
         internal ActiveLogEvent(
             long leadershipTermId,
-            int commitPositionId,
+            long logPosition,
+            long maxLogPosition,
+            int memberId,
             int sessionId,
             int streamId,
             string channel)
         {
             this.leadershipTermId = leadershipTermId;
-            this.commitPositionId = commitPositionId;
+            this.logPosition = logPosition;
+            this.maxLogPosition = maxLogPosition;
+            this.memberId = memberId;
             this.sessionId = sessionId;
             this.streamId = streamId;
             this.channel = channel;
@@ -29,7 +35,9 @@
         {
             return "NewActiveLogEvent{"
                    + "leadershipTermId=" + leadershipTermId
-                   + ", commitPositionId=" + commitPositionId
+                   + ", logPosition=" + logPosition
+                   + ", maxLogPosition=" + maxLogPosition
+                   + ", memberId=" + memberId
                    + ", sessionId=" + sessionId
                    + ", streamId=" + streamId
                    + ", channel='" + channel + "'"

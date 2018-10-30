@@ -7,19 +7,19 @@ using Adaptive.Agrona;
 
 namespace Adaptive.Cluster.Codecs {
 
-public class SessionOpenEventEncoder
+public class ClusterMembersResponseEncoder
 {
-    public const ushort BLOCK_LENGTH = 36;
-    public const ushort TEMPLATE_ID = 22;
+    public const ushort BLOCK_LENGTH = 12;
+    public const ushort TEMPLATE_ID = 41;
     public const ushort SCHEMA_ID = 1;
     public const ushort SCHEMA_VERSION = 1;
 
-    private SessionOpenEventEncoder _parentMessage;
+    private ClusterMembersResponseEncoder _parentMessage;
     private IMutableDirectBuffer _buffer;
     protected int _offset;
     protected int _limit;
 
-    public SessionOpenEventEncoder()
+    public ClusterMembersResponseEncoder()
     {
         _parentMessage = this;
     }
@@ -59,7 +59,7 @@ public class SessionOpenEventEncoder
         return _offset;
     }
 
-    public SessionOpenEventEncoder Wrap(IMutableDirectBuffer buffer, int offset)
+    public ClusterMembersResponseEncoder Wrap(IMutableDirectBuffer buffer, int offset)
     {
         this._buffer = buffer;
         this._offset = offset;
@@ -68,7 +68,7 @@ public class SessionOpenEventEncoder
         return this;
     }
 
-    public SessionOpenEventEncoder WrapAndApplyHeader(
+    public ClusterMembersResponseEncoder WrapAndApplyHeader(
         IMutableDirectBuffer buffer, int offset, MessageHeaderEncoder headerEncoder)
     {
         headerEncoder
@@ -96,41 +96,9 @@ public class SessionOpenEventEncoder
         this._limit = limit;
     }
 
-    public static int LeadershipTermIdEncodingOffset()
-    {
-        return 0;
-    }
-
-    public static int LeadershipTermIdEncodingLength()
-    {
-        return 8;
-    }
-
-    public static long LeadershipTermIdNullValue()
-    {
-        return -9223372036854775808L;
-    }
-
-    public static long LeadershipTermIdMinValue()
-    {
-        return -9223372036854775807L;
-    }
-
-    public static long LeadershipTermIdMaxValue()
-    {
-        return 9223372036854775807L;
-    }
-
-    public SessionOpenEventEncoder LeadershipTermId(long value)
-    {
-        _buffer.PutLong(_offset + 0, value, ByteOrder.LittleEndian);
-        return this;
-    }
-
-
     public static int CorrelationIdEncodingOffset()
     {
-        return 8;
+        return 0;
     }
 
     public static int CorrelationIdEncodingLength()
@@ -153,120 +121,56 @@ public class SessionOpenEventEncoder
         return 9223372036854775807L;
     }
 
-    public SessionOpenEventEncoder CorrelationId(long value)
+    public ClusterMembersResponseEncoder CorrelationId(long value)
     {
-        _buffer.PutLong(_offset + 8, value, ByteOrder.LittleEndian);
+        _buffer.PutLong(_offset + 0, value, ByteOrder.LittleEndian);
         return this;
     }
 
 
-    public static int ClusterSessionIdEncodingOffset()
-    {
-        return 16;
-    }
-
-    public static int ClusterSessionIdEncodingLength()
+    public static int LeaderMemberIdEncodingOffset()
     {
         return 8;
     }
 
-    public static long ClusterSessionIdNullValue()
-    {
-        return -9223372036854775808L;
-    }
-
-    public static long ClusterSessionIdMinValue()
-    {
-        return -9223372036854775807L;
-    }
-
-    public static long ClusterSessionIdMaxValue()
-    {
-        return 9223372036854775807L;
-    }
-
-    public SessionOpenEventEncoder ClusterSessionId(long value)
-    {
-        _buffer.PutLong(_offset + 16, value, ByteOrder.LittleEndian);
-        return this;
-    }
-
-
-    public static int TimestampEncodingOffset()
-    {
-        return 24;
-    }
-
-    public static int TimestampEncodingLength()
-    {
-        return 8;
-    }
-
-    public static long TimestampNullValue()
-    {
-        return -9223372036854775808L;
-    }
-
-    public static long TimestampMinValue()
-    {
-        return -9223372036854775807L;
-    }
-
-    public static long TimestampMaxValue()
-    {
-        return 9223372036854775807L;
-    }
-
-    public SessionOpenEventEncoder Timestamp(long value)
-    {
-        _buffer.PutLong(_offset + 24, value, ByteOrder.LittleEndian);
-        return this;
-    }
-
-
-    public static int ResponseStreamIdEncodingOffset()
-    {
-        return 32;
-    }
-
-    public static int ResponseStreamIdEncodingLength()
+    public static int LeaderMemberIdEncodingLength()
     {
         return 4;
     }
 
-    public static int ResponseStreamIdNullValue()
+    public static int LeaderMemberIdNullValue()
     {
         return -2147483648;
     }
 
-    public static int ResponseStreamIdMinValue()
+    public static int LeaderMemberIdMinValue()
     {
         return -2147483647;
     }
 
-    public static int ResponseStreamIdMaxValue()
+    public static int LeaderMemberIdMaxValue()
     {
         return 2147483647;
     }
 
-    public SessionOpenEventEncoder ResponseStreamId(int value)
+    public ClusterMembersResponseEncoder LeaderMemberId(int value)
     {
-        _buffer.PutInt(_offset + 32, value, ByteOrder.LittleEndian);
+        _buffer.PutInt(_offset + 8, value, ByteOrder.LittleEndian);
         return this;
     }
 
 
-    public static int ResponseChannelId()
+    public static int ActiveMembersId()
     {
-        return 7;
+        return 3;
     }
 
-    public static string ResponseChannelCharacterEncoding()
+    public static string ActiveMembersCharacterEncoding()
     {
         return "US-ASCII";
     }
 
-    public static string ResponseChannelMetaAttribute(MetaAttribute metaAttribute)
+    public static string ActiveMembersMetaAttribute(MetaAttribute metaAttribute)
     {
         switch (metaAttribute)
         {
@@ -279,12 +183,12 @@ public class SessionOpenEventEncoder
         return "";
     }
 
-    public static int ResponseChannelHeaderLength()
+    public static int ActiveMembersHeaderLength()
     {
         return 4;
     }
 
-    public SessionOpenEventEncoder PutResponseChannel(IDirectBuffer src, int srcOffset, int length)
+    public ClusterMembersResponseEncoder PutActiveMembers(IDirectBuffer src, int srcOffset, int length)
     {
         if (length > 1073741824)
         {
@@ -300,7 +204,7 @@ public class SessionOpenEventEncoder
         return this;
     }
 
-    public SessionOpenEventEncoder PutResponseChannel(byte[] src, int srcOffset, int length)
+    public ClusterMembersResponseEncoder PutActiveMembers(byte[] src, int srcOffset, int length)
     {
         if (length > 1073741824)
         {
@@ -316,7 +220,7 @@ public class SessionOpenEventEncoder
         return this;
     }
 
-    public SessionOpenEventEncoder ResponseChannel(string value)
+    public ClusterMembersResponseEncoder ActiveMembers(string value)
     {
         int length = value.Length;
         if (length > 1073741824)
@@ -333,12 +237,17 @@ public class SessionOpenEventEncoder
         return this;
     }
 
-    public static int EncodedPrincipalId()
+    public static int PassiveFollowersId()
     {
-        return 8;
+        return 4;
     }
 
-    public static string EncodedPrincipalMetaAttribute(MetaAttribute metaAttribute)
+    public static string PassiveFollowersCharacterEncoding()
+    {
+        return "US-ASCII";
+    }
+
+    public static string PassiveFollowersMetaAttribute(MetaAttribute metaAttribute)
     {
         switch (metaAttribute)
         {
@@ -351,12 +260,12 @@ public class SessionOpenEventEncoder
         return "";
     }
 
-    public static int EncodedPrincipalHeaderLength()
+    public static int PassiveFollowersHeaderLength()
     {
         return 4;
     }
 
-    public SessionOpenEventEncoder PutEncodedPrincipal(IDirectBuffer src, int srcOffset, int length)
+    public ClusterMembersResponseEncoder PutPassiveFollowers(IDirectBuffer src, int srcOffset, int length)
     {
         if (length > 1073741824)
         {
@@ -372,7 +281,7 @@ public class SessionOpenEventEncoder
         return this;
     }
 
-    public SessionOpenEventEncoder PutEncodedPrincipal(byte[] src, int srcOffset, int length)
+    public ClusterMembersResponseEncoder PutPassiveFollowers(byte[] src, int srcOffset, int length)
     {
         if (length > 1073741824)
         {
@@ -384,6 +293,23 @@ public class SessionOpenEventEncoder
         _parentMessage.Limit(limit + headerLength + length);
         _buffer.PutInt(limit, unchecked((int)length), ByteOrder.LittleEndian);
         _buffer.PutBytes(limit + headerLength, src, srcOffset, length);
+
+        return this;
+    }
+
+    public ClusterMembersResponseEncoder PassiveFollowers(string value)
+    {
+        int length = value.Length;
+        if (length > 1073741824)
+        {
+            throw new InvalidOperationException("length > maxValue for type: " + length);
+        }
+
+        int headerLength = 4;
+        int limit = _parentMessage.Limit();
+        _parentMessage.Limit(limit + headerLength + length);
+        _buffer.PutInt(limit, unchecked((int)length), ByteOrder.LittleEndian);
+        _buffer.PutStringWithoutLengthAscii(limit + headerLength, value);
 
         return this;
     }
@@ -396,7 +322,7 @@ public class SessionOpenEventEncoder
 
     public StringBuilder AppendTo(StringBuilder builder)
     {
-        SessionOpenEventDecoder writer = new SessionOpenEventDecoder();
+        ClusterMembersResponseDecoder writer = new ClusterMembersResponseDecoder();
         writer.Wrap(_buffer, _offset, BLOCK_LENGTH, SCHEMA_VERSION);
 
         return writer.AppendTo(builder);

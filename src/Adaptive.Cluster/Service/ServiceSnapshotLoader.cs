@@ -91,7 +91,6 @@ namespace Adaptive.Cluster.Service
 
                     agent.AddSession(
                         clientSessionDecoder.ClusterSessionId(),
-                        clientSessionDecoder.LastCorrelationId(),
                         clientSessionDecoder.ResponseStreamId(),
                         responseChannel,
                         encodedPrincipal);

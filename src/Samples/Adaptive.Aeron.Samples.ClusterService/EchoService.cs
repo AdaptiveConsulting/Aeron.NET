@@ -26,13 +26,13 @@ namespace Adaptive.Aeron.Samples.ClusterService
             Console.WriteLine($"OnSessionClose: sessionId={session.Id()}, timestamp={timestampMs}");
         }
 
-        public void OnSessionMessage(ClientSession session, long correlationId, long timestampMs, IDirectBuffer buffer, int offset, int length, Header header)
+        public void OnSessionMessage(ClientSession session, long timestampMs, IDirectBuffer buffer, int offset, int length, Header header)
         {
-            Console.WriteLine($"OnSessionMessage: sessionId={session.Id()}, timestamp={timestampMs}, correlationId={correlationId}, length={length}");
+            Console.WriteLine($"OnSessionMessage: sessionId={session.Id()}, timestamp={timestampMs}, length={length}");
 
             Console.WriteLine("Received Message: " + buffer.GetStringWithoutLengthUtf8(offset, length));
             
-            while (session.Offer(correlationId, buffer, offset, length) <= 0)
+            while (session.Offer(buffer, offset, length) <= 0)
             {
                 _cluster.Idle();
             }

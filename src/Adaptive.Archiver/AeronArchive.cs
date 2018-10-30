@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using Adaptive.Aeron;
 using Adaptive.Agrona;
 using Adaptive.Agrona.Concurrent;
@@ -399,7 +400,7 @@ namespace Adaptive.Archiver
         /// <param name="channel">        to be recorded. </param>
         /// <param name="streamId">       to be recorded. </param>
         /// <param name="sourceLocation"> of the publication to be recorded. </param>
-        /// <returns> the subscriptionId of the recording. </returns>
+        /// <returns> the subscriptionId, i.e. <see cref="Subscription.RegistrationId"/>, of the recording. </returns>
         public long StartRecording(string channel, int streamId, SourceLocation sourceLocation)
         {
             _lock.Lock();
@@ -431,7 +432,7 @@ namespace Adaptive.Archiver
         /// <param name="channel">        to be recorded. </param>
         /// <param name="streamId">       to be recorded. </param>
         /// <param name="sourceLocation"> of the publication to be recorded. </param>
-        /// <returns> the subscriptionId of the recording. </returns>
+        /// <returns> the subscriptionId, i.e. <see cref="Subscription.RegistrationId"/>, of the recording. </returns>
         public long ExtendRecording(long recordingId, string channel, int streamId,
             SourceLocation sourceLocation)
         {
@@ -783,6 +784,60 @@ namespace Adaptive.Archiver
         }
 
         /// <summary>
+        /// Get the stop position for a recording.
+        /// </summary>
+        /// <param name="recordingId"> of the active recording for which the position is required. </param>
+        /// <returns> the stop position, or <seealso cref="AeronArchive.NULL_POSITION"/> if still active. </returns>
+        public long GetStopPosition(long recordingId)
+        {
+            _lock.Lock();
+            try
+            {
+                long correlationId = aeron.NextCorrelationId();
+
+                if (!archiveProxy.GetStopPosition(recordingId, correlationId, controlSessionId))
+                {
+                    throw new ArchiveException("failed to send get stop position request");
+                }
+
+                return PollForResponse(correlationId);
+            }
+            finally
+            {
+                _lock.Unlock();
+            }
+        }
+
+        /// <summary>
+        /// Find the last recording that matches the given criteria.
+        /// </summary>
+        /// <param name="minRecordingId"> to search back to. </param>
+        /// <param name="channel">        for a contains match on the stripped channel stored with the archive descriptor </param>
+        /// <param name="streamId">       of the recording to match. </param>
+        /// <param name="sessionId">      of the recording to match. </param>
+        /// <returns> the recordingId if found otherwise <seealso cref="Aeron.NULL_VALUE"/> if not found. </returns>
+        public long FindLastMatchingRecording(long minRecordingId, string channel, int streamId, int sessionId)
+        {
+            _lock.Lock();
+            try
+            {
+                long correlationId = aeron.NextCorrelationId();
+
+                if (!archiveProxy.FindLastMatchingRecording(
+                    minRecordingId, channel, streamId, sessionId, correlationId, controlSessionId))
+                {
+                    throw new ArchiveException("failed to send find last matching request");
+                }
+
+                return PollForResponse(correlationId);
+            }
+            finally
+            {
+                _lock.Unlock();
+            }
+        }
+
+        /// <summary>
         /// Truncate a stopped recording to a given position that is less than the stopped position. The provided position
         /// must be on a fragment boundary. Truncating a recording to the start position effectively deletes the recording.
         /// </summary>
@@ -808,12 +863,22 @@ namespace Adaptive.Archiver
             }
         }
 
+        private void CheckDeadline(long deadlineNs, string errorMessage, long correlationId)
+        {
+            Thread.Sleep(0); // allow thread to be interrupted
+
+            if (deadlineNs - nanoClock.NanoTime() < 0)
+            {
+                throw new TimeoutException(errorMessage + " - correlationId=" + correlationId);
+            }
+        }
+
         private long AwaitSessionOpened(long correlationId)
         {
             long deadlineNs = nanoClock.NanoTime() + messageTimeoutNs;
             ControlResponsePoller poller = controlResponsePoller;
 
-            AwaitConnection(deadlineNs, poller);
+            AwaitConnection(deadlineNs, poller, correlationId);
 
             while (true)
             {
@@ -841,17 +906,13 @@ namespace Adaptive.Archiver
             }
         }
 
-        private void AwaitConnection(long deadlineNs, ControlResponsePoller poller)
+        private void AwaitConnection(long deadlineNs, ControlResponsePoller poller, long correlationId)
         {
             idleStrategy.Reset();
 
             while (!poller.Subscription().IsConnected)
             {
-                if (nanoClock.NanoTime() > deadlineNs)
-                {
-                    throw new TimeoutException("failed to establish response connection");
-                }
-
+                CheckDeadline(deadlineNs, "failed to establish response connection", correlationId);
                 idleStrategy.Idle();
                 InvokeAeronClient();
             }
@@ -915,10 +976,7 @@ namespace Adaptive.Archiver
                     throw new ArchiveException("subscription to archive is not connected");
                 }
 
-                if (nanoClock.NanoTime() > deadlineNs)
-                {
-                    throw new TimeoutException("awaiting response for correlationId=" + correlationId);
-                }
+                CheckDeadline(deadlineNs, "awaiting response", correlationId);
 
                 idleStrategy.Idle();
                 InvokeAeronClient();
@@ -927,6 +985,7 @@ namespace Adaptive.Archiver
 
         private int PollForDescriptors(long correlationId, int recordCount, IRecordingDescriptorConsumer consumer)
         {
+            int existingRemainCount = recordCount;
             long deadlineNs = nanoClock.NanoTime() + messageTimeoutNs;
             RecordingDescriptorPoller poller = recordingDescriptorPoller;
             poller.Reset(correlationId, recordCount, consumer);
@@ -935,10 +994,17 @@ namespace Adaptive.Archiver
             while (true)
             {
                 int fragments = poller.Poll();
+                int remainingRecordCount = poller.RemainingRecordCount();
 
                 if (poller.IsDispatchComplete())
                 {
-                    return recordCount - poller.RemainingRecordCount();
+                    return recordCount - remainingRecordCount;
+                }
+
+                if (remainingRecordCount != existingRemainCount)
+                {
+                    existingRemainCount = remainingRecordCount;
+                    deadlineNs = nanoClock.NanoTime() + messageTimeoutNs;
                 }
 
                 InvokeAeronClient();
@@ -953,11 +1019,7 @@ namespace Adaptive.Archiver
                     throw new ArchiveException("subscription to archive is not connected");
                 }
 
-                if (nanoClock.NanoTime() > deadlineNs)
-                {
-                    throw new TimeoutException("awaiting recording descriptors: correlationId=" + correlationId);
-                }
-
+                CheckDeadline(deadlineNs, "awaiting recording descriptors", correlationId);
                 idleStrategy.Idle();
             }
         }
@@ -1442,7 +1504,7 @@ namespace Adaptive.Archiver
             {
                 return controlResponseStreamId;
             }
-            
+
             /// <summary>
             /// Should the control streams use sparse file term buffers.
             /// </summary>

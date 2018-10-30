@@ -7,7 +7,7 @@ using Adaptive.Cluster.Codecs;
 
 namespace Adaptive.Cluster.Service
 {
-    internal class ConsensusModuleProxy : IDisposable
+    public class ConsensusModuleProxy : IDisposable
     {
         private const int SEND_ATTEMPTS = 3;
 
@@ -17,9 +17,11 @@ namespace Adaptive.Cluster.Service
         private readonly CancelTimerEncoder _cancelTimerEncoder = new CancelTimerEncoder();
         private readonly ServiceAckEncoder _serviceAckEncoder = new ServiceAckEncoder();
         private readonly CloseSessionEncoder _closeSessionEncoder = new CloseSessionEncoder();
+        private readonly ClusterMembersQueryEncoder _clusterMembersQueryEncoder = new ClusterMembersQueryEncoder();
+        private readonly RemoveMemberEncoder _removeMemberEncoder = new RemoveMemberEncoder();
         private readonly Publication _publication;
 
-        internal ConsensusModuleProxy(Publication publication)
+        public ConsensusModuleProxy(Publication publication)
         {
             _publication = publication;
         }
@@ -33,7 +35,7 @@ namespace Adaptive.Cluster.Service
         {
             return _publication.IsConnected;
         }
-        
+
         public bool ScheduleTimer(long correlationId, long deadlineMs)
         {
             int length = MessageHeaderEncoder.ENCODED_LENGTH + ScheduleTimerEncoder.BLOCK_LENGTH;
@@ -89,7 +91,7 @@ namespace Adaptive.Cluster.Service
         {
             Ack(logPosition, ackId, Aeron.Aeron.NULL_VALUE, serviceId);
         }
-        
+
         public void Ack(long logPosition, long ackId, long relevantId, int serviceId)
         {
             int length = MessageHeaderEncoder.ENCODED_LENGTH + ServiceAckEncoder.BLOCK_LENGTH;
@@ -117,7 +119,7 @@ namespace Adaptive.Cluster.Service
 
             throw new ClusterException("failed to send ACK");
         }
-        
+
         public bool CloseSession(long clusterSessionId)
         {
             int length = MessageHeaderEncoder.ENCODED_LENGTH + CloseSessionEncoder.BLOCK_LENGTH;
@@ -131,6 +133,58 @@ namespace Adaptive.Cluster.Service
                     _closeSessionEncoder
                         .WrapAndApplyHeader(_bufferClaim.Buffer, _bufferClaim.Offset, _messageHeaderEncoder)
                         .ClusterSessionId(clusterSessionId);
+
+                    _bufferClaim.Commit();
+
+                    return true;
+                }
+
+                CheckResult(result);
+            } while (--attempts > 0);
+
+            return false;
+        }
+
+        public bool ClusterMembersQuery(long correlationId)
+        {
+            int length = MessageHeaderEncoder.ENCODED_LENGTH + ClusterMembersQueryEncoder.BLOCK_LENGTH;
+
+            int attempts = SEND_ATTEMPTS;
+            do
+            {
+                long result = _publication.TryClaim(length, _bufferClaim);
+                if (result > 0)
+                {
+                    _clusterMembersQueryEncoder
+                        .WrapAndApplyHeader(_bufferClaim.Buffer, _bufferClaim.Offset, _messageHeaderEncoder)
+                        .CorrelationId(correlationId);
+
+                    _bufferClaim.Commit();
+
+                    return true;
+                }
+
+                CheckResult(result);
+            } while (--attempts > 0);
+
+            return false;
+        }
+
+        public bool RemoveMember(long correlationId, int memberId, BooleanType isPassive)
+        {
+            int length = MessageHeaderEncoder.ENCODED_LENGTH + RemoveMemberEncoder.BLOCK_LENGTH;
+
+            int attempts = SEND_ATTEMPTS;
+            do
+            {
+                long result = _publication.TryClaim(length, _bufferClaim);
+                if (result > 0)
+                {
+                    _removeMemberEncoder
+                        .WrapAndApplyHeader(_bufferClaim.Buffer, _bufferClaim.Offset, _messageHeaderEncoder)
+                        .CorrelationId(correlationId)
+                        .MemberId(memberId)
+                        .IsPassive(isPassive);
 
                     _bufferClaim.Commit();
 

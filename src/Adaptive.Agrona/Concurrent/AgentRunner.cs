@@ -188,11 +188,12 @@ namespace Adaptive.Agrona.Concurrent
                         }
 
                         Console.Error.WriteLine($"Timeout waiting for agent '{_agent.RoleName()}' to close, Retrying...");
-
+                        
                         thread.Interrupt();
                     }
                     catch (ThreadInterruptedException)
                     {
+                        System.Threading.Thread.CurrentThread.Interrupt();
                         return;
                     }
                 }
@@ -207,6 +208,7 @@ namespace Adaptive.Agrona.Concurrent
             }
             catch (ThreadInterruptedException)
             {
+                System.Threading.Thread.CurrentThread.Interrupt();
                 return true;
             }
             catch (AgentTerminationException ex)

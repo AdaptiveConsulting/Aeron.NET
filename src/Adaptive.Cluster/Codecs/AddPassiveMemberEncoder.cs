@@ -7,19 +7,19 @@ using Adaptive.Agrona;
 
 namespace Adaptive.Cluster.Codecs {
 
-public class ClusterMembersEncoder
+public class AddPassiveMemberEncoder
 {
     public const ushort BLOCK_LENGTH = 8;
-    public const ushort TEMPLATE_ID = 106;
+    public const ushort TEMPLATE_ID = 70;
     public const ushort SCHEMA_ID = 1;
     public const ushort SCHEMA_VERSION = 1;
 
-    private ClusterMembersEncoder _parentMessage;
+    private AddPassiveMemberEncoder _parentMessage;
     private IMutableDirectBuffer _buffer;
     protected int _offset;
     protected int _limit;
 
-    public ClusterMembersEncoder()
+    public AddPassiveMemberEncoder()
     {
         _parentMessage = this;
     }
@@ -59,7 +59,7 @@ public class ClusterMembersEncoder
         return _offset;
     }
 
-    public ClusterMembersEncoder Wrap(IMutableDirectBuffer buffer, int offset)
+    public AddPassiveMemberEncoder Wrap(IMutableDirectBuffer buffer, int offset)
     {
         this._buffer = buffer;
         this._offset = offset;
@@ -68,7 +68,7 @@ public class ClusterMembersEncoder
         return this;
     }
 
-    public ClusterMembersEncoder WrapAndApplyHeader(
+    public AddPassiveMemberEncoder WrapAndApplyHeader(
         IMutableDirectBuffer buffer, int offset, MessageHeaderEncoder headerEncoder)
     {
         headerEncoder
@@ -96,81 +96,49 @@ public class ClusterMembersEncoder
         this._limit = limit;
     }
 
-    public static int MemberIdEncodingOffset()
+    public static int CorrelationIdEncodingOffset()
     {
         return 0;
     }
 
-    public static int MemberIdEncodingLength()
+    public static int CorrelationIdEncodingLength()
     {
-        return 4;
+        return 8;
     }
 
-    public static int MemberIdNullValue()
+    public static long CorrelationIdNullValue()
     {
-        return -2147483648;
+        return -9223372036854775808L;
     }
 
-    public static int MemberIdMinValue()
+    public static long CorrelationIdMinValue()
     {
-        return -2147483647;
+        return -9223372036854775807L;
     }
 
-    public static int MemberIdMaxValue()
+    public static long CorrelationIdMaxValue()
     {
-        return 2147483647;
+        return 9223372036854775807L;
     }
 
-    public ClusterMembersEncoder MemberId(int value)
+    public AddPassiveMemberEncoder CorrelationId(long value)
     {
-        _buffer.PutInt(_offset + 0, value, ByteOrder.LittleEndian);
+        _buffer.PutLong(_offset + 0, value, ByteOrder.LittleEndian);
         return this;
     }
 
 
-    public static int HighMemberIdEncodingOffset()
+    public static int MemberEndpointsId()
     {
-        return 4;
+        return 2;
     }
 
-    public static int HighMemberIdEncodingLength()
-    {
-        return 4;
-    }
-
-    public static int HighMemberIdNullValue()
-    {
-        return -2147483648;
-    }
-
-    public static int HighMemberIdMinValue()
-    {
-        return -2147483647;
-    }
-
-    public static int HighMemberIdMaxValue()
-    {
-        return 2147483647;
-    }
-
-    public ClusterMembersEncoder HighMemberId(int value)
-    {
-        _buffer.PutInt(_offset + 4, value, ByteOrder.LittleEndian);
-        return this;
-    }
-
-
-    public static int ClusterMembersId()
-    {
-        return 3;
-    }
-
-    public static string ClusterMembersCharacterEncoding()
+    public static string MemberEndpointsCharacterEncoding()
     {
         return "US-ASCII";
     }
 
-    public static string ClusterMembersMetaAttribute(MetaAttribute metaAttribute)
+    public static string MemberEndpointsMetaAttribute(MetaAttribute metaAttribute)
     {
         switch (metaAttribute)
         {
@@ -183,12 +151,12 @@ public class ClusterMembersEncoder
         return "";
     }
 
-    public static int ClusterMembersHeaderLength()
+    public static int MemberEndpointsHeaderLength()
     {
         return 4;
     }
 
-    public ClusterMembersEncoder PutClusterMembers(IDirectBuffer src, int srcOffset, int length)
+    public AddPassiveMemberEncoder PutMemberEndpoints(IDirectBuffer src, int srcOffset, int length)
     {
         if (length > 1073741824)
         {
@@ -204,7 +172,7 @@ public class ClusterMembersEncoder
         return this;
     }
 
-    public ClusterMembersEncoder PutClusterMembers(byte[] src, int srcOffset, int length)
+    public AddPassiveMemberEncoder PutMemberEndpoints(byte[] src, int srcOffset, int length)
     {
         if (length > 1073741824)
         {
@@ -220,7 +188,7 @@ public class ClusterMembersEncoder
         return this;
     }
 
-    public ClusterMembersEncoder ClusterMembers(string value)
+    public AddPassiveMemberEncoder MemberEndpoints(string value)
     {
         int length = value.Length;
         if (length > 1073741824)
@@ -245,7 +213,7 @@ public class ClusterMembersEncoder
 
     public StringBuilder AppendTo(StringBuilder builder)
     {
-        ClusterMembersDecoder writer = new ClusterMembersDecoder();
+        AddPassiveMemberDecoder writer = new AddPassiveMemberDecoder();
         writer.Wrap(_buffer, _offset, BLOCK_LENGTH, SCHEMA_VERSION);
 
         return writer.AppendTo(builder);

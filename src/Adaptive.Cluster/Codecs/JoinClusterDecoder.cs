@@ -10,7 +10,7 @@ namespace Adaptive.Cluster.Codecs {
 public class JoinClusterDecoder
 {
     public const ushort BLOCK_LENGTH = 12;
-    public const ushort TEMPLATE_ID = 75;
+    public const ushort TEMPLATE_ID = 74;
     public const ushort SCHEMA_ID = 1;
     public const ushort SCHEMA_VERSION = 1;
 

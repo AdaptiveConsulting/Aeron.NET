@@ -5,21 +5,21 @@ using System.Collections.Generic;
 using Adaptive.Agrona;
 
 
-namespace Adaptive.Cluster.Codecs {
+namespace Adaptive.Archiver.Codecs {
 
-public class AddClusterMemberEncoder
+public class FindLastMatchingRecordingRequestEncoder
 {
-    public const ushort BLOCK_LENGTH = 8;
-    public const ushort TEMPLATE_ID = 70;
+    public const ushort BLOCK_LENGTH = 32;
+    public const ushort TEMPLATE_ID = 16;
     public const ushort SCHEMA_ID = 1;
-    public const ushort SCHEMA_VERSION = 1;
+    public const ushort SCHEMA_VERSION = 0;
 
-    private AddClusterMemberEncoder _parentMessage;
+    private FindLastMatchingRecordingRequestEncoder _parentMessage;
     private IMutableDirectBuffer _buffer;
     protected int _offset;
     protected int _limit;
 
-    public AddClusterMemberEncoder()
+    public FindLastMatchingRecordingRequestEncoder()
     {
         _parentMessage = this;
     }
@@ -59,7 +59,7 @@ public class AddClusterMemberEncoder
         return _offset;
     }
 
-    public AddClusterMemberEncoder Wrap(IMutableDirectBuffer buffer, int offset)
+    public FindLastMatchingRecordingRequestEncoder Wrap(IMutableDirectBuffer buffer, int offset)
     {
         this._buffer = buffer;
         this._offset = offset;
@@ -68,7 +68,7 @@ public class AddClusterMemberEncoder
         return this;
     }
 
-    public AddClusterMemberEncoder WrapAndApplyHeader(
+    public FindLastMatchingRecordingRequestEncoder WrapAndApplyHeader(
         IMutableDirectBuffer buffer, int offset, MessageHeaderEncoder headerEncoder)
     {
         headerEncoder
@@ -96,9 +96,41 @@ public class AddClusterMemberEncoder
         this._limit = limit;
     }
 
-    public static int CorrelationIdEncodingOffset()
+    public static int ControlSessionIdEncodingOffset()
     {
         return 0;
+    }
+
+    public static int ControlSessionIdEncodingLength()
+    {
+        return 8;
+    }
+
+    public static long ControlSessionIdNullValue()
+    {
+        return -9223372036854775808L;
+    }
+
+    public static long ControlSessionIdMinValue()
+    {
+        return -9223372036854775807L;
+    }
+
+    public static long ControlSessionIdMaxValue()
+    {
+        return 9223372036854775807L;
+    }
+
+    public FindLastMatchingRecordingRequestEncoder ControlSessionId(long value)
+    {
+        _buffer.PutLong(_offset + 0, value, ByteOrder.LittleEndian);
+        return this;
+    }
+
+
+    public static int CorrelationIdEncodingOffset()
+    {
+        return 8;
     }
 
     public static int CorrelationIdEncodingLength()
@@ -121,24 +153,120 @@ public class AddClusterMemberEncoder
         return 9223372036854775807L;
     }
 
-    public AddClusterMemberEncoder CorrelationId(long value)
+    public FindLastMatchingRecordingRequestEncoder CorrelationId(long value)
     {
-        _buffer.PutLong(_offset + 0, value, ByteOrder.LittleEndian);
+        _buffer.PutLong(_offset + 8, value, ByteOrder.LittleEndian);
         return this;
     }
 
 
-    public static int MemberEndpointsId()
+    public static int MinRecordingIdEncodingOffset()
     {
-        return 2;
+        return 16;
     }
 
-    public static string MemberEndpointsCharacterEncoding()
+    public static int MinRecordingIdEncodingLength()
+    {
+        return 8;
+    }
+
+    public static long MinRecordingIdNullValue()
+    {
+        return -9223372036854775808L;
+    }
+
+    public static long MinRecordingIdMinValue()
+    {
+        return -9223372036854775807L;
+    }
+
+    public static long MinRecordingIdMaxValue()
+    {
+        return 9223372036854775807L;
+    }
+
+    public FindLastMatchingRecordingRequestEncoder MinRecordingId(long value)
+    {
+        _buffer.PutLong(_offset + 16, value, ByteOrder.LittleEndian);
+        return this;
+    }
+
+
+    public static int SessionIdEncodingOffset()
+    {
+        return 24;
+    }
+
+    public static int SessionIdEncodingLength()
+    {
+        return 4;
+    }
+
+    public static int SessionIdNullValue()
+    {
+        return -2147483648;
+    }
+
+    public static int SessionIdMinValue()
+    {
+        return -2147483647;
+    }
+
+    public static int SessionIdMaxValue()
+    {
+        return 2147483647;
+    }
+
+    public FindLastMatchingRecordingRequestEncoder SessionId(int value)
+    {
+        _buffer.PutInt(_offset + 24, value, ByteOrder.LittleEndian);
+        return this;
+    }
+
+
+    public static int StreamIdEncodingOffset()
+    {
+        return 28;
+    }
+
+    public static int StreamIdEncodingLength()
+    {
+        return 4;
+    }
+
+    public static int StreamIdNullValue()
+    {
+        return -2147483648;
+    }
+
+    public static int StreamIdMinValue()
+    {
+        return -2147483647;
+    }
+
+    public static int StreamIdMaxValue()
+    {
+        return 2147483647;
+    }
+
+    public FindLastMatchingRecordingRequestEncoder StreamId(int value)
+    {
+        _buffer.PutInt(_offset + 28, value, ByteOrder.LittleEndian);
+        return this;
+    }
+
+
+    public static int ChannelId()
+    {
+        return 6;
+    }
+
+    public static string ChannelCharacterEncoding()
     {
         return "US-ASCII";
     }
 
-    public static string MemberEndpointsMetaAttribute(MetaAttribute metaAttribute)
+    public static string ChannelMetaAttribute(MetaAttribute metaAttribute)
     {
         switch (metaAttribute)
         {
@@ -151,12 +279,12 @@ public class AddClusterMemberEncoder
         return "";
     }
 
-    public static int MemberEndpointsHeaderLength()
+    public static int ChannelHeaderLength()
     {
         return 4;
     }
 
-    public AddClusterMemberEncoder PutMemberEndpoints(IDirectBuffer src, int srcOffset, int length)
+    public FindLastMatchingRecordingRequestEncoder PutChannel(IDirectBuffer src, int srcOffset, int length)
     {
         if (length > 1073741824)
         {
@@ -172,7 +300,7 @@ public class AddClusterMemberEncoder
         return this;
     }
 
-    public AddClusterMemberEncoder PutMemberEndpoints(byte[] src, int srcOffset, int length)
+    public FindLastMatchingRecordingRequestEncoder PutChannel(byte[] src, int srcOffset, int length)
     {
         if (length > 1073741824)
         {
@@ -188,7 +316,7 @@ public class AddClusterMemberEncoder
         return this;
     }
 
-    public AddClusterMemberEncoder MemberEndpoints(string value)
+    public FindLastMatchingRecordingRequestEncoder Channel(string value)
     {
         int length = value.Length;
         if (length > 1073741824)
@@ -213,7 +341,7 @@ public class AddClusterMemberEncoder
 
     public StringBuilder AppendTo(StringBuilder builder)
     {
-        AddClusterMemberDecoder writer = new AddClusterMemberDecoder();
+        FindLastMatchingRecordingRequestDecoder writer = new FindLastMatchingRecordingRequestDecoder();
         writer.Wrap(_buffer, _offset, BLOCK_LENGTH, SCHEMA_VERSION);
 
         return writer.AppendTo(builder);

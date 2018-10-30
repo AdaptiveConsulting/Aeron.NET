@@ -98,12 +98,11 @@ namespace Adaptive.Aeron
             int channelStatusId,
             LogBuffers logBuffers, 
             long originalRegistrationId,
-            long registrationId,
-            int maxMessageLength)
+            long registrationId)
         {
             _logMetaDataBuffer = logBuffers.MetaDataBuffer();
             TermBufferLength = logBuffers.TermLength();
-            MaxMessageLength = maxMessageLength;
+            MaxMessageLength = FrameDescriptor.ComputeMaxMessageLength(TermBufferLength);
             MaxPayloadLength = LogBufferDescriptor.MtuLength(_logMetaDataBuffer) - DataHeaderFlyweight.HEADER_LENGTH;
             _maxPossiblePosition = TermBufferLength * (1L << 31);
             _conductor = clientConductor;

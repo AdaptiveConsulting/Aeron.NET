@@ -39,6 +39,8 @@ namespace Adaptive.Archiver
         private readonly ExtendRecordingRequestEncoder extendRecordingRequestEncoder = new ExtendRecordingRequestEncoder();
         private readonly RecordingPositionRequestEncoder recordingPositionRequestEncoder = new RecordingPositionRequestEncoder();
         private readonly TruncateRecordingRequestEncoder truncateRecordingRequestEncoder = new TruncateRecordingRequestEncoder();
+        private readonly StopPositionRequestEncoder stopPositionRequestEncoder = new StopPositionRequestEncoder();
+        private readonly FindLastMatchingRecordingRequestEncoder findLastMatchingRecordingRequestEncoder = new FindLastMatchingRecordingRequestEncoder();
 
         /// <summary>
         /// Create a proxy with a <seealso cref="Publication"/> for sending control message requests.
@@ -380,6 +382,62 @@ namespace Adaptive.Archiver
             return Offer(truncateRecordingRequestEncoder.EncodedLength());
         }
 
+        /// <summary>
+        /// Get the stop position of a recording.
+        /// </summary>
+        /// <param name="recordingId">      of the recording that the stop position is being requested for. </param>
+        /// <param name="correlationId">    for this request. </param>
+        /// <param name="controlSessionId"> for this request. </param>
+        /// <returns> true if successfully offered otherwise false. </returns>
+        public bool GetStopPosition(
+            long recordingId,
+            long correlationId,
+            long controlSessionId)
+        {
+            stopPositionRequestEncoder
+                .WrapAndApplyHeader(buffer, 0, messageHeaderEncoder)
+                .ControlSessionId(controlSessionId)
+                .CorrelationId(correlationId)
+                .RecordingId(recordingId);
+
+            return Offer(stopPositionRequestEncoder.EncodedLength());
+        }
+
+        /// <summary>
+        /// Truncate a stopped recording to a given position that is less than the stopped position. The provided position
+        /// must be on a fragment boundary. Truncating a recording to the start position effectively deletes the recording.
+        /// <para>
+        /// Find the last recording that matches the given criteria.
+        /// 
+        /// </para>
+        /// </summary>
+        /// <param name="minRecordingId">   to search back to. </param>
+        /// <param name="channel">          for a contains match on the stripped channel stored with the archive descriptor. </param>
+        /// <param name="streamId">         of the recording to match. </param>
+        /// <param name="sessionId">        of the recording to match. </param>
+        /// <param name="correlationId">    for this request. </param>
+        /// <param name="controlSessionId"> for this request. </param>
+        /// <returns> true if successfully offered otherwise false. </returns>
+        public bool FindLastMatchingRecording(
+            long minRecordingId,
+            string channel,
+            int streamId,
+            int sessionId,
+            long correlationId,
+            long controlSessionId)
+        {
+            findLastMatchingRecordingRequestEncoder
+                .WrapAndApplyHeader(buffer, 0, messageHeaderEncoder)
+                .ControlSessionId(controlSessionId)
+                .CorrelationId(correlationId)
+                .MinRecordingId(minRecordingId)
+                .SessionId(sessionId)
+                .StreamId(streamId)
+                .Channel(channel);
+
+            return Offer(findLastMatchingRecordingRequestEncoder.EncodedLength());
+        }
+
         private bool Offer(int length)
         {
             retryIdleStrategy.Reset();
@@ -445,7 +503,7 @@ namespace Adaptive.Archiver
                     throw new ArchiveException("offer failed due to max position being reached");
                 }
 
-                if (nanoClock.NanoTime() > deadlineNs)
+                if (deadlineNs - nanoClock.NanoTime() < 0)
                 {
                     return false;
                 }

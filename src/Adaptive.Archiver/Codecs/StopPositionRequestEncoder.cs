@@ -5,21 +5,21 @@ using System.Collections.Generic;
 using Adaptive.Agrona;
 
 
-namespace Adaptive.Cluster.Codecs {
+namespace Adaptive.Archiver.Codecs {
 
-public class RemoveClusterMemberEncoder
+public class StopPositionRequestEncoder
 {
-    public const ushort BLOCK_LENGTH = 12;
-    public const ushort TEMPLATE_ID = 71;
+    public const ushort BLOCK_LENGTH = 24;
+    public const ushort TEMPLATE_ID = 15;
     public const ushort SCHEMA_ID = 1;
-    public const ushort SCHEMA_VERSION = 1;
+    public const ushort SCHEMA_VERSION = 0;
 
-    private RemoveClusterMemberEncoder _parentMessage;
+    private StopPositionRequestEncoder _parentMessage;
     private IMutableDirectBuffer _buffer;
     protected int _offset;
     protected int _limit;
 
-    public RemoveClusterMemberEncoder()
+    public StopPositionRequestEncoder()
     {
         _parentMessage = this;
     }
@@ -59,7 +59,7 @@ public class RemoveClusterMemberEncoder
         return _offset;
     }
 
-    public RemoveClusterMemberEncoder Wrap(IMutableDirectBuffer buffer, int offset)
+    public StopPositionRequestEncoder Wrap(IMutableDirectBuffer buffer, int offset)
     {
         this._buffer = buffer;
         this._offset = offset;
@@ -68,7 +68,7 @@ public class RemoveClusterMemberEncoder
         return this;
     }
 
-    public RemoveClusterMemberEncoder WrapAndApplyHeader(
+    public StopPositionRequestEncoder WrapAndApplyHeader(
         IMutableDirectBuffer buffer, int offset, MessageHeaderEncoder headerEncoder)
     {
         headerEncoder
@@ -96,9 +96,41 @@ public class RemoveClusterMemberEncoder
         this._limit = limit;
     }
 
-    public static int CorrelationIdEncodingOffset()
+    public static int ControlSessionIdEncodingOffset()
     {
         return 0;
+    }
+
+    public static int ControlSessionIdEncodingLength()
+    {
+        return 8;
+    }
+
+    public static long ControlSessionIdNullValue()
+    {
+        return -9223372036854775808L;
+    }
+
+    public static long ControlSessionIdMinValue()
+    {
+        return -9223372036854775807L;
+    }
+
+    public static long ControlSessionIdMaxValue()
+    {
+        return 9223372036854775807L;
+    }
+
+    public StopPositionRequestEncoder ControlSessionId(long value)
+    {
+        _buffer.PutLong(_offset + 0, value, ByteOrder.LittleEndian);
+        return this;
+    }
+
+
+    public static int CorrelationIdEncodingOffset()
+    {
+        return 8;
     }
 
     public static int CorrelationIdEncodingLength()
@@ -121,41 +153,41 @@ public class RemoveClusterMemberEncoder
         return 9223372036854775807L;
     }
 
-    public RemoveClusterMemberEncoder CorrelationId(long value)
+    public StopPositionRequestEncoder CorrelationId(long value)
     {
-        _buffer.PutLong(_offset + 0, value, ByteOrder.LittleEndian);
+        _buffer.PutLong(_offset + 8, value, ByteOrder.LittleEndian);
         return this;
     }
 
 
-    public static int MemberIdEncodingOffset()
+    public static int RecordingIdEncodingOffset()
+    {
+        return 16;
+    }
+
+    public static int RecordingIdEncodingLength()
     {
         return 8;
     }
 
-    public static int MemberIdEncodingLength()
+    public static long RecordingIdNullValue()
     {
-        return 4;
+        return -9223372036854775808L;
     }
 
-    public static int MemberIdNullValue()
+    public static long RecordingIdMinValue()
     {
-        return -2147483648;
+        return -9223372036854775807L;
     }
 
-    public static int MemberIdMinValue()
+    public static long RecordingIdMaxValue()
     {
-        return -2147483647;
+        return 9223372036854775807L;
     }
 
-    public static int MemberIdMaxValue()
+    public StopPositionRequestEncoder RecordingId(long value)
     {
-        return 2147483647;
-    }
-
-    public RemoveClusterMemberEncoder MemberId(int value)
-    {
-        _buffer.PutInt(_offset + 8, value, ByteOrder.LittleEndian);
+        _buffer.PutLong(_offset + 16, value, ByteOrder.LittleEndian);
         return this;
     }
 
@@ -168,7 +200,7 @@ public class RemoveClusterMemberEncoder
 
     public StringBuilder AppendTo(StringBuilder builder)
     {
-        RemoveClusterMemberDecoder writer = new RemoveClusterMemberDecoder();
+        StopPositionRequestDecoder writer = new StopPositionRequestDecoder();
         writer.Wrap(_buffer, _offset, BLOCK_LENGTH, SCHEMA_VERSION);
 
         return writer.AppendTo(builder);

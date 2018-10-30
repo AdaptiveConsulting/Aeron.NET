@@ -74,8 +74,7 @@ namespace Adaptive.Aeron
                 channelStatusId,
                 logBuffers,
                 originalRegistrationId,
-                registrationId,
-                FrameDescriptor.ComputeExclusiveMaxMessageLength(logBuffers.TermLength())
+                registrationId
             )
         {
             var buffers = logBuffers.DuplicateTermBuffers();
@@ -170,12 +169,12 @@ namespace Adaptive.Aeron
                     {
                         CheckForMaxMessageLength(length);
                         result = termAppender.AppendFragmentedMessage(
-                            _termId, 
-                            _termOffset, 
-                            _headerWriter, 
-                            vectors, 
-                            length, 
-                            MaxPayloadLength, 
+                            _termId,
+                            _termOffset,
+                            _headerWriter,
+                            vectors,
+                            length,
+                            MaxPayloadLength,
                             reservedValueSupplier);
                     }
 
@@ -292,7 +291,7 @@ namespace Adaptive.Aeron
 
                 return _termBeginPosition + resultingOffset;
             }
-            
+
             if ((_termBeginPosition + TermBufferLength) >= MaxPossiblePosition())
             {
                 return MAX_POSITION_EXCEEDED;
@@ -308,7 +307,7 @@ namespace Adaptive.Aeron
                 LogBufferDescriptor.ComputeTermBeginPosition(nextTermId, _positionBitsToShift, InitialTermId);
 
             var termCount = nextTermId - InitialTermId;
-                
+
             LogBufferDescriptor.InitialiseTailWithTermId(_logMetaDataBuffer, nextIndex, nextTermId);
             LogBufferDescriptor.ActiveTermCountOrdered(_logMetaDataBuffer, termCount);
 

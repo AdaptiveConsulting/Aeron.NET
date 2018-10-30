@@ -9,7 +9,7 @@ namespace Adaptive.Cluster.Codecs {
 
 public class JoinLogEncoder
 {
-    public const ushort BLOCK_LENGTH = 20;
+    public const ushort BLOCK_LENGTH = 36;
     public const ushort TEMPLATE_ID = 40;
     public const ushort SCHEMA_ID = 1;
     public const ushort SCHEMA_VERSION = 1;
@@ -128,41 +128,105 @@ public class JoinLogEncoder
     }
 
 
-    public static int CommitPositionIdEncodingOffset()
+    public static int LogPositionEncodingOffset()
     {
         return 8;
     }
 
-    public static int CommitPositionIdEncodingLength()
+    public static int LogPositionEncodingLength()
+    {
+        return 8;
+    }
+
+    public static long LogPositionNullValue()
+    {
+        return -9223372036854775808L;
+    }
+
+    public static long LogPositionMinValue()
+    {
+        return -9223372036854775807L;
+    }
+
+    public static long LogPositionMaxValue()
+    {
+        return 9223372036854775807L;
+    }
+
+    public JoinLogEncoder LogPosition(long value)
+    {
+        _buffer.PutLong(_offset + 8, value, ByteOrder.LittleEndian);
+        return this;
+    }
+
+
+    public static int MaxLogPositionEncodingOffset()
+    {
+        return 16;
+    }
+
+    public static int MaxLogPositionEncodingLength()
+    {
+        return 8;
+    }
+
+    public static long MaxLogPositionNullValue()
+    {
+        return -9223372036854775808L;
+    }
+
+    public static long MaxLogPositionMinValue()
+    {
+        return -9223372036854775807L;
+    }
+
+    public static long MaxLogPositionMaxValue()
+    {
+        return 9223372036854775807L;
+    }
+
+    public JoinLogEncoder MaxLogPosition(long value)
+    {
+        _buffer.PutLong(_offset + 16, value, ByteOrder.LittleEndian);
+        return this;
+    }
+
+
+    public static int MemberIdEncodingOffset()
+    {
+        return 24;
+    }
+
+    public static int MemberIdEncodingLength()
     {
         return 4;
     }
 
-    public static int CommitPositionIdNullValue()
+    public static int MemberIdNullValue()
     {
         return -2147483648;
     }
 
-    public static int CommitPositionIdMinValue()
+    public static int MemberIdMinValue()
     {
         return -2147483647;
     }
 
-    public static int CommitPositionIdMaxValue()
+    public static int MemberIdMaxValue()
     {
         return 2147483647;
     }
 
-    public JoinLogEncoder CommitPositionId(int value)
+    public JoinLogEncoder MemberId(int value)
     {
-        _buffer.PutInt(_offset + 8, value, ByteOrder.LittleEndian);
+        _buffer.PutInt(_offset + 24, value, ByteOrder.LittleEndian);
         return this;
     }
 
 
     public static int LogSessionIdEncodingOffset()
     {
-        return 12;
+        return 28;
     }
 
     public static int LogSessionIdEncodingLength()
@@ -187,14 +251,14 @@ public class JoinLogEncoder
 
     public JoinLogEncoder LogSessionId(int value)
     {
-        _buffer.PutInt(_offset + 12, value, ByteOrder.LittleEndian);
+        _buffer.PutInt(_offset + 28, value, ByteOrder.LittleEndian);
         return this;
     }
 
 
     public static int LogStreamIdEncodingOffset()
     {
-        return 16;
+        return 32;
     }
 
     public static int LogStreamIdEncodingLength()
@@ -219,14 +283,14 @@ public class JoinLogEncoder
 
     public JoinLogEncoder LogStreamId(int value)
     {
-        _buffer.PutInt(_offset + 16, value, ByteOrder.LittleEndian);
+        _buffer.PutInt(_offset + 32, value, ByteOrder.LittleEndian);
         return this;
     }
 
 
     public static int LogChannelId()
     {
-        return 5;
+        return 7;
     }
 
     public static string LogChannelCharacterEncoding()

@@ -147,6 +147,16 @@ namespace Adaptive.Cluster
             markFile.MappedByteBuffer().Flush();
         }
 
+        public int MemberId()
+        {
+            return buffer.GetIntVolatile(MarkFileHeaderDecoder.MemberIdEncodingOffset());
+        }
+
+        public void MemberId(int memberId)
+        {
+            buffer.PutIntVolatile(MarkFileHeaderEncoder.MemberIdEncodingOffset(), memberId);
+            markFile.MappedByteBuffer().Flush();
+        }
 
         public void SignalReady()
         {

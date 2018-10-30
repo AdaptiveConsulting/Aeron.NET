@@ -88,27 +88,27 @@ public class IngressMessageHeaderDecoder
         this._limit = limit;
     }
 
-    public static int CorrelationIdId()
+    public static int LeadershipTermIdId()
     {
         return 1;
     }
 
-    public static int CorrelationIdSinceVersion()
+    public static int LeadershipTermIdSinceVersion()
     {
         return 0;
     }
 
-    public static int CorrelationIdEncodingOffset()
+    public static int LeadershipTermIdEncodingOffset()
     {
         return 0;
     }
 
-    public static int CorrelationIdEncodingLength()
+    public static int LeadershipTermIdEncodingLength()
     {
         return 8;
     }
 
-    public static string CorrelationIdMetaAttribute(MetaAttribute metaAttribute)
+    public static string LeadershipTermIdMetaAttribute(MetaAttribute metaAttribute)
     {
         switch (metaAttribute)
         {
@@ -121,22 +121,22 @@ public class IngressMessageHeaderDecoder
         return "";
     }
 
-    public static long CorrelationIdNullValue()
+    public static long LeadershipTermIdNullValue()
     {
         return -9223372036854775808L;
     }
 
-    public static long CorrelationIdMinValue()
+    public static long LeadershipTermIdMinValue()
     {
         return -9223372036854775807L;
     }
 
-    public static long CorrelationIdMaxValue()
+    public static long LeadershipTermIdMaxValue()
     {
         return 9223372036854775807L;
     }
 
-    public long CorrelationId()
+    public long LeadershipTermId()
     {
         return _buffer.GetLong(_offset + 0, ByteOrder.LittleEndian);
     }
@@ -196,27 +196,27 @@ public class IngressMessageHeaderDecoder
     }
 
 
-    public static int LeadershipTermIdId()
+    public static int TimestampId()
     {
         return 3;
     }
 
-    public static int LeadershipTermIdSinceVersion()
+    public static int TimestampSinceVersion()
     {
         return 0;
     }
 
-    public static int LeadershipTermIdEncodingOffset()
+    public static int TimestampEncodingOffset()
     {
         return 16;
     }
 
-    public static int LeadershipTermIdEncodingLength()
+    public static int TimestampEncodingLength()
     {
         return 8;
     }
 
-    public static string LeadershipTermIdMetaAttribute(MetaAttribute metaAttribute)
+    public static string TimestampMetaAttribute(MetaAttribute metaAttribute)
     {
         switch (metaAttribute)
         {
@@ -229,22 +229,22 @@ public class IngressMessageHeaderDecoder
         return "";
     }
 
-    public static long LeadershipTermIdNullValue()
+    public static long TimestampNullValue()
     {
         return -9223372036854775808L;
     }
 
-    public static long LeadershipTermIdMinValue()
+    public static long TimestampMinValue()
     {
         return -9223372036854775807L;
     }
 
-    public static long LeadershipTermIdMaxValue()
+    public static long TimestampMaxValue()
     {
         return 9223372036854775807L;
     }
 
-    public long LeadershipTermId()
+    public long Timestamp()
     {
         return _buffer.GetLong(_offset + 16, ByteOrder.LittleEndian);
     }
@@ -279,20 +279,20 @@ public class IngressMessageHeaderDecoder
         }
         builder.Append(BLOCK_LENGTH);
         builder.Append("):");
-        //Token{signal=BEGIN_FIELD, name='correlationId', referencedName='null', description='null', id=1, version=0, deprecated=0, encodedLength=0, offset=0, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=BEGIN_FIELD, name='leadershipTermId', referencedName='null', description='null', id=1, version=0, deprecated=0, encodedLength=0, offset=0, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
         //Token{signal=ENCODING, name='int64', referencedName='null', description='null', id=-1, version=0, deprecated=0, encodedLength=8, offset=0, componentTokenCount=1, encoding=Encoding{presence=REQUIRED, primitiveType=INT64, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
-        builder.Append("CorrelationId=");
-        builder.Append(CorrelationId());
+        builder.Append("LeadershipTermId=");
+        builder.Append(LeadershipTermId());
         builder.Append('|');
         //Token{signal=BEGIN_FIELD, name='clusterSessionId', referencedName='null', description='null', id=2, version=0, deprecated=0, encodedLength=0, offset=8, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
         //Token{signal=ENCODING, name='int64', referencedName='null', description='null', id=-1, version=0, deprecated=0, encodedLength=8, offset=8, componentTokenCount=1, encoding=Encoding{presence=REQUIRED, primitiveType=INT64, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
         builder.Append("ClusterSessionId=");
         builder.Append(ClusterSessionId());
         builder.Append('|');
-        //Token{signal=BEGIN_FIELD, name='leadershipTermId', referencedName='null', description='null', id=3, version=0, deprecated=0, encodedLength=0, offset=16, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
-        //Token{signal=ENCODING, name='int64', referencedName='null', description='null', id=-1, version=0, deprecated=0, encodedLength=8, offset=16, componentTokenCount=1, encoding=Encoding{presence=REQUIRED, primitiveType=INT64, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
-        builder.Append("LeadershipTermId=");
-        builder.Append(LeadershipTermId());
+        //Token{signal=BEGIN_FIELD, name='timestamp', referencedName='null', description='null', id=3, version=0, deprecated=0, encodedLength=0, offset=16, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=ENCODING, name='time_t', referencedName='null', description='Epoch time in milliseconds since 1 Jan 1970 UTC', id=-1, version=0, deprecated=0, encodedLength=8, offset=16, componentTokenCount=1, encoding=Encoding{presence=REQUIRED, primitiveType=INT64, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        builder.Append("Timestamp=");
+        builder.Append(Timestamp());
 
         Limit(originalLimit);
 

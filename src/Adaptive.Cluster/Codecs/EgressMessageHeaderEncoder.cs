@@ -96,32 +96,32 @@ public class EgressMessageHeaderEncoder
         this._limit = limit;
     }
 
-    public static int CorrelationIdEncodingOffset()
+    public static int LeadershipTermIdEncodingOffset()
     {
         return 0;
     }
 
-    public static int CorrelationIdEncodingLength()
+    public static int LeadershipTermIdEncodingLength()
     {
         return 8;
     }
 
-    public static long CorrelationIdNullValue()
+    public static long LeadershipTermIdNullValue()
     {
         return -9223372036854775808L;
     }
 
-    public static long CorrelationIdMinValue()
+    public static long LeadershipTermIdMinValue()
     {
         return -9223372036854775807L;
     }
 
-    public static long CorrelationIdMaxValue()
+    public static long LeadershipTermIdMaxValue()
     {
         return 9223372036854775807L;
     }
 
-    public EgressMessageHeaderEncoder CorrelationId(long value)
+    public EgressMessageHeaderEncoder LeadershipTermId(long value)
     {
         _buffer.PutLong(_offset + 0, value, ByteOrder.LittleEndian);
         return this;

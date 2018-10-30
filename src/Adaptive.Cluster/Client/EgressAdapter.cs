@@ -9,7 +9,7 @@ namespace Adaptive.Cluster.Client
     public class EgressAdapter : IFragmentHandler
     {
         /// <summary>
-        /// Length of the session header that will be prepended to the message.
+        /// Length of the session header before the message.
         /// </summary>
         public static readonly int SESSION_HEADER_LENGTH = MessageHeaderDecoder.ENCODED_LENGTH + SessionHeaderDecoder.BLOCK_LENGTH;
 
@@ -46,31 +46,32 @@ namespace Adaptive.Cluster.Client
             _messageHeaderDecoder.Wrap(buffer, offset);
 
             int templateId = _messageHeaderDecoder.TemplateId();
+
+            if (EgressMessageHeaderDecoder.TEMPLATE_ID == templateId)
+            {
+                _egressMessageHeaderDecoder.Wrap(
+                    buffer,
+                    offset + MessageHeaderDecoder.ENCODED_LENGTH,
+                    _messageHeaderDecoder.BlockLength(),
+                    _messageHeaderDecoder.Version());
+
+                var sessionId = _egressMessageHeaderDecoder.ClusterSessionId();
+                if (sessionId == _clusterSessionId)
+                {
+                    _listener.OnMessage(
+                        sessionId,
+                        _egressMessageHeaderDecoder.Timestamp(),
+                        buffer,
+                        offset + SESSION_HEADER_LENGTH,
+                        length - SESSION_HEADER_LENGTH,
+                        header);
+                }
+
+                return;
+            }
+            
             switch (templateId)
             {
-                case EgressMessageHeaderDecoder.TEMPLATE_ID:
-                {
-                    _egressMessageHeaderDecoder.Wrap(
-                        buffer,
-                        offset + MessageHeaderDecoder.ENCODED_LENGTH,
-                        _messageHeaderDecoder.BlockLength(),
-                        _messageHeaderDecoder.Version());
-
-                    var sessionId = _egressMessageHeaderDecoder.ClusterSessionId();
-                    if (sessionId == _clusterSessionId)
-                    {
-                        _listener.OnMessage(
-                            _egressMessageHeaderDecoder.CorrelationId(),
-                            _egressMessageHeaderDecoder.ClusterSessionId(),
-                            _egressMessageHeaderDecoder.Timestamp(),
-                            buffer,
-                            offset + SESSION_HEADER_LENGTH,
-                            length - SESSION_HEADER_LENGTH,
-                            header);
-                    }
-                    break;
-                }
-                
                 case SessionEventDecoder.TEMPLATE_ID:
                 {
                     _sessionEventDecoder.Wrap(

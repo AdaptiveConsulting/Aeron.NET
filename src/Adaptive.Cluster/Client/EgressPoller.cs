@@ -181,8 +181,8 @@ namespace Adaptive.Cluster.Client
                     egressMessageHeaderDecoder.Wrap(buffer, offset + MessageHeaderDecoder.ENCODED_LENGTH,
                         messageHeaderDecoder.BlockLength(), messageHeaderDecoder.Version());
 
+                    leadershipTermId = EgressMessageHeaderDecoder.LeadershipTermIdId();
                     clusterSessionId = egressMessageHeaderDecoder.ClusterSessionId();
-                    correlationId = egressMessageHeaderDecoder.CorrelationId();
                     break;
 
                 case ChallengeDecoder.TEMPLATE_ID:

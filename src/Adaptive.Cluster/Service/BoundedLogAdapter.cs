@@ -3,7 +3,6 @@ using Adaptive.Aeron;
 using Adaptive.Aeron.LogBuffer;
 using Adaptive.Aeron.Status;
 using Adaptive.Agrona;
-using Adaptive.Agrona.Concurrent.Status;
 using Adaptive.Cluster.Codecs;
 
 namespace Adaptive.Cluster.Service
@@ -46,19 +45,14 @@ namespace Adaptive.Cluster.Service
             image.Subscription?.Dispose();
         }
 
-        public bool IsImageClosed()
+        public bool IsDone()
         {
-            return image.Closed;
+            return image.IsEndOfStream() || image.Closed;
         }
 
         public long Position()
         {
             return image.Position();
-        }
-
-        public bool IsConsumed(CountersReader counters)
-        {
-            return image.Position() >= CommitPos.GetMaxLogPosition(counters, upperBound.CounterId());
         }
 
         public int Poll()
@@ -81,7 +75,6 @@ namespace Adaptive.Cluster.Service
 
                 agent.OnSessionMessage(
                     sessionHeaderDecoder.ClusterSessionId(),
-                    sessionHeaderDecoder.CorrelationId(),
                     sessionHeaderDecoder.Timestamp(),
                     buffer,
                     offset + SESSION_HEADER_LENGTH,
@@ -117,7 +110,6 @@ namespace Adaptive.Cluster.Service
 
                     agent.OnSessionOpen(
                         openEventDecoder.ClusterSessionId(),
-                        openEventDecoder.CorrelationId(),
                         openEventDecoder.Timestamp(),
                         openEventDecoder.ResponseStreamId(),
                         responseChannel,
@@ -175,7 +167,7 @@ namespace Adaptive.Cluster.Service
                     );
 
                     agent.OnClusterChange(
-                        clusterChangeEventDecoder.LeaderMemberId(),
+                        clusterChangeEventDecoder.LeadershipTermId(),
                         clusterChangeEventDecoder.LogPosition(),
                         clusterChangeEventDecoder.Timestamp(),
                         clusterChangeEventDecoder.LeaderMemberId(),

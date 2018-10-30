@@ -7,21 +7,21 @@ using Adaptive.Agrona;
 
 namespace Adaptive.Cluster.Codecs {
 
-public class RemoveClusterMemberDecoder
+public class RemoveMemberDecoder
 {
-    public const ushort BLOCK_LENGTH = 12;
-    public const ushort TEMPLATE_ID = 71;
+    public const ushort BLOCK_LENGTH = 16;
+    public const ushort TEMPLATE_ID = 35;
     public const ushort SCHEMA_ID = 1;
     public const ushort SCHEMA_VERSION = 1;
 
-    private RemoveClusterMemberDecoder _parentMessage;
+    private RemoveMemberDecoder _parentMessage;
     private IDirectBuffer _buffer;
     protected int _offset;
     protected int _limit;
     protected int _actingBlockLength;
     protected int _actingVersion;
 
-    public RemoveClusterMemberDecoder()
+    public RemoveMemberDecoder()
     {
         _parentMessage = this;
     }
@@ -61,7 +61,7 @@ public class RemoveClusterMemberDecoder
         return _offset;
     }
 
-    public RemoveClusterMemberDecoder Wrap(
+    public RemoveMemberDecoder Wrap(
         IDirectBuffer buffer, int offset, int actingBlockLength, int actingVersion)
     {
         this._buffer = buffer;
@@ -196,6 +196,45 @@ public class RemoveClusterMemberDecoder
     }
 
 
+    public static int IsPassiveId()
+    {
+        return 3;
+    }
+
+    public static int IsPassiveSinceVersion()
+    {
+        return 0;
+    }
+
+    public static int IsPassiveEncodingOffset()
+    {
+        return 12;
+    }
+
+    public static int IsPassiveEncodingLength()
+    {
+        return 4;
+    }
+
+    public static string IsPassiveMetaAttribute(MetaAttribute metaAttribute)
+    {
+        switch (metaAttribute)
+        {
+            case MetaAttribute.EPOCH: return "unix";
+            case MetaAttribute.TIME_UNIT: return "nanosecond";
+            case MetaAttribute.SEMANTIC_TYPE: return "";
+            case MetaAttribute.PRESENCE: return "required";
+        }
+
+        return "";
+    }
+
+    public BooleanType IsPassive()
+    {
+        return (BooleanType)_buffer.GetInt(_offset + 12, ByteOrder.LittleEndian);
+    }
+
+
 
     public override string ToString()
     {
@@ -206,7 +245,7 @@ public class RemoveClusterMemberDecoder
     {
         int originalLimit = Limit();
         Limit(_offset + _actingBlockLength);
-        builder.Append("[RemoveClusterMember](sbeTemplateId=");
+        builder.Append("[RemoveMember](sbeTemplateId=");
         builder.Append(TEMPLATE_ID);
         builder.Append("|sbeSchemaId=");
         builder.Append(SCHEMA_ID);
@@ -234,6 +273,11 @@ public class RemoveClusterMemberDecoder
         //Token{signal=ENCODING, name='int32', referencedName='null', description='null', id=-1, version=0, deprecated=0, encodedLength=4, offset=8, componentTokenCount=1, encoding=Encoding{presence=REQUIRED, primitiveType=INT32, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
         builder.Append("MemberId=");
         builder.Append(MemberId());
+        builder.Append('|');
+        //Token{signal=BEGIN_FIELD, name='isPassive', referencedName='null', description='null', id=3, version=0, deprecated=0, encodedLength=0, offset=12, componentTokenCount=6, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=BEGIN_ENUM, name='BooleanType', referencedName='null', description='null', id=-1, version=0, deprecated=0, encodedLength=4, offset=12, componentTokenCount=4, encoding=Encoding{presence=REQUIRED, primitiveType=INT32, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='null', timeUnit=null, semanticType='null'}}
+        builder.Append("IsPassive=");
+        builder.Append(IsPassive());
 
         Limit(originalLimit);
 

@@ -116,22 +116,22 @@
     <sbe:message name="IngressMessageHeader"
                  id="1"
                  description="Header for ingress messages from a client to the cluster services">
-        <field name="correlationId"        id="1" type="int64"/>
+        <field name="leadershipTermId"     id="1" type="int64"/>
         <field name="clusterSessionId"     id="2" type="int64"/>
-        <field name="leadershipTermId"     id="3" type="int64"/>
+        <field name="timestamp"            id="3" type="time_t"/>
     </sbe:message>
 
     <sbe:message name="EgressMessageHeader"
                  id="2"
                  description="Header for egress messages from a service to the cluster client">
-        <field name="correlationId"        id="1" type="int64"/>
+        <field name="leadershipTermId"     id="1" type="int64"/>
         <field name="clusterSessionId"     id="2" type="int64"/>
         <field name="timestamp"            id="3" type="time_t"/>
     </sbe:message>
 
     <sbe:message name="SessionEvent"
                  id="3"
-                 description="Response to a connect request or async event. Details will be empty if code is OK">
+                 description="Response to a connect request or async event, details will be empty if code is OK">
         <field name="clusterSessionId"     id="1" type="int64"
                description="Session id for a multiplexed session over a shared connection, i.e. same Image"/>
         <field name="correlationId"        id="2" type="int64"
@@ -150,30 +150,30 @@
                  id="4"
                  description="Connect to the cluster and if successful then open a session">
         <field name="correlationId"        id="1" type="int64"/>
-        <field name="clusterSessionId"     id="2" type="int64"/>
-        <field name="responseStreamId"     id="3" type="int32"/>
-        <data  name="responseChannel"      id="4" type="varAsciiEncoding"/>
-        <data  name="encodedCredentials"   id="5" type="varDataEncoding"/>
+        <field name="responseStreamId"     id="2" type="int32"/>
+        <data  name="responseChannel"      id="3" type="varAsciiEncoding"/>
+        <data  name="encodedCredentials"   id="4" type="varDataEncoding"/>
     </sbe:message>
 
     <sbe:message name="SessionCloseRequest"
                  id="5"
                  description="Close an open cluster session">
-        <field name="clusterSessionId"     id="1" type="int64"/>
+        <field name="leadershipTermId"     id="1" type="int64"/>
+        <field name="clusterSessionId"     id="2" type="int64"/>
     </sbe:message>
 
     <sbe:message name="SessionKeepAlive"
                  id="6"
                  description="Keep a cluster session open by indicating the client is alive">
-        <field name="clusterSessionId"     id="1" type="int64"/>
         <field name="leadershipTermId"     id="2" type="int64"/>
+        <field name="clusterSessionId"     id="1" type="int64"/>
     </sbe:message>
 
     <sbe:message name="NewLeaderEvent"
                  id="7"
                  description="Event to indicate a new leader has been elected for the cluster">
-        <field name="clusterSessionId"     id="1" type="int64"/>
-        <field name="leadershipTermId"     id="2" type="int64"/>
+        <field name="leadershipTermId"     id="1" type="int64"/>
+        <field name="clusterSessionId"     id="2" type="int64"/>
         <field name="leaderMemberId"       id="3" type="int32"/>
         <data  name="memberEndpoints"      id="4" type="varAsciiEncoding"/>
     </sbe:message>
@@ -199,7 +199,7 @@
     <sbe:message name="SessionHeader"
                  id="20"
                  description="Header for ingress messages from clients appended to the log">
-        <field name="correlationId"        id="1" type="int64"/>
+        <field name="leadershipTermId"     id="1" type="int64"/>
         <field name="clusterSessionId"     id="2" type="int64"/>
         <field name="timestamp"            id="3" type="time_t"/>
     </sbe:message>
@@ -207,25 +207,27 @@
     <sbe:message name="TimerEvent"
                  id="21"
                  description="Timer triggered event as the result of a deadline passing on a registered timer">
-        <field name="correlationId"        id="1" type="int64"/>
-        <field name="timestamp"            id="2" type="time_t"/>
+        <field name="leadershipTermId"     id="1" type="int64"/>
+        <field name="correlationId"        id="2" type="int64"/>
+        <field name="timestamp"            id="3" type="time_t"/>
     </sbe:message>
 
     <sbe:message name="SessionOpenEvent"
                  id="22"
                  description="Event for the state machine to notify a session has been opened">
-        <field name="correlationId"        id="1" type="int64"/>
-        <field name="clusterSessionId"     id="2" type="int64"/>
-        <field name="timestamp"            id="3" type="time_t"/>
-        <field name="responseStreamId"     id="4" type="int32"/>
-        <data  name="responseChannel"      id="5" type="varAsciiEncoding"/>
-        <data  name="encodedPrincipal"     id="6" type="varDataEncoding"/>
+        <field name="leadershipTermId"     id="1" type="int64"/>
+        <field name="correlationId"        id="2" type="int64"/>
+        <field name="clusterSessionId"     id="3" type="int64"/>
+        <field name="timestamp"            id="4" type="time_t"/>
+        <field name="responseStreamId"     id="6" type="int32"/>
+        <data  name="responseChannel"      id="7" type="varAsciiEncoding"/>
+        <data  name="encodedPrincipal"     id="8" type="varDataEncoding"/>
     </sbe:message>
 
     <sbe:message name="SessionCloseEvent"
                  id="23"
                  description="Event for the state machine to notify a session has been closed">
-        <field name="correlationId"        id="1" type="int64"/>
+        <field name="leadershipTermId"     id="1" type="int64"/>
         <field name="clusterSessionId"     id="2" type="int64"/>
         <field name="timestamp"            id="3" type="time_t"/>
         <field name="closeReason"          id="4" type="CloseReason"/>
@@ -293,16 +295,40 @@
         <field name="serviceId"            id="4" type="int32"/>
     </sbe:message>
 
+    <sbe:message name="ClusterMembersQuery"
+                 id="34"
+                 description="Request list of cluster members and passive followers to be sent">
+        <field name="correlationId"        id="1" type="int64"/>
+    </sbe:message>
+
+    <sbe:message name="RemoveMember"
+                 id="35"
+                 description="Remove a cluster member either as normal member or passive member">
+        <field name="correlationId"        id="1" type="int64"/>
+        <field name="memberId"             id="2" type="int32"/>
+        <field name="isPassive"            id="3" type="BooleanType"/>
+    </sbe:message>
+
     <sbe:message name="JoinLog"
                  id="40"
                  description="Consensus Module instructing a service to join a log">
         <field name="leadershipTermId"     id="1" type="int64"/>
-        <field name="commitPositionId"     id="2" type="int32"/>
-        <field name="logSessionId"         id="3" type="int32"/>
-        <field name="logStreamId"          id="4" type="int32"/>
-        <data  name="logChannel"           id="5" type="varAsciiEncoding"/>
+        <field name="logPosition"          id="2" type="int64"/>
+        <field name="maxLogPosition"       id="3" type="int64"/>
+        <field name="memberId"             id="4" type="int32"/>
+        <field name="logSessionId"         id="5" type="int32"/>
+        <field name="logStreamId"          id="6" type="int32"/>
+        <data  name="logChannel"           id="7" type="varAsciiEncoding"/>
     </sbe:message>
 
+    <sbe:message name="ClusterMembersResponse"
+                 id="41"
+                 description="Cluster Members for normal and passive followers">
+        <field name="correlationId"        id="1" type="int64"/>
+        <field name="leaderMemberId"       id="2" type="int32"/>
+        <data name="activeMembers"         id="3" type="varAsciiEncoding"/>
+        <data name="passiveFollowers"      id="4" type="varAsciiEncoding"/>
+    </sbe:message>
 
     <!--
         Cluster Consensus Protocol
@@ -325,7 +351,7 @@
 
     <sbe:message name="CanvassPosition"
                  id="50"
-                 description="The highest position a follower has appended to their local log when canvassing for leadership">
+                 description="Position a follower has appended to their local log when canvassing for leadership">
         <field name="logLeadershipTermId"  id="1" type="int64"/>
         <field name="logPosition"          id="2" type="int64"/>
         <field name="followerMemberId"     id="3" type="int32"/>
@@ -394,92 +420,15 @@
         <field name="followerMemberId"     id="2" type="int32"/>
     </sbe:message>
 
-    <sbe:message name="RecoveryPlanQuery"
-                 id="61"
-                 description="Query a leader for their recovery plan">
-        <field name="correlationId"            id="1"  type="int64"/>
-        <field name="requestMemberId"          id="2"  type="int32"/>
-        <field name="leaderMemberId"           id="3"  type="int32"/>
-    </sbe:message>
-
-    <sbe:message name="RecoveryPlan"
-                 id="62"
-                 description="Serialised Recovery Plan">
-        <field name="correlationId"            id="1"  type="int64"/>
-        <field name="requestMemberId"          id="2"  type="int32"/>
-        <field name="leaderMemberId"           id="3"  type="int32"/>
-        <field name="lastLeadershipTermId"     id="4"  type="int64"/>
-        <field name="lastTermBaseLogPosition"  id="5"  type="int64"/>
-        <field name="appendedLogPosition"      id="6"  type="int64"/>
-        <field name="committedLogPosition"     id="7"  type="int64"/>
-        <group name="snapshots"                id="8"  dimensionType="groupSizeEncoding">
-            <field name="recordingId"          id="9"  type="int64"/>
-            <field name="leadershipTermId"     id="10"  type="int64"/>
-            <field name="termBaseLogPosition"  id="11" type="int64"/>
-            <field name="logPosition"          id="12" type="int64"/>
-            <field name="timestamp"            id="13" type="time_t"/>
-            <field name="serviceId"            id="14" type="int32"/>
-        </group>
-        <group name="logs"                     id="15" dimensionType="groupSizeEncoding">
-            <field name="recordingId"          id="16" type="int64"/>
-            <field name="leadershipTermId"     id="17" type="int64"/>
-            <field name="termBaseLogPosition"  id="18" type="int64"/>
-            <field name="logPosition"          id="19" type="int64"/>
-            <field name="startPosition"        id="12" type="int64"/>
-            <field name="stopPosition"         id="21" type="int64"/>
-            <field name="initialTermId"        id="22" type="int32"/>
-            <field name="termBufferLength"     id="23" type="int32"/>
-            <field name="mtuLength"            id="24" type="int32"/>
-            <field name="sessionId"            id="25" type="int32"/>
-        </group>
-    </sbe:message>
-
-    <sbe:message name="RecordingLogQuery"
-                 id="63"
-                 description="Query a leader for their recording log">
-        <field name="correlationId"            id="1" type="int64"/>
-        <field name="requestMemberId"          id="2" type="int32"/>
-        <field name="leaderMemberId"           id="3" type="int32"/>
-        <field name="fromLeadershipTermId"     id="4" type="int64"/>
-        <field name="count"                    id="5" type="int32"/>
-        <field name="includeSnapshots"         id="6" type="BooleanType"/>
-    </sbe:message>
-
-    <sbe:message name="RecordingLog"
-                 id="64"
-                 blockLength="20"
-                 description="Range of a recording log">
-        <field name="correlationId"            id="1"  type="int64"/>
-        <field name="requestMemberId"          id="2"  type="int32"/>
-        <field name="leaderMemberId"           id="3"  type="int32"/>
-        <group name="entries"                  id="4"  dimensionType="groupSizeEncoding" blockLength="64">
-            <field name="recordingId"          id="5"  type="int64"/>
-            <field name="leadershipTermId"     id="6"  type="int64"/>
-            <field name="termBaseLogPosition"  id="7"  type="int64"/>
-            <field name="logPosition"          id="8"  type="int64"/>
-            <field name="timestamp"            id="9"  type="time_t"/>
-            <field name="serviceId"            id="10" type="int32"/>
-            <field name="entryType"            id="11" type="int32"/>
-            <field name="isCurrent"            id="12" type="BooleanType"/>
-        </group>
-    </sbe:message>
-
-    <sbe:message name="AddClusterMember"
+    <sbe:message name="AddPassiveMember"
                  id="70"
                  description="Add a member to the passive member list.">
         <field name="correlationId"            id="1" type="int64"/>
         <data  name="memberEndpoints"          id="2" type="varAsciiEncoding"/>
     </sbe:message>
 
-    <sbe:message name="RemoveClusterMember"
-                 id="71"
-                 description="Remove a member from the passive member list.">
-        <field name="correlationId"            id="1" type="int64"/>
-        <field name="memberId"                 id="2" type="int32"/>
-    </sbe:message>
-
     <sbe:message name="ClusterMembersChange"
-                 id="72"
+                 id="71"
                  description="Cluster Member list change, add or remove, response.">
         <field name="correlationId"            id="1" type="int64"/>
         <field name="leaderMemberId"           id="2" type="int32"/>
@@ -488,14 +437,14 @@
     </sbe:message>
 
     <sbe:message name="SnapshotRecordingQuery"
-                 id="73"
+                 id="72"
                  description="Query a leader for the info on latest snapshot recordings">
         <field name="correlationId"            id="1"  type="int64"/>
         <field name="requestMemberId"          id="2"  type="int32"/>
     </sbe:message>
 
     <sbe:message name="SnapshotRecordings"
-                 id="74"
+                 id="73"
                  description="Response to Snapshot recording query">
         <field name="correlationId"            id="1"  type="int64"/>
         <group name="snapshots"                id="3"  dimensionType="groupSizeEncoding">
@@ -510,15 +459,8 @@
     </sbe:message>
 
     <sbe:message name="JoinCluster"
-                 id="75"
-                 description="Join the cluster officially, increasing the cluster size. Transitioning from passive.">
-        <field name="leadershipTermId"         id="1" type="int64"/>
-        <field name="memberId"                 id="2" type="int32"/>
-    </sbe:message>
-
-    <sbe:message name="LeaveCluster"
-                 id="76"
-                 description="Leave the cluster officially, decreasing the cluster size. Transitioning to passive.">
+                 id="74"
+                 description="Join the cluster officially, increasing the member size, transitioning from passive">
         <field name="leadershipTermId"         id="1" type="int64"/>
         <field name="memberId"                 id="2" type="int32"/>
     </sbe:message>
@@ -539,10 +481,9 @@
                  id="102"
                  description="A serialised client session in the context of a service">
         <field name="clusterSessionId"     id="1" type="int64"/>
-        <field name="lastCorrelationId"    id="2" type="int64"/>
-        <field name="responseStreamId"     id="3" type="int32"/>
-        <data  name="responseChannel"      id="4" type="varAsciiEncoding"/>
-        <data  name="encodedPrincipal"     id="5" type="varDataEncoding"/>
+        <field name="responseStreamId"     id="2" type="int32"/>
+        <data  name="responseChannel"      id="3" type="varAsciiEncoding"/>
+        <data  name="encodedPrincipal"     id="4" type="varDataEncoding"/>
     </sbe:message>
 
     <sbe:message name="ClusterSession"
@@ -550,7 +491,7 @@
                  description="A serialised client session in the context of a Consensus Module">
         <field name="clusterSessionId"     id="1" type="int64"/>
         <field name="openedLogPosition"    id="2" type="int64"/>
-        <field name="lastCorrelationId"    id="3" type="int64"/>
+        <field name="correlationId"        id="3" type="int64"/>
         <field name="timeOfLastActivity"   id="4" type="time_t"/>
         <field name="closeReason"          id="5" type="CloseReason"/>
         <field name="responseStreamId"     id="6" type="int32"/>
@@ -575,7 +516,7 @@
                  description="Serialized state of Cluster Members">
         <field name="memberId"              id="1" type="int32"/>
         <field name="highMemberId"          id="2" type="int32"/>
-        <data  name="clusterMembers"        id="1" type="varAsciiEncoding"/>
+        <data  name="clusterMembers"        id="3" type="varAsciiEncoding"/>
     </sbe:message>
 
 </sbe:messageSchema>

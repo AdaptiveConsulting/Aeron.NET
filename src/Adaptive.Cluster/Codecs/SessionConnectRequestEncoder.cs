@@ -9,7 +9,7 @@ namespace Adaptive.Cluster.Codecs {
 
 public class SessionConnectRequestEncoder
 {
-    public const ushort BLOCK_LENGTH = 20;
+    public const ushort BLOCK_LENGTH = 12;
     public const ushort TEMPLATE_ID = 4;
     public const ushort SCHEMA_ID = 1;
     public const ushort SCHEMA_VERSION = 1;
@@ -128,41 +128,9 @@ public class SessionConnectRequestEncoder
     }
 
 
-    public static int ClusterSessionIdEncodingOffset()
-    {
-        return 8;
-    }
-
-    public static int ClusterSessionIdEncodingLength()
-    {
-        return 8;
-    }
-
-    public static long ClusterSessionIdNullValue()
-    {
-        return -9223372036854775808L;
-    }
-
-    public static long ClusterSessionIdMinValue()
-    {
-        return -9223372036854775807L;
-    }
-
-    public static long ClusterSessionIdMaxValue()
-    {
-        return 9223372036854775807L;
-    }
-
-    public SessionConnectRequestEncoder ClusterSessionId(long value)
-    {
-        _buffer.PutLong(_offset + 8, value, ByteOrder.LittleEndian);
-        return this;
-    }
-
-
     public static int ResponseStreamIdEncodingOffset()
     {
-        return 16;
+        return 8;
     }
 
     public static int ResponseStreamIdEncodingLength()
@@ -187,14 +155,14 @@ public class SessionConnectRequestEncoder
 
     public SessionConnectRequestEncoder ResponseStreamId(int value)
     {
-        _buffer.PutInt(_offset + 16, value, ByteOrder.LittleEndian);
+        _buffer.PutInt(_offset + 8, value, ByteOrder.LittleEndian);
         return this;
     }
 
 
     public static int ResponseChannelId()
     {
-        return 4;
+        return 3;
     }
 
     public static string ResponseChannelCharacterEncoding()
@@ -271,7 +239,7 @@ public class SessionConnectRequestEncoder
 
     public static int EncodedCredentialsId()
     {
-        return 5;
+        return 4;
     }
 
     public static string EncodedCredentialsMetaAttribute(MetaAttribute metaAttribute)

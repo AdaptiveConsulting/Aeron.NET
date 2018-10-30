@@ -96,32 +96,32 @@ public class IngressMessageHeaderEncoder
         this._limit = limit;
     }
 
-    public static int CorrelationIdEncodingOffset()
+    public static int LeadershipTermIdEncodingOffset()
     {
         return 0;
     }
 
-    public static int CorrelationIdEncodingLength()
+    public static int LeadershipTermIdEncodingLength()
     {
         return 8;
     }
 
-    public static long CorrelationIdNullValue()
+    public static long LeadershipTermIdNullValue()
     {
         return -9223372036854775808L;
     }
 
-    public static long CorrelationIdMinValue()
+    public static long LeadershipTermIdMinValue()
     {
         return -9223372036854775807L;
     }
 
-    public static long CorrelationIdMaxValue()
+    public static long LeadershipTermIdMaxValue()
     {
         return 9223372036854775807L;
     }
 
-    public IngressMessageHeaderEncoder CorrelationId(long value)
+    public IngressMessageHeaderEncoder LeadershipTermId(long value)
     {
         _buffer.PutLong(_offset + 0, value, ByteOrder.LittleEndian);
         return this;
@@ -160,32 +160,32 @@ public class IngressMessageHeaderEncoder
     }
 
 
-    public static int LeadershipTermIdEncodingOffset()
+    public static int TimestampEncodingOffset()
     {
         return 16;
     }
 
-    public static int LeadershipTermIdEncodingLength()
+    public static int TimestampEncodingLength()
     {
         return 8;
     }
 
-    public static long LeadershipTermIdNullValue()
+    public static long TimestampNullValue()
     {
         return -9223372036854775808L;
     }
 
-    public static long LeadershipTermIdMinValue()
+    public static long TimestampMinValue()
     {
         return -9223372036854775807L;
     }
 
-    public static long LeadershipTermIdMaxValue()
+    public static long TimestampMaxValue()
     {
         return 9223372036854775807L;
     }
 
-    public IngressMessageHeaderEncoder LeadershipTermId(long value)
+    public IngressMessageHeaderEncoder Timestamp(long value)
     {
         _buffer.PutLong(_offset + 16, value, ByteOrder.LittleEndian);
         return this;

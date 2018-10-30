@@ -96,41 +96,9 @@ public class SessionKeepAliveEncoder
         this._limit = limit;
     }
 
-    public static int ClusterSessionIdEncodingOffset()
-    {
-        return 0;
-    }
-
-    public static int ClusterSessionIdEncodingLength()
-    {
-        return 8;
-    }
-
-    public static long ClusterSessionIdNullValue()
-    {
-        return -9223372036854775808L;
-    }
-
-    public static long ClusterSessionIdMinValue()
-    {
-        return -9223372036854775807L;
-    }
-
-    public static long ClusterSessionIdMaxValue()
-    {
-        return 9223372036854775807L;
-    }
-
-    public SessionKeepAliveEncoder ClusterSessionId(long value)
-    {
-        _buffer.PutLong(_offset + 0, value, ByteOrder.LittleEndian);
-        return this;
-    }
-
-
     public static int LeadershipTermIdEncodingOffset()
     {
-        return 8;
+        return 0;
     }
 
     public static int LeadershipTermIdEncodingLength()
@@ -154,6 +122,38 @@ public class SessionKeepAliveEncoder
     }
 
     public SessionKeepAliveEncoder LeadershipTermId(long value)
+    {
+        _buffer.PutLong(_offset + 0, value, ByteOrder.LittleEndian);
+        return this;
+    }
+
+
+    public static int ClusterSessionIdEncodingOffset()
+    {
+        return 8;
+    }
+
+    public static int ClusterSessionIdEncodingLength()
+    {
+        return 8;
+    }
+
+    public static long ClusterSessionIdNullValue()
+    {
+        return -9223372036854775808L;
+    }
+
+    public static long ClusterSessionIdMinValue()
+    {
+        return -9223372036854775807L;
+    }
+
+    public static long ClusterSessionIdMaxValue()
+    {
+        return 9223372036854775807L;
+    }
+
+    public SessionKeepAliveEncoder ClusterSessionId(long value)
     {
         _buffer.PutLong(_offset + 8, value, ByteOrder.LittleEndian);
         return this;

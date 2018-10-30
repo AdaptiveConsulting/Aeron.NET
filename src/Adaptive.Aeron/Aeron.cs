@@ -1522,7 +1522,7 @@ namespace Adaptive.Aeron
             }
             catch (ThreadInterruptedException ignore)
             {
-                // Java version runs Thread.interrupted() here to clear the interrupted state. Can't find a C# equivalent.
+                Thread.CurrentThread.Interrupt();
             }
         }
     }

@@ -7,19 +7,19 @@ using Adaptive.Agrona;
 
 namespace Adaptive.Cluster.Codecs {
 
-public class LeaveClusterEncoder
+public class RemoveMemberEncoder
 {
-    public const ushort BLOCK_LENGTH = 12;
-    public const ushort TEMPLATE_ID = 76;
+    public const ushort BLOCK_LENGTH = 16;
+    public const ushort TEMPLATE_ID = 35;
     public const ushort SCHEMA_ID = 1;
     public const ushort SCHEMA_VERSION = 1;
 
-    private LeaveClusterEncoder _parentMessage;
+    private RemoveMemberEncoder _parentMessage;
     private IMutableDirectBuffer _buffer;
     protected int _offset;
     protected int _limit;
 
-    public LeaveClusterEncoder()
+    public RemoveMemberEncoder()
     {
         _parentMessage = this;
     }
@@ -59,7 +59,7 @@ public class LeaveClusterEncoder
         return _offset;
     }
 
-    public LeaveClusterEncoder Wrap(IMutableDirectBuffer buffer, int offset)
+    public RemoveMemberEncoder Wrap(IMutableDirectBuffer buffer, int offset)
     {
         this._buffer = buffer;
         this._offset = offset;
@@ -68,7 +68,7 @@ public class LeaveClusterEncoder
         return this;
     }
 
-    public LeaveClusterEncoder WrapAndApplyHeader(
+    public RemoveMemberEncoder WrapAndApplyHeader(
         IMutableDirectBuffer buffer, int offset, MessageHeaderEncoder headerEncoder)
     {
         headerEncoder
@@ -96,32 +96,32 @@ public class LeaveClusterEncoder
         this._limit = limit;
     }
 
-    public static int LeadershipTermIdEncodingOffset()
+    public static int CorrelationIdEncodingOffset()
     {
         return 0;
     }
 
-    public static int LeadershipTermIdEncodingLength()
+    public static int CorrelationIdEncodingLength()
     {
         return 8;
     }
 
-    public static long LeadershipTermIdNullValue()
+    public static long CorrelationIdNullValue()
     {
         return -9223372036854775808L;
     }
 
-    public static long LeadershipTermIdMinValue()
+    public static long CorrelationIdMinValue()
     {
         return -9223372036854775807L;
     }
 
-    public static long LeadershipTermIdMaxValue()
+    public static long CorrelationIdMaxValue()
     {
         return 9223372036854775807L;
     }
 
-    public LeaveClusterEncoder LeadershipTermId(long value)
+    public RemoveMemberEncoder CorrelationId(long value)
     {
         _buffer.PutLong(_offset + 0, value, ByteOrder.LittleEndian);
         return this;
@@ -153,12 +153,28 @@ public class LeaveClusterEncoder
         return 2147483647;
     }
 
-    public LeaveClusterEncoder MemberId(int value)
+    public RemoveMemberEncoder MemberId(int value)
     {
         _buffer.PutInt(_offset + 8, value, ByteOrder.LittleEndian);
         return this;
     }
 
+
+    public static int IsPassiveEncodingOffset()
+    {
+        return 12;
+    }
+
+    public static int IsPassiveEncodingLength()
+    {
+        return 4;
+    }
+
+    public RemoveMemberEncoder IsPassive(BooleanType value)
+    {
+        _buffer.PutInt(_offset + 12, (int)value, ByteOrder.LittleEndian);
+        return this;
+    }
 
 
     public override string ToString()
@@ -168,7 +184,7 @@ public class LeaveClusterEncoder
 
     public StringBuilder AppendTo(StringBuilder builder)
     {
-        LeaveClusterDecoder writer = new LeaveClusterDecoder();
+        RemoveMemberDecoder writer = new RemoveMemberDecoder();
         writer.Wrap(_buffer, _offset, BLOCK_LENGTH, SCHEMA_VERSION);
 
         return writer.AppendTo(builder);

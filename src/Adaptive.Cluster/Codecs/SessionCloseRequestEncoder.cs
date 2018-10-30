@@ -9,7 +9,7 @@ namespace Adaptive.Cluster.Codecs {
 
 public class SessionCloseRequestEncoder
 {
-    public const ushort BLOCK_LENGTH = 8;
+    public const ushort BLOCK_LENGTH = 16;
     public const ushort TEMPLATE_ID = 5;
     public const ushort SCHEMA_ID = 1;
     public const ushort SCHEMA_VERSION = 1;
@@ -96,9 +96,41 @@ public class SessionCloseRequestEncoder
         this._limit = limit;
     }
 
-    public static int ClusterSessionIdEncodingOffset()
+    public static int LeadershipTermIdEncodingOffset()
     {
         return 0;
+    }
+
+    public static int LeadershipTermIdEncodingLength()
+    {
+        return 8;
+    }
+
+    public static long LeadershipTermIdNullValue()
+    {
+        return -9223372036854775808L;
+    }
+
+    public static long LeadershipTermIdMinValue()
+    {
+        return -9223372036854775807L;
+    }
+
+    public static long LeadershipTermIdMaxValue()
+    {
+        return 9223372036854775807L;
+    }
+
+    public SessionCloseRequestEncoder LeadershipTermId(long value)
+    {
+        _buffer.PutLong(_offset + 0, value, ByteOrder.LittleEndian);
+        return this;
+    }
+
+
+    public static int ClusterSessionIdEncodingOffset()
+    {
+        return 8;
     }
 
     public static int ClusterSessionIdEncodingLength()
@@ -123,7 +155,7 @@ public class SessionCloseRequestEncoder
 
     public SessionCloseRequestEncoder ClusterSessionId(long value)
     {
-        _buffer.PutLong(_offset + 0, value, ByteOrder.LittleEndian);
+        _buffer.PutLong(_offset + 8, value, ByteOrder.LittleEndian);
         return this;
     }
 

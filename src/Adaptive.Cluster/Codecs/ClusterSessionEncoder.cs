@@ -160,32 +160,32 @@ public class ClusterSessionEncoder
     }
 
 
-    public static int LastCorrelationIdEncodingOffset()
+    public static int CorrelationIdEncodingOffset()
     {
         return 16;
     }
 
-    public static int LastCorrelationIdEncodingLength()
+    public static int CorrelationIdEncodingLength()
     {
         return 8;
     }
 
-    public static long LastCorrelationIdNullValue()
+    public static long CorrelationIdNullValue()
     {
         return -9223372036854775808L;
     }
 
-    public static long LastCorrelationIdMinValue()
+    public static long CorrelationIdMinValue()
     {
         return -9223372036854775807L;
     }
 
-    public static long LastCorrelationIdMaxValue()
+    public static long CorrelationIdMaxValue()
     {
         return 9223372036854775807L;
     }
 
-    public ClusterSessionEncoder LastCorrelationId(long value)
+    public ClusterSessionEncoder CorrelationId(long value)
     {
         _buffer.PutLong(_offset + 16, value, ByteOrder.LittleEndian);
         return this;

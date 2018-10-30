@@ -7,21 +7,21 @@ using Adaptive.Agrona;
 
 namespace Adaptive.Cluster.Codecs {
 
-public class LeaveClusterDecoder
+public class ClusterMembersQueryDecoder
 {
-    public const ushort BLOCK_LENGTH = 12;
-    public const ushort TEMPLATE_ID = 76;
+    public const ushort BLOCK_LENGTH = 8;
+    public const ushort TEMPLATE_ID = 34;
     public const ushort SCHEMA_ID = 1;
     public const ushort SCHEMA_VERSION = 1;
 
-    private LeaveClusterDecoder _parentMessage;
+    private ClusterMembersQueryDecoder _parentMessage;
     private IDirectBuffer _buffer;
     protected int _offset;
     protected int _limit;
     protected int _actingBlockLength;
     protected int _actingVersion;
 
-    public LeaveClusterDecoder()
+    public ClusterMembersQueryDecoder()
     {
         _parentMessage = this;
     }
@@ -61,7 +61,7 @@ public class LeaveClusterDecoder
         return _offset;
     }
 
-    public LeaveClusterDecoder Wrap(
+    public ClusterMembersQueryDecoder Wrap(
         IDirectBuffer buffer, int offset, int actingBlockLength, int actingVersion)
     {
         this._buffer = buffer;
@@ -88,27 +88,27 @@ public class LeaveClusterDecoder
         this._limit = limit;
     }
 
-    public static int LeadershipTermIdId()
+    public static int CorrelationIdId()
     {
         return 1;
     }
 
-    public static int LeadershipTermIdSinceVersion()
+    public static int CorrelationIdSinceVersion()
     {
         return 0;
     }
 
-    public static int LeadershipTermIdEncodingOffset()
+    public static int CorrelationIdEncodingOffset()
     {
         return 0;
     }
 
-    public static int LeadershipTermIdEncodingLength()
+    public static int CorrelationIdEncodingLength()
     {
         return 8;
     }
 
-    public static string LeadershipTermIdMetaAttribute(MetaAttribute metaAttribute)
+    public static string CorrelationIdMetaAttribute(MetaAttribute metaAttribute)
     {
         switch (metaAttribute)
         {
@@ -121,78 +121,24 @@ public class LeaveClusterDecoder
         return "";
     }
 
-    public static long LeadershipTermIdNullValue()
+    public static long CorrelationIdNullValue()
     {
         return -9223372036854775808L;
     }
 
-    public static long LeadershipTermIdMinValue()
+    public static long CorrelationIdMinValue()
     {
         return -9223372036854775807L;
     }
 
-    public static long LeadershipTermIdMaxValue()
+    public static long CorrelationIdMaxValue()
     {
         return 9223372036854775807L;
     }
 
-    public long LeadershipTermId()
+    public long CorrelationId()
     {
         return _buffer.GetLong(_offset + 0, ByteOrder.LittleEndian);
-    }
-
-
-    public static int MemberIdId()
-    {
-        return 2;
-    }
-
-    public static int MemberIdSinceVersion()
-    {
-        return 0;
-    }
-
-    public static int MemberIdEncodingOffset()
-    {
-        return 8;
-    }
-
-    public static int MemberIdEncodingLength()
-    {
-        return 4;
-    }
-
-    public static string MemberIdMetaAttribute(MetaAttribute metaAttribute)
-    {
-        switch (metaAttribute)
-        {
-            case MetaAttribute.EPOCH: return "unix";
-            case MetaAttribute.TIME_UNIT: return "nanosecond";
-            case MetaAttribute.SEMANTIC_TYPE: return "";
-            case MetaAttribute.PRESENCE: return "required";
-        }
-
-        return "";
-    }
-
-    public static int MemberIdNullValue()
-    {
-        return -2147483648;
-    }
-
-    public static int MemberIdMinValue()
-    {
-        return -2147483647;
-    }
-
-    public static int MemberIdMaxValue()
-    {
-        return 2147483647;
-    }
-
-    public int MemberId()
-    {
-        return _buffer.GetInt(_offset + 8, ByteOrder.LittleEndian);
     }
 
 
@@ -206,7 +152,7 @@ public class LeaveClusterDecoder
     {
         int originalLimit = Limit();
         Limit(_offset + _actingBlockLength);
-        builder.Append("[LeaveCluster](sbeTemplateId=");
+        builder.Append("[ClusterMembersQuery](sbeTemplateId=");
         builder.Append(TEMPLATE_ID);
         builder.Append("|sbeSchemaId=");
         builder.Append(SCHEMA_ID);
@@ -225,15 +171,10 @@ public class LeaveClusterDecoder
         }
         builder.Append(BLOCK_LENGTH);
         builder.Append("):");
-        //Token{signal=BEGIN_FIELD, name='leadershipTermId', referencedName='null', description='null', id=1, version=0, deprecated=0, encodedLength=0, offset=0, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=BEGIN_FIELD, name='correlationId', referencedName='null', description='null', id=1, version=0, deprecated=0, encodedLength=0, offset=0, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
         //Token{signal=ENCODING, name='int64', referencedName='null', description='null', id=-1, version=0, deprecated=0, encodedLength=8, offset=0, componentTokenCount=1, encoding=Encoding{presence=REQUIRED, primitiveType=INT64, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
-        builder.Append("LeadershipTermId=");
-        builder.Append(LeadershipTermId());
-        builder.Append('|');
-        //Token{signal=BEGIN_FIELD, name='memberId', referencedName='null', description='null', id=2, version=0, deprecated=0, encodedLength=0, offset=8, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
-        //Token{signal=ENCODING, name='int32', referencedName='null', description='null', id=-1, version=0, deprecated=0, encodedLength=4, offset=8, componentTokenCount=1, encoding=Encoding{presence=REQUIRED, primitiveType=INT32, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
-        builder.Append("MemberId=");
-        builder.Append(MemberId());
+        builder.Append("CorrelationId=");
+        builder.Append(CorrelationId());
 
         Limit(originalLimit);
 

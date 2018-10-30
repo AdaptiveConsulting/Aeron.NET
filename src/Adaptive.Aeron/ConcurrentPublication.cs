@@ -43,8 +43,7 @@ namespace Adaptive.Aeron
 				channelStatusId,
 				logBuffers,
 				originalRegistrationId,
-				registrationId,
-				FrameDescriptor.ComputeMaxMessageLength(logBuffers.TermLength())
+				registrationId
 			)
 		{
 			var buffers = logBuffers.DuplicateTermBuffers();

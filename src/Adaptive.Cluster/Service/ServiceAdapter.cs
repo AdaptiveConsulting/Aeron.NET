@@ -2,7 +2,6 @@
 using Adaptive.Aeron;
 using Adaptive.Aeron.LogBuffer;
 using Adaptive.Agrona;
-using Adaptive.Cluster.Client;
 using Adaptive.Cluster.Codecs;
 
 namespace Adaptive.Cluster.Service
@@ -37,23 +36,23 @@ namespace Adaptive.Cluster.Service
 
             int templateId = messageHeaderDecoder.TemplateId();
 
-            if (JoinLogDecoder.TEMPLATE_ID != templateId)
+            if (JoinLogDecoder.TEMPLATE_ID == templateId)
             {
-                throw new ClusterException("unknown template id: " + templateId);
+                joinLogDecoder.Wrap(
+                    buffer, 
+                    offset + MessageHeaderDecoder.ENCODED_LENGTH,
+                    messageHeaderDecoder.BlockLength(), 
+                    messageHeaderDecoder.Version());
+
+                clusteredServiceAgent.OnJoinLog(
+                    joinLogDecoder.LeadershipTermId(),
+                    joinLogDecoder.LogPosition(),
+                    joinLogDecoder.MaxLogPosition(),
+                    joinLogDecoder.MemberId(),
+                    joinLogDecoder.LogSessionId(),
+                    joinLogDecoder.LogStreamId(),
+                    joinLogDecoder.LogChannel());
             }
-
-            joinLogDecoder.Wrap(
-                buffer, 
-                offset + MessageHeaderDecoder.ENCODED_LENGTH,
-                messageHeaderDecoder.BlockLength(), 
-                messageHeaderDecoder.Version());
-
-            clusteredServiceAgent.OnJoinLog(
-                joinLogDecoder.LeadershipTermId(),
-                joinLogDecoder.CommitPositionId(),
-                joinLogDecoder.LogSessionId(),
-                joinLogDecoder.LogStreamId(),
-                joinLogDecoder.LogChannel());
         }
     }
 }

@@ -453,6 +453,7 @@ namespace Adaptive.Agrona
             }
             catch (ThreadInterruptedException)
             {
+                Thread.CurrentThread.Interrupt();
             }
         }
     }

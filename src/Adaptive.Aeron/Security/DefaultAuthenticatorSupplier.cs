@@ -1,5 +1,3 @@
-using System;
-
 namespace Adaptive.Aeron.Security
 {
     /// <summary>
@@ -15,7 +13,7 @@ namespace Adaptive.Aeron.Security
             return DEFAULT_AUTHENTICATOR;
         }
 
-        private class DefaultAuthenticator : IAuthenticator
+        class DefaultAuthenticator : IAuthenticator
         {
             public void OnConnectRequest(long sessionId, byte[] encodedCredentials, long nowMs)
             {

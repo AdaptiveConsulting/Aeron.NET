@@ -7,21 +7,21 @@ using Adaptive.Agrona;
 
 namespace Adaptive.Cluster.Codecs {
 
-public class AddClusterMemberDecoder
+public class ClusterMembersResponseDecoder
 {
-    public const ushort BLOCK_LENGTH = 8;
-    public const ushort TEMPLATE_ID = 70;
+    public const ushort BLOCK_LENGTH = 12;
+    public const ushort TEMPLATE_ID = 41;
     public const ushort SCHEMA_ID = 1;
     public const ushort SCHEMA_VERSION = 1;
 
-    private AddClusterMemberDecoder _parentMessage;
+    private ClusterMembersResponseDecoder _parentMessage;
     private IDirectBuffer _buffer;
     protected int _offset;
     protected int _limit;
     protected int _actingBlockLength;
     protected int _actingVersion;
 
-    public AddClusterMemberDecoder()
+    public ClusterMembersResponseDecoder()
     {
         _parentMessage = this;
     }
@@ -61,7 +61,7 @@ public class AddClusterMemberDecoder
         return _offset;
     }
 
-    public AddClusterMemberDecoder Wrap(
+    public ClusterMembersResponseDecoder Wrap(
         IDirectBuffer buffer, int offset, int actingBlockLength, int actingVersion)
     {
         this._buffer = buffer;
@@ -142,22 +142,27 @@ public class AddClusterMemberDecoder
     }
 
 
-    public static int MemberEndpointsId()
+    public static int LeaderMemberIdId()
     {
         return 2;
     }
 
-    public static int MemberEndpointsSinceVersion()
+    public static int LeaderMemberIdSinceVersion()
     {
         return 0;
     }
 
-    public static string MemberEndpointsCharacterEncoding()
+    public static int LeaderMemberIdEncodingOffset()
     {
-        return "US-ASCII";
+        return 8;
     }
 
-    public static string MemberEndpointsMetaAttribute(MetaAttribute metaAttribute)
+    public static int LeaderMemberIdEncodingLength()
+    {
+        return 4;
+    }
+
+    public static string LeaderMemberIdMetaAttribute(MetaAttribute metaAttribute)
     {
         switch (metaAttribute)
         {
@@ -170,18 +175,67 @@ public class AddClusterMemberDecoder
         return "";
     }
 
-    public static int MemberEndpointsHeaderLength()
+    public static int LeaderMemberIdNullValue()
+    {
+        return -2147483648;
+    }
+
+    public static int LeaderMemberIdMinValue()
+    {
+        return -2147483647;
+    }
+
+    public static int LeaderMemberIdMaxValue()
+    {
+        return 2147483647;
+    }
+
+    public int LeaderMemberId()
+    {
+        return _buffer.GetInt(_offset + 8, ByteOrder.LittleEndian);
+    }
+
+
+    public static int ActiveMembersId()
+    {
+        return 3;
+    }
+
+    public static int ActiveMembersSinceVersion()
+    {
+        return 0;
+    }
+
+    public static string ActiveMembersCharacterEncoding()
+    {
+        return "US-ASCII";
+    }
+
+    public static string ActiveMembersMetaAttribute(MetaAttribute metaAttribute)
+    {
+        switch (metaAttribute)
+        {
+            case MetaAttribute.EPOCH: return "unix";
+            case MetaAttribute.TIME_UNIT: return "nanosecond";
+            case MetaAttribute.SEMANTIC_TYPE: return "";
+            case MetaAttribute.PRESENCE: return "required";
+        }
+
+        return "";
+    }
+
+    public static int ActiveMembersHeaderLength()
     {
         return 4;
     }
 
-    public int MemberEndpointsLength()
+    public int ActiveMembersLength()
     {
         int limit = _parentMessage.Limit();
         return (int)unchecked((uint)_buffer.GetInt(limit, ByteOrder.LittleEndian));
     }
 
-    public int GetMemberEndpoints(IMutableDirectBuffer dst, int dstOffset, int length)
+    public int GetActiveMembers(IMutableDirectBuffer dst, int dstOffset, int length)
     {
         int headerLength = 4;
         int limit = _parentMessage.Limit();
@@ -193,7 +247,7 @@ public class AddClusterMemberDecoder
         return bytesCopied;
     }
 
-    public int GetMemberEndpoints(byte[] dst, int dstOffset, int length)
+    public int GetActiveMembers(byte[] dst, int dstOffset, int length)
     {
         int headerLength = 4;
         int limit = _parentMessage.Limit();
@@ -205,7 +259,82 @@ public class AddClusterMemberDecoder
         return bytesCopied;
     }
 
-    public string MemberEndpoints()
+    public string ActiveMembers()
+    {
+        int headerLength = 4;
+        int limit = _parentMessage.Limit();
+        int dataLength = (int)unchecked((uint)_buffer.GetInt(limit, ByteOrder.LittleEndian));
+        _parentMessage.Limit(limit + headerLength + dataLength);
+        byte[] tmp = new byte[dataLength];
+        _buffer.GetBytes(limit + headerLength, tmp, 0, dataLength);
+
+        return Encoding.ASCII.GetString(tmp);
+    }
+
+    public static int PassiveFollowersId()
+    {
+        return 4;
+    }
+
+    public static int PassiveFollowersSinceVersion()
+    {
+        return 0;
+    }
+
+    public static string PassiveFollowersCharacterEncoding()
+    {
+        return "US-ASCII";
+    }
+
+    public static string PassiveFollowersMetaAttribute(MetaAttribute metaAttribute)
+    {
+        switch (metaAttribute)
+        {
+            case MetaAttribute.EPOCH: return "unix";
+            case MetaAttribute.TIME_UNIT: return "nanosecond";
+            case MetaAttribute.SEMANTIC_TYPE: return "";
+            case MetaAttribute.PRESENCE: return "required";
+        }
+
+        return "";
+    }
+
+    public static int PassiveFollowersHeaderLength()
+    {
+        return 4;
+    }
+
+    public int PassiveFollowersLength()
+    {
+        int limit = _parentMessage.Limit();
+        return (int)unchecked((uint)_buffer.GetInt(limit, ByteOrder.LittleEndian));
+    }
+
+    public int GetPassiveFollowers(IMutableDirectBuffer dst, int dstOffset, int length)
+    {
+        int headerLength = 4;
+        int limit = _parentMessage.Limit();
+        int dataLength = (int)unchecked((uint)_buffer.GetInt(limit, ByteOrder.LittleEndian));
+        int bytesCopied = Math.Min(length, dataLength);
+        _parentMessage.Limit(limit + headerLength + dataLength);
+        _buffer.GetBytes(limit + headerLength, dst, dstOffset, bytesCopied);
+
+        return bytesCopied;
+    }
+
+    public int GetPassiveFollowers(byte[] dst, int dstOffset, int length)
+    {
+        int headerLength = 4;
+        int limit = _parentMessage.Limit();
+        int dataLength = (int)unchecked((uint)_buffer.GetInt(limit, ByteOrder.LittleEndian));
+        int bytesCopied = Math.Min(length, dataLength);
+        _parentMessage.Limit(limit + headerLength + dataLength);
+        _buffer.GetBytes(limit + headerLength, dst, dstOffset, bytesCopied);
+
+        return bytesCopied;
+    }
+
+    public string PassiveFollowers()
     {
         int headerLength = 4;
         int limit = _parentMessage.Limit();
@@ -227,7 +356,7 @@ public class AddClusterMemberDecoder
     {
         int originalLimit = Limit();
         Limit(_offset + _actingBlockLength);
-        builder.Append("[AddClusterMember](sbeTemplateId=");
+        builder.Append("[ClusterMembersResponse](sbeTemplateId=");
         builder.Append(TEMPLATE_ID);
         builder.Append("|sbeSchemaId=");
         builder.Append(SCHEMA_ID);
@@ -251,9 +380,18 @@ public class AddClusterMemberDecoder
         builder.Append("CorrelationId=");
         builder.Append(CorrelationId());
         builder.Append('|');
-        //Token{signal=BEGIN_VAR_DATA, name='memberEndpoints', referencedName='null', description='null', id=2, version=0, deprecated=0, encodedLength=0, offset=8, componentTokenCount=6, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
-        builder.Append("MemberEndpoints=");
-        builder.Append(MemberEndpoints());
+        //Token{signal=BEGIN_FIELD, name='leaderMemberId', referencedName='null', description='null', id=2, version=0, deprecated=0, encodedLength=0, offset=8, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=ENCODING, name='int32', referencedName='null', description='null', id=-1, version=0, deprecated=0, encodedLength=4, offset=8, componentTokenCount=1, encoding=Encoding{presence=REQUIRED, primitiveType=INT32, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        builder.Append("LeaderMemberId=");
+        builder.Append(LeaderMemberId());
+        builder.Append('|');
+        //Token{signal=BEGIN_VAR_DATA, name='activeMembers', referencedName='null', description='null', id=3, version=0, deprecated=0, encodedLength=0, offset=12, componentTokenCount=6, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        builder.Append("ActiveMembers=");
+        builder.Append(ActiveMembers());
+        builder.Append('|');
+        //Token{signal=BEGIN_VAR_DATA, name='passiveFollowers', referencedName='null', description='null', id=4, version=0, deprecated=0, encodedLength=0, offset=-1, componentTokenCount=6, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        builder.Append("PassiveFollowers=");
+        builder.Append(PassiveFollowers());
 
         Limit(originalLimit);
 

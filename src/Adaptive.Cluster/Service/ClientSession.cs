@@ -14,7 +14,6 @@ namespace Adaptive.Cluster.Service
         public const long MOCKED_OFFER = 1;
 
         private readonly long _id;
-        private long _lastCorrelationId;
         private readonly int _responseStreamId;
         private readonly string _responseChannel;
         private readonly byte[] _encodedPrincipal;
@@ -25,14 +24,12 @@ namespace Adaptive.Cluster.Service
 
         internal ClientSession(
             long sessionId,
-            long correlationId,
             int responseStreamId,
             string responseChannel,
             byte[] encodedPrincipal,
             ClusteredServiceAgent cluster)
         {
             _id = sessionId;
-            _lastCorrelationId = correlationId;
             _responseStreamId = responseStreamId;
             _responseChannel = responseChannel;
             _encodedPrincipal = encodedPrincipal;
@@ -82,30 +79,16 @@ namespace Adaptive.Cluster.Service
         public bool IsClosing => _isClosing;
 
         /// <summary>
-        /// Get the last correlation id processed on this session.
-        /// </summary>
-        /// <returns> the last correlation id processed on this session. </returns>
-        public long LastCorrelationId()
-        {
-            return _lastCorrelationId;
-        }
-
-        /// <summary>
         /// Non-blocking publish of a partial buffer containing a message to a cluster.
         /// </summary>
-        /// <param name="correlationId"> to be used to identify the message to the cluster. </param>
-        /// <param name="buffer">        containing message. </param>
-        /// <param name="offset">        offset in the buffer at which the encoded message begins. </param>
-        /// <param name="length">        in bytes of the encoded message. </param>
+        /// <param name="buffer"> containing message. </param>
+        /// <param name="offset"> offset in the buffer at which the encoded message begins. </param>
+        /// <param name="length"> in bytes of the encoded message. </param>
         /// <returns> the same as <seealso cref="Publication.Offer(IDirectBuffer, int, int)"/> when in <seealso cref="ClusterRole.Leader"/>
         /// otherwise <see cref="MOCKED_OFFER"/>. </returns>
-        public long Offer(
-            long correlationId,
-            IDirectBuffer buffer,
-            int offset,
-            int length)
+        public long Offer(IDirectBuffer buffer, int offset, int length)
         {
-            return _cluster.Offer(correlationId, _id, _responsePublication, buffer, offset, length);
+            return _cluster.Offer(_id, _responsePublication, buffer, offset, length);
         }
 
         internal void Connect(Aeron.Aeron aeron)
@@ -130,11 +113,6 @@ namespace Adaptive.Cluster.Service
         {
             _responsePublication?.Dispose();
             _responsePublication = null;
-        }
-
-        internal void LastCorrelationId(long correlationId)
-        {
-            _lastCorrelationId = correlationId;
         }
     }
 }

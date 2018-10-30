@@ -14,8 +14,6 @@ namespace Adaptive.Cluster.Service
     ///  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     ///  |                         Service ID                            |
     ///  +---------------------------------------------------------------+
-    ///  |                      Cluster Member ID                        |
-    ///  +---------------------------------------------------------------+
     /// </pre>
     /// </para>
     /// </summary>
@@ -27,15 +25,13 @@ namespace Adaptive.Cluster.Service
         public const int SERVICE_HEARTBEAT_TYPE_ID = 206;
 
         public const int SERVICE_ID_OFFSET = 0;
-        public const int MEMBER_ID_OFFSET = SERVICE_ID_OFFSET + BitUtil.SIZE_OF_INT;
-        
         
         /// <summary>
         /// Human readable name for the counter.
         /// </summary>
         public const string NAME = "service-heartbeat: serviceId=";
 
-        public static readonly int KEY_LENGTH = MEMBER_ID_OFFSET + BitUtil.SIZE_OF_INT;
+        public static readonly int KEY_LENGTH = BitUtil.SIZE_OF_INT;
 
         /// <summary>
         /// Allocate a counter to represent the heartbeat of a clustered service.
@@ -43,12 +39,10 @@ namespace Adaptive.Cluster.Service
         /// <param name="aeron">      to allocate the counter. </param>
         /// <param name="tempBuffer"> to use for building the key and label without allocation. </param>
         /// <param name="serviceId">  of the service heartbeat. </param>
-        /// <param name="clusterMemberId">  the service will be associated with. </param>
         /// <returns> the <seealso cref="Counter"/> for the commit position. </returns>
-        public static Counter Allocate(Aeron.Aeron aeron, IMutableDirectBuffer tempBuffer, int serviceId, int clusterMemberId)
+        public static Counter Allocate(Aeron.Aeron aeron, IMutableDirectBuffer tempBuffer, int serviceId)
         {
             tempBuffer.PutInt(SERVICE_ID_OFFSET, serviceId);
-            tempBuffer.PutInt(MEMBER_ID_OFFSET, clusterMemberId);
             
             int labelOffset = BitUtil.Align(KEY_LENGTH, BitUtil.SIZE_OF_INT);
             int labelLength = 0;
@@ -85,29 +79,5 @@ namespace Adaptive.Cluster.Service
 
             return CountersReader.NULL_COUNTER_ID;
         }
-        
-        /// <summary>
-        /// Get the cluster member id this service is associated with.
-        /// </summary>
-        /// <param name="counters">  to search within. </param>
-        /// <param name="counterId"> for the active service heartbeat counter. </param>
-        /// <returns> if found otherwise <seealso cref="Aeron.NULL_VALUE"/>. </returns>
-        public static int GetClusterMemberId(CountersReader counters, int counterId)
-        {
-            IDirectBuffer buffer = counters.MetaDataBuffer;
-
-            if (counters.GetCounterState(counterId) == CountersReader.RECORD_ALLOCATED)
-            {
-                int recordOffset = CountersReader.MetaDataOffset(counterId);
-
-                if (buffer.GetInt(recordOffset + CountersReader.TYPE_ID_OFFSET) == SERVICE_HEARTBEAT_TYPE_ID)
-                {
-                    return buffer.GetInt(recordOffset + CountersReader.KEY_OFFSET + MEMBER_ID_OFFSET);
-                }
-            }
-
-            return Aeron.Aeron.NULL_VALUE;
-        }
-
     }
 }

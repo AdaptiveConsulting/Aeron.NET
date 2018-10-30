@@ -111,6 +111,7 @@ namespace Adaptive.Agrona.Concurrent
                 catch (ThreadInterruptedException)
                 {
                     Dispose();
+                    Thread.CurrentThread.Interrupt();
                 }
                 catch (AgentTerminationException ex)
                 {

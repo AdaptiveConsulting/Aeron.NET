@@ -29,7 +29,6 @@ namespace Adaptive.Cluster.Service
                 {
                     _clientSessionEncoder.WrapAndApplyHeader(bufferClaim.Buffer, bufferClaim.Offset, messageHeaderEncoder)
                         .ClusterSessionId(session.Id())
-                        .LastCorrelationId(session.LastCorrelationId())
                         .ResponseStreamId(session.ResponseStreamId())
                         .ResponseChannel(responseChannel)
                         .PutEncodedPrincipal(encodedPrincipal, 0, encodedPrincipal.Length);

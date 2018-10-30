@@ -9,7 +9,7 @@ namespace Adaptive.Cluster.Codecs {
 
 public class TimerEventEncoder
 {
-    public const ushort BLOCK_LENGTH = 16;
+    public const ushort BLOCK_LENGTH = 24;
     public const ushort TEMPLATE_ID = 21;
     public const ushort SCHEMA_ID = 1;
     public const ushort SCHEMA_VERSION = 1;
@@ -96,9 +96,41 @@ public class TimerEventEncoder
         this._limit = limit;
     }
 
-    public static int CorrelationIdEncodingOffset()
+    public static int LeadershipTermIdEncodingOffset()
     {
         return 0;
+    }
+
+    public static int LeadershipTermIdEncodingLength()
+    {
+        return 8;
+    }
+
+    public static long LeadershipTermIdNullValue()
+    {
+        return -9223372036854775808L;
+    }
+
+    public static long LeadershipTermIdMinValue()
+    {
+        return -9223372036854775807L;
+    }
+
+    public static long LeadershipTermIdMaxValue()
+    {
+        return 9223372036854775807L;
+    }
+
+    public TimerEventEncoder LeadershipTermId(long value)
+    {
+        _buffer.PutLong(_offset + 0, value, ByteOrder.LittleEndian);
+        return this;
+    }
+
+
+    public static int CorrelationIdEncodingOffset()
+    {
+        return 8;
     }
 
     public static int CorrelationIdEncodingLength()
@@ -123,14 +155,14 @@ public class TimerEventEncoder
 
     public TimerEventEncoder CorrelationId(long value)
     {
-        _buffer.PutLong(_offset + 0, value, ByteOrder.LittleEndian);
+        _buffer.PutLong(_offset + 8, value, ByteOrder.LittleEndian);
         return this;
     }
 
 
     public static int TimestampEncodingOffset()
     {
-        return 8;
+        return 16;
     }
 
     public static int TimestampEncodingLength()
@@ -155,7 +187,7 @@ public class TimerEventEncoder
 
     public TimerEventEncoder Timestamp(long value)
     {
-        _buffer.PutLong(_offset + 8, value, ByteOrder.LittleEndian);
+        _buffer.PutLong(_offset + 16, value, ByteOrder.LittleEndian);
         return this;
     }
 
