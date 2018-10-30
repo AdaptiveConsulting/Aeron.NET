@@ -76,7 +76,7 @@ namespace Adaptive.Aeron.Tests
         public void ShouldEnsureTheSubscriptionIsOpenWhenPolling()
         {
             Subscription.Dispose();
-            Assert.True(Subscription.Closed);
+            Assert.True(Subscription.IsClosed);
 
             A.CallTo(() => Conductor.ReleaseSubscription(Subscription)).MustHaveHappened();
         }

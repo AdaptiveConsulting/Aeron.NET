@@ -478,7 +478,7 @@ namespace Adaptive.Aeron
             _clientLock.Lock();
             try
             {
-                if (!subscription.Closed)
+                if (!subscription.IsClosed)
                 {
                     EnsureOpen();
                     EnsureNotReentrant();

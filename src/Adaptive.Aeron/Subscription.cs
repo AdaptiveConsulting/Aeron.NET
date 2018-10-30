@@ -423,7 +423,7 @@ namespace Adaptive.Aeron
         /// Has this object been closed and should no longer be used?
         /// </summary>
         /// <returns> true if it has been closed otherwise false. </returns>
-        public bool Closed => _fields.isClosed;
+        public bool IsClosed => _fields.isClosed;
 
 
         /// <summary>
