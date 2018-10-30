@@ -12,19 +12,19 @@ namespace Adaptive.Cluster.Service
         /// The unique id for the hosting member of the cluster. Useful only for debugging purposes.
         /// </summary>
         /// <returns> unique id for the hosting member of the cluster. </returns>
-        int MemberId();
+        int MemberId { get; }
         
         /// <summary>
         /// The role the cluster node is playing.
         /// </summary>
         /// <returns> the role the cluster node is playing. </returns>
-        ClusterRole Role();
+        ClusterRole Role { get; }
 
         /// <summary>
         /// Get the <seealso cref="Aeron"/> client used by the cluster.
         /// </summary>
         /// <returns> the <seealso cref="Aeron"/> client used by the cluster. </returns>
-        Aeron.Aeron Aeron();
+        Aeron.Aeron Aeron { get; }
 
         /// <summary>
         /// Get the <seealso cref="ClientSession"/> for a given cluster session id.
@@ -37,7 +37,7 @@ namespace Adaptive.Cluster.Service
         /// Get all <seealso cref="ClientSession"/>s.
         /// </summary>
         /// <returns> the <seealso cref="ClientSession"/>s. </returns>
-        ICollection<ClientSession> GetClientSessions();
+        ICollection<ClientSession> ClientSessions { get; }
         
         /// <summary>
         /// Request the close of a <seealso cref="ClientSession"/> by sending the request to the consensus module.
@@ -51,7 +51,7 @@ namespace Adaptive.Cluster.Service
         /// Current Epoch time in milliseconds.
         /// </summary>
         /// <returns> Epoch time in milliseconds. </returns>
-        long TimeMs();
+        long TimeMs { get; }
 
         /// <summary>
         /// Schedule a timer for a given deadline and provide a correlation id to identify the timer when it expires or

@@ -18,17 +18,17 @@ namespace Adaptive.Aeron.Samples.ClusterService
 
         public void OnSessionOpen(ClientSession session, long timestampMs)
         {
-            Console.WriteLine($"OnSessionOpen: sessionId={session.Id()}, timestamp={timestampMs}");
+            Console.WriteLine($"OnSessionOpen: sessionId={session.Id}, timestamp={timestampMs}");
         }
 
         public void OnSessionClose(ClientSession session, long timestampMs, CloseReason closeReason)
         {
-            Console.WriteLine($"OnSessionClose: sessionId={session.Id()}, timestamp={timestampMs}");
+            Console.WriteLine($"OnSessionClose: sessionId={session.Id}, timestamp={timestampMs}");
         }
 
         public void OnSessionMessage(ClientSession session, long timestampMs, IDirectBuffer buffer, int offset, int length, Header header)
         {
-            Console.WriteLine($"OnSessionMessage: sessionId={session.Id()}, timestamp={timestampMs}, length={length}");
+            Console.WriteLine($"OnSessionMessage: sessionId={session.Id}, timestamp={timestampMs}, length={length}");
 
             Console.WriteLine("Received Message: " + buffer.GetStringWithoutLengthUtf8(offset, length));
             

@@ -225,37 +225,26 @@ namespace Adaptive.Cluster.Client
         /// Get the context used to launch this cluster client.
         /// </summary>
         /// <returns> the context used to launch this cluster client. </returns>
-        public Context Ctx()
-        {
-            return _ctx;
-        }
+        public Context Ctx => _ctx;
 
         /// <summary>
         /// Cluster session id for the session that was opened as the result of a successful connect.
         /// </summary>
         /// <returns> session id for the session that was opened as the result of a successful connect. </returns>
-        public long ClusterSessionId()
-        {
-            return _clusterSessionId;
-        }
+        public long ClusterSessionId => _clusterSessionId;
 
         /// <summary>
         /// Leadership term identity for the cluster. Advances with changing leadership.
         /// </summary>
         /// <returns> leadership term identity for the cluster. </returns>
-        public long LeadershipTermId()
-        {
-            return _leadershipTermId;
-        }
+        public long LeadershipTermId => _leadershipTermId;
+        
 
         /// <summary>
         /// Get the current leader member id for the cluster.
         /// </summary>
         /// <returns> the current leader member id for the cluster. </returns>
-        public int LeaderMemberId()
-        {
-            return _leaderMemberId;
-        }
+        public int LeaderMemberId => _leaderMemberId;
 
         /// <summary>
         /// Get the raw <seealso cref="Publication"/> for sending to the cluster.
@@ -267,10 +256,7 @@ namespace Adaptive.Cluster.Client
         /// </para>
         /// </summary>
         /// <returns> the raw <seealso cref="Publication"/> for connecting to the cluster. </returns>
-        public Publication IngressPublication()
-        {
-            return _publication;
-        }
+        public Publication IngressPublication => _publication;
 
         /// <summary>
         /// Get the raw <seealso cref="Subscription"/> for receiving from the cluster.
@@ -279,10 +265,7 @@ namespace Adaptive.Cluster.Client
         /// 
         /// </summary>
         /// <returns> the raw <seealso cref="Subscription"/> for receiving from the cluster. </returns>
-        public Subscription EgressSubscription()
-        {
-            return _subscription;
-        }
+        public Subscription EgressSubscription => _subscription;
 
         /// <summary>
         /// Non-blocking publish of a partial buffer containing a message plus session header to a cluster.
@@ -685,7 +668,7 @@ namespace Adaptive.Cluster.Client
                 throw new TimeoutException(errorMessage);
             }
         }
-        
+
         private static void CheckResult(long result)
         {
             if (result == Publication.NOT_CONNECTED || result == Publication.CLOSED ||

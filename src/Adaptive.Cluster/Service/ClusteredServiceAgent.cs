@@ -17,9 +17,9 @@ namespace Adaptive.Cluster.Service
 {
     internal sealed class ClusteredServiceAgent : IAgent, ICluster
     {
-        public static readonly int SESSION_HEADER_LENGTH = 
+        public static readonly int SESSION_HEADER_LENGTH =
             MessageHeaderEncoder.ENCODED_LENGTH + SessionHeaderEncoder.BLOCK_LENGTH;
-        
+
         private readonly int serviceId;
         private bool isRecovering;
         private readonly AeronArchive.Context archiveCtx;
@@ -64,7 +64,7 @@ namespace Adaptive.Cluster.Service
             var channel = ctx.ServiceControlChannel();
             _consensusModuleProxy = new ConsensusModuleProxy(aeron.AddPublication(channel, ctx.ConsensusModuleStreamId()));
             _serviceAdapter = new ServiceAdapter(aeron.AddSubscription(channel, ctx.ServiceStreamId()), this);
-            
+
             UnsafeBuffer headerBuffer = new UnsafeBuffer(new byte[SESSION_HEADER_LENGTH]);
             _egressMessageHeaderEncoder.WrapAndApplyHeader(headerBuffer, 0, new MessageHeaderEncoder());
 
@@ -80,9 +80,9 @@ namespace Adaptive.Cluster.Service
             commitPosition = AwaitCommitPositionCounter(counters);
 
             service.OnStart(this);
-            
+
             isRecovering = true;
-            
+
             int recoveryCounterId = AwaitRecoveryCounter(counters);
             heartbeatCounter.SetOrdered(epochClock.Time());
             CheckForSnapshot(counters, recoveryCounterId);
@@ -115,7 +115,7 @@ namespace Adaptive.Cluster.Service
                 PollServiceAdapter();
                 workCount += 1;
             }
-           
+
             if (null != logAdapter)
             {
                 int polled = logAdapter.Poll();
@@ -135,35 +135,31 @@ namespace Adaptive.Cluster.Service
             return workCount;
         }
 
-        public string RoleName()
+        public string RoleName() => ctx.ServiceName();
+
+        public ClusterRole Role
         {
-            return ctx.ServiceName();
+            get => role;
+            private set
+            {
+                if (value != role)
+                {
+                    role = value;
+                    service.OnRoleChange(value);
+                }
+            }
         }
 
-        public ClusterRole Role()
-        {
-            return role;
-        }
+        public int MemberId => memberId;
 
-        public int MemberId()
-        {
-            return memberId;
-        }
-
-        public Aeron.Aeron Aeron()
-        {
-            return aeron;
-        }
+        public Aeron.Aeron Aeron => aeron;
 
         public ClientSession GetClientSession(long clusterSessionId)
         {
             return sessionByIdMap[clusterSessionId];
         }
 
-        public ICollection<ClientSession> GetClientSessions()
-        {
-            return sessionByIdMap.Values;
-        }
+        public ICollection<ClientSession> ClientSessions => sessionByIdMap.Values;
 
         public bool CloseSession(long clusterSessionId)
         {
@@ -188,10 +184,7 @@ namespace Adaptive.Cluster.Service
             return false;
         }
 
-        public long TimeMs()
-        {
-            return clusterTimeMs;
-        }
+        public long TimeMs => clusterTimeMs;
 
         public bool ScheduleTimer(long correlationId, long deadlineMs)
         {
@@ -216,7 +209,7 @@ namespace Adaptive.Cluster.Service
             CheckForClockTick();
             idleStrategy.Idle(workCount);
         }
-        
+
         public long Offer(
             long clusterSessionId,
             Publication publication,
@@ -253,22 +246,22 @@ namespace Adaptive.Cluster.Service
                 logAdapter.Dispose();
                 logAdapter = null;
             }
-            
+
             activeLogEvent = new ActiveLogEvent(
                 leadershipTermId, logPosition, maxLogPosition, memberId, logSessionId, logStreamId, logChannel);
         }
 
         internal void OnSessionMessage(
-            long clusterSessionId, 
-            long timestampMs, 
-            IDirectBuffer buffer, 
-            int offset, 
-            int length, 
+            long clusterSessionId,
+            long timestampMs,
+            IDirectBuffer buffer,
+            int offset,
+            int length,
             Header header)
         {
             clusterTimeMs = timestampMs;
             var clientSession = sessionByIdMap[clusterSessionId];
-            
+
             service.OnSessionMessage(clientSession, timestampMs, buffer, offset, length, header);
         }
 
@@ -325,7 +318,7 @@ namespace Adaptive.Cluster.Service
             _egressMessageHeaderEncoder.LeadershipTermId(leadershipTermId);
             clusterTimeMs = timestampMs;
         }
-        
+
         internal void OnClusterChange(
             long leadershipTermId,
             long logPosition,
@@ -355,15 +348,6 @@ namespace Adaptive.Cluster.Service
                 clusterSessionId, responseStreamId, responseChannel, encodedPrincipal, this);
 
             sessionByIdMap[clusterSessionId] = session;
-        }
-
-        private void Role(ClusterRole newRole)
-        {
-            if (newRole != role)
-            {
-                role = newRole;
-                service.OnRoleChange(newRole);
-            }
         }
 
         private void CheckForSnapshot(CountersReader counters, int recoveryCounterId)
@@ -445,7 +429,7 @@ namespace Adaptive.Cluster.Service
             {
                 CheckInterruptedStatus();
                 idleStrategy.Idle();
-                
+
                 heartbeatCounter.SetOrdered(epochClock.Time());
                 counterId = RecoveryState.FindCounterId(counters);
             }
@@ -468,7 +452,7 @@ namespace Adaptive.Cluster.Service
             activeLogEvent = null;
             logAdapter = new BoundedLogAdapter(image, commitPosition, this);
 
-            Role((ClusterRole) roleCounter.Get());
+            Role = (ClusterRole) roleCounter.Get();
 
             foreach (ClientSession session in sessionByIdMap.Values)
             {
@@ -476,9 +460,9 @@ namespace Adaptive.Cluster.Service
                 {
                     if (ctx.IsRespondingService())
                     {
-                        session.Connect(aeron);                        
+                        session.Connect(aeron);
                     }
-                    
+
                     session.ResetClosing();
                 }
                 else
@@ -514,7 +498,7 @@ namespace Adaptive.Cluster.Service
 
             return new ReadableCounter(counters, counterId);
         }
-        
+
         private ReadableCounter AwaitCommitPositionCounter(CountersReader counters)
         {
             idleStrategy.Reset();
@@ -529,7 +513,7 @@ namespace Adaptive.Cluster.Service
 
             return new ReadableCounter(counters, counterId);
         }
-        
+
         private AtomicCounter AwaitHeartbeatCounter(CountersReader counters)
         {
             idleStrategy.Reset();
@@ -591,12 +575,12 @@ namespace Adaptive.Cluster.Service
         {
             long recordingId;
 
-            using (AeronArchive archive = AeronArchive.Connect(archiveCtx)) 
-            using(Publication publication = aeron.AddExclusivePublication(ctx.SnapshotChannel(), ctx.SnapshotStreamId()))
+            using (AeronArchive archive = AeronArchive.Connect(archiveCtx))
+            using (Publication publication = aeron.AddExclusivePublication(ctx.SnapshotChannel(), ctx.SnapshotStreamId()))
             {
                 var channel = ChannelUri.AddSessionId(ctx.SnapshotChannel(), publication.SessionId);
                 long subscriptionId = archive.StartRecording(channel, ctx.SnapshotStreamId(), SourceLocation.LOCAL);
-                
+
                 try
                 {
                     CountersReader counters = aeron.CountersReader;
@@ -708,7 +692,7 @@ namespace Adaptive.Cluster.Service
         private bool CheckForClockTick()
         {
             long nowMs = epochClock.Time();
-            
+
             if (cachedTimeMs != nowMs)
             {
                 cachedTimeMs = nowMs;

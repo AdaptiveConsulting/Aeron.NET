@@ -15,8 +15,8 @@ namespace Adaptive.Cluster.Service
 
         public void SnapshotSession(ClientSession session)
         {
-            string responseChannel = session.ResponseChannel();
-            byte[] encodedPrincipal = session.EncodedPrincipal();
+            string responseChannel = session.ResponseChannel;
+            byte[] encodedPrincipal = session.EncodedPrincipal;
             int length = MessageHeaderEncoder.ENCODED_LENGTH + ClientSessionEncoder.BLOCK_LENGTH + 
                          ClientSessionEncoder.ResponseChannelHeaderLength() + responseChannel.Length + 
                          ClientSessionEncoder.EncodedPrincipalHeaderLength() + encodedPrincipal.Length;
@@ -28,8 +28,8 @@ namespace Adaptive.Cluster.Service
                 if (result > 0)
                 {
                     _clientSessionEncoder.WrapAndApplyHeader(bufferClaim.Buffer, bufferClaim.Offset, messageHeaderEncoder)
-                        .ClusterSessionId(session.Id())
-                        .ResponseStreamId(session.ResponseStreamId())
+                        .ClusterSessionId(session.Id)
+                        .ResponseStreamId(session.ResponseStreamId)
                         .ResponseChannel(responseChannel)
                         .PutEncodedPrincipal(encodedPrincipal, 0, encodedPrincipal.Length);
 

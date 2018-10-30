@@ -13,14 +13,8 @@ namespace Adaptive.Cluster.Service
         /// </summary>
         public const long MOCKED_OFFER = 1;
 
-        private readonly long _id;
-        private readonly int _responseStreamId;
-        private readonly string _responseChannel;
-        private readonly byte[] _encodedPrincipal;
-
         private readonly ClusteredServiceAgent _cluster;
         private Publication _responsePublication;
-        private bool _isClosing;
 
         internal ClientSession(
             long sessionId,
@@ -29,10 +23,10 @@ namespace Adaptive.Cluster.Service
             byte[] encodedPrincipal,
             ClusteredServiceAgent cluster)
         {
-            _id = sessionId;
-            _responseStreamId = responseStreamId;
-            _responseChannel = responseChannel;
-            _encodedPrincipal = encodedPrincipal;
+            Id = sessionId;
+            ResponseStreamId = responseStreamId;
+            ResponseChannel = responseChannel;
+            EncodedPrincipal = encodedPrincipal;
             _cluster = cluster;
         }
 
@@ -40,43 +34,31 @@ namespace Adaptive.Cluster.Service
         /// Cluster session identity uniquely allocated when the session was opened.
         /// </summary>
         /// <returns> the cluster session identity uniquely allocated when the session was opened. </returns>
-        public long Id()
-        {
-            return _id;
-        }
+        public long Id { get; }
 
         /// <summary>
         /// The response channel stream id for responding to the client.
         /// </summary>
         /// <returns> response channel stream id for responding to the client. </returns>
-        public int ResponseStreamId()
-        {
-            return _responseStreamId;
-        }
+        public int ResponseStreamId { get; }
 
         /// <summary>
         /// The response channel for responding to the client.
         /// </summary>
         /// <returns> response channel for responding to the client. </returns>
-        public string ResponseChannel()
-        {
-            return _responseChannel;
-        }
+        public string ResponseChannel { get; }
 
         /// <summary>
         /// Cluster session encoded principal from when the session was authenticated.
         /// </summary>
         /// <returns> The encoded Principal passed. May be 0 length to indicate none present. </returns>
-        public byte[] EncodedPrincipal()
-        {
-            return _encodedPrincipal;
-        }
+        public byte[] EncodedPrincipal { get; }
 
         /// <summary>
         /// Indicates that a request to close this session has been made.
         /// </summary>
         /// <returns> whether a request to close this session has been made. </returns>
-        public bool IsClosing => _isClosing;
+        public bool IsClosing { get; private set; }
 
         /// <summary>
         /// Non-blocking publish of a partial buffer containing a message to a cluster.
@@ -88,25 +70,25 @@ namespace Adaptive.Cluster.Service
         /// otherwise <see cref="MOCKED_OFFER"/>. </returns>
         public long Offer(IDirectBuffer buffer, int offset, int length)
         {
-            return _cluster.Offer(_id, _responsePublication, buffer, offset, length);
+            return _cluster.Offer(Id, _responsePublication, buffer, offset, length);
         }
 
         internal void Connect(Aeron.Aeron aeron)
         {
             if (null == _responsePublication)
             {
-                _responsePublication = aeron.AddExclusivePublication(_responseChannel, _responseStreamId);
+                _responsePublication = aeron.AddExclusivePublication(ResponseChannel, ResponseStreamId);
             }
         }
 
         internal void MarkClosing()
         {
-            _isClosing = true;
+            IsClosing = true;
         }
 
         internal void ResetClosing()
         {
-            _isClosing = false;
+            IsClosing = false;
         }
 
         internal void Disconnect()
