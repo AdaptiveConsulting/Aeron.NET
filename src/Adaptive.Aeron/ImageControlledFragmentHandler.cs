@@ -35,7 +35,7 @@ namespace Adaptive.Aeron
         /// Get the delegate unto which assembled messages are delegated.
         /// </summary>
         /// <returns>  the delegate unto which assembled messages are delegated. </returns>
-        public virtual IControlledFragmentHandler Delegate()
+        public IControlledFragmentHandler Delegate()
         {
             return _delegate;
         }

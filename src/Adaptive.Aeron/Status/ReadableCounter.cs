@@ -63,7 +63,7 @@ namespace Adaptive.Aeron.Status
         /// Return the registration Id for the counter.
         /// </summary>
         /// <returns> registration Id. </returns>
-        public virtual long RegistrationId()
+        public long RegistrationId()
         {
             return registrationId;
         }
@@ -72,7 +72,7 @@ namespace Adaptive.Aeron.Status
         /// Return the counter Id.
         /// </summary>
         /// <returns> counter Id. </returns>
-        public virtual int CounterId()
+        public int CounterId()
         {
             return counterId;
         }
@@ -84,7 +84,7 @@ namespace Adaptive.Aeron.Status
         /// <seealso cref="CountersReader.RECORD_RECLAIMED"/>
         /// <seealso cref="CountersReader.RECORD_UNUSED"/>
         /// <returns> state for the counter. </returns>
-        public virtual int State()
+        public int State()
         {
             return countersReader.GetCounterState(counterId);
         }
@@ -93,7 +93,7 @@ namespace Adaptive.Aeron.Status
         /// Return the counter label.
         /// </summary>
         /// <returns> the counter label. </returns>
-        public virtual string Label()
+        public string Label()
         {
             return countersReader.GetCounterLabel(counterId);
         }
@@ -107,7 +107,7 @@ namespace Adaptive.Aeron.Status
         /// </para>
         /// </summary>
         /// <returns> the latest value for the counter. </returns>
-        public virtual long Get()
+        public long Get()
         {
             // return UnsafeAccess.UNSAFE.getLongVolatile(buffer, addressOffset);
             
@@ -118,7 +118,7 @@ namespace Adaptive.Aeron.Status
         /// Get the value of the counter using weak ordering semantics. This is the same a standard read of a field.
         /// </summary>
         /// <returns> the  value for the counter. </returns>
-        public virtual long GetWeak()
+        public long GetWeak()
         {
             // UnsafeAccess.UNSAFE.getLong(buffer, addressOffset);
             
@@ -128,7 +128,7 @@ namespace Adaptive.Aeron.Status
         /// <summary>
         /// Close this counter. This has no impact on the <seealso cref="Counter"/> it is viewing.
         /// </summary>
-        public virtual void Dispose()
+        public void Dispose()
         {
             isClosed = true;
         }
@@ -137,7 +137,7 @@ namespace Adaptive.Aeron.Status
         /// Has this counters been closed and should no longer be used?
         /// </summary>
         /// <returns> true if it has been closed otherwise false. </returns>
-        public virtual bool IsClosed()
+        public bool IsClosed()
         {
             return isClosed;
         }

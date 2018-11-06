@@ -300,7 +300,7 @@ namespace Adaptive.Agrona.Concurrent.Status
         /// <param name="labelOffset"> within the labelBuffer at which the label begins. </param>
         /// <param name="labelLength"> of the label in the labelBuffer. </param>
         /// <returns> the id allocated for the counter. </returns>
-        public virtual AtomicCounter NewCounter(
+        public AtomicCounter NewCounter(
             int typeId,
             IDirectBuffer keyBuffer,
             int keyOffset,

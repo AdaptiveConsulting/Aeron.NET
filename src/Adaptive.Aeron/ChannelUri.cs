@@ -109,7 +109,7 @@ namespace Adaptive.Aeron
         /// </summary>
         /// <param name="media"> to replace the parsed value. </param>
         /// <returns> this for a fluent API. </returns>
-        public virtual ChannelUri Media(string media)
+        public ChannelUri Media(string media)
         {
             _media = media;
             return this;

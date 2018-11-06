@@ -154,7 +154,7 @@ namespace Adaptive.Agrona
             this.timestampFieldOffset = timestampFieldOffset;
         }
 
-        public virtual bool IsClosed()
+        public bool IsClosed()
         {
             return isClosed;
         }
@@ -172,57 +172,57 @@ namespace Adaptive.Agrona
             }
         }
 
-        public virtual void SignalReady(int version)
+        public void SignalReady(int version)
         {
             buffer.PutIntOrdered(versionFieldOffset, version);
         }
 
-        public virtual int VersionVolatile()
+        public int VersionVolatile()
         {
             return buffer.GetIntVolatile(versionFieldOffset);
         }
 
-        public virtual int VersionWeak()
+        public int VersionWeak()
         {
             return buffer.GetInt(versionFieldOffset);
         }
 
-        public virtual void TimestampOrdered(long timestamp)
+        public void TimestampOrdered(long timestamp)
         {
             buffer.PutLongOrdered(timestampFieldOffset, timestamp);
         }
 
-        public virtual long TimestampVolatile()
+        public long TimestampVolatile()
         {
             return buffer.GetLongVolatile(timestampFieldOffset);
         }
 
-        public virtual long TimestampWeak()
+        public long TimestampWeak()
         {
             return buffer.GetLong(timestampFieldOffset);
         }
 
-        public virtual void DeleteDirectory(bool ignoreFailures)
+        public void DeleteDirectory(bool ignoreFailures)
         {
             IoUtil.Delete(parentDir, ignoreFailures);
         }
 
-        public virtual DirectoryInfo CncDirectory()
+        public DirectoryInfo CncDirectory()
         {
             return parentDir;
         }
 
-        public virtual FileInfo CncFileName()
+        public FileInfo CncFileName()
         {
             return markFile;
         }
 
-        public virtual MappedByteBuffer MappedByteBuffer()
+        public MappedByteBuffer MappedByteBuffer()
         {
             return mappedBuffer;
         }
 
-        public virtual UnsafeBuffer Buffer()
+        public UnsafeBuffer Buffer()
         {
             return buffer;
         }

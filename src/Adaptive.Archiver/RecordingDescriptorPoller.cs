@@ -54,7 +54,7 @@ namespace Adaptive.Archiver
         /// Get the <seealso cref="Subscription"/> used for polling responses.
         /// </summary>
         /// <returns> the <seealso cref="Subscription"/> used for polling responses. </returns>
-        public virtual Subscription Subscription()
+        public Subscription Subscription()
         {
             return subscription;
         }
@@ -63,7 +63,7 @@ namespace Adaptive.Archiver
         /// Poll for recording events.
         /// </summary>
         /// <returns> the number of fragments read during the operation. Zero if no events are available. </returns>
-        public virtual int Poll()
+        public int Poll()
         {
             isDispatchComplete = false;
 
@@ -74,7 +74,7 @@ namespace Adaptive.Archiver
         /// Control session id for filtering responses.
         /// </summary>
         /// <returns> control session id for filtering responses. </returns>
-        public virtual long ControlSessionId()
+        public long ControlSessionId()
         {
             return controlSessionId;
         }
@@ -83,7 +83,7 @@ namespace Adaptive.Archiver
         /// Is the dispatch of descriptors complete?
         /// </summary>
         /// <returns> true if the dispatch of descriptors complete? </returns>
-        public virtual bool IsDispatchComplete()
+        public bool IsDispatchComplete()
         {
             return isDispatchComplete;
         }
@@ -92,7 +92,7 @@ namespace Adaptive.Archiver
         /// Get the number of remaining records are expected.
         /// </summary>
         /// <returns> the number of remaining records are expected. </returns>
-        public virtual int RemainingRecordCount()
+        public int RemainingRecordCount()
         {
             return remainingRecordCount;
         }
@@ -103,7 +103,7 @@ namespace Adaptive.Archiver
         /// <param name="expectedCorrelationId"> for the response. </param>
         /// <param name="recordCount">           of descriptors to expect. </param>
         /// <param name="consumer">              to which the recording descriptors are to be dispatched. </param>
-        public virtual void Reset(long expectedCorrelationId, int recordCount, IRecordingDescriptorConsumer consumer)
+        public void Reset(long expectedCorrelationId, int recordCount, IRecordingDescriptorConsumer consumer)
         {
             this.expectedCorrelationId = expectedCorrelationId;
             this.consumer = consumer;
@@ -111,7 +111,7 @@ namespace Adaptive.Archiver
             isDispatchComplete = false;
         }
 
-        public virtual ControlledFragmentHandlerAction OnFragment(IDirectBuffer buffer, int offset, int length, Header header)
+        public ControlledFragmentHandlerAction OnFragment(IDirectBuffer buffer, int offset, int length, Header header)
         {
             messageHeaderDecoder.Wrap(buffer, offset);
 

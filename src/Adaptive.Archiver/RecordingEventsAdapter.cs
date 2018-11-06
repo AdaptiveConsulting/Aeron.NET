@@ -36,12 +36,12 @@ namespace Adaptive.Archiver
         /// Poll for recording events and dispatch them to the <seealso cref="IRecordingEventsListener"/> for this instance.
         /// </summary>
         /// <returns> the number of fragments read during the operation. Zero if no events are available. </returns>
-        public virtual int Poll()
+        public int Poll()
         {
             return _subscription.Poll(this, _fragmentLimit);
         }
 
-        public virtual void OnFragment(IDirectBuffer buffer, int offset, int length, Header header)
+        public void OnFragment(IDirectBuffer buffer, int offset, int length, Header header)
         {
             _messageHeaderDecoder.Wrap(buffer, offset);
 

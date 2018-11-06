@@ -77,7 +77,7 @@ namespace Adaptive.Archiver
         /// Get the <seealso cref="Publication"/> used for sending control messages.
         /// </summary>
         /// <returns> the <seealso cref="Publication"/> used for sending control messages. </returns>
-        public virtual Publication Pub()
+        public Publication Pub()
         {
             return publication;
         }
@@ -89,7 +89,7 @@ namespace Adaptive.Archiver
         /// <param name="responseStreamId"> for the control message responses. </param>
         /// <param name="correlationId">    for this request. </param>
         /// <returns> true if successfully offered otherwise false. </returns>
-        public virtual bool Connect(string responseChannel, int responseStreamId, long correlationId)
+        public bool Connect(string responseChannel, int responseStreamId, long correlationId)
         {
             connectRequestEncoder
                 .WrapAndApplyHeader(buffer, 0, messageHeaderEncoder)
@@ -129,7 +129,7 @@ namespace Adaptive.Archiver
         /// <param name="correlationId">      for this request. </param>
         /// <param name="aeronClientInvoker"> for aeron client conductor thread. </param>
         /// <returns> true if successfully offered otherwise false. </returns>
-        public virtual bool Connect(string responseChannel, int responseStreamId, long correlationId, AgentInvoker aeronClientInvoker)
+        public bool Connect(string responseChannel, int responseStreamId, long correlationId, AgentInvoker aeronClientInvoker)
         {
             connectRequestEncoder
                 .WrapAndApplyHeader(buffer, 0, messageHeaderEncoder)
@@ -145,7 +145,7 @@ namespace Adaptive.Archiver
         /// </summary>
         /// <param name="controlSessionId"> with the archive. </param>
         /// <returns> true if successfully offered otherwise false. </returns>
-        public virtual bool CloseSession(long controlSessionId)
+        public bool CloseSession(long controlSessionId)
         {
             closeSessionRequestEncoder
                 .WrapAndApplyHeader(buffer, 0, messageHeaderEncoder)
@@ -163,7 +163,7 @@ namespace Adaptive.Archiver
         /// <param name="correlationId">    for this request. </param>
         /// <param name="controlSessionId"> for this request. </param>
         /// <returns> true if successfully offered otherwise false. </returns>
-        public virtual bool StartRecording(string channel, int streamId, SourceLocation sourceLocation, long correlationId, long controlSessionId)
+        public bool StartRecording(string channel, int streamId, SourceLocation sourceLocation, long correlationId, long controlSessionId)
         {
             startRecordingRequestEncoder
                 .WrapAndApplyHeader(buffer, 0, messageHeaderEncoder)
@@ -184,7 +184,7 @@ namespace Adaptive.Archiver
         /// <param name="correlationId">    for this request. </param>
         /// <param name="controlSessionId"> for this request. </param>
         /// <returns> true if successfully offered otherwise false. </returns>
-        public virtual bool StopRecording(string channel, int streamId, long correlationId, long controlSessionId)
+        public bool StopRecording(string channel, int streamId, long correlationId, long controlSessionId)
         {
             stopRecordingRequestEncoder
                 .WrapAndApplyHeader(buffer, 0, messageHeaderEncoder)
@@ -225,7 +225,7 @@ namespace Adaptive.Archiver
         /// <param name="correlationId">    for this request. </param>
         /// <param name="controlSessionId"> for this request. </param>
         /// <returns> true if successfully offered otherwise false. </returns>
-        public virtual bool Replay(long recordingId, long position, long length, string replayChannel, int replayStreamId, long correlationId, long controlSessionId)
+        public bool Replay(long recordingId, long position, long length, string replayChannel, int replayStreamId, long correlationId, long controlSessionId)
         {
             replayRequestEncoder
                 .WrapAndApplyHeader(buffer, 0, messageHeaderEncoder)
@@ -247,7 +247,7 @@ namespace Adaptive.Archiver
         /// <param name="correlationId">    for this request. </param>
         /// <param name="controlSessionId"> for this request. </param>
         /// <returns> true if successfully offered otherwise false. </returns>
-        public virtual bool StopReplay(long replaySessionId, long correlationId, long controlSessionId)
+        public bool StopReplay(long replaySessionId, long correlationId, long controlSessionId)
         {
             stopReplayRequestEncoder
                 .WrapAndApplyHeader(buffer, 0, messageHeaderEncoder)
@@ -266,7 +266,7 @@ namespace Adaptive.Archiver
         /// <param name="correlationId">    for this request. </param>
         /// <param name="controlSessionId"> for this request. </param>
         /// <returns> true if successfully offered otherwise false. </returns>
-        public virtual bool ListRecordings(long fromRecordingId, int recordCount, long correlationId, long controlSessionId)
+        public bool ListRecordings(long fromRecordingId, int recordCount, long correlationId, long controlSessionId)
         {
             listRecordingsRequestEncoder
                 .WrapAndApplyHeader(buffer, 0, messageHeaderEncoder)
@@ -288,7 +288,7 @@ namespace Adaptive.Archiver
         /// <param name="correlationId">    for this request. </param>
         /// <param name="controlSessionId"> for this request. </param>
         /// <returns> true if successfully offered otherwise false. </returns>
-        public virtual bool ListRecordingsForUri(long fromRecordingId, int recordCount, string channel, int streamId, long correlationId, long controlSessionId)
+        public bool ListRecordingsForUri(long fromRecordingId, int recordCount, string channel, int streamId, long correlationId, long controlSessionId)
         {
             listRecordingsForUriRequestEncoder
                 .WrapAndApplyHeader(buffer, 0, messageHeaderEncoder)
@@ -309,7 +309,7 @@ namespace Adaptive.Archiver
         /// <param name="correlationId">    for this request. </param>
         /// <param name="controlSessionId"> for this request. </param>
         /// <returns> true if successfully offered otherwise false. </returns>
-        public virtual bool ListRecording(long recordingId, long correlationId, long controlSessionId)
+        public bool ListRecording(long recordingId, long correlationId, long controlSessionId)
         {
             listRecordingRequestEncoder
                 .WrapAndApplyHeader(buffer, 0, messageHeaderEncoder)
@@ -330,7 +330,7 @@ namespace Adaptive.Archiver
         /// <param name="correlationId">    for this request. </param>
         /// <param name="controlSessionId"> for this request. </param>
         /// <returns> true if successfully offered otherwise false. </returns>
-        public virtual bool ExtendRecording(string channel, int streamId, SourceLocation sourceLocation, long recordingId, long correlationId, long controlSessionId)
+        public bool ExtendRecording(string channel, int streamId, SourceLocation sourceLocation, long recordingId, long correlationId, long controlSessionId)
         {
             extendRecordingRequestEncoder
                 .WrapAndApplyHeader(buffer, 0, messageHeaderEncoder)

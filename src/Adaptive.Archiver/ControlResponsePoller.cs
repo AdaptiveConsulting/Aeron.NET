@@ -51,7 +51,7 @@ namespace Adaptive.Archiver
         /// Get the <seealso cref="Subscription"/> used for polling responses.
         /// </summary>
         /// <returns> the <seealso cref="Subscription"/> used for polling responses. </returns>
-        public virtual Subscription Subscription()
+        public Subscription Subscription()
         {
             return subscription;
         }
@@ -60,7 +60,7 @@ namespace Adaptive.Archiver
         /// Poll for recording events.
         /// </summary>
         /// <returns> the number of fragments read during the operation. Zero if no events are available. </returns>
-        public virtual int Poll()
+        public int Poll()
         {
             controlSessionId = -1;
             correlationId = -1;
@@ -75,7 +75,7 @@ namespace Adaptive.Archiver
         /// Control session id of the last polled message or <see cref="Aeron.NULL_VALUE"/> if poll returned nothing.
         /// </summary>
         /// <returns> control session id of the last polled message or <see cref="Aeron.NULL_VALUE"/> if unrecognised template. </returns>
-        public virtual long ControlSessionId()
+        public long ControlSessionId()
         {
             return controlSessionId;
         }
@@ -84,7 +84,7 @@ namespace Adaptive.Archiver
         /// Correlation id of the last polled message or <see cref="Aeron.NULL_VALUE"/> if poll returned nothing.
         /// </summary>
         /// <returns> correlation id of the last polled message or <see cref="Aeron.NULL_VALUE"/> if unrecognised template. </returns>
-        public virtual long CorrelationId()
+        public long CorrelationId()
         {
             return correlationId;
         }
@@ -93,7 +93,7 @@ namespace Adaptive.Archiver
         /// Get the relevant id returned with the response, e.g. replay session id.
         /// </summary>
         /// <returns> the relevant id returned with the response. </returns>
-        public virtual long RelevantId()
+        public long RelevantId()
         {
             return relevantId;
         }
@@ -102,7 +102,7 @@ namespace Adaptive.Archiver
         /// Has the last polling action received a complete message?
         /// </summary>
         /// <returns> true if the last polling action received a complete message? </returns>
-        public virtual bool IsPollComplete()
+        public bool IsPollComplete()
         {
             return pollComplete;
         }
@@ -111,7 +111,7 @@ namespace Adaptive.Archiver
         /// Get the template id of the last received message.
         /// </summary>
         /// <returns> the template id of the last received message. </returns>
-        public virtual int TemplateId()
+        public int TemplateId()
         {
             return templateId;
         }
@@ -120,7 +120,7 @@ namespace Adaptive.Archiver
         /// Get the response code of the last response.
         /// </summary>
         /// <returns> the response code of the last response. </returns>
-        public virtual ControlResponseCode Code()
+        public ControlResponseCode Code()
         {
             return code;
         }
@@ -129,12 +129,12 @@ namespace Adaptive.Archiver
         /// Get the error message of the last response.
         /// </summary>
         /// <returns> the error message of the last response. </returns>
-        public virtual string ErrorMessage()
+        public string ErrorMessage()
         {
             return errorMessage;
         }
 
-        public virtual ControlledFragmentHandlerAction OnFragment(IDirectBuffer buffer, int offset, int length, Header header)
+        public ControlledFragmentHandlerAction OnFragment(IDirectBuffer buffer, int offset, int length, Header header)
         {
             messageHeaderDecoder.Wrap(buffer, offset);
 
