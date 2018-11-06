@@ -123,7 +123,7 @@ namespace Adaptive.Aeron
         /// The correlationId for identification of the image with the media driver.
         /// </summary>
         /// <returns> the correlationId for identification of the image with the media driver. </returns>
-        public virtual long CorrelationId { get; }
+        public long CorrelationId { get; }
 
         /// <summary>
         /// Get the <seealso cref="Subscription"/> to which this <seealso cref="Image"/> belongs.
@@ -217,11 +217,7 @@ namespace Adaptive.Aeron
         /// <returns> the number of fragments that have been consumed. </returns>
         /// <seealso cref="FragmentAssembler" />
         /// <seealso cref="ImageFragmentAssembler" />
-#if DEBUG
-        public virtual int Poll(FragmentHandler fragmentHandler, int fragmentLimit)
-#else
         public int Poll(FragmentHandler fragmentHandler, int fragmentLimit)
-#endif
         {
             var handler = HandlerHelper.ToFragmentHandler(fragmentHandler);
             return Poll(handler, fragmentLimit);
@@ -238,11 +234,7 @@ namespace Adaptive.Aeron
         /// <returns> the number of fragments that have been consumed. </returns>
         /// <seealso cref="FragmentAssembler" />
         /// <seealso cref="ImageFragmentAssembler" />
-#if DEBUG
-        public virtual int Poll(IFragmentHandler fragmentHandler, int fragmentLimit)
-#else
         public int Poll(IFragmentHandler fragmentHandler, int fragmentLimit)
-#endif
         {
             if (_isClosed)
             {
@@ -385,7 +377,7 @@ namespace Adaptive.Aeron
         /// <returns> the number of fragments that have been consumed. </returns>
         /// <seealso cref="ControlledFragmentAssembler"/>
         /// <seealso cref="ImageControlledFragmentAssembler"/>
-        public virtual int BoundedControlledPoll(IControlledFragmentHandler handler, long maxPosition,
+        public int BoundedControlledPoll(IControlledFragmentHandler handler, long maxPosition,
             int fragmentLimit)
         {
             if (_isClosed)
@@ -477,7 +469,7 @@ namespace Adaptive.Aeron
         /// <returns> the number of fragments that have been consumed. </returns>
         /// <seealso cref="ControlledFragmentAssembler"/>
         /// <seealso cref="ImageControlledFragmentAssembler"/>
-        public virtual int BoundedControlledPoll(ControlledFragmentHandler handler, long maxPosition,
+        public int BoundedControlledPoll(ControlledFragmentHandler handler, long maxPosition,
             int fragmentLimit)
         {
             var fragmentHandler = HandlerHelper.ToControlledFragmentHandler(handler);
@@ -498,7 +490,7 @@ namespace Adaptive.Aeron
         /// <returns> the resulting position after the scan terminates which is a complete message. </returns>
         /// <seealso cref="ControlledFragmentAssembler"/>
         /// <seealso cref="ImageControlledFragmentAssembler"/>
-        public virtual long ControlledPeek(long initialPosition, IControlledFragmentHandler handler, long limitPosition)
+        public long ControlledPeek(long initialPosition, IControlledFragmentHandler handler, long limitPosition)
         {
             if (_isClosed)
             {
@@ -574,7 +566,7 @@ namespace Adaptive.Aeron
             return resultingPosition;
         }
 
-        public virtual long ControlledPeek(long initialPosition, ControlledFragmentHandler handler, long limitPosition)
+        public long ControlledPeek(long initialPosition, ControlledFragmentHandler handler, long limitPosition)
         {
             var fragmentHandler = HandlerHelper.ToControlledFragmentHandler(handler);
             return ControlledPeek(initialPosition, fragmentHandler, limitPosition);
