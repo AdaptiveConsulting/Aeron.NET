@@ -6,15 +6,15 @@ env: MONO_BASE_PATH=/usr/lib/mono/
 before_script: cd src
 solution: ./src/Adaptive.Aeron.sln
 script:
-  - nuget install NUnit.ConsoleRunner -Version 3.8.0 -OutputDirectory testrunner
+  - nuget install NUnit.ConsoleRunner -Version 3.9.0 -OutputDirectory testrunner
   - FrameworkPathOverride=$MONO_BASE_PATH/4.5-api/ dotnet build
   - cd Adaptive.Agrona.Tests
   - dotnet test -f netcoreapp2.0
   # It looks like dotnet cli does not support tests running on mono yet
   # https://github.com/Microsoft/vstest/issues/865
   # - FrameworkPathOverride=$MONO_BASE_PATH/4.5-api/ dotnet test -f net45
-  - mono ../testrunner/NUnit.ConsoleRunner.3.8.0/tools/nunit3-console.exe bin/Debug/net45/Adaptive.Agrona.Tests.dll
+  - mono ../testrunner/NUnit.ConsoleRunner.3.9.0/tools/nunit3-console.exe bin/Debug/net45/Adaptive.Agrona.Tests.dll
   - cd ../Adaptive.Aeron.Tests
   - dotnet test -f netcoreapp2.0
   # - FrameworkPathOverride=$MONO_BASE_PATH/4.5-api/ dotnet test -f net45
-  - mono ../testrunner/NUnit.ConsoleRunner.3.8.0/tools/nunit3-console.exe bin/Debug/net45/Adaptive.Aeron.Tests.dll --where "class != Adaptive.Aeron.Tests.ImageTest"
+  - mono ../testrunner/NUnit.ConsoleRunner.3.9.0/tools/nunit3-console.exe bin/Debug/net45/Adaptive.Aeron.Tests.dll
