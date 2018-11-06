@@ -147,16 +147,6 @@ namespace Adaptive.Aeron.LogBuffer
         /// <param name="reservedValueSupplier"><see cref="ReservedValueSupplier"/> for the frame</param>
         /// <returns> the resulting offset of the term after the append on success otherwise <seealso cref="FAILED"/>.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#if DEBUG
-        public virtual int AppendUnfragmentedMessage(
-            int termId,
-            int termOffset,
-            HeaderWriter header, 
-            IDirectBuffer srcBuffer, 
-            int srcOffset, 
-            int length, 
-            ReservedValueSupplier reservedValueSupplier)
-#else
         public int AppendUnfragmentedMessage(
             int termId,
             int termOffset, 
@@ -165,7 +155,6 @@ namespace Adaptive.Aeron.LogBuffer
             int srcOffset, 
             int length, 
             ReservedValueSupplier reservedValueSupplier)
-#endif
         {
             int frameLength = length + DataHeaderFlyweight.HEADER_LENGTH;
             int alignedLength = BitUtil.Align(frameLength, FrameDescriptor.FRAME_ALIGNMENT);
@@ -208,15 +197,6 @@ namespace Adaptive.Aeron.LogBuffer
         /// <param name="reservedValueSupplier"><see cref="ReservedValueSupplier"/> for the frame</param>
         /// <returns> the resulting offset of the term after the append on success otherwise <seealso cref="FAILED"/>.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#if DEBUG
-        public virtual int AppendUnfragmentedMessage(
-            int termId,
-            int termOffset,
-            HeaderWriter header, 
-            DirectBufferVector[] vectors,
-            int length, 
-            ReservedValueSupplier reservedValueSupplier)
-#else
         public int AppendUnfragmentedMessage(
             int termId,
             int termOffset, 
@@ -224,7 +204,6 @@ namespace Adaptive.Aeron.LogBuffer
             DirectBufferVector[] vectors, 
             int length, 
             ReservedValueSupplier reservedValueSupplier)
-#endif
         {
             int frameLength = length + DataHeaderFlyweight.HEADER_LENGTH;
             int alignedLength = BitUtil.Align(frameLength, FrameDescriptor.FRAME_ALIGNMENT);

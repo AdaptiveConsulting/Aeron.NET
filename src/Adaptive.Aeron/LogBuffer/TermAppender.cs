@@ -123,11 +123,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// <param name="activeTermId"> used for flow control. </param>
         /// <returns> the resulting offset of the term after the append on success otherwise <seealso cref="FAILED"/>. </returns> 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#if DEBUG
-        public virtual int AppendUnfragmentedMessage(HeaderWriter header, IDirectBuffer srcBuffer, int srcOffset, int length, ReservedValueSupplier reservedValueSupplier, int activeTermId)
-#else
         public int AppendUnfragmentedMessage(HeaderWriter header, IDirectBuffer srcBuffer, int srcOffset, int length, ReservedValueSupplier reservedValueSupplier, int activeTermId)
-#endif
         {
             int frameLength = length + DataHeaderFlyweight.HEADER_LENGTH;
             int alignedLength = BitUtil.Align(frameLength, FrameDescriptor.FRAME_ALIGNMENT);
@@ -172,11 +168,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// <param name="activeTermId"> used for flow control. </param>
         /// <returns> the resulting offset of the term after the append on success otherwise <seealso cref="FAILED"/>. </returns> 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#if DEBUG
-        public virtual int AppendUnfragmentedMessage(HeaderWriter header, DirectBufferVector[] vectors, int length, ReservedValueSupplier reservedValueSupplier, int activeTermId)
-#else
         public int AppendUnfragmentedMessage(HeaderWriter header, DirectBufferVector[] vectors, int length, ReservedValueSupplier reservedValueSupplier, int activeTermId)
-#endif
         {
             int frameLength = length + DataHeaderFlyweight.HEADER_LENGTH;
             int alignedLength = BitUtil.Align(frameLength, FrameDescriptor.FRAME_ALIGNMENT);

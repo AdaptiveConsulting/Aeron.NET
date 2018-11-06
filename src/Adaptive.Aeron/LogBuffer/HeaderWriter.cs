@@ -52,11 +52,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// <param name="length">     of the fragment including the header. </param>
         /// <param name="termId">     of the current term buffer. </param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#if DEBUG
-        public virtual void Write(UnsafeBuffer termBuffer, int offset, int length, int termId)
-#else
         public void Write(UnsafeBuffer termBuffer, int offset, int length, int termId)
-#endif
         {
             var lengthVersionFlagsType = _versionFlagsType | (-length & 0xFFFFFFFFL);
             var termOffsetSessionId = _sessionId | (uint)offset;
