@@ -398,7 +398,7 @@ namespace Adaptive.Aeron
             }
         }
 
-        internal virtual ExclusivePublication AddExclusivePublication(string channel, int streamId)
+        internal ExclusivePublication AddExclusivePublication(string channel, int streamId)
         {
             _clientLock.Lock();
             try
@@ -418,7 +418,7 @@ namespace Adaptive.Aeron
             }
         }
 
-        internal virtual void ReleasePublication(Publication publication)
+        internal void ReleasePublication(Publication publication)
         {
             _clientLock.Lock();
             try
@@ -450,7 +450,7 @@ namespace Adaptive.Aeron
             return AddSubscription(channel, streamId, _defaultAvailableImageHandler, _defaultUnavailableImageHandler);
         }
 
-        internal virtual Subscription AddSubscription(string channel, int streamId, AvailableImageHandler availableImageHandler, UnavailableImageHandler unavailableImageHandler)
+        internal Subscription AddSubscription(string channel, int streamId, AvailableImageHandler availableImageHandler, UnavailableImageHandler unavailableImageHandler)
         {
             _clientLock.Lock();
             try
@@ -473,7 +473,7 @@ namespace Adaptive.Aeron
             }
         }
 
-        internal virtual void ReleaseSubscription(Subscription subscription)
+        internal void ReleaseSubscription(Subscription subscription)
         {
             _clientLock.Lock();
             try
@@ -496,7 +496,7 @@ namespace Adaptive.Aeron
             }
         }
 
-        internal virtual void AddDestination(long registrationId, string endpointChannel)
+        internal void AddDestination(long registrationId, string endpointChannel)
         {
             _clientLock.Lock();
             try
@@ -512,7 +512,7 @@ namespace Adaptive.Aeron
             }
         }
 
-        internal virtual void RemoveDestination(long registrationId, string endpointChannel)
+        internal void RemoveDestination(long registrationId, string endpointChannel)
         {
             _clientLock.Lock();
             try
@@ -561,7 +561,7 @@ namespace Adaptive.Aeron
         }
 
 
-        internal virtual Counter AddCounter(int typeId, IDirectBuffer keyBuffer, int keyOffset, int keyLength, IDirectBuffer labelBuffer, int labelOffset, int labelLength)
+        internal Counter AddCounter(int typeId, IDirectBuffer keyBuffer, int keyOffset, int keyLength, IDirectBuffer labelBuffer, int labelOffset, int labelLength)
         {
             _clientLock.Lock();
             try
@@ -615,7 +615,7 @@ namespace Adaptive.Aeron
             }
         }
 
-        internal virtual void ReleaseCounter(Counter counter)
+        internal void ReleaseCounter(Counter counter)
         {
             _clientLock.Lock();
             try
@@ -640,7 +640,7 @@ namespace Adaptive.Aeron
             }
         }
 
-        internal virtual void ReleaseLogBuffers(LogBuffers logBuffers, long registrationId)
+        internal void ReleaseLogBuffers(LogBuffers logBuffers, long registrationId)
         {
             if (logBuffers.DecRef() == 0)
             {
@@ -655,7 +655,7 @@ namespace Adaptive.Aeron
             return _driverEventsAdapter;
         }
 
-        internal virtual long ChannelStatus(int channelStatusId)
+        internal long ChannelStatus(int channelStatusId)
         {
             switch (channelStatusId)
             {

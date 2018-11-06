@@ -43,7 +43,7 @@ namespace Adaptive.Aeron
         /// Return the registration id used to register this counter with the media driver.
         /// </summary>
         /// <returns> registration id </returns>
-        public virtual long RegistrationId()
+        public long RegistrationId()
         {
             return registrationId;
         }
@@ -73,12 +73,12 @@ namespace Adaptive.Aeron
         /// Has this object been closed and should no longer be used?
         /// </summary>
         /// <returns> true if it has been closed otherwise false. </returns>
-        public virtual bool IsClosed()
+        public bool IsClosed()
         {
             return isClosed;
         }
 
-        internal virtual void InternalClose()
+        internal void InternalClose()
         {
             base.Dispose();
             isClosed = true;

@@ -49,7 +49,7 @@ namespace Adaptive.Archiver
         /// Poll for recording events and dispatch them to the <seealso cref="RecordingEventsListener"/> for this instance.
         /// </summary>
         /// <returns> the number of fragments read during the operation. Zero if no events are available. </returns>
-        public virtual int Poll()
+        public int Poll()
         {
             return subscription.Poll(fragmentAssembler, fragmentLimit);
         }
@@ -64,7 +64,7 @@ namespace Adaptive.Archiver
             consumer.OnRecordingDescriptor(decoder.ControlSessionId(), decoder.CorrelationId(), decoder.RecordingId(), decoder.StartTimestamp(), decoder.StopTimestamp(), decoder.StartPosition(), decoder.StopPosition(), decoder.InitialTermId(), decoder.SegmentFileLength(), decoder.TermBufferLength(), decoder.MtuLength(), decoder.SessionId(), decoder.StreamId(), decoder.StrippedChannel(), decoder.OriginalChannel(), decoder.SourceIdentity());
         }
 
-        public virtual void OnFragment(IDirectBuffer buffer, int offset, int length, Header header)
+        public void OnFragment(IDirectBuffer buffer, int offset, int length, Header header)
         {
             messageHeaderDecoder.Wrap(buffer, offset);
 

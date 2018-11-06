@@ -257,7 +257,7 @@ namespace Adaptive.Aeron
         /// <returns> The new stream position, otherwise a negative error value of <seealso cref="Publication.NOT_CONNECTED"/>,
         /// <seealso cref="Publication.BACK_PRESSURED"/>, <seealso cref="Publication.ADMIN_ACTION"/>, <seealso cref="Publication.CLOSED"/>, or <seealso cref="Publication.MAX_POSITION_EXCEEDED"/>. </returns>
         /// <exception cref="ArgumentException"> if the length is greater than <seealso cref="Publication.MaxMessageLength()"/>. </exception>
-        public virtual long AppendPadding(int length)
+        public long AppendPadding(int length)
         {
             CheckForMaxMessageLength(length);
             long newPosition = CLOSED;

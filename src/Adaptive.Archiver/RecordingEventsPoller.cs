@@ -38,7 +38,7 @@ namespace Adaptive.Archiver
         /// Poll for recording events.
         /// </summary>
         /// <returns> the number of fragments read during the operation. Zero if no events are available. </returns>
-        public virtual int Poll()
+        public int Poll()
         {
             templateId = Aeron.Aeron.NULL_VALUE;
             pollComplete = false;
@@ -50,7 +50,7 @@ namespace Adaptive.Archiver
         /// Has the last polling action received a complete message?
         /// </summary>
         /// <returns> true of the last polling action received a complete message? </returns>
-        public virtual bool IsPollComplete()
+        public bool IsPollComplete()
         {
             return pollComplete;
         }
@@ -59,7 +59,7 @@ namespace Adaptive.Archiver
         /// Get the template id of the last received message.
         /// </summary>
         /// <returns> the template id of the last received message. </returns>
-        public virtual int TemplateId()
+        public int TemplateId()
         {
             return templateId;
         }
@@ -68,7 +68,7 @@ namespace Adaptive.Archiver
         /// Get the recording id of the last received event.
         /// </summary>
         /// <returns> the recording id of the last received event. </returns>
-        public virtual long RecordingId()
+        public long RecordingId()
         {
             return recordingId;
         }
@@ -77,7 +77,7 @@ namespace Adaptive.Archiver
         /// Get the position the recording started at.
         /// </summary>
         /// <returns> the position the recording started at. </returns>
-        public virtual long RecordingStartPosition()
+        public long RecordingStartPosition()
         {
             return recordingStartPosition;
         }
@@ -86,7 +86,7 @@ namespace Adaptive.Archiver
         /// Get the current recording position.
         /// </summary>
         /// <returns> the current recording position. </returns>
-        public virtual long RecordingPosition()
+        public long RecordingPosition()
         {
             return recordingPosition;
         }
@@ -95,12 +95,12 @@ namespace Adaptive.Archiver
         /// Get the position the recording stopped at.
         /// </summary>
         /// <returns> the position the recording stopped at. </returns>
-        public virtual long RecordingStopPosition()
+        public long RecordingStopPosition()
         {
             return recordingStopPosition;
         }
 
-        public virtual void OnFragment(IDirectBuffer buffer, int offset, int length, Header header)
+        public void OnFragment(IDirectBuffer buffer, int offset, int length, Header header)
         {
             messageHeaderDecoder.Wrap(buffer, offset);
 

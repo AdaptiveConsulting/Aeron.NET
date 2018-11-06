@@ -35,7 +35,7 @@ namespace Adaptive.Aeron.Tests.LogBuffer
         private DataHeaderFlyweight dataFlyweight;
 
         [SetUp]
-        public virtual void Setup()
+        public void Setup()
         {
             metaDataBuffer = new UnsafeBuffer(new byte[LogBufferDescriptor.LOG_META_DATA_LENGTH]);
             termBuffer = new UnsafeBuffer(new byte[LogBufferDescriptor.TERM_MIN_LENGTH]);
@@ -45,7 +45,7 @@ namespace Adaptive.Aeron.Tests.LogBuffer
         }
 
         [Test]
-        public virtual void ShouldFillGapAtBeginningOfTerm()
+        public void ShouldFillGapAtBeginningOfTerm()
         {
             const int gapOffset = 0;
             const int gapLength = 64;
@@ -61,7 +61,7 @@ namespace Adaptive.Aeron.Tests.LogBuffer
         }
 
         [Test]
-        public virtual void ShouldNotOverwriteExistingFrame()
+        public void ShouldNotOverwriteExistingFrame()
         {
             const int gapOffset = 0;
             const int gapLength = 64;
@@ -72,7 +72,7 @@ namespace Adaptive.Aeron.Tests.LogBuffer
         }
 
         [Test]
-        public virtual void ShouldFillGapAfterExistingFrame()
+        public void ShouldFillGapAfterExistingFrame()
         {
             const int gapOffset = 128;
             const int gapLength = 64;
@@ -92,7 +92,7 @@ namespace Adaptive.Aeron.Tests.LogBuffer
         }
 
         [Test]
-        public virtual void ShouldFillGapBetweenExistingFrames()
+        public void ShouldFillGapBetweenExistingFrames()
         {
             const int gapOffset = 128;
             const int gapLength = 64;
@@ -115,7 +115,7 @@ namespace Adaptive.Aeron.Tests.LogBuffer
         }
 
         [Test]
-        public virtual void ShouldFillGapAtEndOfTerm()
+        public void ShouldFillGapAtEndOfTerm()
         {
             int gapOffset = termBuffer.Capacity - 64;
             const int gapLength = 64;

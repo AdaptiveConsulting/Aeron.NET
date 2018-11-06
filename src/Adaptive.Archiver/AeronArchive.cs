@@ -291,7 +291,7 @@ namespace Adaptive.Archiver
         /// To check for an error response without raising an exception then try <seealso cref="PollForErrorResponse()"/>.
         /// </summary>
         ///  <seealso cref="PollForErrorResponse()"/>
-        public virtual void CheckForErrorResponse()
+        public void CheckForErrorResponse()
         {
             _lock.Lock();
             try

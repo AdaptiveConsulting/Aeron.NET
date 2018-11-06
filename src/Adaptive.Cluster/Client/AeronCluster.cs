@@ -1200,7 +1200,7 @@ namespace Adaptive.Cluster.Client
             /// </summary>
             /// <param name="errorHandler"> Method to handle objects of type Throwable. </param>
             /// <returns> this for fluent API. </returns>
-            public virtual Context ErrorHandler(ErrorHandler errorHandler)
+            public Context ErrorHandler(ErrorHandler errorHandler)
             {
                 _errorHandler = errorHandler;
                 return this;
