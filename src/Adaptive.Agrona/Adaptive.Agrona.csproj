@@ -28,4 +28,11 @@
   <PropertyGroup Condition=" '$(TargetFramework)' == 'net45'">
     <DefineConstants>$(DefineConstants);NET45;NETFULL</DefineConstants>
   </PropertyGroup>
+  <ItemGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <PackageReference Include="Fody" Version="3.2.16">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Virtuosity.Fody" Version="1.21.3" />
+  </ItemGroup>
 </Project>
