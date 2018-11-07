@@ -61,7 +61,7 @@ namespace Adaptive.Aeron
 
             this.registrationId = registrationId;
             this.streamId = streamId;
-            this.conductor = clientConductor;
+            conductor = clientConductor;
             this.channel = channel;
             this.availableImageHandler = availableImageHandler;
             this.unavailableImageHandler = unavailableImageHandler;
@@ -84,14 +84,14 @@ namespace Adaptive.Aeron
     /// receive whole messages, whether or not they were fragmented, then the Subscriber
     /// should be created with a <seealso cref="FragmentAssembler"/> or a custom implementation.
     /// 
-    /// It is an application's responsibility to <seealso cref="Poll"/> the <seealso cref="Subscription"/> for new messages.
+    /// It is an application's responsibility to <seealso cref="Poll(IFragmentHandler, int)"/> the <seealso cref="Subscription"/> for new messages.
     /// 
     /// <b>Note:</b>Subscriptions are not threadsafe and should not be shared between subscribers.
     /// </summary>
     /// <seealso cref="FragmentAssembler"/>
     /// <seealso cref="ControlledFragmentHandler"/>
     /// <seealso cref="Aeron.AddSubscription(string, int)"/>
-    /// <seealso cref="Aeron.AddSubscription(string, int, AvailableImageHandler, UnavailableImageHandler)"/>
+    /// <seealso cref="Aeron.AddSubscription(string, int, Adaptive.Aeron.AvailableImageHandler, Adaptive.Aeron.UnavailableImageHandler)"/>
     public class Subscription : IDisposable
     {
         private SubscriptionFields _fields;
@@ -297,28 +297,6 @@ namespace Adaptive.Aeron
 
             return bytesConsumed;
         }
-
-        // TODO come back to this
-        ///// <summary>
-        ///// Poll the <seealso cref="Image"/>s under the subscription for available message fragments in blocks.
-        ///// <para>
-        ///// This method is useful for operations like bulk archiving a stream to file.
-        ///// 
-        ///// </para>
-        ///// </summary>
-        ///// <param name="rawBlockHandler"> to receive a block of fragments from each <seealso cref="Image"/>. </param>
-        ///// <param name="blockLengthLimit"> for each <seealso cref="Image"/> polled. </param>
-        ///// <returns> the number of bytes consumed. </returns>
-        //public long RawPoll(IRawBlockHandler rawBlockHandler, int blockLengthLimit)
-        //{
-        //    long bytesConsumed = 0;
-        //    foreach (Image image in images)
-        //    {
-        //        bytesConsumed += image.FilePoll(rawBlockHandler, blockLengthLimit);
-        //    }
-
-        //    return bytesConsumed;
-        //}
 
         /// <summary>
         /// Is this subscription connected by having at least one open publication <seealso cref="Image"/>.

@@ -62,7 +62,7 @@ namespace Adaptive.Cluster.Service
         /// The service should take a snapshot and store its state to the provided archive <seealso cref="Publication"/>.
         /// <para>
         /// <b>Note:</b> As this is a potentially long running operation the implementation should occasional call
-        /// <seealso cref="Thread#isInterrupted()"/> and if true then throw an <seealso cref="ThreadInterruptedException"/> or
+        /// check for thread interruption <see cref="Thread.Sleep(int)"/> and throw an <seealso cref="ThreadInterruptedException"/> or
         /// <seealso cref="AgentTerminationException"/>.
         /// 
         /// </para>

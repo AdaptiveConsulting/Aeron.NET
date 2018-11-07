@@ -130,7 +130,7 @@ namespace Adaptive.Cluster
         /// <summary>
         /// Get the current value of a candidate term id if a vote is placed in an election.
         /// </summary>
-        /// <returns> the current candidate term id within an election after voting or <seealso cref="Aeron#NULL_VALUE"/> if
+        /// <returns> the current candidate term id within an election after voting or <see cref="Adaptive.Aeron.Aeron.NULL_VALUE"/> if
         /// no voting phase of an election is currently active. </returns>
         public long CandidateTermId()
         {

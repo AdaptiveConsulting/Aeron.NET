@@ -24,7 +24,7 @@ namespace Adaptive.Aeron
         /// Construct a read-write view of an existing counter.
         /// </summary>
         /// <param name="countersReader"> for getting access to the buffers. </param>
-        /// <param name="registrationId"> assigned by the driver for the counter or <see cref="Aeron.NULL_VALUE"/> if not known. </param>
+        /// <param name="registrationId"> assigned by the driver for the counter or <see cref="Adaptive.Aeron.Aeron.NULL_VALUE"/> if not known. </param>
         /// <param name="counterId">      for the counter to be viewed. </param>
         /// <exception cref="AeronException"> if the id has for the counter has not been allocated. </exception>
         internal Counter(CountersReader countersReader, long registrationId, int counterId) : base(
@@ -73,10 +73,7 @@ namespace Adaptive.Aeron
         /// Has this object been closed and should no longer be used?
         /// </summary>
         /// <returns> true if it has been closed otherwise false. </returns>
-        public bool IsClosed()
-        {
-            return isClosed;
-        }
+        public override bool IsClosed => isClosed;
 
         internal void InternalClose()
         {

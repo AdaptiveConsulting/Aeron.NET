@@ -16,25 +16,19 @@
 
 using Adaptive.Aeron.LogBuffer;
 using Adaptive.Agrona;
-using Adaptive.Agrona.Concurrent;
 
 namespace Adaptive.Aeron
 {
     /// <summary>
     /// A <seealso cref="IFragmentHandler"/> that sits in a chain-of-responsibility pattern that reassembles fragmented messages
-    /// so that the next handler in the chain only sees whole messages.
+    /// so that the next handler in the chain only sees whole messages. This is for a single session on an {@link Image}
+    /// and not for multiple session <see cref="Image"/>s in a <see cref="Subscription"/>.
     /// 
     /// Unfragmented messages are delegated without copy. Fragmented messages are copied to a temporary
     /// buffer for reassembly before delegation.
     /// 
     /// The <seealso cref="Header"/> passed to the _delegate on assembling a message will be that of the last fragment.
     /// 
-    /// Session based buffers will be allocated and grown as necessary based on the length of messages to be assembled.
-    /// When sessions go inactive see <seealso cref="UnavailableImageHandler"/>, it is possible to free the buffer by calling
-    /// <seealso cref="FreeSessionBuffer(int)"/>.
-    /// 
-    /// <see cref="Subscription.Poll"/>
-    /// <see cref="Image.Poll"/>
     /// </summary>
     public class ImageFragmentAssembler : IFragmentHandler
     {

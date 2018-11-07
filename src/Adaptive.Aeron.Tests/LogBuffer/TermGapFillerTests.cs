@@ -24,7 +24,6 @@ namespace Adaptive.Aeron.Tests.LogBuffer
     [TestFixture]
     public class TermGapFillerTest
     {
-        private bool InstanceFieldsInitialized;
         private const int INITIAL_TERM_ID = 11;
         private const int TERM_ID = 22;
         private const int SESSION_ID = 333;

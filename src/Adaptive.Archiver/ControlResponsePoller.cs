@@ -72,18 +72,18 @@ namespace Adaptive.Archiver
         }
 
         /// <summary>
-        /// Control session id of the last polled message or <see cref="Aeron.NULL_VALUE"/> if poll returned nothing.
+        /// Control session id of the last polled message or <see cref="Adaptive.Aeron.Aeron.NULL_VALUE"/> if poll returned nothing.
         /// </summary>
-        /// <returns> control session id of the last polled message or <see cref="Aeron.NULL_VALUE"/> if unrecognised template. </returns>
+        /// <returns> control session id of the last polled message or <see cref="Adaptive.Aeron.Aeron.NULL_VALUE"/> if unrecognised template. </returns>
         public long ControlSessionId()
         {
             return controlSessionId;
         }
 
         /// <summary>
-        /// Correlation id of the last polled message or <see cref="Aeron.NULL_VALUE"/> if poll returned nothing.
+        /// Correlation id of the last polled message or <see cref="Adaptive.Aeron.Aeron.NULL_VALUE"/> if poll returned nothing.
         /// </summary>
-        /// <returns> correlation id of the last polled message or <see cref="Aeron.NULL_VALUE"/> if unrecognised template. </returns>
+        /// <returns> correlation id of the last polled message or <see cref="Adaptive.Aeron.Aeron.NULL_VALUE"/> if unrecognised template. </returns>
         public long CorrelationId()
         {
             return correlationId;

@@ -143,7 +143,7 @@ namespace Adaptive.Cluster.Client
         }
 
         /// <summary>
-        /// Connect to the cluster providing <seealso cref="Aeron.Context"/> for configuration.
+        /// Connect to the cluster providing <seealso cref="Adaptive.Aeron.Aeron.Context"/> for configuration.
         /// </summary>
         /// <param name="ctx"> for configuration. </param>
         /// <returns> allocated cluster client if the connection is successful. </returns>
@@ -171,13 +171,15 @@ namespace Adaptive.Cluster.Client
 
                 _clusterSessionId = ConnectToCluster();
 
-                UnsafeBuffer headerBuffer = new UnsafeBuffer(new byte[IngressSessionDecorator.INGRESS_MESSAGE_HEADER_LENGTH]);
+                UnsafeBuffer headerBuffer =
+                    new UnsafeBuffer(new byte[IngressSessionDecorator.INGRESS_MESSAGE_HEADER_LENGTH]);
                 _ingressMessageHeaderEncoder
                     .WrapAndApplyHeader(headerBuffer, 0, _messageHeaderEncoder)
                     .ClusterSessionId(_clusterSessionId)
                     .LeadershipTermId(_leadershipTermId);
 
-                _vectors[0] = new DirectBufferVector(headerBuffer, 0, IngressSessionDecorator.INGRESS_MESSAGE_HEADER_LENGTH);
+                _vectors[0] = new DirectBufferVector(headerBuffer, 0,
+                    IngressSessionDecorator.INGRESS_MESSAGE_HEADER_LENGTH);
                 _vectors[1] = _messageVector;
 
                 _poller = new Poller(ctx.EgressListener(), _clusterSessionId, this);
@@ -238,7 +240,7 @@ namespace Adaptive.Cluster.Client
         /// </summary>
         /// <returns> leadership term identity for the cluster. </returns>
         public long LeadershipTermId => _leadershipTermId;
-        
+
 
         /// <summary>
         /// Get the current leader member id for the cluster.
@@ -277,7 +279,7 @@ namespace Adaptive.Cluster.Client
         /// <param name="buffer">        containing message. </param>
         /// <param name="offset">        offset in the buffer at which the encoded message begins. </param>
         /// <param name="length">        in bytes of the encoded message. </param>
-        /// <returns> the same as <seealso cref="Publication.Offer(IDirectBuffer, int, int)"/>. </returns>
+        /// <returns> the same as <seealso cref="Publication.Offer(IDirectBuffer, int, int, ReservedValueSupplier)"/>. </returns>
         public long Offer(IDirectBuffer buffer, int offset, int length)
         {
             _messageVector.Reset(buffer, offset, length);
@@ -325,9 +327,9 @@ namespace Adaptive.Cluster.Client
 
         /// <summary>
         /// Poll the <seealso cref="EgressSubscription()"/> for session messages which are dispatched to
-        /// <seealso cref="Context.EgressListener"/>.
+        /// <seealso cref="Context.EgressListener()"/>.
         /// <para>
-        /// <b>Note:</b> if <seealso cref="Context.EgressListener"/> is not set then a <seealso cref="ConfigurationException"/> could result.
+        /// <b>Note:</b> if <seealso cref="Context.EgressListener()"/> is not set then a <seealso cref="ConfigurationException"/> could result.
         ///    
         /// </para>
         /// </summary>
@@ -345,7 +347,8 @@ namespace Adaptive.Cluster.Client
         /// <param name="leadershipTermId"> that identifies the term for which the new leader has been elected.</param>
         /// <param name="leaderMemberId">   which has become the new leader. </param>
         /// <param name="memberEndpoints">  comma separated list of cluster members endpoints to connect to with the leader first. </param>
-        public void OnNewLeader(long clusterSessionId, long leadershipTermId, int leaderMemberId, string memberEndpoints)
+        public void OnNewLeader(long clusterSessionId, long leadershipTermId, int leaderMemberId,
+            string memberEndpoints)
         {
             if (clusterSessionId != _clusterSessionId)
             {
@@ -501,7 +504,8 @@ namespace Adaptive.Cluster.Client
                 AwaitConnectedPublication(deadlineNs);
                 byte[] encodedCredentials = _ctx.CredentialsSupplier().EncodedCredentials();
 
-                return OpenSession(deadlineNs, new EgressPoller(_subscription, CONNECT_FRAGMENT_LIMIT), encodedCredentials);
+                return OpenSession(deadlineNs, new EgressPoller(_subscription, CONNECT_FRAGMENT_LIMIT),
+                    encodedCredentials);
             }
         }
 
@@ -774,7 +778,7 @@ namespace Adaptive.Cluster.Client
             }
 
             /// <summary>
-            /// The value <seealso cref="#NGRESS_CHANNEL_DEFAULT"/> or system property
+            /// The value <seealso cref="INGRESS_CHANNEL_DEFAULT"/> or system property
             /// <seealso cref="INGRESS_CHANNEL_PROP_NAME"/> if set.
             /// </summary>
             /// <returns> <seealso cref="INGRESS_CHANNEL_DEFAULT"/> or system property
@@ -1049,7 +1053,7 @@ namespace Adaptive.Cluster.Client
             /// Get the stream id for the egress channel.
             /// </summary>
             /// <returns> the stream id for the egress channel. </returns>
-            /// <seealso cref="Configuration.EGRESS_STREAM_ID_PROP_NAME"/></seealso>
+            /// <seealso cref="Configuration.EGRESS_STREAM_ID_PROP_NAME"/>
             public int EgressStreamId()
             {
                 return _egressStreamId;

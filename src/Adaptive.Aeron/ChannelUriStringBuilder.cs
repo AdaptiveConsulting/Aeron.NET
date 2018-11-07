@@ -526,7 +526,7 @@ namespace Adaptive.Aeron
         /// </summary>
         /// <param name="tags"> for the channel, publication or subscription. </param>
         /// <returns> this for a fluent API. </returns>
-        /// <seealso cref="Aeron.Context#TAGS_PARAM_NAME"/>
+        /// <seealso cref="Aeron.Context.TAGS_PARAM_NAME"/>
         public ChannelUriStringBuilder Tags(string tags)
         {
             _tags = tags;
@@ -537,7 +537,7 @@ namespace Adaptive.Aeron
         /// Get the tags for a channel, and/or publication or subscription.
         /// </summary>
         /// <returns> the tags for a channel, publication or subscription. </returns>
-        /// <seealso cref="Aeron.Context#TAGS_PARAM_NAME"/>
+        /// <seealso cref="Aeron.Context.TAGS_PARAM_NAME"/>
         public string Tags()
         {
             return _tags;

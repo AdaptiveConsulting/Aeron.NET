@@ -120,7 +120,7 @@ namespace Adaptive.Aeron
         }
 
         /// <summary>
-        /// Print out the values from <seealso cref="#countersReader()"/> which can be useful for debugging.
+        /// Print out the values from <seealso cref="CountersReader"/> which can be useful for debugging.
         /// </summary>
         ///  <param name="out"> to where the counters get printed. </param>
         public void PrintCounters(StreamWriter @out)
@@ -300,14 +300,14 @@ namespace Adaptive.Aeron
         /// <summary>
         /// Allocate a counter on the media driver and return a <seealso cref="Counter"/> for it.
         /// <para>
-        /// The counter should be freed by calling <seealso cref="Counter#close()"/>.
+        /// The counter should be freed by calling <seealso cref="Counter.Dispose()"/>.
         /// 
         /// </para>
         /// </summary>
         /// <param name="typeId"> for the counter. </param>
         /// <param name="label">  for the counter. It should be US-ASCII. </param>
         /// <returns> the newly allocated counter. </returns>
-        /// <seealso cref= org.agrona.concurrent.status.CountersManager#allocate(String, int) </seealso>
+        /// <seealso cref="CountersManager.Allocate(string,int)"></seealso>
         public Counter AddCounter(int typeId, string label)
         {
             return _conductor.AddCounter(typeId, label);
@@ -585,7 +585,7 @@ namespace Adaptive.Aeron
             /// Perform a shallow copy of the object.
             /// </summary>
             /// <returns> a shallow copy of the object. </returns>
-            public virtual Context Clone()
+            public Context Clone()
             {
                 return (Context) MemberwiseClone();
             }
@@ -769,9 +769,9 @@ namespace Adaptive.Aeron
 
 
             /// <summary>
-            /// Set the <seealso cref="NanoClock"/> to be used for tracking high resolution time.
+            /// Set the <seealso cref="INanoClock"/> to be used for tracking high resolution time.
             /// </summary>
-            /// <param name="clock"> <seealso cref="NanoClock"/> to be used for tracking high resolution time. </param>
+            /// <param name="clock"> <seealso cref="INanoClock"/> to be used for tracking high resolution time. </param>
             /// <returns> this Aeron.Context for method chaining </returns>
             public Context NanoClock(INanoClock clock)
             {
@@ -1455,6 +1455,7 @@ namespace Adaptive.Aeron
             /// Read the error log to a given <seealso cref="StreamWriter"/>
             /// </summary>
             /// <param name="writer"> to write the error log contents to. </param>
+            /// <param name="cncByteBuffer"> containing the error log.</param>
             /// <returns> the number of observations from the error log </returns>
             public int SaveErrorLog(StreamWriter writer, MappedByteBuffer cncByteBuffer)
             {
@@ -1511,7 +1512,7 @@ namespace Adaptive.Aeron
             {
                 Thread.Sleep(durationMs);
             }
-            catch (ThreadInterruptedException ignore)
+            catch (ThreadInterruptedException)
             {
                 Thread.CurrentThread.Interrupt();
             }

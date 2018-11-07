@@ -95,6 +95,7 @@ namespace Adaptive.Aeron.Samples.Common
                    && !new JitHelper().IsMsX64();
         }
 
+#pragma warning disable 162
         internal static string GetConfiguration()
         {
 #if DEBUG
@@ -102,6 +103,7 @@ namespace Adaptive.Aeron.Samples.Common
 #endif
             return "RELEASE";
         }
+#pragma warning restore 162
 
         // See http://aakinshin.net/en/blog/dotnet/jit-version-determining-in-runtime/
         private class JitHelper

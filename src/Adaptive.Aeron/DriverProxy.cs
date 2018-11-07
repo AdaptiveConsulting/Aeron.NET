@@ -68,11 +68,7 @@ namespace Adaptive.Aeron
             return _toDriverCommandBuffer.ConsumerHeartbeatTime();
         }
 
-#if DEBUG
-        public virtual long AddPublication(string channel, int streamId)
-#else
         public long AddPublication(string channel, int streamId)
-#endif
         {
             long correlationId = _toDriverCommandBuffer.NextCorrelationId();
 
@@ -82,7 +78,8 @@ namespace Adaptive.Aeron
                 .StreamId(streamId)
                 .Channel(channel);
 
-            if (!_toDriverCommandBuffer.Write(ControlProtocolEvents.ADD_PUBLICATION, _buffer, 0, _publicationMessage.Length()))
+            if (!_toDriverCommandBuffer.Write(ControlProtocolEvents.ADD_PUBLICATION, _buffer, 0,
+                _publicationMessage.Length()))
             {
                 throw new AeronException("Could not write add publication command");
             }
@@ -90,12 +87,7 @@ namespace Adaptive.Aeron
             return correlationId;
         }
 
-
-#if DEBUG
-        public virtual long AddExclusivePublication(string channel, int streamId)
-#else
         public long AddExclusivePublication(string channel, int streamId)
-#endif
         {
             long correlationId = _toDriverCommandBuffer.NextCorrelationId();
 
@@ -105,7 +97,8 @@ namespace Adaptive.Aeron
                 .StreamId(streamId)
                 .Channel(channel);
 
-            if (!_toDriverCommandBuffer.Write(ControlProtocolEvents.ADD_EXCLUSIVE_PUBLICATION, _buffer, 0, _publicationMessage.Length()))
+            if (!_toDriverCommandBuffer.Write(ControlProtocolEvents.ADD_EXCLUSIVE_PUBLICATION, _buffer, 0,
+                _publicationMessage.Length()))
             {
                 throw new AeronException("Could not write add exclusive publication command");
             }
@@ -113,17 +106,14 @@ namespace Adaptive.Aeron
             return correlationId;
         }
 
-#if DEBUG
-        public virtual long RemovePublication(long registrationId)
-#else
         public long RemovePublication(long registrationId)
-#endif
         {
             long correlationId = _toDriverCommandBuffer.NextCorrelationId();
 
             _removeMessage.RegistrationId(registrationId).CorrelationId(correlationId);
 
-            if (!_toDriverCommandBuffer.Write(ControlProtocolEvents.REMOVE_PUBLICATION, _buffer, 0, RemoveMessageFlyweight.Length()))
+            if (!_toDriverCommandBuffer.Write(ControlProtocolEvents.REMOVE_PUBLICATION, _buffer, 0,
+                RemoveMessageFlyweight.Length()))
             {
                 throw new AeronException("Could not write remove publication command");
             }
@@ -131,11 +121,7 @@ namespace Adaptive.Aeron
             return correlationId;
         }
 
-#if DEBUG
-        public virtual long AddSubscription(string channel, int streamId)
-#else
         public long AddSubscription(string channel, int streamId)
-#endif
         {
             const long registrationId = Aeron.NULL_VALUE;
             long correlationId = _toDriverCommandBuffer.NextCorrelationId();
@@ -144,7 +130,8 @@ namespace Adaptive.Aeron
 
             _subscriptionMessage.RegistrationCorrelationId(registrationId).StreamId(streamId).Channel(channel);
 
-            if (!_toDriverCommandBuffer.Write(ControlProtocolEvents.ADD_SUBSCRIPTION, _buffer, 0, _subscriptionMessage.Length()))
+            if (!_toDriverCommandBuffer.Write(ControlProtocolEvents.ADD_SUBSCRIPTION, _buffer, 0,
+                _subscriptionMessage.Length()))
             {
                 throw new AeronException("Could not write add subscription command");
             }
@@ -152,17 +139,14 @@ namespace Adaptive.Aeron
             return correlationId;
         }
 
-#if DEBUG
-        public virtual long RemoveSubscription(long registrationId)
-#else
         public long RemoveSubscription(long registrationId)
-#endif
         {
             long correlationId = _toDriverCommandBuffer.NextCorrelationId();
 
             _removeMessage.RegistrationId(registrationId).CorrelationId(correlationId);
 
-            if (!_toDriverCommandBuffer.Write(ControlProtocolEvents.REMOVE_SUBSCRIPTION, _buffer, 0, RemoveMessageFlyweight.Length()))
+            if (!_toDriverCommandBuffer.Write(ControlProtocolEvents.REMOVE_SUBSCRIPTION, _buffer, 0,
+                RemoveMessageFlyweight.Length()))
             {
                 throw new AeronException("Could not write remove subscription message");
             }
@@ -174,7 +158,8 @@ namespace Adaptive.Aeron
         {
             _correlatedMessage.CorrelationId(0);
 
-            if (!_toDriverCommandBuffer.Write(ControlProtocolEvents.CLIENT_KEEPALIVE, _buffer, 0, CorrelatedMessageFlyweight.LENGTH))
+            if (!_toDriverCommandBuffer.Write(ControlProtocolEvents.CLIENT_KEEPALIVE, _buffer, 0,
+                CorrelatedMessageFlyweight.LENGTH))
             {
                 throw new AeronException("Could not send client keepalive command");
             }
@@ -184,9 +169,11 @@ namespace Adaptive.Aeron
         {
             long correlationId = _toDriverCommandBuffer.NextCorrelationId();
 
-            _destinationMessage.RegistrationCorrelationId(registrationId).Channel(endpointChannel).CorrelationId(correlationId);
+            _destinationMessage.RegistrationCorrelationId(registrationId).Channel(endpointChannel)
+                .CorrelationId(correlationId);
 
-            if (!_toDriverCommandBuffer.Write(ControlProtocolEvents.ADD_DESTINATION, _buffer, 0, _destinationMessage.Length()))
+            if (!_toDriverCommandBuffer.Write(ControlProtocolEvents.ADD_DESTINATION, _buffer, 0,
+                _destinationMessage.Length()))
             {
                 throw new AeronException("Could not write destination command");
             }
@@ -198,23 +185,27 @@ namespace Adaptive.Aeron
         {
             long correlationId = _toDriverCommandBuffer.NextCorrelationId();
 
-            _destinationMessage.RegistrationCorrelationId(registrationId).Channel(endpointChannel).CorrelationId(correlationId);
+            _destinationMessage.RegistrationCorrelationId(registrationId).Channel(endpointChannel)
+                .CorrelationId(correlationId);
 
-            if (!_toDriverCommandBuffer.Write(ControlProtocolEvents.REMOVE_DESTINATION, _buffer, 0, _destinationMessage.Length()))
+            if (!_toDriverCommandBuffer.Write(ControlProtocolEvents.REMOVE_DESTINATION, _buffer, 0,
+                _destinationMessage.Length()))
             {
                 throw new AeronException("Could not write destination command");
             }
 
             return correlationId;
         }
-        
+
         public long AddRcvDestination(long registrationId, string endpointChannel)
         {
             long correlationId = _toDriverCommandBuffer.NextCorrelationId();
 
-            _destinationMessage.RegistrationCorrelationId(registrationId).Channel(endpointChannel).CorrelationId(correlationId);
+            _destinationMessage.RegistrationCorrelationId(registrationId).Channel(endpointChannel)
+                .CorrelationId(correlationId);
 
-            if (!_toDriverCommandBuffer.Write(ControlProtocolEvents.ADD_RCV_DESTINATION, _buffer, 0, _destinationMessage.Length()))
+            if (!_toDriverCommandBuffer.Write(ControlProtocolEvents.ADD_RCV_DESTINATION, _buffer, 0,
+                _destinationMessage.Length()))
             {
                 throw new AeronException("Could not write rcv destination command");
             }
@@ -226,9 +217,11 @@ namespace Adaptive.Aeron
         {
             long correlationId = _toDriverCommandBuffer.NextCorrelationId();
 
-            _destinationMessage.RegistrationCorrelationId(registrationId).Channel(endpointChannel).CorrelationId(correlationId);
+            _destinationMessage.RegistrationCorrelationId(registrationId).Channel(endpointChannel)
+                .CorrelationId(correlationId);
 
-            if (!_toDriverCommandBuffer.Write(ControlProtocolEvents.REMOVE_RCV_DESTINATION, _buffer, 0, _destinationMessage.Length()))
+            if (!_toDriverCommandBuffer.Write(ControlProtocolEvents.REMOVE_RCV_DESTINATION, _buffer, 0,
+                _destinationMessage.Length()))
             {
                 throw new AeronException("Could not write rcv destination command");
             }
@@ -236,12 +229,14 @@ namespace Adaptive.Aeron
             return correlationId;
         }
 
-        
-        public long AddCounter(int typeId, IDirectBuffer keyBuffer, int keyOffset, int keyLength, IDirectBuffer labelBuffer, int labelOffset, int labelLength)
+
+        public long AddCounter(int typeId, IDirectBuffer keyBuffer, int keyOffset, int keyLength,
+            IDirectBuffer labelBuffer, int labelOffset, int labelLength)
         {
             long correlationId = _toDriverCommandBuffer.NextCorrelationId();
 
-            _counterMessage.TypeId(typeId).KeyBuffer(keyBuffer, keyOffset, keyLength).LabelBuffer(labelBuffer, labelOffset, labelLength).CorrelationId(correlationId);
+            _counterMessage.TypeId(typeId).KeyBuffer(keyBuffer, keyOffset, keyLength)
+                .LabelBuffer(labelBuffer, labelOffset, labelLength).CorrelationId(correlationId);
 
             if (!_toDriverCommandBuffer.Write(ControlProtocolEvents.ADD_COUNTER, _buffer, 0, _counterMessage.Length()))
             {
@@ -271,7 +266,8 @@ namespace Adaptive.Aeron
 
             _removeMessage.RegistrationId(registrationId).CorrelationId(correlationId);
 
-            if (!_toDriverCommandBuffer.Write(ControlProtocolEvents.REMOVE_COUNTER, _buffer, 0, RemoveMessageFlyweight.Length()))
+            if (!_toDriverCommandBuffer.Write(ControlProtocolEvents.REMOVE_COUNTER, _buffer, 0,
+                RemoveMessageFlyweight.Length()))
             {
                 throw new AeronException("Could not write remove counter command");
             }
@@ -279,7 +275,7 @@ namespace Adaptive.Aeron
             return correlationId;
         }
 
-        public virtual void ClientClose()
+        public void ClientClose()
         {
             _correlatedMessage.CorrelationId(_toDriverCommandBuffer.NextCorrelationId());
             _toDriverCommandBuffer.Write(ControlProtocolEvents.CLIENT_CLOSE, _buffer, 0, CorrelatedMessageFlyweight.LENGTH);

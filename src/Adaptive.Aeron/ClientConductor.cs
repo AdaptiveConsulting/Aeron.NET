@@ -620,7 +620,7 @@ namespace Adaptive.Aeron
             _clientLock.Lock();
             try
             {
-                if (!counter.IsClosed())
+                if (!counter.IsClosed)
                 {
                     EnsureOpen();
                     EnsureNotReentrant();
