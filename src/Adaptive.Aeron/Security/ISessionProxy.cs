@@ -8,8 +8,8 @@ namespace Adaptive.Aeron.Security
         /// <summary>
         /// The session Id of the potential session assigned by the system.
         /// </summary>
-        /// <returns> session id for the potential session </returns>
-        long SessionId();
+        /// <value> session id for the potential session </value>
+        long SessionId { get; }
 
         /// <summary>
         /// Inform the system that the session requires a challenge and to send the provided encoded challenge.

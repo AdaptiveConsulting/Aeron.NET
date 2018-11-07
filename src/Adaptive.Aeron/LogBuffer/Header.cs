@@ -28,9 +28,8 @@ namespace Adaptive.Aeron.LogBuffer
     {
         private readonly int _positionBitsToShift;
         private readonly int _initialTermId;
-        private int _offset;
         private IDirectBuffer _buffer;
-        private readonly Object _context;
+        private readonly object _context;
         
         /// <summary>
         /// Construct a header that references a buffer for the log.
@@ -60,31 +59,26 @@ namespace Adaptive.Aeron.LogBuffer
         /// Context for storing state related to the context of the callback where the header is used.
         /// </summary>
         /// <returns>  context for storing state related to the context of the callback where the header is used.</returns>
-        public Object Context
-        {
-            get { return _context; }
-        }
+        public object Context => _context;
 
         /// <summary>
         /// Get the current position to which the image has advanced on reading this message.
         /// </summary>
-        /// <returns> the current position to which the image has advanced on reading this message. </returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public long Position()
+        /// <value> the current position to which the image has advanced on reading this message. </value>
+        public long Position
         {
-            var resultingOffset = BitUtil.Align(TermOffset + FrameLength, FrameDescriptor.FRAME_ALIGNMENT);
-            return LogBufferDescriptor.ComputePosition(TermId, resultingOffset, _positionBitsToShift, _initialTermId);
+            get
+            {
+                var resultingOffset = BitUtil.Align(TermOffset + FrameLength, FrameDescriptor.FRAME_ALIGNMENT);
+                return LogBufferDescriptor.ComputePosition(TermId, resultingOffset, _positionBitsToShift, _initialTermId);
+            }
         }
 
         /// <summary>
         /// Get the initial term id this stream started at.
         /// </summary>
-        /// <returns> the initial term id this stream started at. </returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public int InitialTermId()
-        {
-            return _initialTermId;
-        }
+        /// <value> the initial term id this stream started at. </value>
+        public int InitialTermId => _initialTermId;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void SetBuffer(IDirectBuffer buffer, int offset)
@@ -96,18 +90,14 @@ namespace Adaptive.Aeron.LogBuffer
         /// <summary>
         /// The offset at which the frame begins.
         /// </summary>
-        public int Offset
-        {
-            get { return _offset; }
-            set { _offset = value; }
-        }
+        public int Offset { get; set; }
 
         /// <summary>
         /// The <seealso cref="IDirectBuffer"/> containing the header.
         /// </summary>
         public IDirectBuffer Buffer
         {
-            get { return _buffer; }
+            get => _buffer;
             set {
                 if (value != _buffer)
                 {
