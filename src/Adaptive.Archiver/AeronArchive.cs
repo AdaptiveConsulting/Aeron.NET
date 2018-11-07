@@ -15,7 +15,7 @@ namespace Adaptive.Archiver
     /// <seealso cref="RecordingDescriptorPoller"/> may be used directly if a more asynchronous interaction is required.
     /// </para>
     /// <para>
-    /// Note: This class is threadsafe but the lock can be elided for single threaded access via <seealso cref="Aeron.Context#lock(Lock)"/>
+    /// Note: This class is threadsafe but the lock can be elided for single threaded access via <seealso cref="Adaptive.Aeron.Aeron.Context.ClientLock(Adaptive.Agrona.Concurrent.ILock)"/>
     /// being set to <seealso cref="NoOpLock"/>.
     /// </para>
     /// </summary>
@@ -139,7 +139,7 @@ namespace Adaptive.Archiver
         }
 
         /// <summary>
-        /// Connect to an Aeron archive using a default <seealso cref="Aeron.Context"/>. This will create a control session.
+        /// Connect to an Aeron archive using a default <seealso cref="Adaptive.Aeron.Aeron.Context"/>. This will create a control session.
         /// </summary>
         /// <returns> the newly created Aeron Archive client. </returns>
         public static AeronArchive Connect()
@@ -148,10 +148,10 @@ namespace Adaptive.Archiver
         }
 
         /// <summary>
-        /// Connect to an Aeron archive by providing a <seealso cref="Aeron.Context"/>. This will create a control session.
+        /// Connect to an Aeron archive by providing a <seealso cref="Adaptive.Aeron.Aeron.Context"/>. This will create a control session.
         /// <para>
-        /// Before connecting <seealso cref="Aeron.Context#conclude()"/> will be called.
-        /// If an exception occurs then <seealso cref="Aeron.Context#close()"/> will be called.
+        /// Before connecting <seealso cref="Adaptive.Aeron.Aeron.Context.Conclude()"/> will be called.
+        /// If an exception occurs then <seealso cref="Adaptive.Aeron.Aeron.Context.Dispose()"/> will be called.
         /// 
         /// </para>
         /// </summary>
@@ -215,9 +215,9 @@ namespace Adaptive.Archiver
 
 
         /// <summary>
-        /// Get the <seealso cref="Aeron.Context"/> used to connect this archive client.
+        /// Get the <seealso cref="Adaptive.Aeron.Aeron.Context"/> used to connect this archive client.
         /// </summary>
-        /// <returns> the <seealso cref="Aeron.Context"/> used to connect this archive client. </returns>
+        /// <returns> the <seealso cref="Adaptive.Aeron.Aeron.Context"/> used to connect this archive client. </returns>
         public Context Ctx()
         {
             return context;
@@ -314,7 +314,7 @@ namespace Adaptive.Archiver
 
         /// <summary>
         /// Add a <seealso cref="Publication"/> and set it up to be recorded. If this is not the first,
-        /// i.e. <seealso cref="Publication#isOriginal()"/> is true,  then an <seealso cref="ArchiveException"/>
+        /// i.e. <seealso cref="Publication.IsOriginal"/> is true,  then an <seealso cref="ArchiveException"/>
         /// will be thrown and the recording not initiated.
         /// <para>
         /// This is a sessionId specific recording.
@@ -498,8 +498,8 @@ namespace Adaptive.Archiver
 
         /// <summary>
         /// Stop recording for a subscriptionId that has been returned from
-        /// <seealso cref="#startRecording(String, int, SourceLocation)"/> or
-        /// <seealso cref="#extendRecording(long, String, int, SourceLocation)"/>.
+        /// <seealso cref="StartRecording(String, int, SourceLocation)"/> or
+        /// <seealso cref="ExtendRecording(long, String, int, SourceLocation)"/>.
         /// </summary>
         /// <param name="subscriptionId"> the subscription was registered with for the recording. </param>
         public void StopRecording(long subscriptionId)
@@ -761,7 +761,7 @@ namespace Adaptive.Archiver
         /// Get the position recorded for an active recording.
         /// </summary>
         /// <param name="recordingId"> of the active recording for which the position is required. </param>
-        /// <returns> the recorded position for the active recording or <seealso cref="#NULL_POSITION"/> if recording not active. </returns>
+        /// <returns> the recorded position for the active recording or <seealso cref="NULL_POSITION"/> if recording not active. </returns>
         public long GetRecordingPosition(long recordingId)
         {
             _lock.Lock();
@@ -814,7 +814,7 @@ namespace Adaptive.Archiver
         /// <param name="channel">        for a contains match on the stripped channel stored with the archive descriptor </param>
         /// <param name="streamId">       of the recording to match. </param>
         /// <param name="sessionId">      of the recording to match. </param>
-        /// <returns> the recordingId if found otherwise <seealso cref="Aeron.NULL_VALUE"/> if not found. </returns>
+        /// <returns> the recordingId if found otherwise <see cref="Adaptive.Aeron.Aeron.NULL_VALUE"/> if not found. </returns>
         public long FindLastMatchingRecording(long minRecordingId, string channel, int streamId, int sessionId)
         {
             _lock.Lock();
@@ -1162,7 +1162,7 @@ namespace Adaptive.Archiver
             /// The timeout in nanoseconds to wait for a message.
             /// </summary>
             /// <returns> timeout in nanoseconds to wait for a message. </returns>
-            /// <seealso cref= #MESSAGE_TIMEOUT_PROP_NAME </seealso>
+            /// <seealso cref="MESSAGE_TIMEOUT_PROP_NAME"></seealso>
             public static long MessageTimeoutNs()
             {
                 return Config.GetDurationInNanos(MESSAGE_TIMEOUT_PROP_NAME, MESSAGE_TIMEOUT_DEFAULT_NS);
@@ -1193,95 +1193,95 @@ namespace Adaptive.Archiver
             /// MTU length to be used for control request and response streams.
             /// </summary>
             /// <returns> MTU length to be used for control request and response streams. </returns>
-            /// <seealso cref= #CONTROL_MTU_LENGTH_PARAM_NAME </seealso>
+            /// <seealso cref="CONTROL_MTU_LENGTH_PARAM_NAME"></seealso>
             public static int ControlMtuLength()
             {
                 return Config.GetSizeAsInt(CONTROL_MTU_LENGTH_PARAM_NAME, CONTROL_MTU_LENGTH_DEFAULT);
             }
 
             /// <summary>
-            /// The value <seealso cref="#CONTROL_CHANNEL_DEFAULT"/> or system property
-            /// <seealso cref="#CONTROL_CHANNEL_PROP_NAME"/> if set.
+            /// The value <seealso cref="CONTROL_CHANNEL_DEFAULT"/> or system property
+            /// <seealso cref="CONTROL_CHANNEL_PROP_NAME"/> if set.
             /// </summary>
-            /// <returns> <seealso cref="#CONTROL_CHANNEL_DEFAULT"/> or system property
-            /// <seealso cref="#CONTROL_CHANNEL_PROP_NAME"/> if set. </returns>
+            /// <returns> <seealso cref="CONTROL_CHANNEL_DEFAULT"/> or system property
+            /// <seealso cref="CONTROL_CHANNEL_PROP_NAME"/> if set. </returns>
             public static string ControlChannel()
             {
                 return Config.GetProperty(CONTROL_CHANNEL_PROP_NAME, CONTROL_CHANNEL_DEFAULT);
             }
 
             /// <summary>
-            /// The value <seealso cref="#CONTROL_STREAM_ID_DEFAULT"/> or system property
-            /// <seealso cref="#CONTROL_STREAM_ID_PROP_NAME"/> if set.
+            /// The value <seealso cref="CONTROL_STREAM_ID_DEFAULT"/> or system property
+            /// <seealso cref="CONTROL_STREAM_ID_PROP_NAME"/> if set.
             /// </summary>
-            /// <returns> <seealso cref="#CONTROL_STREAM_ID_DEFAULT"/> or system property
-            /// <seealso cref="#CONTROL_STREAM_ID_PROP_NAME"/> if set. </returns>
+            /// <returns> <seealso cref="CONTROL_STREAM_ID_DEFAULT"/> or system property
+            /// <seealso cref="CONTROL_STREAM_ID_PROP_NAME"/> if set. </returns>
             public static int ControlStreamId()
             {
                 return Config.GetInteger(CONTROL_STREAM_ID_PROP_NAME, CONTROL_STREAM_ID_DEFAULT);
             }
 
             /// <summary>
-            /// The value <seealso cref="#LOCAL_CONTROL_CHANNEL_DEFAULT"/> or system property
-            /// <seealso cref="#CONTROL_CHANNEL_PROP_NAME"/> if set.
+            /// The value <seealso cref="LOCAL_CONTROL_CHANNEL_DEFAULT"/> or system property
+            /// <seealso cref="CONTROL_CHANNEL_PROP_NAME"/> if set.
             /// </summary>
-            /// <returns> <seealso cref="#LOCAL_CONTROL_CHANNEL_DEFAULT"/> or system property
-            /// <seealso cref="#LOCAL_CONTROL_CHANNEL_PROP_NAME"/> if set. </returns>
+            /// <returns> <seealso cref="LOCAL_CONTROL_CHANNEL_DEFAULT"/> or system property
+            /// <seealso cref="LOCAL_CONTROL_CHANNEL_PROP_NAME"/> if set. </returns>
             public static string LocalControlChannel()
             {
                 return Config.GetProperty(LOCAL_CONTROL_CHANNEL_PROP_NAME, LOCAL_CONTROL_CHANNEL_DEFAULT);
             }
 
             /// <summary>
-            /// The value <seealso cref="#LOCAL_CONTROL_STREAM_ID_DEFAULT"/> or system property
-            /// <seealso cref="#LOCAL_CONTROL_STREAM_ID_PROP_NAME"/> if set.
+            /// The value <seealso cref="LOCAL_CONTROL_STREAM_ID_DEFAULT"/> or system property
+            /// <seealso cref="LOCAL_CONTROL_STREAM_ID_PROP_NAME"/> if set.
             /// </summary>
-            /// <returns> <seealso cref="#LOCAL_CONTROL_STREAM_ID_DEFAULT"/> or system property
-            /// <seealso cref="#LOCAL_CONTROL_STREAM_ID_PROP_NAME"/> if set. </returns>
+            /// <returns> <seealso cref="LOCAL_CONTROL_STREAM_ID_DEFAULT"/> or system property
+            /// <seealso cref="LOCAL_CONTROL_STREAM_ID_PROP_NAME"/> if set. </returns>
             public static int LocalControlStreamId()
             {
                 return Config.GetInteger(LOCAL_CONTROL_STREAM_ID_PROP_NAME, LOCAL_CONTROL_STREAM_ID_DEFAULT);
             }
 
             /// <summary>
-            /// The value <seealso cref="#CONTROL_RESPONSE_CHANNEL_DEFAULT"/> or system property
-            /// <seealso cref="#CONTROL_RESPONSE_CHANNEL_PROP_NAME"/> if set.
+            /// The value <seealso cref="CONTROL_RESPONSE_CHANNEL_DEFAULT"/> or system property
+            /// <seealso cref="CONTROL_RESPONSE_CHANNEL_PROP_NAME"/> if set.
             /// </summary>
-            /// <returns> <seealso cref="#CONTROL_RESPONSE_CHANNEL_DEFAULT"/> or system property
-            /// <seealso cref="#CONTROL_RESPONSE_CHANNEL_PROP_NAME"/> if set. </returns>
+            /// <returns> <seealso cref="CONTROL_RESPONSE_CHANNEL_DEFAULT"/> or system property
+            /// <seealso cref="CONTROL_RESPONSE_CHANNEL_PROP_NAME"/> if set. </returns>
             public static string ControlResponseChannel()
             {
                 return Config.GetProperty(CONTROL_RESPONSE_CHANNEL_PROP_NAME, CONTROL_RESPONSE_CHANNEL_DEFAULT);
             }
 
             /// <summary>
-            /// The value <seealso cref="#CONTROL_RESPONSE_STREAM_ID_DEFAULT"/> or system property
-            /// <seealso cref="#CONTROL_RESPONSE_STREAM_ID_PROP_NAME"/> if set.
+            /// The value <seealso cref="CONTROL_RESPONSE_STREAM_ID_DEFAULT"/> or system property
+            /// <seealso cref="CONTROL_RESPONSE_STREAM_ID_PROP_NAME"/> if set.
             /// </summary>
-            /// <returns> <seealso cref="#CONTROL_RESPONSE_STREAM_ID_DEFAULT"/> or system property
-            /// <seealso cref="#CONTROL_RESPONSE_STREAM_ID_PROP_NAME"/> if set. </returns>
+            /// <returns> <seealso cref="CONTROL_RESPONSE_STREAM_ID_DEFAULT"/> or system property
+            /// <seealso cref="CONTROL_RESPONSE_STREAM_ID_PROP_NAME"/> if set. </returns>
             public static int ControlResponseStreamId()
             {
                 return Config.GetInteger(CONTROL_RESPONSE_STREAM_ID_PROP_NAME, CONTROL_RESPONSE_STREAM_ID_DEFAULT);
             }
 
             /// <summary>
-            /// The value <seealso cref="#RECORDING_EVENTS_CHANNEL_DEFAULT"/> or system property
-            /// <seealso cref="#RECORDING_EVENTS_CHANNEL_PROP_NAME"/> if set.
+            /// The value <seealso cref="RECORDING_EVENTS_CHANNEL_DEFAULT"/> or system property
+            /// <seealso cref="RECORDING_EVENTS_CHANNEL_PROP_NAME"/> if set.
             /// </summary>
-            /// <returns> <seealso cref="#RECORDING_EVENTS_CHANNEL_DEFAULT"/> or system property
-            /// <seealso cref="#RECORDING_EVENTS_CHANNEL_PROP_NAME"/> if set. </returns>
+            /// <returns> <seealso cref="RECORDING_EVENTS_CHANNEL_DEFAULT"/> or system property
+            /// <seealso cref="RECORDING_EVENTS_CHANNEL_PROP_NAME"/> if set. </returns>
             public static string RecordingEventsChannel()
             {
                 return Config.GetProperty(RECORDING_EVENTS_CHANNEL_PROP_NAME, RECORDING_EVENTS_CHANNEL_DEFAULT);
             }
 
             /// <summary>
-            /// The value <seealso cref="#RECORDING_EVENTS_STREAM_ID_DEFAULT"/> or system property
-            /// <seealso cref="#RECORDING_EVENTS_STREAM_ID_PROP_NAME"/> if set.
+            /// The value <seealso cref="RECORDING_EVENTS_STREAM_ID_DEFAULT"/> or system property
+            /// <seealso cref="RECORDING_EVENTS_STREAM_ID_PROP_NAME"/> if set.
             /// </summary>
-            /// <returns> <seealso cref="#RECORDING_EVENTS_STREAM_ID_DEFAULT"/> or system property
-            /// <seealso cref="#RECORDING_EVENTS_STREAM_ID_PROP_NAME"/> if set. </returns>
+            /// <returns> <seealso cref="RECORDING_EVENTS_STREAM_ID_DEFAULT"/> or system property
+            /// <seealso cref="RECORDING_EVENTS_STREAM_ID_PROP_NAME"/> if set. </returns>
             public static int RecordingEventsStreamId()
             {
                 return Config.GetInteger(RECORDING_EVENTS_STREAM_ID_PROP_NAME, RECORDING_EVENTS_STREAM_ID_DEFAULT);
@@ -1353,7 +1353,7 @@ namespace Adaptive.Archiver
             /// </summary>
             /// <param name="messageTimeoutNs"> to wait for sending or receiving a message. </param>
             /// <returns> this for a fluent API. </returns>
-            /// <seealso cref= Configuration#MESSAGE_TIMEOUT_PROP_NAME </seealso>
+            /// <seealso cref="Configuration.MESSAGE_TIMEOUT_PROP_NAME"/>
             public Context MessageTimeoutNs(long messageTimeoutNs)
             {
                 this.messageTimeoutNs = messageTimeoutNs;
@@ -1364,7 +1364,7 @@ namespace Adaptive.Archiver
             /// The message timeout in nanoseconds to wait for sending or receiving a message.
             /// </summary>
             /// <returns> the message timeout in nanoseconds to wait for sending or receiving a message. </returns>
-            /// <seealso cref= Configuration#MESSAGE_TIMEOUT_PROP_NAME </seealso>
+            /// <seealso cref="Configuration.MESSAGE_TIMEOUT_PROP_NAME"/>
             public long MessageTimeoutNs()
             {
                 return messageTimeoutNs;
@@ -1389,7 +1389,7 @@ namespace Adaptive.Archiver
             /// </summary>
             /// <param name="recordingEventsChannel"> channel URI on which the recording events publication will publish. </param>
             /// <returns> this for a fluent API. </returns>
-            /// <seealso cref= io.aeron.CommonContext#MDC_CONTROL_PARAM_NAME </seealso>
+            /// <seealso cref="Adaptive.Aeron.Aeron.Context.MDC_CONTROL_PARAM_NAME"/>
             public Context RecordingEventsChannel(string recordingEventsChannel)
             {
                 this.recordingEventsChannel = recordingEventsChannel;
@@ -1421,7 +1421,7 @@ namespace Adaptive.Archiver
             /// </summary>
             /// <param name="channel"> parameter for the control request channel. </param>
             /// <returns> this for a fluent API. </returns>
-            /// <seealso cref= Configuration#CONTROL_CHANNEL_PROP_NAME </seealso>
+            /// <seealso cref="Configuration.CONTROL_CHANNEL_PROP_NAME"></seealso>
             public Context ControlRequestChannel(string channel)
             {
                 controlRequestChannel = channel;
@@ -1432,7 +1432,7 @@ namespace Adaptive.Archiver
             /// Get the channel parameter for the control request channel.
             /// </summary>
             /// <returns> the channel parameter for the control request channel. </returns>
-            /// <seealso cref= Configuration#CONTROL_CHANNEL_PROP_NAME </seealso>
+            /// <seealso cref="Configuration.CONTROL_CHANNEL_PROP_NAME"></seealso>
             public string ControlRequestChannel()
             {
                 return controlRequestChannel;
@@ -1443,7 +1443,7 @@ namespace Adaptive.Archiver
             /// </summary>
             /// <param name="streamId"> for the control request channel. </param>
             /// <returns> this for a fluent API </returns>
-            /// <seealso cref= Configuration#CONTROL_STREAM_ID_PROP_NAME </seealso>
+            /// <seealso cref="Configuration.CONTROL_STREAM_ID_PROP_NAME"></seealso>
             public Context ControlRequestStreamId(int streamId)
             {
                 controlRequestStreamId = streamId;
@@ -1454,7 +1454,7 @@ namespace Adaptive.Archiver
             /// Get the stream id for the control request channel.
             /// </summary>
             /// <returns> the stream id for the control request channel. </returns>
-            /// <seealso cref= Configuration#CONTROL_STREAM_ID_PROP_NAME </seealso>
+            /// <seealso cref="Configuration.CONTROL_STREAM_ID_PROP_NAME"></seealso>
             public int ControlRequestStreamId()
             {
                 return controlRequestStreamId;
@@ -1465,7 +1465,7 @@ namespace Adaptive.Archiver
             /// </summary>
             /// <param name="channel"> parameter for the control response channel. </param>
             /// <returns> this for a fluent API. </returns>
-            /// <seealso cref= Configuration#CONTROL_RESPONSE_CHANNEL_PROP_NAME </seealso>
+            /// <seealso cref="Configuration.CONTROL_RESPONSE_CHANNEL_PROP_NAME"></seealso>s
             public Context ControlResponseChannel(string channel)
             {
                 controlResponseChannel = channel;
@@ -1476,7 +1476,7 @@ namespace Adaptive.Archiver
             /// Get the channel parameter for the control response channel.
             /// </summary>
             /// <returns> the channel parameter for the control response channel. </returns>
-            /// <seealso cref= Configuration#CONTROL_RESPONSE_CHANNEL_PROP_NAME </seealso>
+            /// <seealso cref="Configuration.CONTROL_RESPONSE_CHANNEL_PROP_NAME"></seealso>
             public string ControlResponseChannel()
             {
                 return controlResponseChannel;
@@ -1487,7 +1487,7 @@ namespace Adaptive.Archiver
             /// </summary>
             /// <param name="streamId"> for the control response channel. </param>
             /// <returns> this for a fluent API </returns>
-            /// <seealso cref= Configuration#CONTROL_RESPONSE_STREAM_ID_PROP_NAME </seealso>
+            /// <seealso cref="Configuration.CONTROL_RESPONSE_STREAM_ID_PROP_NAME"></seealso>
             public Context ControlResponseStreamId(int streamId)
             {
                 controlResponseStreamId = streamId;
@@ -1498,7 +1498,7 @@ namespace Adaptive.Archiver
             /// Get the stream id for the control response channel.
             /// </summary>
             /// <returns> the stream id for the control response channel. </returns>
-            /// <seealso cref= Configuration#CONTROL_RESPONSE_STREAM_ID_PROP_NAME </seealso>
+            /// <seealso cref="Configuration.CONTROL_RESPONSE_STREAM_ID_PROP_NAME"></seealso>
             public int ControlResponseStreamId()
             {
                 return controlResponseStreamId;
@@ -1531,7 +1531,7 @@ namespace Adaptive.Archiver
             /// </summary>
             /// <param name="controlTermBufferLength"> for the control stream. </param>
             /// <returns> this for a fluent API. </returns>
-            /// <seealso cref= Configuration#CONTROL_TERM_BUFFER_LENGTH_PARAM_NAME </seealso>
+            /// <seealso cref="Configuration.CONTROL_TERM_BUFFER_LENGTH_PARAM_NAME"></seealso>
             public Context ControlTermBufferLength(int controlTermBufferLength)
             {
                 this.controlTermBufferLength = controlTermBufferLength;
@@ -1542,7 +1542,7 @@ namespace Adaptive.Archiver
             /// Get the term buffer length for the control streams.
             /// </summary>
             /// <returns> the term buffer length for the control streams. </returns>
-            /// <seealso cref= Configuration#CONTROL_TERM_BUFFER_LENGTH_PARAM_NAME </seealso>
+            /// <seealso cref="Configuration.CONTROL_TERM_BUFFER_LENGTH_PARAM_NAME"></seealso>
             public int ControlTermBufferLength()
             {
                 return controlTermBufferLength;
@@ -1553,7 +1553,7 @@ namespace Adaptive.Archiver
             /// </summary>
             /// <param name="controlMtuLength"> for the control streams. </param>
             /// <returns> this for a fluent API. </returns>
-            /// <seealso cref= Configuration#CONTROL_MTU_LENGTH_PARAM_NAME </seealso>
+            /// <seealso cref="Configuration.CONTROL_MTU_LENGTH_PARAM_NAME"></seealso>
             public Context ControlMtuLength(int controlMtuLength)
             {
                 this.controlMtuLength = controlMtuLength;
@@ -1564,14 +1564,14 @@ namespace Adaptive.Archiver
             /// Get the MTU length for the control steams.
             /// </summary>
             /// <returns> the MTU length for the control steams. </returns>
-            /// <seealso cref= Configuration#CONTROL_MTU_LENGTH_PARAM_NAME </seealso>
+            /// <seealso cref="Configuration.CONTROL_MTU_LENGTH_PARAM_NAME"></seealso>
             public int ControlMtuLength()
             {
                 return controlMtuLength;
             }
 
             /// <summary>
-            /// Set the <seealso cref="IdleStrategy"/> used when waiting for responses.
+            /// Set the <seealso cref="IIdleStrategy"/> used when waiting for responses.
             /// </summary>
             /// <param name="idleStrategy"> used when waiting for responses. </param>
             /// <returns> this for a fluent API. </returns>
@@ -1582,9 +1582,9 @@ namespace Adaptive.Archiver
             }
 
             /// <summary>
-            /// Get the <seealso cref="IdleStrategy"/> used when waiting for responses.
+            /// Get the <seealso cref="IIdleStrategy"/> used when waiting for responses.
             /// </summary>
-            /// <returns> the <seealso cref="IdleStrategy"/> used when waiting for responses. </returns>
+            /// <returns> the <seealso cref="IIdleStrategy"/> used when waiting for responses. </returns>
             public IIdleStrategy IdleStrategy()
             {
                 return idleStrategy;
@@ -1613,14 +1613,14 @@ namespace Adaptive.Archiver
             /// <summary>
             /// <seealso cref="Adaptive.Aeron.Aeron"/> client for communicating with the local Media Driver.
             /// <para>
-            /// This client will be closed when the <seealso cref="AeronArchive#close()"/> or <seealso cref="#close()"/> methods are called if
-            /// <seealso cref="#ownsAeronClient()"/> is true.
+            /// This client will be closed when the <seealso cref="AeronArchive.Dispose()"/> or <seealso cref="Dispose()"/> methods are called if
+            /// <seealso cref="OwnsAeronClient()"/> is true.
             /// 
             /// </para>
             /// </summary>
             /// <param name="aeron"> client for communicating with the local Media Driver. </param>
             /// <returns> this for a fluent API. </returns>
-            /// <seealso cref= Aeron#connect() </seealso>
+            /// <seealso cref="Adaptive.Aeron.Aeron.Connect()"></seealso>
             public Context AeronClient(Aeron.Aeron aeron)
             {
                 this.aeron = aeron;
@@ -1630,8 +1630,8 @@ namespace Adaptive.Archiver
             /// <summary>
             /// <seealso cref="Adaptive.Aeron.Aeron"/> client for communicating with the local Media Driver.
             /// <para>
-            /// If not provided then a default will be established during <seealso cref="#conclude()"/> by calling
-            /// <seealso cref="Adaptive.Aeron.Aeron#connect()"/>.
+            /// If not provided then a default will be established during <seealso cref="Conclude()"/> by calling
+            /// <seealso cref="Adaptive.Aeron.Aeron.Connect()"/>.
             /// 
             /// </para>
             /// </summary>
@@ -1642,9 +1642,9 @@ namespace Adaptive.Archiver
             }
 
             /// <summary>
-            /// Does this context own the <seealso cref="#aeron()"/> client and this takes responsibility for closing it?
+            /// Does this context own the <seealso cref="AeronClient()"/> client and this takes responsibility for closing it?
             /// </summary>
-            /// <param name="ownsAeronClient"> does this context own the <seealso cref="#aeron()"/> client. </param>
+            /// <param name="ownsAeronClient"> does this context own the <seealso cref="AeronClient()"/> client. </param>
             /// <returns> this for a fluent API. </returns>
             public Context OwnsAeronClient(bool ownsAeronClient)
             {
@@ -1653,9 +1653,9 @@ namespace Adaptive.Archiver
             }
 
             /// <summary>
-            /// Does this context own the <seealso cref="#aeron()"/> client and this takes responsibility for closing it?
+            /// Does this context own the <seealso cref="AeronClient()"/> client and this takes responsibility for closing it?
             /// </summary>
-            /// <returns> does this context own the <seealso cref="#aeron()"/> client and this takes responsibility for closing it? </returns>
+            /// <returns> does this context own the <seealso cref="AeronClient()"/> client and this takes responsibility for closing it? </returns>
             public bool OwnsAeronClient()
             {
                 return ownsAeronClient;
@@ -1689,7 +1689,7 @@ namespace Adaptive.Archiver
             /// <summary>
             /// Close the context and free applicable resources.
             /// <para>
-            /// If <seealso cref="#ownsAeronClient()"/> is true then the <seealso cref="#aeron()"/> client will be closed.
+            /// If <seealso cref="OwnsAeronClient()"/> is true then the <seealso cref="AeronClient()"/> client will be closed.
             /// </para>
             /// </summary>
             public void Dispose()

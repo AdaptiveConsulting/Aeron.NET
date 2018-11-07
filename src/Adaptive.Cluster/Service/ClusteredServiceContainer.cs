@@ -233,37 +233,37 @@ namespace Adaptive.Cluster.Service
             public const bool RESPONDER_SERVICE_DEFAULT = true;
             
             /// <summary>
-            /// The value <seealso cref="#SERVICE_ID_DEFAULT"/> or system property <seealso cref="#SERVICE_ID_PROP_NAME"/> if set.
+            /// The value <seealso cref="SERVICE_ID_DEFAULT"/> or system property <seealso cref="SERVICE_ID_PROP_NAME"/> if set.
             /// </summary>
-            /// <returns> <seealso cref="#SERVICE_ID_DEFAULT"/> or system property <seealso cref="#SERVICE_ID_PROP_NAME"/> if set. </returns>
+            /// <returns> <seealso cref="SERVICE_ID_DEFAULT"/> or system property <seealso cref="SERVICE_ID_PROP_NAME"/> if set. </returns>
             public static int ServiceId()
             {
                 return Config.GetInteger(SERVICE_ID_PROP_NAME, SERVICE_ID_DEFAULT);
             }
 
             /// <summary>
-            /// The value <seealso cref="#SERVICE_NAME_DEFAULT"/> or system property <seealso cref="#SERVICE_NAME_PROP_NAME"/> if set.
+            /// The value <seealso cref="SERVICE_NAME_DEFAULT"/> or system property <seealso cref="SERVICE_NAME_PROP_NAME"/> if set.
             /// </summary>
-            /// <returns> <seealso cref="#SERVICE_NAME_DEFAULT"/> or system property <seealso cref="#SERVICE_NAME_PROP_NAME"/> if set. </returns>
+            /// <returns> <seealso cref="SERVICE_NAME_DEFAULT"/> or system property <seealso cref="SERVICE_NAME_PROP_NAME"/> if set. </returns>
             public static string ServiceName()
             {
                 return Config.GetProperty(SERVICE_NAME_PROP_NAME, SERVICE_NAME_DEFAULT);
             }
 
             /// <summary>
-            /// The value <seealso cref="#REPLAY_CHANNEL_DEFAULT"/> or system property <seealso cref="#REPLAY_CHANNEL_PROP_NAME"/> if set.
+            /// The value <seealso cref="REPLAY_CHANNEL_DEFAULT"/> or system property <seealso cref="REPLAY_CHANNEL_PROP_NAME"/> if set.
             /// </summary>
-            /// <returns> <seealso cref="#REPLAY_CHANNEL_DEFAULT"/> or system property <seealso cref="#REPLAY_CHANNEL_PROP_NAME"/> if set. </returns>
+            /// <returns> <seealso cref="REPLAY_CHANNEL_DEFAULT"/> or system property <seealso cref="REPLAY_CHANNEL_PROP_NAME"/> if set. </returns>
             public static string ReplayChannel()
             {
                 return Config.GetProperty(REPLAY_CHANNEL_PROP_NAME, REPLAY_CHANNEL_DEFAULT);
             }
 
             /// <summary>
-            /// The value <seealso cref="#REPLAY_STREAM_ID_DEFAULT"/> or system property <seealso cref="#REPLAY_STREAM_ID_PROP_NAME"/>
+            /// The value <seealso cref="REPLAY_STREAM_ID_DEFAULT"/> or system property <seealso cref="REPLAY_STREAM_ID_PROP_NAME"/>
             /// if set.
             /// </summary>
-            /// <returns> <seealso cref="#REPLAY_STREAM_ID_DEFAULT"/> or system property <seealso cref="#REPLAY_STREAM_ID_PROP_NAME"/>
+            /// <returns> <seealso cref="REPLAY_STREAM_ID_DEFAULT"/> or system property <seealso cref="REPLAY_STREAM_ID_PROP_NAME"/>
             /// if set. </returns>
             public static int ReplayStreamId()
             {
@@ -271,52 +271,52 @@ namespace Adaptive.Cluster.Service
             }
 
             /// <summary>
-            /// The value <seealso cref="#SERVICE_CONTROL_CHANNEL_DEFAULT"/> or system property
-            /// <seealso cref="#SERVICE_CONTROL_CHANNEL_PROP_NAME"/> if set.
+            /// The value <seealso cref="SERVICE_CONTROL_CHANNEL_DEFAULT"/> or system property
+            /// <seealso cref="SERVICE_CONTROL_CHANNEL_PROP_NAME"/> if set.
             /// </summary>
-            /// <returns> <seealso cref="#SERVICE_CONTROL_CHANNEL_DEFAULT"/> or system property
-            /// <seealso cref="#SERVICE_CONTROL_CHANNEL_PROP_NAME"/> if set. </returns>
+            /// <returns> <seealso cref="SERVICE_CONTROL_CHANNEL_DEFAULT"/> or system property
+            /// <seealso cref="SERVICE_CONTROL_CHANNEL_PROP_NAME"/> if set. </returns>
             public static string ServiceControlChannel()
             {
                 return Config.GetProperty(SERVICE_CONTROL_CHANNEL_PROP_NAME, SERVICE_CONTROL_CHANNEL_DEFAULT);
             }
             
             /// <summary>
-            /// The value <seealso cref="#CONSENSUS_MODULE_STREAM_ID_DEFAULT"/> or system property
-            /// <seealso cref="#CONSENSUS_MODULE_STREAM_ID_PROP_NAME"/> if set.
+            /// The value <seealso cref="CONSENSUS_MODULE_STREAM_ID_DEFAULT"/> or system property
+            /// <seealso cref="CONSENSUS_MODULE_STREAM_ID_PROP_NAME"/> if set.
             /// </summary>
-            /// <returns> <seealso cref="#CONSENSUS_MODULE_STREAM_ID_DEFAULT"/> or system property
-            /// <seealso cref="#CONSENSUS_MODULE_STREAM_ID_PROP_NAME"/> if set. </returns>
+            /// <returns> <seealso cref="CONSENSUS_MODULE_STREAM_ID_DEFAULT"/> or system property
+            /// <seealso cref="CONSENSUS_MODULE_STREAM_ID_PROP_NAME"/> if set. </returns>
             public static int ConsensusModuleStreamId()
             {
                 return Config.GetInteger(CONSENSUS_MODULE_STREAM_ID_PROP_NAME, CONSENSUS_MODULE_STREAM_ID_DEFAULT);
             }
 
             /// <summary>
-            /// The value <seealso cref="#SERVICE_CONTROL_STREAM_ID_DEFAULT"/> or system property
-            /// <seealso cref="#SERVICE_STREAM_ID_PROP_NAME"/> if set.
+            /// The value <seealso cref="SERVICE_CONTROL_STREAM_ID_DEFAULT"/> or system property
+            /// <seealso cref="SERVICE_STREAM_ID_PROP_NAME"/> if set.
             /// </summary>
-            /// <returns> <seealso cref="#SERVICE_CONTROL_STREAM_ID_DEFAULT"/> or system property
-            /// <seealso cref="#SERVICE_STREAM_ID_PROP_NAME"/> if set. </returns>
+            /// <returns> <seealso cref="SERVICE_CONTROL_STREAM_ID_DEFAULT"/> or system property
+            /// <seealso cref="SERVICE_STREAM_ID_PROP_NAME"/> if set. </returns>
             public static int ServiceStreamId()
             {
                 return Config.GetInteger(SERVICE_STREAM_ID_PROP_NAME, SERVICE_CONTROL_STREAM_ID_DEFAULT);
             }
             
             /// <summary>
-            /// The value <seealso cref="#SNAPSHOT_CHANNEL_DEFAULT"/> or system property <seealso cref="#SNAPSHOT_CHANNEL_PROP_NAME"/> if set.
+            /// The value <seealso cref="SNAPSHOT_CHANNEL_DEFAULT"/> or system property <seealso cref="SNAPSHOT_CHANNEL_PROP_NAME"/> if set.
             /// </summary>
-            /// <returns> <seealso cref="#SNAPSHOT_CHANNEL_DEFAULT"/> or system property <seealso cref="#SNAPSHOT_CHANNEL_PROP_NAME"/> if set. </returns>
+            /// <returns> <seealso cref="SNAPSHOT_CHANNEL_DEFAULT"/> or system property <seealso cref="SNAPSHOT_CHANNEL_PROP_NAME"/> if set. </returns>
             public static string SnapshotChannel()
             {
                 return Config.GetProperty(SNAPSHOT_CHANNEL_PROP_NAME, SNAPSHOT_CHANNEL_DEFAULT);
             }
 
             /// <summary>
-            /// The value <seealso cref="#SNAPSHOT_STREAM_ID_DEFAULT"/> or system property <seealso cref="#SNAPSHOT_STREAM_ID_PROP_NAME"/>
+            /// The value <seealso cref="SNAPSHOT_STREAM_ID_DEFAULT"/> or system property <seealso cref="SNAPSHOT_STREAM_ID_PROP_NAME"/>
             /// if set.
             /// </summary>
-            /// <returns> <seealso cref="#SNAPSHOT_STREAM_ID_DEFAULT"/> or system property <seealso cref="#SNAPSHOT_STREAM_ID_PROP_NAME"/> if set. </returns>
+            /// <returns> <seealso cref="SNAPSHOT_STREAM_ID_DEFAULT"/> or system property <seealso cref="SNAPSHOT_STREAM_ID_PROP_NAME"/> if set. </returns>
             public static int SnapshotStreamId()
             {
                 return Config.GetInteger(SNAPSHOT_STREAM_ID_PROP_NAME, SNAPSHOT_STREAM_ID_DEFAULT);
@@ -326,9 +326,9 @@ namespace Adaptive.Cluster.Service
             public const string CLUSTER_IDLE_STRATEGY_PROP_NAME = "aeron.cluster.idle.strategy";
 
             /// <summary>
-            /// Create a supplier of <seealso cref="IdleStrategy"/>s that will use the system property.
+            /// Create a supplier of <seealso cref="IIdleStrategy"/>s that will use the system property.
             /// </summary>
-            /// <param name="controllableStatus"> if a <seealso cref="org.agrona.concurrent.ControllableIdleStrategy"/> is required. </param>
+            /// <param name="controllableStatus"> if a <seealso cref="ControllableIdleStrategy"/> is required. </param>
             /// <returns> the new idle strategy </returns>
             public static Func<IIdleStrategy> IdleStrategySupplier(StatusIndicator controllableStatus)
             {
@@ -340,9 +340,9 @@ namespace Adaptive.Cluster.Service
             }
 
             /// <summary>
-            /// The value <seealso cref="#CLUSTER_DIR_DEFAULT"/> or system property <seealso cref="#CLUSTER_DIR_PROP_NAME"/> if set.
+            /// The value <seealso cref="CLUSTER_DIR_DEFAULT"/> or system property <seealso cref="CLUSTER_DIR_PROP_NAME"/> if set.
             /// </summary>
-            /// <returns> <seealso cref="#CLUSTER_DIR_DEFAULT"/> or system property <seealso cref="#CLUSTER_DIR_PROP_NAME"/> if set. </returns>
+            /// <returns> <seealso cref="CLUSTER_DIR_DEFAULT"/> or system property <seealso cref="CLUSTER_DIR_PROP_NAME"/> if set. </returns>
             public static string ClusterDirName()
             {
                 return Config.GetProperty(CLUSTER_DIR_PROP_NAME, CLUSTER_DIR_DEFAULT);
@@ -535,7 +535,7 @@ namespace Adaptive.Cluster.Service
             /// </summary>
             /// <param name="serviceId"> for this clustered service. </param>
             /// <returns> this for a fluent API </returns>
-            /// <seealso cref= ClusteredServiceContainer.Configuration#SERVICE_ID_PROP_NAME </seealso>
+            /// <seealso cref="Configuration.SERVICE_ID_PROP_NAME"></seealso>
             public Context ServiceId(int serviceId)
             {
                 this.serviceId = serviceId;
@@ -546,7 +546,7 @@ namespace Adaptive.Cluster.Service
             /// Get the id for this clustered service. Services should be numbered from 0 and be contiguous.
             /// </summary>
             /// <returns> the id for this clustered service. </returns>
-            /// <seealso cref= ClusteredServiceContainer.Configuration#SERVICE_ID_PROP_NAME </seealso>
+            /// <seealso cref="Configuration.SERVICE_ID_PROP_NAME"></seealso>
             public int ServiceId()
             {
                 return serviceId;
@@ -580,7 +580,7 @@ namespace Adaptive.Cluster.Service
             /// </summary>
             /// <param name="channel"> parameter for the cluster log replay channel. </param>
             /// <returns> this for a fluent API. </returns>
-            /// <seealso cref= ClusteredServiceContainer.Configuration#REPLAY_CHANNEL_PROP_NAME </seealso>
+            /// <seealso cref="Configuration.REPLAY_CHANNEL_PROP_NAME"></seealso>
             public Context ReplayChannel(string channel)
             {
                 replayChannel = channel;
@@ -591,7 +591,7 @@ namespace Adaptive.Cluster.Service
             /// Get the channel parameter for the cluster log and snapshot replay channel.
             /// </summary>
             /// <returns> the channel parameter for the cluster replay channel. </returns>
-            /// <seealso cref= ClusteredServiceContainer.Configuration#REPLAY_CHANNEL_PROP_NAME </seealso>
+            /// <seealso cref="Configuration.REPLAY_CHANNEL_PROP_NAME"></seealso>
             public string ReplayChannel()
             {
                 return replayChannel;
@@ -602,7 +602,7 @@ namespace Adaptive.Cluster.Service
             /// </summary>
             /// <param name="streamId"> for the cluster log replay channel. </param>
             /// <returns> this for a fluent API </returns>
-            /// <seealso cref= ClusteredServiceContainer.Configuration#REPLAY_STREAM_ID_PROP_NAME </seealso>
+            /// <seealso cref="Configuration.REPLAY_STREAM_ID_PROP_NAME"></seealso>
             public Context ReplayStreamId(int streamId)
             {
                 replayStreamId = streamId;
@@ -613,7 +613,7 @@ namespace Adaptive.Cluster.Service
             /// Get the stream id for the cluster log and snapshot replay channel.
             /// </summary>
             /// <returns> the stream id for the cluster log replay channel. </returns>
-            /// <seealso cref= ClusteredServiceContainer.Configuration#REPLAY_STREAM_ID_PROP_NAME </seealso>
+            /// <seealso cref="Configuration.REPLAY_STREAM_ID_PROP_NAME"></seealso>
             public int ReplayStreamId()
             {
                 return replayStreamId;
@@ -624,7 +624,7 @@ namespace Adaptive.Cluster.Service
             /// </summary>
             /// <param name="channel"> parameter for sending messages to the Consensus Module. </param>
             /// <returns> this for a fluent API. </returns>
-            /// <seealso cref= Configuration#CONSENSUS_MODULE_CHANNEL_PROP_NAME </seealso>
+            /// <seealso cref="Configuration.SERVICE_CONTROL_CHANNEL_PROP_NAME"></seealso>
             public Context ServiceControlChannel(string channel)
             {
                 serviceControlChannel = channel;
@@ -635,7 +635,7 @@ namespace Adaptive.Cluster.Service
             /// Get the channel parameter for sending messages to the Consensus Module.
             /// </summary>
             /// <returns> the channel parameter for sending messages to the Consensus Module. </returns>
-            /// <seealso cref= Configuration#CONSENSUS_MODULE_CHANNEL_PROP_NAME </seealso>
+            /// <seealso cref="Configuration.SERVICE_CONTROL_CHANNEL_PROP_NAME"></seealso>
             public string ServiceControlChannel()
             {
                 return serviceControlChannel;
@@ -646,7 +646,7 @@ namespace Adaptive.Cluster.Service
             /// </summary>
             /// <param name="streamId"> for communications from the consensus module and to the services. </param>
             /// <returns> this for a fluent API </returns>
-            /// <seealso cref= Configuration#SERVICE_STREAM_ID_PROP_NAME </seealso>
+            /// <seealso cref="Configuration.SERVICE_STREAM_ID_PROP_NAME"></seealso>
             public Context ServiceStreamId(int streamId)
             {
                 serviceStreamId = streamId;
@@ -657,7 +657,7 @@ namespace Adaptive.Cluster.Service
             /// Get the stream id for communications from the consensus module and to the services.
             /// </summary>
             /// <returns> the stream id for communications from the consensus module and to the services. </returns>
-            /// <seealso cref= Configuration#SERVICE_STREAM_ID_PROP_NAME </seealso>
+            /// <seealso cref="Configuration.SERVICE_STREAM_ID_PROP_NAME"></seealso>
             public int ServiceStreamId()
             {
                 return serviceStreamId;
@@ -668,7 +668,7 @@ namespace Adaptive.Cluster.Service
             /// </summary>
             /// <param name="streamId"> for communications from the services to the consensus module. </param>
             /// <returns> this for a fluent API </returns>
-            /// <seealso cref= Configuration#CONSENSUS_MODULE_STREAM_ID_PROP_NAME </seealso>
+            /// <seealso cref="Configuration.CONSENSUS_MODULE_STREAM_ID_PROP_NAME"></seealso>
             public Context ConsensusModuleStreamId(int streamId)
             {
                 consensusModuleStreamId = streamId;
@@ -679,7 +679,7 @@ namespace Adaptive.Cluster.Service
             /// Get the stream id for communications from the services to the consensus module.
             /// </summary>
             /// <returns> the stream id for communications from the services to the consensus module. </returns>
-            /// <seealso cref= Configuration#CONSENSUS_MODULE_STREAM_ID_PROP_NAME </seealso>
+            /// <seealso cref="Configuration.CONSENSUS_MODULE_STREAM_ID_PROP_NAME"></seealso>
             public int ConsensusModuleStreamId()
             {
                 return consensusModuleStreamId;
@@ -690,7 +690,7 @@ namespace Adaptive.Cluster.Service
             /// </summary>
             /// <param name="channel"> parameter for snapshot recordings </param>
             /// <returns> this for a fluent API. </returns>
-            /// <seealso cref= Configuration#SNAPSHOT_CHANNEL_PROP_NAME </seealso>
+            /// <seealso cref="Configuration.SNAPSHOT_CHANNEL_PROP_NAME"></seealso>
             public Context SnapshotChannel(string channel)
             {
                 snapshotChannel = channel;
@@ -701,7 +701,7 @@ namespace Adaptive.Cluster.Service
             /// Get the channel parameter for snapshot recordings.
             /// </summary>
             /// <returns> the channel parameter for snapshot recordings. </returns>
-            /// <seealso cref= Configuration#SNAPSHOT_CHANNEL_PROP_NAME </seealso>
+            /// <seealso cref="Configuration.SNAPSHOT_CHANNEL_PROP_NAME"></seealso>
             public string SnapshotChannel()
             {
                 return snapshotChannel;
@@ -712,7 +712,7 @@ namespace Adaptive.Cluster.Service
             /// </summary>
             /// <param name="streamId"> for snapshot recordings. </param>
             /// <returns> this for a fluent API </returns>
-            /// <seealso cref= Configuration#SNAPSHOT_STREAM_ID_PROP_NAME </seealso>
+            /// <seealso cref="Configuration.SNAPSHOT_STREAM_ID_PROP_NAME"></seealso>
             public Context SnapshotStreamId(int streamId)
             {
                 snapshotStreamId = streamId;
@@ -723,7 +723,7 @@ namespace Adaptive.Cluster.Service
             /// Get the stream id for snapshot recordings.
             /// </summary>
             /// <returns> the stream id for snapshot recordings. </returns>
-            /// <seealso cref= Configuration#SNAPSHOT_STREAM_ID_PROP_NAME </seealso>
+            /// <seealso cref="Configuration.SNAPSHOT_STREAM_ID_PROP_NAME"></seealso>
             public int SnapshotStreamId()
             {
                 return snapshotStreamId;
@@ -792,9 +792,9 @@ namespace Adaptive.Cluster.Service
             }
 
             /// <summary>
-            /// Set the <seealso cref="EpochClock"/> to be used for tracking wall clock time when interacting with the archive.
+            /// Set the <seealso cref="IEpochClock"/> to be used for tracking wall clock time when interacting with the archive.
             /// </summary>
-            /// <param name="clock"> <seealso cref="EpochClock"/> to be used for tracking wall clock time when interacting with the archive. </param>
+            /// <param name="clock"> <seealso cref="IEpochClock"/> to be used for tracking wall clock time when interacting with the archive. </param>
             /// <returns> this for a fluent API. </returns>
             public Context EpochClock(IEpochClock clock)
             {
@@ -803,9 +803,9 @@ namespace Adaptive.Cluster.Service
             }
 
             /// <summary>
-            /// Get the <seealso cref="EpochClock"/> to used for tracking wall clock time within the archive.
+            /// Get the <seealso cref="IEpochClock"/> to used for tracking wall clock time within the archive.
             /// </summary>
-            /// <returns> the <seealso cref="EpochClock"/> to used for tracking wall clock time within the archive. </returns>
+            /// <returns> the <seealso cref="IEpochClock"/> to used for tracking wall clock time within the archive. </returns>
             public IEpochClock EpochClock()
             {
                 return epochClock;
@@ -863,9 +863,9 @@ namespace Adaptive.Cluster.Service
             }
 
             /// <summary>
-            /// The <seealso cref="#errorHandler()"/> that will increment <seealso cref="#errorCounter()"/> by default.
+            /// The <seealso cref="ErrorHandler()"/> that will increment <seealso cref="ErrorCounter()"/> by default.
             /// </summary>
-            /// <returns> <seealso cref="#errorHandler()"/> that will increment <seealso cref="#errorCounter()"/> by default. </returns>
+            /// <returns> <seealso cref="ErrorHandler()"/> that will increment <seealso cref="ErrorCounter()"/> by default. </returns>
             public CountedErrorHandler CountedErrorHandler()
             {
                 return countedErrorHandler;
@@ -916,9 +916,9 @@ namespace Adaptive.Cluster.Service
             }
 
             /// <summary>
-            /// Does this context own the <seealso cref="#aeron()"/> client and this takes responsibility for closing it?
+            /// Does this context own the <seealso cref="Aeron()"/> client and this takes responsibility for closing it?
             /// </summary>
-            /// <param name="ownsAeronClient"> does this context own the <seealso cref="#aeron()"/> client. </param>
+            /// <param name="ownsAeronClient"> does this context own the <seealso cref="Aeron()"/> client. </param>
             /// <returns> this for a fluent API. </returns>
             public Context OwnsAeronClient(bool ownsAeronClient)
             {
@@ -927,9 +927,9 @@ namespace Adaptive.Cluster.Service
             }
 
             /// <summary>
-            /// Does this context own the <seealso cref="#aeron()"/> client and this takes responsibility for closing it?
+            /// Does this context own the <seealso cref="Aeron()"/> client and this takes responsibility for closing it?
             /// </summary>
-            /// <returns> does this context own the <seealso cref="#aeron()"/> client and this takes responsibility for closing it? </returns>
+            /// <returns> does this context own the <seealso cref="Aeron()"/> client and this takes responsibility for closing it? </returns>
             public bool OwnsAeronClient()
             {
                 return ownsAeronClient;
@@ -1002,7 +1002,7 @@ namespace Adaptive.Cluster.Service
             /// </summary>
             /// <param name="clusterDir"> to use. </param>
             /// <returns> this for a fluent API. </returns>
-            /// <seealso cref= Configuration#CLUSTERED_SERVICE_DIR_PROP_NAME </seealso>
+            /// <seealso cref="Configuration.CLUSTER_DIR_PROP_NAME"></seealso>
             public Context ClusterDir(DirectoryInfo clusterDir)
             {
                 this.clusterDir = clusterDir;
@@ -1013,7 +1013,7 @@ namespace Adaptive.Cluster.Service
             /// The directory used for for the cluster directory.
             /// </summary>
             /// <returns>  directory for for the cluster directory. </returns>
-            /// <seealso cref= Configuration#CLUSTERED_SERVICE_DIR_PROP_NAME </seealso>
+            /// <seealso cref="Configuration.CLUSTER_DIR_PROP_NAME"></seealso>
             public DirectoryInfo ClusterDir()
             {
                 return clusterDir;
@@ -1041,7 +1041,7 @@ namespace Adaptive.Cluster.Service
 
             /// <summary>
             /// Set the <seealso cref="Action"/> that is called when processing a
-            /// <seealso cref="ServiceAction.SHUTDOWN"/> or <seealso cref="ServiceAction.ABORT"/>
+            /// <seealso cref="ClusterAction.SHUTDOWN"/> or <seealso cref="ClusterAction.ABORT"/>
             /// </summary>
             /// <param name="terminationHook"> that can be used to terminate a service container. </param>
             /// <returns> this for a fluent API. </returns>
@@ -1055,7 +1055,7 @@ namespace Adaptive.Cluster.Service
             /// Get the <seealso cref="Action"/> that is called when processing a
             /// <seealso cref="ClusterAction.SHUTDOWN"/> or <seealso cref="ClusterAction.ABORT"/>
             /// <para>
-            /// The default action is to call signal on the <seealso cref="#shutdownSignalBarrier()"/>.
+            /// The default action is to call signal on the <seealso cref="ShutdownSignalBarrier()"/>.
             /// 
             /// </para>
             /// </summary>

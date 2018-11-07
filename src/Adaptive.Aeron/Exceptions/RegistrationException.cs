@@ -42,7 +42,7 @@ namespace Adaptive.Aeron.Exceptions
 
         /// <summary>
         /// Value of the errorCode encoded. This can provide additional information when a
-        /// <seealso cref="ErrorCode#UNKNOWN_CODE_VALUE"/> is returned.
+        /// <seealso cref="Adaptive.Aeron.ErrorCode.UNKNOWN_CODE_VALUE"/> is returned.
         /// </summary>
         /// <returns> value of the errorCode encoded as an int. </returns>
         public int ErrorCodeValue()

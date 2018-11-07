@@ -76,11 +76,7 @@ namespace Adaptive.Agrona.Concurrent.Broadcast
         /// </summary>
         /// <param name="handler"> to be called for each message received. </param>
         /// <returns> the number of messages that have been received. </returns>
-#if DEBUG
-        public virtual int Receive(MessageHandler handler)
-#else
-        public  int Receive(MessageHandler handler)
-#endif
+        public int Receive(MessageHandler handler)
         {
             var messagesReceived = 0;
             var receiver = _receiver;

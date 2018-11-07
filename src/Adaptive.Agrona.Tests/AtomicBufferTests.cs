@@ -15,7 +15,6 @@
  */
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.MemoryMappedFiles;
@@ -108,7 +107,6 @@ namespace Adaptive.Agrona.Tests
             buffer.CheckLimit(index);
         }
 
-#if DEBUG
         [Theory]
         [ExpectedException(typeof(IndexOutOfRangeException))]
         public void ShouldThrowExceptionWhenOutOfBounds(IAtomicBuffer buffer)
@@ -116,7 +114,6 @@ namespace Adaptive.Agrona.Tests
             const int index = BufferCapacity;
             buffer.GetByte(index);
         }
-#endif
 
         [Test]
         public void SharedBuffer()

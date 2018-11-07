@@ -34,7 +34,7 @@ namespace Adaptive.Cluster.Service
 
         internal BoundedLogAdapter(Image image, ReadableCounter upperBound, ClusteredServiceAgent agent)
         {
-            fragmentAssembler = new ImageControlledFragmentAssembler(this, INITIAL_BUFFER_LENGTH, true);
+            fragmentAssembler = new ImageControlledFragmentAssembler(this, INITIAL_BUFFER_LENGTH);
             this.image = image;
             this.upperBound = upperBound;
             this.agent = agent;

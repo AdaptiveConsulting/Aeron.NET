@@ -147,9 +147,9 @@ namespace Adaptive.Aeron.LogBuffer
         public int TermOffset => Offset;
 
         /// <summary>
-        /// The type of the the frame which should always be <seealso cref="DataHeaderFlyweight.HDR_TYPE_DATA"/>
+        /// The type of the the frame which should always be <seealso cref="HeaderFlyweight.HDR_TYPE_DATA"/>
         /// </summary>
-        /// <returns> type of the the frame which should always be <seealso cref="DataHeaderFlyweight.HDR_TYPE_DATA"/> </returns>
+        /// <returns> type of the the frame which should always be <seealso cref="HeaderFlyweight.HDR_TYPE_DATA"/> </returns>
         public int Type => Buffer.GetShort(Offset + HeaderFlyweight.TYPE_FIELD_OFFSET) & 0xFFFF;
 
         /// <summary>

@@ -66,7 +66,7 @@ namespace Adaptive.Cluster.Service
         /// <param name="buffer"> containing message. </param>
         /// <param name="offset"> offset in the buffer at which the encoded message begins. </param>
         /// <param name="length"> in bytes of the encoded message. </param>
-        /// <returns> the same as <seealso cref="Publication.Offer(IDirectBuffer, int, int)"/> when in <seealso cref="ClusterRole.Leader"/>
+        /// <returns> the same as <seealso cref="Publication.Offer(IDirectBuffer, int, int, ReservedValueSupplier)"/> when in <seealso cref="ClusterRole.Leader"/>
         /// otherwise <see cref="MOCKED_OFFER"/>. </returns>
         public long Offer(IDirectBuffer buffer, int offset, int length)
         {

@@ -29,8 +29,8 @@ namespace Adaptive.Aeron
 {
     /// <summary>
     /// Aeron publisher API for sending messages to subscribers of a given channel and streamId pair. <seealso cref="Publication"/>s
-    /// are created via the <seealso cref="Aeron#addPublication(String, int)"/> <seealso cref="Aeron#addExclusivePublication(String, int)"/>
-    /// methods, and messages are sent via one of the <seealso cref="#offer(DirectBuffer)"/> methods.
+    /// are created via the <seealso cref="Aeron.AddPublication(string, int)"/> <seealso cref="Aeron.AddExclusivePublication(string, int)"/>
+    /// methods, and messages are sent via one of the <seealso cref="Offer(UnsafeBuffer)"/> methods.
     /// <para>
     /// The APIs used for tryClaim and offer are non-blocking.
     /// </para>
@@ -225,8 +225,8 @@ namespace Adaptive.Aeron
         /// <summary>
         /// Get the status of the media channel for this Publication.
         /// <para>
-        /// The status will be <seealso cref="ChannelEndpointStatus#ERRORED"/> if a socket exception occurs on setup
-        /// and <seealso cref="ChannelEndpointStatus#ACTIVE"/> if all is well.
+        /// The status will be <seealso cref="ChannelEndpointStatus.ERRORED"/> if a socket exception occurs on setup
+        /// and <seealso cref="ChannelEndpointStatus.ACTIVE"/> if all is well.
         ///     
         /// </para>
         /// </summary>
@@ -361,8 +361,7 @@ namespace Adaptive.Aeron
         ///         }
         ///     }
         /// }</pre>
-        ///     
-        /// </para>
+        /// 
         /// </summary>
         /// <param name="length">      of the range to claim, in bytes.. </param>
         /// <param name="bufferClaim"> to be populated if the claim succeeds. </param>

@@ -191,7 +191,7 @@ namespace Adaptive.Aeron
 
         /// <summary>
         /// Try to claim a range in the publication log into which a message can be written with zero copy semantics.
-        /// Once the message has been written then <seealso cref="ExclusiveBufferClaim.Commit()"/> should be called thus making it available.
+        /// Once the message has been written then <seealso cref="BufferClaim.Commit()"/> should be called thus making it available.
         /// 
         /// <b>Note:</b> This method can only be used for message lengths less than MTU length minus header.
         /// If the claim is held after the publication is closed, or the client dies, then it will be unblocked to reach

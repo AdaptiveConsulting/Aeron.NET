@@ -125,33 +125,21 @@ namespace Adaptive.Aeron
             }
         }
 
-#if DEBUG
-        public virtual UnsafeBuffer[] DuplicateTermBuffers()
-#else
         public UnsafeBuffer[] DuplicateTermBuffers()
-#endif
         {
             return _termBuffers;
         }
 
-#if DEBUG
-        public virtual UnsafeBuffer MetaDataBuffer()
-#else
         /// <summary>
         /// Get the buffer which holds the log metadata.
         /// </summary>
         /// <returns> the buffer which holds the log metadata. </returns>
         public UnsafeBuffer MetaDataBuffer()
-#endif
         {
             return _logMetaDataBuffer;
         }
 
-#if DEBUG
-        public virtual void Dispose()
-#else
         public void Dispose()
-#endif
         {
             foreach (var buffer in _mappedByteBuffers)
             {
@@ -159,15 +147,11 @@ namespace Adaptive.Aeron
             }
         }
 
-#if DEBUG
-        public virtual int TermLength()
-#else
         /// <summary>
         ///  The length of the term buffer in each log partition.
         /// </summary>
         /// <returns> length of the term buffer in each log partition. </returns>
         public int TermLength()
-#endif
         {
             return _termLength;
         }

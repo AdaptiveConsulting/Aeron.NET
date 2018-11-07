@@ -34,8 +34,8 @@ namespace Adaptive.Aeron
     /// When sessions go inactive see <seealso cref="UnavailableImageHandler"/>, it is possible to free the buffer by calling
     /// <seealso cref="FreeSessionBuffer(int)"/>.
     /// 
-    /// <see cref="Subscription.Poll"/>
-    /// <see cref="Image.Poll"/>
+    /// <see cref="Subscription.Poll(Adaptive.Aeron.LogBuffer.FragmentHandler,int)"/>
+    /// <see cref="Image.Poll(Adaptive.Aeron.LogBuffer.FragmentHandler,int) "/>
     /// </summary>
     public class FragmentAssembler : IFragmentHandler
     {

@@ -1,5 +1,4 @@
-﻿using System;
-using Adaptive.Aeron;
+﻿using Adaptive.Aeron;
 using Adaptive.Aeron.LogBuffer;
 using Adaptive.Agrona;
 using Adaptive.Cluster.Codecs;
@@ -53,36 +52,36 @@ namespace Adaptive.Cluster.Client
         }
 
         /// <summary>
-        /// Cluster session id of the last polled event or <see cref="Aeron.NULL_VALUE"/> if poll returned nothing.
+        /// Cluster session id of the last polled event or <see cref="Adaptive.Aeron.Aeron.NULL_VALUE"/> if poll returned nothing.
         /// </summary>
-        /// <returns> cluster session id of the last polled event or <see cref="Aeron.NULL_VALUE"/> if not returned. </returns>
+        /// <returns> cluster session id of the last polled event or <see cref="Adaptive.Aeron.Aeron.NULL_VALUE"/> if not returned. </returns>
         public long ClusterSessionId()
         {
             return clusterSessionId;
         }
 
         /// <summary>
-        /// Correlation id of the last polled event or <see cref="Aeron.NULL_VALUE"/> if poll returned nothing.
+        /// Correlation id of the last polled event or <see cref="Adaptive.Aeron.Aeron.NULL_VALUE"/> if poll returned nothing.
         /// </summary>
-        /// <returns> correlation id of the last polled event or <see cref="Aeron.NULL_VALUE"/> if not returned. </returns>
+        /// <returns> correlation id of the last polled event or <see cref="Adaptive.Aeron.Aeron.NULL_VALUE"/> if not returned. </returns>
         public long CorrelationId()
         {
             return correlationId;
         }
         
         /// <summary>
-        /// Leadership term id of the last polled event or <seealso cref="Aeron.NULL_VALUE"/> if poll returned nothing.
+        /// Leadership term id of the last polled event or <see cref="Adaptive.Aeron.Aeron.NULL_VALUE"/> if poll returned nothing.
         /// </summary>
-        /// <returns> leadership term id of the last polled event or <seealso cref="Aeron.NULL_VALUE"/> if not returned. </returns>
+        /// <returns> leadership term id of the last polled event or <see cref="Adaptive.Aeron.Aeron.NULL_VALUE"/> if not returned. </returns>
         public long LeadershipTermId()
         {
             return leadershipTermId;
         }
         
         /// <summary>
-        /// Leader cluster member id of the last polled event or <seealso cref="Aeron#NULL_VALUE"/> if poll returned nothing.
+        /// Leader cluster member id of the last polled event or <see cref="Adaptive.Aeron.Aeron.NULL_VALUE"/> if poll returned nothing.
         /// </summary>
-        /// <returns> leader cluster member id of the last polled event or <seealso cref="Aeron#NULL_VALUE"/> if poll returned nothing. </returns>
+        /// <returns> leader cluster member id of the last polled event or <see cref="Adaptive.Aeron.Aeron.NULL_VALUE"/> if poll returned nothing. </returns>
         public int LeaderMemberId()
         {
             return leaderMemberId;

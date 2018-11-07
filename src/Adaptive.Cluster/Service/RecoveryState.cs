@@ -133,11 +133,11 @@ namespace Adaptive.Cluster.Service
         }
 
         /// <summary>
-        /// Get the leadership term id for the snapshot state. <see cref="Aeron.NULL_VALUE"/> if no snapshot for recovery.
+        /// Get the leadership term id for the snapshot state. <see cref="Adaptive.Aeron.Aeron.NULL_VALUE"/> if no snapshot for recovery.
         /// </summary>
         /// <param name="counters">  to search within. </param>
         /// <param name="counterId"> for the active consensus position. </param>
-        /// <returns> the leadership term id if found otherwise <see cref="Aeron.NULL_VALUE"/>. </returns>
+        /// <returns> the leadership term id if found otherwise <see cref="Adaptive.Aeron.Aeron.NULL_VALUE"/>. </returns>
         public static long GetLeadershipTermId(CountersReader counters, int counterId)
         {
             IDirectBuffer buffer = counters.MetaDataBuffer;
@@ -156,11 +156,11 @@ namespace Adaptive.Cluster.Service
         }
 
         /// <summary>
-        ///  Get the position at which the snapshot was taken. <seealso cref="Aeron.NULL_VALUE"/> if no snapshot for recovery.
+        ///  Get the position at which the snapshot was taken. <see cref="Adaptive.Aeron.Aeron.NULL_VALUE"/> if no snapshot for recovery.
         /// </summary>
         /// <param name="counters">  to search within. </param>
         /// <param name="counterId"> for the active consensus position. </param>
-        /// <returns> the log position if found otherwise <seealso cref="Aeron.NULL_VALUE"/>. </returns>
+        /// <returns> the log position if found otherwise <see cref="Adaptive.Aeron.Aeron.NULL_VALUE"/>. </returns>
         public static long GetLogPosition(CountersReader counters, int counterId)
         {
             IDirectBuffer buffer = counters.MetaDataBuffer;
@@ -180,11 +180,11 @@ namespace Adaptive.Cluster.Service
 
 
         /// <summary>
-        /// Get the timestamp at the beginning of recovery. <seealso cref="Aeron.NULL_VALUE"/> if no snapshot for recovery.
+        /// Get the timestamp at the beginning of recovery. <see cref="Adaptive.Aeron.Aeron.NULL_VALUE"/> if no snapshot for recovery.
         /// </summary>
         /// <param name="counters">  to search within. </param>
         /// <param name="counterId"> for the active recovery counter. </param>
-        /// <returns> the timestamp if found otherwise <seealso cref="Aeron.NULL_VALUE"/>. </returns>
+        /// <returns> the timestamp if found otherwise <see cref="Adaptive.Aeron.Aeron.NULL_VALUE"/>. </returns>
         public static long GetTimestamp(CountersReader counters, int counterId)
         {
             IDirectBuffer buffer = counters.MetaDataBuffer;
@@ -231,7 +231,7 @@ namespace Adaptive.Cluster.Service
         /// <param name="counters">  to search within. </param>
         /// <param name="counterId"> for the active recovery counter. </param>
         /// <param name="serviceId"> for the snapshot required. </param>
-        /// <returns> the count of replay terms if found otherwise <seealso cref="Aeron.NULL_VALUE"/>. </returns>
+        /// <returns> the count of replay terms if found otherwise <see cref="Adaptive.Aeron.Aeron.NULL_VALUE"/>. </returns>
         public static long GetSnapshotRecordingId(CountersReader counters, int counterId, int serviceId)
         {
             IDirectBuffer buffer = counters.MetaDataBuffer;

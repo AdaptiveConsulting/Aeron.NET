@@ -46,7 +46,7 @@ namespace Adaptive.Archiver
         }
 
         /// <summary>
-        /// Poll for recording events and dispatch them to the <seealso cref="RecordingEventsListener"/> for this instance.
+        /// Poll for recording events and dispatch them to the <seealso cref="IRecordingEventsListener"/> for this instance.
         /// </summary>
         /// <returns> the number of fragments read during the operation. Zero if no events are available. </returns>
         public int Poll()

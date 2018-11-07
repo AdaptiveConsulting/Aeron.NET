@@ -337,7 +337,7 @@ namespace Adaptive.Agrona.Concurrent.Status
         /// Get the deadline (in milliseconds) for when a given counter id may be reused.
         /// </summary>
         /// <param name="counterId"> to be read. </param>
-        /// <returns> deadline (in milliseconds) for when a given counter id may be reused or <seealso cref="#NOT_FREE_TO_REUSE"/> if
+        /// <returns> deadline (in milliseconds) for when a given counter id may be reused or <seealso cref="NOT_FREE_TO_REUSE"/> if
         /// currently in use. </returns>
         public long GetFreeForReuseDeadline(int counterId)
         {

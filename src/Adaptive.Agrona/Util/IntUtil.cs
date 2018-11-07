@@ -83,8 +83,8 @@ namespace Adaptive.Agrona.Util
         /// <para>Note that this method is closely related to the logarithm base 2.
         /// For all positive {@code int} values x:
         /// <ul>
-        /// <li>floor(log<sub>2</sub>(x)) = {@code 31 - numberOfLeadingZeros(x)}
-        /// <li>ceil(log<sub>2</sub>(x)) = {@code 32 - numberOfLeadingZeros(x - 1)}
+        /// <li>floor(log<sub>2</sub>(x)) = {@code 31 - numberOfLeadingZeros(x)}</li>
+        /// <li>ceil(log<sub>2</sub>(x)) = {@code 32 - numberOfLeadingZeros(x - 1)}</li>
         /// </ul>
         /// 
         /// </para>

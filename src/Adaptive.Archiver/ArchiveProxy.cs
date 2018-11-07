@@ -46,8 +46,8 @@ namespace Adaptive.Archiver
         /// Create a proxy with a <seealso cref="Publication"/> for sending control message requests.
         /// <para>
         /// This provides a default <seealso cref="IIdleStrategy"/> of a <seealso cref="YieldingIdleStrategy"/> when offers are back pressured
-        /// with a defaults of <seealso cref="AeronArchive.Configuration#MESSAGE_TIMEOUT_DEFAULT_NS"/> and
-        /// <seealso cref="#DEFAULT_RETRY_ATTEMPTS"/>.
+        /// with a defaults of <seealso cref="AeronArchive.Configuration.MESSAGE_TIMEOUT_DEFAULT_NS"/> and
+        /// <seealso cref="DEFAULT_RETRY_ATTEMPTS"/>.
         /// 
         /// </para>
         /// </summary>
@@ -197,7 +197,7 @@ namespace Adaptive.Archiver
         }
 
         /// <summary>
-        /// Stop an active recording by the <seealso cref="Subscription#registrationId()"/> it was registered with.
+        /// Stop an active recording by the <seealso cref="Subscription.RegistrationId"/> it was registered with.
         /// </summary>
         /// <param name="subscriptionId">   that identifies the subscription in the archive doing the recording. </param>
         /// <param name="correlationId">    for this request. </param>
@@ -219,7 +219,7 @@ namespace Adaptive.Archiver
         /// </summary>
         /// <param name="recordingId">      to be replayed. </param>
         /// <param name="position">         from which the replay should be started. </param>
-        /// <param name="length">           of the stream to be replayed. Use <seealso cref="Long#MAX_VALUE"/> to follow a live stream. </param>
+        /// <param name="length">           of the stream to be replayed. Use <seealso cref="long.MaxValue"/> to follow a live stream. </param>
         /// <param name="replayChannel">    to which the replay should be sent. </param>
         /// <param name="replayStreamId">   to which the replay should be sent. </param>
         /// <param name="correlationId">    for this request. </param>

@@ -25,7 +25,7 @@ namespace Adaptive.Cluster.Client
         private readonly IngressMessageHeaderEncoder ingressMessageHeaderEncoder = new IngressMessageHeaderEncoder();
 
         /// <summary>
-        /// Construct a new ingress session header wrapper that defaults all fields to the <see cref="Aeron.NULL_VALUE"/>
+        /// Construct a new ingress session header wrapper that defaults all fields to the <see cref="Adaptive.Aeron.Aeron.NULL_VALUE"/>
         /// </summary>
         public IngressSessionDecorator() : this(Aeron.Aeron.NULL_VALUE, Aeron.Aeron.NULL_VALUE)
         {
@@ -74,7 +74,7 @@ namespace Adaptive.Cluster.Client
         /// <summary>
         /// Non-blocking publish of a partial buffer containing a message plus session header to a cluster.
         /// <para>
-        /// This version of the method will set the timestamp value in the header to <see cref="Aeron.NULL_VALUE"/>.
+        /// This version of the method will set the timestamp value in the header to <see cref="Adaptive.Aeron.Aeron.NULL_VALUE"/>.
         /// 
         /// </para>
         /// </summary>
@@ -82,7 +82,7 @@ namespace Adaptive.Cluster.Client
         /// <param name="buffer">        containing message. </param>
         /// <param name="offset">        offset in the buffer at which the encoded message begins. </param>
         /// <param name="length">        in bytes of the encoded message. </param>
-        /// <returns> the same as <seealso cref="Publication.Offer(UnsafeBuffer, int, int)"/>. </returns>
+        /// <returns> the same as <seealso cref="Publication.Offer(IDirectBuffer, int, int, ReservedValueSupplier)"/>. </returns>
         public long Offer(Publication publication, IDirectBuffer buffer, int offset, int length)
         {
             messageVector.Reset(buffer, offset, length);

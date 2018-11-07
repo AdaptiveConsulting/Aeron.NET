@@ -61,7 +61,7 @@ namespace Adaptive.Agrona.Concurrent.Status
         /// Has this counter been closed?
         /// </summary>
         /// <returns> true if this counter has already been closed. </returns>
-        public bool IsClosed { get; private set; }
+        public virtual bool IsClosed { get; private set; }
 
         /// <summary>
         /// Perform an atomic increment that will not lose updates across threads.
@@ -151,7 +151,7 @@ namespace Adaptive.Agrona.Concurrent.Status
         /// <summary>
         /// Free the counter slot for reuse.
         /// </summary>
-        public void Dispose()
+        public virtual void Dispose()
         {
             if (!IsClosed)
             {

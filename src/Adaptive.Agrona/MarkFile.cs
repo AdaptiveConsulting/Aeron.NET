@@ -28,7 +28,7 @@ namespace Adaptive.Agrona
         /// Create a CnC directory and file if none present. Checking if an active CnC file exists and is active. Old CnC
         /// file is deleted and recreated if not active.
         /// 
-        /// Total length of CnC file will be mapped until <seealso cref="#close()"/> is called.
+        /// Total length of CnC file will be mapped until <seealso cref="Dispose"/> is called.
         /// </summary>
         /// <param name="directory">             for the CnC file </param>
         /// <param name="filename">              of the CnC file </param>
@@ -62,7 +62,7 @@ namespace Adaptive.Agrona
         /// Create a CnC file if none present. Checking if an active CnC file exists and is active. Existing CnC file
         /// is used if not active.
         /// 
-        /// Total length of CnC file will be mapped until <seealso cref="#close()"/> is called.
+        /// Total length of CnC file will be mapped until <seealso cref="Dispose"/> is called.
         /// </summary>
         /// <param name="markFile">               to use </param>
         /// <param name="shouldPreExist">        or not </param>
@@ -92,7 +92,7 @@ namespace Adaptive.Agrona
         /// <summary>
         /// Map a pre-existing CnC file if one present and is active.
         /// 
-        /// Total length of CnC file will be mapped until <seealso cref="#close()"/> is called.
+        /// Total length of CnC file will be mapped until <seealso cref="Dispose"/> is called.
         /// </summary>
         /// <param name="directory">             for the CnC file </param>
         /// <param name="filename">              of the CnC file </param>
@@ -119,7 +119,7 @@ namespace Adaptive.Agrona
         /// <summary>
         /// Manage a CnC file given a mapped file and offsets of version and timestamp.
         /// 
-        /// If mappedCncBuffer is not null, then it will be unmapped upon <seealso cref="#close()"/>.
+        /// If mappedCncBuffer is not null, then it will be unmapped upon <seealso cref="Dispose"/>.
         /// </summary>
         /// <param name="mappedBuffer">      for the CnC fields </param>
         /// <param name="versionFieldOffset">   for the version field </param>
