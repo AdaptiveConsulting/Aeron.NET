@@ -157,10 +157,7 @@ namespace Adaptive.Agrona.Concurrent.Status
             {
                 IsClosed = true;
 
-                if (null != _countersManager)
-                {
-                    _countersManager.Free(Id);
-                }
+                _countersManager?.Free(Id);
             }
         }
     }

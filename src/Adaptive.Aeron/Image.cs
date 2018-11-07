@@ -178,7 +178,7 @@ namespace Adaptive.Aeron
         /// The counter id for the subscriber position counter.
         /// </summary>
         /// <returns> the id for the subscriber position counter. </returns>
-        public int SubscriberPositionId => _subscriberPosition.Id();
+        public int SubscriberPositionId => _subscriberPosition.Id;
 
         /// <summary>
         /// Is the current consumed position at the end of the stream?

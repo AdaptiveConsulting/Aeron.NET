@@ -5,8 +5,8 @@
         /// <summary>
         /// Identifier for this status indicator.
         /// </summary>
-        /// <returns> the identifier for this status indicator. </returns>
-        public abstract int Id();
+        /// <value> the identifier for this status indicator. </value>
+        public abstract int Id { get; }
 
         /// <summary>
         /// Get the current status indication of a component with volatile semantics.

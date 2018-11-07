@@ -626,7 +626,7 @@ namespace Adaptive.Aeron
                     EnsureNotReentrant();
 
                     counter.InternalClose();
-                    long registrationId = counter.RegistrationId();
+                    long registrationId = counter.RegistrationId;
 
                     if (_resourceByRegIdMap.Remove(registrationId))
                     {

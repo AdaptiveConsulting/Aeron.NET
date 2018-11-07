@@ -295,7 +295,7 @@ namespace Adaptive.Aeron
         /// Get the counter id for the position limit after which the publication will be back pressured.
         /// </summary>
         /// <returns> the counter id for the position limit after which the publication will be back pressured. </returns>
-        public int PositionLimitId => _positionLimit.Id();
+        public int PositionLimitId => _positionLimit.Id;
 
         /// <summary>
         /// Non-blocking publish of a buffer containing a message.

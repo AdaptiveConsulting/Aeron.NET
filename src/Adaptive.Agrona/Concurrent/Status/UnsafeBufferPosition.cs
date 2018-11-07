@@ -23,8 +23,7 @@ namespace Adaptive.Agrona.Concurrent.Status
     /// </summary>
     public class UnsafeBufferPosition : IPosition
     {
-        public bool IsClosed { get; private set; } = false;
-        private readonly int _counterId;
+        public bool IsClosed { get; private set; }
         private readonly int _offset;
         private readonly UnsafeBuffer _buffer;
         private readonly CountersManager _countersManager;
@@ -47,49 +46,45 @@ namespace Adaptive.Agrona.Concurrent.Status
         public UnsafeBufferPosition(UnsafeBuffer buffer, int counterId, CountersManager countersManager)
         {
             _buffer = buffer;
-            _counterId = counterId;
+            Id = counterId;
             _countersManager = countersManager;
             _offset = CountersReader.CounterOffset(counterId);
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override int Id()
-        {
-            return _counterId;
-        }
+        public int Id { get; }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override long Get()
+        public long Get()
         {
             return _buffer.GetLong(_offset);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override long GetVolatile()
+        public long GetVolatile()
         {
             return _buffer.GetLongVolatile(_offset);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override void Set(long value)
+        public void Set(long value)
         {
             _buffer.PutLong(_offset, value);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override void SetOrdered(long value)
+        public void SetOrdered(long value)
         {
             _buffer.PutLongOrdered(_offset, value);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override void SetVolatile(long value)
+        public void SetVolatile(long value)
         {
             _buffer.PutLongVolatile(_offset, value);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override bool ProposeMax(long proposedValue)
+        public bool ProposeMax(long proposedValue)
         {
             var buffer = _buffer;
             var offset = _offset;
@@ -105,7 +100,7 @@ namespace Adaptive.Agrona.Concurrent.Status
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override bool ProposeMaxOrdered(long proposedValue)
+        public bool ProposeMaxOrdered(long proposedValue)
         {
             var buffer = _buffer;
             var offset = _offset;
@@ -120,13 +115,13 @@ namespace Adaptive.Agrona.Concurrent.Status
             return updated;
         }
 
-        public override void Dispose()
+        public void Dispose()
         {
             if (!IsClosed)
             {
                 IsClosed = true;
 
-                _countersManager?.Free(_counterId);
+                _countersManager?.Free(Id);
             }
         }
     }

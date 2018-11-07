@@ -9,15 +9,14 @@ namespace Adaptive.Aeron
     /// </summary>
     public class Counter : AtomicCounter
     {
-        private readonly long registrationId;
-        private readonly ClientConductor clientConductor;
-        private volatile bool isClosed = false;
+        private readonly ClientConductor _clientConductor;
+        private volatile bool _isClosed;
 
         internal Counter(long registrationId, ClientConductor clientConductor, IAtomicBuffer buffer, int counterId) :
             base(buffer, counterId)
         {
-            this.registrationId = registrationId;
-            this.clientConductor = clientConductor;
+            RegistrationId = registrationId;
+            _clientConductor = clientConductor;
         }
 
         /// <summary>
@@ -27,26 +26,23 @@ namespace Adaptive.Aeron
         /// <param name="registrationId"> assigned by the driver for the counter or <see cref="Adaptive.Aeron.Aeron.NULL_VALUE"/> if not known. </param>
         /// <param name="counterId">      for the counter to be viewed. </param>
         /// <exception cref="AeronException"> if the id has for the counter has not been allocated. </exception>
-        internal Counter(CountersReader countersReader, long registrationId, int counterId) : base(
-            countersReader.ValuesBuffer, counterId)
+        internal Counter(CountersReader countersReader, long registrationId, int counterId)
+            : base(countersReader.ValuesBuffer, counterId)
         {
             if (countersReader.GetCounterState(counterId) != CountersReader.RECORD_ALLOCATED)
             {
                 throw new AeronException("Counter id has not been allocated: " + counterId);
             }
 
-            this.registrationId = registrationId;
-            this.clientConductor = null;
+            RegistrationId = registrationId;
+            _clientConductor = null;
         }
 
         /// <summary>
         /// Return the registration id used to register this counter with the media driver.
         /// </summary>
-        /// <returns> registration id </returns>
-        public long RegistrationId()
-        {
-            return registrationId;
-        }
+        /// <value> registration id </value>
+        public long RegistrationId { get; }
 
         /// <summary>
         /// Close the counter, releasing the resource managed by the media driver if this was the creator of the Counter.
@@ -56,15 +52,15 @@ namespace Adaptive.Aeron
         /// </summary>
         public override void Dispose()
         {
-            if (!isClosed)
+            if (!_isClosed)
             {
-                if (null != clientConductor)
+                if (null != _clientConductor)
                 {
-                    clientConductor.ReleaseCounter(this);
+                    _clientConductor.ReleaseCounter(this);
                 }
                 else
                 {
-                    isClosed = true;
+                    _isClosed = true;
                 }
             }
         }
@@ -73,12 +69,12 @@ namespace Adaptive.Aeron
         /// Has this object been closed and should no longer be used?
         /// </summary>
         /// <returns> true if it has been closed otherwise false. </returns>
-        public override bool IsClosed => isClosed;
+        public override bool IsClosed => _isClosed;
 
         internal void InternalClose()
         {
             base.Dispose();
-            isClosed = true;
+            _isClosed = true;
         }
     }
 }

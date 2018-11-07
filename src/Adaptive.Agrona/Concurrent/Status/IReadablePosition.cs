@@ -21,20 +21,18 @@ namespace Adaptive.Agrona.Concurrent.Status
     /// <summary>
     /// Indicates how far through an abstract task a component has progressed as a counter value.
     /// </summary>
-    public abstract class IReadablePosition : IDisposable
+    public interface IReadablePosition : IDisposable
     {
         /// <summary>
         /// Identifier for this position.
         /// </summary>
-        /// <returns> the identifier for this position. </returns>
-        public abstract int Id();
+        /// <value> the identifier for this position. </value>
+        int Id { get; }
 
         /// <summary>
         /// Get the current position of a component with volatile semantics
         /// </summary>
         /// <returns> the current position of a component with volatile semantics </returns>
-        public abstract long GetVolatile();
-
-        public abstract void Dispose();
+        long GetVolatile();
     }
 }

@@ -22,54 +22,50 @@ namespace Adaptive.Agrona.Concurrent.Status
     {
         private readonly AtomicLong _value = new AtomicLong();
 
-        public override void Dispose()
+        public void Dispose()
         {
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override int Id()
-        {
-            return 0;
-        }
+        public int Id => 0;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override long GetVolatile()
+        public long GetVolatile()
         {
             return _value.Get();
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override long Get()
+        public long Get()
         {
             return _value.Get();
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override void Set(long value)
+        public void Set(long value)
         {
             _value.Set(value);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override void SetOrdered(long value)
+        public void SetOrdered(long value)
         {
             _value.Set(value);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override void SetVolatile(long value)
+        public void SetVolatile(long value)
         {
             _value.Set(value);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override bool ProposeMax(long proposedValue)
+        public bool ProposeMax(long proposedValue)
         {
             return ProposeMaxOrdered(proposedValue);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override bool ProposeMaxOrdered(long proposedValue)
+        public bool ProposeMaxOrdered(long proposedValue)
         {
             bool updated = false;
 

@@ -8,20 +8,20 @@ namespace Adaptive.Aeron.Status
     /// <summary>
     /// Readonly View of an associated <seealso cref="Counter"/>.
     /// <para>
-    /// <b>Note:</b>The user should call <seealso cref="IsClosed()"/> and ensure the result is false to avoid a race on reading a
+    /// <b>Note:</b>The user should call <seealso cref="IsClosed"/> and ensure the result is false to avoid a race on reading a
     /// closed counter.
     /// 
     /// </para>
     /// </summary>
     public class ReadableCounter : IDisposable
     {
-        private readonly int addressOffset;
-        private readonly long registrationId;
-        private readonly int counterId;
-        private volatile bool isClosed = false;
-        private readonly byte[] buffer;
-        private readonly CountersReader countersReader;
-        private readonly IAtomicBuffer valuesBuffer;
+        private readonly int _addressOffset;
+        private readonly long _registrationId;
+        private readonly int _counterId;
+        private volatile bool _isClosed = false;
+        private readonly byte[] _buffer;
+        private readonly CountersReader _countersReader;
+        private readonly IAtomicBuffer _valuesBuffer;
 
         /// <summary>
         /// Construct a view of an existing counter.
@@ -37,16 +37,16 @@ namespace Adaptive.Aeron.Status
                 throw new InvalidOperationException("Counter id has not been allocated: " + counterId);
             }
 
-            this.countersReader = countersReader;
-            this.counterId = counterId;
-            this.registrationId = registrationId;
+            _countersReader = countersReader;
+            _counterId = counterId;
+            _registrationId = registrationId;
 
-            valuesBuffer = countersReader.ValuesBuffer;
+            _valuesBuffer = countersReader.ValuesBuffer;
             var counterOffset = CountersReader.CounterOffset(counterId);
-            valuesBuffer.BoundsCheck(counterOffset, BitUtil.SIZE_OF_LONG);
+            _valuesBuffer.BoundsCheck(counterOffset, BitUtil.SIZE_OF_LONG);
 
-            buffer = valuesBuffer.ByteArray;
-            addressOffset = counterOffset;
+            _buffer = _valuesBuffer.ByteArray;
+            _addressOffset = counterOffset;
         }
 
         /// <summary>
@@ -63,19 +63,13 @@ namespace Adaptive.Aeron.Status
         /// Return the registration Id for the counter.
         /// </summary>
         /// <returns> registration Id. </returns>
-        public long RegistrationId()
-        {
-            return registrationId;
-        }
+        public long RegistrationId => _registrationId;
 
         /// <summary>
         /// Return the counter Id.
         /// </summary>
         /// <returns> counter Id. </returns>
-        public int CounterId()
-        {
-            return counterId;
-        }
+        public int CounterId => _counterId;
 
         /// <summary>
         /// Return the state of the counter.
@@ -84,24 +78,18 @@ namespace Adaptive.Aeron.Status
         /// <seealso cref="CountersReader.RECORD_RECLAIMED"/>
         /// <seealso cref="CountersReader.RECORD_UNUSED"/>
         /// <returns> state for the counter. </returns>
-        public int State()
-        {
-            return countersReader.GetCounterState(counterId);
-        }
+        public int State => _countersReader.GetCounterState(_counterId);
 
         /// <summary>
         /// Return the counter label.
         /// </summary>
         /// <returns> the counter label. </returns>
-        public string Label()
-        {
-            return countersReader.GetCounterLabel(counterId);
-        }
+        public string Label => _countersReader.GetCounterLabel(_counterId);
 
         /// <summary>
         /// Get the latest value for the counter with volatile semantics.
         /// <para>
-        /// <b>Note:</b>The user should call <seealso cref="IsClosed()"/> and ensure the result is false to avoid a race on reading
+        /// <b>Note:</b>The user should call <seealso cref="IsClosed"/> and ensure the result is false to avoid a race on reading
         /// a closed counter.
         /// 
         /// </para>
@@ -111,7 +99,7 @@ namespace Adaptive.Aeron.Status
         {
             // return UnsafeAccess.UNSAFE.getLongVolatile(buffer, addressOffset);
             
-            return valuesBuffer.GetLongVolatile(addressOffset);
+            return _valuesBuffer.GetLongVolatile(_addressOffset);
         }
 
         /// <summary>
@@ -122,7 +110,7 @@ namespace Adaptive.Aeron.Status
         {
             // UnsafeAccess.UNSAFE.getLong(buffer, addressOffset);
             
-            return valuesBuffer.GetLong(addressOffset);
+            return _valuesBuffer.GetLong(_addressOffset);
         }
 
         /// <summary>
@@ -130,16 +118,13 @@ namespace Adaptive.Aeron.Status
         /// </summary>
         public void Dispose()
         {
-            isClosed = true;
+            _isClosed = true;
         }
 
         /// <summary>
         /// Has this counters been closed and should no longer be used?
         /// </summary>
         /// <returns> true if it has been closed otherwise false. </returns>
-        public bool IsClosed()
-        {
-            return isClosed;
-        }
+        public bool IsClosed => _isClosed;
     }
 }

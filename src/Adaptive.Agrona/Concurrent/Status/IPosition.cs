@@ -21,44 +21,44 @@ namespace Adaptive.Agrona.Concurrent.Status
     /// 
     /// Threadsafe to write to from a single writer.
     /// </summary>
-    public abstract class IPosition : IReadablePosition
+    public interface IPosition : IReadablePosition
     {
         /// <summary>
         /// Get the current position of a component without memory ordering semantics.
         /// </summary>
         /// <returns> the current position of a component </returns>
-        public abstract long Get();
+        long Get();
 
         /// <summary>
         /// Sets the current position of the component without memory ordering semantics.
         /// </summary>
         /// <param name="value"> the current position of the component. </param>
-        public abstract void Set(long value);
+        void Set(long value);
 
         /// <summary>
         /// Sets the current position of the component with ordered memory semantics.
         /// </summary>
         /// <param name="value"> the current position of the component. </param>
-        public abstract void SetOrdered(long value);
+        void SetOrdered(long value);
 
         /// <summary>
         /// Sets the current position of the component with volatile memory semantics.
         /// </summary>
         /// <param name="value"> the current position of the component. </param>
-        public abstract void SetVolatile(long value);
+        void SetVolatile(long value);
         
         /// <summary>
         /// Set the position to a new proposedValue if greater than the current value with memory ordering semantics.
         /// </summary>
         /// <param name="proposedValue"> for the new max. </param>
         /// <returns> true if a new max as been set otherwise false. </returns>
-        public abstract bool ProposeMax(long proposedValue);
+        bool ProposeMax(long proposedValue);
 
         /// <summary>
         /// Set the position to the new proposedValue if greater than the current value with memory ordering semantics.
         /// </summary>
         /// <param name="proposedValue"> for the new max. </param>
         /// <returns> true if a new max as been set otherwise false. </returns>
-        public abstract bool ProposeMaxOrdered(long proposedValue);
+        bool ProposeMaxOrdered(long proposedValue);
     }
 }
