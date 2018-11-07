@@ -6,6 +6,23 @@
         {
             switch (strategyName)
             {
+                case "ControllableIdleStrategy":
+                    var idleStrategy = new ControllableIdleStrategy(controllableStatus);
+                    controllableStatus.SetOrdered(ControllableIdleStrategy.PARK);
+                    return idleStrategy;
+
+                case "YieldingIdleStrategy":
+                    return new YieldingIdleStrategy();
+                    
+                case "SleepingIdleStrategy":
+                    return new SleepingIdleStrategy(1);
+                
+                case "BusySpinIdleStrategy":
+                    return new BusySpinIdleStrategy();
+                
+                case "NoOpIdleStrategy":
+                    return new NoOpIdleStrategy();
+                
                 default:
                     return new BackoffIdleStrategy(
                         Configuration.IDLE_MAX_SPINS,

@@ -322,7 +322,7 @@ namespace Adaptive.Cluster.Service
                 return Config.GetInteger(SNAPSHOT_STREAM_ID_PROP_NAME, SNAPSHOT_STREAM_ID_DEFAULT);
             }
 
-            public const string DEFAULT_IDLE_STRATEGY = "org.agrona.concurrent.BackoffIdleStrategy";
+            public const string DEFAULT_IDLE_STRATEGY = "BackoffIdleStrategy";
             public const string CLUSTER_IDLE_STRATEGY_PROP_NAME = "aeron.cluster.idle.strategy";
 
             /// <summary>
