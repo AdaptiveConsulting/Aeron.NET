@@ -25,10 +25,10 @@ namespace Adaptive.Agrona.Util
     public static class LockSupport
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void ParkNanos(int nanos)
+        public static void ParkNanos(long nanos)
         {
-            // TODO check closest equivalent in .NET
-            Thread.Sleep(1);
+            var iterations = (int) (15 * nanos / 1000);
+            Thread.SpinWait(iterations);
         }
     }
 }
