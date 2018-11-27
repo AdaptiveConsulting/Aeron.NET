@@ -243,41 +243,7 @@ namespace Adaptive.Aeron
             return newPosition;
         }
 
-        /// <summary>
-        /// Try to claim a range in the publication log into which a message can be written with zero copy semantics.
-        /// Once the message has been written then <seealso cref="BufferClaim.Commit()"/> should be called thus making it available.
-        /// 
-        /// <b>Note:</b> This method can only be used for message lengths less than MTU length minus header.
-        /// If the claim is held after the publication is closed, or the client dies, then it will be unblocked to reach
-        /// end-of-stream (EOS)
-        ///     
-        /// <pre>{@code
-        ///     final ExclusiveBufferClaim bufferClaim = new ExclusiveBufferClaim(); // Can be stored and reused to avoid allocation
-        ///     
-        ///     if (publication.tryClaim(messageLength, bufferClaim) > 0L)
-        ///     {
-        ///         try
-        ///         {
-        ///              final MutableDirectBuffer buffer = bufferClaim.buffer();
-        ///              final int offset = bufferClaim.offset();
-        ///     
-        ///              // Work with buffer directly or wrap with a flyweight
-        ///         }
-        ///         finally
-        ///         {
-        ///             bufferClaim.Commit();
-        ///         }
-        ///     }
-        /// }</pre>
-        ///     
-        /// </summary>
-        /// <param name="length">      of the range to claim, in bytes.. </param>
-        /// <param name="bufferClaim"> to be populated if the claim succeeds. </param>
-        /// <returns> The new stream position, otherwise <seealso cref="Publication.NOT_CONNECTED"/>, <seealso cref="Publication.BACK_PRESSURED"/>,
-        /// <seealso cref="Publication.ADMIN_ACTION"/>, <seealso cref="Publication.CLOSED"/> or <see cref="Publication.MAX_POSITION_EXCEEDED"/>. </returns>
-        /// <exception cref="ArgumentException"> if the length is greater than max payload length within an MTU. </exception>
-        /// <seealso cref="BufferClaim.Commit()" />
-        /// <seealso cref="BufferClaim.Abort()" />
+        /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override long TryClaim(int length, BufferClaim bufferClaim)
         {
@@ -310,7 +276,7 @@ namespace Adaptive.Aeron
         /// <param name="length"> of the range to claim, in bytes.. </param>
         /// <returns> The new stream position, otherwise a negative error value of <seealso cref="Publication.NOT_CONNECTED"/>,
         /// <seealso cref="Publication.BACK_PRESSURED"/>, <seealso cref="Publication.ADMIN_ACTION"/>, <seealso cref="Publication.CLOSED"/>, or <seealso cref="Publication.MAX_POSITION_EXCEEDED"/>. </returns>
-        /// <exception cref="ArgumentException"> if the length is greater than <seealso cref="Publication.MaxMessageLength()"/>. </exception>
+        /// <exception cref="ArgumentException"> if the length is greater than <seealso cref="Publication.MaxMessageLength"/>. </exception>
         public long AppendPadding(int length)
         {
             CheckMaxMessageLength(length);

@@ -369,24 +369,25 @@ namespace Adaptive.Aeron
         /// If the claim is held for more than the aeron.publication.unblock.timeout system property then the driver will
         /// assume the publication thread is dead and will unblock the claim thus allowing other threads to make progress
         /// for <see cref="ConcurrentPublication"/> and other claims to be sent to reach end-of-stream (EOS).
-        /// <pre>{@code
-        ///     final BufferClaim bufferClaim = new BufferClaim(); // Can be stored and reused to avoid allocation
+        ///
+        /// <code>
+        ///     BufferClaim bufferClaim = new BufferClaim(); // Can be stored and reused to avoid allocation
         ///     
-        ///     if (publication.tryClaim(messageLength, bufferClaim) > 0L)
+        ///     if (publication.TryClaim(messageLength, bufferClaim) > 0L)
         ///     {
         ///         try
         ///         {
-        ///              final MutableDirectBuffer buffer = bufferClaim.buffer();
-        ///              final int offset = bufferClaim.offset();
+        ///              IMutableDirectBuffer buffer = bufferClaim.Buffer;
+        ///              int offset = bufferClaim.Offset;
         ///     
         ///              // Work with buffer directly or wrap with a flyweight
         ///         }
         ///         finally
         ///         {
-        ///             bufferClaim.commit();
+        ///             bufferClaim.Commit();
         ///         }
         ///     }
-        /// }</pre>
+        /// </code>
         /// 
         /// </summary>
         /// <param name="length">      of the range to claim, in bytes.. </param>

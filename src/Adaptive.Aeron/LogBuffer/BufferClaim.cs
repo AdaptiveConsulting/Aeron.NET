@@ -24,7 +24,7 @@ namespace Adaptive.Aeron.LogBuffer
     /// <summary>
     /// Represents a claimed range in a buffer to be used for recording a message without copy semantics for later commit.
     /// 
-    /// The claimed space is in <seealso cref="Buffer()"/> between <seealso cref="Offset()"/> and <seealso cref="Offset()"/> + <seealso cref="Length()"/>.
+    /// The claimed space is in <seealso cref="Buffer"/> between <seealso cref="Offset"/> and <seealso cref="Offset"/> + <seealso cref="Length"/>.
     /// When the buffer is filled with message data, use <seealso cref="Commit()"/> to make it available to subscribers.
     /// 
     /// If the claimed space is no longer required it can be aborted by calling <seealso cref="Abort()"/>.
@@ -33,7 +33,7 @@ namespace Adaptive.Aeron.LogBuffer
     /// </summary>
     public class BufferClaim
     {
-        protected readonly UnsafeBuffer _buffer = new UnsafeBuffer(IntPtr.Zero, 0);
+        private readonly UnsafeBuffer _buffer = new UnsafeBuffer(IntPtr.Zero, 0);
 
         /// <summary>
         /// Wrap a region of an underlying log buffer so it can represent a claimed space for use by a publisher.
@@ -135,7 +135,7 @@ namespace Adaptive.Aeron.LogBuffer
             _buffer.PutLong(DataHeaderFlyweight.RESERVED_VALUE_OFFSET, value);
             return this;
         }
-
+        
         /// <summary>
         /// Put bytes into the claimed buffer space for a message. To write multiple parts then use <seealso cref="Buffer()"/>
         /// and <seealso cref="Offset()"/>.
