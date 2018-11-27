@@ -514,20 +514,7 @@ namespace Adaptive.Aeron.LogBuffer
 
             return (termCount << positionBitsToShift) + termOffset;
         }
-        
-        /// <summary>
-        /// Compute the current position in absolute number of bytes.
-        /// </summary>
-        /// <param name="termCount">           of terms since the initial term. </param>
-        /// <param name="termOffset">          in the term. </param>
-        /// <param name="positionBitsToShift"> number of times to left shift the term count </param>
-        /// <returns> the absolute position in bytes </returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static long ComputePosition(int termCount, int termOffset, int positionBitsToShift)
-        {
-            return (termCount << positionBitsToShift) + termOffset;
-        }
-
+       
         /// <summary>
         /// Compute the current position in absolute number of bytes for the beginning of a term.
         /// </summary>
@@ -554,20 +541,6 @@ namespace Adaptive.Aeron.LogBuffer
         public static int ComputeTermIdFromPosition(long position, int positionBitsToShift, int initialTermId)
         {
             return ((int) ((long) ((ulong) position >> positionBitsToShift)) + initialTermId);
-        }
-
-        /// <summary>
-        /// Compute the term offset from a given position.
-        /// </summary>
-        /// <param name="position">            to calculate from </param>
-        /// <param name="positionBitsToShift"> number of times to right shift the position </param>
-        /// <returns> the offset within the term that represents the position </returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int ComputeTermOffsetFromPosition(long position, int positionBitsToShift)
-        {
-            var mask = (1L << positionBitsToShift) - 1L;
-
-            return (int) (position & mask);
         }
 
         /// <summary>

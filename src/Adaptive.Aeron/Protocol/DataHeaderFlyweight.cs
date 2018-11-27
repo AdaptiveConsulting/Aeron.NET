@@ -33,7 +33,7 @@ namespace Adaptive.Aeron.Protocol
         /// <summary>
         /// Length of the Data Header
         /// </summary>
-        public new const int HEADER_LENGTH = 32;
+        public const int HEADER_LENGTH = 32;
 
         /// <summary>
         /// Begin Flag
@@ -241,7 +241,7 @@ namespace Adaptive.Aeron.Protocol
         /// <returns> byte array containing the header </returns>
 	    public static UnsafeBuffer CreateDefaultHeader(int sessionId, int streamId, int termId)
         {
-            var buffer = new UnsafeBuffer(BufferUtil.AllocateDirectAligned(HEADER_LENGTH, FrameDescriptor.FRAME_ALIGNMENT));
+            var buffer = new UnsafeBuffer(BufferUtil.AllocateDirectAligned(HEADER_LENGTH, BitUtil.CACHE_LINE_LENGTH));
 
             buffer.PutByte(VERSION_FIELD_OFFSET, CURRENT_VERSION);
             buffer.PutByte(FLAGS_FIELD_OFFSET, (byte)BEGIN_AND_END_FLAGS);

@@ -23,6 +23,12 @@ namespace Adaptive.Cluster.Client
     /// </summary>
     public sealed class AeronCluster : IDisposable
     {
+        public static readonly int INGRESS_HEADER_LENGTH =
+            MessageHeaderEncoder.ENCODED_LENGTH + IngressMessageHeaderEncoder.BLOCK_LENGTH;
+
+        public static readonly int EGRESS_HEADER_LENGTH =
+            MessageHeaderEncoder.ENCODED_LENGTH + EgressMessageHeaderEncoder.BLOCK_LENGTH;
+
         private const int SEND_ATTEMPTS = 3;
         private const int CONNECT_FRAGMENT_LIMIT = 1;
         private const int SESSION_FRAGMENT_LIMIT = 10;
@@ -40,11 +46,11 @@ namespace Adaptive.Cluster.Client
 
         private IDictionary<int, MemberEndpoint> _endpointByMemberIdMap = new DefaultDictionary<int, MemberEndpoint>();
         private readonly BufferClaim _bufferClaim = new BufferClaim();
+        private readonly UnsafeBuffer _msgHeaderBuffer = new UnsafeBuffer(new byte[INGRESS_HEADER_LENGTH]);
+        private readonly UnsafeBuffer _keepaliveMsgBuffer;
         private readonly MessageHeaderEncoder _messageHeaderEncoder = new MessageHeaderEncoder();
-        private readonly SessionKeepAliveEncoder _sessionKeepAliveEncoder = new SessionKeepAliveEncoder();
         private readonly IngressMessageHeaderEncoder _ingressMessageHeaderEncoder = new IngressMessageHeaderEncoder();
-        private readonly DirectBufferVector[] _vectors = new DirectBufferVector[2];
-        private readonly DirectBufferVector _messageVector = new DirectBufferVector();
+        private readonly SessionKeepAliveEncoder _sessionKeepAliveEncoder = new SessionKeepAliveEncoder();
         private readonly FragmentAssembler _fragmentAssembler;
         private readonly Poller _poller;
         private readonly IEgressListener _egressListener;
@@ -87,8 +93,8 @@ namespace Adaptive.Cluster.Client
                             sessionId,
                             _egressMessageHeaderDecoder.Timestamp(),
                             buffer,
-                            offset + IngressSessionDecorator.INGRESS_MESSAGE_HEADER_LENGTH,
-                            length - IngressSessionDecorator.INGRESS_MESSAGE_HEADER_LENGTH,
+                            offset + EGRESS_HEADER_LENGTH,
+                            length - EGRESS_HEADER_LENGTH,
                             header);
                     }
                 }
@@ -171,16 +177,18 @@ namespace Adaptive.Cluster.Client
 
                 _clusterSessionId = ConnectToCluster();
 
-                UnsafeBuffer headerBuffer =
-                    new UnsafeBuffer(new byte[IngressSessionDecorator.INGRESS_MESSAGE_HEADER_LENGTH]);
                 _ingressMessageHeaderEncoder
-                    .WrapAndApplyHeader(headerBuffer, 0, _messageHeaderEncoder)
+                    .WrapAndApplyHeader(_msgHeaderBuffer, 0, _messageHeaderEncoder)
                     .ClusterSessionId(_clusterSessionId)
                     .LeadershipTermId(_leadershipTermId);
 
-                _vectors[0] = new DirectBufferVector(headerBuffer, 0,
-                    IngressSessionDecorator.INGRESS_MESSAGE_HEADER_LENGTH);
-                _vectors[1] = _messageVector;
+                _keepaliveMsgBuffer = new UnsafeBuffer(new byte[
+                    MessageHeaderEncoder.ENCODED_LENGTH + SessionKeepAliveEncoder.BLOCK_LENGTH]);
+
+                _sessionKeepAliveEncoder
+                    .WrapAndApplyHeader(_keepaliveMsgBuffer, 0, _messageHeaderEncoder)
+                    .LeadershipTermId(_leadershipTermId)
+                    .ClusterSessionId(_clusterSessionId);
 
                 _poller = new Poller(ctx.EgressListener(), _clusterSessionId, this);
                 _egressListener = ctx.EgressListener();
@@ -282,38 +290,41 @@ namespace Adaptive.Cluster.Client
         /// <returns> the same as <seealso cref="Publication.Offer(IDirectBuffer, int, int, ReservedValueSupplier)"/>. </returns>
         public long Offer(IDirectBuffer buffer, int offset, int length)
         {
-            _messageVector.Reset(buffer, offset, length);
-            return _publication.Offer(_vectors);
+            return _publication.Offer(_msgHeaderBuffer, 0, INGRESS_HEADER_LENGTH, buffer, offset, length);
         }
 
         /// <summary>
         /// Send a keep alive message to the cluster to keep this session open.
+        ///
+        /// Note: keep alives can fail during a leadership transition. The consumer should continue to call
+        /// <see cref="PollEgress"/> to ensure a connection to the new leader is established.
+        /// 
         /// </summary>
         /// <returns> true if successfully sent otherwise false. </returns>
         public bool SendKeepAlive()
         {
             _idleStrategy.Reset();
-            int length = MessageHeaderEncoder.ENCODED_LENGTH + SessionKeepAliveEncoder.BLOCK_LENGTH;
             int attempts = SEND_ATTEMPTS;
 
             while (true)
             {
-                long result = _publication.TryClaim(length, _bufferClaim);
+                long result = _publication.Offer(_keepaliveMsgBuffer, 0, _keepaliveMsgBuffer.Capacity);
 
                 if (result > 0)
                 {
-                    _sessionKeepAliveEncoder
-                        .WrapAndApplyHeader(_bufferClaim.Buffer, _bufferClaim.Offset, _messageHeaderEncoder)
-                        .LeadershipTermId(_leadershipTermId)
-                        .ClusterSessionId(_clusterSessionId);
-
-                    _bufferClaim.Commit();
-
                     return true;
                 }
 
-                CheckResult(result);
+                if (result == Publication.NOT_CONNECTED || result == Publication.CLOSED)
+                {
+                    return false;
+                }
 
+                if (result == Publication.MAX_POSITION_EXCEEDED)
+                {
+                    throw new ClusterException("unexpected publication state: " + result);
+                }
+                    
                 if (--attempts <= 0)
                 {
                     break;
@@ -360,6 +371,7 @@ namespace Adaptive.Cluster.Client
             _leadershipTermId = leadershipTermId;
             _leaderMemberId = leaderMemberId;
             _ingressMessageHeaderEncoder.LeadershipTermId(leadershipTermId);
+            _sessionKeepAliveEncoder.LeadershipTermId(leadershipTermId);
 
             if (_isUnicast)
             {
@@ -872,7 +884,7 @@ namespace Adaptive.Cluster.Client
             private Aeron.Aeron _aeron;
             private ICredentialsSupplier _credentialsSupplier;
             private bool _ownsAeronClient = false;
-            private bool _isIngressExclusive = true;
+            private bool _isIngressExclusive = false;
             private ErrorHandler _errorHandler = Adaptive.Aeron.Aeron.Configuration.DEFAULT_ERROR_HANDLER;
             private IEgressListener _egressListener;
 

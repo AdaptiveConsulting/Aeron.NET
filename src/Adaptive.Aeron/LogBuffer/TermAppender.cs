@@ -89,11 +89,12 @@ namespace Adaptive.Aeron.LogBuffer
         {
             int frameLength = length + DataHeaderFlyweight.HEADER_LENGTH;
             int alignedLength = BitUtil.Align(frameLength, FrameDescriptor.FRAME_ALIGNMENT);
+            UnsafeBuffer termBuffer = _termBuffer;
+            int termLength = termBuffer.Capacity;
+
             long rawTail = GetAndAddRawTail(alignedLength);
             int termId = LogBufferDescriptor.TermId(rawTail);
             long termOffset = rawTail & 0xFFFFFFFFL;
-            UnsafeBuffer termBuffer = _termBuffer;
-            int termLength = termBuffer.Capacity;
 
             CheckTerm(activeTermId, termId);
 
@@ -115,23 +116,89 @@ namespace Adaptive.Aeron.LogBuffer
         /// <summary>
         /// Append an unfragmented message to the the term buffer.
         /// </summary>
+        /// <param name="header">                for writing the default header. </param>
+        /// <param name="bufferOne">             containing the first part of the message. </param>
+        /// <param name="offsetOne">             at which the first part of the message begins. </param>
+        /// <param name="lengthOne">             of the first part of the message. </param>
+        /// <param name="bufferTwo">             containing the second part of the message. </param>
+        /// <param name="offsetTwo">             at which the second part of the message begins. </param>
+        /// <param name="lengthTwo">             of the second part of the message. </param>
+        /// <param name="reservedValueSupplier"> <seealso cref="ReservedValueSupplier"/> for the frame. </param>
+        /// <param name="activeTermId">          used for flow control. </param>
+        /// <returns> the resulting offset of the term after the append on success otherwise <seealso cref="FAILED"/> </returns>
+        public int AppendUnfragmentedMessage(
+            HeaderWriter header,
+            IDirectBuffer bufferOne,
+            int offsetOne,
+            int lengthOne,
+            IDirectBuffer bufferTwo,
+            int offsetTwo,
+            int lengthTwo,
+            ReservedValueSupplier reservedValueSupplier,
+            int activeTermId)
+        {
+            int frameLength = lengthOne + lengthTwo + DataHeaderFlyweight.HEADER_LENGTH;
+            int alignedLength = BitUtil.Align(frameLength, FrameDescriptor.FRAME_ALIGNMENT);
+            UnsafeBuffer termBuffer = _termBuffer;
+            int termLength = termBuffer.Capacity;
+
+            long rawTail = GetAndAddRawTail(alignedLength);
+            int termId = LogBufferDescriptor.TermId(rawTail);
+            long termOffset = rawTail & 0xFFFF_FFFFL;
+
+            CheckTerm(activeTermId, termId);
+
+            long resultingOffset = termOffset + alignedLength;
+            if (resultingOffset > termLength)
+            {
+                resultingOffset = HandleEndOfLogCondition(termBuffer, termOffset, header, termLength, termId);
+            }
+            else
+            {
+                int frameOffset = (int) termOffset;
+                header.Write(termBuffer, frameOffset, frameLength, termId);
+                termBuffer.PutBytes(frameOffset + DataHeaderFlyweight.HEADER_LENGTH, bufferOne, offsetOne, lengthOne);
+                termBuffer.PutBytes(frameOffset + DataHeaderFlyweight.HEADER_LENGTH + lengthOne, bufferTwo, offsetTwo, lengthTwo);
+
+                if (null != reservedValueSupplier)
+                {
+                    long reservedValue = reservedValueSupplier(termBuffer, frameOffset, frameLength);
+                    termBuffer.PutLong(frameOffset + DataHeaderFlyweight.RESERVED_VALUE_OFFSET, reservedValue, ByteOrder.LittleEndian);
+                }
+
+                FrameDescriptor.FrameLengthOrdered(termBuffer, frameOffset, frameLength);
+            }
+
+            return (int) resultingOffset;
+        }
+
+        /// <summary>
+        /// Append an unfragmented message to the the term buffer.
+        /// </summary>
         /// <param name="header">    for writing the default header. </param>
-        /// <param name="srcBuffer"> containing the message. </param>
-        /// <param name="srcOffset"> at which the message begins. </param>
+        /// <param name="buffer"> containing the message. </param>
+        /// <param name="offset"> at which the message begins. </param>
         /// <param name="length">    of the message in the source buffer. </param>
         /// <param name="reservedValueSupplier"><see cref="ReservedValueSupplier"/> for the frame</param>
         /// <param name="activeTermId"> used for flow control. </param>
         /// <returns> the resulting offset of the term after the append on success otherwise <seealso cref="FAILED"/>. </returns> 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public int AppendUnfragmentedMessage(HeaderWriter header, IDirectBuffer srcBuffer, int srcOffset, int length, ReservedValueSupplier reservedValueSupplier, int activeTermId)
+        public int AppendUnfragmentedMessage(
+            HeaderWriter header,
+            IDirectBuffer buffer,
+            int offset,
+            int length,
+            ReservedValueSupplier reservedValueSupplier,
+            int activeTermId)
         {
             int frameLength = length + DataHeaderFlyweight.HEADER_LENGTH;
             int alignedLength = BitUtil.Align(frameLength, FrameDescriptor.FRAME_ALIGNMENT);
             long rawTail = GetAndAddRawTail(alignedLength);
-            int termId = LogBufferDescriptor.TermId(rawTail);
-            long termOffset = rawTail & 0xFFFFFFFFL;
             UnsafeBuffer termBuffer = _termBuffer;
             int termLength = termBuffer.Capacity;
+
+            int termId = LogBufferDescriptor.TermId(rawTail);
+            long termOffset = rawTail & 0xFFFFFFFFL;
 
             CheckTerm(activeTermId, termId);
 
@@ -144,7 +211,7 @@ namespace Adaptive.Aeron.LogBuffer
             {
                 int frameOffset = (int) termOffset;
                 header.Write(termBuffer, frameOffset, frameLength, LogBufferDescriptor.TermId(rawTail));
-                termBuffer.PutBytes(frameOffset + DataHeaderFlyweight.HEADER_LENGTH, srcBuffer, srcOffset, length);
+                termBuffer.PutBytes(frameOffset + DataHeaderFlyweight.HEADER_LENGTH, buffer, offset, length);
 
                 if (null != reservedValueSupplier)
                 {
@@ -168,15 +235,22 @@ namespace Adaptive.Aeron.LogBuffer
         /// <param name="activeTermId"> used for flow control. </param>
         /// <returns> the resulting offset of the term after the append on success otherwise <seealso cref="FAILED"/>. </returns> 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public int AppendUnfragmentedMessage(HeaderWriter header, DirectBufferVector[] vectors, int length, ReservedValueSupplier reservedValueSupplier, int activeTermId)
+        public int AppendUnfragmentedMessage(
+            HeaderWriter header,
+            DirectBufferVector[] vectors,
+            int length,
+            ReservedValueSupplier reservedValueSupplier,
+            int activeTermId)
         {
             int frameLength = length + DataHeaderFlyweight.HEADER_LENGTH;
             int alignedLength = BitUtil.Align(frameLength, FrameDescriptor.FRAME_ALIGNMENT);
+            UnsafeBuffer termBuffer = _termBuffer;
+            int termLength = termBuffer.Capacity;
+
             long rawTail = GetAndAddRawTail(alignedLength);
             int termId = LogBufferDescriptor.TermId(rawTail);
             long termOffset = rawTail & 0xFFFFFFFFL;
-            UnsafeBuffer termBuffer = _termBuffer;
-            int termLength = termBuffer.Capacity;
+
 
             CheckTerm(activeTermId, termId);
 
@@ -216,26 +290,33 @@ namespace Adaptive.Aeron.LogBuffer
         /// The message will be split up into fragments of MTU length minus header.
         /// </summary>
         /// <param name="header">           for writing the default header. </param>
-        /// <param name="srcBuffer">        containing the message. </param>
-        /// <param name="srcOffset">        at which the message begins. </param>
+        /// <param name="buffer">        containing the message. </param>
+        /// <param name="offset">        at which the message begins. </param>
         /// <param name="length">           of the message in the source buffer. </param>
         /// <param name="maxPayloadLength"> that the message will be fragmented into. </param>
         /// <param name="reservedValueSupplier"><see cref="ReservedValueSupplier"/> for the frame</param>
         /// <param name="activeTermId"> used for flow control. </param>
         /// <returns> the resulting offset of the term after the append on success otherwise <seealso cref="FAILED"/>. </returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public int AppendFragmentedMessage(HeaderWriter header, IDirectBuffer srcBuffer, int srcOffset, int length,
-            int maxPayloadLength, ReservedValueSupplier reservedValueSupplier, int activeTermId)
+        public int AppendFragmentedMessage(
+            HeaderWriter header,
+            IDirectBuffer buffer,
+            int offset,
+            int length,
+            int maxPayloadLength,
+            ReservedValueSupplier reservedValueSupplier,
+            int activeTermId)
         {
             int numMaxPayloads = length / maxPayloadLength;
             int remainingPayload = length % maxPayloadLength;
             int lastFrameLength = remainingPayload > 0 ? BitUtil.Align(remainingPayload + DataHeaderFlyweight.HEADER_LENGTH, FrameDescriptor.FRAME_ALIGNMENT) : 0;
             int requiredLength = (numMaxPayloads * (maxPayloadLength + DataHeaderFlyweight.HEADER_LENGTH)) + lastFrameLength;
+            UnsafeBuffer termBuffer = _termBuffer;
+            int termLength = termBuffer.Capacity;
+
             long rawTail = GetAndAddRawTail(requiredLength);
             int termId = LogBufferDescriptor.TermId(rawTail);
             long termOffset = rawTail & 0xFFFFFFFFL;
-            UnsafeBuffer termBuffer = _termBuffer;
-            int termLength = termBuffer.Capacity;
 
             CheckTerm(activeTermId, termId);
 
@@ -257,8 +338,119 @@ namespace Adaptive.Aeron.LogBuffer
                     int alignedLength = BitUtil.Align(frameLength, FrameDescriptor.FRAME_ALIGNMENT);
 
                     header.Write(termBuffer, frameOffset, frameLength, termId);
-                    termBuffer.PutBytes(frameOffset + DataHeaderFlyweight.HEADER_LENGTH, srcBuffer,
-                        srcOffset + (length - remaining), bytesToWrite);
+                    termBuffer.PutBytes(frameOffset + DataHeaderFlyweight.HEADER_LENGTH, buffer,
+                        offset + (length - remaining), bytesToWrite);
+
+                    if (remaining <= maxPayloadLength)
+                    {
+                        flags |= FrameDescriptor.END_FRAG_FLAG;
+                    }
+
+                    FrameDescriptor.FrameFlags(termBuffer, frameOffset, flags);
+
+                    if (null != reservedValueSupplier)
+                    {
+                        long reservedValue = reservedValueSupplier(termBuffer, frameOffset, frameLength);
+                        termBuffer.PutLong(frameOffset + DataHeaderFlyweight.RESERVED_VALUE_OFFSET, reservedValue, ByteOrder.LittleEndian);
+                    }
+
+                    FrameDescriptor.FrameLengthOrdered(termBuffer, frameOffset, frameLength);
+
+                    flags = 0;
+                    frameOffset += alignedLength;
+                    remaining -= bytesToWrite;
+                } while (remaining > 0);
+            }
+
+            return (int) resultingOffset;
+        }
+
+        /// <summary>
+        /// Append a fragmented message to the the term buffer.
+        /// The message will be split up into fragments of MTU length minus header.
+        /// </summary>
+        /// <param name="header">                for writing the default header. </param>
+        /// <param name="bufferOne">             containing the first part of the message. </param>
+        /// <param name="offsetOne">             at which the first part of the message begins. </param>
+        /// <param name="lengthOne">             of the first part of the message. </param>
+        /// <param name="bufferTwo">             containing the second part of the message. </param>
+        /// <param name="offsetTwo">             at which the second part of the message begins. </param>
+        /// <param name="lengthTwo">             of the second part of the message. </param>
+        /// <param name="maxPayloadLength">      that the message will be fragmented into. </param>
+        /// <param name="reservedValueSupplier"> <seealso cref="ReservedValueSupplier"/> for the frame. </param>
+        /// <param name="activeTermId">          used for flow control. </param>
+        /// <returns> the resulting offset of the term after the append on success otherwise  <seealso cref="FAILED"/>. </returns>
+        public int AppendFragmentedMessage(
+            HeaderWriter header,
+            IDirectBuffer bufferOne,
+            int offsetOne,
+            int lengthOne,
+            IDirectBuffer bufferTwo,
+            int offsetTwo,
+            int lengthTwo,
+            int maxPayloadLength,
+            ReservedValueSupplier reservedValueSupplier,
+            int activeTermId)
+        {
+            int length = lengthOne + lengthTwo;
+            int numMaxPayloads = length / maxPayloadLength;
+            int remainingPayload = length % maxPayloadLength;
+            int lastFrameLength = remainingPayload > 0 ? BitUtil.Align(remainingPayload + DataHeaderFlyweight.HEADER_LENGTH, FrameDescriptor.FRAME_ALIGNMENT) : 0;
+            int requiredLength = (numMaxPayloads * (maxPayloadLength + DataHeaderFlyweight.HEADER_LENGTH)) + lastFrameLength;
+            UnsafeBuffer termBuffer = _termBuffer;
+            int termLength = termBuffer.Capacity;
+
+            long rawTail = GetAndAddRawTail(requiredLength);
+            int termId = LogBufferDescriptor.TermId(rawTail);
+            long termOffset = rawTail & 0xFFFF_FFFFL;
+
+            CheckTerm(activeTermId, termId);
+
+            long resultingOffset = termOffset + requiredLength;
+            if (resultingOffset > termLength)
+            {
+                resultingOffset = HandleEndOfLogCondition(termBuffer, termOffset, header, termLength, termId);
+            }
+            else
+            {
+                int frameOffset = (int) termOffset;
+                byte flags = FrameDescriptor.BEGIN_FRAG_FLAG;
+                int remaining = length;
+                int positionOne = 0;
+                int positionTwo = 0;
+
+                do
+                {
+                    int bytesToWrite = Math.Min(remaining, maxPayloadLength);
+                    int frameLength = bytesToWrite + DataHeaderFlyweight.HEADER_LENGTH;
+                    int alignedLength = BitUtil.Align(frameLength, FrameDescriptor.FRAME_ALIGNMENT);
+
+                    header.Write(termBuffer, frameOffset, frameLength, termId);
+
+                    int bytesWritten = 0;
+                    int payloadOffset = frameOffset + DataHeaderFlyweight.HEADER_LENGTH;
+                    do
+                    {
+                        int remainingOne = lengthOne - positionOne;
+                        if (remainingOne > 0)
+                        {
+                            int numBytes = Math.Min(bytesToWrite - bytesWritten, remainingOne);
+                            termBuffer.PutBytes(payloadOffset, bufferOne, offsetOne + positionOne, numBytes);
+
+                            bytesWritten += numBytes;
+                            payloadOffset += numBytes;
+                            positionOne += numBytes;
+                        }
+                        else
+                        {
+                            int numBytes = Math.Min(bytesToWrite - bytesWritten, lengthTwo - positionTwo);
+                            termBuffer.PutBytes(payloadOffset, bufferTwo, offsetTwo + positionTwo, numBytes);
+
+                            bytesWritten += numBytes;
+                            payloadOffset += numBytes;
+                            positionTwo += numBytes;
+                        }
+                    } while (bytesWritten < bytesToWrite);
 
                     if (remaining <= maxPayloadLength)
                     {
@@ -303,12 +495,13 @@ namespace Adaptive.Aeron.LogBuffer
             int remainingPayload = length % maxPayloadLength;
             int lastFrameLength = remainingPayload > 0 ? BitUtil.Align(remainingPayload + DataHeaderFlyweight.HEADER_LENGTH, FrameDescriptor.FRAME_ALIGNMENT) : 0;
             int requiredLength = (numMaxPayloads * (maxPayloadLength + DataHeaderFlyweight.HEADER_LENGTH)) + lastFrameLength;
+            UnsafeBuffer termBuffer = _termBuffer;
+            int termLength = termBuffer.Capacity;
+            
             long rawTail = GetAndAddRawTail(requiredLength);
             int termId = LogBufferDescriptor.TermId(rawTail);
             long termOffset = rawTail & 0xFFFFFFFFL;
-            UnsafeBuffer termBuffer = _termBuffer;
-            int termLength = termBuffer.Capacity;
-
+            
             CheckTerm(activeTermId, termId);
 
             long resultingOffset = termOffset + requiredLength;
@@ -382,7 +575,7 @@ namespace Adaptive.Aeron.LogBuffer
         {
             if (termId != expectedTermId)
             {
-                throw new AeronException($"Action possibly delayed: expectedTermId={expectedTermId} termId={termId}");
+                throw new AeronException($"action possibly delayed: expectedTermId={expectedTermId} termId={termId}");
             }
         }
 

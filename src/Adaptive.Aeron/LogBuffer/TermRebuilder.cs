@@ -33,7 +33,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// <param name="termBuffer"> into which the packet should be inserted. </param>
         /// <param name="termOffset"> in the term at which the packet should be inserted. </param>
         /// <param name="packet">     containing a sequence of frames. </param>
-        /// <param name="length">     of the sequence of frames in bytes. </param>
+        /// <param name="length">     of the packet of frames in bytes. </param>
         public static void Insert(IAtomicBuffer termBuffer, int termOffset, UnsafeBuffer packet, int length)
         {
             if (0 == termBuffer.GetInt(termOffset))

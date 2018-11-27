@@ -44,7 +44,7 @@ namespace Adaptive.Aeron
     /// </para>
     /// </summary>
     /// <seealso cref="Aeron.AddExclusivePublication(String, int)"></seealso>
-    /// <seealso cref="ExclusiveBufferClaim"></seealso>
+    /// <seealso cref="BufferClaim"></seealso>
     public class ExclusivePublication : Publication
     {
         private long _termBeginPosition;
@@ -94,18 +94,11 @@ namespace Adaptive.Aeron
             _termId = LogBufferDescriptor.TermId(rawTail);
             _termOffset = LogBufferDescriptor.TermOffset(rawTail);
             _termBeginPosition =
-                LogBufferDescriptor.ComputeTermBeginPosition(_termId, _positionBitsToShift, InitialTermId);
+                LogBufferDescriptor.ComputeTermBeginPosition(_termId, PositionBitsToShift, InitialTermId);
         }
 
-        /// <summary>
-        /// Non-blocking publish of a partial buffer containing a message.
-        /// </summary>
-        /// <param name="buffer"> containing message. </param>
-        /// <param name="offset"> offset in the buffer at which the encoded message begins. </param>
-        /// <param name="length"> in bytes of the encoded message. </param>
-        /// <param name="reservedValueSupplier"> <see cref="ReservedValueSupplier"/> for the frame.</param>
-        /// <returns> The new stream position, otherwise a negative error value <seealso cref="Publication.NOT_CONNECTED"/>, <seealso cref="Publication.BACK_PRESSURED"/>,
-        /// <seealso cref="Publication.ADMIN_ACTION"/>, <seealso cref="Publication.CLOSED"/> or <see cref="Publication.MAX_POSITION_EXCEEDED"/>. </returns>
+       
+        /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override long Offer(
             IDirectBuffer buffer,
@@ -125,12 +118,13 @@ namespace Adaptive.Aeron
                     int result;
                     if (length <= MaxPayloadLength)
                     {
+                        CheckPositiveLength(length);
                         result = termAppender.AppendUnfragmentedMessage(_termId, _termOffset, _headerWriter, buffer,
                             offset, length, reservedValueSupplier);
                     }
                     else
                     {
-                        CheckForMaxMessageLength(length);
+                        CheckMaxMessageLength(length);
                         result = termAppender.AppendFragmentedMessage(_termId, _termOffset, _headerWriter, buffer,
                             offset, length, MaxPayloadLength, reservedValueSupplier);
                     }
@@ -145,6 +139,66 @@ namespace Adaptive.Aeron
 
             return newPosition;
         }
+
+      
+        
+        /// <inheritdoc />
+        public override long Offer(IDirectBuffer bufferOne, int offsetOne, int lengthOne, IDirectBuffer bufferTwo, int offsetTwo, int lengthTwo, ReservedValueSupplier reservedValueSupplier = null)
+        {
+            long newPosition = CLOSED;
+            if (!_isClosed)
+            {
+                long limit = _positionLimit.GetVolatile();
+                ExclusiveTermAppender termAppender = _termAppenders[_activePartitionIndex];
+                long position = _termBeginPosition + _termOffset;
+                int length = ValidateAndComputeLength(lengthOne, lengthTwo);
+
+                if (position < limit)
+                {
+                    int result;
+                    if (length <= MaxPayloadLength)
+                    {
+                        CheckPositiveLength(length);
+                        result = termAppender.AppendUnfragmentedMessage(
+                            _termId,
+                            _termOffset,
+                            _headerWriter,
+                            bufferOne,
+                            offsetOne,
+                            lengthOne,
+                            bufferTwo,
+                            offsetTwo,
+                            lengthTwo,
+                            reservedValueSupplier);
+                    }
+                    else
+                    {
+                        CheckMaxMessageLength(length);
+                        result = termAppender.AppendFragmentedMessage(
+                            _termId,
+                            _termOffset,
+                            _headerWriter,
+                            bufferOne,
+                            offsetOne,
+                            lengthOne,
+                            bufferTwo,
+                            offsetTwo,
+                            lengthTwo,
+                            MaxPayloadLength,
+                            reservedValueSupplier);
+                    }
+
+                    newPosition = NewPosition(result);
+                }
+                else
+                {
+                    newPosition = BackPressureStatus(position, length);
+                }
+            }
+
+            return newPosition;
+        }
+
 
         /// <inheritdoc />
         public override long Offer(DirectBufferVector[] vectors, ReservedValueSupplier reservedValueSupplier = null)
@@ -167,7 +221,7 @@ namespace Adaptive.Aeron
                     }
                     else
                     {
-                        CheckForMaxMessageLength(length);
+                        CheckMaxMessageLength(length);
                         result = termAppender.AppendFragmentedMessage(
                             _termId,
                             _termOffset,
@@ -227,7 +281,7 @@ namespace Adaptive.Aeron
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override long TryClaim(int length, BufferClaim bufferClaim)
         {
-            CheckForMaxPayloadLength(length);
+            CheckPayloadLength(length);
             var newPosition = CLOSED;
 
             if (!_isClosed)
@@ -259,7 +313,7 @@ namespace Adaptive.Aeron
         /// <exception cref="ArgumentException"> if the length is greater than <seealso cref="Publication.MaxMessageLength()"/>. </exception>
         public long AppendPadding(int length)
         {
-            CheckForMaxMessageLength(length);
+            CheckMaxMessageLength(length);
             long newPosition = CLOSED;
 
             if (!_isClosed)
@@ -270,6 +324,7 @@ namespace Adaptive.Aeron
 
                 if (position < limit)
                 {
+                    CheckPositiveLength(length);
                     int result = termAppender.AppendPadding(_termId, _termOffset, _headerWriter, length);
                     newPosition = NewPosition(result);
                 }
@@ -304,7 +359,7 @@ namespace Adaptive.Aeron
             _termOffset = 0;
             _termId = nextTermId;
             _termBeginPosition =
-                LogBufferDescriptor.ComputeTermBeginPosition(nextTermId, _positionBitsToShift, InitialTermId);
+                LogBufferDescriptor.ComputeTermBeginPosition(nextTermId, PositionBitsToShift, InitialTermId);
 
             var termCount = nextTermId - InitialTermId;
 

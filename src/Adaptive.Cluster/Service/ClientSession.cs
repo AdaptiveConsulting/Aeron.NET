@@ -1,4 +1,6 @@
-﻿using Adaptive.Aeron;
+﻿using System;
+using Adaptive.Aeron;
+using Adaptive.Aeron.Exceptions;
 using Adaptive.Agrona;
 
 namespace Adaptive.Cluster.Service
@@ -60,6 +62,21 @@ namespace Adaptive.Cluster.Service
         /// <returns> whether a request to close this session has been made. </returns>
         public bool IsClosing { get; private set; }
 
+
+        /// <summary>
+        /// Close of this <seealso cref="ClientSession"/> by sending the request to the consensus module.
+        /// <para>
+        /// This method is idempotent.
+        /// </para>
+        /// </summary>
+        public void Close()
+        {
+            if (null != _cluster.GetClientSession(Id))
+            {
+                _cluster.CloseSession(Id);
+            }
+        }
+
         /// <summary>
         /// Non-blocking publish of a partial buffer containing a message to a cluster.
         /// </summary>
@@ -77,7 +94,14 @@ namespace Adaptive.Cluster.Service
         {
             if (null == _responsePublication)
             {
-                _responsePublication = aeron.AddExclusivePublication(ResponseChannel, ResponseStreamId);
+                try
+                {
+                    _responsePublication = aeron.AddExclusivePublication(ResponseChannel, ResponseStreamId);
+                }
+                catch (RegistrationException)
+                {
+                    // ignore
+                }
             }
         }
 

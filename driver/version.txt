@@ -1,2 +1,2 @@
 Driver source:
-https://repo1.maven.org/maven2/io/aeron/aeron-all/1.11.3/aeron-all-1.11.3.jar
+https://repo1.maven.org/maven2/io/aeron/aeron-all/1.12.0/aeron-all-1.12.0.jar

@@ -44,7 +44,7 @@ namespace Adaptive.Aeron
         private readonly int _initialTermId;
 
         private readonly int _termLengthMask;
-        private readonly int _positionBitsToShift;
+
         private bool _isEos;
         private volatile bool _isClosed;
 
@@ -83,11 +83,17 @@ namespace Adaptive.Aeron
 
             var termLength = logBuffers.TermLength();
             _termLengthMask = termLength - 1;
-            _positionBitsToShift = LogBufferDescriptor.PositionBitsToShift(termLength);
+            PositionBitsToShift = LogBufferDescriptor.PositionBitsToShift(termLength);
             _initialTermId = LogBufferDescriptor.InitialTermId(logBuffers.MetaDataBuffer());
-            _header = new Header(LogBufferDescriptor.InitialTermId(logBuffers.MetaDataBuffer()), _positionBitsToShift, this);
+            _header = new Header(LogBufferDescriptor.InitialTermId(logBuffers.MetaDataBuffer()), PositionBitsToShift, this);
         }
 
+        /// <summary>
+        /// Number of bits to right shift a position to get a term count for how far the stream has progressed.
+        /// </summary>
+        /// <returns> of bits to right shift a position to get a term count for how far the stream has progressed. </returns>
+        public int PositionBitsToShift { get; }
+        
         /// <summary>
         /// Get the length in bytes for each term partition in the log buffer.
         /// </summary>
@@ -163,14 +169,11 @@ namespace Adaptive.Aeron
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             set
             {
-                if (_isClosed)
+                if (!_isClosed)
                 {
-                    AeronThrowHelper.ThrowAeronException("Image is closed");
+                    ValidatePosition(value);
+                    _subscriberPosition.SetOrdered(value);                    
                 }
-
-                ValidatePosition(value);
-
-                _subscriberPosition.SetOrdered(value);
             }
         }
 
@@ -575,6 +578,13 @@ namespace Adaptive.Aeron
         /// <summary>
         /// Poll for new messages in a stream. If new messages are found beyond the last consumed position then they
         /// will be delivered to the <seealso cref="IBlockHandler"/> up to a limited number of bytes.
+        ///
+        /// A scan will terminate if a padding frame is encountered. If first frame in a scan is padding then a block
+        /// for the padding is notified. If the padding comes after the first frame in a scan then the scan terminates
+        /// at the offset the padding frame begins. Padding frames are delivered singularly in a block.
+        ///
+        /// Padding frames may be for a greater range than the limit offset but only the header needs to be valid so
+        /// relevant length of the frame is <see cref="DataHeaderFlyweight.HEADER_LENGTH"/>
         /// </summary>
         /// <param name="handler">     to which block is delivered. </param>
         /// <param name="blockLengthLimit"> up to which a block may be in length. </param>
@@ -589,18 +599,17 @@ namespace Adaptive.Aeron
             var position = _subscriberPosition.Get();
             var termOffset = (int) position & _termLengthMask;
             var termBuffer = ActiveTermBuffer(position);
-            var limit = Math.Min(termOffset + blockLengthLimit, termBuffer.Capacity);
-
-            var resultingOffset = TermBlockScanner.Scan(termBuffer, termOffset, limit);
-
-            var bytesConsumed = resultingOffset - termOffset;
+            var limitOffset = Math.Min(termOffset + blockLengthLimit, termBuffer.Capacity);
+            var resultingOffset = TermBlockScanner.Scan(termBuffer, termOffset, limitOffset);
+            var length = resultingOffset - termOffset;
+            
             if (resultingOffset > termOffset)
             {
                 try
                 {
                     var termId = termBuffer.GetInt(termOffset + DataHeaderFlyweight.TERM_ID_FIELD_OFFSET);
 
-                    handler(termBuffer, termOffset, bytesConsumed, SessionId, termId);
+                    handler(termBuffer, termOffset, length, SessionId, termId);
                 }
                 catch (Exception t)
                 {
@@ -608,76 +617,31 @@ namespace Adaptive.Aeron
                 }
                 finally
                 {
-                    _subscriberPosition.SetOrdered(position + bytesConsumed);
+                    _subscriberPosition.SetOrdered(position + length);
                 }
             }
 
-            return bytesConsumed;
+            return length;
         }
-
-        // TODO
-        ///// <summary>
-        ///// Poll for new messages in a stream. If new messages are found beyond the last consumed position then they
-        ///// will be delivered to the <seealso cref="IRawBlockHandler"/> up to a limited number of bytes.
-        ///// </summary>
-        ///// <param name="fileBlockHandler"> to which block is delivered. </param>
-        ///// <param name="blockLengthLimit"> up to which a block may be in length. </param>
-        ///// <returns> the number of bytes that have been consumed. </returns>
-        //public int RawPoll(IRawBlockHandler rawBlockHandler, int blockLengthLimit)
-        //{
-        //    if (_isClosed)
-        //    {
-        //        return 0;
-        //    }
-
-        //    long position = _subscriberPosition.Get();
-        //    int termOffset = (int)position & _termLengthMask;
-        //    int activeIndex = LogBufferDescriptor.IndexByPosition(position, _positionBitsToShift);
-        //    UnsafeBuffer termBuffer = _termBuffers[activeIndex];
-        //    int capacity = termBuffer.Capacity;
-        //    int limit = Math.Min(termOffset + blockLengthLimit, capacity);
-
-        //    int resultingOffset = TermBlockScanner.Scan(termBuffer, termOffset, limit);
-
-        //    int length = resultingOffset - termOffset;
-        //    if (resultingOffset > termOffset)
-        //    {
-        //        try
-        //        {
-        //            long fileOffset = ((long)capacity * activeIndex) + termOffset;
-        //            int termId = termBuffer.GetInt(termOffset + DataHeaderFlyweight.TERM_ID_FIELD_OFFSET);
-
-        //            rawBlockHandler.OnBlock(_logBuffers.FileChannel(), fileOffset, termBuffer, termOffset, length, _sessionId, termId);
-        //        }
-        //        catch (Exception t)
-        //        {
-        //            _errorHandler(t);
-        //        }
-
-        //        _subscriberPosition.SetOrdered(position + length);
-        //    }
-
-        //    return length;
-        //}
 
         private UnsafeBuffer ActiveTermBuffer(long position)
         {
-            return _termBuffers[LogBufferDescriptor.IndexByPosition(position, _positionBitsToShift)];
+            return _termBuffers[LogBufferDescriptor.IndexByPosition(position, PositionBitsToShift)];
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void ValidatePosition(long newPosition)
         {
             long currentPosition = _subscriberPosition.Get();
-            long limitPosition = currentPosition + TermBufferLength;
+            long limitPosition = (currentPosition - (currentPosition & _termLengthMask)) + _termLengthMask + 1;
             if (newPosition < currentPosition || newPosition > limitPosition)
             {
-                ThrowHelper.ThrowArgumentException("newPosition of " + newPosition + " out of range " + currentPosition + "-" + limitPosition);
+                ThrowHelper.ThrowArgumentException($"{newPosition} newPosition out of range {currentPosition}-{limitPosition}");
             }
 
             if (0 != (newPosition & (FrameDescriptor.FRAME_ALIGNMENT - 1)))
             {
-                ThrowHelper.ThrowArgumentException("newPosition of " + newPosition + " not aligned to FRAME_ALIGNMENT");
+                ThrowHelper.ThrowArgumentException($"{newPosition} newPosition not aligned to FRAME_ALIGNMENT");
             }
         }
 

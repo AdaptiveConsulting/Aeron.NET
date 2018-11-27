@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
@@ -178,21 +179,42 @@ namespace Adaptive.Aeron
 
         public void OnChannelEndpointError(int statusIndicatorId, string message)
         {
-            foreach (var resource in _resourceByRegIdMap.Values)
+            var resourcesToRemove = new List<long>();
+            
+            try
             {
-                if (resource is Subscription subscription)
+                foreach (var item in _resourceByRegIdMap)
                 {
-                    if (subscription.ChannelStatusId == statusIndicatorId)
+                    var resource = item.Value;
+
+                    if (resource is Subscription subscription)
                     {
-                        HandleError(new ChannelEndpointException(statusIndicatorId, message));
+                        if (subscription.ChannelStatusId == statusIndicatorId)
+                        {
+                            HandleError(new ChannelEndpointException(statusIndicatorId, message));
+                            subscription.InternalClose();
+
+                            resourcesToRemove.Add(item.Key); // TODO In java version, an iterator is used here
+                        }
+                    }
+                    else if (resource is Publication publication)
+                    {
+                        if (publication.ChannelStatusId == statusIndicatorId)
+                        {
+                            HandleError(new ChannelEndpointException(statusIndicatorId, message));
+                            publication.InternalClose();
+                            ReleaseLogBuffers(publication.LogBuffers, publication.OriginalRegistrationId);
+
+                            resourcesToRemove.Add(item.Key);
+                        }
                     }
                 }
-                else if (resource is Publication publication)
+            }
+            finally
+            {
+                foreach (var resourceKey in resourcesToRemove)
                 {
-                    if (publication.ChannelStatusId == statusIndicatorId)
-                    {
-                        HandleError(new ChannelEndpointException(statusIndicatorId, message));
-                    }
+                    _resourceByRegIdMap.Remove(resourceKey);
                 }
             }
         }
@@ -758,7 +780,6 @@ namespace Adaptive.Aeron
                 }
 
                 Thread.Sleep(0); // check interrupt
-                
             } while (deadlineNs - _nanoClock.NanoTime() > 0);
 
             throw new DriverTimeoutException("no response from MediaDriver within (ms):" + _driverTimeoutMs);

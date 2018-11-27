@@ -65,6 +65,50 @@ namespace Adaptive.Aeron.LogBuffer
         /// <returns> length of the range in the buffer. </returns>
         public int Length => _buffer.Capacity - DataHeaderFlyweight.HEADER_LENGTH;
 
+        /// <summary>
+        /// Get the value of the header type field. The lower 16 bits are valid.
+        /// </summary>
+        /// <returns> the value of the header type field. </returns>
+        /// <seealso cref="DataHeaderFlyweight"></seealso>
+        public int HeaderType()
+        {
+            return _buffer.GetShort(HeaderFlyweight.TYPE_FIELD_OFFSET, ByteOrder.LittleEndian) & 0xFFFF;
+        }
+
+        /// <summary>
+        /// Get the value of the flags field.
+        /// </summary>
+        /// <returns> the value of the header flags field. </returns>
+        /// <seealso cref="DataHeaderFlyweight"></seealso>
+        public byte Flags()
+        {
+            return _buffer.GetByte(HeaderFlyweight.FLAGS_FIELD_OFFSET);
+        }
+
+        /// <summary>
+        /// Set the value of the header flags field.
+        /// </summary>
+        /// <param name="flags"> value to be set in the header. </param>
+        /// <returns> this for a fluent API. </returns>
+        /// <seealso cref="DataHeaderFlyweight"></seealso>
+        public BufferClaim Flags(byte flags)
+        {
+            _buffer.PutByte(HeaderFlyweight.FLAGS_FIELD_OFFSET, flags);
+            return this;
+        }
+
+        /// <summary>
+        /// Set the value of the header type field. The lower 16 bits are valid.
+        /// </summary>
+        /// <param name="type"> value to be set in the header. </param>
+        /// <returns> this for a fluent API. </returns>
+        /// <seealso cref="DataHeaderFlyweight"></seealso>
+        public BufferClaim HeaderType(int type)
+        {
+            _buffer.PutShort(HeaderFlyweight.TYPE_FIELD_OFFSET, (short) type, ByteOrder.LittleEndian);
+            return this;
+        }
+
 
         /// <summary>
         /// Get the value stored in the reserve space at the end of a data frame header.
@@ -93,6 +137,20 @@ namespace Adaptive.Aeron.LogBuffer
         }
 
         /// <summary>
+        /// Put bytes into the claimed buffer space for a message. To write multiple parts then use <seealso cref="Buffer()"/>
+        /// and <seealso cref="Offset()"/>.
+        /// </summary>
+        /// <param name="srcBuffer"> to copy into the claimed space. </param>
+        /// <param name="srcIndex">  in the source buffer from which to copy. </param>
+        /// <param name="length">    of the source buffer to copy. </param>
+        /// <returns> this for a fluent API. </returns>
+        public BufferClaim PutBytes(IDirectBuffer srcBuffer, int srcIndex, int length)
+        {
+            _buffer.PutBytes(DataHeaderFlyweight.HEADER_LENGTH, srcBuffer, srcIndex, length);
+            return this;
+        }
+
+        /// <summary>
         /// Commit the message to the log buffer so that is it available to subscribers.
         /// </summary>
         public void Commit()
@@ -109,7 +167,7 @@ namespace Adaptive.Aeron.LogBuffer
         {
             var frameLength = _buffer.Capacity;
 
-            _buffer.PutShort(HeaderFlyweight.TYPE_FIELD_OFFSET, (short) HeaderFlyweight.HDR_TYPE_PAD);
+            _buffer.PutShort(HeaderFlyweight.TYPE_FIELD_OFFSET, (short) HeaderFlyweight.HDR_TYPE_PAD, ByteOrder.LittleEndian);
             _buffer.PutIntOrdered(HeaderFlyweight.FRAME_LENGTH_FIELD_OFFSET, frameLength);
         }
     }

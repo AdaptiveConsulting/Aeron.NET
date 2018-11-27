@@ -83,7 +83,7 @@ namespace Adaptive.Archiver
 
                 controlSessionId = AwaitSessionOpened(correlationId);
                 recordingDescriptorPoller =
-                    new RecordingDescriptorPoller(subscription, FRAGMENT_LIMIT, controlSessionId);
+                    new RecordingDescriptorPoller(subscription, ctx.ErrorHandler(), controlSessionId, FRAGMENT_LIMIT);
             }
             catch (Exception)
             {
@@ -271,7 +271,8 @@ namespace Adaptive.Archiver
             {
                 if (controlResponsePoller.Poll() != 0 && controlResponsePoller.IsPollComplete())
                 {
-                    if (controlResponsePoller.TemplateId() == ControlResponseDecoder.TEMPLATE_ID &&
+                    if (controlResponsePoller.ControlSessionId() == controlSessionId &&
+                        controlResponsePoller.TemplateId() == ControlResponseDecoder.TEMPLATE_ID &&
                         controlResponsePoller.Code() == ControlResponseCode.ERROR)
                     {
                         return controlResponsePoller.ErrorMessage();
@@ -287,7 +288,9 @@ namespace Adaptive.Archiver
         }
 
         /// <summary>
-        /// Check if an error has been returned for the control session and throw a <seealso cref="ArchiveException"/> if necessary.
+        /// Check if an error has been returned for the control session and throw a <seealso cref="ArchiveException"/> if
+        /// <see cref="Context.ErrorHandler(Adaptive.Agrona.ErrorHandler)"/> is not set.
+        /// 
         /// To check for an error response without raising an exception then try <seealso cref="PollForErrorResponse()"/>.
         /// </summary>
         ///  <seealso cref="PollForErrorResponse()"/>
@@ -298,11 +301,21 @@ namespace Adaptive.Archiver
             {
                 if (controlResponsePoller.Poll() != 0 && controlResponsePoller.IsPollComplete())
                 {
-                    if (controlResponsePoller.TemplateId() == ControlResponseDecoder.TEMPLATE_ID &&
+                    if (controlResponsePoller.ControlSessionId() == controlSessionId &&
+                        controlResponsePoller.TemplateId() == ControlResponseDecoder.TEMPLATE_ID &&
                         controlResponsePoller.Code() == ControlResponseCode.ERROR)
                     {
-                        throw new ArchiveException(controlResponsePoller.ErrorMessage(),
+                        var ex = new ArchiveException(controlResponsePoller.ErrorMessage(),
                             (int) controlResponsePoller.RelevantId());
+
+                        if (null != context.ErrorHandler())
+                        {
+                            context.ErrorHandler()(ex);
+                        }
+                        else
+                        {
+                            throw ex;
+                        }
                     }
                 }
             }
@@ -933,20 +946,30 @@ namespace Adaptive.Archiver
                     continue;
                 }
 
-                if (poller.Code() == ControlResponseCode.ERROR)
+                var code = poller.Code();
+                if (code == ControlResponseCode.ERROR)
                 {
-                    throw new ArchiveException("response for correlationId=" + correlationId + ", error: " +
+                    var ex = new ArchiveException("response for correlationId=" + correlationId + ", error: " +
                                                poller.ErrorMessage(), (int) poller.RelevantId());
-                }
 
-                ControlResponseCode code = poller.Code();
-                if (ControlResponseCode.OK != code)
-                {
-                    throw new ArchiveException("unexpected response code: " + code);
+                    if (poller.CorrelationId() == correlationId)
+                    {
+                        throw ex;
+                    }
+
+                    if (context.ErrorHandler() != null)
+                    {
+                        context.ErrorHandler().Invoke(ex);
+                    }
                 }
 
                 if (poller.CorrelationId() == correlationId)
                 {
+                    if (ControlResponseCode.OK != code)
+                    {
+                        throw new ArchiveException("unexpected response code: " + code);
+                    }
+                    
                     return poller.RelevantId();
                 }
             }
@@ -1037,7 +1060,7 @@ namespace Adaptive.Archiver
         public class Configuration
         {
             /// <summary>
-            /// Timeout when waiting on a message to be sent or received.
+            /// Timeout in nanoseconds when waiting on a message to be sent or received.
             /// </summary>
             public const string MESSAGE_TIMEOUT_PROP_NAME = "aeron.archive.message.timeout";
 
@@ -1308,6 +1331,7 @@ namespace Adaptive.Archiver
             internal ILock _lock;
             internal string aeronDirectoryName = Aeron.Aeron.Context.GetAeronDirectoryName();
             internal Aeron.Aeron aeron;
+            private ErrorHandler errorHandler;
             internal bool ownsAeronClient = false;
 
             public Context Clone()
@@ -1687,6 +1711,26 @@ namespace Adaptive.Archiver
             }
 
             /// <summary>
+            /// Handle errors returned asynchronously from the archive for a control session.
+            /// </summary>
+            /// <param name="errorHandler"> method to handle objects of type Throwable. </param>
+            /// <returns> this for a fluent API. </returns>
+            public Context ErrorHandler(ErrorHandler errorHandler)
+            {
+                this.errorHandler = errorHandler;
+                return this;
+            }
+
+            /// <summary>
+            /// Get the error handler that will be called for asynchronous errors.
+            /// </summary>
+            /// <returns> the error handler that will be called for asynchronous errors. </returns>
+            public ErrorHandler ErrorHandler()
+            {
+                return errorHandler;
+            }
+
+            /// <summary>
             /// Close the context and free applicable resources.
             /// <para>
             /// If <seealso cref="OwnsAeronClient()"/> is true then the <seealso cref="AeronClient()"/> client will be closed.
@@ -1794,7 +1838,7 @@ namespace Adaptive.Archiver
                     long controlSessionId = controlResponsePoller.ControlSessionId();
                     Subscription subscription = controlResponsePoller.Subscription();
                     return new AeronArchive(ctx, controlResponsePoller, archiveProxy,
-                        new RecordingDescriptorPoller(subscription, FRAGMENT_LIMIT, controlSessionId),
+                        new RecordingDescriptorPoller(subscription, ctx.ErrorHandler(), controlSessionId, FRAGMENT_LIMIT),
                         controlSessionId);
                 }
 

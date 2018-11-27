@@ -32,8 +32,7 @@ namespace Adaptive.Cluster.Service
         private readonly IIdleStrategy idleStrategy;
         private readonly IEpochClock epochClock;
         private readonly ClusterMarkFile markFile;
-        private readonly DirectBufferVector[] _vectors = new DirectBufferVector[2];
-        private readonly DirectBufferVector _messageVector = new DirectBufferVector();
+        private readonly UnsafeBuffer headerBuffer = new UnsafeBuffer(new byte[SESSION_HEADER_LENGTH]);
         private readonly EgressMessageHeaderEncoder _egressMessageHeaderEncoder = new EgressMessageHeaderEncoder();
 
         private long ackId = 0;
@@ -65,11 +64,7 @@ namespace Adaptive.Cluster.Service
             _consensusModuleProxy = new ConsensusModuleProxy(aeron.AddPublication(channel, ctx.ConsensusModuleStreamId()));
             _serviceAdapter = new ServiceAdapter(aeron.AddSubscription(channel, ctx.ServiceStreamId()), this);
 
-            UnsafeBuffer headerBuffer = new UnsafeBuffer(new byte[SESSION_HEADER_LENGTH]);
             _egressMessageHeaderEncoder.WrapAndApplyHeader(headerBuffer, 0, new MessageHeaderEncoder());
-
-            _vectors[0] = new DirectBufferVector(headerBuffer, 0, SESSION_HEADER_LENGTH);
-            _vectors[1] = _messageVector;
         }
 
         public void OnStart()
@@ -222,15 +217,17 @@ namespace Adaptive.Cluster.Service
                 return ClientSession.MOCKED_OFFER;
             }
 
+            if (null == publication)
+            {
+                return Publication.NOT_CONNECTED;
+            }
+            
             _egressMessageHeaderEncoder
                 .ClusterSessionId(clusterSessionId)
                 .Timestamp(clusterTimeMs);
 
-            _messageVector.Reset(buffer, offset, length);
-
-            return publication.Offer(_vectors);
+            return publication.Offer(headerBuffer, 0, headerBuffer.Capacity, buffer, offset, length, null);
         }
-
 
         public void OnJoinLog(
             long leadershipTermId,

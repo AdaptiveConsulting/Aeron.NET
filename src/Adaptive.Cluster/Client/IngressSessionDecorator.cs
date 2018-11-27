@@ -17,12 +17,17 @@ namespace Adaptive.Cluster.Client
     {
         /// <summary>
         /// Length of the session header that will be prepended to the message.
+        ///
+        /// The client message header is applied to the <see cref="Publication"/> before the offered buffer.
+        ///
+        /// Note: This class is NOT threadsafe for updating <see cref="ClusterSessionId"/> or
+        /// <see cref="LeadershipTermId"/>. Each publisher thread requires its own instance.
+        /// 
         /// </summary>
-        public static readonly int INGRESS_MESSAGE_HEADER_LENGTH = MessageHeaderEncoder.ENCODED_LENGTH + IngressMessageHeaderEncoder.BLOCK_LENGTH;
+        public static readonly int HEADER_LENGTH = MessageHeaderEncoder.ENCODED_LENGTH + IngressMessageHeaderEncoder.BLOCK_LENGTH;
 
-        private readonly DirectBufferVector[] vectors = new DirectBufferVector[2];
-        private readonly DirectBufferVector messageVector = new DirectBufferVector();
         private readonly IngressMessageHeaderEncoder ingressMessageHeaderEncoder = new IngressMessageHeaderEncoder();
+        private readonly UnsafeBuffer headerBuffer = new UnsafeBuffer(new byte[HEADER_LENGTH]);
 
         /// <summary>
         /// Construct a new ingress session header wrapper that defaults all fields to the <see cref="Adaptive.Aeron.Aeron.NULL_VALUE"/>
@@ -38,15 +43,11 @@ namespace Adaptive.Cluster.Client
         /// <param name="leadershipTermId"> of the current leader.</param>
         public IngressSessionDecorator(long clusterSessionId, long leadershipTermId)
         {
-            UnsafeBuffer headerBuffer = new UnsafeBuffer(new byte[INGRESS_MESSAGE_HEADER_LENGTH]);
             ingressMessageHeaderEncoder
                 .WrapAndApplyHeader(headerBuffer, 0, new MessageHeaderEncoder())
                 .LeadershipTermId(leadershipTermId)
                 .ClusterSessionId(clusterSessionId)
                 .Timestamp(Aeron.Aeron.NULL_VALUE);
-
-            vectors[0] = new DirectBufferVector(headerBuffer, 0, INGRESS_MESSAGE_HEADER_LENGTH);
-            vectors[1] = messageVector;
         }
 
         /// <summary>
@@ -85,8 +86,7 @@ namespace Adaptive.Cluster.Client
         /// <returns> the same as <seealso cref="Publication.Offer(IDirectBuffer, int, int, ReservedValueSupplier)"/>. </returns>
         public long Offer(Publication publication, IDirectBuffer buffer, int offset, int length)
         {
-            messageVector.Reset(buffer, offset, length);
-            return publication.Offer(vectors, null);
+            return publication.Offer(headerBuffer, 0, HEADER_LENGTH, buffer, offset, length);
         }
     }
 }

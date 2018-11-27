@@ -86,7 +86,7 @@ namespace Adaptive.Aeron.Protocol
         public const int VERSION_FIELD_OFFSET = 4;
         public const int FLAGS_FIELD_OFFSET = 5;
         public const int TYPE_FIELD_OFFSET = 6;
-        public static readonly int HEADER_LENGTH = TYPE_FIELD_OFFSET + BitUtil.SIZE_OF_SHORT;
+        public static readonly int MIN_HEADER_LENGTH = TYPE_FIELD_OFFSET + BitUtil.SIZE_OF_SHORT;
 
         public HeaderFlyweight()
         {

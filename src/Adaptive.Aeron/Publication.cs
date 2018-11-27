@@ -80,7 +80,6 @@ namespace Adaptive.Aeron
         protected readonly long _originalRegistrationId;
         protected readonly long _maxPossiblePosition;
         protected readonly int _channelStatusId;
-        protected readonly int _positionBitsToShift;
         protected volatile bool _isClosed;
 
         protected readonly IReadablePosition _positionLimit;
@@ -115,10 +114,16 @@ namespace Adaptive.Aeron
             _positionLimit = positionLimit;
             _channelStatusId = channelStatusId;
             _logBuffers = logBuffers;
-            _positionBitsToShift = LogBufferDescriptor.PositionBitsToShift(TermBufferLength);
+            PositionBitsToShift = LogBufferDescriptor.PositionBitsToShift(TermBufferLength);
             _headerWriter = new HeaderWriter(LogBufferDescriptor.DefaultFrameHeader(_logMetaDataBuffer));
         }
 
+        /// <summary>
+        /// Number of bits to right shift a position to get a term count for how far the stream has progressed.
+        /// </summary>
+        /// <returns> of bits to right shift a position to get a term count for how far the stream has progressed. </returns>
+        public int PositionBitsToShift { get;  }
+        
         /// <summary>
         /// Get the length in bytes for each term partition in the log buffer.
         /// </summary>
@@ -268,7 +273,7 @@ namespace Adaptive.Aeron
                 var rawTail = LogBufferDescriptor.RawTailVolatile(_logMetaDataBuffer);
                 var termOffset = LogBufferDescriptor.TermOffset(rawTail, TermBufferLength);
 
-                return LogBufferDescriptor.ComputePosition(LogBufferDescriptor.TermId(rawTail), termOffset, _positionBitsToShift, InitialTermId);
+                return LogBufferDescriptor.ComputePosition(LogBufferDescriptor.TermId(rawTail), termOffset, PositionBitsToShift, InitialTermId);
             }
         }
 
@@ -325,6 +330,27 @@ namespace Adaptive.Aeron
             int length,
             ReservedValueSupplier reservedValueSupplier = null);
 
+        /// <summary>
+        /// Non-blocking publish of a message composed of two parts, e.g. a header and encapsulated payload.
+        /// </summary>
+        /// <param name="bufferOne">             containing the first part of the message. </param>
+        /// <param name="offsetOne">             at which the first part of the message begins. </param>
+        /// <param name="lengthOne">             of the first part of the message. </param>
+        /// <param name="bufferTwo">             containing the second part of the message. </param>
+        /// <param name="offsetTwo">             at which the second part of the message begins. </param>
+        /// <param name="lengthTwo">             of the second part of the message. </param>
+        /// <param name="reservedValueSupplier"> <seealso cref="ReservedValueSupplier"/> for the frame. </param>
+        /// <returns> The new stream position, otherwise a negative error value of <seealso cref="NOT_CONNECTED"/>,
+        /// <seealso cref="BACK_PRESSURED"/>, <seealso cref="ADMIN_ACTION"/>, <seealso cref="CLOSED"/>, or <seealso cref="MAX_POSITION_EXCEEDED"/>. </returns>
+        public abstract long Offer(
+            IDirectBuffer bufferOne,
+            int offsetOne,
+            int lengthOne,
+            IDirectBuffer bufferTwo,
+            int offsetTwo,
+            int lengthTwo,
+            ReservedValueSupplier reservedValueSupplier = null);
+        
         /// <summary>
         /// Non-blocking publish by gathering buffer vectors into a message.
         /// </summary>
@@ -425,8 +451,22 @@ namespace Adaptive.Aeron
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected void CheckForMaxPayloadLength(int length)
+        internal void CheckPositiveLength(int length)
         {
+            if (length < 0)
+            {
+                throw new ArgumentException("invalid length: " + length);
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        internal void CheckPayloadLength(int length)
+        {
+            if (length < 0)
+            {
+                throw new ArgumentException("invalid length: " + length);
+            }
+
             if (length > MaxPayloadLength)
             {
                 ThrowHelper.ThrowArgumentException(
@@ -435,7 +475,7 @@ namespace Adaptive.Aeron
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected void CheckForMaxMessageLength(int length)
+        internal void CheckMaxMessageLength(int length)
         {
             if (length > MaxMessageLength)
             {
@@ -443,5 +483,27 @@ namespace Adaptive.Aeron
                     $"message exceeds maxMessageLength of {MaxMessageLength:D}, length={length:D}");
             }
         }
+        
+        internal static int ValidateAndComputeLength(int lengthOne, int lengthTwo)
+        {
+            if (lengthOne < 0)
+            {
+                throw new ArgumentException("lengthOne < 0: " + lengthOne);
+            }
+
+            if (lengthTwo < 0)
+            {
+                throw new ArgumentException("lengthTwo < 0: " + lengthTwo);
+            }
+
+            int totalLength = lengthOne + lengthTwo;
+            if (totalLength < 0)
+            {
+                throw new ArgumentException("overflow totalLength=" + totalLength);
+            }
+
+            return totalLength;
+        }
+
     }
 }

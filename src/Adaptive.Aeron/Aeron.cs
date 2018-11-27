@@ -595,7 +595,7 @@ namespace Adaptive.Aeron
             /// There is no need to call it from a client application. It is responsible for providing default
             /// values for options that are not individually changed through field setters.
             /// </summary>
-            /// <returns> this Aeron.Context for method chaining. </returns>
+            /// <returns> this for a fluent API. </returns>
             public Context Conclude()
             {
                 ConcludeAeronDirectory();
@@ -706,7 +706,7 @@ namespace Adaptive.Aeron
             /// a thread with an <see cref="AgentRunner"/>
             /// </summary>
             /// <param name="useConductorAgentInvoker"> use <see cref="AgentInvoker"/> for running the <see cref="ClientConductor"/></param>
-            /// <returns> this for a fluent API.</returns>
+            /// <returns> this for a fluent API. </returns>
             public Context UseConductorAgentInvoker(bool useConductorAgentInvoker)
             {
                 _useConductorAgentInvoker = useConductorAgentInvoker;
@@ -731,7 +731,7 @@ namespace Adaptive.Aeron
             /// 
             /// </summary>
             /// <param name="lock"> that is used to provide mutual exclusion in the Aeron client.</param>
-            /// <returns> this for a fluent API.</returns>
+            /// <returns> this for a fluent API. </returns>
             public Context ClientLock(ILock @lock)
             {
                 _clientLock = @lock;
@@ -751,7 +751,7 @@ namespace Adaptive.Aeron
             /// Set the <seealso cref="IEpochClock"/> to be used for tracking wall clock time when interacting with the driver.
             /// </summary>
             /// <param name="clock"> <seealso cref="IEpochClock"/> to be used for tracking wall clock time when interacting with the driver. </param>
-            /// <returns> this Aeron.Context for method chaining </returns>
+            /// <returns>this for a fluent API.</returns>
             public Context EpochClock(IEpochClock clock)
             {
                 _epochClock = clock;
@@ -772,7 +772,7 @@ namespace Adaptive.Aeron
             /// Set the <seealso cref="INanoClock"/> to be used for tracking high resolution time.
             /// </summary>
             /// <param name="clock"> <seealso cref="INanoClock"/> to be used for tracking high resolution time. </param>
-            /// <returns> this Aeron.Context for method chaining </returns>
+            /// <returns>this for a fluent API.</returns>
             public Context NanoClock(INanoClock clock)
             {
                 _nanoClock = clock;
@@ -792,7 +792,7 @@ namespace Adaptive.Aeron
             /// Provides an IdleStrategy for the thread responsible for communicating with the Aeron Media Driver.
             /// </summary>
             /// <param name="idleStrategy"> Thread idle strategy for communication with the Media Driver. </param>
-            /// <returns> this Aeron.Context for method chaining. </returns>
+            /// <returns> this for a fluent API. </returns>
             public Context IdleStrategy(IIdleStrategy idleStrategy)
             {
                 _idleStrategy = idleStrategy;
@@ -812,7 +812,7 @@ namespace Adaptive.Aeron
             /// This method is used for testing and debugging.
             /// </summary>
             /// <param name="toClientBuffer"> Injected CopyBroadcastReceiver </param>
-            /// <returns> this Aeron.Context for method chaining. </returns>
+            /// <returns> this for a fluent API. </returns>
             internal Context ToClientBuffer(CopyBroadcastReceiver toClientBuffer)
             {
                 _toClientBuffer = toClientBuffer;
@@ -832,7 +832,7 @@ namespace Adaptive.Aeron
             /// This method is used for testing and debugging.
             /// </summary>
             /// <param name="toDriverBuffer"> Injected RingBuffer. </param>
-            /// <returns> this Aeron.Context for method chaining. </returns>
+            /// <returns> this for a fluent API. </returns>
             internal Context ToDriverBuffer(IRingBuffer toDriverBuffer)
             {
                 _toDriverBuffer = toDriverBuffer;
@@ -852,7 +852,7 @@ namespace Adaptive.Aeron
             /// Set the proxy for communicating with the media driver.
             /// </summary>
             /// <param name="driverProxy"> for communicating with the media driver. </param>
-            /// <returns> this Aeron.Context for method chaining. </returns>
+            /// <returns> this for a fluent API. </returns>
             internal Context DriverProxy(DriverProxy driverProxy)
             {
                 _driverProxy = driverProxy;
@@ -900,7 +900,7 @@ namespace Adaptive.Aeron
             /// <seealso cref="CountedErrorHandler"/>.
             /// </summary>
             /// <param name="errorHandler"> Method to handle objects of type Throwable. </param>
-            /// <returns> this Aeron.Context for method chaining. </returns>
+            /// <returns> this for a fluent API. </returns>
             /// <seealso cref="DriverTimeoutException" />
             /// <seealso cref="RegistrationException" />
             public Context ErrorHandler(ErrorHandler errorHandler)
@@ -922,7 +922,7 @@ namespace Adaptive.Aeron
             /// Setup a default callback for when an <seealso cref="Image"/> is available.
             /// </summary>
             /// <param name="handler"> Callback method for handling available image notifications. </param>
-            /// <returns> this Aeron.Context for method chaining. </returns>
+            /// <returns> this for a fluent API. </returns>
             public Context AvailableImageHandler(AvailableImageHandler handler)
             {
                 _availableImageHandler = handler;
@@ -942,7 +942,7 @@ namespace Adaptive.Aeron
             /// Setup a default callback for when an <seealso cref="Image"/> is unavailable.
             /// </summary>
             /// <param name="handler"> Callback method for handling unavailable image notifications. </param>
-            /// <returns> this Aeron.Context for method chaining. </returns>
+            /// <returns> this for a fluent API. </returns>
             public Context UnavailableImageHandler(UnavailableImageHandler handler)
             {
                 _unavailableImageHandler = handler;
@@ -982,7 +982,7 @@ namespace Adaptive.Aeron
             /// Setup a callback for when a counter is unavailable.
             /// </summary>
             /// <param name="handler"> to be called for handling unavailable counter notifications. </param>
-            /// <returns> this Aeron.Context for fluent API. </returns>
+            /// <returns> this for a fluent API. </returns>
             public Context UnavailableCounterHandler(UnavailableCounterHandler handler)
             {
                 _unavailableCounterHandler = handler;
@@ -1178,7 +1178,7 @@ namespace Adaptive.Aeron
             /// Specify the thread factory to use when starting the conductor thread.
             /// </summary>
             /// <param name="threadFactory"> thread factory to construct the thread.</param>
-            /// <returns> this for a fluent API.</returns>
+            /// <returns> this for a fluent API. </returns>
             public Context ThreadFactory(IThreadFactory threadFactory)
             {
                 _threadFactory = threadFactory;

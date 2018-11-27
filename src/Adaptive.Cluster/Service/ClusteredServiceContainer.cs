@@ -504,6 +504,7 @@ namespace Adaptive.Cluster.Service
                 archiveContext
                     .AeronClient(aeron)
                     .OwnsAeronClient(false)
+                    .ErrorHandler(countedErrorHandler.OnError)
                     .Lock(new NoOpLock());
 
                 if (null == shutdownSignalBarrier)
