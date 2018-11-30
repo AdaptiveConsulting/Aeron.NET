@@ -391,6 +391,7 @@ namespace Adaptive.Cluster.Service
             {
                 _serviceAdapter.Poll();
                 CheckInterruptedStatus();
+                heartbeatCounter.SetOrdered(epochClock.Time());
                 idleStrategy.Idle();
             }
         }
