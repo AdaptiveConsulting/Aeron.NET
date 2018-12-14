@@ -17,6 +17,7 @@
 using System;
 using System.IO;
 using System.IO.MemoryMappedFiles;
+using System.Runtime.InteropServices;
 using Adaptive.Agrona.Util;
 
 namespace Adaptive.Agrona
@@ -196,13 +197,15 @@ namespace Adaptive.Agrona
             }
         }
 
+        private static readonly bool IsOSX = RuntimeInformation.IsOSPlatform(OSPlatform.OSX);
+
         /// <summary>
         /// Return the system property for java.io.tmpdir ensuring a '/' is at the end.
         /// </summary>
         /// <returns> tmp directory for the runtime </returns>
         public static string TmpDirName()
         {
-            if (Environment.OSVersion.Platform == PlatformID.Unix)
+            if (Environment.OSVersion.Platform == PlatformID.Unix && !IsOSX)
             {
                 return @"/dev/shm";
             }
