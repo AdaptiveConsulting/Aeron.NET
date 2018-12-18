@@ -128,41 +128,9 @@ public class ClusterSessionEncoder
     }
 
 
-    public static int OpenedLogPositionEncodingOffset()
-    {
-        return 8;
-    }
-
-    public static int OpenedLogPositionEncodingLength()
-    {
-        return 8;
-    }
-
-    public static long OpenedLogPositionNullValue()
-    {
-        return -9223372036854775808L;
-    }
-
-    public static long OpenedLogPositionMinValue()
-    {
-        return -9223372036854775807L;
-    }
-
-    public static long OpenedLogPositionMaxValue()
-    {
-        return 9223372036854775807L;
-    }
-
-    public ClusterSessionEncoder OpenedLogPosition(long value)
-    {
-        _buffer.PutLong(_offset + 8, value, ByteOrder.LittleEndian);
-        return this;
-    }
-
-
     public static int CorrelationIdEncodingOffset()
     {
-        return 16;
+        return 8;
     }
 
     public static int CorrelationIdEncodingLength()
@@ -186,6 +154,38 @@ public class ClusterSessionEncoder
     }
 
     public ClusterSessionEncoder CorrelationId(long value)
+    {
+        _buffer.PutLong(_offset + 8, value, ByteOrder.LittleEndian);
+        return this;
+    }
+
+
+    public static int OpenedLogPositionEncodingOffset()
+    {
+        return 16;
+    }
+
+    public static int OpenedLogPositionEncodingLength()
+    {
+        return 8;
+    }
+
+    public static long OpenedLogPositionNullValue()
+    {
+        return -9223372036854775808L;
+    }
+
+    public static long OpenedLogPositionMinValue()
+    {
+        return -9223372036854775807L;
+    }
+
+    public static long OpenedLogPositionMaxValue()
+    {
+        return 9223372036854775807L;
+    }
+
+    public ClusterSessionEncoder OpenedLogPosition(long value)
     {
         _buffer.PutLong(_offset + 16, value, ByteOrder.LittleEndian);
         return this;

@@ -9,7 +9,7 @@ namespace Adaptive.Cluster.Codecs {
 
 public class NewLeadershipTermEncoder
 {
-    public const ushort BLOCK_LENGTH = 32;
+    public const ushort BLOCK_LENGTH = 40;
     public const ushort TEMPLATE_ID = 53;
     public const ushort SCHEMA_ID = 1;
     public const ushort SCHEMA_VERSION = 1;
@@ -192,9 +192,41 @@ public class NewLeadershipTermEncoder
     }
 
 
-    public static int LeaderMemberIdEncodingOffset()
+    public static int MaxLogPositionEncodingOffset()
     {
         return 24;
+    }
+
+    public static int MaxLogPositionEncodingLength()
+    {
+        return 8;
+    }
+
+    public static long MaxLogPositionNullValue()
+    {
+        return -9223372036854775808L;
+    }
+
+    public static long MaxLogPositionMinValue()
+    {
+        return -9223372036854775807L;
+    }
+
+    public static long MaxLogPositionMaxValue()
+    {
+        return 9223372036854775807L;
+    }
+
+    public NewLeadershipTermEncoder MaxLogPosition(long value)
+    {
+        _buffer.PutLong(_offset + 24, value, ByteOrder.LittleEndian);
+        return this;
+    }
+
+
+    public static int LeaderMemberIdEncodingOffset()
+    {
+        return 32;
     }
 
     public static int LeaderMemberIdEncodingLength()
@@ -219,14 +251,14 @@ public class NewLeadershipTermEncoder
 
     public NewLeadershipTermEncoder LeaderMemberId(int value)
     {
-        _buffer.PutInt(_offset + 24, value, ByteOrder.LittleEndian);
+        _buffer.PutInt(_offset + 32, value, ByteOrder.LittleEndian);
         return this;
     }
 
 
     public static int LogSessionIdEncodingOffset()
     {
-        return 28;
+        return 36;
     }
 
     public static int LogSessionIdEncodingLength()
@@ -251,7 +283,7 @@ public class NewLeadershipTermEncoder
 
     public NewLeadershipTermEncoder LogSessionId(int value)
     {
-        _buffer.PutInt(_offset + 28, value, ByteOrder.LittleEndian);
+        _buffer.PutInt(_offset + 36, value, ByteOrder.LittleEndian);
         return this;
     }
 

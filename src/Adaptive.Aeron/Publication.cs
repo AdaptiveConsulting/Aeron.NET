@@ -261,7 +261,7 @@ namespace Adaptive.Aeron
         /// Get the current position to which the publication has advanced for this stream.
         /// </summary>
         /// <returns> the current position to which the publication has advanced for this stream or <see cref="CLOSED"/>. </returns>
-        public long Position
+        public virtual long Position
         {
             get
             {
@@ -301,6 +301,13 @@ namespace Adaptive.Aeron
         /// </summary>
         /// <returns> the counter id for the position limit after which the publication will be back pressured. </returns>
         public int PositionLimitId => _positionLimit.Id;
+        
+        /// <summary>
+        /// Available window for offering into a publication before the <seealso cref="PositionLimit"/> is reached.
+        /// </summary>
+        /// <returns>  window for offering into a publication before the <seealso cref="PositionLimit"/> is reached. If
+        /// the publication is closed then <seealso cref="CLOSED"/> will be returned. </returns>
+        public abstract long AvailableWindow { get; }
 
         /// <summary>
         /// Non-blocking publish of a buffer containing a message.

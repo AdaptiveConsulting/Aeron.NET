@@ -9,7 +9,7 @@ namespace Adaptive.Cluster.Codecs {
 
 public class StopCatchupEncoder
 {
-    public const ushort BLOCK_LENGTH = 8;
+    public const ushort BLOCK_LENGTH = 20;
     public const ushort TEMPLATE_ID = 57;
     public const ushort SCHEMA_ID = 1;
     public const ushort SCHEMA_VERSION = 1;
@@ -96,41 +96,73 @@ public class StopCatchupEncoder
         this._limit = limit;
     }
 
-    public static int ReplaySessionIdEncodingOffset()
+    public static int LeadershipTermIdEncodingOffset()
     {
         return 0;
     }
 
-    public static int ReplaySessionIdEncodingLength()
+    public static int LeadershipTermIdEncodingLength()
     {
-        return 4;
+        return 8;
     }
 
-    public static int ReplaySessionIdNullValue()
+    public static long LeadershipTermIdNullValue()
     {
-        return -2147483648;
+        return -9223372036854775808L;
     }
 
-    public static int ReplaySessionIdMinValue()
+    public static long LeadershipTermIdMinValue()
     {
-        return -2147483647;
+        return -9223372036854775807L;
     }
 
-    public static int ReplaySessionIdMaxValue()
+    public static long LeadershipTermIdMaxValue()
     {
-        return 2147483647;
+        return 9223372036854775807L;
     }
 
-    public StopCatchupEncoder ReplaySessionId(int value)
+    public StopCatchupEncoder LeadershipTermId(long value)
     {
-        _buffer.PutInt(_offset + 0, value, ByteOrder.LittleEndian);
+        _buffer.PutLong(_offset + 0, value, ByteOrder.LittleEndian);
+        return this;
+    }
+
+
+    public static int LogPositionEncodingOffset()
+    {
+        return 8;
+    }
+
+    public static int LogPositionEncodingLength()
+    {
+        return 8;
+    }
+
+    public static long LogPositionNullValue()
+    {
+        return -9223372036854775808L;
+    }
+
+    public static long LogPositionMinValue()
+    {
+        return -9223372036854775807L;
+    }
+
+    public static long LogPositionMaxValue()
+    {
+        return 9223372036854775807L;
+    }
+
+    public StopCatchupEncoder LogPosition(long value)
+    {
+        _buffer.PutLong(_offset + 8, value, ByteOrder.LittleEndian);
         return this;
     }
 
 
     public static int FollowerMemberIdEncodingOffset()
     {
-        return 4;
+        return 16;
     }
 
     public static int FollowerMemberIdEncodingLength()
@@ -155,7 +187,7 @@ public class StopCatchupEncoder
 
     public StopCatchupEncoder FollowerMemberId(int value)
     {
-        _buffer.PutInt(_offset + 4, value, ByteOrder.LittleEndian);
+        _buffer.PutInt(_offset + 16, value, ByteOrder.LittleEndian);
         return this;
     }
 

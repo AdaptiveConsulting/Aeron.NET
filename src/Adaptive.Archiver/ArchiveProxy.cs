@@ -283,12 +283,18 @@ namespace Adaptive.Archiver
         /// </summary>
         /// <param name="fromRecordingId">  at which to begin listing. </param>
         /// <param name="recordCount">      for the number of descriptors to be listed. </param>
-        /// <param name="channel">          to match recordings on. </param>
+        /// <param name="channelFragment">  to match recordings on. </param>
         /// <param name="streamId">         to match recordings on. </param>
         /// <param name="correlationId">    for this request. </param>
         /// <param name="controlSessionId"> for this request. </param>
         /// <returns> true if successfully offered otherwise false. </returns>
-        public bool ListRecordingsForUri(long fromRecordingId, int recordCount, string channel, int streamId, long correlationId, long controlSessionId)
+        public bool ListRecordingsForUri(
+            long fromRecordingId,
+            int recordCount,
+            string channelFragment,
+            int streamId,
+            long correlationId,
+            long controlSessionId)
         {
             listRecordingsForUriRequestEncoder
                 .WrapAndApplyHeader(buffer, 0, messageHeaderEncoder)
@@ -297,7 +303,7 @@ namespace Adaptive.Archiver
                 .FromRecordingId(fromRecordingId)
                 .RecordCount(recordCount)
                 .StreamId(streamId)
-                .Channel(channel);
+                .Channel(channelFragment);
 
             return Offer(listRecordingsForUriRequestEncoder.EncodedLength());
         }
@@ -412,7 +418,7 @@ namespace Adaptive.Archiver
         /// </para>
         /// </summary>
         /// <param name="minRecordingId">   to search back to. </param>
-        /// <param name="channel">          for a contains match on the stripped channel stored with the archive descriptor. </param>
+        /// <param name="channelFragment">  for a contains match on the stripped channel stored with the archive descriptor. </param>
         /// <param name="streamId">         of the recording to match. </param>
         /// <param name="sessionId">        of the recording to match. </param>
         /// <param name="correlationId">    for this request. </param>
@@ -420,7 +426,7 @@ namespace Adaptive.Archiver
         /// <returns> true if successfully offered otherwise false. </returns>
         public bool FindLastMatchingRecording(
             long minRecordingId,
-            string channel,
+            string channelFragment,
             int streamId,
             int sessionId,
             long correlationId,
@@ -433,7 +439,7 @@ namespace Adaptive.Archiver
                 .MinRecordingId(minRecordingId)
                 .SessionId(sessionId)
                 .StreamId(streamId)
-                .Channel(channel);
+                .Channel(channelFragment);
 
             return Offer(findLastMatchingRecordingRequestEncoder.EncodedLength());
         }

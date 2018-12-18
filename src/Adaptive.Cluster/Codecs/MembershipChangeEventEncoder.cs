@@ -7,19 +7,19 @@ using Adaptive.Agrona;
 
 namespace Adaptive.Cluster.Codecs {
 
-public class ClusterChangeEventEncoder
+public class MembershipChangeEventEncoder
 {
     public const ushort BLOCK_LENGTH = 40;
     public const ushort TEMPLATE_ID = 26;
     public const ushort SCHEMA_ID = 1;
     public const ushort SCHEMA_VERSION = 1;
 
-    private ClusterChangeEventEncoder _parentMessage;
+    private MembershipChangeEventEncoder _parentMessage;
     private IMutableDirectBuffer _buffer;
     protected int _offset;
     protected int _limit;
 
-    public ClusterChangeEventEncoder()
+    public MembershipChangeEventEncoder()
     {
         _parentMessage = this;
     }
@@ -59,7 +59,7 @@ public class ClusterChangeEventEncoder
         return _offset;
     }
 
-    public ClusterChangeEventEncoder Wrap(IMutableDirectBuffer buffer, int offset)
+    public MembershipChangeEventEncoder Wrap(IMutableDirectBuffer buffer, int offset)
     {
         this._buffer = buffer;
         this._offset = offset;
@@ -68,7 +68,7 @@ public class ClusterChangeEventEncoder
         return this;
     }
 
-    public ClusterChangeEventEncoder WrapAndApplyHeader(
+    public MembershipChangeEventEncoder WrapAndApplyHeader(
         IMutableDirectBuffer buffer, int offset, MessageHeaderEncoder headerEncoder)
     {
         headerEncoder
@@ -121,7 +121,7 @@ public class ClusterChangeEventEncoder
         return 9223372036854775807L;
     }
 
-    public ClusterChangeEventEncoder LeadershipTermId(long value)
+    public MembershipChangeEventEncoder LeadershipTermId(long value)
     {
         _buffer.PutLong(_offset + 0, value, ByteOrder.LittleEndian);
         return this;
@@ -153,7 +153,7 @@ public class ClusterChangeEventEncoder
         return 9223372036854775807L;
     }
 
-    public ClusterChangeEventEncoder LogPosition(long value)
+    public MembershipChangeEventEncoder LogPosition(long value)
     {
         _buffer.PutLong(_offset + 8, value, ByteOrder.LittleEndian);
         return this;
@@ -185,7 +185,7 @@ public class ClusterChangeEventEncoder
         return 9223372036854775807L;
     }
 
-    public ClusterChangeEventEncoder Timestamp(long value)
+    public MembershipChangeEventEncoder Timestamp(long value)
     {
         _buffer.PutLong(_offset + 16, value, ByteOrder.LittleEndian);
         return this;
@@ -217,7 +217,7 @@ public class ClusterChangeEventEncoder
         return 2147483647;
     }
 
-    public ClusterChangeEventEncoder LeaderMemberId(int value)
+    public MembershipChangeEventEncoder LeaderMemberId(int value)
     {
         _buffer.PutInt(_offset + 24, value, ByteOrder.LittleEndian);
         return this;
@@ -249,24 +249,24 @@ public class ClusterChangeEventEncoder
         return 2147483647;
     }
 
-    public ClusterChangeEventEncoder ClusterSize(int value)
+    public MembershipChangeEventEncoder ClusterSize(int value)
     {
         _buffer.PutInt(_offset + 28, value, ByteOrder.LittleEndian);
         return this;
     }
 
 
-    public static int EventTypeEncodingOffset()
+    public static int ChangeTypeEncodingOffset()
     {
         return 32;
     }
 
-    public static int EventTypeEncodingLength()
+    public static int ChangeTypeEncodingLength()
     {
         return 4;
     }
 
-    public ClusterChangeEventEncoder EventType(ChangeType value)
+    public MembershipChangeEventEncoder ChangeType(ChangeType value)
     {
         _buffer.PutInt(_offset + 32, (int)value, ByteOrder.LittleEndian);
         return this;
@@ -297,7 +297,7 @@ public class ClusterChangeEventEncoder
         return 2147483647;
     }
 
-    public ClusterChangeEventEncoder MemberId(int value)
+    public MembershipChangeEventEncoder MemberId(int value)
     {
         _buffer.PutInt(_offset + 36, value, ByteOrder.LittleEndian);
         return this;
@@ -332,7 +332,7 @@ public class ClusterChangeEventEncoder
         return 4;
     }
 
-    public ClusterChangeEventEncoder PutClusterMembers(IDirectBuffer src, int srcOffset, int length)
+    public MembershipChangeEventEncoder PutClusterMembers(IDirectBuffer src, int srcOffset, int length)
     {
         if (length > 1073741824)
         {
@@ -348,7 +348,7 @@ public class ClusterChangeEventEncoder
         return this;
     }
 
-    public ClusterChangeEventEncoder PutClusterMembers(byte[] src, int srcOffset, int length)
+    public MembershipChangeEventEncoder PutClusterMembers(byte[] src, int srcOffset, int length)
     {
         if (length > 1073741824)
         {
@@ -364,7 +364,7 @@ public class ClusterChangeEventEncoder
         return this;
     }
 
-    public ClusterChangeEventEncoder ClusterMembers(string value)
+    public MembershipChangeEventEncoder ClusterMembers(string value)
     {
         int length = value.Length;
         if (length > 1073741824)
@@ -389,7 +389,7 @@ public class ClusterChangeEventEncoder
 
     public StringBuilder AppendTo(StringBuilder builder)
     {
-        ClusterChangeEventDecoder writer = new ClusterChangeEventDecoder();
+        MembershipChangeEventDecoder writer = new MembershipChangeEventDecoder();
         writer.Wrap(_buffer, _offset, BLOCK_LENGTH, SCHEMA_VERSION);
 
         return writer.AppendTo(builder);

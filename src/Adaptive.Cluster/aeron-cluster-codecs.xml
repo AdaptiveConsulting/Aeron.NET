@@ -54,7 +54,7 @@
         </enum>
         <enum name="ChangeType" encodingType="int32" description="Type of Cluster Change Event">
             <validValue name="JOIN">0</validValue>
-            <validValue name="LEAVE">1</validValue>
+            <validValue name="QUIT">1</validValue>
         </enum>
         <type name="time_t" primitiveType="int64" description="Epoch time in milliseconds since 1 Jan 1970 UTC"/>
     </types>
@@ -63,7 +63,7 @@
         Cluster Session Protocol
         ========================
 
-        Protocol is:
+        Session Protocol:
             -> session-connect, [*ingress-message | *session-keep-alive], session-close
                       \
             <-          *session-event, [*egress-message | *session-event | *new-leader-event]
@@ -252,17 +252,17 @@
         <field name="logSessionId"         id="5" type="int32"/>
     </sbe:message>
 
-    <sbe:message name="ClusterChangeEvent"
+    <sbe:message name="MembershipChangeEvent"
                  id="26"
-                 description="Event for the change of the cluster list that affects the size">
+                 description="Event for the change of the cluster membership that affects the cluster size">
         <field name="leadershipTermId"     id="1" type="int64"/>
         <field name="logPosition"          id="2" type="int64"/>
         <field name="timestamp"            id="3" type="time_t"/>
         <field name="leaderMemberId"       id="4" type="int32"/>
         <field name="clusterSize"          id="5" type="int32"/>
-        <field name="eventType"            id="6" type="ChangeType"/>
+        <field name="changeType"           id="6" type="ChangeType"/>
         <field name="memberId"             id="7" type="int32"/>
-        <data name="clusterMembers"        id="8" type="varAsciiEncoding"/>
+        <data  name="clusterMembers"        id="8" type="varAsciiEncoding"/>
     </sbe:message>
 
     <!-- Messages for service control between clustered services and the Consensus Module -->
@@ -383,8 +383,9 @@
         <field name="logLeadershipTermId"  id="1" type="int64"/>
         <field name="logPosition"          id="2" type="int64"/>
         <field name="leadershipTermId"     id="3" type="int64"/>
-        <field name="leaderMemberId"       id="4" type="int32"/>
-        <field name="logSessionId"         id="5" type="int32"/>
+        <field name="maxLogPosition"       id="4" type="int64"/>
+        <field name="leaderMemberId"       id="5" type="int32"/>
+        <field name="logSessionId"         id="6" type="int32"/>
     </sbe:message>
 
     <!-- keep this under 32 - 8 = 24 bytes for efficiency -->
@@ -415,9 +416,10 @@
 
     <sbe:message name="StopCatchup"
                  id="57"
-                 description="The follower requests to stop any active catchup replay to the follower">
-        <field name="replaySessionId"      id="1" type="int32"/>
-        <field name="followerMemberId"     id="2" type="int32"/>
+                 description="The leader informs the follower it can stop the catchup process">
+        <field name="leadershipTermId"     id="1" type="int64"/>
+        <field name="logPosition"          id="2" type="int64"/>
+        <field name="followerMemberId"     id="3" type="int32"/>
     </sbe:message>
 
     <sbe:message name="AddPassiveMember"
@@ -490,8 +492,8 @@
                  id="103"
                  description="A serialised client session in the context of a Consensus Module">
         <field name="clusterSessionId"     id="1" type="int64"/>
-        <field name="openedLogPosition"    id="2" type="int64"/>
-        <field name="correlationId"        id="3" type="int64"/>
+        <field name="correlationId"        id="2" type="int64"/>
+        <field name="openedLogPosition"    id="3" type="int64"/>
         <field name="timeOfLastActivity"   id="4" type="time_t"/>
         <field name="closeReason"          id="5" type="CloseReason"/>
         <field name="responseStreamId"     id="6" type="int32"/>

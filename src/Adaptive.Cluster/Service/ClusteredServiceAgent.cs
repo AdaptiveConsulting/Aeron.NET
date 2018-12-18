@@ -316,19 +316,19 @@ namespace Adaptive.Cluster.Service
             clusterTimeMs = timestampMs;
         }
 
-        internal void OnClusterChange(
+        internal void OnMembershipChange(
             long leadershipTermId,
             long logPosition,
             long timestampMs,
             int leaderMemberId,
             int clusterSize,
-            ChangeType eventType,
+            ChangeType changeType,
             int memberId,
             string clusterMembers)
         {
             clusterTimeMs = timestampMs;
 
-            if (memberId == this.memberId && eventType == ChangeType.LEAVE)
+            if (memberId == this.memberId && changeType == ChangeType.QUIT)
             {
                 _consensusModuleProxy.Ack(logPosition, ackId++, serviceId);
                 ctx.TerminationHook().Invoke();

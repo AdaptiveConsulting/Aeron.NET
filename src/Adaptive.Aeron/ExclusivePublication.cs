@@ -44,7 +44,6 @@ namespace Adaptive.Aeron
     /// </para>
     /// </summary>
     /// <seealso cref="Aeron.AddExclusivePublication(String, int)"></seealso>
-    /// <seealso cref="BufferClaim"></seealso>
     public class ExclusivePublication : Publication
     {
         private long _termBeginPosition;
@@ -97,7 +96,32 @@ namespace Adaptive.Aeron
                 LogBufferDescriptor.ComputeTermBeginPosition(_termId, PositionBitsToShift, InitialTermId);
         }
 
-       
+        public override long Position
+        {
+            get
+            {
+                if (_isClosed)
+                {
+                    return CLOSED;
+                }
+
+                return _termBeginPosition + _termOffset;
+            }
+        }
+
+        public override long AvailableWindow
+        {
+            get
+            {
+                if (_isClosed)
+                {
+                    return CLOSED;
+                }
+
+                return _positionLimit.GetVolatile() - (_termBeginPosition + _termOffset);
+            }
+        }
+
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override long Offer(
@@ -140,8 +164,7 @@ namespace Adaptive.Aeron
             return newPosition;
         }
 
-      
-        
+
         /// <inheritdoc />
         public override long Offer(IDirectBuffer bufferOne, int offsetOne, int lengthOne, IDirectBuffer bufferTwo, int offsetTwo, int lengthTwo, ReservedValueSupplier reservedValueSupplier = null)
         {
@@ -324,8 +347,7 @@ namespace Adaptive.Aeron
             _activePartitionIndex = nextIndex;
             _termOffset = 0;
             _termId = nextTermId;
-            _termBeginPosition =
-                LogBufferDescriptor.ComputeTermBeginPosition(nextTermId, PositionBitsToShift, InitialTermId);
+            _termBeginPosition += TermBufferLength;
 
             var termCount = nextTermId - InitialTermId;
 

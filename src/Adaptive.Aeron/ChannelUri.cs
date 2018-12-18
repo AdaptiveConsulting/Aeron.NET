@@ -49,7 +49,7 @@ namespace Adaptive.Aeron
         private string _prefix;
         private string _media;
         private readonly IDictionary<string, string> _params;
-        private string[] _tags;
+        private readonly string[] _tags;
 
         /// <summary>
         /// Construct with the components provided to avoid parsing.
@@ -62,7 +62,6 @@ namespace Adaptive.Aeron
             _prefix = prefix;
             _media = media;
             _params = @params;
-
             _tags = SplitTags(_params.GetOrDefault(Aeron.Context.TAGS_PARAM_NAME));
         }
 
@@ -185,27 +184,31 @@ namespace Adaptive.Aeron
         /// </summary>
         /// <param name="key"> to be lookup. </param>
         /// <returns> true if the key has a value otherwise false. </returns>
+        /// <see cref="Aeron.Context.TAGS_PARAM_NAME"/>
+        /// <see cref="Aeron.Context.TAG_PREFIX"/>
         public bool ContainsKey(string key)
         {
             return _params.ContainsKey(key);
         }
 
         /// <summary>
-        /// Get the channel tag.
+        /// Get the channel tag, if it exists, that refers to an another channel.
         /// </summary>
-        /// <returns> channel tag. </returns>
+        /// <returns> channel tag if it exists or null if not in this URI. </returns>
         public string ChannelTag()
         {
-            return (_tags.Length > CHANNEL_TAG_INDEX) ? _tags[CHANNEL_TAG_INDEX] : null;
+            return  (null != _tags && _tags.Length > CHANNEL_TAG_INDEX) ? _tags[CHANNEL_TAG_INDEX] : null;
         }
 
         /// <summary>
-        /// Get the entity tag.
+        /// Get the entity tag, if it exists, that refers to an entity such as subscription or publication.
         /// </summary>
-        /// <returns> entity tag. </returns>
+        /// <returns> entity tag if it exists or null if not in this URI. </returns>
+        /// <see cref="Aeron.Context.TAGS_PARAM_NAME"/>
+        /// <see cref="Aeron.Context.TAG_PREFIX"/>
         public string EntityTag()
         {
-            return (_tags.Length > ENTITY_TAG_INDEX) ? _tags[ENTITY_TAG_INDEX] : null;
+            return (null != _tags && _tags.Length > ENTITY_TAG_INDEX) ? _tags[ENTITY_TAG_INDEX] : null;
         }
 
         /// <summary>
@@ -275,7 +278,7 @@ namespace Adaptive.Aeron
         {
             int position = 0;
             string prefix;
-            if (StartsWith(cs, Aeron.Context.SPY_PREFIX))
+            if (StartsWith(cs, 0, Aeron.Context.SPY_PREFIX))
             {
                 prefix = SPY_QUALIFIER;
                 position = Aeron.Context.SPY_PREFIX.Length;
@@ -326,33 +329,28 @@ namespace Adaptive.Aeron
                         break;
 
                     case State.PARAMS_KEY:
-                        switch (c)
+                        if (c == '=')
                         {
-                            case '=':
-                                key = builder.ToString();
-                                builder.Length = 0;
-                                state = State.PARAMS_VALUE;
-                                break;
-
-                            default:
-                                builder.Append(c);
-                                break;
+                            key = builder.ToString();
+                            builder.Length = 0;
+                            state = State.PARAMS_VALUE;
                         }
-
+                        else
+                        {
+                            builder.Append(c);
+                        }
                         break;
 
                     case State.PARAMS_VALUE:
-                        switch (c)
+                        if (c == '|')
                         {
-                            case '|':
-                                @params[key] = builder.ToString();
-                                builder.Length = 0;
-                                state = State.PARAMS_KEY;
-                                break;
-
-                            default:
-                                builder.Append(c);
-                                break;
+                            @params[key] = builder.ToString();
+                            builder.Length = 0;
+                            state = State.PARAMS_KEY;
+                        }
+                        else
+                        {
+                            builder.Append(c);
                         }
 
                         break;
@@ -394,20 +392,24 @@ namespace Adaptive.Aeron
         }
         
         /// <summary>
-        /// Is the param tagged? (starts with the "tag:" prefix)
+        /// Is the param value tagged? (starts with the "tag:" prefix)
         /// </summary>
         /// <param name="paramValue"> to check if tagged. </param>
         /// <returns> true if tagged or false if not. </returns>
+        /// <see cref="Aeron.Context.TAGS_PARAM_NAME"/>
+        /// <see cref="Aeron.Context.TAG_PREFIX"/>
         public static bool IsTagged(string paramValue)
         {
-            return StartsWith(paramValue, "tag:");
+            return StartsWith(paramValue, 0, Aeron.Context.TAG_PREFIX);
         }
 
         /// <summary>
-        /// Get the value of the tag from a given parameter.
+        /// Get the value of the tag from a given parameter value.
         /// </summary>
         /// <param name="paramValue"> to extract the tag value from. </param>
         /// <returns> the value of the tag or <seealso cref="INVALID_TAG"/> if not tagged. </returns>
+        /// <see cref="Aeron.Context.TAGS_PARAM_NAME"/>
+        /// <see cref="Aeron.Context.TAG_PREFIX"/>
         public static long GetTag(string paramValue)
         {
             return IsTagged(paramValue) ? long.Parse(paramValue.Substring(4, paramValue.Length - 4)) : INVALID_TAG;
@@ -430,49 +432,56 @@ namespace Adaptive.Aeron
 
             return true;
         }
-
-        private static bool StartsWith(string input, string prefix)
-        {
-            return StartsWith(input, 0, prefix);
-        }
         
-        private static string[] SplitTags(string tags)
+        private static string[] SplitTags(string tagsValue)
         {
-            string[] stringArray = new string[0];
+            string[] tags = ArrayUtil.EMPTY_STRING_ARRAY;
 
-            if (null != tags)
+            if (null != tagsValue)
             {
-                int currentStartIndex = 0;
-                int tagIndex = 0;
-                stringArray = new string[2];
-                int length = tags.Length;
-
-                for (int i = 0; i < length; i++)
+                int tagCount = CountTags(tagsValue);
+                if (tagCount == 1)
                 {
-                    if (tags[i] == ',')
-                    {
-                        string tag = null;
-
-                        if (i - currentStartIndex > 0)
-                        {
-                            tag = tags.Substring(currentStartIndex, i - currentStartIndex);
-                            currentStartIndex = i + 1;
-                        }
-
-                        stringArray = ArrayUtil.EnsureCapacity(stringArray, tagIndex + 1);
-                        stringArray[tagIndex] = tag;
-                        tagIndex++;
-                    }
+                    tags = new[]{tagsValue};
                 }
-
-                if ((length - currentStartIndex) > 0)
+                else
                 {
-                    stringArray = ArrayUtil.EnsureCapacity(stringArray, tagIndex + 1);
-                    stringArray[tagIndex] = tags.Substring(currentStartIndex, length - currentStartIndex);
+                    int tagStartPosition = 0;
+                    int tagIndex = 0;
+                    tags = new string[tagCount];
+
+                    for (int i = 0, length = tagsValue.Length; i < length; i++)
+                    {
+                        if (tagsValue[i] == ',')
+                        {
+                            tags[tagIndex++] = tagsValue.Substring(tagStartPosition, i - tagStartPosition);
+                            tagStartPosition = i + 1;
+
+                            if (tagIndex >= (tagCount - 1))
+                            {
+                                tags[tagIndex] = tagsValue.Substring(tagStartPosition, length - tagStartPosition);
+                            }
+                        }
+                    }
                 }
             }
 
-            return stringArray;
+            return tags;
+        }
+
+        private static int CountTags(string tags)
+        {
+            int count = 1;
+
+            for (int i = 0, length = tags.Length; i < length; i++)
+            {
+                if (tags[i] == ',')
+                {
+                    ++count;
+                }
+            }
+
+            return count;
         }
     }
 }

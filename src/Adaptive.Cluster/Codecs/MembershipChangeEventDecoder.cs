@@ -7,21 +7,21 @@ using Adaptive.Agrona;
 
 namespace Adaptive.Cluster.Codecs {
 
-public class ClusterChangeEventDecoder
+public class MembershipChangeEventDecoder
 {
     public const ushort BLOCK_LENGTH = 40;
     public const ushort TEMPLATE_ID = 26;
     public const ushort SCHEMA_ID = 1;
     public const ushort SCHEMA_VERSION = 1;
 
-    private ClusterChangeEventDecoder _parentMessage;
+    private MembershipChangeEventDecoder _parentMessage;
     private IDirectBuffer _buffer;
     protected int _offset;
     protected int _limit;
     protected int _actingBlockLength;
     protected int _actingVersion;
 
-    public ClusterChangeEventDecoder()
+    public MembershipChangeEventDecoder()
     {
         _parentMessage = this;
     }
@@ -61,7 +61,7 @@ public class ClusterChangeEventDecoder
         return _offset;
     }
 
-    public ClusterChangeEventDecoder Wrap(
+    public MembershipChangeEventDecoder Wrap(
         IDirectBuffer buffer, int offset, int actingBlockLength, int actingVersion)
     {
         this._buffer = buffer;
@@ -358,27 +358,27 @@ public class ClusterChangeEventDecoder
     }
 
 
-    public static int EventTypeId()
+    public static int ChangeTypeId()
     {
         return 6;
     }
 
-    public static int EventTypeSinceVersion()
+    public static int ChangeTypeSinceVersion()
     {
         return 0;
     }
 
-    public static int EventTypeEncodingOffset()
+    public static int ChangeTypeEncodingOffset()
     {
         return 32;
     }
 
-    public static int EventTypeEncodingLength()
+    public static int ChangeTypeEncodingLength()
     {
         return 4;
     }
 
-    public static string EventTypeMetaAttribute(MetaAttribute metaAttribute)
+    public static string ChangeTypeMetaAttribute(MetaAttribute metaAttribute)
     {
         switch (metaAttribute)
         {
@@ -391,7 +391,7 @@ public class ClusterChangeEventDecoder
         return "";
     }
 
-    public ChangeType EventType()
+    public ChangeType ChangeType()
     {
         return (ChangeType)_buffer.GetInt(_offset + 32, ByteOrder.LittleEndian);
     }
@@ -536,7 +536,7 @@ public class ClusterChangeEventDecoder
     {
         int originalLimit = Limit();
         Limit(_offset + _actingBlockLength);
-        builder.Append("[ClusterChangeEvent](sbeTemplateId=");
+        builder.Append("[MembershipChangeEvent](sbeTemplateId=");
         builder.Append(TEMPLATE_ID);
         builder.Append("|sbeSchemaId=");
         builder.Append(SCHEMA_ID);
@@ -580,10 +580,10 @@ public class ClusterChangeEventDecoder
         builder.Append("ClusterSize=");
         builder.Append(ClusterSize());
         builder.Append('|');
-        //Token{signal=BEGIN_FIELD, name='eventType', referencedName='null', description='null', id=6, version=0, deprecated=0, encodedLength=0, offset=32, componentTokenCount=6, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=BEGIN_FIELD, name='changeType', referencedName='null', description='null', id=6, version=0, deprecated=0, encodedLength=0, offset=32, componentTokenCount=6, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
         //Token{signal=BEGIN_ENUM, name='ChangeType', referencedName='null', description='Type of Cluster Change Event', id=-1, version=0, deprecated=0, encodedLength=4, offset=32, componentTokenCount=4, encoding=Encoding{presence=REQUIRED, primitiveType=INT32, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='null', timeUnit=null, semanticType='null'}}
-        builder.Append("EventType=");
-        builder.Append(EventType());
+        builder.Append("ChangeType=");
+        builder.Append(ChangeType());
         builder.Append('|');
         //Token{signal=BEGIN_FIELD, name='memberId', referencedName='null', description='null', id=7, version=0, deprecated=0, encodedLength=0, offset=36, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
         //Token{signal=ENCODING, name='int32', referencedName='null', description='null', id=-1, version=0, deprecated=0, encodedLength=4, offset=36, componentTokenCount=1, encoding=Encoding{presence=REQUIRED, primitiveType=INT32, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}

@@ -4,7 +4,7 @@ namespace Adaptive.Cluster.Codecs {
     public enum ChangeType : int
     {
         JOIN = 0,
-        LEAVE = 1,
+        QUIT = 1,
         NULL_VALUE = -2147483648
     }
 }

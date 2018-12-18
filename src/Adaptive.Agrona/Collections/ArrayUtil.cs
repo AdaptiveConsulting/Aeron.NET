@@ -30,6 +30,8 @@ namespace Adaptive.Agrona.Collections
     public sealed class ArrayUtil
     {
         public const int UNKNOWN_INDEX = -1;
+        
+        public static readonly string[] EMPTY_STRING_ARRAY = new string[0];
 
         /// <summary>
         /// Add an element to an array resulting in a new array.

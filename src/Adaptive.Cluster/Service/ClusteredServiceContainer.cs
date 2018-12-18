@@ -42,7 +42,7 @@ namespace Adaptive.Cluster.Service
         private ClusteredServiceContainer(Context ctx)
         {
             this.ctx = ctx;
-            
+
             try
             {
                 ctx.Conclude();
@@ -181,7 +181,7 @@ namespace Adaptive.Cluster.Service
             /// Default stream id within a channel for communications from the services to the consensus module.
             /// </summary>
             public const int CONSENSUS_MODULE_STREAM_ID_DEFAULT = 105;
-            
+
             /// <summary>
             /// Default channel to be used for archiving snapshots.
             /// </summary>
@@ -231,7 +231,7 @@ namespace Adaptive.Cluster.Service
             /// Default to true that this a responding service to client requests.
             /// </summary>
             public const bool RESPONDER_SERVICE_DEFAULT = true;
-            
+
             /// <summary>
             /// The value <seealso cref="SERVICE_ID_DEFAULT"/> or system property <seealso cref="SERVICE_ID_PROP_NAME"/> if set.
             /// </summary>
@@ -280,7 +280,7 @@ namespace Adaptive.Cluster.Service
             {
                 return Config.GetProperty(SERVICE_CONTROL_CHANNEL_PROP_NAME, SERVICE_CONTROL_CHANNEL_DEFAULT);
             }
-            
+
             /// <summary>
             /// The value <seealso cref="CONSENSUS_MODULE_STREAM_ID_DEFAULT"/> or system property
             /// <seealso cref="CONSENSUS_MODULE_STREAM_ID_PROP_NAME"/> if set.
@@ -302,7 +302,7 @@ namespace Adaptive.Cluster.Service
             {
                 return Config.GetInteger(SERVICE_STREAM_ID_PROP_NAME, SERVICE_CONTROL_STREAM_ID_DEFAULT);
             }
-            
+
             /// <summary>
             /// The value <seealso cref="SNAPSHOT_CHANNEL_DEFAULT"/> or system property <seealso cref="SNAPSHOT_CHANNEL_PROP_NAME"/> if set.
             /// </summary>
@@ -357,7 +357,7 @@ namespace Adaptive.Cluster.Service
             {
                 return Config.GetSizeAsInt(ERROR_BUFFER_LENGTH_PROP_NAME, ERROR_BUFFER_LENGTH_DEFAULT);
             }
-            
+
             /// <summary>
             /// The value <seealso cref="RESPONDER_SERVICE_DEFAULT"/> or system property <seealso cref="RESPONDER_SERVICE_PROP_NAME"/> if set.
             /// </summary>
@@ -387,7 +387,7 @@ namespace Adaptive.Cluster.Service
             private int snapshotStreamId = Configuration.SnapshotStreamId();
             private int errorBufferLength = Configuration.ErrorBufferLength();
             private bool isRespondingService = Configuration.IsRespondingService();
-            
+
             private IThreadFactory threadFactory;
             private Func<IIdleStrategy> idleStrategySupplier;
             private IEpochClock epochClock;
@@ -422,7 +422,7 @@ namespace Adaptive.Cluster.Service
                 {
                     throw new ConfigurationException("service id must be not be negative: " + serviceId);
                 }
-                
+
                 if (null == threadFactory)
                 {
                     threadFactory = new DefaultThreadFactory();
@@ -452,10 +452,7 @@ namespace Adaptive.Cluster.Service
                 {
                     markFile = new ClusterMarkFile(
                         new FileInfo(Path.Combine(clusterDir.FullName, ClusterMarkFile.MarkFilenameForService(serviceId))),
-                        ClusterComponentType.CONTAINER,
-                        errorBufferLength,
-                        epochClock,
-                        0);
+                        ClusterComponentType.CONTAINER, errorBufferLength, epochClock, 0);
                 }
 
                 if (null == errorLog)
@@ -685,7 +682,7 @@ namespace Adaptive.Cluster.Service
             {
                 return consensusModuleStreamId;
             }
-           
+
             /// <summary>
             /// Set the channel parameter for snapshot recordings.
             /// </summary>
@@ -729,7 +726,7 @@ namespace Adaptive.Cluster.Service
             {
                 return snapshotStreamId;
             }
-            
+
             /// <summary>
             /// Set if this a service that responds to client requests.
             /// </summary>

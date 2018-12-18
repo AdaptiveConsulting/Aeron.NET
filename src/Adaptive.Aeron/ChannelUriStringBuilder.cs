@@ -23,6 +23,7 @@ namespace Adaptive.Aeron
         private string _controlEndpoint;
         private string _controlMode;
         private string _tags;
+        private string _alias;
         private bool? _reliable;
         private bool? _sparse;
         private int? _ttl;
@@ -32,7 +33,7 @@ namespace Adaptive.Aeron
         private int? _termId;
         private int? _termOffset;
         private int? _sessionId;
-        private int? _linger;
+        private long? _linger;
         private bool _isSessionIdTagged;
 
         /// <summary>
@@ -48,6 +49,7 @@ namespace Adaptive.Aeron
             _controlEndpoint = null;
             _controlMode = null;
             _tags = null;
+            _alias = null;
             _reliable = null;
             _ttl = null;
             _mtu = null;
@@ -493,13 +495,13 @@ namespace Adaptive.Aeron
         }
 
         /// <summary>
-        /// Set the time a publication will linger in nanoseconds after being drained. This time is so that tail loss
+        /// Set the time a network publication will linger in nanoseconds after being drained. This time is so that tail loss
         /// can be recovered.
         /// </summary>
         /// <param name="lingerNs"> time for the publication after it is drained. </param>
         /// <returns> this for a fluent API. </returns>
         /// <seealso cref="Aeron.Context.LINGER_PARAM_NAME"></seealso>
-        public ChannelUriStringBuilder Linger(int? lingerNs)
+        public ChannelUriStringBuilder Linger(long? lingerNs)
         {
             if (null != lingerNs && lingerNs < 0)
             {
@@ -511,22 +513,24 @@ namespace Adaptive.Aeron
         }
 
         /// <summary>
-        /// Get the time a publication will linger in nanoseconds after being drained. This time is so that tail loss
+        /// Get the time a network publication will linger in nanoseconds after being drained. This time is so that tail loss
         /// can be recovered.
         /// </summary>
         /// <returns> the linger time in nanoseconds a publication will wait around after being drained. </returns>
         /// <seealso cref="Aeron.Context.LINGER_PARAM_NAME"></seealso>
-        public int? Linger()
+        public long? Linger()
         {
             return _linger;
         }
 
         /// <summary>
-        /// Set the tags for a channel, and/or publication or subscription.
+        /// Set the tags for a channel used by a publication or subscription. Tags can be used to identify or tag a
+        /// channel so that a configuration can be referenced and reused.
         /// </summary>
         /// <param name="tags"> for the channel, publication or subscription. </param>
         /// <returns> this for a fluent API. </returns>
         /// <seealso cref="Aeron.Context.TAGS_PARAM_NAME"/>
+        /// <seealso cref="Aeron.Context.TAG_PREFIX"/>
         public ChannelUriStringBuilder Tags(string tags)
         {
             _tags = tags;
@@ -534,10 +538,12 @@ namespace Adaptive.Aeron
         }
 
         /// <summary>
-        /// Get the tags for a channel, and/or publication or subscription.
+        /// Get the tags for a channel used by a publication or subscription. Tags can be used to identify or tag a
+        /// channel so that a configuration can be referenced and reused.
         /// </summary>
         /// <returns> the tags for a channel, publication or subscription. </returns>
         /// <seealso cref="Aeron.Context.TAGS_PARAM_NAME"/>
+        /// <seealso cref="Aeron.Context.TAG_PREFIX"/>
         public string Tags()
         {
             return _tags;
@@ -548,6 +554,8 @@ namespace Adaptive.Aeron
         /// </summary>
         /// <param name="isSessionIdTagged"> for session id </param>
         /// <returns> this for a fluent API. </returns>
+        /// <seealso cref="Aeron.Context.TAGS_PARAM_NAME"/>
+        /// <seealso cref="Aeron.Context.TAG_PREFIX"/>
         public ChannelUriStringBuilder IsSessionIdTagged(bool isSessionIdTagged)
         {
             _isSessionIdTagged = isSessionIdTagged;
@@ -558,11 +566,35 @@ namespace Adaptive.Aeron
         /// Is the value for <seealso cref="SessionId()"/> a tagged.
         /// </summary>
         /// <returns> whether the value for <seealso cref="SessionId()"/> a tag reference or not. </returns>
+        /// <seealso cref="Aeron.Context.TAGS_PARAM_NAME"/>
+        /// <seealso cref="Aeron.Context.TAG_PREFIX"/>
         public bool IsSessionIdTagged()
         {
             return _isSessionIdTagged;
         }
 
+        /// <summary>
+        /// Set the alias for a URI. Alias's are not interpreted by Aeron and are to be used by the application
+        /// </summary>
+        /// <param name="alias"> for the URI. </param>
+        /// <returns> this for a fluent API. </returns>
+        /// <seealso cref="Aeron.Context.ALIAS_PARAM_NAME"/>
+        public ChannelUriStringBuilder Alias(string alias)
+        {
+            _alias = alias;
+            return this;
+        }
+
+        /// <summary>
+        /// Get the alias present in the URI.
+        /// </summary>
+        /// <returns> alias for the URI. </returns>
+        /// <seealso cref="Aeron.Context.ALIAS_PARAM_NAME"/>
+        public string Alias()
+        {
+            return _alias;
+        }
+        
         /// <summary>
         /// Initialise a channel for restarting a publication at a given position.
         /// </summary>
@@ -672,6 +704,11 @@ namespace Adaptive.Aeron
             if (null != _linger)
             {
                 _sb.Append(Aeron.Context.LINGER_PARAM_NAME).Append('=').Append(_linger.Value).Append('|');
+            }
+
+            if (null != _alias)
+            {
+                _sb.Append(Aeron.Context.ALIAS_PARAM_NAME).Append('=').Append(_alias).Append('|');
             }
 
             char lastChar = _sb[_sb.Length - 1];

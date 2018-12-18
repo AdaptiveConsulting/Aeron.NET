@@ -137,20 +137,27 @@ namespace Adaptive.Aeron
         /// <returns> callback used to indicate when an <see cref="Image"/> goes unavailable under this <see cref="Subscription"/>.</returns>
         public UnavailableImageHandler UnavailableImageHandler => _fields.unavailableImageHandler;
 
+        /// <summary>
+        /// Poll the <seealso cref="Image"/>s under the subscription for having reached End of Stream (EOS). This method will miss
+        /// <seealso cref="Image"/>s that have gone unavailable between calls unless using the <seealso cref="Aeron.ConductorAgentInvoker"/>.
+        /// </summary>
+        /// <param name="endOfStreamHandler"> callback for handling end of stream indication. </param>
+        /// <returns> number of <seealso cref="Image"/> that have reached End of Stream. </returns>
+        [Obsolete]
         public int PollEndOfStreams(EndOfStreamHandler endOfStreamHandler)
         {
-            int numberEndOfStreams = 0;
+            int eosCount = 0;
 
             foreach (var image in Images)
             {
                 if (image.IsEndOfStream)
                 {
-                    numberEndOfStreams++;
+                    eosCount++;
                     endOfStreamHandler(image);
                 }
             }
 
-            return numberEndOfStreams;
+            return eosCount;
         }
 
         /// <summary>
@@ -493,7 +500,7 @@ namespace Adaptive.Aeron
             if (null != removedImage)
             {
                 _fields.images = ArrayUtil.Remove(oldArray, i);
-                _fields.conductor.ReleaseLogBuffers(removedImage.LogBuffers, removedImage.CorrelationId);
+                _fields.conductor.ReleaseLogBuffers(removedImage.LogBuffers, correlationId);
             }
 
             return removedImage;

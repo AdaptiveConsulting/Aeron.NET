@@ -706,7 +706,7 @@ namespace Adaptive.Archiver
         }
 
         /// <summary>
-        /// List recording descriptors from a recording id with a limit of record count for a given channel and stream id.
+        /// List recording descriptors from a recording id with a limit of record count for a given channelFragment and stream id.
         /// <para>
         /// If the recording id is greater than the largest known id then nothing is returned.
         /// 
@@ -714,11 +714,15 @@ namespace Adaptive.Archiver
         /// </summary>
         /// <param name="fromRecordingId"> at which to begin the listing. </param>
         /// <param name="recordCount">     to limit for each query. </param>
-        /// <param name="channel">         for a contains match on the stripped channel stored with the archive descriptor. </param>
+        /// <param name="channelFragment"> for a contains match on the original channel stored with the archive descriptor. </param>
         /// <param name="streamId">        to match. </param>
         /// <param name="consumer">        to which the descriptors are dispatched. </param>
         /// <returns> the number of descriptors found and consumed. </returns>
-        public int ListRecordingsForUri(long fromRecordingId, int recordCount, string channel, int streamId,
+        public int ListRecordingsForUri(
+            long fromRecordingId,
+            int recordCount,
+            string channelFragment,
+            int streamId,
             IRecordingDescriptorConsumer consumer)
         {
             _lock.Lock();
@@ -726,7 +730,7 @@ namespace Adaptive.Archiver
             {
                 long correlationId = aeron.NextCorrelationId();
 
-                if (!archiveProxy.ListRecordingsForUri(fromRecordingId, recordCount, channel, streamId, correlationId,
+                if (!archiveProxy.ListRecordingsForUri(fromRecordingId, recordCount, channelFragment, streamId, correlationId,
                     controlSessionId))
                 {
                     throw new ArchiveException("failed to send list recordings request");
@@ -823,12 +827,12 @@ namespace Adaptive.Archiver
         /// <summary>
         /// Find the last recording that matches the given criteria.
         /// </summary>
-        /// <param name="minRecordingId"> to search back to. </param>
-        /// <param name="channel">        for a contains match on the stripped channel stored with the archive descriptor </param>
-        /// <param name="streamId">       of the recording to match. </param>
-        /// <param name="sessionId">      of the recording to match. </param>
+        /// <param name="minRecordingId">  to search back to. </param>
+        /// <param name="channelFragment"> for a contains match on the stripped channel stored with the archive descriptor </param>
+        /// <param name="streamId">        of the recording to match. </param>
+        /// <param name="sessionId">       of the recording to match. </param>
         /// <returns> the recordingId if found otherwise <see cref="Adaptive.Aeron.Aeron.NULL_VALUE"/> if not found. </returns>
-        public long FindLastMatchingRecording(long minRecordingId, string channel, int streamId, int sessionId)
+        public long FindLastMatchingRecording(long minRecordingId, string channelFragment, int streamId, int sessionId)
         {
             _lock.Lock();
             try
@@ -836,7 +840,7 @@ namespace Adaptive.Archiver
                 long correlationId = aeron.NextCorrelationId();
 
                 if (!archiveProxy.FindLastMatchingRecording(
-                    minRecordingId, channel, streamId, sessionId, correlationId, controlSessionId))
+                    minRecordingId, channelFragment, streamId, sessionId, correlationId, controlSessionId))
                 {
                     throw new ArchiveException("failed to send find last matching request");
                 }
@@ -950,7 +954,7 @@ namespace Adaptive.Archiver
                 if (code == ControlResponseCode.ERROR)
                 {
                     var ex = new ArchiveException("response for correlationId=" + correlationId + ", error: " +
-                                               poller.ErrorMessage(), (int) poller.RelevantId());
+                                                  poller.ErrorMessage(), (int) poller.RelevantId());
 
                     if (poller.CorrelationId() == correlationId)
                     {
@@ -962,14 +966,13 @@ namespace Adaptive.Archiver
                         context.ErrorHandler().Invoke(ex);
                     }
                 }
-
-                if (poller.CorrelationId() == correlationId)
+                else if (poller.CorrelationId() == correlationId)
                 {
                     if (ControlResponseCode.OK != code)
                     {
                         throw new ArchiveException("unexpected response code: " + code);
                     }
-                    
+
                     return poller.RelevantId();
                 }
             }
@@ -1154,32 +1157,32 @@ namespace Adaptive.Archiver
             /// <summary>
             /// Sparse term buffer indicator for control streams.
             /// </summary>
-            private const string CONTROL_TERM_BUFFER_SPARSE_PARAM_NAME = "aeron.archive.control.term.buffer.sparse";
+            public const string CONTROL_TERM_BUFFER_SPARSE_PARAM_NAME = "aeron.archive.control.term.buffer.sparse";
 
             /// <summary>
             /// Overrides driver's sparse term buffer indicator for control streams.
             /// </summary>
-            private const bool CONTROL_TERM_BUFFER_SPARSE_DEFAULT = true;
+            public const bool CONTROL_TERM_BUFFER_SPARSE_DEFAULT = true;
 
             /// <summary>
             /// Term length for control streams.
             /// </summary>
-            internal const string CONTROL_TERM_BUFFER_LENGTH_PARAM_NAME = "aeron.archive.control.term.buffer.length";
+            public const string CONTROL_TERM_BUFFER_LENGTH_PARAM_NAME = "aeron.archive.control.term.buffer.length";
 
             /// <summary>
             /// Low term length for control channel reflects expected low bandwidth usage.
             /// </summary>
-            internal const int CONTROL_TERM_BUFFER_LENGTH_DEFAULT = 64 * 1024;
+            public const int CONTROL_TERM_BUFFER_LENGTH_DEFAULT = 64 * 1024;
 
             /// <summary>
             /// MTU length for control streams.
             /// </summary>
-            internal const string CONTROL_MTU_LENGTH_PARAM_NAME = "aeron.archive.control.mtu.length";
+            public const string CONTROL_MTU_LENGTH_PARAM_NAME = "aeron.archive.control.mtu.length";
 
             /// <summary>
             ///  MTU to reflect default for the control streams.
             /// </summary>
-            internal const int CONTROL_MTU_LENGTH_DEFAULT = 4 * 1024;
+            public const int CONTROL_MTU_LENGTH_DEFAULT = 4 * 1024;
 
             /// <summary>
             /// The timeout in nanoseconds to wait for a message.

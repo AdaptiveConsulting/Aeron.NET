@@ -53,6 +53,20 @@ namespace Adaptive.Aeron
                 _termAppenders[i] = new TermAppender(buffers[i], _logMetaDataBuffer, i);
             }
         }
+        
+        /// <inheritdoc />
+        public override long AvailableWindow
+        {
+            get
+            {
+                if (_isClosed)
+                {
+                    return CLOSED;
+                }
+
+                return _positionLimit.GetVolatile() - Position;
+            }
+        }
 
         /// <inheritdoc />
         public override long Offer(IDirectBuffer buffer, int offset, int length, ReservedValueSupplier reservedValueSupplier = null)
