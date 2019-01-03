@@ -516,7 +516,7 @@ namespace Adaptive.Aeron
                 image.Close();
             }
 
-            foreach (Image image in _fields.images)
+            foreach (Image image in images)
             {
                 _fields.conductor.ReleaseLogBuffers(image.LogBuffers, image.CorrelationId);
 
