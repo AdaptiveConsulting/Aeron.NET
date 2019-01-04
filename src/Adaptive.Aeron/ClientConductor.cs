@@ -109,20 +109,14 @@ namespace Adaptive.Aeron
         public void OnClose()
         {
             _clientLock.Lock();
-
             try
             {
                 if (!_isClosed)
                 {
                     _isClosed = true;
 
-                    int lingeringResourcesSize = _lingeringResources.Count;
                     ForceCloseResources();
-
-                    if (_lingeringResources.Count > lingeringResourcesSize)
-                    {
-                        Aeron.Sleep(15);
-                    }
+                    Thread.Yield();
 
                     for (int i = 0, size = _lingeringResources.Count; i < size; i++)
                     {
@@ -136,6 +130,11 @@ namespace Adaptive.Aeron
             {
                 _clientLock.Unlock();
             }
+        }
+
+        internal void ClientClose()
+        {
+            _driverProxy.ClientClose();
         }
 
         public int DoWork()
@@ -180,7 +179,7 @@ namespace Adaptive.Aeron
         public void OnChannelEndpointError(int statusIndicatorId, string message)
         {
             var resourcesToRemove = new List<long>();
-            
+
             try
             {
                 foreach (var item in _resourceByRegIdMap)
@@ -757,15 +756,7 @@ namespace Adaptive.Aeron
 
             do
             {
-                try
-                {
-                    Thread.Sleep(1);
-                }
-                catch (ThreadInterruptedException)
-                {
-                    Thread.CurrentThread.Interrupt();
-                    throw;
-                }
+                Thread.Sleep(1);
 
                 Service(correlationId);
 
@@ -780,6 +771,7 @@ namespace Adaptive.Aeron
                 }
 
                 Thread.Sleep(0); // check interrupt
+                
             } while (deadlineNs - _nanoClock.NanoTime() > 0);
 
             throw new DriverTimeoutException("no response from MediaDriver within (ms):" + _driverTimeoutMs);
@@ -828,7 +820,6 @@ namespace Adaptive.Aeron
                 if (_epochClock.Time() > (_driverProxy.TimeOfLastDriverKeepaliveMs() + _driverTimeoutMs))
                 {
                     OnClose();
-
                     throw new DriverTimeoutException("MediaDriver keepalive older than (ms): " + _driverTimeoutMs);
                 }
 

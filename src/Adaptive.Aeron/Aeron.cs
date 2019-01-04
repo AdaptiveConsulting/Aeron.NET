@@ -168,20 +168,13 @@ namespace Adaptive.Aeron
                 if (null != _conductorRunner)
                 {
                     _conductorRunner.Dispose();
-                    if (!_conductorRunner.IsClosed)
-                    {
-                        throw new AeronException("failed to close Aeron client");
-                    }
                 }
                 else
                 {
                     _conductorInvoker.Dispose();
-                    if (!_conductorInvoker.IsClosed)
-                    {
-                        throw new AeronException("failed to close Aeron client");
-                    }
                 }
 
+                _conductor.ClientClose();
                 _ctx.Dispose();
             }
         }
@@ -556,17 +549,17 @@ namespace Adaptive.Aeron
             /// Qualifier for a value which is a tag for reference. This prefix is use in the param value.
             /// </summary>
             public const string TAG_PREFIX = "tag:";
-            
+
             /// <summary>
             /// Parameter name for channel URI param to indicate if term buffers should be sparse. Value is boolean.
             /// </summary>
             public const string SPARSE_PARAM_NAME = "sparse";
-            
+
             /// <summary>
             /// Parameter name for channel URI param to indicate an alias for the given URI. Value not interpreted by Aeron.
             /// </summary>
             public const string ALIAS_PARAM_NAME = "alias";
-            
+
             /// <summary>
             /// Get the default directory name to be used if <seealso cref="AeronDirectoryName(String)"/> is not set. This will take
             /// the <seealso cref="AERON_DIR_PROP_NAME"/> if set and if not then <seealso cref="AERON_DIR_PROP_DEFAULT"/>.
@@ -1293,7 +1286,8 @@ namespace Adaptive.Aeron
                 }
             }
 
-            private static MappedByteBuffer WaitForFileMapping(FileInfo cncFile, long deadLineMs, IEpochClock epochClock)
+            private static MappedByteBuffer WaitForFileMapping(FileInfo cncFile, long deadLineMs,
+                IEpochClock epochClock)
             {
                 try
                 {

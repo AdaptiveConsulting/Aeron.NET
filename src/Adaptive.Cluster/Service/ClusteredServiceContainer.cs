@@ -1038,8 +1038,7 @@ namespace Adaptive.Cluster.Service
             }
 
             /// <summary>
-            /// Set the <seealso cref="Action"/> that is called when processing a
-            /// <seealso cref="ClusterAction.SHUTDOWN"/> or <seealso cref="ClusterAction.ABORT"/>
+            /// Set the <seealso cref="Action"/> that is called when container is instructed to terminate.
             /// </summary>
             /// <param name="terminationHook"> that can be used to terminate a service container. </param>
             /// <returns> this for a fluent API. </returns>
@@ -1050,8 +1049,7 @@ namespace Adaptive.Cluster.Service
             }
 
             /// <summary>
-            /// Get the <seealso cref="Action"/> that is called when processing a
-            /// <seealso cref="ClusterAction.SHUTDOWN"/> or <seealso cref="ClusterAction.ABORT"/>
+            /// Get the <seealso cref="Action"/> that is called when container is instructed to terminate.
             /// <para>
             /// The default action is to call signal on the <seealso cref="ShutdownSignalBarrier()"/>.
             /// 

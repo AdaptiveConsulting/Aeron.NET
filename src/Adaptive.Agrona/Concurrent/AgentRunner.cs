@@ -31,7 +31,7 @@ namespace Adaptive.Agrona.Concurrent
         /// <summary>
         /// Indicates that the runner is being closed.
         /// </summary>
-        private static readonly Thread TOMBSTONE = null;
+        private static readonly Thread TOMBSTONE = new Thread(() => { });
 
         private static readonly int RETRY_CLOSE_TIMEOUT_MS = 3000;
         
@@ -174,7 +174,20 @@ namespace Adaptive.Agrona.Concurrent
             _isRunning = false;
 
             var thread = _thread.GetAndSet(TOMBSTONE);
-            if (TOMBSTONE != thread && null != thread)
+
+            if (null == thread)
+            {
+                try
+                {
+                    IsClosed = true;
+                    _agent.OnClose();
+                }
+                catch (Exception ex)
+                {
+                    _errorHandler(ex);
+                }
+            }
+            if (TOMBSTONE != thread)
             {
                 while (true)
                 {

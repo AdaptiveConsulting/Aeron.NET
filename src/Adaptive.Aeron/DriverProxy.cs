@@ -28,7 +28,8 @@ namespace Adaptive.Aeron
     /// 
     /// Writes commands into the client conductor buffer.
     /// 
-    /// Note: this class is not thread safe and is expecting to be called under the {@link ClientConductor} main lock.
+    /// Note: this class is not thread safe and is expecting to be called within <see cref="Aeron.Context.ClientLock(Adaptive.Agrona.Concurrent.ILock)"/>
+    /// with the exception of <see cref="ClientClose"/> which is thread safe.
     /// </summary>
     public class DriverProxy
     {
@@ -277,8 +278,15 @@ namespace Adaptive.Aeron
 
         public void ClientClose()
         {
-            _correlatedMessage.CorrelationId(_toDriverCommandBuffer.NextCorrelationId());
-            _toDriverCommandBuffer.Write(ControlProtocolEvents.CLIENT_CLOSE, _buffer, 0, CorrelatedMessageFlyweight.LENGTH);
+            var buffer = new UnsafeBuffer(new byte[CorrelatedMessageFlyweight.LENGTH]);
+
+            new CorrelatedMessageFlyweight()
+                .Wrap(buffer, 0)
+                .ClientId(_correlatedMessage.ClientId())
+                .CorrelationId(Aeron.NULL_VALUE);
+            
+            //_correlatedMessage.CorrelationId(_toDriverCommandBuffer.NextCorrelationId());
+            _toDriverCommandBuffer.Write(ControlProtocolEvents.CLIENT_CLOSE, buffer, 0, CorrelatedMessageFlyweight.LENGTH);
         }
     }
 }

@@ -51,6 +51,7 @@ namespace Adaptive.Aeron
             _tags = null;
             _alias = null;
             _reliable = null;
+            _sparse = null;
             _ttl = null;
             _mtu = null;
             _termLength = null;
@@ -58,6 +59,7 @@ namespace Adaptive.Aeron
             _termId = null;
             _termOffset = null;
             _sessionId = null;
+            _linger = null;
             _isSessionIdTagged = false;
 
             return this;
@@ -718,16 +720,6 @@ namespace Adaptive.Aeron
             }
 
             return _sb.ToString();
-        }
-
-        /// <summary>
-        /// Call <seealso cref="Convert.ToInt32(String)"/> only if the value param is not null. Else pass null on.
-        /// </summary>
-        /// <param name="value"> to check for null and convert if not null. </param>
-        /// <returns> null if value param is null or result of <seealso cref="Convert.ToInt32(String)"/>. </returns>
-        public static int? IntegerValueOf(string value)
-        {
-            return null == value ? (int?) null : Convert.ToInt32(value);
         }
 
         private static string PrefixTag(bool isTagged, int value)

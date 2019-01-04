@@ -6,8 +6,6 @@ namespace Adaptive.Cluster.Codecs {
         SUSPEND = 0,
         RESUME = 1,
         SNAPSHOT = 2,
-        SHUTDOWN = 3,
-        ABORT = 4,
         NULL_VALUE = -2147483648
     }
 }

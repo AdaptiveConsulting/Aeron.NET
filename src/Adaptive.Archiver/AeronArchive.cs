@@ -775,10 +775,11 @@ namespace Adaptive.Archiver
         }
 
         /// <summary>
-        /// Get the position recorded for an active recording.
+        /// Get the position recorded for an active recording. If no active recording the return <see cref="NULL_POSITION"/>
         /// </summary>
         /// <param name="recordingId"> of the active recording for which the position is required. </param>
         /// <returns> the recorded position for the active recording or <seealso cref="NULL_POSITION"/> if recording not active. </returns>
+        /// <seealso cref="GetStopPosition"/>
         public long GetRecordingPosition(long recordingId)
         {
             _lock.Lock();
@@ -804,6 +805,7 @@ namespace Adaptive.Archiver
         /// </summary>
         /// <param name="recordingId"> of the active recording for which the position is required. </param>
         /// <returns> the stop position, or <seealso cref="AeronArchive.NULL_POSITION"/> if still active. </returns>
+        /// <seealso cref="GetRecordingPosition"/>
         public long GetStopPosition(long recordingId)
         {
             _lock.Lock();

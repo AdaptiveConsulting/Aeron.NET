@@ -13,6 +13,7 @@ namespace Adaptive.Cluster.Service
 
         private readonly MessageHeaderDecoder messageHeaderDecoder = new MessageHeaderDecoder();
         private readonly JoinLogDecoder joinLogDecoder = new JoinLogDecoder();
+        private readonly ServiceTerminationPositionDecoder serviceTerminationPositionDecoder = new ServiceTerminationPositionDecoder();
 
         public ServiceAdapter(Subscription subscription, ClusteredServiceAgent clusteredServiceAgent)
         {
@@ -52,6 +53,16 @@ namespace Adaptive.Cluster.Service
                     joinLogDecoder.LogSessionId(),
                     joinLogDecoder.LogStreamId(),
                     joinLogDecoder.LogChannel());
+            }
+            else if (ServiceTerminationPositionDecoder.TEMPLATE_ID == templateId)
+            {
+                serviceTerminationPositionDecoder.Wrap(
+                    buffer, 
+                    offset + MessageHeaderDecoder.ENCODED_LENGTH,
+                    messageHeaderDecoder.BlockLength(), 
+                    messageHeaderDecoder.Version());
+                
+                clusteredServiceAgent.OnServiceTerminationPosition(serviceTerminationPositionDecoder.LogPosition());
             }
         }
     }
