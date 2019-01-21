@@ -411,6 +411,28 @@ namespace Adaptive.Aeron
             private UnsafeBuffer _countersValuesBuffer;
             private IThreadFactory _threadFactory = new DefaultThreadFactory();
 
+
+            static Context()
+            {
+                string baseDirName = null;
+                
+                if (Environment.OSVersion.Platform == PlatformID.Unix)
+                {
+                    if (Directory.Exists(@"/dev/shm"))
+                    {
+                        baseDirName = "/dev/shm/aeron";
+                    }
+                }
+
+                if (null == baseDirName)
+                {
+                    baseDirName = Path.Combine(Path.GetTempPath(), "aeron");
+                }
+
+                AERON_DIR_PROP_DEFAULT = baseDirName + '-' + Environment.UserName;
+
+            }
+            
             /// <summary>
             /// The top level Aeron directory used for communication between a Media Driver and client.
             /// </summary>
@@ -419,8 +441,7 @@ namespace Adaptive.Aeron
             /// <summary>
             /// The value of the top level Aeron directory unless overridden by <seealso cref="AeronDirectoryName()"/>
             /// </summary>
-            public static readonly string AERON_DIR_PROP_DEFAULT =
-                Path.Combine(IoUtil.TmpDirName(), "aeron-" + Environment.UserName);
+            public static readonly string AERON_DIR_PROP_DEFAULT;
 
             /// <summary>
             /// Media type used for IPC shared memory from <seealso cref="Publication"/> to <seealso cref="Subscription"/> channels.

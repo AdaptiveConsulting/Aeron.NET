@@ -196,20 +196,6 @@ namespace Adaptive.Agrona
             }
         }
 
-        /// <summary>
-        /// Return the system property for java.io.tmpdir ensuring a '/' is at the end.
-        /// </summary>
-        /// <returns> tmp directory for the runtime </returns>
-        public static string TmpDirName()
-        {
-            if (Environment.OSVersion.Platform == PlatformID.Unix)
-            {
-                return @"/dev/shm";
-            }
-
-            return Path.GetTempPath();
-        }
-
         public static void Delete(DirectoryInfo directory, bool b)
         {
             if (directory.Exists)
