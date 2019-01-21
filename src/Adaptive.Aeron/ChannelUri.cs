@@ -258,6 +258,11 @@ namespace Adaptive.Aeron
         /// <param name="termLength">    for the stream. </param>
         public void InitialPosition(long position, int initialTermId, int termLength)
         {
+            if (position < 0 || 0 != (position & (FrameDescriptor.FRAME_ALIGNMENT - 1)))
+            {
+                throw new ArgumentException("invalid position: " + position);
+            }
+            
             int bitsToShift = LogBufferDescriptor.PositionBitsToShift(termLength);
             int termId = LogBufferDescriptor.ComputeTermIdFromPosition(position, bitsToShift, initialTermId);
             int termOffset = (int)(position & (termLength - 1));

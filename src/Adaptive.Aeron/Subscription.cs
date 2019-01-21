@@ -533,5 +533,15 @@ namespace Adaptive.Aeron
                 }
             }
         }
+        
+        public override string ToString()
+        {
+            return "Subscription{" + 
+                   "registrationId=" + RegistrationId + 
+                   ", streamId=" + StreamId + 
+                   ", channel='" + Channel + '\'' + 
+                   ", imageCount=" + ImageCount + 
+                   '}';
+        }
     }
 }

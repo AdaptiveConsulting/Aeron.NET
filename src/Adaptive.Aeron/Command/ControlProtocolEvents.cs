@@ -134,6 +134,11 @@ namespace Adaptive.Aeron.Command
         /// Inform clients of removal of counter.
         /// </summary>
         public const int ON_UNAVAILABLE_COUNTER = 0x0F09;
+        
+        /// <summary>
+        /// Inform clients of client timeout.
+        /// </summary>
+        public const int ON_CLIENT_TIMEOUT = 0x0F0A;
     }
 
 }

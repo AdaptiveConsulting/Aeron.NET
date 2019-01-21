@@ -19,7 +19,7 @@ using System;
 namespace Adaptive.Agrona.Concurrent.Broadcast
 {
     /// <summary>
-    /// Receiver that copies messages that have been broadcast to enable a simpler API for the client.
+    /// Receiver that copies messages which have been broadcast to enable a simpler API for the client.
     /// </summary>
     public class CopyBroadcastReceiver
     {
@@ -45,13 +45,6 @@ namespace Adaptive.Agrona.Concurrent.Broadcast
         {
             _receiver = receiver;
             _scratchBuffer = new UnsafeBuffer(BufferUtil.AllocateDirect(scratchBufferLength));
-
-            while (receiver.ReceiveNext())
-            {
-                // If we're reconnecting to a broadcast buffer then we need to
-                // scan ourselves up to date, otherwise we risk "falling behind"
-                // the buffer due to the time taken to catchup.
-            }
         }
 
         /// <summary>
@@ -62,13 +55,6 @@ namespace Adaptive.Agrona.Concurrent.Broadcast
         {
             _receiver = receiver;
             _scratchBuffer = new UnsafeBuffer(BufferUtil.AllocateDirect(ScratchBufferSize));
-
-            while (receiver.ReceiveNext())
-            {
-                // If we're reconnecting to a broadcast buffer then we need to
-                // scan ourselves up to date, otherwise we risk "falling behind"
-                // the buffer due to the time taken to catchup.
-            }
         }
 
         /// <summary>
@@ -86,7 +72,7 @@ namespace Adaptive.Agrona.Concurrent.Broadcast
             {
                 if (lastSeenLappedCount != receiver.LappedCount())
                 {
-                    throw new InvalidOperationException("Unable to keep up with broadcast buffer");
+                    throw new InvalidOperationException("Unable to keep up with broadcast");
                 }
 
                 var length = receiver.Length();
@@ -101,7 +87,7 @@ namespace Adaptive.Agrona.Concurrent.Broadcast
 
                 if (!receiver.Validate())
                 {
-                    throw new InvalidOperationException("Unable to keep up with broadcast buffer");
+                    throw new InvalidOperationException("Unable to keep up with broadcast");
                 }
 
                 handler(msgTypeId, _scratchBuffer, 0, length);

@@ -89,7 +89,20 @@ namespace Adaptive.Cluster.Service
         {
             return _cluster.Offer(Id, _responsePublication, buffer, offset, length);
         }
-
+        
+        /// <summary>
+        /// Non-blocking publish by gathering buffer vectors into a message. The first vector will be replaced cluster
+        /// egress header so must be left unused.
+        /// </summary>
+        /// <param name="vectors"> which make up the message. </param>
+        /// <returns> the same as <seealso cref="Publication.Offer(DirectBufferVector[], ReservedValueSupplier)"/>. </returns>
+        /// <seealso cref="Publication.Offer(DirectBufferVector[], ReservedValueSupplier)"/> when in <seealso cref="ClusterRole.Leader"/>
+        /// otherwise <seealso cref="MOCKED_OFFER"/>.
+        public long Offer(DirectBufferVector[] vectors)
+        {
+            return _cluster.Offer(Id, _responsePublication, vectors);
+        }
+        
         internal void Connect(Aeron.Aeron aeron)
         {
             if (null == _responsePublication)

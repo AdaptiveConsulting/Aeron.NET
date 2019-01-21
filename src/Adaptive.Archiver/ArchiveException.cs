@@ -14,6 +14,7 @@ namespace Adaptive.Archiver
         public const int UNKNOWN_REPLAY = 6;
         public const int MAX_REPLAYS = 7;
         public const int MAX_RECORDINGS = 8;
+        public const int INVALID_EXTENSION  = 9;
         
         /// <summary>
         /// Error code providing more detail into what went wrong.

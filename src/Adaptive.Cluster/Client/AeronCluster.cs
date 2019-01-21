@@ -46,7 +46,8 @@ namespace Adaptive.Cluster.Client
 
         private IDictionary<int, MemberEndpoint> _endpointByMemberIdMap = new DefaultDictionary<int, MemberEndpoint>();
         private readonly BufferClaim _bufferClaim = new BufferClaim();
-        private readonly UnsafeBuffer _msgHeaderBuffer = new UnsafeBuffer(new byte[INGRESS_HEADER_LENGTH]);
+        private readonly UnsafeBuffer _headerBuffer = new UnsafeBuffer(new byte[INGRESS_HEADER_LENGTH]);
+        private readonly DirectBufferVector _headerVector;
         private readonly UnsafeBuffer _keepaliveMsgBuffer;
         private readonly MessageHeaderEncoder _messageHeaderEncoder = new MessageHeaderEncoder();
         private readonly IngressMessageHeaderEncoder _ingressMessageHeaderEncoder = new IngressMessageHeaderEncoder();
@@ -54,6 +55,9 @@ namespace Adaptive.Cluster.Client
         private readonly FragmentAssembler _fragmentAssembler;
         private readonly Poller _poller;
         private readonly IEgressListener _egressListener;
+        private readonly ControlledFragmentAssembler _controlledFragmentAssembler;
+        private readonly IControlledEgressListener _controlledEgressListener;
+        private readonly ControlledPoller _controlledPoller;
 
         private class Poller : IFragmentHandler
         {
@@ -139,6 +143,96 @@ namespace Adaptive.Cluster.Client
             }
         }
 
+        private class ControlledPoller : IControlledFragmentHandler
+        {
+            private readonly MessageHeaderDecoder _messageHeaderDecoder = new MessageHeaderDecoder();
+            private readonly EgressMessageHeaderDecoder _egressMessageHeaderDecoder = new EgressMessageHeaderDecoder();
+            private readonly NewLeaderEventDecoder _newLeaderEventDecoder = new NewLeaderEventDecoder();
+            private readonly SessionEventDecoder _sessionEventDecoder = new SessionEventDecoder();
+
+            private readonly IControlledEgressListener _egressListener;
+            private readonly long _clusterSessionId;
+            private readonly AeronCluster _cluster;
+
+            public ControlledPoller(IControlledEgressListener egressListener, long clusterSessionId, AeronCluster cluster)
+            {
+                _egressListener = egressListener;
+                _clusterSessionId = clusterSessionId;
+                _cluster = cluster;
+            }
+
+            public ControlledFragmentHandlerAction OnFragment(IDirectBuffer buffer, int offset, int length, Header header)
+            {
+                _messageHeaderDecoder.Wrap(buffer, offset);
+
+                int templateId = _messageHeaderDecoder.TemplateId();
+                if (EgressMessageHeaderDecoder.TEMPLATE_ID == templateId)
+                {
+                    _egressMessageHeaderDecoder.Wrap(
+                        buffer,
+                        offset + MessageHeaderDecoder.ENCODED_LENGTH,
+                        _messageHeaderDecoder.BlockLength(),
+                        _messageHeaderDecoder.Version());
+
+                    long sessionId = _egressMessageHeaderDecoder.ClusterSessionId();
+                    if (sessionId == _clusterSessionId)
+                    {
+                        return _egressListener.OnMessage(
+                            sessionId,
+                            _egressMessageHeaderDecoder.Timestamp(),
+                            buffer,
+                            offset + EGRESS_HEADER_LENGTH,
+                            length - EGRESS_HEADER_LENGTH,
+                            header);
+                    }
+                }
+                else if (NewLeaderEventDecoder.TEMPLATE_ID == templateId)
+                {
+                    _newLeaderEventDecoder.Wrap(
+                        buffer,
+                        offset + MessageHeaderDecoder.ENCODED_LENGTH,
+                        _messageHeaderDecoder.BlockLength(),
+                        _messageHeaderDecoder.Version());
+
+                    long sessionId = _newLeaderEventDecoder.ClusterSessionId();
+                    if (sessionId == _clusterSessionId)
+                    {
+                        _cluster.OnNewLeader(
+                            sessionId,
+                            _newLeaderEventDecoder.LeadershipTermId(),
+                            _newLeaderEventDecoder.LeaderMemberId(),
+                            _newLeaderEventDecoder.MemberEndpoints());
+
+                        return ControlledFragmentHandlerAction.COMMIT;
+                    }
+                }
+                else if (SessionEventDecoder.TEMPLATE_ID == templateId)
+                {
+                    _sessionEventDecoder.Wrap(
+                        buffer,
+                        offset + MessageHeaderDecoder.ENCODED_LENGTH,
+                        _messageHeaderDecoder.BlockLength(),
+                        _messageHeaderDecoder.Version());
+
+                    long sessionId = _sessionEventDecoder.ClusterSessionId();
+                    if (sessionId == _clusterSessionId)
+                    {
+                        _egressListener.SessionEvent(
+                            _sessionEventDecoder.CorrelationId(),
+                            sessionId,
+                            _sessionEventDecoder.LeadershipTermId(),
+                            _sessionEventDecoder.LeaderMemberId(),
+                            _sessionEventDecoder.Code(),
+                            _sessionEventDecoder.Detail());
+                        
+                        return ControlledFragmentHandlerAction.COMMIT;
+                    }
+                }
+
+                return ControlledFragmentHandlerAction.CONTINUE;
+            }
+        }
+
         /// <summary>
         /// Connect to the cluster using default configuration.
         /// </summary>
@@ -160,6 +254,8 @@ namespace Adaptive.Cluster.Client
 
         private AeronCluster(Context ctx)
         {
+            _headerVector = new DirectBufferVector(_headerBuffer, 0, _headerBuffer.Capacity);
+
             Subscription subscription = null;
 
             try
@@ -171,6 +267,13 @@ namespace Adaptive.Cluster.Client
                 _idleStrategy = ctx.IdleStrategy();
                 _nanoClock = _aeron.Ctx.NanoClock();
                 _isUnicast = ctx.ClusterMemberEndpoints() != null;
+                _egressListener = ctx.EgressListener();
+                _poller = new Poller(ctx.EgressListener(), _clusterSessionId, this);
+                _fragmentAssembler = new FragmentAssembler(_poller);
+
+                _controlledEgressListener = ctx.ControlledEgressListener();
+                _controlledPoller = new ControlledPoller(ctx.ControlledEgressListener(), _clusterSessionId, this);
+                _controlledFragmentAssembler = new ControlledFragmentAssembler(_controlledPoller, 0); // IsDirect
 
                 subscription = _aeron.AddSubscription(ctx.EgressChannel(), ctx.EgressStreamId());
                 _subscription = subscription;
@@ -178,7 +281,7 @@ namespace Adaptive.Cluster.Client
                 _clusterSessionId = ConnectToCluster();
 
                 _ingressMessageHeaderEncoder
-                    .WrapAndApplyHeader(_msgHeaderBuffer, 0, _messageHeaderEncoder)
+                    .WrapAndApplyHeader(_headerBuffer, 0, _messageHeaderEncoder)
                     .ClusterSessionId(_clusterSessionId)
                     .LeadershipTermId(_leadershipTermId);
 
@@ -189,10 +292,6 @@ namespace Adaptive.Cluster.Client
                     .WrapAndApplyHeader(_keepaliveMsgBuffer, 0, _messageHeaderEncoder)
                     .LeadershipTermId(_leadershipTermId)
                     .ClusterSessionId(_clusterSessionId);
-
-                _poller = new Poller(ctx.EgressListener(), _clusterSessionId, this);
-                _egressListener = ctx.EgressListener();
-                _fragmentAssembler = new FragmentAssembler(_poller);
             }
             catch (Exception)
             {
@@ -207,7 +306,7 @@ namespace Adaptive.Cluster.Client
                     CloseHelper.QuietDispose(subscription);
                 }
 
-                CloseHelper.QuietDispose(ctx);
+                ctx.Dispose();
                 throw;
             }
         }
@@ -290,13 +389,30 @@ namespace Adaptive.Cluster.Client
         /// <returns> the same as <seealso cref="Publication.Offer(IDirectBuffer, int, int, ReservedValueSupplier)"/>. </returns>
         public long Offer(IDirectBuffer buffer, int offset, int length)
         {
-            return _publication.Offer(_msgHeaderBuffer, 0, INGRESS_HEADER_LENGTH, buffer, offset, length);
+            return _publication.Offer(_headerBuffer, 0, INGRESS_HEADER_LENGTH, buffer, offset, length);
+        }
+
+        /// <summary>
+        /// Non-blocking publish by gathering buffer vectors into a message. The first vector will be replaced cluster
+        /// ingress header so must be left unused.
+        /// </summary>
+        /// <param name="vectors"> which make up the message. </param>
+        /// <returns> the same as <seealso cref="Publication.Offer(DirectBufferVector[], ReservedValueSupplier)"/>. </returns>
+        /// <seealso cref="Publication.Offer(DirectBufferVector[], ReservedValueSupplier)"/>
+        public long Offer(DirectBufferVector[] vectors)
+        {
+            if (_headerVector != vectors[0])
+            {
+                vectors[0] = _headerVector;
+            }
+
+            return _publication.Offer(vectors);
         }
 
         /// <summary>
         /// Send a keep alive message to the cluster to keep this session open.
         ///
-        /// Note: keep alives can fail during a leadership transition. The consumer should continue to call
+        /// Note: keepalives can fail during a leadership transition. The consumer should continue to call
         /// <see cref="PollEgress"/> to ensure a connection to the new leader is established.
         /// 
         /// </summary>
@@ -324,7 +440,7 @@ namespace Adaptive.Cluster.Client
                 {
                     throw new ClusterException("unexpected publication state: " + result);
                 }
-                    
+
                 if (--attempts <= 0)
                 {
                     break;
@@ -348,6 +464,21 @@ namespace Adaptive.Cluster.Client
         public int PollEgress()
         {
             return _subscription.Poll(_fragmentAssembler, SESSION_FRAGMENT_LIMIT);
+        }
+
+        /// <summary>
+        /// Poll the <seealso cref="EgressSubscription"/> for session messages which are dispatched to
+        /// <seealso cref="Context.ControlledEgressListener()"/>.
+        /// <para>
+        /// <b>Note:</b> if <seealso cref="Context.ControlledEgressListener()"/> is not set then a <seealso cref="ConfigurationException"/>
+        /// could result.
+        ///    
+        /// </para>
+        /// </summary>
+        /// <returns> the number of fragments processed. </returns>
+        public int ControlledPollEgress()
+        {
+            return _subscription.ControlledPoll(_controlledFragmentAssembler, SESSION_FRAGMENT_LIMIT);
         }
 
         /// <summary>
@@ -381,7 +512,10 @@ namespace Adaptive.Cluster.Client
                 UpdateMemberEndpoints(memberEndpoints, leaderMemberId);
             }
 
+            _fragmentAssembler.Clear();
+            _controlledFragmentAssembler.Clear();
             _egressListener.NewLeader(clusterSessionId, leadershipTermId, leaderMemberId, memberEndpoints);
+            _controlledEgressListener.NewLeader(clusterSessionId, leadershipTermId, leaderMemberId, memberEndpoints);
         }
 
         private void UpdateMemberEndpoints(string memberEndpoints, int leaderMemberId)
@@ -837,9 +971,9 @@ namespace Adaptive.Cluster.Client
         /// <summary>
         /// Context for cluster session and connection.
         /// </summary>
-        public class Context : IDisposable
+        public class Context
         {
-            private class MissingEgressMessageListener : IEgressListener
+            private class MissingEgressMessageListener : IEgressListener, IControlledEgressListener
             {
                 public void OnMessage(
                     long clusterSessionId,
@@ -852,6 +986,17 @@ namespace Adaptive.Cluster.Client
                     throw new ConfigurationException("egressMessageListener must be specified on AeronCluster.Context");
                 }
 
+                ControlledFragmentHandlerAction IControlledEgressListener.OnMessage(
+                    long clusterSessionId, 
+                    long timestampMs, 
+                    IDirectBuffer buffer, 
+                    int offset, 
+                    int length, 
+                    Header header)
+                {
+                    throw new ConfigurationException("controlledEgressListened must be specified on AeronCluster.Context");
+                }
+
                 public void SessionEvent(
                     long correlationId,
                     long clusterSessionId,
@@ -860,7 +1005,6 @@ namespace Adaptive.Cluster.Client
                     EventCode code,
                     string detail)
                 {
-                    throw new ConfigurationException("egressMessageListener must be specified on AeronCluster.Context");
                 }
 
                 public void NewLeader(
@@ -869,7 +1013,6 @@ namespace Adaptive.Cluster.Client
                     int leaderMemberId,
                     string memberEndpoints)
                 {
-                    throw new ConfigurationException("egressMessageListener must be specified on AeronCluster.Context");
                 }
             }
 
@@ -886,7 +1029,9 @@ namespace Adaptive.Cluster.Client
             private bool _ownsAeronClient = false;
             private bool _isIngressExclusive = false;
             private ErrorHandler _errorHandler = Adaptive.Aeron.Aeron.Configuration.DEFAULT_ERROR_HANDLER;
+            private bool _isDirectAssemblers = false;
             private IEgressListener _egressListener;
+            private IControlledEgressListener _controlledEgressListener;
 
             /// <summary>
             /// Perform a shallow copy of the object.
@@ -921,6 +1066,11 @@ namespace Adaptive.Cluster.Client
                 if (null == _egressListener)
                 {
                     _egressListener = new MissingEgressMessageListener();
+                }
+
+                if (null == _controlledEgressListener)
+                {
+                    _controlledEgressListener = new MissingEgressMessageListener();
                 }
             }
 
@@ -1223,6 +1373,26 @@ namespace Adaptive.Cluster.Client
             }
 
             /// <summary>
+            /// Is direct buffers used for fragment assembly on egress.
+            /// </summary>
+            /// <returns> true if direct buffers used for fragment assembly on egress. </returns>
+            public bool IsDirectAssemblers()
+            {
+                return _isDirectAssemblers;
+            }
+
+            /// <summary>
+            /// Is direct buffers used for fragment assembly on egress.
+            /// </summary>
+            /// <param name="isDirectAssemblers"> true if direct buffers used for fragment assembly on egress. </param>
+            /// <returns> this for a fluent API. </returns>
+            public Context IsDirectAssemblers(bool isDirectAssemblers)
+            {
+                _isDirectAssemblers = isDirectAssemblers;
+                return this;
+            }
+
+            /// <summary>
             /// Get the <seealso cref="IEgressListener"/> function that will be called when polling for egress via
             /// <seealso cref="AeronCluster.PollEgress()"/>.
             /// </summary>
@@ -1236,6 +1406,10 @@ namespace Adaptive.Cluster.Client
             /// <summary>
             /// Get the <seealso cref="IEgressListener"/> function that will be called when polling for egress via
             /// <seealso cref="AeronCluster.PollEgress()"/>.
+            ///
+            /// Only <see cref="IEgressListener.OnMessage"/> will be dispatched
+            /// when using <see cref="AeronCluster.PollEgress()"/>
+            /// 
             /// </summary>
             /// <param name="listener"> function that will be called when polling for egress via <seealso cref="AeronCluster.PollEgress()"/>. </param>
             /// <returns> this for a fluent API. </returns>
@@ -1245,6 +1419,32 @@ namespace Adaptive.Cluster.Client
                 return this;
             }
 
+            /// <summary>
+            /// Get the <seealso cref="IControlledEgressListener"/> function that will be called when polling for egress via
+            /// <seealso cref="AeronCluster.ControlledPollEgress"/>.
+            /// </summary>
+            /// <returns> the <seealso cref="IControlledEgressListener"/> function that will be called when polling for egress via
+            /// <seealso cref="AeronCluster.ControlledPollEgress"/>. </returns>
+            public IControlledEgressListener ControlledEgressListener()
+            {
+                return _controlledEgressListener;
+            }
+
+            /// <summary>
+            /// Get the <seealso cref="IControlledEgressListener"/> function that will be called when polling for egress via
+            /// <seealso cref="AeronCluster.ControlledPollEgress"/>.
+            /// 
+            /// Only <seealso cref="IControlledEgressListener.OnMessage(long, long, IDirectBuffer, int, int, Header)"/> will be
+            /// dispatched when using <seealso cref="AeronCluster.ControlledPollEgress"/>.
+            /// </summary>
+            /// <param name="listener"> function that will be called when polling for egress via
+            ///                 <seealso cref="AeronCluster.ControlledPollEgress"/>. </param>
+            /// <returns> this for a fluent API. </returns>
+            public Context ControlledEgressListener(IControlledEgressListener listener)
+            {
+                _controlledEgressListener = listener;
+                return this;
+            }
 
             /// <summary>
             /// Close the context and free applicable resources.

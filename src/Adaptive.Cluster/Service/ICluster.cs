@@ -27,6 +27,12 @@ namespace Adaptive.Cluster.Service
         Aeron.Aeron Aeron { get; }
 
         /// <summary>
+        /// Get the  <seealso cref="ClusteredServiceContainer.Context"/> under which the container is running.
+        /// </summary>
+        /// <returns> the <seealso cref="ClusteredServiceContainer.Context"/> under which the container is running. </returns>
+        ClusteredServiceContainer.Context Context { get; }
+        
+        /// <summary>
         /// Get the <seealso cref="ClientSession"/> for a given cluster session id.
         /// </summary>
         /// <param name="clusterSessionId"> to be looked up. </param>

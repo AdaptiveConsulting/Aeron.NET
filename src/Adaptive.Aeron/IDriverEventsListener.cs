@@ -74,6 +74,8 @@ namespace Adaptive.Aeron
         void OnUnavailableCounter(
             long correlationId,
             int counterId);
+
+        void OnClientTimeout();
     }
 
 }

@@ -28,8 +28,7 @@ namespace Adaptive.Aeron
     /// 
     /// Writes commands into the client conductor buffer.
     /// 
-    /// Note: this class is not thread safe and is expecting to be called within <see cref="Aeron.Context.ClientLock(Adaptive.Agrona.Concurrent.ILock)"/>
-    /// with the exception of <see cref="ClientClose"/> which is thread safe.
+    /// Note: this class is not thread safe and is expecting to be called within <see cref="Aeron.Context.ClientLock(Adaptive.Agrona.Concurrent.ILock)"/>.
     /// </summary>
     public class DriverProxy
     {
@@ -67,6 +66,11 @@ namespace Adaptive.Aeron
         public long TimeOfLastDriverKeepaliveMs()
         {
             return _toDriverCommandBuffer.ConsumerHeartbeatTime();
+        }
+
+        public long ClientId()
+        {
+            return _correlatedMessage.ClientId();
         }
 
         public long AddPublication(string channel, int streamId)
@@ -278,15 +282,8 @@ namespace Adaptive.Aeron
 
         public void ClientClose()
         {
-            var buffer = new UnsafeBuffer(new byte[CorrelatedMessageFlyweight.LENGTH]);
-
-            new CorrelatedMessageFlyweight()
-                .Wrap(buffer, 0)
-                .ClientId(_correlatedMessage.ClientId())
-                .CorrelationId(Aeron.NULL_VALUE);
-            
-            //_correlatedMessage.CorrelationId(_toDriverCommandBuffer.NextCorrelationId());
-            _toDriverCommandBuffer.Write(ControlProtocolEvents.CLIENT_CLOSE, buffer, 0, CorrelatedMessageFlyweight.LENGTH);
+            _correlatedMessage.CorrelationId(Aeron.NULL_VALUE);
+            _toDriverCommandBuffer.Write(ControlProtocolEvents.CLIENT_CLOSE, _buffer, 0, CorrelatedMessageFlyweight.LENGTH);
         }
     }
 }

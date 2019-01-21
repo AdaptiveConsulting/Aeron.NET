@@ -653,5 +653,19 @@ namespace Adaptive.Aeron
             _isEos = _finalPosition >= LogBufferDescriptor.EndOfStreamPosition(_logBuffers.MetaDataBuffer());
             _isClosed = true;
         }
+
+        public override string ToString()
+        {
+            return "Image{" +
+                   $"correlationId={CorrelationId}, " +
+                   $"joinPosition={JoinPosition}, " +
+                   $"sessionId={SessionId}, " +
+                   $"initialTermId={InitialTermId}, " +
+                   $"isEos={IsEndOfStream}, " +
+                   $"sourceIdentity='{SourceIdentity}', " +
+                   $"subscription={Subscription}, " +
+                   $"position={Position}" +
+                   '}';
+        }
     }
 }

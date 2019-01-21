@@ -48,6 +48,7 @@ namespace Adaptive.Aeron
         private long _timeOfLastServiceNs;
         private bool _isClosed;
         private bool _isInCallback;
+        private bool _isTerminating;
         private string _stashedChannel;
         private RegistrationException _driverException;
 
@@ -91,7 +92,7 @@ namespace Adaptive.Aeron
             _defaultUnavailableImageHandler = ctx.UnavailableImageHandler();
             _availableCounterHandler = ctx.AvailableCounterHandler();
             _unavailableCounterHandler = ctx.UnavailableCounterHandler();
-            _driverEventsAdapter = new DriverEventsAdapter(ctx.ToClientBuffer(), this);
+            _driverEventsAdapter = new DriverEventsAdapter(ctx.ToClientBuffer(), ctx.ClientId(), this);
             _counterValuesBuffer = ctx.CountersValuesBuffer();
             _countersReader =
                 new CountersReader(ctx.CountersMetaDataBuffer(), ctx.CountersValuesBuffer(), Encoding.ASCII);
@@ -114,7 +115,6 @@ namespace Adaptive.Aeron
                 if (!_isClosed)
                 {
                     _isClosed = true;
-
                     ForceCloseResources();
                     Thread.Yield();
 
@@ -124,17 +124,13 @@ namespace Adaptive.Aeron
                     }
 
                     _driverProxy.ClientClose();
+                    _ctx.Dispose();
                 }
             }
             finally
             {
                 _clientLock.Unlock();
             }
-        }
-
-        internal void ClientClose()
-        {
-            _driverProxy.ClientClose();
         }
 
         public int DoWork()
@@ -145,7 +141,7 @@ namespace Adaptive.Aeron
             {
                 try
                 {
-                    if (_isClosed)
+                    if (_isTerminating)
                     {
                         throw new AgentTerminationException();
                     }
@@ -166,9 +162,14 @@ namespace Adaptive.Aeron
             return "aeron-client-conductor";
         }
 
-        public bool IsClosed()
+        internal bool IsClosed()
         {
             return _isClosed;
+        }
+
+        internal bool IsTerminating()
+        {
+            return _isTerminating;
         }
 
         public void OnError(long correlationId, int codeValue, ErrorCode errorCode, string message)
@@ -388,6 +389,16 @@ namespace Adaptive.Aeron
                 }
             }
         }
+        
+        public void OnClientTimeout()
+        {
+            if (!_isClosed)
+            {
+                _isTerminating = true;
+                ForceCloseResources();
+                HandleError(new ClientTimeoutException("client timeout from driver"));
+            }
+        }
 
         internal CountersReader CountersReader()
         {
@@ -404,7 +415,7 @@ namespace Adaptive.Aeron
             _clientLock.Lock();
             try
             {
-                EnsureOpen();
+                EnsureActive();
                 EnsureNotReentrant();
 
                 _stashedChannel = channel;
@@ -424,7 +435,7 @@ namespace Adaptive.Aeron
             _clientLock.Lock();
             try
             {
-                EnsureOpen();
+                EnsureActive();
                 EnsureNotReentrant();
 
                 _stashedChannel = channel;
@@ -446,7 +457,7 @@ namespace Adaptive.Aeron
             {
                 if (!publication.IsClosed)
                 {
-                    EnsureOpen();
+                    EnsureActive();
                     EnsureNotReentrant();
 
                     publication.InternalClose();
@@ -476,7 +487,7 @@ namespace Adaptive.Aeron
             _clientLock.Lock();
             try
             {
-                EnsureOpen();
+                EnsureActive();
                 EnsureNotReentrant();
 
                 long correlationId = _driverProxy.AddSubscription(channel, streamId);
@@ -501,7 +512,7 @@ namespace Adaptive.Aeron
             {
                 if (!subscription.IsClosed)
                 {
-                    EnsureOpen();
+                    EnsureActive();
                     EnsureNotReentrant();
 
                     subscription.InternalClose();
@@ -522,7 +533,7 @@ namespace Adaptive.Aeron
             _clientLock.Lock();
             try
             {
-                EnsureOpen();
+                EnsureActive();
                 EnsureNotReentrant();
 
                 AwaitResponse(_driverProxy.AddDestination(registrationId, endpointChannel));
@@ -538,7 +549,7 @@ namespace Adaptive.Aeron
             _clientLock.Lock();
             try
             {
-                EnsureOpen();
+                EnsureActive();
                 EnsureNotReentrant();
 
                 AwaitResponse(_driverProxy.RemoveDestination(registrationId, endpointChannel));
@@ -554,7 +565,7 @@ namespace Adaptive.Aeron
             _clientLock.Lock();
             try
             {
-                EnsureOpen();
+                EnsureActive();
                 EnsureNotReentrant();
 
                 AwaitResponse(_driverProxy.AddRcvDestination(registrationId, endpointChannel));
@@ -570,7 +581,7 @@ namespace Adaptive.Aeron
             _clientLock.Lock();
             try
             {
-                EnsureOpen();
+                EnsureActive();
                 EnsureNotReentrant();
 
                 AwaitResponse(_driverProxy.RemoveRcvDestination(registrationId, endpointChannel));
@@ -587,7 +598,7 @@ namespace Adaptive.Aeron
             _clientLock.Lock();
             try
             {
-                EnsureOpen();
+                EnsureActive();
                 EnsureNotReentrant();
 
                 if (keyLength < 0 || keyLength > CountersManager.MAX_KEY_LENGTH)
@@ -616,7 +627,7 @@ namespace Adaptive.Aeron
             _clientLock.Lock();
             try
             {
-                EnsureOpen();
+                EnsureActive();
                 EnsureNotReentrant();
 
                 if (label.Length > CountersManager.MAX_LABEL_LENGTH)
@@ -643,7 +654,7 @@ namespace Adaptive.Aeron
             {
                 if (!counter.IsClosed)
                 {
-                    EnsureOpen();
+                    EnsureActive();
                     EnsureNotReentrant();
 
                     counter.InternalClose();
@@ -691,11 +702,11 @@ namespace Adaptive.Aeron
             }
         }
 
-        private void EnsureOpen()
+        private void EnsureActive()
         {
-            if (_isClosed)
+            if (_isClosed || _isTerminating)
             {
-                throw new AeronException("Aeron client conductor is closed");
+                throw new AeronException("Aeron client conductor is closed or terminating");
             }
         }
 
@@ -735,6 +746,11 @@ namespace Adaptive.Aeron
             {
                 HandleError(throwable);
 
+                if (_driverEventsAdapter.IsInvalid)
+                {
+                    OnClose();
+                }
+                
                 if (IsClientApiCall(correlationId))
                 {
                     throw;
@@ -756,11 +772,19 @@ namespace Adaptive.Aeron
 
             do
             {
-                Thread.Sleep(1);
+                try
+                {
+                    Thread.Sleep(1);
+                }
+                catch (ThreadInterruptedException)
+                {
+                    _isTerminating = true;
+                    throw;
+                }
 
                 Service(correlationId);
 
-                if (_driverEventsAdapter.ReceivedCorrelationId() == correlationId)
+                if (_driverEventsAdapter.ReceivedCorrelationId == correlationId)
                 {
                     if (null != _driverException)
                     {
@@ -770,7 +794,15 @@ namespace Adaptive.Aeron
                     return;
                 }
 
-                Thread.Sleep(0); // check interrupt
+                try
+                {
+                    Thread.Sleep(1);
+                }
+                catch (ThreadInterruptedException)
+                {
+                    _isTerminating = true;
+                    throw;
+                }
                 
             } while (deadlineNs - _nanoClock.NanoTime() > 0);
 
@@ -798,16 +830,10 @@ namespace Adaptive.Aeron
         {
             if ((_timeOfLastServiceNs + _interServiceTimeoutNs) - nowNs < 0)
             {
-                int lingeringResourcesSize = _lingeringResources.Count;
-
+                _isTerminating = true;
+                
                 ForceCloseResources();
-
-                if (_lingeringResources.Count > lingeringResourcesSize)
-                {
-                    Aeron.Sleep(NanoUtil.ToMillis(_ctx.ResourceLingerDurationNs()));
-                }
-
-                OnClose();
+                Thread.Yield();
 
                 throw new ConductorServiceTimeoutException("service interval exceeded (ns): " + _interServiceTimeoutNs);
             }
@@ -819,7 +845,11 @@ namespace Adaptive.Aeron
             {
                 if (_epochClock.Time() > (_driverProxy.TimeOfLastDriverKeepaliveMs() + _driverTimeoutMs))
                 {
-                    OnClose();
+                    _isTerminating = true;
+                
+                    ForceCloseResources();
+                    Thread.Yield();
+                    
                     throw new DriverTimeoutException("MediaDriver keepalive older than (ms): " + _driverTimeoutMs);
                 }
 

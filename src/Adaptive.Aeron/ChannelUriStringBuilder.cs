@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Text;
 using Adaptive.Aeron.LogBuffer;
+using static Adaptive.Aeron.LogBuffer.FrameDescriptor;
 
 namespace Adaptive.Aeron
 {
@@ -25,7 +26,6 @@ namespace Adaptive.Aeron
         private string _tags;
         private string _alias;
         private bool? _reliable;
-        private bool? _sparse;
         private int? _ttl;
         private int? _mtu;
         private int? _termLength;
@@ -34,6 +34,7 @@ namespace Adaptive.Aeron
         private int? _termOffset;
         private int? _sessionId;
         private long? _linger;
+        private bool? _sparse;
         private bool _isSessionIdTagged;
 
         /// <summary>
@@ -278,30 +279,6 @@ namespace Adaptive.Aeron
         }
 
         /// <summary>
-        /// Set to indicate if a term log buffer should be sparse on disk or not. Sparse saves space at the potential
-        /// expense of latency.
-        /// </summary>
-        /// <param name="isSparse"> true if the term buffer log is sparse on disk. </param>
-        /// <returns> this for a fluent API. </returns>
-        /// <see cref="Aeron.Context.SPARSE_PARAM_NAME"/>
-        public ChannelUriStringBuilder Sparse(bool? isSparse)
-        {
-            _sparse = isSparse;
-            return this;
-        }
-
-        /// <summary>
-        /// Get if a term log buffer should be sparse on disk or not. Sparse saves space at the potential expense of latency.
-        /// </summary>
-        /// <returns> true if the term buffer log is sparse on disk. </returns>
-        /// <see cref="Aeron.Context.SPARSE_PARAM_NAME"/>
-        public bool? Sparse()
-        {
-            return _sparse;
-        }
-
-        
-        /// <summary>
         /// Set the Time To Live (TTL) for a multicast datagram. Valid values are 0-255 for the number of hops the datagram
         /// can progress along.
         /// </summary>
@@ -345,7 +322,7 @@ namespace Adaptive.Aeron
                     throw new ArgumentException("MTU not in range 32-65504: " + mtu);
                 }
 
-                if ((mtu & (FrameDescriptor.FRAME_ALIGNMENT - 1)) != 0)
+                if ((mtu & (FRAME_ALIGNMENT - 1)) != 0)
                 {
                     throw new ArgumentException("MTU not a multiple of FRAME_ALIGNMENT: mtu=" + mtu);
                 }
@@ -454,7 +431,7 @@ namespace Adaptive.Aeron
                     throw new ArgumentException("term offset not in range 0-1g: " + termOffset);
                 }
 
-                if (0 != (termOffset & (FrameDescriptor.FRAME_ALIGNMENT - 1)))
+                if (0 != (termOffset & (FRAME_ALIGNMENT - 1)))
                 {
                     throw new ArgumentException("term offset not multiple of FRAME_ALIGNMENT: " + termOffset);
                 }
@@ -525,6 +502,29 @@ namespace Adaptive.Aeron
             return _linger;
         }
 
+        /// <summary>
+        /// Set to indicate if a term log buffer should be sparse on disk or not. Sparse saves space at the potential
+        /// expense of latency.
+        /// </summary>
+        /// <param name="isSparse"> true if the term buffer log is sparse on disk. </param>
+        /// <returns> this for a fluent API. </returns>
+        /// <see cref="Aeron.Context.SPARSE_PARAM_NAME"/>
+        public ChannelUriStringBuilder Sparse(bool? isSparse)
+        {
+            _sparse = isSparse;
+            return this;
+        }
+
+        /// <summary>
+        /// Get if a term log buffer should be sparse on disk or not. Sparse saves space at the potential expense of latency.
+        /// </summary>
+        /// <returns> true if the term buffer log is sparse on disk. </returns>
+        /// <see cref="Aeron.Context.SPARSE_PARAM_NAME"/>
+        public bool? Sparse()
+        {
+            return _sparse;
+        }
+        
         /// <summary>
         /// Set the tags for a channel used by a publication or subscription. Tags can be used to identify or tag a
         /// channel so that a configuration can be referenced and reused.
@@ -606,6 +606,11 @@ namespace Adaptive.Aeron
         /// <returns> this for a fluent API. </returns>
         public ChannelUriStringBuilder InitialPosition(long position, int initialTermId, int termLength)
         {
+            if (position < 0 || 0 != (position & (FRAME_ALIGNMENT - 1)))
+            {
+                throw new ArgumentException("invalid position: " + position);
+            }
+            
             int bitsToShift = LogBufferDescriptor.PositionBitsToShift(termLength);
 
             _initialTermId = initialTermId;
@@ -657,21 +662,6 @@ namespace Adaptive.Aeron
                 _sb.Append(Aeron.Context.MDC_CONTROL_MODE_PARAM_NAME).Append('=').Append(_controlMode).Append('|');
             }
 
-            if (null != _reliable)
-            {
-                _sb.Append(Aeron.Context.RELIABLE_STREAM_PARAM_NAME).Append('=').Append(_reliable).Append('|');
-            }
-
-            if (null != _sparse)
-            {
-                _sb.Append(Aeron.Context.SPARSE_PARAM_NAME).Append('=').Append(_sparse).Append('|');
-            }
-
-            if (null != _ttl)
-            {
-                _sb.Append(Aeron.Context.TTL_PARAM_NAME).Append('=').Append(_ttl.Value).Append('|');
-            }
-
             if (null != _mtu)
             {
                 _sb.Append(Aeron.Context.MTU_LENGTH_PARAM_NAME).Append('=').Append(_mtu.Value).Append('|');
@@ -703,6 +693,16 @@ namespace Adaptive.Aeron
                 _sb.Append(Aeron.Context.SESSION_ID_PARAM_NAME).Append('=').Append(PrefixTag(_isSessionIdTagged, _sessionId.Value)).Append('|');
             }
 
+            if (null != _ttl)
+            {
+                _sb.Append(Aeron.Context.TTL_PARAM_NAME).Append('=').Append(_ttl.Value).Append('|');
+            }
+            
+            if (null != _reliable)
+            {
+                _sb.Append(Aeron.Context.RELIABLE_STREAM_PARAM_NAME).Append('=').Append(_reliable).Append('|');
+            }
+
             if (null != _linger)
             {
                 _sb.Append(Aeron.Context.LINGER_PARAM_NAME).Append('=').Append(_linger.Value).Append('|');
@@ -711,6 +711,11 @@ namespace Adaptive.Aeron
             if (null != _alias)
             {
                 _sb.Append(Aeron.Context.ALIAS_PARAM_NAME).Append('=').Append(_alias).Append('|');
+            }
+            
+            if (null != _sparse)
+            {
+                _sb.Append(Aeron.Context.SPARSE_PARAM_NAME).Append('=').Append(_sparse).Append('|');
             }
 
             char lastChar = _sb[_sb.Length - 1];

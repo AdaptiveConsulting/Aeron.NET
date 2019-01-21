@@ -87,5 +87,11 @@ namespace Adaptive.Cluster.Service
         /// </summary>
         /// <param name="newRole"> that the node has assumed. </param>
         void OnRoleChange(ClusterRole newRole);
+        
+        /// <summary>
+        /// Called when the container is going to terminate.
+        /// </summary>
+        /// <param name="cluster"> with which the service can interact. </param>
+        void OnTerminate(ICluster cluster);
     }
 }

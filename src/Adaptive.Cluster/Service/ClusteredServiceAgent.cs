@@ -34,6 +34,7 @@ namespace Adaptive.Cluster.Service
         private readonly IEpochClock epochClock;
         private readonly ClusterMarkFile markFile;
         private readonly UnsafeBuffer headerBuffer = new UnsafeBuffer(new byte[SESSION_HEADER_LENGTH]);
+        private readonly DirectBufferVector headerVector;
         private readonly EgressMessageHeaderEncoder _egressMessageHeaderEncoder = new EgressMessageHeaderEncoder();
 
         private long ackId = 0;
@@ -41,6 +42,7 @@ namespace Adaptive.Cluster.Service
         private long cachedTimeMs;
         private long terminationPosition = NULL_POSITION;
         private int memberId = NULL_VALUE;
+        private bool isServiceActive;
         private BoundedLogAdapter logAdapter;
         private AtomicCounter heartbeatCounter;
         private ReadableCounter roleCounter;
@@ -52,6 +54,8 @@ namespace Adaptive.Cluster.Service
         internal ClusteredServiceAgent(ClusteredServiceContainer.Context ctx)
         {
             this.ctx = ctx;
+            
+            headerVector = new DirectBufferVector(headerBuffer, 0, headerBuffer.Capacity);
 
             archiveCtx = ctx.ArchiveContext();
             aeron = ctx.Aeron();
@@ -86,6 +90,19 @@ namespace Adaptive.Cluster.Service
 
         public void OnClose()
         {
+            if (isServiceActive)
+            {
+                isServiceActive = false;
+                try
+                {
+                    service.OnTerminate(this);
+                }
+                catch (Exception ex)
+                {
+                    ctx.CountedErrorHandler().OnError(ex);
+                }
+            }
+            
             if (!ctx.OwnsAeronClient())
             {
                 foreach (ClientSession session in sessionByIdMap.Values)
@@ -97,6 +114,8 @@ namespace Adaptive.Cluster.Service
                 _consensusModuleProxy?.Dispose();
                 _serviceAdapter?.Dispose();
             }
+            
+            ctx.Dispose();
         }
 
         public int DoWork()
@@ -146,6 +165,8 @@ namespace Adaptive.Cluster.Service
         public int MemberId => memberId;
 
         public Aeron.Aeron Aeron => aeron;
+
+        public ClusteredServiceContainer.Context Context => ctx;
 
         public ClientSession GetClientSession(long clusterSessionId)
         {
@@ -225,6 +246,30 @@ namespace Adaptive.Cluster.Service
                 .Timestamp(clusterTimeMs);
 
             return publication.Offer(headerBuffer, 0, headerBuffer.Capacity, buffer, offset, length, null);
+        }
+        
+        public long Offer(long clusterSessionId, Publication publication, DirectBufferVector[] vectors)
+        {
+            if (role != ClusterRole.Leader)
+            {
+                return ClientSession.MOCKED_OFFER;
+            }
+
+            if (null == publication)
+            {
+                return Publication.NOT_CONNECTED;
+            }
+
+            _egressMessageHeaderEncoder
+                .ClusterSessionId(clusterSessionId)
+                .Timestamp(clusterTimeMs);
+
+            if (vectors[0] != headerVector)
+            {
+                vectors[0] = headerVector;
+            }
+
+            return publication.Offer(vectors);
         }
 
         public void OnJoinLog(
@@ -333,8 +378,7 @@ namespace Adaptive.Cluster.Service
 
             if (memberId == this.memberId && changeType == ChangeType.QUIT)
             {
-                _consensusModuleProxy.Ack(logPosition, ackId++, serviceId);
-                ctx.TerminationHook().Invoke();
+                Terminate(logPosition);
             }
         }
 
@@ -717,10 +761,27 @@ namespace Adaptive.Cluster.Service
         {
             if (null != logAdapter && logAdapter.Position() >= terminationPosition)
             {
-                _consensusModuleProxy.Ack(terminationPosition, ackId++, serviceId);
+                var logPosition = terminationPosition;
                 terminationPosition = NULL_POSITION;
-                ctx.TerminationHook().Invoke();
+                Terminate(logPosition);
             }
+        }
+
+        private void Terminate(long logPosition)
+        {
+            isServiceActive = false;
+
+            try
+            {
+                service.OnTerminate(this);
+            }
+            catch (Exception ex)
+            {
+                ctx.CountedErrorHandler().OnError(ex);
+            }
+            
+            _consensusModuleProxy.Ack(logPosition, ackId++, serviceId);
+            ctx.TerminationHook().Invoke();
         }
     }
 }

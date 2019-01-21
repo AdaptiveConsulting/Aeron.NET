@@ -38,6 +38,7 @@ namespace Adaptive.Archiver
 
         private const int FRAGMENT_LIMIT = 10;
 
+        private bool isClosed = false;
         private readonly long controlSessionId;
         private readonly long messageTimeoutNs;
         private readonly Context context;
@@ -93,7 +94,7 @@ namespace Adaptive.Archiver
                     CloseHelper.QuietDispose(publication);
                 }
 
-                CloseHelper.QuietDispose(ctx);
+                ctx.Dispose();
 
                 throw;
             }
@@ -122,15 +123,19 @@ namespace Adaptive.Archiver
             _lock.Lock();
             try
             {
-                archiveProxy.CloseSession(controlSessionId);
-
-                if (!context.OwnsAeronClient())
+                if (!isClosed)
                 {
-                    controlResponsePoller.Subscription()?.Dispose();
-                    archiveProxy.Pub()?.Dispose();
-                }
+                    isClosed = true;
+                    archiveProxy.CloseSession(controlSessionId);
 
-                context.Dispose();
+                    if (!context.OwnsAeronClient())
+                    {
+                        controlResponsePoller.Subscription()?.Dispose();
+                        archiveProxy.Pub()?.Dispose();
+                    }
+
+                    context.Dispose();
+                }
             }
             finally
             {
@@ -207,7 +212,7 @@ namespace Adaptive.Archiver
                     CloseHelper.QuietDispose(publication);
                 }
 
-                CloseHelper.QuietDispose(ctx);
+                ctx.Dispose();
 
                 throw;
             }
@@ -269,6 +274,8 @@ namespace Adaptive.Archiver
             _lock.Lock();
             try
             {
+                EnsureOpen();
+                
                 if (controlResponsePoller.Poll() != 0 && controlResponsePoller.IsPollComplete())
                 {
                     if (controlResponsePoller.ControlSessionId() == controlSessionId &&
@@ -299,6 +306,8 @@ namespace Adaptive.Archiver
             _lock.Lock();
             try
             {
+                EnsureOpen();
+                
                 if (controlResponsePoller.Poll() != 0 && controlResponsePoller.IsPollComplete())
                 {
                     if (controlResponsePoller.ControlSessionId() == controlSessionId &&
@@ -343,6 +352,8 @@ namespace Adaptive.Archiver
             _lock.Lock();
             try
             {
+                EnsureOpen();
+                
                 publication = aeron.AddPublication(channel, streamId);
                 if (!publication.IsOriginal)
                 {
@@ -383,8 +394,9 @@ namespace Adaptive.Archiver
             _lock.Lock();
             try
             {
+                EnsureOpen();
+                
                 publication = aeron.AddExclusivePublication(channel, streamId);
-
                 StartRecording(ChannelUri.AddSessionId(channel, publication.SessionId), streamId, SourceLocation.LOCAL);
             }
             catch (Exception)
@@ -418,6 +430,8 @@ namespace Adaptive.Archiver
             _lock.Lock();
             try
             {
+                EnsureOpen();
+                
                 long correlationId = aeron.NextCorrelationId();
 
                 if (!archiveProxy.StartRecording(channel, streamId, sourceLocation, correlationId, controlSessionId))
@@ -451,6 +465,8 @@ namespace Adaptive.Archiver
             _lock.Lock();
             try
             {
+                EnsureOpen();
+                
                 long correlationId = aeron.NextCorrelationId();
 
                 if (!archiveProxy.ExtendRecording(channel, streamId, sourceLocation, recordingId, correlationId,
@@ -483,6 +499,8 @@ namespace Adaptive.Archiver
             _lock.Lock();
             try
             {
+                EnsureOpen();
+                
                 long correlationId = aeron.NextCorrelationId();
 
                 if (!archiveProxy.StopRecording(channel, streamId, correlationId, controlSessionId))
@@ -514,12 +532,14 @@ namespace Adaptive.Archiver
         /// <seealso cref="StartRecording(String, int, SourceLocation)"/> or
         /// <seealso cref="ExtendRecording(long, String, int, SourceLocation)"/>.
         /// </summary>
-        /// <param name="subscriptionId"> the subscription was registered with for the recording. </param>
+        /// <param name="subscriptionId"> is the <see cref="Subscription.RegistrationId"/> was registered with for the recording. </param>
         public void StopRecording(long subscriptionId)
         {
             _lock.Lock();
             try
             {
+                EnsureOpen();
+                
                 long correlationId = aeron.NextCorrelationId();
 
                 if (!archiveProxy.StopRecording(subscriptionId, correlationId, controlSessionId))
@@ -558,6 +578,8 @@ namespace Adaptive.Archiver
             _lock.Lock();
             try
             {
+                EnsureOpen();
+                
                 long correlationId = aeron.NextCorrelationId();
 
                 if (!archiveProxy.Replay(recordingId, position, length, replayChannel, replayStreamId, correlationId,
@@ -583,6 +605,8 @@ namespace Adaptive.Archiver
             _lock.Lock();
             try
             {
+                EnsureOpen();
+                
                 long correlationId = aeron.NextCorrelationId();
 
                 if (!archiveProxy.StopReplay(replaySessionId, correlationId, controlSessionId))
@@ -614,6 +638,8 @@ namespace Adaptive.Archiver
             _lock.Lock();
             try
             {
+                EnsureOpen();
+                
                 ChannelUri replayChannelUri = ChannelUri.Parse(replayChannel);
                 long correlationId = aeron.NextCorrelationId();
 
@@ -653,6 +679,8 @@ namespace Adaptive.Archiver
             _lock.Lock();
             try
             {
+                EnsureOpen();
+                
                 ChannelUri replayChannelUri = ChannelUri.Parse(replayChannel);
                 long correlationId = aeron.NextCorrelationId();
 
@@ -690,6 +718,8 @@ namespace Adaptive.Archiver
             _lock.Lock();
             try
             {
+                EnsureOpen();
+                
                 long correlationId = aeron.NextCorrelationId();
 
                 if (!archiveProxy.ListRecordings(fromRecordingId, recordCount, correlationId, controlSessionId))
@@ -728,6 +758,8 @@ namespace Adaptive.Archiver
             _lock.Lock();
             try
             {
+                EnsureOpen();
+                
                 long correlationId = aeron.NextCorrelationId();
 
                 if (!archiveProxy.ListRecordingsForUri(fromRecordingId, recordCount, channelFragment, streamId, correlationId,
@@ -759,6 +791,8 @@ namespace Adaptive.Archiver
             _lock.Lock();
             try
             {
+                EnsureOpen();
+                
                 long correlationId = aeron.NextCorrelationId();
 
                 if (!archiveProxy.ListRecording(recordingId, correlationId, controlSessionId))
@@ -785,6 +819,8 @@ namespace Adaptive.Archiver
             _lock.Lock();
             try
             {
+                EnsureOpen();
+                
                 long correlationId = aeron.NextCorrelationId();
 
                 if (!archiveProxy.GetRecordingPosition(recordingId, correlationId, controlSessionId))
@@ -811,6 +847,8 @@ namespace Adaptive.Archiver
             _lock.Lock();
             try
             {
+                EnsureOpen();
+                
                 long correlationId = aeron.NextCorrelationId();
 
                 if (!archiveProxy.GetStopPosition(recordingId, correlationId, controlSessionId))
@@ -839,6 +877,8 @@ namespace Adaptive.Archiver
             _lock.Lock();
             try
             {
+                EnsureOpen();
+                
                 long correlationId = aeron.NextCorrelationId();
 
                 if (!archiveProxy.FindLastMatchingRecording(
@@ -866,6 +906,8 @@ namespace Adaptive.Archiver
             _lock.Lock();
             try
             {
+                EnsureOpen();
+                
                 long correlationId = aeron.NextCorrelationId();
 
                 if (!archiveProxy.TruncateRecording(recordingId, position, correlationId, controlSessionId))
@@ -1059,6 +1101,14 @@ namespace Adaptive.Archiver
             }
         }
 
+        private void EnsureOpen()
+        {
+            if (isClosed)
+            {
+                throw new ArchiveException("client is closed");
+            }
+        }
+        
         /// <summary>
         /// Common configuration properties for communicating with an Aeron archive.
         /// </summary>
@@ -1318,8 +1368,11 @@ namespace Adaptive.Archiver
 
         /// <summary>
         /// Specialised configuration options for communicating with an Aeron Archive.
+        ///
+        /// The context will be owned by <see cref="AeronArchive"/> after a successful
+        /// <see cref="AeronArchive.Connect(Context)"/> and closed via <see cref="AeronArchive.Dispose"/>
         /// </summary>
-        public class Context : IDisposable
+        public class Context
         {
             internal long messageTimeoutNs = Configuration.MessageTimeoutNs();
             internal string recordingEventsChannel = Configuration.RecordingEventsChannel();
@@ -1769,13 +1822,13 @@ namespace Adaptive.Archiver
             }
 
             /// <summary>
-            /// Close any allocated resources if it fails to connect.
+            /// Close any allocated resources.
             /// </summary>
             public void Dispose()
             {
                 controlResponsePoller.Subscription()?.Dispose();
                 archiveProxy.Pub()?.Dispose();
-                ctx?.Dispose();
+                ctx.Dispose();
             }
 
             /// <summary>

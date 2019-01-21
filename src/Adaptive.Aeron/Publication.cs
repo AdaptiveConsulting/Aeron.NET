@@ -513,5 +513,18 @@ namespace Adaptive.Aeron
             return totalLength;
         }
 
+        public override string ToString()
+        {
+            return "Publication{" + 
+                   "originalRegistrationId=" + OriginalRegistrationId + 
+                   ", registrationId=" + RegistrationId + 
+                   ", initialTermId=" + InitialTermId + 
+                   ", termBufferLength=" + TermBufferLength + 
+                   ", sessionId=" + SessionId + 
+                   ", streamId=" + StreamId + 
+                   ", channel='" + Channel + '\'' + 
+                   ", position=" + Position + 
+                   '}';
+        }
     }
 }

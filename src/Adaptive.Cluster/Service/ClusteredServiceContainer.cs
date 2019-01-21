@@ -54,6 +54,7 @@ namespace Adaptive.Cluster.Service
                     ctx.MarkFile().SignalFailedStart();
                 }
 
+                ctx.Dispose();
                 throw;
             }
 
@@ -98,7 +99,6 @@ namespace Adaptive.Cluster.Service
         public void Dispose()
         {
             serviceAgentRunner?.Dispose();
-            ctx?.Dispose();
         }
 
         /// <summary>
@@ -374,7 +374,11 @@ namespace Adaptive.Cluster.Service
             }
         }
 
-        public class Context : IDisposable
+        /// <summary>
+        /// The context will be owned by <seealso cref="ClusteredServiceAgent"/> after a successful
+        /// <seealso cref="ClusteredServiceContainer.Launch(Context)"/> and closed via <seealso cref="ClusteredServiceContainer.Dispose()"/>.
+        /// </summary>
+        public class Context
         {
             private int serviceId = Configuration.ServiceId();
             private string serviceName = Configuration.ServiceName();
@@ -1140,12 +1144,12 @@ namespace Adaptive.Cluster.Service
             /// </summary>
             public void Dispose()
             {
-                CloseHelper.QuietDispose(markFile);
-
                 if (ownsAeronClient)
                 {
                     aeron?.Dispose();
                 }
+
+                CloseHelper.QuietDispose(markFile);
             }
 
             private void ConcludeMarkFile()

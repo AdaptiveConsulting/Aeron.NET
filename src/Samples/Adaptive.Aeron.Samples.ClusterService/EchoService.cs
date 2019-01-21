@@ -57,5 +57,10 @@ namespace Adaptive.Aeron.Samples.ClusterService
         {
             Console.WriteLine($"OnRoleChange: newRole={newRole}");
         }
+
+        public void OnTerminate(ICluster cluster)
+        {
+            Console.WriteLine("OnTerminate");
+        }
     }
 }

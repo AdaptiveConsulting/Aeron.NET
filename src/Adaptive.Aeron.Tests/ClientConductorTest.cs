@@ -59,11 +59,13 @@ namespace Adaptive.Aeron.Tests
         private SubscriptionReadyFlyweight SubscriptionReady;
         private OperationSucceededFlyweight OperationSuccess;
         private ErrorResponseFlyweight ErrorResponse;
+        private ClientTimeoutFlyweight ClientTimeout;
 
         private UnsafeBuffer PublicationReadyBuffer;
         private UnsafeBuffer SubscriptionReadyBuffer;
         private UnsafeBuffer OperationSuccessBuffer;
         private UnsafeBuffer ErrorMessageBuffer;
+        private UnsafeBuffer ClientTimeoutBuffer;
 
         private CopyBroadcastReceiver MockToClientReceiver;
 
@@ -98,11 +100,13 @@ namespace Adaptive.Aeron.Tests
             SubscriptionReady = new SubscriptionReadyFlyweight();
             OperationSuccess = new OperationSucceededFlyweight();
             ErrorResponse = new ErrorResponseFlyweight();
+            ClientTimeout = new ClientTimeoutFlyweight();
 
             PublicationReadyBuffer = new UnsafeBuffer(new byte[SEND_BUFFER_CAPACITY]);
             SubscriptionReadyBuffer = new UnsafeBuffer(new byte[SEND_BUFFER_CAPACITY]);
             OperationSuccessBuffer = new UnsafeBuffer(new byte[SEND_BUFFER_CAPACITY]);
             ErrorMessageBuffer = new UnsafeBuffer(new byte[SEND_BUFFER_CAPACITY]);
+            ClientTimeoutBuffer = new UnsafeBuffer(new byte[SEND_BUFFER_CAPACITY]);
             
             CounterValuesBuffer = new UnsafeBuffer(new byte[COUNTER_BUFFER_LENGTH]);
             MockToClientReceiver = A.Fake<CopyBroadcastReceiver>();
@@ -144,6 +148,7 @@ namespace Adaptive.Aeron.Tests
             SubscriptionReady.Wrap(SubscriptionReadyBuffer, 0);
             OperationSuccess.Wrap(OperationSuccessBuffer, 0);
             ErrorResponse.Wrap(ErrorMessageBuffer, 0);
+            ClientTimeout.Wrap(ClientTimeoutBuffer, 0);
 
             PublicationReady.CorrelationId(CORRELATION_ID);
             PublicationReady.RegistrationId(CORRELATION_ID);
@@ -497,9 +502,51 @@ namespace Adaptive.Aeron.Tests
 
             A.CallTo(() => MockClientErrorHandler(A<ConductorServiceTimeoutException>._)).MustHaveHappened();
 
-            Assert.True(Conductor.IsClosed());
+            Assert.True(Conductor.IsTerminating());
         }
 
+        [Test]
+        public void ShouldTerminateAndErrorOnClientTimeoutFromDriver()
+        {
+            SuppressPrintError = true;
+            
+            Conductor.OnClientTimeout();
+
+            A.CallTo(() => MockClientErrorHandler.Invoke(A<Exception>._)).MustHaveHappened();
+
+            bool threwException = false;
+            try
+            {
+                Conductor.DoWork();
+            }
+            catch (AgentTerminationException)
+            {
+                threwException = true;
+            }
+            
+            Assert.True(threwException);
+            Assert.True(Conductor.IsTerminating());
+        }
+
+        [Test]
+        public void ShouldNotCloseAndErrorOnClientTimeoutForAnotherClientIdFromDriver()
+        {
+            WhenReceiveBroadcastOnMessage(
+                ControlProtocolEvents.ON_CLIENT_TIMEOUT,
+                ClientTimeoutBuffer,
+                buffer =>
+                {
+                    ClientTimeout.ClientId(Conductor.DriverListenerAdapter().ClientId + 1);
+                    return ClientTimeoutFlyweight.LENGTH;
+                });
+
+            Conductor.DoWork();
+            
+            A.CallTo(() => MockClientErrorHandler.Invoke(A<Exception>._)).MustNotHaveHappened();
+            
+            Assert.False(Conductor.IsClosed());
+        }
+        
         private void WhenReceiveBroadcastOnMessage(int msgTypeId, IMutableDirectBuffer buffer, Func<IMutableDirectBuffer, int> filler)
         {
             A.CallTo(() => MockToClientReceiver.Receive(A<MessageHandler>._)).Invokes(() =>

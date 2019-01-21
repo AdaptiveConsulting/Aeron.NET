@@ -63,6 +63,9 @@ namespace Adaptive.Agrona.Concurrent.Broadcast
             _tailIntentCounterIndex = _capacity + BroadcastBufferDescriptor.TailIntentCounterOffset;
             _tailCounterIndex = _capacity + BroadcastBufferDescriptor.TailCounterOffset;
             _latestCounterIndex = _capacity + BroadcastBufferDescriptor.LatestCounterOffset;
+
+            _cursor = _nextRecord = buffer.GetLongVolatile(_latestCounterIndex);
+            _recordOffset = (int) _cursor & (_capacity - 1);
         }
 
         /// <summary>

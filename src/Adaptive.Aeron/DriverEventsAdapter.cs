@@ -15,10 +15,12 @@
  */
 
 using System;
+using System.Runtime.CompilerServices;
 using Adaptive.Aeron.Command;
 using Adaptive.Agrona;
 using Adaptive.Agrona.Concurrent;
 using Adaptive.Agrona.Concurrent.Broadcast;
+using static Adaptive.Aeron.Command.ControlProtocolEvents;
 
 namespace Adaptive.Aeron
 {
@@ -36,15 +38,19 @@ namespace Adaptive.Aeron
         private readonly OperationSucceededFlyweight _operationSucceeded = new OperationSucceededFlyweight();
         private readonly ImageMessageFlyweight _imageMessage = new ImageMessageFlyweight();
         private readonly CounterUpdateFlyweight _counterUpdate = new CounterUpdateFlyweight();
+        private readonly ClientTimeoutFlyweight _clientTimeout = new ClientTimeoutFlyweight();
         private readonly IDriverEventsListener _listener;
         private readonly MessageHandler _messageHandler;
 
         private long _activeCorrelationId;
         private long _receivedCorrelationId;
+        private readonly long _clientId;
+        private bool _isInvalid;
 
-        internal DriverEventsAdapter(CopyBroadcastReceiver broadcastReceiver, IDriverEventsListener listener)
+        internal DriverEventsAdapter(CopyBroadcastReceiver broadcastReceiver, long clientId, IDriverEventsListener listener)
         {
             _broadcastReceiver = broadcastReceiver;
+            _clientId = clientId;
             _listener = listener;
             _messageHandler = OnMessage;
         }
@@ -54,19 +60,29 @@ namespace Adaptive.Aeron
             _activeCorrelationId = activeCorrelationId;
             _receivedCorrelationId = Aeron.NULL_VALUE;
 
-            return _broadcastReceiver.Receive(_messageHandler);
+            try
+            {
+                return _broadcastReceiver.Receive(_messageHandler);
+            }
+            catch (InvalidOperationException)
+            {
+                _isInvalid = true;
+                throw;
+            }
         }
 
-        public long ReceivedCorrelationId()
-        {
-            return _receivedCorrelationId;
-        }
+        public long ReceivedCorrelationId => _receivedCorrelationId;
+        
+        public bool IsInvalid => _isInvalid;
+
+        public long ClientId => _clientId; 
+        
 
         public void OnMessage(int msgTypeId, IMutableDirectBuffer buffer, int index, int length)
         {
             switch (msgTypeId)
             {
-                case ControlProtocolEvents.ON_ERROR:
+                case ON_ERROR:
                 {
                     _errorResponse.Wrap(buffer, index);
 
@@ -88,7 +104,7 @@ namespace Adaptive.Aeron
                     break;
                 }
 
-                case ControlProtocolEvents.ON_AVAILABLE_IMAGE:
+                case ON_AVAILABLE_IMAGE:
                 {
                     _imageReady.Wrap(buffer, index);
 
@@ -104,7 +120,7 @@ namespace Adaptive.Aeron
                 }
 
 
-                case ControlProtocolEvents.ON_PUBLICATION_READY:
+                case ON_PUBLICATION_READY:
                 {
                     _publicationReady.Wrap(buffer, index);
 
@@ -125,7 +141,7 @@ namespace Adaptive.Aeron
                     break;
                 }
 
-                case ControlProtocolEvents.ON_SUBSCRIPTION_READY:
+                case ON_SUBSCRIPTION_READY:
                 {
                     _subscriptionReady.Wrap(buffer, index);
 
@@ -139,7 +155,7 @@ namespace Adaptive.Aeron
                     break;
                 }
 
-                case ControlProtocolEvents.ON_OPERATION_SUCCESS:
+                case ON_OPERATION_SUCCESS:
                 {
                     _operationSucceeded.Wrap(buffer, index);
 
@@ -152,7 +168,7 @@ namespace Adaptive.Aeron
                     break;
                 }
 
-                case ControlProtocolEvents.ON_UNAVAILABLE_IMAGE:
+                case ON_UNAVAILABLE_IMAGE:
                 {
                     _imageMessage.Wrap(buffer, index);
 
@@ -161,7 +177,7 @@ namespace Adaptive.Aeron
                     break;
                 }
 
-                case ControlProtocolEvents.ON_EXCLUSIVE_PUBLICATION_READY:
+                case ON_EXCLUSIVE_PUBLICATION_READY:
                 {
                     _publicationReady.Wrap(buffer, index);
 
@@ -182,7 +198,7 @@ namespace Adaptive.Aeron
                     break;
                 }
 
-                case ControlProtocolEvents.ON_COUNTER_READY:
+                case ON_COUNTER_READY:
                 {
                     _counterUpdate.Wrap(buffer, index);
 
@@ -201,13 +217,26 @@ namespace Adaptive.Aeron
                     break;
                 }
 
-                case ControlProtocolEvents.ON_UNAVAILABLE_COUNTER:
+                case ON_UNAVAILABLE_COUNTER:
                 {
                     _counterUpdate.Wrap(buffer, index);
 
                     _listener.OnUnavailableCounter(_counterUpdate.CorrelationId(), _counterUpdate.CounterId());
                     break;
                 }
+
+                case ON_CLIENT_TIMEOUT:
+                {
+                    _clientTimeout.Wrap(buffer, index);
+
+                    if (_clientTimeout.ClientId() == _clientId)
+                    {
+                        _listener.OnClientTimeout();
+                    }
+
+                    break;
+                }
+                    
             }
         }
 

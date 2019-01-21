@@ -173,9 +173,6 @@ namespace Adaptive.Aeron
                 {
                     _conductorInvoker.Dispose();
                 }
-
-                _conductor.ClientClose();
-                _ctx.Dispose();
             }
         }
 
@@ -380,8 +377,11 @@ namespace Adaptive.Aeron
         /// A number of the properties are for testing and should not be set by end users.
         /// 
         /// <b>Note:</b> Do not reuse instances of the context across different <seealso cref="Aeron"/> clients.
+        ///
+        /// The context will be owned be <see cref="ClientConductor"/> after a successful
+        /// <see cref="Aeron.Connect(Context)"/> and closed via <see cref="Aeron.Dispose"/>
         /// </summary>
-        public class Context : IDisposable
+        public class Context
         {
             private long _clientId;
             private bool _useConductorAgentInvoker = false;
@@ -537,16 +537,6 @@ namespace Adaptive.Aeron
             public const string MDC_CONTROL_MODE = "control-mode";
 
             /// <summary>
-            /// Key for the session id for a publication or restricted subscription.
-            /// </summary>
-            public const string SESSION_ID_PARAM_NAME = "session-id";
-
-            /// <summary>
-            /// Key for the linger timeout for a publication to wait around after draining in nanoseconds.
-            /// </summary>
-            public const string LINGER_PARAM_NAME = "linger";
-
-            /// <summary>
             /// Valid value for <seealso cref="MDC_CONTROL_MODE"/> when manual control is desired.
             /// </summary>
             public const string MDC_CONTROL_MODE_MANUAL = "manual";
@@ -555,7 +545,17 @@ namespace Adaptive.Aeron
             /// Valid value for <seealso cref="MDC_CONTROL_MODE_PARAM_NAME"/> when dynamic control is desired. Default value.
             /// </summary>
             public const string MDC_CONTROL_MODE_DYNAMIC = "dynamic";
+            
+            /// <summary>
+            /// Key for the session id for a publication or restricted subscription.
+            /// </summary>
+            public const string SESSION_ID_PARAM_NAME = "session-id";
 
+            /// <summary>
+            /// Key for the linger timeout for a publication to wait around after draining in nanoseconds.
+            /// </summary>
+            public const string LINGER_PARAM_NAME = "linger";
+            
             /// <summary>
             /// Parameter name for channel URI param to indicate if a subscribed must be reliable or not. Value is boolean.
             /// </summary>
@@ -1223,8 +1223,10 @@ namespace Adaptive.Aeron
             /// </summary>
             public void Dispose()
             {
-                IoUtil.Unmap(_cncByteBuffer);
+                var cncByteBuffer = _cncByteBuffer;
                 _cncByteBuffer = null;
+                IoUtil.Unmap(cncByteBuffer);
+                
 
                 _cncMetaDataBuffer?.Dispose();
                 _countersMetaDataBuffer?.Dispose();
