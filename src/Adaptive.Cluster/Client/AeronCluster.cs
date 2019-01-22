@@ -268,12 +268,7 @@ namespace Adaptive.Cluster.Client
                 _nanoClock = _aeron.Ctx.NanoClock();
                 _isUnicast = ctx.ClusterMemberEndpoints() != null;
                 _egressListener = ctx.EgressListener();
-                _poller = new Poller(ctx.EgressListener(), _clusterSessionId, this);
-                _fragmentAssembler = new FragmentAssembler(_poller);
-
                 _controlledEgressListener = ctx.ControlledEgressListener();
-                _controlledPoller = new ControlledPoller(ctx.ControlledEgressListener(), _clusterSessionId, this);
-                _controlledFragmentAssembler = new ControlledFragmentAssembler(_controlledPoller, 0); // IsDirect
 
                 subscription = _aeron.AddSubscription(ctx.EgressChannel(), ctx.EgressStreamId());
                 _subscription = subscription;
@@ -292,6 +287,11 @@ namespace Adaptive.Cluster.Client
                     .WrapAndApplyHeader(_keepaliveMsgBuffer, 0, _messageHeaderEncoder)
                     .LeadershipTermId(_leadershipTermId)
                     .ClusterSessionId(_clusterSessionId);
+
+                _poller = new Poller(ctx.EgressListener(), _clusterSessionId, this);
+                _fragmentAssembler = new FragmentAssembler(_poller);
+                _controlledPoller = new ControlledPoller(ctx.ControlledEgressListener(), _clusterSessionId, this);
+                _controlledFragmentAssembler = new ControlledFragmentAssembler(_controlledPoller);
             }
             catch (Exception)
             {
