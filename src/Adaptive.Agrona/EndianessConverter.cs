@@ -16,6 +16,7 @@
 
 using System;
 using System.Net;
+using System.Runtime.CompilerServices;
 
 namespace Adaptive.Agrona
 {
@@ -33,7 +34,8 @@ namespace Adaptive.Agrona
         /// </summary>
         /// <param name="byteOrder">the endianess to apply</param>
         /// <param name="value">the value to be converted</param>
-        /// <returns>The value with applied endainess</returns>
+        /// <returns>The value with applied endianess</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static short ApplyInt16(ByteOrder byteOrder, short value)
         {
             if (byteOrder == NativeByteOrder) return value;
@@ -46,7 +48,8 @@ namespace Adaptive.Agrona
         /// </summary>
         /// <param name="byteOrder">the endianess to apply</param>
         /// <param name="value">the value to be converted</param>
-        /// <returns>The value with applied endainess</returns>
+        /// <returns>The value with applied endianess</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ushort ApplyUint16(ByteOrder byteOrder, ushort value)
         {
             if (byteOrder == NativeByteOrder) return value;
@@ -59,7 +62,8 @@ namespace Adaptive.Agrona
         /// </summary>
         /// <param name="byteOrder">the endianess to apply</param>
         /// <param name="value">the value to be converted</param>
-        /// <returns>The value with applied endainess</returns>
+        /// <returns>The value with applied endianess</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int ApplyInt32(ByteOrder byteOrder, int value)
         {
             if (byteOrder == NativeByteOrder) return value;
@@ -73,7 +77,8 @@ namespace Adaptive.Agrona
         /// </summary>
         /// <param name="byteOrder">the endianess to apply</param>
         /// <param name="value">the value to be converted</param>
-        /// <returns>The value with applied endainess</returns>
+        /// <returns>The value with applied endianess</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static uint ApplyUint32(ByteOrder byteOrder, uint value)
         {
             if (byteOrder == NativeByteOrder) return value;
@@ -87,7 +92,8 @@ namespace Adaptive.Agrona
         /// </summary>
         /// <param name="byteOrder">the endianess to apply</param>
         /// <param name="value">the value to be converted</param>
-        /// <returns>The value with applied endainess</returns>
+        /// <returns>The value with applied endianess</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ulong ApplyUint64(ByteOrder byteOrder, ulong value)
         {
             if (byteOrder == NativeByteOrder) return value;
@@ -103,7 +109,8 @@ namespace Adaptive.Agrona
         /// </summary>
         /// <param name="byteOrder">the endianess to apply</param>
         /// <param name="value">the value to be converted</param>
-        /// <returns>The value with applied endainess</returns>
+        /// <returns>The value with applied endianess</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static long ApplyInt64(ByteOrder byteOrder, long value)
         {
             if (byteOrder == NativeByteOrder) return value;
@@ -116,7 +123,8 @@ namespace Adaptive.Agrona
         /// </summary>
         /// <param name="byteOrder">the endianess to apply</param>
         /// <param name="value">the value to be converted</param>
-        /// <returns>The value with applied endainess</returns>
+        /// <returns>The value with applied endianess</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double ApplyDouble(ByteOrder byteOrder, double value)
         {
             if (byteOrder == NativeByteOrder) return value;
@@ -129,7 +137,8 @@ namespace Adaptive.Agrona
         /// </summary>
         /// <param name="byteOrder">the endianess to apply</param>
         /// <param name="value">the value to be converted</param>
-        /// <returns>The value with applied endainess</returns>
+        /// <returns>The value with applied endianess</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public unsafe static float ApplyFloat(ByteOrder byteOrder, float value)
         {
             if (byteOrder == NativeByteOrder) return value;
