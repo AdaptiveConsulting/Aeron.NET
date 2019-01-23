@@ -274,12 +274,7 @@ namespace Adaptive.Agrona.Concurrent
         public void SetMemory(int index, int length, byte value)
         {
             BoundsCheck0(index, length);
-            // TODO PERF Naive implementation, we should not write byte by byte, this is slow
-            //UNSAFE.SetMemory(byteArray, addressOffset + index, length, value);
-            for (var i = index; i < index + length; i++)
-            {
-                _pBuffer[i] = value;
-            }
+            Unsafe.InitBlock(_pBuffer + index, value, (uint) length);            
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
