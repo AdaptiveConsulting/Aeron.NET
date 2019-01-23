@@ -489,45 +489,20 @@ namespace Adaptive.Agrona.Concurrent
             return Interlocked.Add(ref *(int*) (_pBuffer + index), delta) - delta;
         }
 
-        ///////////////////////////////////////////////////////////////////////////
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public double GetDouble(int index, ByteOrder byteOrder)
+        {
+            BoundsCheck0(index, BitUtil.SIZE_OF_DOUBLE);
+            return EndianessConverter.ApplyDouble(byteOrder, *(double*)(_pBuffer + index));
+        }
 
-        // TODO Olivier: Martin told me this is not required for the client
-
-        //public double GetDouble(int index, ByteOrder byteOrder)
-        //{
-        //    if (SHOULD_BOUNDS_CHECK)
-        //    {
-        //        BoundsCheck0(index, SIZE_OF_DOUBLE);
-        //    }
-
-        //    if (NATIVE_BYTE_ORDER != byteOrder)
-        //    {
-        //        long bits = UNSAFE.GetLong(byteArray, addressOffset + index);
-        //        return Double.LongBitsToDouble(Long.ReverseBytes(bits));
-        //    }
-        //    else
-        //    {
-        //        return UNSAFE.GetDouble(byteArray, addressOffset + index);
-        //    }
-        //}
-
-        //public void PutDouble(int index, double value, ByteOrder byteOrder)
-        //{
-        //    if (SHOULD_BOUNDS_CHECK)
-        //    {
-        //        BoundsCheck0(index, SIZE_OF_DOUBLE);
-        //    }
-
-        //    if (NATIVE_BYTE_ORDER != byteOrder)
-        //    {
-        //        long bits = Long.ReverseBytes(Double.DoubleToRawLongBits(value));
-        //        UNSAFE.PutLong(byteArray, addressOffset + index, bits);
-        //    }
-        //    else
-        //    {
-        //        UNSAFE.PutDouble(byteArray, addressOffset + index, value);
-        //    }
-        //}
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void PutDouble(int index, double value, ByteOrder byteOrder)
+        {
+            BoundsCheck0(index, BitUtil.SIZE_OF_DOUBLE);
+            value = EndianessConverter.ApplyDouble(byteOrder, value);
+            *(double*)(_pBuffer + index) = value;
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public double GetDouble(int index)
@@ -546,6 +521,22 @@ namespace Adaptive.Agrona.Concurrent
         }
 
         ///////////////////////////////////////////////////////////////////////////
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public float GetFloat(int index, ByteOrder byteOrder)
+        {
+            BoundsCheck0(index, BitUtil.SIZE_OF_FLOAT);
+
+            return EndianessConverter.ApplyFloat(byteOrder, *(float*)(_pBuffer + index));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void PutFloat(int index, float value, ByteOrder byteOrder)
+        {
+            BoundsCheck0(index, BitUtil.SIZE_OF_FLOAT);
+            value = EndianessConverter.ApplyFloat(byteOrder, value);
+            *(float*)(_pBuffer + index) = value;
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public float GetFloat(int index)
