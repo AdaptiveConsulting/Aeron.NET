@@ -35,4 +35,7 @@
     </PackageReference>
     <PackageReference Include="Virtuosity.Fody" Version="1.21.3" />
   </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="4.5.2" />
+  </ItemGroup>
 </Project>
