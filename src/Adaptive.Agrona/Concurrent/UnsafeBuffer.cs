@@ -257,7 +257,33 @@ namespace Adaptive.Agrona.Concurrent
             ByteBuffer = null;
             ByteArray = null;
         }
-        
+
+        public unsafe void Wrap(byte* pointer, int length)
+        {
+            FreeGcHandle();
+
+            _needToFreeGcHandle = false;
+
+            _pBuffer = pointer;
+            Capacity = length;
+
+            ByteBuffer = null;
+            ByteArray = null;
+        }
+
+        public unsafe void Wrap(byte* pointer, int offset, int length)
+        {
+            FreeGcHandle();
+
+            _needToFreeGcHandle = false;
+
+            _pBuffer = pointer + offset;
+            Capacity = length;
+
+            ByteBuffer = null;
+            ByteArray = null;
+        }
+
         public IntPtr BufferPointer
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
