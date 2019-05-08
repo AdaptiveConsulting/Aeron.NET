@@ -35,14 +35,12 @@ namespace Adaptive.Agrona
         /// <param name="length"> of the range accessed. </param>
         public static void BoundsCheck(byte[] buffer, long index, int length)
         {
-#if SHOULD_BOUNDS_CHECK
             var capacity = buffer.Length;
             var resultingPosition = index + length;
             if (index < 0 || resultingPosition > capacity)
             {
                 ThrowHelper.ThrowIndexOutOfRangeException($"index={index:D}, length={length:D}, capacity={capacity:D}");
             }
-#endif
         }
         
         public static ByteBuffer AllocateDirectAligned(int capacity, int alignment)
