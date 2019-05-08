@@ -23,6 +23,6 @@ after_test:
 
     $wc = New-Object 'System.Net.WebClient'
 
-    $wc.UploadFile("https://ci.appveyor.com/api/testresults/nunit3/$($env:APPVEYOR_JOB_ID)", (Resolve-Path ./Adaptive.Agrona.Tests/TestResults/AgronaResults.trx))
+    $wc.UploadFile("https://ci.appveyor.com/api/testresults/nunit3/$($env:APPVEYOR_JOB_ID)", (Resolve-Path ./Adaptive.Agrona.Tests/TestResults/AgronaResults*.trx))
 
-    $wc.UploadFile("https://ci.appveyor.com/api/testresults/nunit3/$($env:APPVEYOR_JOB_ID)", (Resolve-Path ./Adaptive.Aeron.Tests/TestResults/AeronResults.trx))
+    $wc.UploadFile("https://ci.appveyor.com/api/testresults/nunit3/$($env:APPVEYOR_JOB_ID)", (Resolve-Path ./Adaptive.Aeron.Tests/TestResults/AeronResults*.trx))
