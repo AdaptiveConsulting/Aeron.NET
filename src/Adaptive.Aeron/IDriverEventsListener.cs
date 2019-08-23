@@ -24,58 +24,43 @@ namespace Adaptive.Aeron
         void OnError(long correlationId, int codeValue, ErrorCode errorCode, string message);
 
         void OnAvailableImage(
-            long correlationId, 
-            int streamId, 
+            long correlationId,
             int sessionId,
-            long subscriberRegistrationId, 
-            int subscriberPositionId, 
-            string logFileName, 
+            long subscriberRegistrationId,
+            int subscriberPositionId,
+            string logFileName,
             string sourceIdentity);
 
         void OnNewPublication(
-            long correlationId, 
-            long registrationId,
-            int streamId, 
-            int sessionId, 
-            int publicationLimitId, 
-            int statusIndicatorId, 
-            string logFileName);
-        
-        void OnNewSubscription(
             long correlationId,
-            int statusIndicatorId);
+            long registrationId,
+            int streamId,
+            int sessionId,
+            int publicationLimitId,
+            int statusIndicatorId,
+            string logFileName);
 
-        void OnUnavailableImage(
-            long correlationId, 
-            long subscriptionRegistrationId, 
-            int streamId);
+        void OnNewSubscription(long correlationId, int statusIndicatorId);
+
+        void OnUnavailableImage(long correlationId, long subscriptionRegistrationId);
 
         void OnNewExclusivePublication(
-            long correlationId, 
-            long registrationid, 
-            int streamId, 
-            int sessionId, 
-            int publicationLimitId, 
-            int statusIndicatorId, 
-            string logFileName);
-        
-        void OnChannelEndpointError(
+            long correlationId,
+            long registrationid,
+            int streamId,
+            int sessionId,
+            int publicationLimitId,
             int statusIndicatorId,
-            string message);
+            string logFileName);
 
-        void OnNewCounter(
-            long correlationId,
-            int counterId);
+        void OnChannelEndpointError(int statusIndicatorId, string message);
 
-        void OnAvailableCounter(
-            long correlationId,
-            int counterId);
+        void OnNewCounter(long correlationId, int counterId);
 
-        void OnUnavailableCounter(
-            long correlationId,
-            int counterId);
+        void OnAvailableCounter(long correlationId, int counterId);
+
+        void OnUnavailableCounter(long correlationId, int counterId);
 
         void OnClientTimeout();
     }
-
 }

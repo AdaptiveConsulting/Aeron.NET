@@ -47,7 +47,7 @@ namespace Adaptive.Aeron
     public abstract class Publication : IDisposable
     {
         /// <summary>
-        /// The publication is not yet connected to a subscriber.
+        /// The publication is not connected to a subscriber, this can be an intermittent state as subscribers come and go.
         /// </summary>
         public const long NOT_CONNECTED = -1;
 
@@ -122,8 +122,8 @@ namespace Adaptive.Aeron
         /// Number of bits to right shift a position to get a term count for how far the stream has progressed.
         /// </summary>
         /// <returns> of bits to right shift a position to get a term count for how far the stream has progressed. </returns>
-        public int PositionBitsToShift { get;  }
-        
+        public int PositionBitsToShift { get; }
+
         /// <summary>
         /// Get the length in bytes for each term partition in the log buffer.
         /// </summary>
@@ -273,7 +273,8 @@ namespace Adaptive.Aeron
                 var rawTail = LogBufferDescriptor.RawTailVolatile(_logMetaDataBuffer);
                 var termOffset = LogBufferDescriptor.TermOffset(rawTail, TermBufferLength);
 
-                return LogBufferDescriptor.ComputePosition(LogBufferDescriptor.TermId(rawTail), termOffset, PositionBitsToShift, InitialTermId);
+                return LogBufferDescriptor.ComputePosition(LogBufferDescriptor.TermId(rawTail), termOffset,
+                    PositionBitsToShift, InitialTermId);
             }
         }
 
@@ -301,7 +302,7 @@ namespace Adaptive.Aeron
         /// </summary>
         /// <returns> the counter id for the position limit after which the publication will be back pressured. </returns>
         public int PositionLimitId => _positionLimit.Id;
-        
+
         /// <summary>
         /// Available window for offering into a publication before the <seealso cref="PositionLimit"/> is reached.
         /// </summary>
@@ -357,7 +358,7 @@ namespace Adaptive.Aeron
             int offsetTwo,
             int lengthTwo,
             ReservedValueSupplier reservedValueSupplier = null);
-        
+
         /// <summary>
         /// Non-blocking publish by gathering buffer vectors into a message.
         /// </summary>
@@ -371,7 +372,8 @@ namespace Adaptive.Aeron
         /// <summary>
         /// Try to claim a range in the publication log into which a message can be written with zero copy semantics.
         /// Once the message has been written then <seealso cref="BufferClaim.Commit()"/> should be called thus making it available.
-        ///
+        /// A claim length cannot be greater than <see cref="MaxPayloadLength"/>
+        /// 
         /// <b>Note:</b> This method can only be used for message lengths less than MTU length minus header.
         /// If the claim is held for more than the aeron.publication.unblock.timeout system property then the driver will
         /// assume the publication thread is dead and will unblock the claim thus allowing other threads to make progress
@@ -491,7 +493,7 @@ namespace Adaptive.Aeron
                     $"message exceeds maxMessageLength of {MaxMessageLength:D}, length={length:D}");
             }
         }
-        
+
         internal static int ValidateAndComputeLength(int lengthOne, int lengthTwo)
         {
             if (lengthOne < 0)
@@ -515,15 +517,16 @@ namespace Adaptive.Aeron
 
         public override string ToString()
         {
-            return "Publication{" + 
-                   "originalRegistrationId=" + OriginalRegistrationId + 
-                   ", registrationId=" + RegistrationId + 
-                   ", initialTermId=" + InitialTermId + 
-                   ", termBufferLength=" + TermBufferLength + 
-                   ", sessionId=" + SessionId + 
-                   ", streamId=" + StreamId + 
-                   ", channel='" + Channel + '\'' + 
-                   ", position=" + Position + 
+            return "Publication{" +
+                   "originalRegistrationId=" + OriginalRegistrationId +
+                   ", registrationId=" + RegistrationId +
+                   ", isClosed=" + _isClosed +
+                   ", initialTermId=" + InitialTermId +
+                   ", termBufferLength=" + TermBufferLength +
+                   ", sessionId=" + SessionId +
+                   ", streamId=" + StreamId +
+                   ", channel='" + Channel + '\'' +
+                   ", position=" + Position +
                    '}';
         }
     }

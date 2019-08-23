@@ -802,7 +802,7 @@ namespace Adaptive.Aeron.LogBuffer
                     return 30;
             }
 
-            throw new ArgumentException("Invalid term buffer length: " + termBufferLength);
+            throw new ArgumentException("invalid term buffer length: " + termBufferLength);
         }
     }
 }

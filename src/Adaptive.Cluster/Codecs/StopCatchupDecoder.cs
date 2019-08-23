@@ -11,8 +11,8 @@ public class StopCatchupDecoder
 {
     public const ushort BLOCK_LENGTH = 20;
     public const ushort TEMPLATE_ID = 57;
-    public const ushort SCHEMA_ID = 1;
-    public const ushort SCHEMA_VERSION = 1;
+    public const ushort SCHEMA_ID = 111;
+    public const ushort SCHEMA_VERSION = 4;
 
     private StopCatchupDecoder _parentMessage;
     private IDirectBuffer _buffer;

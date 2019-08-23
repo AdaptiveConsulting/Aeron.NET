@@ -10,9 +10,9 @@ namespace Adaptive.Cluster.Codecs {
 public class ChallengeResponseEncoder
 {
     public const ushort BLOCK_LENGTH = 16;
-    public const ushort TEMPLATE_ID = 9;
-    public const ushort SCHEMA_ID = 1;
-    public const ushort SCHEMA_VERSION = 1;
+    public const ushort TEMPLATE_ID = 8;
+    public const ushort SCHEMA_ID = 111;
+    public const ushort SCHEMA_VERSION = 4;
 
     private ChallengeResponseEncoder _parentMessage;
     private IMutableDirectBuffer _buffer;

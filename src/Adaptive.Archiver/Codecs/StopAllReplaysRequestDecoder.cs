@@ -5,23 +5,23 @@ using System.Collections.Generic;
 using Adaptive.Agrona;
 
 
-namespace Adaptive.Cluster.Codecs {
+namespace Adaptive.Archiver.Codecs {
 
-public class SessionHeaderDecoder
+public class StopAllReplaysRequestDecoder
 {
     public const ushort BLOCK_LENGTH = 24;
-    public const ushort TEMPLATE_ID = 20;
-    public const ushort SCHEMA_ID = 1;
-    public const ushort SCHEMA_VERSION = 1;
+    public const ushort TEMPLATE_ID = 19;
+    public const ushort SCHEMA_ID = 101;
+    public const ushort SCHEMA_VERSION = 2;
 
-    private SessionHeaderDecoder _parentMessage;
+    private StopAllReplaysRequestDecoder _parentMessage;
     private IDirectBuffer _buffer;
     protected int _offset;
     protected int _limit;
     protected int _actingBlockLength;
     protected int _actingVersion;
 
-    public SessionHeaderDecoder()
+    public StopAllReplaysRequestDecoder()
     {
         _parentMessage = this;
     }
@@ -61,7 +61,7 @@ public class SessionHeaderDecoder
         return _offset;
     }
 
-    public SessionHeaderDecoder Wrap(
+    public StopAllReplaysRequestDecoder Wrap(
         IDirectBuffer buffer, int offset, int actingBlockLength, int actingVersion)
     {
         this._buffer = buffer;
@@ -88,27 +88,27 @@ public class SessionHeaderDecoder
         this._limit = limit;
     }
 
-    public static int LeadershipTermIdId()
+    public static int ControlSessionIdId()
     {
         return 1;
     }
 
-    public static int LeadershipTermIdSinceVersion()
+    public static int ControlSessionIdSinceVersion()
     {
         return 0;
     }
 
-    public static int LeadershipTermIdEncodingOffset()
+    public static int ControlSessionIdEncodingOffset()
     {
         return 0;
     }
 
-    public static int LeadershipTermIdEncodingLength()
+    public static int ControlSessionIdEncodingLength()
     {
         return 8;
     }
 
-    public static string LeadershipTermIdMetaAttribute(MetaAttribute metaAttribute)
+    public static string ControlSessionIdMetaAttribute(MetaAttribute metaAttribute)
     {
         switch (metaAttribute)
         {
@@ -121,48 +121,48 @@ public class SessionHeaderDecoder
         return "";
     }
 
-    public static long LeadershipTermIdNullValue()
+    public static long ControlSessionIdNullValue()
     {
         return -9223372036854775808L;
     }
 
-    public static long LeadershipTermIdMinValue()
+    public static long ControlSessionIdMinValue()
     {
         return -9223372036854775807L;
     }
 
-    public static long LeadershipTermIdMaxValue()
+    public static long ControlSessionIdMaxValue()
     {
         return 9223372036854775807L;
     }
 
-    public long LeadershipTermId()
+    public long ControlSessionId()
     {
         return _buffer.GetLong(_offset + 0, ByteOrder.LittleEndian);
     }
 
 
-    public static int ClusterSessionIdId()
+    public static int CorrelationIdId()
     {
         return 2;
     }
 
-    public static int ClusterSessionIdSinceVersion()
+    public static int CorrelationIdSinceVersion()
     {
         return 0;
     }
 
-    public static int ClusterSessionIdEncodingOffset()
+    public static int CorrelationIdEncodingOffset()
     {
         return 8;
     }
 
-    public static int ClusterSessionIdEncodingLength()
+    public static int CorrelationIdEncodingLength()
     {
         return 8;
     }
 
-    public static string ClusterSessionIdMetaAttribute(MetaAttribute metaAttribute)
+    public static string CorrelationIdMetaAttribute(MetaAttribute metaAttribute)
     {
         switch (metaAttribute)
         {
@@ -175,48 +175,48 @@ public class SessionHeaderDecoder
         return "";
     }
 
-    public static long ClusterSessionIdNullValue()
+    public static long CorrelationIdNullValue()
     {
         return -9223372036854775808L;
     }
 
-    public static long ClusterSessionIdMinValue()
+    public static long CorrelationIdMinValue()
     {
         return -9223372036854775807L;
     }
 
-    public static long ClusterSessionIdMaxValue()
+    public static long CorrelationIdMaxValue()
     {
         return 9223372036854775807L;
     }
 
-    public long ClusterSessionId()
+    public long CorrelationId()
     {
         return _buffer.GetLong(_offset + 8, ByteOrder.LittleEndian);
     }
 
 
-    public static int TimestampId()
+    public static int RecordingIdId()
     {
         return 3;
     }
 
-    public static int TimestampSinceVersion()
+    public static int RecordingIdSinceVersion()
     {
         return 0;
     }
 
-    public static int TimestampEncodingOffset()
+    public static int RecordingIdEncodingOffset()
     {
         return 16;
     }
 
-    public static int TimestampEncodingLength()
+    public static int RecordingIdEncodingLength()
     {
         return 8;
     }
 
-    public static string TimestampMetaAttribute(MetaAttribute metaAttribute)
+    public static string RecordingIdMetaAttribute(MetaAttribute metaAttribute)
     {
         switch (metaAttribute)
         {
@@ -229,22 +229,22 @@ public class SessionHeaderDecoder
         return "";
     }
 
-    public static long TimestampNullValue()
+    public static long RecordingIdNullValue()
     {
         return -9223372036854775808L;
     }
 
-    public static long TimestampMinValue()
+    public static long RecordingIdMinValue()
     {
         return -9223372036854775807L;
     }
 
-    public static long TimestampMaxValue()
+    public static long RecordingIdMaxValue()
     {
         return 9223372036854775807L;
     }
 
-    public long Timestamp()
+    public long RecordingId()
     {
         return _buffer.GetLong(_offset + 16, ByteOrder.LittleEndian);
     }
@@ -260,7 +260,7 @@ public class SessionHeaderDecoder
     {
         int originalLimit = Limit();
         Limit(_offset + _actingBlockLength);
-        builder.Append("[SessionHeader](sbeTemplateId=");
+        builder.Append("[StopAllReplaysRequest](sbeTemplateId=");
         builder.Append(TEMPLATE_ID);
         builder.Append("|sbeSchemaId=");
         builder.Append(SCHEMA_ID);
@@ -279,20 +279,20 @@ public class SessionHeaderDecoder
         }
         builder.Append(BLOCK_LENGTH);
         builder.Append("):");
-        //Token{signal=BEGIN_FIELD, name='leadershipTermId', referencedName='null', description='null', id=1, version=0, deprecated=0, encodedLength=0, offset=0, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=BEGIN_FIELD, name='controlSessionId', referencedName='null', description='null', id=1, version=0, deprecated=0, encodedLength=0, offset=0, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
         //Token{signal=ENCODING, name='int64', referencedName='null', description='null', id=-1, version=0, deprecated=0, encodedLength=8, offset=0, componentTokenCount=1, encoding=Encoding{presence=REQUIRED, primitiveType=INT64, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
-        builder.Append("LeadershipTermId=");
-        builder.Append(LeadershipTermId());
+        builder.Append("ControlSessionId=");
+        builder.Append(ControlSessionId());
         builder.Append('|');
-        //Token{signal=BEGIN_FIELD, name='clusterSessionId', referencedName='null', description='null', id=2, version=0, deprecated=0, encodedLength=0, offset=8, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=BEGIN_FIELD, name='correlationId', referencedName='null', description='null', id=2, version=0, deprecated=0, encodedLength=0, offset=8, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
         //Token{signal=ENCODING, name='int64', referencedName='null', description='null', id=-1, version=0, deprecated=0, encodedLength=8, offset=8, componentTokenCount=1, encoding=Encoding{presence=REQUIRED, primitiveType=INT64, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
-        builder.Append("ClusterSessionId=");
-        builder.Append(ClusterSessionId());
+        builder.Append("CorrelationId=");
+        builder.Append(CorrelationId());
         builder.Append('|');
-        //Token{signal=BEGIN_FIELD, name='timestamp', referencedName='null', description='null', id=3, version=0, deprecated=0, encodedLength=0, offset=16, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
-        //Token{signal=ENCODING, name='time_t', referencedName='null', description='Epoch time in milliseconds since 1 Jan 1970 UTC', id=-1, version=0, deprecated=0, encodedLength=8, offset=16, componentTokenCount=1, encoding=Encoding{presence=REQUIRED, primitiveType=INT64, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
-        builder.Append("Timestamp=");
-        builder.Append(Timestamp());
+        //Token{signal=BEGIN_FIELD, name='recordingId', referencedName='null', description='null', id=3, version=0, deprecated=0, encodedLength=0, offset=16, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=ENCODING, name='int64', referencedName='null', description='null', id=-1, version=0, deprecated=0, encodedLength=8, offset=16, componentTokenCount=1, encoding=Encoding{presence=REQUIRED, primitiveType=INT64, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        builder.Append("RecordingId=");
+        builder.Append(RecordingId());
 
         Limit(originalLimit);
 

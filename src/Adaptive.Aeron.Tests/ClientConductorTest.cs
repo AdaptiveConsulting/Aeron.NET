@@ -32,8 +32,8 @@ namespace Adaptive.Aeron.Tests
     {
         private static readonly int TERM_BUFFER_LENGTH = LogBufferDescriptor.TERM_MIN_LENGTH;
 
-        protected internal const int SESSION_ID_1 = 13;
-        protected internal const int SESSION_ID_2 = 15;
+        private const int SESSION_ID_1 = 13;
+        private const int SESSION_ID_2 = 15;
 
         private const string CHANNEL = "aeron:udp?endpoint=localhost:40124";
         private const int STREAM_ID_1 = 2;
@@ -75,12 +75,14 @@ namespace Adaptive.Aeron.Tests
         private readonly TestNanoClock NanoClock = new TestNanoClock();
         private ErrorHandler MockClientErrorHandler;
 
-        private DriverProxy DriverProxy;
         private ClientConductor Conductor;
+        private DriverProxy DriverProxy;
         private AvailableImageHandler MockAvailableImageHandler;
         private UnavailableImageHandler MockUnavailableImageHandler;
+        private Action MockCloseHandler;
         private ILogBuffersFactory LogBuffersFactory;
         private ILock mockClientLock = A.Fake<ILock>();
+        private Aeron MockAeron;
         private bool SuppressPrintError = false;
 
 
@@ -113,10 +115,13 @@ namespace Adaptive.Aeron.Tests
 
             MockAvailableImageHandler = A.Fake<AvailableImageHandler>();
             MockUnavailableImageHandler = A.Fake<UnavailableImageHandler>();
+            MockCloseHandler = A.Fake<Action>();
 
             LogBuffersFactory = A.Fake<ILogBuffersFactory>();
             
             DriverProxy = A.Fake<DriverProxy>();
+
+            MockAeron = A.Fake<Aeron>();
             
             A.CallTo(() => mockClientLock.TryLock()).Returns(true);
 
@@ -136,13 +141,13 @@ namespace Adaptive.Aeron.Tests
                 .ErrorHandler(MockClientErrorHandler)
                 .AvailableImageHandler(MockAvailableImageHandler)
                 .UnavailableImageHandler(MockUnavailableImageHandler)
-                .KeepAliveInterval(KEEP_ALIVE_INTERVAL)
+                .CloseHandler(MockCloseHandler)
+                .KeepAliveIntervalNs(KEEP_ALIVE_INTERVAL)
                 .DriverTimeoutMs(AWAIT_TIMEOUT)
-                .InterServiceTimeout(INTER_SERVICE_TIMEOUT_MS * 1000000)
+                .InterServiceTimeoutNs(INTER_SERVICE_TIMEOUT_MS * 1000000)
                 .CountersValuesBuffer(CounterValuesBuffer);
 
-
-            Conductor = new ClientConductor(ctx);
+            Conductor = new ClientConductor(ctx, MockAeron);
 
             PublicationReady.Wrap(PublicationReadyBuffer, 0);
             SubscriptionReady.Wrap(SubscriptionReadyBuffer, 0);
@@ -422,7 +427,6 @@ namespace Adaptive.Aeron.Tests
 
             Conductor.OnAvailableImage(
                 CORRELATION_ID, 
-                STREAM_ID_1, 
                 SESSION_ID_1, 
                 subscription.RegistrationId, 
                 SUBSCRIPTION_POSITION_ID, 
@@ -445,7 +449,6 @@ namespace Adaptive.Aeron.Tests
 
             Conductor.OnAvailableImage(
                 CORRELATION_ID, 
-                STREAM_ID_1, 
                 SESSION_ID_1, 
                 subscription.RegistrationId, 
                 SUBSCRIPTION_POSITION_ID, 
@@ -457,7 +460,7 @@ namespace Adaptive.Aeron.Tests
 
             A.CallTo(() => MockAvailableImageHandler(A<Image>._)).MustHaveHappened();
 
-            Conductor.OnUnavailableImage(CORRELATION_ID, subscription.RegistrationId, STREAM_ID_1);
+            Conductor.OnUnavailableImage(CORRELATION_ID, subscription.RegistrationId);
 
             A.CallTo(() => MockUnavailableImageHandler(A<Image>._)).MustHaveHappened();
 
@@ -470,7 +473,6 @@ namespace Adaptive.Aeron.Tests
         {
             Conductor.OnAvailableImage(
                 CORRELATION_ID_2, 
-                STREAM_ID_2, 
                 SESSION_ID_2, 
                 SUBSCRIPTION_POSITION_REGISTRATION_ID, 
                 SUBSCRIPTION_POSITION_ID, 
@@ -484,7 +486,7 @@ namespace Adaptive.Aeron.Tests
         [Test]
         public void ShouldIgnoreUnknownInactiveImage()
         {
-            Conductor.OnUnavailableImage(CORRELATION_ID_2, SUBSCRIPTION_POSITION_REGISTRATION_ID, STREAM_ID_2);
+            Conductor.OnUnavailableImage(CORRELATION_ID_2, SUBSCRIPTION_POSITION_REGISTRATION_ID);
 
             A.CallTo(() => LogBuffersFactory.Map(A<string>._)).MustNotHaveHappened();
             A.CallTo(() => MockAvailableImageHandler(A<Image>._)).MustNotHaveHappened();
@@ -526,6 +528,9 @@ namespace Adaptive.Aeron.Tests
             
             Assert.True(threwException);
             Assert.True(Conductor.IsTerminating());
+            
+            Conductor.OnClose();
+            A.CallTo(() => MockCloseHandler.Invoke()).MustHaveHappened();
         }
 
         [Test]

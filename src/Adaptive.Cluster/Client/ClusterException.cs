@@ -10,6 +10,10 @@ namespace Adaptive.Cluster.Client
         {
         }
 
+        public ClusterException(string message, Category category) : base(message, category)
+        {
+        }
+
         protected ClusterException(SerializationInfo info, StreamingContext context) : base(info, context)
         {
         }

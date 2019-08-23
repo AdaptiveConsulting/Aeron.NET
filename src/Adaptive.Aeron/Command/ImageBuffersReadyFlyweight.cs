@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+using System.Text;
 using Adaptive.Agrona;
 
 namespace Adaptive.Aeron.Command
@@ -188,6 +189,15 @@ namespace Adaptive.Aeron.Command
         public string LogFileName()
         {
             return _buffer.GetStringAscii(_offset + LOG_FILE_NAME_OFFSET);
+        }
+        
+        /// <summary>
+        /// Append the log file name to a <seealso cref="StringBuilder"/>.
+        /// </summary>
+        /// <param name="stringBuilder"> to append log file name to. </param>
+        public void AppendLogFileName(StringBuilder stringBuilder)
+        {
+            _buffer.GetStringAscii(_offset + LOG_FILE_NAME_OFFSET, stringBuilder);
         }
 
         /// <summary>

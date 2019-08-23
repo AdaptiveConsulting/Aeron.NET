@@ -1,7 +1,9 @@
 ﻿using System;
 using Adaptive.Aeron;
 using Adaptive.Aeron.Exceptions;
+using Adaptive.Aeron.LogBuffer;
 using Adaptive.Agrona;
+using Adaptive.Cluster.Client;
 
 namespace Adaptive.Cluster.Service
 {
@@ -15,7 +17,7 @@ namespace Adaptive.Cluster.Service
         /// </summary>
         public const long MOCKED_OFFER = 1;
 
-        private readonly ClusteredServiceAgent _cluster;
+        private readonly ClusteredServiceAgent _clusteredServiceAgent;
         private Publication _responsePublication;
 
         internal ClientSession(
@@ -23,13 +25,13 @@ namespace Adaptive.Cluster.Service
             int responseStreamId,
             string responseChannel,
             byte[] encodedPrincipal,
-            ClusteredServiceAgent cluster)
+            ClusteredServiceAgent clusteredServiceAgent)
         {
             Id = sessionId;
             ResponseStreamId = responseStreamId;
             ResponseChannel = responseChannel;
             EncodedPrincipal = encodedPrincipal;
-            _cluster = cluster;
+            _clusteredServiceAgent = clusteredServiceAgent;
         }
 
         /// <summary>
@@ -71,9 +73,9 @@ namespace Adaptive.Cluster.Service
         /// </summary>
         public void Close()
         {
-            if (null != _cluster.GetClientSession(Id))
+            if (null != _clusteredServiceAgent.GetClientSession(Id))
             {
-                _cluster.CloseSession(Id);
+                _clusteredServiceAgent.CloseSession(Id);
             }
         }
 
@@ -87,11 +89,11 @@ namespace Adaptive.Cluster.Service
         /// otherwise <see cref="MOCKED_OFFER"/>. </returns>
         public long Offer(IDirectBuffer buffer, int offset, int length)
         {
-            return _cluster.Offer(Id, _responsePublication, buffer, offset, length);
+            return _clusteredServiceAgent.Offer(Id, _responsePublication, buffer, offset, length);
         }
         
         /// <summary>
-        /// Non-blocking publish by gathering buffer vectors into a message. The first vector will be replaced cluster
+        /// Non-blocking publish by gathering buffer vectors into a message. The first vector will be replaced by the cluster
         /// egress header so must be left unused.
         /// </summary>
         /// <param name="vectors"> which make up the message. </param>
@@ -100,7 +102,46 @@ namespace Adaptive.Cluster.Service
         /// otherwise <seealso cref="MOCKED_OFFER"/>.
         public long Offer(DirectBufferVector[] vectors)
         {
-            return _cluster.Offer(Id, _responsePublication, vectors);
+            return _clusteredServiceAgent.Offer(Id, _responsePublication, vectors);
+        }
+        /// <summary>
+        /// Try to claim a range in the publication log into which a message can be written with zero copy semantics.
+        /// Once the message has been written then <seealso cref="BufferClaim.Commit()"/> should be called thus making it available.
+        /// <para>
+        /// On successful claim, the Cluster egress header will be written to the start of the claimed buffer section.
+        /// Clients <b>MUST</b> write into the claimed buffer region at offset + <seealso cref="AeronCluster.SESSION_HEADER_LENGTH"/>.
+        /// <pre>{@code
+        ///     final IDirectBuffer srcBuffer = AcquireMessage();
+        ///    
+        ///     if (clientSession.TryClaim(length, bufferClaim) > 0L)
+        ///     {
+        ///         try
+        ///         {
+        ///              final IMutableDirectBuffer buffer = bufferClaim.Buffer;
+        ///              final int offset = bufferClaim.Offset;
+        ///              // ensure that data is written at the correct offset
+        ///              buffer.PutBytes(offset + AeronCluster.SESSION_HEADER_LENGTH, srcBuffer, 0, length);
+        ///         }
+        ///         finally
+        ///         {
+        ///             bufferClaim.Commit();
+        ///         }
+        ///     }
+        /// }</pre>
+        ///    
+        /// </para>
+        /// </summary>
+        /// <param name="length">      of the range to claim, in bytes. </param>
+        /// <param name="bufferClaim"> to be populated if the claim succeeds. </param>
+        /// <returns> The new stream position, otherwise a negative error value as specified in
+        ///         <seealso cref="Publication.TryClaim(int, BufferClaim)"/>. </returns>
+        /// <exception cref="ArgumentException"> if the length is greater than <seealso cref="Publication.MaxPayloadLength"/>. </exception>
+        /// <seealso cref="Publication.TryClaim(int, BufferClaim)"/>
+        /// <seealso cref="BufferClaim.Commit()"/>
+        /// <seealso cref="BufferClaim.Abort()"/>
+        public long TryClaim(int length, BufferClaim bufferClaim)
+        {
+            return _clusteredServiceAgent.TryClaim(Id, _responsePublication, length, bufferClaim);
         }
         
         internal void Connect(Aeron.Aeron aeron)
@@ -109,11 +150,11 @@ namespace Adaptive.Cluster.Service
             {
                 try
                 {
-                    _responsePublication = aeron.AddExclusivePublication(ResponseChannel, ResponseStreamId);
+                    _responsePublication = aeron.AddPublication(ResponseChannel, ResponseStreamId);
                 }
-                catch (RegistrationException)
+                catch (RegistrationException ex)
                 {
-                    // ignore
+                    _clusteredServiceAgent.HandleError(ex);
                 }
             }
         }

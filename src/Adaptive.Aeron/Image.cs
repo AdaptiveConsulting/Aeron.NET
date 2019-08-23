@@ -279,41 +279,42 @@ namespace Adaptive.Aeron
             var fragmentsRead = 0;
             var initialPosition = _subscriberPosition.Get();
             var initialOffset = (int) initialPosition & _termLengthMask;
-            var resultingOffset = initialOffset;
+            var offset = initialOffset;
             var termBuffer = ActiveTermBuffer(initialPosition);
             int capacity = termBuffer.Capacity;
-            _header.Buffer = termBuffer;
+            var header = _header;
+            header.Buffer = termBuffer;
 
             try
             {
-                while (fragmentsRead < fragmentLimit && resultingOffset < capacity)
+                while (fragmentsRead < fragmentLimit && offset < capacity)
                 {
-                    var length = FrameDescriptor.FrameLengthVolatile(termBuffer, resultingOffset);
+                    var length = FrameDescriptor.FrameLengthVolatile(termBuffer, offset);
                     if (length <= 0)
                     {
                         break;
                     }
 
-                    var frameOffset = resultingOffset;
+                    var frameOffset = offset;
                     var alignedLength = BitUtil.Align(length, FrameDescriptor.FRAME_ALIGNMENT);
-                    resultingOffset += alignedLength;
+                    offset += alignedLength;
 
                     if (FrameDescriptor.IsPaddingFrame(termBuffer, frameOffset))
                     {
                         continue;
                     }
 
-                    _header.Offset = frameOffset;
+                    header.Offset = frameOffset;
 
                     var action = handler.OnFragment(
                         termBuffer,
                         frameOffset + DataHeaderFlyweight.HEADER_LENGTH,
                         length - DataHeaderFlyweight.HEADER_LENGTH,
-                        _header);
+                        header);
 
                     if (action == ControlledFragmentHandlerAction.ABORT)
                     {
-                        resultingOffset -= alignedLength;
+                        offset -= alignedLength;
                         break;
                     }
 
@@ -325,8 +326,8 @@ namespace Adaptive.Aeron
                     }
                     else if (action == ControlledFragmentHandlerAction.COMMIT)
                     {
-                        initialPosition += (resultingOffset - initialOffset);
-                        initialOffset = resultingOffset;
+                        initialPosition += (offset - initialOffset);
+                        initialOffset = offset;
                         _subscriberPosition.SetOrdered(initialPosition);
                     }
                 }
@@ -337,7 +338,7 @@ namespace Adaptive.Aeron
             }
             finally
             {
-                long resultingPosition = initialPosition + (resultingOffset - initialOffset);
+                long resultingPosition = initialPosition + (offset - initialOffset);
                 if (resultingPosition > initialPosition)
                 {
                     _subscriberPosition.SetOrdered(resultingPosition);
@@ -375,12 +376,12 @@ namespace Adaptive.Aeron
         /// </para>
         /// </summary>
         /// <param name="handler"> to which message fragments are delivered. </param>
-        /// <param name="maxPosition">     to consume messages up to. </param>
+        /// <param name="limitPosition">     to consume messages up to. </param>
         /// <param name="fragmentLimit">   for the number of fragments to be consumed during one polling operation. </param>
         /// <returns> the number of fragments that have been consumed. </returns>
         /// <seealso cref="ControlledFragmentAssembler"/>
         /// <seealso cref="ImageControlledFragmentAssembler"/>
-        public int BoundedControlledPoll(IControlledFragmentHandler handler, long maxPosition,
+        public int BoundedControlledPoll(IControlledFragmentHandler handler, long limitPosition,
             int fragmentLimit)
         {
             if (_isClosed)
@@ -391,39 +392,40 @@ namespace Adaptive.Aeron
             var fragmentsRead = 0;
             var initialPosition = _subscriberPosition.Get();
             var initialOffset = (int) initialPosition & _termLengthMask;
-            var resultingOffset = initialOffset;
+            var offset = initialOffset;
             var termBuffer = ActiveTermBuffer(initialPosition);
-            var endOffset = (int) Math.Min(termBuffer.Capacity, (maxPosition - initialPosition + initialOffset));
-            _header.Buffer = termBuffer;
+            var limitOffset = (int) Math.Min(termBuffer.Capacity, (limitPosition - initialPosition + initialOffset));
+            var header = _header;
+            header.Buffer = termBuffer;
 
             try
             {
-                while (fragmentsRead < fragmentLimit && resultingOffset < endOffset)
+                while (fragmentsRead < fragmentLimit && offset < limitOffset)
                 {
-                    int length = FrameDescriptor.FrameLengthVolatile(termBuffer, resultingOffset);
+                    int length = FrameDescriptor.FrameLengthVolatile(termBuffer, offset);
                     if (length <= 0)
                     {
                         break;
                     }
 
-                    int frameOffset = resultingOffset;
+                    int frameOffset = offset;
                     int alignedLength = BitUtil.Align(length, FrameDescriptor.FRAME_ALIGNMENT);
-                    resultingOffset += alignedLength;
+                    offset += alignedLength;
 
                     if (FrameDescriptor.IsPaddingFrame(termBuffer, frameOffset))
                     {
                         continue;
                     }
 
-                    _header.Offset = frameOffset;
+                    header.Offset = frameOffset;
 
                     var action = handler.OnFragment(termBuffer,
                         frameOffset + DataHeaderFlyweight.HEADER_LENGTH,
-                        length - DataHeaderFlyweight.HEADER_LENGTH, _header);
+                        length - DataHeaderFlyweight.HEADER_LENGTH, header);
 
                     if (action == ControlledFragmentHandlerAction.ABORT)
                     {
-                        resultingOffset -= alignedLength;
+                        offset -= alignedLength;
                         break;
                     }
 
@@ -435,8 +437,8 @@ namespace Adaptive.Aeron
                     }
                     else if (action == ControlledFragmentHandlerAction.COMMIT)
                     {
-                        initialPosition += (resultingOffset - initialOffset);
-                        initialOffset = resultingOffset;
+                        initialPosition += (offset - initialOffset);
+                        initialOffset = offset;
                         _subscriberPosition.SetOrdered(initialPosition);
                     }
                 }
@@ -447,7 +449,7 @@ namespace Adaptive.Aeron
             }
             finally
             {
-                long resultingPosition = initialPosition + (resultingOffset - initialOffset);
+                long resultingPosition = initialPosition + (offset - initialOffset);
                 if (resultingPosition > initialPosition)
                 {
                     _subscriberPosition.SetOrdered(resultingPosition);
@@ -467,16 +469,16 @@ namespace Adaptive.Aeron
         /// </para>
         /// </summary>
         /// <param name="handler"> to which message fragments are delivered. </param>
-        /// <param name="maxPosition">     to consume messages up to. </param>
+        /// <param name="limitPosition">     to consume messages up to. </param>
         /// <param name="fragmentLimit">   for the number of fragments to be consumed during one polling operation. </param>
         /// <returns> the number of fragments that have been consumed. </returns>
         /// <seealso cref="ControlledFragmentAssembler"/>
         /// <seealso cref="ImageControlledFragmentAssembler"/>
-        public int BoundedControlledPoll(ControlledFragmentHandler handler, long maxPosition,
+        public int BoundedControlledPoll(ControlledFragmentHandler handler, long limitPosition,
             int fragmentLimit)
         {
             var fragmentHandler = HandlerHelper.ToControlledFragmentHandler(handler);
-            return BoundedControlledPoll(fragmentHandler, maxPosition, fragmentLimit);
+            return BoundedControlledPoll(fragmentHandler, limitPosition, fragmentLimit);
         }
 
         /// <summary>
@@ -497,22 +499,27 @@ namespace Adaptive.Aeron
         {
             if (_isClosed)
             {
-                return 0;
+                return initialPosition;
             }
 
             ValidatePosition(initialPosition);
+            if (initialPosition >= limitPosition)
+            {
+                return initialPosition;
+            }
 
             int initialOffset = (int) initialPosition & _termLengthMask;
             int offset = initialOffset;
             long position = initialPosition;
             UnsafeBuffer termBuffer = ActiveTermBuffer(initialPosition);
-            int capacity = termBuffer.Capacity;
+            var header = _header;
+            int limitOffset = (int)Math.Min(termBuffer.Capacity, (limitPosition - initialPosition) + offset);
             _header.Buffer = termBuffer;
             long resultingPosition = initialPosition;
 
             try
             {
-                while (position < limitPosition && offset < capacity)
+                while (offset < limitOffset)
                 {
                     int length = FrameDescriptor.FrameLengthVolatile(termBuffer, offset);
                     if (length <= 0)
@@ -521,8 +528,7 @@ namespace Adaptive.Aeron
                     }
 
                     int frameOffset = offset;
-                    var alignedLength = BitUtil.Align(length, FrameDescriptor.FRAME_ALIGNMENT);
-                    offset += alignedLength;
+                    offset += BitUtil.Align(length, FrameDescriptor.FRAME_ALIGNMENT);
 
                     if (FrameDescriptor.IsPaddingFrame(termBuffer, frameOffset))
                     {
@@ -597,19 +603,19 @@ namespace Adaptive.Aeron
             }
 
             var position = _subscriberPosition.Get();
-            var termOffset = (int) position & _termLengthMask;
+            var offset = (int) position & _termLengthMask;
             var termBuffer = ActiveTermBuffer(position);
-            var limitOffset = Math.Min(termOffset + blockLengthLimit, termBuffer.Capacity);
-            var resultingOffset = TermBlockScanner.Scan(termBuffer, termOffset, limitOffset);
-            var length = resultingOffset - termOffset;
+            var limitOffset = Math.Min(offset + blockLengthLimit, termBuffer.Capacity);
+            var resultingOffset = TermBlockScanner.Scan(termBuffer, offset, limitOffset);
+            var length = resultingOffset - offset;
             
-            if (resultingOffset > termOffset)
+            if (resultingOffset > offset)
             {
                 try
                 {
-                    var termId = termBuffer.GetInt(termOffset + DataHeaderFlyweight.TERM_ID_FIELD_OFFSET);
+                    var termId = termBuffer.GetInt(offset + DataHeaderFlyweight.TERM_ID_FIELD_OFFSET);
 
-                    handler(termBuffer, termOffset, length, SessionId, termId);
+                    handler(termBuffer, offset, length, SessionId, termId);
                 }
                 catch (Exception t)
                 {
@@ -630,18 +636,18 @@ namespace Adaptive.Aeron
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void ValidatePosition(long newPosition)
+        private void ValidatePosition(long position)
         {
             long currentPosition = _subscriberPosition.Get();
             long limitPosition = (currentPosition - (currentPosition & _termLengthMask)) + _termLengthMask + 1;
-            if (newPosition < currentPosition || newPosition > limitPosition)
+            if (position < currentPosition || position > limitPosition)
             {
-                ThrowHelper.ThrowArgumentException($"{newPosition} newPosition out of range {currentPosition}-{limitPosition}");
+                ThrowHelper.ThrowArgumentException($"{position} position out of range {currentPosition}-{limitPosition}");
             }
 
-            if (0 != (newPosition & (FrameDescriptor.FRAME_ALIGNMENT - 1)))
+            if (0 != (position & (FrameDescriptor.FRAME_ALIGNMENT - 1)))
             {
-                ThrowHelper.ThrowArgumentException($"{newPosition} newPosition not aligned to FRAME_ALIGNMENT");
+                ThrowHelper.ThrowArgumentException($"{position} position not aligned to FRAME_ALIGNMENT");
             }
         }
 
@@ -658,13 +664,15 @@ namespace Adaptive.Aeron
         {
             return "Image{" +
                    $"correlationId={CorrelationId}, " +
-                   $"joinPosition={JoinPosition}, " +
                    $"sessionId={SessionId}, " +
-                   $"initialTermId={InitialTermId}, " +
+                   $"isClosed={_isClosed}, " +
                    $"isEos={IsEndOfStream}, " +
+                   $"initialTermId={InitialTermId}, " +
+                   $"termLength={TermBufferLength}, " +
+                   $"joinPosition={JoinPosition}, " +
+                   $"position={Position}, " +
                    $"sourceIdentity='{SourceIdentity}', " +
-                   $"subscription={Subscription}, " +
-                   $"position={Position}" +
+                   $"subscription={Subscription}" +
                    '}';
         }
     }

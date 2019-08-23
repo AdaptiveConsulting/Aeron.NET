@@ -138,29 +138,6 @@ namespace Adaptive.Aeron
         public UnavailableImageHandler UnavailableImageHandler => _fields.unavailableImageHandler;
 
         /// <summary>
-        /// Poll the <seealso cref="Image"/>s under the subscription for having reached End of Stream (EOS). This method will miss
-        /// <seealso cref="Image"/>s that have gone unavailable between calls unless using the <seealso cref="Aeron.ConductorAgentInvoker"/>.
-        /// </summary>
-        /// <param name="endOfStreamHandler"> callback for handling end of stream indication. </param>
-        /// <returns> number of <seealso cref="Image"/> that have reached End of Stream. </returns>
-        [Obsolete]
-        public int PollEndOfStreams(EndOfStreamHandler endOfStreamHandler)
-        {
-            int eosCount = 0;
-
-            foreach (var image in Images)
-            {
-                if (image.IsEndOfStream)
-                {
-                    eosCount++;
-                    endOfStreamHandler(image);
-                }
-            }
-
-            return eosCount;
-        }
-
-        /// <summary>
         /// Poll the <seealso cref="Image"/>s under the subscription for available message fragments.
         /// <para>
         /// Each fragment read will be a whole message if it is under MTU length. If larger than MTU then it will come
@@ -172,7 +149,7 @@ namespace Adaptive.Aeron
         /// </para>
         /// </summary>
         /// <param name="fragmentHandler"> callback for handling each message fragment as it is read. </param>
-        /// <param name="fragmentLimit">   number of message fragments to limit for the poll operation across multiple <seealso cref="Image"/>s. </param>
+        /// <param name="fragmentLimit">   number of message fragments to limit when polling across multiple <seealso cref="Image"/>s. </param>
         /// <returns> the number of fragments received </returns>
         public int Poll(FragmentHandler fragmentHandler, int fragmentLimit)
         {
@@ -192,7 +169,7 @@ namespace Adaptive.Aeron
         /// </para>
         /// </summary>
         /// <param name="fragmentHandler"> callback for handling each message fragment as it is read. </param>
-        /// <param name="fragmentLimit">   number of message fragments to limit for the poll operation across multiple <seealso cref="Image"/>s. </param>
+        /// <param name="fragmentLimit">   number of message fragments to limit when polling across multiple <seealso cref="Image"/>s. </param>
         /// <returns> the number of fragments received </returns>
         public int Poll(IFragmentHandler fragmentHandler, int fragmentLimit)
         {
@@ -233,7 +210,7 @@ namespace Adaptive.Aeron
         /// </para>
         /// </summary>
         /// <param name="fragmentHandler"> callback for handling each message fragment as it is read. </param>
-        /// <param name="fragmentLimit">   number of message fragments to limit for the poll operation across multiple <seealso cref="Image"/>s. </param>
+        /// <param name="fragmentLimit">   number of message fragments to limit when polling across multiple <seealso cref="Image"/>s. </param>
         /// <returns> the number of fragments received </returns>
         /// <seealso cref="ControlledFragmentHandler" />
         public int ControlledPoll(IControlledFragmentHandler fragmentHandler, int fragmentLimit)
@@ -275,7 +252,7 @@ namespace Adaptive.Aeron
         /// </para>
         /// </summary>
         /// <param name="fragmentHandler"> callback for handling each message fragment as it is read. </param>
-        /// <param name="fragmentLimit">   number of message fragments to limit for the poll operation across multiple <seealso cref="Image"/>s. </param>
+        /// <param name="fragmentLimit">   number of message fragments to limit when polling across multiple <seealso cref="Image"/>s. </param>
         /// <returns> the number of fragments received </returns>
         /// <seealso cref="ControlledFragmentHandler" />
         public int ControlledPoll(ControlledFragmentHandler fragmentHandler, int fragmentLimit)
@@ -469,7 +446,10 @@ namespace Adaptive.Aeron
         internal void InternalClose()
         {
             _fields.isClosed = true;
-            CloseImages();
+            var images = _fields.images;
+            _fields.images = new Image[0];
+
+            _fields.conductor.CloseImages(images, _fields.unavailableImageHandler);
         }
 
         internal void AddImage(Image image)
@@ -489,7 +469,6 @@ namespace Adaptive.Aeron
             {
                 if (image.CorrelationId == correlationId)
                 {
-                    image.Close();
                     removedImage = image;
                     break;
                 }
@@ -500,44 +479,18 @@ namespace Adaptive.Aeron
             if (null != removedImage)
             {
                 _fields.images = ArrayUtil.Remove(oldArray, i);
+                removedImage.Close();
                 _fields.conductor.ReleaseLogBuffers(removedImage.LogBuffers, correlationId);
             }
 
             return removedImage;
-        }
-
-        private void CloseImages()
-        {
-            var images = _fields.images;
-            _fields.images = SubscriptionFields.EMPTY_ARRAY;
-
-            foreach (var image in images)
-            {
-                image.Close();
-            }
-
-            foreach (Image image in images)
-            {
-                _fields.conductor.ReleaseLogBuffers(image.LogBuffers, image.CorrelationId);
-
-                try
-                {
-                    if (null != _fields.unavailableImageHandler)
-                    {
-                        _fields.unavailableImageHandler(image);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    _fields.conductor.HandleError(ex);
-                }
-            }
         }
         
         public override string ToString()
         {
             return "Subscription{" + 
                    "registrationId=" + RegistrationId + 
+                   ", isClosed=" + IsClosed + 
                    ", streamId=" + StreamId + 
                    ", channel='" + Channel + '\'' + 
                    ", imageCount=" + ImageCount + 

@@ -2,11 +2,18 @@
 using Adaptive.Aeron;
 using Adaptive.Aeron.Exceptions;
 using Adaptive.Aeron.LogBuffer;
+using Adaptive.Agrona;
 using Adaptive.Cluster.Client;
 using Adaptive.Cluster.Codecs;
 
 namespace Adaptive.Cluster.Service
 {
+    /// <summary>
+    /// Proxy for communicating with the Consensus Module over IPC.
+    /// <para>
+    /// This class is not for public use.
+    /// </para>
+    /// </summary>
     public class ConsensusModuleProxy : IDisposable
     {
         private const int SEND_ATTEMPTS = 3;
@@ -29,11 +36,6 @@ namespace Adaptive.Cluster.Service
         public void Dispose()
         {
             _publication?.Dispose();
-        }
-
-        public bool IsConnected()
-        {
-            return _publication.IsConnected;
         }
 
         public bool ScheduleTimer(long correlationId, long deadlineMs)
@@ -86,13 +88,35 @@ namespace Adaptive.Cluster.Service
 
             return false;
         }
-
-        public void Ack(long logPosition, long ackId, int serviceId)
+        
+        public long Offer(
+            IDirectBuffer headerBuffer,
+            int headerOffset,
+            int headerLength,
+            IDirectBuffer messageBuffer,
+            int messageOffset,
+            int messageLength)
         {
-            Ack(logPosition, ackId, Aeron.Aeron.NULL_VALUE, serviceId);
+            return _publication.Offer(headerBuffer, headerOffset, headerLength, messageBuffer, messageOffset, messageLength);
         }
 
-        public void Ack(long logPosition, long ackId, long relevantId, int serviceId)
+        public long Offer(DirectBufferVector[] vectors)
+        {
+            return _publication.Offer(vectors, null);
+        }
+
+        public long TryClaim(int length, BufferClaim bufferClaim, IDirectBuffer sessionHeader)
+        {
+            long result = _publication.TryClaim(length, bufferClaim);
+            if (result > 0)
+            {
+                bufferClaim.PutBytes(sessionHeader, 0, AeronCluster.SESSION_HEADER_LENGTH);
+            }
+
+            return result;
+        }
+
+        public bool Ack(long logPosition, long timestamp, long ackId, long relevantId, int serviceId)
         {
             int length = MessageHeaderEncoder.ENCODED_LENGTH + ServiceAckEncoder.BLOCK_LENGTH;
 
@@ -105,19 +129,20 @@ namespace Adaptive.Cluster.Service
                     _serviceAckEncoder
                         .WrapAndApplyHeader(_bufferClaim.Buffer, _bufferClaim.Offset, _messageHeaderEncoder)
                         .LogPosition(logPosition)
+                        .Timestamp(timestamp)
                         .AckId(ackId)
                         .RelevantId(relevantId)
                         .ServiceId(serviceId);
 
                     _bufferClaim.Commit();
 
-                    return;
+                    return true;
                 }
 
                 CheckResult(result);
             } while (--attempts > 0);
 
-            throw new ClusterException("failed to send ACK");
+            return false;
         }
 
         public bool CloseSession(long clusterSessionId)

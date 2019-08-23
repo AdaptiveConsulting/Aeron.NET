@@ -10,7 +10,7 @@ namespace Adaptive.Aeron.Samples.ClusterService
     {
         private ICluster _cluster;
 
-        public void OnStart(ICluster cluster)
+        public void OnStart(ICluster cluster, Image snapshotImage)
         {
             Console.WriteLine("OnStart");
             _cluster = cluster;

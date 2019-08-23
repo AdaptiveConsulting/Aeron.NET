@@ -9,10 +9,10 @@ namespace Adaptive.Cluster.Codecs {
 
 public class ServiceAckEncoder
 {
-    public const ushort BLOCK_LENGTH = 28;
+    public const ushort BLOCK_LENGTH = 36;
     public const ushort TEMPLATE_ID = 33;
-    public const ushort SCHEMA_ID = 1;
-    public const ushort SCHEMA_VERSION = 1;
+    public const ushort SCHEMA_ID = 111;
+    public const ushort SCHEMA_VERSION = 4;
 
     private ServiceAckEncoder _parentMessage;
     private IMutableDirectBuffer _buffer;
@@ -128,9 +128,41 @@ public class ServiceAckEncoder
     }
 
 
-    public static int AckIdEncodingOffset()
+    public static int TimestampEncodingOffset()
     {
         return 8;
+    }
+
+    public static int TimestampEncodingLength()
+    {
+        return 8;
+    }
+
+    public static long TimestampNullValue()
+    {
+        return -9223372036854775808L;
+    }
+
+    public static long TimestampMinValue()
+    {
+        return -9223372036854775807L;
+    }
+
+    public static long TimestampMaxValue()
+    {
+        return 9223372036854775807L;
+    }
+
+    public ServiceAckEncoder Timestamp(long value)
+    {
+        _buffer.PutLong(_offset + 8, value, ByteOrder.LittleEndian);
+        return this;
+    }
+
+
+    public static int AckIdEncodingOffset()
+    {
+        return 16;
     }
 
     public static int AckIdEncodingLength()
@@ -155,14 +187,14 @@ public class ServiceAckEncoder
 
     public ServiceAckEncoder AckId(long value)
     {
-        _buffer.PutLong(_offset + 8, value, ByteOrder.LittleEndian);
+        _buffer.PutLong(_offset + 16, value, ByteOrder.LittleEndian);
         return this;
     }
 
 
     public static int RelevantIdEncodingOffset()
     {
-        return 16;
+        return 24;
     }
 
     public static int RelevantIdEncodingLength()
@@ -187,14 +219,14 @@ public class ServiceAckEncoder
 
     public ServiceAckEncoder RelevantId(long value)
     {
-        _buffer.PutLong(_offset + 16, value, ByteOrder.LittleEndian);
+        _buffer.PutLong(_offset + 24, value, ByteOrder.LittleEndian);
         return this;
     }
 
 
     public static int ServiceIdEncodingOffset()
     {
-        return 24;
+        return 32;
     }
 
     public static int ServiceIdEncodingLength()
@@ -219,7 +251,7 @@ public class ServiceAckEncoder
 
     public ServiceAckEncoder ServiceId(int value)
     {
-        _buffer.PutInt(_offset + 24, value, ByteOrder.LittleEndian);
+        _buffer.PutInt(_offset + 32, value, ByteOrder.LittleEndian);
         return this;
     }
 

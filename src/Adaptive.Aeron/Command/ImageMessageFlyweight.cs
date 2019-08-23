@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+using System.Text;
 using Adaptive.Agrona;
 
 namespace Adaptive.Aeron.Command
@@ -136,6 +137,18 @@ namespace Adaptive.Aeron.Command
             lengthOfChannel = BitUtil.SIZE_OF_INT + length;
 
             return buffer.GetStringAscii(offset + CHANNEL_OFFSET, length);
+        }
+
+        /// <summary>
+        /// Append the channel value to a <seealso cref="StringBuilder"/>.
+        /// </summary>
+        /// <param name="stringBuilder"> to append channel to. </param>
+        public void AppendChannel(StringBuilder stringBuilder)
+        {
+            int length = buffer.GetInt(offset + CHANNEL_OFFSET);
+            lengthOfChannel = BitUtil.SIZE_OF_INT + length;
+
+            buffer.GetStringAscii(offset + CHANNEL_OFFSET, stringBuilder);
         }
 
         /// <summary>

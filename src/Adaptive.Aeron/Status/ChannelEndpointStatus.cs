@@ -4,7 +4,7 @@ using Adaptive.Agrona.Concurrent.Status;
 namespace Adaptive.Aeron.Status
 {
     /// <summary>
-    /// Status for an Aeron media channel for a <seealso cref="Publication"/> or <seealso cref="Subscription"/>.
+    /// Status of the Aeron media channel for a <seealso cref="Publication"/> or <seealso cref="Subscription"/>.
     /// </summary>
     public class ChannelEndpointStatus
     {

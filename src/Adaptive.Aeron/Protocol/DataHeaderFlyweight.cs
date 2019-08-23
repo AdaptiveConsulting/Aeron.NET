@@ -23,7 +23,7 @@ using Adaptive.Agrona.Concurrent;
 namespace Adaptive.Aeron.Protocol
 {
     /// <summary>
-    /// HeaderFlyweight for Data Frame header of a message fragment.
+    /// Flyweight for Data Frame header of a message fragment.
     /// 
     /// <a target="_blank" href="https://github.com/real-logic/aeron/wiki/Protocol-Specification#data-frame">Data Frame</a>
     /// wiki page.
@@ -31,32 +31,32 @@ namespace Adaptive.Aeron.Protocol
     public class DataHeaderFlyweight : HeaderFlyweight
     {
         /// <summary>
-        /// Length of the Data Header
+        /// Length of the Data Header.
         /// </summary>
         public const int HEADER_LENGTH = 32;
 
         /// <summary>
-        /// Begin Flag
+        /// (B) - Fragment that Begins a message Flag.
         /// </summary>
         public const short BEGIN_FLAG = 0x80;
 
         /// <summary>
-        /// End Flag
+        /// (E) - Fragment that Ends a message Flag.
         /// </summary>
         public const short END_FLAG = 0x40;
 
         /// <summary>
-        /// Begin and End Flags
+        /// Begin and End Flags.
         /// </summary>
         public static readonly short BEGIN_AND_END_FLAGS = BEGIN_FLAG | END_FLAG;
 
         /// <summary>
-        /// End of Stream Flag
+        /// (S) - End of Stream (EOS) Flag for heartbeats after the publication is closed.
         /// </summary>
         public const short EOS_FLAG = 0x20;
 
         /// <summary>
-        /// Begin, End, and End of Stream Flags
+        /// Begin, End, and EOS Flags.
         /// </summary>
         public static readonly short BEGIN_END_AND_EOS_FLAGS = BEGIN_FLAG | END_FLAG | EOS_FLAG;
 
@@ -76,7 +76,7 @@ namespace Adaptive.Aeron.Protocol
         public DataHeaderFlyweight(UnsafeBuffer buffer) : base(buffer)
         {
         }
-        
+
         /// <summary>
         /// Is the frame at data frame at the beginning of packet a heartbeat message?
         /// </summary>
@@ -106,7 +106,7 @@ namespace Adaptive.Aeron.Protocol
         {
             return GetInt(SESSION_ID_FIELD_OFFSET);
         }
-        
+
         public static int SessionId(UnsafeBuffer termBuffer, int frameOffset)
         {
             return termBuffer.GetInt(frameOffset + SESSION_ID_FIELD_OFFSET, ByteOrder.LittleEndian);
@@ -132,7 +132,7 @@ namespace Adaptive.Aeron.Protocol
         {
             return GetInt(STREAM_ID_FIELD_OFFSET);
         }
-        
+
         public static int StreamId(UnsafeBuffer termBuffer, int frameOffset)
         {
             return termBuffer.GetInt(frameOffset + STREAM_ID_FIELD_OFFSET, ByteOrder.LittleEndian);
@@ -163,7 +163,7 @@ namespace Adaptive.Aeron.Protocol
         {
             return termBuffer.GetInt(frameOffset + TERM_ID_FIELD_OFFSET, ByteOrder.LittleEndian);
         }
-        
+
         /// <summary>
         /// set term id field
         /// </summary>
@@ -189,7 +189,7 @@ namespace Adaptive.Aeron.Protocol
         {
             return termBuffer.GetInt(frameOffset + TERM_OFFSET_FIELD_OFFSET, ByteOrder.LittleEndian);
         }
-        
+
         /// <summary>
         /// set term offset field
         /// </summary>
@@ -239,12 +239,12 @@ namespace Adaptive.Aeron.Protocol
         /// <param name="streamId">  for the header </param>
         /// <param name="termId">    for the header </param>
         /// <returns> byte array containing the header </returns>
-	    public static UnsafeBuffer CreateDefaultHeader(int sessionId, int streamId, int termId)
+        public static UnsafeBuffer CreateDefaultHeader(int sessionId, int streamId, int termId)
         {
             var buffer = new UnsafeBuffer(BufferUtil.AllocateDirectAligned(HEADER_LENGTH, BitUtil.CACHE_LINE_LENGTH));
 
             buffer.PutByte(VERSION_FIELD_OFFSET, CURRENT_VERSION);
-            buffer.PutByte(FLAGS_FIELD_OFFSET, (byte)BEGIN_AND_END_FLAGS);
+            buffer.PutByte(FLAGS_FIELD_OFFSET, (byte) BEGIN_AND_END_FLAGS);
             buffer.PutShort(TYPE_FIELD_OFFSET, HDR_TYPE_DATA);
             buffer.PutInt(SESSION_ID_FIELD_OFFSET, sessionId);
             buffer.PutInt(STREAM_ID_FIELD_OFFSET, streamId);
@@ -256,22 +256,17 @@ namespace Adaptive.Aeron.Protocol
 
         public override string ToString()
         {
-            var sb = new StringBuilder();
-            var formattedFlags = $"{Convert.ToString(Flags(), 2),8}".Replace(' ', '0');
-
-            sb.Append("DATA Header{")
-                .Append("frame_length=").Append(FrameLength())
-                .Append(" version=").Append(Version())
-                .Append(" flags=").Append(formattedFlags)
-                .Append(" type=").Append(HeaderType())
-                .Append(" term_offset=").Append(TermOffset())
-                .Append(" session_id=").Append(SessionId())
-                .Append(" stream_id=").Append(StreamId())
-                .Append(" term_id=").Append(TermId())
-                .Append(" reserved_value=").Append(ReservedValue())
-                .Append("}");
-
-            return sb.ToString();
+            return "DATA Header{" +
+                   "frame-length=" + FrameLength() +
+                   " version=" + Version() +
+                   " flags=" + new String(HeaderFlyweight.FlagsToChars(Flags())) +
+                   " type=" + HeaderType() +
+                   " term-offset=" + TermOffset() +
+                   " session-id=" + SessionId() +
+                   " stream-id=" + StreamId() +
+                   " term-id=" + TermId() +
+                   " reserved-value=" + ReservedValue() +
+                   "}";
         }
-}
+    }
 }

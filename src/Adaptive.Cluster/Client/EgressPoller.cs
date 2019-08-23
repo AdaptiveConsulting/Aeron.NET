@@ -1,10 +1,15 @@
-﻿using Adaptive.Aeron;
+﻿using System;
+using Adaptive.Aeron;
 using Adaptive.Aeron.LogBuffer;
 using Adaptive.Agrona;
 using Adaptive.Cluster.Codecs;
+using static Adaptive.Aeron.LogBuffer.ControlledFragmentHandlerAction;
 
 namespace Adaptive.Cluster.Client
 {
+    /// <summary>
+    /// Poller for the egress from a cluster to capture administration message details.
+    /// </summary>
     public class EgressPoller : IControlledFragmentHandler
     {
         private readonly int fragmentLimit;
@@ -12,7 +17,7 @@ namespace Adaptive.Cluster.Client
         private readonly SessionEventDecoder sessionEventDecoder = new SessionEventDecoder();
         private readonly ChallengeDecoder challengeDecoder = new ChallengeDecoder();
         private readonly NewLeaderEventDecoder newLeaderEventDecoder = new NewLeaderEventDecoder();
-        private readonly EgressMessageHeaderDecoder egressMessageHeaderDecoder = new EgressMessageHeaderDecoder();
+        private readonly SessionMessageHeaderDecoder sessionMessageHeaderDecoder = new SessionMessageHeaderDecoder();
         private readonly ControlledFragmentAssembler fragmentAssembler;
         private readonly Subscription subscription;
         private long clusterSessionId = Aeron.Aeron.NULL_VALUE;
@@ -68,7 +73,7 @@ namespace Adaptive.Cluster.Client
         {
             return correlationId;
         }
-        
+
         /// <summary>
         /// Leadership term id of the last polled event or <see cref="Adaptive.Aeron.Aeron.NULL_VALUE"/> if poll returned nothing.
         /// </summary>
@@ -77,7 +82,7 @@ namespace Adaptive.Cluster.Client
         {
             return leadershipTermId;
         }
-        
+
         /// <summary>
         /// Leader cluster member id of the last polled event or <see cref="Adaptive.Aeron.Aeron.NULL_VALUE"/> if poll returned nothing.
         /// </summary>
@@ -113,7 +118,7 @@ namespace Adaptive.Cluster.Client
         {
             return encodedChallenge;
         }
-        
+
         /// <summary>
         /// Has the last polling action received a complete event?
         /// </summary>
@@ -149,11 +154,32 @@ namespace Adaptive.Cluster.Client
 
         public ControlledFragmentHandlerAction OnFragment(IDirectBuffer buffer, int offset, int length, Header header)
         {
+            if (pollComplete)
+            {
+                return ABORT;
+            }
+
             messageHeaderDecoder.Wrap(buffer, offset);
+
+            int schemaId = messageHeaderDecoder.SchemaId();
+            if (schemaId != MessageHeaderDecoder.SCHEMA_ID)
+            {
+                throw new ClusterException("expected schemaId=" + MessageHeaderDecoder.SCHEMA_ID + ", actual=" +
+                                           schemaId);
+            }
 
             templateId = messageHeaderDecoder.TemplateId();
             switch (templateId)
             {
+                case SessionMessageHeaderDecoder.TEMPLATE_ID:
+                    sessionMessageHeaderDecoder.Wrap(buffer, offset + MessageHeaderDecoder.ENCODED_LENGTH,
+                        messageHeaderDecoder.BlockLength(), messageHeaderDecoder.Version());
+
+                    leadershipTermId = sessionMessageHeaderDecoder.LeadershipTermId();
+                    clusterSessionId = sessionMessageHeaderDecoder.ClusterSessionId();
+                    pollComplete = true;
+                    return BREAK;
+
                 case SessionEventDecoder.TEMPLATE_ID:
                     sessionEventDecoder.Wrap(buffer, offset + MessageHeaderDecoder.ENCODED_LENGTH,
                         messageHeaderDecoder.BlockLength(), messageHeaderDecoder.Version());
@@ -164,7 +190,8 @@ namespace Adaptive.Cluster.Client
                     leaderMemberId = sessionEventDecoder.LeaderMemberId();
                     eventCode = sessionEventDecoder.Code();
                     detail = sessionEventDecoder.Detail();
-                    break;
+                    pollComplete = true;
+                    return BREAK;
 
                 case NewLeaderEventDecoder.TEMPLATE_ID:
                     newLeaderEventDecoder.Wrap(buffer, offset + MessageHeaderDecoder.ENCODED_LENGTH,
@@ -174,34 +201,24 @@ namespace Adaptive.Cluster.Client
                     leadershipTermId = newLeaderEventDecoder.LeadershipTermId();
                     leaderMemberId = newLeaderEventDecoder.LeaderMemberId();
                     detail = newLeaderEventDecoder.MemberEndpoints();
-                    break;
-
-                case EgressMessageHeaderDecoder.TEMPLATE_ID:
-                    egressMessageHeaderDecoder.Wrap(buffer, offset + MessageHeaderDecoder.ENCODED_LENGTH,
-                        messageHeaderDecoder.BlockLength(), messageHeaderDecoder.Version());
-
-                    leadershipTermId = EgressMessageHeaderDecoder.LeadershipTermIdId();
-                    clusterSessionId = egressMessageHeaderDecoder.ClusterSessionId();
-                    break;
+                    pollComplete = true;
+                    return BREAK;
 
                 case ChallengeDecoder.TEMPLATE_ID:
                     challengeDecoder.Wrap(buffer, offset + MessageHeaderDecoder.ENCODED_LENGTH,
                         messageHeaderDecoder.BlockLength(), messageHeaderDecoder.Version());
 
                     encodedChallenge = new byte[challengeDecoder.EncodedChallengeLength()];
-                    challengeDecoder.GetEncodedChallenge(encodedChallenge, 0, challengeDecoder.EncodedChallengeLength());
+                    challengeDecoder.GetEncodedChallenge(encodedChallenge, 0,
+                        challengeDecoder.EncodedChallengeLength());
 
                     clusterSessionId = challengeDecoder.ClusterSessionId();
                     correlationId = challengeDecoder.CorrelationId();
-                    break;
-                
-                default:
-                    throw new ClusterException("unknown templateId: " + templateId);
+                    pollComplete = true;
+                    return BREAK;
             }
 
-            pollComplete = true;
-
-            return ControlledFragmentHandlerAction.BREAK;
+            return CONTINUE;
         }
     }
 }

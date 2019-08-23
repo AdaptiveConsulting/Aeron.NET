@@ -5,21 +5,21 @@ using System.Collections.Generic;
 using Adaptive.Agrona;
 
 
-namespace Adaptive.Cluster.Codecs {
+namespace Adaptive.Archiver.Codecs {
 
-public class SessionHeaderEncoder
+public class StopAllReplaysRequestEncoder
 {
     public const ushort BLOCK_LENGTH = 24;
-    public const ushort TEMPLATE_ID = 20;
-    public const ushort SCHEMA_ID = 1;
-    public const ushort SCHEMA_VERSION = 1;
+    public const ushort TEMPLATE_ID = 19;
+    public const ushort SCHEMA_ID = 101;
+    public const ushort SCHEMA_VERSION = 2;
 
-    private SessionHeaderEncoder _parentMessage;
+    private StopAllReplaysRequestEncoder _parentMessage;
     private IMutableDirectBuffer _buffer;
     protected int _offset;
     protected int _limit;
 
-    public SessionHeaderEncoder()
+    public StopAllReplaysRequestEncoder()
     {
         _parentMessage = this;
     }
@@ -59,7 +59,7 @@ public class SessionHeaderEncoder
         return _offset;
     }
 
-    public SessionHeaderEncoder Wrap(IMutableDirectBuffer buffer, int offset)
+    public StopAllReplaysRequestEncoder Wrap(IMutableDirectBuffer buffer, int offset)
     {
         this._buffer = buffer;
         this._offset = offset;
@@ -68,7 +68,7 @@ public class SessionHeaderEncoder
         return this;
     }
 
-    public SessionHeaderEncoder WrapAndApplyHeader(
+    public StopAllReplaysRequestEncoder WrapAndApplyHeader(
         IMutableDirectBuffer buffer, int offset, MessageHeaderEncoder headerEncoder)
     {
         headerEncoder
@@ -96,96 +96,96 @@ public class SessionHeaderEncoder
         this._limit = limit;
     }
 
-    public static int LeadershipTermIdEncodingOffset()
+    public static int ControlSessionIdEncodingOffset()
     {
         return 0;
     }
 
-    public static int LeadershipTermIdEncodingLength()
+    public static int ControlSessionIdEncodingLength()
     {
         return 8;
     }
 
-    public static long LeadershipTermIdNullValue()
+    public static long ControlSessionIdNullValue()
     {
         return -9223372036854775808L;
     }
 
-    public static long LeadershipTermIdMinValue()
+    public static long ControlSessionIdMinValue()
     {
         return -9223372036854775807L;
     }
 
-    public static long LeadershipTermIdMaxValue()
+    public static long ControlSessionIdMaxValue()
     {
         return 9223372036854775807L;
     }
 
-    public SessionHeaderEncoder LeadershipTermId(long value)
+    public StopAllReplaysRequestEncoder ControlSessionId(long value)
     {
         _buffer.PutLong(_offset + 0, value, ByteOrder.LittleEndian);
         return this;
     }
 
 
-    public static int ClusterSessionIdEncodingOffset()
+    public static int CorrelationIdEncodingOffset()
     {
         return 8;
     }
 
-    public static int ClusterSessionIdEncodingLength()
+    public static int CorrelationIdEncodingLength()
     {
         return 8;
     }
 
-    public static long ClusterSessionIdNullValue()
+    public static long CorrelationIdNullValue()
     {
         return -9223372036854775808L;
     }
 
-    public static long ClusterSessionIdMinValue()
+    public static long CorrelationIdMinValue()
     {
         return -9223372036854775807L;
     }
 
-    public static long ClusterSessionIdMaxValue()
+    public static long CorrelationIdMaxValue()
     {
         return 9223372036854775807L;
     }
 
-    public SessionHeaderEncoder ClusterSessionId(long value)
+    public StopAllReplaysRequestEncoder CorrelationId(long value)
     {
         _buffer.PutLong(_offset + 8, value, ByteOrder.LittleEndian);
         return this;
     }
 
 
-    public static int TimestampEncodingOffset()
+    public static int RecordingIdEncodingOffset()
     {
         return 16;
     }
 
-    public static int TimestampEncodingLength()
+    public static int RecordingIdEncodingLength()
     {
         return 8;
     }
 
-    public static long TimestampNullValue()
+    public static long RecordingIdNullValue()
     {
         return -9223372036854775808L;
     }
 
-    public static long TimestampMinValue()
+    public static long RecordingIdMinValue()
     {
         return -9223372036854775807L;
     }
 
-    public static long TimestampMaxValue()
+    public static long RecordingIdMaxValue()
     {
         return 9223372036854775807L;
     }
 
-    public SessionHeaderEncoder Timestamp(long value)
+    public StopAllReplaysRequestEncoder RecordingId(long value)
     {
         _buffer.PutLong(_offset + 16, value, ByteOrder.LittleEndian);
         return this;
@@ -200,7 +200,7 @@ public class SessionHeaderEncoder
 
     public StringBuilder AppendTo(StringBuilder builder)
     {
-        SessionHeaderDecoder writer = new SessionHeaderDecoder();
+        StopAllReplaysRequestDecoder writer = new StopAllReplaysRequestDecoder();
         writer.Wrap(_buffer, _offset, BLOCK_LENGTH, SCHEMA_VERSION);
 
         return writer.AppendTo(builder);

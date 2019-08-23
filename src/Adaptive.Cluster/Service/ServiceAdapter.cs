@@ -2,6 +2,7 @@
 using Adaptive.Aeron;
 using Adaptive.Aeron.LogBuffer;
 using Adaptive.Agrona;
+using Adaptive.Cluster.Client;
 using Adaptive.Cluster.Codecs;
 
 namespace Adaptive.Cluster.Service
@@ -14,7 +15,8 @@ namespace Adaptive.Cluster.Service
         private readonly MessageHeaderDecoder messageHeaderDecoder = new MessageHeaderDecoder();
         private readonly JoinLogDecoder joinLogDecoder = new JoinLogDecoder();
         private readonly ServiceTerminationPositionDecoder serviceTerminationPositionDecoder = new ServiceTerminationPositionDecoder();
-
+        private readonly ElectionStartEventDecoder electionStartEventDecoder = new ElectionStartEventDecoder();
+        
         public ServiceAdapter(Subscription subscription, ClusteredServiceAgent clusteredServiceAgent)
         {
             this.subscription = subscription;
@@ -35,34 +37,52 @@ namespace Adaptive.Cluster.Service
         {
             messageHeaderDecoder.Wrap(buffer, offset);
 
+            int schemaId = messageHeaderDecoder.SchemaId();
+            if (schemaId != MessageHeaderDecoder.SCHEMA_ID)
+            {
+                throw new ClusterException("expected schemaId=" + MessageHeaderDecoder.SCHEMA_ID + ", actual=" + schemaId);
+            }
+            
             int templateId = messageHeaderDecoder.TemplateId();
 
-            if (JoinLogDecoder.TEMPLATE_ID == templateId)
+            switch (templateId)
             {
-                joinLogDecoder.Wrap(
-                    buffer, 
-                    offset + MessageHeaderDecoder.ENCODED_LENGTH,
-                    messageHeaderDecoder.BlockLength(), 
-                    messageHeaderDecoder.Version());
+                case JoinLogDecoder.TEMPLATE_ID:
+                    joinLogDecoder.Wrap(
+                        buffer, 
+                        offset + MessageHeaderDecoder.ENCODED_LENGTH,
+                        messageHeaderDecoder.BlockLength(), 
+                        messageHeaderDecoder.Version());
 
-                clusteredServiceAgent.OnJoinLog(
-                    joinLogDecoder.LeadershipTermId(),
-                    joinLogDecoder.LogPosition(),
-                    joinLogDecoder.MaxLogPosition(),
-                    joinLogDecoder.MemberId(),
-                    joinLogDecoder.LogSessionId(),
-                    joinLogDecoder.LogStreamId(),
-                    joinLogDecoder.LogChannel());
-            }
-            else if (ServiceTerminationPositionDecoder.TEMPLATE_ID == templateId)
-            {
-                serviceTerminationPositionDecoder.Wrap(
-                    buffer, 
-                    offset + MessageHeaderDecoder.ENCODED_LENGTH,
-                    messageHeaderDecoder.BlockLength(), 
-                    messageHeaderDecoder.Version());
+                    clusteredServiceAgent.OnJoinLog(
+                        joinLogDecoder.LeadershipTermId(),
+                        joinLogDecoder.LogPosition(),
+                        joinLogDecoder.MaxLogPosition(),
+                        joinLogDecoder.MemberId(),
+                        joinLogDecoder.LogSessionId(),
+                        joinLogDecoder.LogStreamId(),
+                        joinLogDecoder.LogChannel());
+                    break;
                 
-                clusteredServiceAgent.OnServiceTerminationPosition(serviceTerminationPositionDecoder.LogPosition());
+                case ServiceTerminationPositionDecoder.TEMPLATE_ID:
+                    serviceTerminationPositionDecoder.Wrap(
+                        buffer, 
+                        offset + MessageHeaderDecoder.ENCODED_LENGTH,
+                        messageHeaderDecoder.BlockLength(), 
+                        messageHeaderDecoder.Version());
+                
+                    clusteredServiceAgent.OnServiceTerminationPosition(serviceTerminationPositionDecoder.LogPosition());
+                    break;
+                
+                case ElectionStartEventDecoder.TEMPLATE_ID:
+                    electionStartEventDecoder.Wrap(
+                        buffer,
+                        offset + MessageHeaderDecoder.ENCODED_LENGTH,
+                        messageHeaderDecoder.BlockLength(),
+                        messageHeaderDecoder.Version());
+
+                    clusteredServiceAgent.OnElectionStartEvent(electionStartEventDecoder.LogPosition());
+                    break;
             }
         }
     }

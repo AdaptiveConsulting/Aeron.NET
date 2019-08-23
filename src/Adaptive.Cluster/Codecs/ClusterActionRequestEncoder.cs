@@ -10,9 +10,9 @@ namespace Adaptive.Cluster.Codecs {
 public class ClusterActionRequestEncoder
 {
     public const ushort BLOCK_LENGTH = 28;
-    public const ushort TEMPLATE_ID = 24;
-    public const ushort SCHEMA_ID = 1;
-    public const ushort SCHEMA_VERSION = 1;
+    public const ushort TEMPLATE_ID = 23;
+    public const ushort SCHEMA_ID = 111;
+    public const ushort SCHEMA_VERSION = 4;
 
     private ClusterActionRequestEncoder _parentMessage;
     private IMutableDirectBuffer _buffer;

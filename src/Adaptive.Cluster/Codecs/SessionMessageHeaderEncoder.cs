@@ -7,19 +7,19 @@ using Adaptive.Agrona;
 
 namespace Adaptive.Cluster.Codecs {
 
-public class IngressMessageHeaderEncoder
+public class SessionMessageHeaderEncoder
 {
     public const ushort BLOCK_LENGTH = 24;
     public const ushort TEMPLATE_ID = 1;
-    public const ushort SCHEMA_ID = 1;
-    public const ushort SCHEMA_VERSION = 1;
+    public const ushort SCHEMA_ID = 111;
+    public const ushort SCHEMA_VERSION = 4;
 
-    private IngressMessageHeaderEncoder _parentMessage;
+    private SessionMessageHeaderEncoder _parentMessage;
     private IMutableDirectBuffer _buffer;
     protected int _offset;
     protected int _limit;
 
-    public IngressMessageHeaderEncoder()
+    public SessionMessageHeaderEncoder()
     {
         _parentMessage = this;
     }
@@ -59,7 +59,7 @@ public class IngressMessageHeaderEncoder
         return _offset;
     }
 
-    public IngressMessageHeaderEncoder Wrap(IMutableDirectBuffer buffer, int offset)
+    public SessionMessageHeaderEncoder Wrap(IMutableDirectBuffer buffer, int offset)
     {
         this._buffer = buffer;
         this._offset = offset;
@@ -68,7 +68,7 @@ public class IngressMessageHeaderEncoder
         return this;
     }
 
-    public IngressMessageHeaderEncoder WrapAndApplyHeader(
+    public SessionMessageHeaderEncoder WrapAndApplyHeader(
         IMutableDirectBuffer buffer, int offset, MessageHeaderEncoder headerEncoder)
     {
         headerEncoder
@@ -121,7 +121,7 @@ public class IngressMessageHeaderEncoder
         return 9223372036854775807L;
     }
 
-    public IngressMessageHeaderEncoder LeadershipTermId(long value)
+    public SessionMessageHeaderEncoder LeadershipTermId(long value)
     {
         _buffer.PutLong(_offset + 0, value, ByteOrder.LittleEndian);
         return this;
@@ -153,7 +153,7 @@ public class IngressMessageHeaderEncoder
         return 9223372036854775807L;
     }
 
-    public IngressMessageHeaderEncoder ClusterSessionId(long value)
+    public SessionMessageHeaderEncoder ClusterSessionId(long value)
     {
         _buffer.PutLong(_offset + 8, value, ByteOrder.LittleEndian);
         return this;
@@ -185,7 +185,7 @@ public class IngressMessageHeaderEncoder
         return 9223372036854775807L;
     }
 
-    public IngressMessageHeaderEncoder Timestamp(long value)
+    public SessionMessageHeaderEncoder Timestamp(long value)
     {
         _buffer.PutLong(_offset + 16, value, ByteOrder.LittleEndian);
         return this;
@@ -200,7 +200,7 @@ public class IngressMessageHeaderEncoder
 
     public StringBuilder AppendTo(StringBuilder builder)
     {
-        IngressMessageHeaderDecoder writer = new IngressMessageHeaderDecoder();
+        SessionMessageHeaderDecoder writer = new SessionMessageHeaderDecoder();
         writer.Wrap(_buffer, _offset, BLOCK_LENGTH, SCHEMA_VERSION);
 
         return writer.AppendTo(builder);

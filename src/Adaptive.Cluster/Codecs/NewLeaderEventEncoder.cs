@@ -10,9 +10,9 @@ namespace Adaptive.Cluster.Codecs {
 public class NewLeaderEventEncoder
 {
     public const ushort BLOCK_LENGTH = 20;
-    public const ushort TEMPLATE_ID = 7;
-    public const ushort SCHEMA_ID = 1;
-    public const ushort SCHEMA_VERSION = 1;
+    public const ushort TEMPLATE_ID = 6;
+    public const ushort SCHEMA_ID = 111;
+    public const ushort SCHEMA_VERSION = 4;
 
     private NewLeaderEventEncoder _parentMessage;
     private IMutableDirectBuffer _buffer;

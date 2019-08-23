@@ -9,10 +9,10 @@ namespace Adaptive.Cluster.Codecs {
 
 public class NewLeadershipTermEventEncoder
 {
-    public const ushort BLOCK_LENGTH = 32;
-    public const ushort TEMPLATE_ID = 25;
-    public const ushort SCHEMA_ID = 1;
-    public const ushort SCHEMA_VERSION = 1;
+    public const ushort BLOCK_LENGTH = 48;
+    public const ushort TEMPLATE_ID = 24;
+    public const ushort SCHEMA_ID = 111;
+    public const ushort SCHEMA_VERSION = 4;
 
     private NewLeadershipTermEventEncoder _parentMessage;
     private IMutableDirectBuffer _buffer;
@@ -192,9 +192,41 @@ public class NewLeadershipTermEventEncoder
     }
 
 
-    public static int LeaderMemberIdEncodingOffset()
+    public static int TermBaseLogPositionEncodingOffset()
     {
         return 24;
+    }
+
+    public static int TermBaseLogPositionEncodingLength()
+    {
+        return 8;
+    }
+
+    public static long TermBaseLogPositionNullValue()
+    {
+        return -9223372036854775808L;
+    }
+
+    public static long TermBaseLogPositionMinValue()
+    {
+        return -9223372036854775807L;
+    }
+
+    public static long TermBaseLogPositionMaxValue()
+    {
+        return 9223372036854775807L;
+    }
+
+    public NewLeadershipTermEventEncoder TermBaseLogPosition(long value)
+    {
+        _buffer.PutLong(_offset + 24, value, ByteOrder.LittleEndian);
+        return this;
+    }
+
+
+    public static int LeaderMemberIdEncodingOffset()
+    {
+        return 32;
     }
 
     public static int LeaderMemberIdEncodingLength()
@@ -219,14 +251,14 @@ public class NewLeadershipTermEventEncoder
 
     public NewLeadershipTermEventEncoder LeaderMemberId(int value)
     {
-        _buffer.PutInt(_offset + 24, value, ByteOrder.LittleEndian);
+        _buffer.PutInt(_offset + 32, value, ByteOrder.LittleEndian);
         return this;
     }
 
 
     public static int LogSessionIdEncodingOffset()
     {
-        return 28;
+        return 36;
     }
 
     public static int LogSessionIdEncodingLength()
@@ -251,7 +283,55 @@ public class NewLeadershipTermEventEncoder
 
     public NewLeadershipTermEventEncoder LogSessionId(int value)
     {
-        _buffer.PutInt(_offset + 28, value, ByteOrder.LittleEndian);
+        _buffer.PutInt(_offset + 36, value, ByteOrder.LittleEndian);
+        return this;
+    }
+
+
+    public static int TimeUnitEncodingOffset()
+    {
+        return 40;
+    }
+
+    public static int TimeUnitEncodingLength()
+    {
+        return 4;
+    }
+
+    public NewLeadershipTermEventEncoder TimeUnit(ClusterTimeUnit value)
+    {
+        _buffer.PutInt(_offset + 40, (int)value, ByteOrder.LittleEndian);
+        return this;
+    }
+
+    public static int AppVersionEncodingOffset()
+    {
+        return 44;
+    }
+
+    public static int AppVersionEncodingLength()
+    {
+        return 4;
+    }
+
+    public static int AppVersionNullValue()
+    {
+        return 0;
+    }
+
+    public static int AppVersionMinValue()
+    {
+        return 1;
+    }
+
+    public static int AppVersionMaxValue()
+    {
+        return 16777215;
+    }
+
+    public NewLeadershipTermEventEncoder AppVersion(int value)
+    {
+        _buffer.PutInt(_offset + 44, value, ByteOrder.LittleEndian);
         return this;
     }
 

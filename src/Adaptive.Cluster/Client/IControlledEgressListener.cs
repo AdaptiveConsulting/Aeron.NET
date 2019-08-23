@@ -15,7 +15,7 @@ namespace Adaptive.Cluster.Client
         /// Message event returned from the clustered service.
         /// </summary>
         /// <param name="clusterSessionId"> to which the message belongs. </param>
-        /// <param name="timestampMs">      at which the correlated ingress was sequenced in the cluster. </param>
+        /// <param name="timestamp">      at which the correlated ingress was sequenced in the cluster. </param>
         /// <param name="buffer">           containing the message. </param>
         /// <param name="offset">           at which the message begins. </param>
         /// <param name="length">           of the message in bytes. </param>
@@ -23,7 +23,7 @@ namespace Adaptive.Cluster.Client
         /// <returns> what action should be taken regarding advancement of the stream.</returns>
         ControlledFragmentHandlerAction OnMessage(
             long clusterSessionId,
-            long timestampMs,
+            long timestamp,
             IDirectBuffer buffer,
             int offset,
             int length,

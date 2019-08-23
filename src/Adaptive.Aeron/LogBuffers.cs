@@ -23,6 +23,7 @@ using Adaptive.Agrona.Concurrent;
 using Adaptive.Agrona.Util;
 
 [assembly: InternalsVisibleTo("DynamicProxyGenAssembly2")]
+
 namespace Adaptive.Aeron
 {
     /// <summary>
@@ -33,7 +34,7 @@ namespace Adaptive.Aeron
     {
         private long _timeOfLastStateChangeNs;
         private int _refCount;
-        
+
         private readonly int _termLength;
         private readonly UnsafeBuffer[] _termBuffers = new UnsafeBuffer[LogBufferDescriptor.PARTITION_COUNT];
         private readonly UnsafeBuffer _logMetaDataBuffer;
@@ -58,7 +59,9 @@ namespace Adaptive.Aeron
                 // if log length exceeds MAX_INT we need multiple mapped buffers, (see FileChannel.map doc).
                 if (logLength < int.MaxValue)
                 {
-                    var mappedBuffer = IoUtil.MapExistingFile(logFileName, MapMode.ReadWrite); // TODO Java has sparse hint & Little Endian
+                    var mappedBuffer =
+                        IoUtil.MapExistingFile(logFileName,
+                            MapMode.ReadWrite); // TODO Java has sparse hint & Little Endian
                     _mappedByteBuffers = new[] {mappedBuffer};
 
                     _logMetaDataBuffer = new UnsafeBuffer(mappedBuffer.Pointer,
@@ -89,8 +92,9 @@ namespace Adaptive.Aeron
                     var memoryMappedFile = IoUtil.OpenMemoryMappedFile(logFileName);
 
                     var metaDataMappedBuffer =
-                        new MappedByteBuffer(memoryMappedFile, metaDataSectionOffset, metaDataMappingLength);  // Little Endian
-                    
+                        new MappedByteBuffer(memoryMappedFile, metaDataSectionOffset,
+                            metaDataMappingLength); // Little Endian
+
                     _mappedByteBuffers[LogBufferDescriptor.LOG_META_DATA_SECTION_INDEX] = metaDataMappedBuffer;
                     _logMetaDataBuffer = new UnsafeBuffer(
                         metaDataMappedBuffer.Pointer,
@@ -113,7 +117,8 @@ namespace Adaptive.Aeron
                     {
                         long position = assumedTermLength * (long) i;
 
-                        _mappedByteBuffers[i] = new MappedByteBuffer(memoryMappedFile, position, assumedTermLength); // Little Endian
+                        _mappedByteBuffers[i] =
+                            new MappedByteBuffer(memoryMappedFile, position, assumedTermLength); // Little Endian
                         _termBuffers[i] = new UnsafeBuffer(_mappedByteBuffers[i].Pointer, 0, assumedTermLength);
                     }
                 }
@@ -139,11 +144,34 @@ namespace Adaptive.Aeron
             return _logMetaDataBuffer;
         }
 
+        /// <summary>
+        /// Pre touch memory pages so they are faulted in to be available before access.
+        /// </summary>
+        public void PreTouch()
+        {
+            const int value = 0;
+            int pageSize = LogBufferDescriptor.PageSize(_logMetaDataBuffer);
+            UnsafeBuffer atomicBuffer = new UnsafeBuffer();
+
+            foreach (MappedByteBuffer buffer in _mappedByteBuffers)
+            {
+                atomicBuffer.Wrap(buffer.Pointer, 0, (int) buffer.Capacity);
+
+                for (int i = 0, length = atomicBuffer.Capacity; i < length; i += pageSize)
+                {
+                    atomicBuffer.CompareAndSetInt(i, value, value);
+                }
+            }
+        }
+
         public void Dispose()
         {
-            foreach (var buffer in _mappedByteBuffers)
+            var length = _mappedByteBuffers.Length;
+            for (var i = 0; i < length; i++)
             {
+                var buffer = _mappedByteBuffers[i];
                 IoUtil.Unmap(buffer);
+                _mappedByteBuffers[i] = null;
             }
         }
 
@@ -169,13 +197,13 @@ namespace Adaptive.Aeron
         public void TimeOfLastStateChange(long timeNs)
         {
             _timeOfLastStateChangeNs = timeNs;
-        } 
-        
+        }
+
         public long TimeOfLastStateChange()
         {
             return _timeOfLastStateChangeNs;
         }
-        
+
         public void Delete()
         {
             Dispose();

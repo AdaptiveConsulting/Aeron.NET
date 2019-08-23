@@ -6,6 +6,7 @@ using Adaptive.Agrona;
 namespace Adaptive.Archiver.Codecs {
 public class MessageHeaderDecoder
 {
+    public const int SCHEMA_ID = 101; // TODO Fix SBE Generation 
     public static int ENCODED_LENGTH = 8;
     private int _offset;
     private IDirectBuffer _buffer;

@@ -32,12 +32,12 @@ namespace Adaptive.Aeron
         INVALID_CHANNEL = 1,
 
         /// <summary>
-        /// Attempted to remove a subscription, but it was not found 
+        /// Attempted to reference a subscription, but it was not found.
         /// </summary>
         UNKNOWN_SUBSCRIPTION = 2,
 
         /// <summary>
-        /// Attempted to remove a publication, but it was not found. 
+        /// Attempted to reference a publication, but it was not found.
         /// </summary>
         UNKNOWN_PUBLICATION = 3,
 
@@ -47,7 +47,7 @@ namespace Adaptive.Aeron
         CHANNEL_ENDPOINT_ERROR = 4,
 
         /// <summary>
-        /// Attempted to remove a counter, but it was not found.
+        /// Attempted to reference a counter, but it was not found.
         /// </summary>
         UNKNOWN_COUNTER = 5,
 

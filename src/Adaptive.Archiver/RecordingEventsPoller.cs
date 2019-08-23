@@ -104,6 +104,12 @@ namespace Adaptive.Archiver
         {
             messageHeaderDecoder.Wrap(buffer, offset);
 
+            int schemaId = messageHeaderDecoder.SchemaId();
+            if (schemaId != MessageHeaderDecoder.SCHEMA_ID)
+            {
+                throw new ArchiveException("expected schemaId=" + MessageHeaderDecoder.SCHEMA_ID + ", actual=" + schemaId);
+            }
+            
             templateId = messageHeaderDecoder.TemplateId();
             switch (templateId)
             {
@@ -114,6 +120,7 @@ namespace Adaptive.Archiver
                     recordingStartPosition = recordingStartedDecoder.StartPosition();
                     recordingPosition = recordingStartPosition;
                     recordingStopPosition = Aeron.Aeron.NULL_VALUE;
+                    pollComplete = true;
                     break;
 
                 case RecordingProgressDecoder.TEMPLATE_ID:
@@ -123,6 +130,7 @@ namespace Adaptive.Archiver
                     recordingStartPosition = recordingProgressDecoder.StartPosition();
                     recordingPosition = recordingProgressDecoder.Position();
                     recordingStopPosition = Aeron.Aeron.NULL_VALUE;
+                    pollComplete = true;
                     break;
 
                 case RecordingStoppedDecoder.TEMPLATE_ID:
@@ -132,13 +140,9 @@ namespace Adaptive.Archiver
                     recordingStartPosition = recordingStoppedDecoder.StartPosition();
                     recordingStopPosition = recordingStoppedDecoder.StopPosition();
                     recordingPosition = recordingStopPosition;
+                    pollComplete = true;
                     break;
-
-                default:
-                    throw new ArchiveException("unknown templateId: " + templateId);
             }
-
-            pollComplete = true;
         }
     }
 }

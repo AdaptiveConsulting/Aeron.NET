@@ -88,6 +88,11 @@ namespace Adaptive.Aeron.Command
         /// </summary>
         public const int REMOVE_RCV_DESTINATION = 0x0D;
 
+        /// <summary>
+        /// Request the driver to terminate.
+        /// </summary>
+        public const int TERMINATE_DRIVER = 0x0E;
+        
         // Media Driver to Clients
 
         /// <summary>

@@ -11,8 +11,8 @@ public class RecordingDescriptorEncoder
 {
     public const ushort BLOCK_LENGTH = 80;
     public const ushort TEMPLATE_ID = 22;
-    public const ushort SCHEMA_ID = 1;
-    public const ushort SCHEMA_VERSION = 0;
+    public const ushort SCHEMA_ID = 101;
+    public const ushort SCHEMA_VERSION = 2;
 
     private RecordingDescriptorEncoder _parentMessage;
     private IMutableDirectBuffer _buffer;

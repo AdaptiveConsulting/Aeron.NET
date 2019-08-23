@@ -1,28 +1,25 @@
-﻿using System;
-using Adaptive.Aeron;
+﻿using Adaptive.Aeron;
 using Adaptive.Aeron.LogBuffer;
 using Adaptive.Agrona;
 using Adaptive.Cluster.Codecs;
 
 namespace Adaptive.Cluster.Client
 {
+    /// <summary>
+    /// Adapter for dispatching egress messages from a cluster to a <seealso cref="IEgressListener"/>.
+    /// </summary>
     public class EgressAdapter : IFragmentHandler
     {
-        /// <summary>
-        /// Length of the session header before the message.
-        /// </summary>
-        public static readonly int SESSION_HEADER_LENGTH = MessageHeaderDecoder.ENCODED_LENGTH + SessionHeaderDecoder.BLOCK_LENGTH;
-
         private readonly long _clusterSessionId;
         private readonly int _fragmentLimit;
         private readonly MessageHeaderDecoder _messageHeaderDecoder = new MessageHeaderDecoder();
         private readonly SessionEventDecoder _sessionEventDecoder = new SessionEventDecoder();
         private readonly NewLeaderEventDecoder _newLeaderEventDecoder = new NewLeaderEventDecoder();
-        private readonly EgressMessageHeaderDecoder _egressMessageHeaderDecoder = new EgressMessageHeaderDecoder();
+        private readonly SessionMessageHeaderDecoder _sessionMessageHeaderDecoder = new SessionMessageHeaderDecoder();
         private readonly FragmentAssembler _fragmentAssembler;
         private readonly IEgressListener _listener;
         private readonly Subscription _subscription;
-        
+
         public EgressAdapter(
             IEgressListener listener,
             long clusterSessionId,
@@ -45,31 +42,38 @@ namespace Adaptive.Cluster.Client
         {
             _messageHeaderDecoder.Wrap(buffer, offset);
 
+            int schemaId = _messageHeaderDecoder.SchemaId();
+            if (schemaId != MessageHeaderDecoder.SCHEMA_ID)
+            {
+                throw new ClusterException("expected schemaId=" + MessageHeaderDecoder.SCHEMA_ID + ", actual=" +
+                                           schemaId);
+            }
+
             int templateId = _messageHeaderDecoder.TemplateId();
 
-            if (EgressMessageHeaderDecoder.TEMPLATE_ID == templateId)
+            if (SessionMessageHeaderDecoder.TEMPLATE_ID == templateId)
             {
-                _egressMessageHeaderDecoder.Wrap(
+                _sessionMessageHeaderDecoder.Wrap(
                     buffer,
                     offset + MessageHeaderDecoder.ENCODED_LENGTH,
                     _messageHeaderDecoder.BlockLength(),
                     _messageHeaderDecoder.Version());
 
-                var sessionId = _egressMessageHeaderDecoder.ClusterSessionId();
+                var sessionId = _sessionMessageHeaderDecoder.ClusterSessionId();
                 if (sessionId == _clusterSessionId)
                 {
                     _listener.OnMessage(
                         sessionId,
-                        _egressMessageHeaderDecoder.Timestamp(),
+                        _sessionMessageHeaderDecoder.Timestamp(),
                         buffer,
-                        offset + SESSION_HEADER_LENGTH,
-                        length - SESSION_HEADER_LENGTH,
+                        offset + AeronCluster.SESSION_HEADER_LENGTH,
+                        length - AeronCluster.SESSION_HEADER_LENGTH,
                         header);
                 }
 
                 return;
             }
-            
+
             switch (templateId)
             {
                 case SessionEventDecoder.TEMPLATE_ID:
@@ -83,7 +87,6 @@ namespace Adaptive.Cluster.Client
                     var sessionId = _sessionEventDecoder.ClusterSessionId();
                     if (sessionId == _clusterSessionId)
                     {
-
                         _listener.SessionEvent(
                             _sessionEventDecoder.CorrelationId(),
                             sessionId,
@@ -116,12 +119,6 @@ namespace Adaptive.Cluster.Client
 
                     break;
                 }
-
-                case ChallengeDecoder.TEMPLATE_ID:
-                    break;
-
-                default:
-                    throw new ClusterException("unknown templateId: " + templateId);
             }
         }
     }

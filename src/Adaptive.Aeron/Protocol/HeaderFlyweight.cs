@@ -15,6 +15,7 @@
  */
 
 using System.Runtime.CompilerServices;
+using System.Text;
 using Adaptive.Agrona;
 using Adaptive.Agrona.Concurrent;
 
@@ -186,6 +187,47 @@ namespace Adaptive.Aeron.Protocol
             PutInt(FRAME_LENGTH_FIELD_OFFSET, length);
 
             return this;
+        }
+        
+        /// <summary>
+        /// Convert header flags to an array of chars to be human readable.
+        /// </summary>
+        /// <param name="flags"> to be converted. </param>
+        /// <returns> header flags converted to an array of chars to be human readable. </returns>
+        public static char[] FlagsToChars(short flags)
+        {
+            char[] chars = {'0', '0', '0', '0', '0', '0', '0', '0'};
+            int length = chars.Length;
+            short mask = (short)(1 << (length - 1));
+
+            for (int i = 0; i < length; i++)
+            {
+                if ((flags & mask) == mask)
+                {
+                    chars[i] = '1';
+                }
+
+                mask >>= 1;
+            }
+
+            return chars;
+        }
+
+        /// <summary>
+        /// Append header flags to an <seealso cref="StringBuilder"/> to be human readable.
+        /// </summary>
+        /// <param name="flags">      to be converted. </param>
+        /// <param name="stringBuilder"> to append flags to. </param>
+        public static void AppendFlagsAsChars(short flags, StringBuilder stringBuilder)
+        {
+            const int length = 8;
+            short mask = (short) (1 << (length - 1));
+
+            for (int i = 0; i < length; i++)
+            {
+                stringBuilder.Append((flags & mask) == mask ? '1' : '0');
+                mask >>= 1;
+            }
         }
     }
 }

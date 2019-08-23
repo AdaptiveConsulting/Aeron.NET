@@ -5,12 +5,12 @@ using Adaptive.Agrona.Concurrent.Status;
 namespace Adaptive.Aeron
 {
     /// <summary>
-    /// Counter stored in the counters file managed by the media driver which can be read with AeronStat.
+    /// Counter stored in a file managed by the media driver which can be observed with AeronStat.
     /// </summary>
     public class Counter : AtomicCounter
     {
         private readonly ClientConductor _clientConductor;
-        private volatile bool _isClosed;
+        private AtomicBoolean _isClosed = new AtomicBoolean(false);
 
         internal Counter(long registrationId, ClientConductor clientConductor, IAtomicBuffer buffer, int counterId) :
             base(buffer, counterId)
@@ -26,12 +26,12 @@ namespace Adaptive.Aeron
         /// <param name="registrationId"> assigned by the driver for the counter or <see cref="Adaptive.Aeron.Aeron.NULL_VALUE"/> if not known. </param>
         /// <param name="counterId">      for the counter to be viewed. </param>
         /// <exception cref="AeronException"> if the id has for the counter has not been allocated. </exception>
-        internal Counter(CountersReader countersReader, long registrationId, int counterId)
+        public Counter(CountersReader countersReader, long registrationId, int counterId)
             : base(countersReader.ValuesBuffer, counterId)
         {
             if (countersReader.GetCounterState(counterId) != CountersReader.RECORD_ALLOCATED)
             {
-                throw new AeronException("Counter id has not been allocated: " + counterId);
+                throw new AeronException("Counter id is not allocated: " + counterId);
             }
 
             RegistrationId = registrationId;
@@ -52,16 +52,11 @@ namespace Adaptive.Aeron
         /// </summary>
         public override void Dispose()
         {
-            if (!_isClosed)
+            if (_isClosed.CompareAndSet(false, true))
             {
-                if (null != _clientConductor)
-                {
-                    _clientConductor.ReleaseCounter(this);
-                }
-                else
-                {
-                    _isClosed = true;
-                }
+                base.Dispose();
+
+                _clientConductor?.ReleaseCounter(this);
             }
         }
 
@@ -74,7 +69,7 @@ namespace Adaptive.Aeron
         internal void InternalClose()
         {
             base.Dispose();
-            _isClosed = true;
+            _isClosed.Set(true);
         }
     }
 }

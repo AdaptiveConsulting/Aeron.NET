@@ -581,7 +581,7 @@ namespace Adaptive.Aeron.LogBuffer
 
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private long HandleEndOfLogCondition(UnsafeBuffer termBuffer, long termOffset, HeaderWriter header,
+        private static long HandleEndOfLogCondition(UnsafeBuffer termBuffer, long termOffset, HeaderWriter header,
             int termLength, int termId)
         {
             if (termOffset < termLength)

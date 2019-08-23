@@ -24,9 +24,9 @@ namespace Adaptive.Cluster.Client
         /// <see cref="LeadershipTermId"/>. Each publisher thread requires its own instance.
         /// 
         /// </summary>
-        public static readonly int HEADER_LENGTH = MessageHeaderEncoder.ENCODED_LENGTH + IngressMessageHeaderEncoder.BLOCK_LENGTH;
+        public static readonly int HEADER_LENGTH = MessageHeaderEncoder.ENCODED_LENGTH + SessionMessageHeaderEncoder.BLOCK_LENGTH;
 
-        private readonly IngressMessageHeaderEncoder ingressMessageHeaderEncoder = new IngressMessageHeaderEncoder();
+        private readonly SessionMessageHeaderEncoder sessionMessageHeaderEncoder = new SessionMessageHeaderEncoder();
         private readonly UnsafeBuffer headerBuffer = new UnsafeBuffer(new byte[HEADER_LENGTH]);
 
         /// <summary>
@@ -43,7 +43,7 @@ namespace Adaptive.Cluster.Client
         /// <param name="leadershipTermId"> of the current leader.</param>
         public IngressSessionDecorator(long clusterSessionId, long leadershipTermId)
         {
-            ingressMessageHeaderEncoder
+            sessionMessageHeaderEncoder
                 .WrapAndApplyHeader(headerBuffer, 0, new MessageHeaderEncoder())
                 .LeadershipTermId(leadershipTermId)
                 .ClusterSessionId(clusterSessionId)
@@ -57,7 +57,7 @@ namespace Adaptive.Cluster.Client
         /// <returns> this for a fluent API. </returns>
         public IngressSessionDecorator ClusterSessionId(long clusterSessionId)
         {
-            ingressMessageHeaderEncoder.ClusterSessionId(clusterSessionId);
+            sessionMessageHeaderEncoder.ClusterSessionId(clusterSessionId);
             return this;
         }
 
@@ -68,7 +68,7 @@ namespace Adaptive.Cluster.Client
         /// <returns> this for a fluent API. </returns>
         public IngressSessionDecorator LeadershipTermId(long leadershipTermId)
         {
-            ingressMessageHeaderEncoder.LeadershipTermId(leadershipTermId);
+            sessionMessageHeaderEncoder.LeadershipTermId(leadershipTermId);
             return this;
         }
 

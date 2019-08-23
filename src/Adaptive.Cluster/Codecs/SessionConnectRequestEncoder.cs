@@ -9,10 +9,10 @@ namespace Adaptive.Cluster.Codecs {
 
 public class SessionConnectRequestEncoder
 {
-    public const ushort BLOCK_LENGTH = 12;
-    public const ushort TEMPLATE_ID = 4;
-    public const ushort SCHEMA_ID = 1;
-    public const ushort SCHEMA_VERSION = 1;
+    public const ushort BLOCK_LENGTH = 16;
+    public const ushort TEMPLATE_ID = 3;
+    public const ushort SCHEMA_ID = 111;
+    public const ushort SCHEMA_VERSION = 4;
 
     private SessionConnectRequestEncoder _parentMessage;
     private IMutableDirectBuffer _buffer;
@@ -160,9 +160,41 @@ public class SessionConnectRequestEncoder
     }
 
 
+    public static int VersionEncodingOffset()
+    {
+        return 12;
+    }
+
+    public static int VersionEncodingLength()
+    {
+        return 4;
+    }
+
+    public static int VersionNullValue()
+    {
+        return 0;
+    }
+
+    public static int VersionMinValue()
+    {
+        return 1;
+    }
+
+    public static int VersionMaxValue()
+    {
+        return 16777215;
+    }
+
+    public SessionConnectRequestEncoder Version(int value)
+    {
+        _buffer.PutInt(_offset + 12, value, ByteOrder.LittleEndian);
+        return this;
+    }
+
+
     public static int ResponseChannelId()
     {
-        return 3;
+        return 4;
     }
 
     public static string ResponseChannelCharacterEncoding()
@@ -239,7 +271,7 @@ public class SessionConnectRequestEncoder
 
     public static int EncodedCredentialsId()
     {
-        return 4;
+        return 5;
     }
 
     public static string EncodedCredentialsMetaAttribute(MetaAttribute metaAttribute)

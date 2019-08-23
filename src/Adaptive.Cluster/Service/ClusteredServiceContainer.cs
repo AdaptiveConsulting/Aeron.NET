@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Threading;
 using Adaptive.Aeron;
 using Adaptive.Aeron.Exceptions;
 using Adaptive.Agrona;
@@ -13,6 +14,11 @@ using Adaptive.Cluster.Codecs.Mark;
 
 namespace Adaptive.Cluster.Service
 {
+    /// <summary>
+    /// Container for a service in the cluster managed by the Consensus Module. This is where business logic resides and
+    /// loaded via <seealso cref="ClusteredServiceContainer.Configuration.SERVICE_CLASS_NAME_PROP_NAME"/> or
+    /// <seealso cref="ClusteredServiceContainer.Context.ClusteredService(IClusteredService)"/>.
+    /// </summary>
     public sealed class ClusteredServiceContainer : IDisposable
     {
         public const int SYSTEM_COUNTER_TYPE_ID = 0;
@@ -380,6 +386,9 @@ namespace Adaptive.Cluster.Service
         /// </summary>
         public class Context
         {
+            private readonly AtomicBoolean _isConcluded = new AtomicBoolean(false);
+
+            private int appVersion = SemanticVersion.Compose(0, 0, 1);
             private int serviceId = Configuration.ServiceId();
             private string serviceName = Configuration.ServiceName();
             private string replayChannel = Configuration.ReplayChannel();
@@ -392,6 +401,7 @@ namespace Adaptive.Cluster.Service
             private int errorBufferLength = Configuration.ErrorBufferLength();
             private bool isRespondingService = Configuration.IsRespondingService();
 
+            private CountdownEvent abortLatch;
             private IThreadFactory threadFactory;
             private Func<IIdleStrategy> idleStrategySupplier;
             private IEpochClock epochClock;
@@ -422,9 +432,14 @@ namespace Adaptive.Cluster.Service
 
             public void Conclude()
             {
+                if (!_isConcluded.CompareAndSet(false, true))
+                {
+                    throw new ConcurrentConcludeException();
+                }
+
                 if (serviceId < 0)
                 {
-                    throw new ConfigurationException("service id must be not be negative: " + serviceId);
+                    throw new ConfigurationException("service id cannot be negative: " + serviceId);
                 }
 
                 if (null == threadFactory)
@@ -455,7 +470,8 @@ namespace Adaptive.Cluster.Service
                 if (null == markFile)
                 {
                     markFile = new ClusterMarkFile(
-                        new FileInfo(Path.Combine(clusterDir.FullName, ClusterMarkFile.MarkFilenameForService(serviceId))),
+                        new FileInfo(Path.Combine(clusterDir.FullName,
+                            ClusterMarkFile.MarkFilenameForService(serviceId))),
                         ClusterComponentType.CONTAINER, errorBufferLength, epochClock, 0);
                 }
 
@@ -523,13 +539,44 @@ namespace Adaptive.Cluster.Service
                     string className = Config.GetProperty(Configuration.SERVICE_CLASS_NAME_PROP_NAME);
                     if (null == className)
                     {
-                        throw new ClusterException("either a ClusteredService instance or class name for the service must be provided");
+                        throw new ClusterException(
+                            "either a ClusteredService instance or class name for the service must be provided");
                     }
 
                     clusteredService = (IClusteredService) Activator.CreateInstance(Type.GetType(className));
                 }
 
+                abortLatch = new CountdownEvent(aeron.ConductorAgentInvoker == null ? 1 : 0);
                 ConcludeMarkFile();
+            }
+            /// <summary>
+            /// User assigned application version which appended to the log as the appVersion in new leadership events.
+            /// <para>
+            /// This can be validated using <seealso cref="SemanticVersion"/> to ensure only application nodes of the same
+            /// major version communicate with each other.
+            ///         
+            /// </para>
+            /// </summary>
+            /// <param name="appVersion"> for user application. </param>
+            /// <returns> this for a fluent API. </returns>
+            public Context AppVersion(int appVersion)
+            {
+                this.appVersion = appVersion;
+                return this;
+            }
+
+            /// <summary>
+            /// User assigned application version which appended to the log as the appVersion in new leadership events.
+            /// <para>
+            /// This can be validated using <seealso cref="SemanticVersion"/> to ensure only application nodes of the same
+            /// major version communicate with each other.
+            /// 
+            /// </para>
+            /// </summary>
+            /// <returns> appVersion for user application. </returns>
+            public int AppVersion()
+            {
+                return appVersion;
             }
 
             /// <summary>
@@ -774,9 +821,9 @@ namespace Adaptive.Cluster.Service
             }
 
             /// <summary>
-            /// Provides an <seealso cref="IdleStrategy"/> supplier for the thread responsible for publication/subscription backoff.
+            /// Provides an <seealso cref="IIdleStrategy"/> supplier for the idle strategy for the agent duty cycle.
             /// </summary>
-            /// <param name="idleStrategySupplier"> supplier of thread idle strategy for publication/subscription backoff. </param>
+            /// <param name="idleStrategySupplier"> supplier for the idle strategy for the agent duty cycle. </param>
             /// <returns> this for a fluent API. </returns>
             public Context IdleStrategySupplier(Func<IIdleStrategy> idleStrategySupplier)
             {
@@ -958,7 +1005,7 @@ namespace Adaptive.Cluster.Service
             }
 
             /// <summary>
-            /// Set the <seealso cref="AeronArchive.Context"/> that should be used for communicating with the local Archive.
+            /// Set the context that should be used for communicating with the local Archive.
             /// </summary>
             /// <param name="archiveContext"> that should be used for communicating with the local Archive. </param>
             /// <returns> this for a fluent API. </returns>
@@ -969,9 +1016,9 @@ namespace Adaptive.Cluster.Service
             }
 
             /// <summary>
-            /// Get the <seealso cref="AeronArchive.Context"/> that should be used for communicating with the local Archive.
+            /// Get the context that should be used for communicating with the local Archive.
             /// </summary>
-            /// <returns> the <seealso cref="AeronArchive.Context"/> that should be used for communicating with the local Archive. </returns>
+            /// <returns> the context that should be used for communicating with the local Archive. </returns>
             public AeronArchive.Context ArchiveContext()
             {
                 return archiveContext;
@@ -1144,12 +1191,17 @@ namespace Adaptive.Cluster.Service
             /// </summary>
             public void Dispose()
             {
+                markFile?.Dispose();
+                
                 if (ownsAeronClient)
                 {
                     aeron?.Dispose();
                 }
+            }
 
-                CloseHelper.QuietDispose(markFile);
+            internal CountdownEvent AbortLatch()
+            {
+                return abortLatch;
             }
 
             private void ConcludeMarkFile()

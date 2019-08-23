@@ -2,6 +2,7 @@
 using Adaptive.Aeron.LogBuffer;
 using Adaptive.Agrona;
 using Adaptive.Archiver.Codecs;
+using static Adaptive.Aeron.LogBuffer.ControlledFragmentHandlerAction;
 
 namespace Adaptive.Archiver
 {
@@ -10,14 +11,10 @@ namespace Adaptive.Archiver
     /// </summary>
     public class ControlResponsePoller : IControlledFragmentHandler
     {
-        private bool InstanceFieldsInitialized = false;
-
-        private void InitializeInstanceFields()
-        {
-            fragmentAssembler = new ControlledFragmentAssembler(this);
-        }
-
-        private const int FRAGMENT_LIMIT = 10;
+        /// <summary>
+        /// Limit to apply when polling response messages.
+        /// </summary>
+        public const int FRAGMENT_LIMIT = 10;
 
         private readonly MessageHeaderDecoder messageHeaderDecoder = new MessageHeaderDecoder();
         private readonly ControlResponseDecoder controlResponseDecoder = new ControlResponseDecoder();
@@ -28,6 +25,7 @@ namespace Adaptive.Archiver
         private long correlationId = Aeron.Aeron.NULL_VALUE;
         private long relevantId = Aeron.Aeron.NULL_VALUE;
         private int templateId = Aeron.Aeron.NULL_VALUE;
+        private readonly int fragmentLimit;
         private ControlResponseCode code;
         private string errorMessage;
         private bool pollComplete = false;
@@ -36,15 +34,12 @@ namespace Adaptive.Archiver
         /// Create a poller for a given subscription to an archive for control response messages.
         /// </summary>
         /// <param name="subscription">  to poll for new events. </param>
-        public ControlResponsePoller(Subscription subscription)
+        /// <param name="fragmentLimit"> to apply when polling.</param>
+        public ControlResponsePoller(Subscription subscription, int fragmentLimit = FRAGMENT_LIMIT)
         {
-            if (!InstanceFieldsInitialized)
-            {
-                InitializeInstanceFields();
-                InstanceFieldsInitialized = true;
-            }
-
+            this.fragmentAssembler = new ControlledFragmentAssembler(this);
             this.subscription = subscription;
+            this.fragmentLimit = fragmentLimit;
         }
 
         /// <summary>
@@ -57,7 +52,7 @@ namespace Adaptive.Archiver
         }
 
         /// <summary>
-        /// Poll for recording events.
+        /// Poll for control response events.
         /// </summary>
         /// <returns> the number of fragments read during the operation. Zero if no events are available. </returns>
         public int Poll()
@@ -66,15 +61,16 @@ namespace Adaptive.Archiver
             correlationId = -1;
             relevantId = -1;
             templateId = -1;
+            errorMessage = null;
             pollComplete = false;
 
-            return subscription.ControlledPoll(fragmentAssembler, FRAGMENT_LIMIT);
+            return subscription.ControlledPoll(fragmentAssembler, fragmentLimit);
         }
 
         /// <summary>
         /// Control session id of the last polled message or <see cref="Adaptive.Aeron.Aeron.NULL_VALUE"/> if poll returned nothing.
         /// </summary>
-        /// <returns> control session id of the last polled message or <see cref="Adaptive.Aeron.Aeron.NULL_VALUE"/> if unrecognised template. </returns>
+        /// <returns> control session id of the last polled message or <see cref="Adaptive.Aeron.Aeron.NULL_VALUE"/> if poll returned nothing. </returns>
         public long ControlSessionId()
         {
             return controlSessionId;
@@ -83,7 +79,7 @@ namespace Adaptive.Archiver
         /// <summary>
         /// Correlation id of the last polled message or <see cref="Adaptive.Aeron.Aeron.NULL_VALUE"/> if poll returned nothing.
         /// </summary>
-        /// <returns> correlation id of the last polled message or <see cref="Adaptive.Aeron.Aeron.NULL_VALUE"/> if unrecognised template. </returns>
+        /// <returns> correlation id of the last polled message or <see cref="Adaptive.Aeron.Aeron.NULL_VALUE"/> if poll returned nothing. </returns>
         public long CorrelationId()
         {
             return correlationId;
@@ -136,39 +132,52 @@ namespace Adaptive.Archiver
 
         public ControlledFragmentHandlerAction OnFragment(IDirectBuffer buffer, int offset, int length, Header header)
         {
-            messageHeaderDecoder.Wrap(buffer, offset);
-
-            templateId = messageHeaderDecoder.TemplateId();
-            switch (templateId)
+            if (pollComplete)
             {
-                case ControlResponseDecoder.TEMPLATE_ID:
-                    controlResponseDecoder.Wrap(buffer, offset + MessageHeaderEncoder.ENCODED_LENGTH, messageHeaderDecoder.BlockLength(), messageHeaderDecoder.Version());
-
-                    controlSessionId = controlResponseDecoder.ControlSessionId();
-                    correlationId = controlResponseDecoder.CorrelationId();
-                    relevantId = controlResponseDecoder.RelevantId();
-                    code = controlResponseDecoder.Code();
-                    if (ControlResponseCode.ERROR == code)
-                    {
-                        errorMessage = controlResponseDecoder.ErrorMessage();
-                    }
-                    else
-                    {
-                        errorMessage = "";
-                    }
-
-                    break;
-
-                case RecordingDescriptorDecoder.TEMPLATE_ID:
-                    break;
-
-                default:
-                    throw new ArchiveException("unknown templateId: " + templateId);
+                return ABORT;
             }
 
-            pollComplete = true;
+            messageHeaderDecoder.Wrap(buffer, offset);
 
-            return ControlledFragmentHandlerAction.BREAK;
+            int schemaId = messageHeaderDecoder.SchemaId();
+            if (schemaId != MessageHeaderDecoder.SCHEMA_ID)
+            {
+                throw new ArchiveException("expected schemaId=" + MessageHeaderDecoder.SCHEMA_ID + ", actual=" + schemaId);
+            }
+
+            templateId = messageHeaderDecoder.TemplateId();
+            if (templateId == ControlResponseDecoder.TEMPLATE_ID)
+            {
+                controlResponseDecoder.Wrap(
+                    buffer,
+                    offset + MessageHeaderEncoder.ENCODED_LENGTH,
+                    messageHeaderDecoder.BlockLength(),
+                    messageHeaderDecoder.Version());
+
+                controlSessionId = controlResponseDecoder.ControlSessionId();
+                correlationId = controlResponseDecoder.CorrelationId();
+                relevantId = controlResponseDecoder.RelevantId();
+                code = controlResponseDecoder.Code();
+                errorMessage = controlResponseDecoder.ErrorMessage();
+                pollComplete = true;
+
+                return BREAK;
+            }
+
+            return CONTINUE;
+        }
+
+        public override string ToString()
+        {
+            return "ControlResponsePoller{" +
+                   "controlSessionId=" + controlSessionId +
+                   ", correlationId=" + correlationId +
+                   ", relevantId=" + relevantId +
+                   ", templateId=" + templateId +
+                   ", code=" + code +
+                   ", errorMessage='" + errorMessage + '\'' +
+                   ", pollComplete=" + pollComplete +
+                   '}';
         }
     }
 }

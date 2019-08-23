@@ -39,7 +39,7 @@ namespace Adaptive.Aeron
     /// occurs then the process will face the wrath of <seealso cref="Environment.Exit"/>. See <seealso cref="Configuration.DEFAULT_ERROR_HANDLER"/>.
     /// 
     /// </summary>
-    public sealed class Aeron : IDisposable
+    public class Aeron : IDisposable
     {
         /// <summary>
         /// Used to represent a null value for when some value is not yet set.
@@ -61,7 +61,7 @@ namespace Adaptive.Aeron
             _ctx = ctx;
             _clientId = ctx.ClientId();
             _commandBuffer = ctx.ToDriverBuffer();
-            _conductor = new ClientConductor(ctx);
+            _conductor = new ClientConductor(ctx, this);
 
             if (ctx.UseConductorAgentInvoker())
             {
@@ -111,6 +111,10 @@ namespace Adaptive.Aeron
                 }
 
                 return aeron;
+            }
+            catch (ConcurrentConcludeException)
+            {
+                throw;
             }
             catch (Exception)
             {
@@ -303,6 +307,71 @@ namespace Adaptive.Aeron
             return _conductor.AddCounter(typeId, label);
         }
 
+        /// <summary>
+        /// Add a handler to the list be called when <seealso cref="Counter"/>s become available.
+        /// </summary>
+        /// <param name="handler"> to be called when <seealso cref="Counter"/>s become available. </param>
+        public void AddAvailableCounterHandler(AvailableCounterHandler handler)
+        {
+            _conductor.AddAvailableCounterHandler(handler);
+        }
+
+        /// <summary>
+        /// Remove a previously added handler to the list be called when <seealso cref="Counter"/>s become available.
+        /// </summary>
+        /// <param name="handler"> to be removed. </param>
+        /// <returns> true if found and removed otherwise false. </returns>
+        public bool RemoveAvailableCounterHandler(AvailableCounterHandler handler)
+        {
+            return _conductor.RemoveAvailableCounterHandler(handler);
+        }
+
+        /// <summary>
+        /// Add a handler to the list be called when <seealso cref="Counter"/>s become unavailable.
+        /// </summary>
+        /// <param name="handler"> to be called when <seealso cref="Counter"/>s become unavailable. </param>
+        public void AddUnavailableCounterHandler(UnavailableCounterHandler handler)
+        {
+            _conductor.AddUnavailableCounterHandler(handler);
+        }
+
+        /// <summary>
+        /// Remove a previously added handler to the list be called when <seealso cref="Counter"/>s become unavailable.
+        /// </summary>
+        /// <param name="handler"> to be removed. </param>
+        /// <returns> true if found and removed otherwise false. </returns>
+        public bool RemoveUnavailableCounterHandler(UnavailableCounterHandler handler)
+        {
+            return _conductor.RemoveUnavailableCounterHandler(handler);
+        }
+
+        /// <summary>
+        /// Add a handler to the list be called when the Aeron client is closed.
+        /// </summary>
+        /// <param name="handler"> to be called when the Aeron client is closed. </param>
+        public void AddCloseHandler(Action handler)
+        {
+            _conductor.AddCloseHandler(handler);
+        }
+
+        /// <summary>
+        /// Remove a previously added handler to the list be called when the Aeron client is closed.
+        /// </summary>
+        /// <param name="handler"> to be removed. </param>
+        /// <returns> true if found and removed otherwise false. </returns>
+        public bool RemoveCloseHandler(Action handler)
+        {
+            return _conductor.RemoveCloserHandler(handler);
+        }
+
+        /// <summary>
+        /// Called by the <seealso cref="ClientConductor"/> if the client should be terminated due to timeout.
+        /// </summary>
+        internal void InternalClose()
+        {
+            _isClosed.Set(true);
+        }
+
         public static class Configuration
         {
             /*
@@ -329,12 +398,37 @@ namespace Adaptive.Aeron
             /// <summary>
             /// Default duration a resource should linger before deletion.
             /// </summary>
-            public static readonly long RESOURCE_LINGER_DURATION_DEFAULT = NanoUtil.FromSeconds(3);
+            public static readonly long RESOURCE_LINGER_DURATION_DEFAULT_NS = NanoUtil.FromSeconds(3);
+
+            /// <summary>
+            /// Duration to linger on close so that publishers subscribers have time to notice closed resources.
+            /// This value can be set to a few seconds if the application is likely to experience CPU starvation or
+            /// long GC pauses.
+            /// </summary>
+            public const string CLOSE_LINGER_DURATION_PROP_NAME = "aeron.client.close.linger.duration";
+
+            /// <summary>
+            /// Default duration to linger on close so that publishers subscribers have time to notice closed resources.
+            /// </summary>
+            public const long CLOSE_LINGER_DURATION_DEFAULT_NS = 0;
+
+            /// <summary>
+            /// Should memory-mapped files be pre-touched so that they are already faulted into a process.
+            /// <para>
+            /// Pre-touching files can result in it taking it it taking longer for resources to become available in
+            /// return for avoiding later pauses due to page faults.
+            /// </para>
+            /// </summary>
+            public const string PRE_TOUCH_MAPPED_MEMORY_PROP_NAME = "aeron.pre.touch.mapped.memory";
+
+            /// <summary>
+            /// Default for if a memory-mapped filed should be pre-touched to fault it into a process.
+            /// </summary>
+            public const bool PRE_TOUCH_MAPPED_MEMORY_DEFAULT = false;
 
             /// <summary>
             /// The Default handler for Aeron runtime exceptions.
-            /// When a <seealso cref="DriverTimeoutException"/> is encountered, this handler will
-            /// exit the program.
+            /// When a <seealso cref="DriverTimeoutException"/> is encountered, this handler will exit the program.
             /// <para>
             /// The error handler can be overridden by supplying an <seealso cref="Context"/> with a custom handler.
             /// 
@@ -347,10 +441,9 @@ namespace Adaptive.Aeron
 
                 if (throwable is DriverTimeoutException)
                 {
+                    Console.WriteLine();
                     Console.WriteLine("***");
-                    Console.WriteLine("***");
-                    Console.WriteLine("Timeout from the MediaDriver - is it currently running? Exiting.");
-                    Console.WriteLine("***");
+                    Console.WriteLine("*** Timeout for the Media Driver - is it currently running? exiting");
                     Console.WriteLine("***");
                     Environment.Exit(-1);
                 }
@@ -364,15 +457,42 @@ namespace Adaptive.Aeron
             /// <seealso cref="RESOURCE_LINGER_DURATION_PROP_NAME"/>
             public static long ResourceLingerDurationNs()
             {
-                return Config.GetDurationInNanos(RESOURCE_LINGER_DURATION_PROP_NAME, RESOURCE_LINGER_DURATION_DEFAULT);
+                return Config.GetDurationInNanos(RESOURCE_LINGER_DURATION_PROP_NAME,
+                    RESOURCE_LINGER_DURATION_DEFAULT_NS);
+            }
+
+            /// <summary>
+            /// Duration to wait while lingering a entity such as an <seealso cref="Image"/> before deleting underlying resources
+            /// such as memory mapped files.
+            /// </summary>
+            /// <returns> duration in nanoseconds to wait before deleting a expired resource. </returns>
+            /// <seealso cref="RESOURCE_LINGER_DURATION_PROP_NAME"/>
+            public static long CloseLingerDurationNs()
+            {
+                return Config.GetDurationInNanos(CLOSE_LINGER_DURATION_PROP_NAME, CLOSE_LINGER_DURATION_DEFAULT_NS);
+            }
+
+            /// <summary>
+            /// Should memory-mapped files be pre-touched so that they are already faulted into a process.
+            /// </summary>
+            /// <returns> true if memory mappings should be pre-touched, otherwise false. </returns>
+            /// <seealso cref="PRE_TOUCH_MAPPED_MEMORY_PROP_NAME"/>
+            public static bool PreTouchMappedMemory()
+            {
+                string value = Config.GetProperty(PRE_TOUCH_MAPPED_MEMORY_PROP_NAME);
+                if (null != value)
+                {
+                    return bool.Parse(value);
+                }
+
+                return PRE_TOUCH_MAPPED_MEMORY_DEFAULT;
             }
         }
 
         /// <summary>
-        /// This class provides configuration for the <seealso cref="Aeron"/> class via the <seealso cref="Aeron.Connect(Aeron.Context)"/>
+        /// Provides a means to override configuration for an <seealso cref="Aeron"/> class via the <seealso cref="Aeron.Connect(Aeron.Context)"/>
         /// method and its overloads. It gives applications some control over the interactions with the Aeron Media Driver.
-        /// It can also set up error handling as well as application callbacks for image information from the
-        /// Media Driver.
+        /// It can also set up error handling as well as application callbacks for image information from the Media Driver.
         /// 
         /// A number of the properties are for testing and should not be set by end users.
         /// 
@@ -385,6 +505,7 @@ namespace Adaptive.Aeron
         {
             private long _clientId;
             private bool _useConductorAgentInvoker = false;
+            private bool _preTouchMappedMemory = Configuration.PreTouchMappedMemory();
             private ILock _clientLock;
             private IEpochClock _epochClock;
             private INanoClock _nanoClock;
@@ -398,9 +519,11 @@ namespace Adaptive.Aeron
             private UnavailableImageHandler _unavailableImageHandler;
             private AvailableCounterHandler _availableCounterHandler;
             private UnavailableCounterHandler _unavailableCounterHandler;
-            private long _keepAliveInterval = Configuration.KeepaliveIntervalNs;
-            private long _interServiceTimeout = 0;
+            private Action _closeHandler;
+            private long _keepAliveIntervalNs = Configuration.KeepaliveIntervalNs;
+            private long _interServiceTimeoutNs = 0;
             private long _resourceLingerDurationNs = Configuration.ResourceLingerDurationNs();
+            private long _closeLingerDurationNs = Configuration.CloseLingerDurationNs();
             private FileInfo _cncFile;
             private string _aeronDirectoryName = GetAeronDirectoryName();
             private DirectoryInfo _aeronDirectory;
@@ -415,7 +538,7 @@ namespace Adaptive.Aeron
             static Context()
             {
                 string baseDirName = null;
-                
+
                 if (Environment.OSVersion.Platform == PlatformID.Unix)
                 {
                     if (Directory.Exists(@"/dev/shm"))
@@ -430,9 +553,8 @@ namespace Adaptive.Aeron
                 }
 
                 AERON_DIR_PROP_DEFAULT = baseDirName + '-' + Environment.UserName;
-
             }
-            
+
             /// <summary>
             /// The top level Aeron directory used for communication between a Media Driver and client.
             /// </summary>
@@ -545,7 +667,7 @@ namespace Adaptive.Aeron
             /// Valid value for <seealso cref="MDC_CONTROL_MODE_PARAM_NAME"/> when dynamic control is desired. Default value.
             /// </summary>
             public const string MDC_CONTROL_MODE_DYNAMIC = "dynamic";
-            
+
             /// <summary>
             /// Key for the session id for a publication or restricted subscription.
             /// </summary>
@@ -555,9 +677,10 @@ namespace Adaptive.Aeron
             /// Key for the linger timeout for a publication to wait around after draining in nanoseconds.
             /// </summary>
             public const string LINGER_PARAM_NAME = "linger";
-            
+
             /// <summary>
-            /// Parameter name for channel URI param to indicate if a subscribed must be reliable or not. Value is boolean.
+            /// Parameter name for channel URI param to indicate if a subscribed stream must be reliable or not.
+            /// Value is boolean with true to recover loss and false to gap fill.
             /// </summary>
             public const string RELIABLE_STREAM_PARAM_NAME = "reliable";
 
@@ -580,6 +703,20 @@ namespace Adaptive.Aeron
             /// Parameter name for channel URI param to indicate an alias for the given URI. Value not interpreted by Aeron.
             /// </summary>
             public const string ALIAS_PARAM_NAME = "alias";
+
+            /// <summary>
+            /// Parameter name for channel URI param to indicate if End of Stream (EOS) should be sent or not. Value is boolean.
+            /// </summary>
+            public const string EOS_PARAM_NAME = "eos";
+
+            /// <summary>
+            /// Parameter name for channel URI param to indicate if a subscription should tether for local flow control.
+            /// Value is boolean. A tether only applies when there is more than one matching active subscription. If tether is
+            /// true then that subscription is included in flow control. If only one subscription then it tethers pace.
+            /// </summary>
+            public const string TETHER_PARAM_NAME = "tether";
+
+            private AtomicBoolean _isConcluded = new AtomicBoolean(false);
 
             /// <summary>
             /// Get the default directory name to be used if <seealso cref="AeronDirectoryName(String)"/> is not set. This will take
@@ -622,6 +759,11 @@ namespace Adaptive.Aeron
             /// <returns> this for a fluent API. </returns>
             public Context Conclude()
             {
+                if (!_isConcluded.CompareAndSet(false, true))
+                {
+                    throw new ConcurrentConcludeException();
+                }
+
                 ConcludeAeronDirectory();
 
                 _cncFile = new FileInfo(Path.Combine(_aeronDirectory.FullName, CncFileDescriptor.CNC_FILE));
@@ -651,6 +793,13 @@ namespace Adaptive.Aeron
                     ConnectToDriver();
                 }
 
+                _interServiceTimeoutNs = CncFileDescriptor.ClientLivenessTimeoutNs(_cncMetaDataBuffer);
+                if (_interServiceTimeoutNs <= _keepAliveIntervalNs)
+                {
+                    throw new ConfigurationException("interServiceTimeoutNs=" + _interServiceTimeoutNs +
+                                                     " <= keepAliveIntervalNs=" + _keepAliveIntervalNs);
+                }
+
                 if (_toDriverBuffer == null)
                 {
                     _toDriverBuffer =
@@ -675,8 +824,6 @@ namespace Adaptive.Aeron
                     CountersValuesBuffer(CncFileDescriptor.CreateCountersValuesBuffer(_cncByteBuffer,
                         _cncMetaDataBuffer));
                 }
-
-                _interServiceTimeout = CncFileDescriptor.ClientLivenessTimeout(_cncMetaDataBuffer);
 
                 if (_logBuffersFactory == null)
                 {
@@ -745,6 +892,28 @@ namespace Adaptive.Aeron
             public bool UseConductorAgentInvoker()
             {
                 return _useConductorAgentInvoker;
+            }
+
+            /// <summary>
+            /// Should mapped-memory be pre-touched to avoid soft page faults.
+            /// </summary>
+            /// <param name="preTouchMappedMemory"> true if mapped-memory should be pre-touched otherwise false. </param>
+            /// <returns> this for a fluent API. </returns>
+            /// <seealso cref="Configuration.PRE_TOUCH_MAPPED_MEMORY_PROP_NAME"/>
+            public Context PreTouchMappedMemory(bool preTouchMappedMemory)
+            {
+                _preTouchMappedMemory = preTouchMappedMemory;
+                return this;
+            }
+
+            /// <summary>
+            /// Should mapped-memory be pre-touched to avoid soft page faults.
+            /// </summary>
+            /// <returns> true if mapped-memory should be pre-touched otherwise false. </returns>
+            /// <seealso cref="Configuration.PRE_TOUCH_MAPPED_MEMORY_PROP_NAME"/>
+            public bool PreTouchMappedMemory()
+            {
+                return _preTouchMappedMemory;
             }
 
             /// <summary>
@@ -983,10 +1152,12 @@ namespace Adaptive.Aeron
             }
 
             /// <summary>
-            /// Setup a callback for when a counter is available.
+            /// Setup a callback for when a counter is available. This will be added to the list first before
+            /// additional handler are added with <seealso cref="Aeron.AddAvailableCounterHandler"/>.
             /// </summary>
             /// <param name="handler"> to be called for handling available counter notifications. </param>
-            /// <returns> this Aeron.Context for fluent API. </returns>
+            /// <returns> this for a fluent API. </returns>
+
             public Context AvailableCounterHandler(AvailableCounterHandler handler)
             {
                 _availableCounterHandler = handler;
@@ -1003,7 +1174,8 @@ namespace Adaptive.Aeron
             }
 
             /// <summary>
-            /// Setup a callback for when a counter is unavailable.
+            /// Setup a callback for when a counter is unavailable. This will be added to the list first before
+            /// additional handler are added with <seealso cref="Aeron.AddUnavailableCounterHandler"/>.
             /// </summary>
             /// <param name="handler"> to be called for handling unavailable counter notifications. </param>
             /// <returns> this for a fluent API. </returns>
@@ -1021,7 +1193,30 @@ namespace Adaptive.Aeron
             {
                 return _unavailableCounterHandler;
             }
+            
+            /// <summary>
+            /// Set a <seealso cref="Action"/> that is called when the client is closed by timeout or normal means.
+            ///        
+            /// It is not safe to call any API functions from any threads after this hook is called. In addition any
+            /// in flight calls may still cause faults. It is thus recommended to treat this as a hard error and
+            /// terminate the process in this hook as soon as possible.
+            /// </summary>
+            /// <param name="handler"> that is called when the client is closed. </param>
+            /// <returns> this for a fluent API. </returns>
+            public Context CloseHandler(Action handler)
+            {
+                this._closeHandler = handler;
+                return this;
+            }
 
+            /// <summary>
+            /// Get the <seealso cref="Action"/> that is called when the client is closed by timeout or normal means.
+            /// </summary>
+            /// <returns> the <seealso cref="Action"/> that is called when the client is closed. </returns>
+            public Action CloseHandler()
+            {
+                return _closeHandler;
+            }
 
             /// <summary>
             /// Get the buffer containing the counter meta data. These counters are R/W for the driver, read only for all
@@ -1071,9 +1266,9 @@ namespace Adaptive.Aeron
             /// </summary>
             /// <param name="value"> the interval in nanoseconds for which the client will perform keep-alive operations. </param>
             /// <returns> this Aeron.Context for method chaining. </returns>
-            public Context KeepAliveInterval(long value)
+            public Context KeepAliveIntervalNs(long value)
             {
-                _keepAliveInterval = value;
+                _keepAliveIntervalNs = value;
                 return this;
             }
 
@@ -1081,9 +1276,9 @@ namespace Adaptive.Aeron
             /// Get the interval in nanoseconds for which the client will perform keep-alive operations.
             /// </summary>
             /// <returns> the interval in nanoseconds for which the client will perform keep-alive operations. </returns>
-            public long KeepAliveInterval()
+            public long KeepAliveIntervalNs()
             {
-                return _keepAliveInterval;
+                return _keepAliveIntervalNs;
             }
 
             /// <summary>
@@ -1108,15 +1303,15 @@ namespace Adaptive.Aeron
             {
                 return _driverTimeoutMs;
             }
-
+            
             /// <summary>
             /// Set the timeout between service calls the to <seealso cref="ClientConductor"/> duty cycles in nanoseconds.
             /// </summary>
             /// <param name="interServiceTimeout"> the timeout (ns) between service calls the to <seealso cref="ClientConductor"/> duty cycle. </param>
             /// <returns> this Aeron.Context for method chaining. </returns>
-            internal Context InterServiceTimeout(long interServiceTimeout)
+            internal Context InterServiceTimeoutNs(long interServiceTimeout)
             {
-                _interServiceTimeout = interServiceTimeout;
+                _interServiceTimeoutNs = interServiceTimeout;
                 return this;
             }
 
@@ -1130,9 +1325,9 @@ namespace Adaptive.Aeron
             /// the aeron.client.liveness.timeout property on the media driver.
             /// </summary>
             /// <returns> the timeout between service calls in nanoseconds. </returns>
-            public long InterServiceTimeout()
+            public long InterServiceTimeoutNs()
             {
-                return _interServiceTimeout;
+                return _interServiceTimeoutNs;
             }
 
             /// <summary>
@@ -1159,6 +1354,39 @@ namespace Adaptive.Aeron
                 return _resourceLingerDurationNs;
             }
 
+            /// <summary>
+            /// Duration to linger on closing to allow publishers and subscribers time to notice closed resources.
+            /// <para>
+            /// This value can be increased from the default to a few seconds to better cope with long GC pauses
+            /// or resource starved environments. Issues could manifest as seg faults using files after they have
+            /// been unmapped from publishers or subscribers not noticing the close in a timely fashion.
+            ///        
+            /// </para>
+            /// </summary>
+            /// <param name="closeLingerDurationNs"> to wait before deleting resources when closing. </param>
+            /// <returns> this for a fluent API. </returns>
+            /// <seealso cref="Configuration.CLOSE_LINGER_DURATION_PROP_NAME"/>
+            public Context CloseLingerDurationNs(long closeLingerDurationNs)
+            {
+                _closeLingerDurationNs = closeLingerDurationNs;
+                return this;
+            }
+
+            /// <summary>
+            /// Duration to linger on closing to allow publishers and subscribers time to notice closed resources.
+            /// <para>
+            /// This value can be increased from the default to a few seconds to better cope with long GC pauses
+            /// or resource starved environments. Issues could manifest as seg faults using files after they have
+            /// been unmapped from publishers or subscribers not noticing the close in a timely fashion.
+            /// 
+            /// </para>
+            /// </summary>
+            /// <returns> duration in nanoseconds to wait before deleting resources when closing. </returns>
+            /// <seealso cref="Configuration.CLOSE_LINGER_DURATION_PROP_NAME"/>
+            public long CloseLingerDurationNs()
+            {
+                return _closeLingerDurationNs;
+            }
 
             /// <summary>
             /// Get the top level Aeron directory used for communication between the client and Media Driver, and
@@ -1226,7 +1454,7 @@ namespace Adaptive.Aeron
                 var cncByteBuffer = _cncByteBuffer;
                 _cncByteBuffer = null;
                 IoUtil.Unmap(cncByteBuffer);
-                
+
 
                 _cncMetaDataBuffer?.Dispose();
                 _countersMetaDataBuffer?.Dispose();
@@ -1270,10 +1498,7 @@ namespace Adaptive.Aeron
                         Sleep(1);
                     }
 
-                    if (CncFileDescriptor.CNC_VERSION != cncVersion)
-                    {
-                        throw new AeronException("CnC file version not supported: version=" + cncVersion);
-                    }
+                    CncFileDescriptor.CheckVersion(cncVersion);
 
                     ManyToOneRingBuffer ringBuffer =
                         new ManyToOneRingBuffer(
@@ -1441,22 +1666,59 @@ namespace Adaptive.Aeron
                     Sleep(1);
                 }
 
-                if (CncFileDescriptor.CNC_VERSION != cncVersion)
-                {
-                    throw new AeronException("Aeron CnC version does not match: version=" + cncVersion +
-                                             " required=" + CncFileDescriptor.CNC_VERSION);
-                }
+                CncFileDescriptor.CheckVersion(cncVersion);
 
                 ManyToOneRingBuffer toDriverBuffer =
                     new ManyToOneRingBuffer(CncFileDescriptor.CreateToDriverBuffer(cncByteBuffer, cncMetaDataBuffer));
 
-                long timestamp = toDriverBuffer.ConsumerHeartbeatTime();
-                long now = DateTime.Now.ToFileTimeUtc();
-                long diff = now - timestamp;
+                long timestampMs = toDriverBuffer.ConsumerHeartbeatTime();
+                long nowMs = DateTime.Now.ToFileTimeUtc();
+                long timestampAgeMs = nowMs - timestampMs;
 
-                logger("INFO: Aeron toDriver consumer heartbeat is " + diff + "ms old");
+                logger("INFO: Aeron toDriver consumer heartbeat is (ms):" + timestampAgeMs);
 
-                return diff <= driverTimeoutMs;
+                return timestampAgeMs <= driverTimeoutMs;
+            }
+
+            /// <summary>
+            /// Request a driver to run its termination hook.
+            /// </summary>
+            /// <param name="directory"> for the driver. </param>
+            /// <param name="tokenBuffer"> containing the optional token for the request. </param>
+            /// <param name="tokenOffset"> within the tokenBuffer at which the token begins. </param>
+            /// <param name="tokenLength"> of the token in the tokenBuffer. </param>
+            /// <returns> true if request was sent or false if request could not be sent. </returns>
+            public static bool requestDriverTermination(DirectoryInfo directory, IDirectBuffer tokenBuffer,
+                int tokenOffset, int tokenLength)
+            {
+                FileInfo cncFile = new FileInfo(Path.Combine(directory.FullName, CncFileDescriptor.CNC_FILE));
+
+                if (cncFile.Exists && cncFile.Length > 0)
+                {
+                    var cncByteBuffer = IoUtil.MapExistingFile(cncFile, "CnC file");
+                    try
+                    {
+                        UnsafeBuffer cncMetaDataBuffer = CncFileDescriptor.CreateMetaDataBuffer(cncByteBuffer);
+                        int cncVersion = cncMetaDataBuffer.GetIntVolatile(CncFileDescriptor.CncVersionOffset(0));
+
+                        CncFileDescriptor.CheckVersion(cncVersion);
+
+                        ManyToOneRingBuffer toDriverBuffer =
+                            new ManyToOneRingBuffer(
+                                CncFileDescriptor.CreateToDriverBuffer(cncByteBuffer, cncMetaDataBuffer));
+                        long clientId = toDriverBuffer.NextCorrelationId();
+
+                        DriverProxy driverProxy = new DriverProxy(toDriverBuffer, clientId);
+
+                        return driverProxy.TerminateDriver(tokenBuffer, tokenOffset, tokenLength);
+                    }
+                    finally
+                    {
+                        IoUtil.Unmap(cncByteBuffer);
+                    }
+                }
+
+                return false;
             }
 
             /// <summary>
@@ -1495,12 +1757,7 @@ namespace Adaptive.Aeron
                 UnsafeBuffer cncMetaDataBuffer = CncFileDescriptor.CreateMetaDataBuffer(cncByteBuffer);
                 int cncVersion = cncMetaDataBuffer.GetInt(CncFileDescriptor.CncVersionOffset(0));
 
-                if (CncFileDescriptor.CNC_VERSION != cncVersion)
-                {
-                    throw new AeronException(
-                        "Aeron CnC version does not match: required=" + CncFileDescriptor.CNC_VERSION + " version=" +
-                        cncVersion);
-                }
+                CncFileDescriptor.CheckVersion(cncVersion);
 
                 int distinctErrorCount = 0;
                 UnsafeBuffer buffer = CncFileDescriptor.CreateErrorLogBuffer(cncByteBuffer, cncMetaDataBuffer);

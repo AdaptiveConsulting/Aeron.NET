@@ -11,8 +11,8 @@ public class StopReplayRequestDecoder
 {
     public const ushort BLOCK_LENGTH = 24;
     public const ushort TEMPLATE_ID = 7;
-    public const ushort SCHEMA_ID = 1;
-    public const ushort SCHEMA_VERSION = 0;
+    public const ushort SCHEMA_ID = 101;
+    public const ushort SCHEMA_VERSION = 2;
 
     private StopReplayRequestDecoder _parentMessage;
     private IDirectBuffer _buffer;

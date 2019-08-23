@@ -13,6 +13,9 @@ namespace Adaptive.Cluster.Service
 
         private bool inSnapshot = false;
         private bool isDone = false;
+        private int appVersion;
+        private ClusterTimeUnit timeUnit;
+
         private readonly MessageHeaderDecoder messageHeaderDecoder = new MessageHeaderDecoder();
         private readonly SnapshotMarkerDecoder snapshotMarkerDecoder = new SnapshotMarkerDecoder();
         private readonly ClientSessionDecoder clientSessionDecoder = new ClientSessionDecoder();
@@ -30,6 +33,16 @@ namespace Adaptive.Cluster.Service
             return isDone;
         }
 
+        public int AppVersion()
+        {
+            return appVersion;
+        }
+
+        public ClusterTimeUnit TimeUnit()
+        {
+            return timeUnit;
+        }
+
         public int Poll()
         {
             return image.ControlledPoll(this, FRAGMENT_LIMIT);
@@ -38,6 +51,13 @@ namespace Adaptive.Cluster.Service
         public ControlledFragmentHandlerAction OnFragment(IDirectBuffer buffer, int offset, int length, Header header)
         {
             messageHeaderDecoder.Wrap(buffer, offset);
+
+            int schemaId = messageHeaderDecoder.SchemaId();
+            if (schemaId != MessageHeaderDecoder.SCHEMA_ID)
+            {
+                throw new ClusterException("expected schemaId=" + MessageHeaderDecoder.SCHEMA_ID + ", actual=" +
+                                           schemaId);
+            }
 
             int templateId = messageHeaderDecoder.TemplateId();
             switch (templateId)
@@ -64,6 +84,11 @@ namespace Adaptive.Cluster.Service
                             }
 
                             inSnapshot = true;
+                            appVersion = snapshotMarkerDecoder.AppVersion();
+                            timeUnit = snapshotMarkerDecoder.TimeUnit() == ClusterTimeUnit.NULL_VALUE
+                                ? ClusterTimeUnit.MILLIS
+                                : snapshotMarkerDecoder.TimeUnit();
+                            
                             return ControlledFragmentHandlerAction.CONTINUE;
 
                         case SnapshotMark.END:
@@ -95,9 +120,6 @@ namespace Adaptive.Cluster.Service
                         responseChannel,
                         encodedPrincipal);
                     break;
-
-                default:
-                    throw new ClusterException("unknown template id: " + templateId);
             }
 
             return ControlledFragmentHandlerAction.CONTINUE;

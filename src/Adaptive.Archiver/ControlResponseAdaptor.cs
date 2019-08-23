@@ -46,7 +46,7 @@ namespace Adaptive.Archiver
         }
 
         /// <summary>
-        /// Poll for recording events and dispatch them to the <seealso cref="IRecordingEventsListener"/> for this instance.
+        /// Poll for recording events and dispatch them to the <seealso cref="IControlResponseListener"/> for this instance.
         /// </summary>
         /// <returns> the number of fragments read during the operation. Zero if no events are available. </returns>
         public int Poll()
@@ -61,13 +61,35 @@ namespace Adaptive.Archiver
         /// <param name="consumer"> to which the decoded fields should be passed. </param>
         public static void DispatchDescriptor(RecordingDescriptorDecoder decoder, IRecordingDescriptorConsumer consumer)
         {
-            consumer.OnRecordingDescriptor(decoder.ControlSessionId(), decoder.CorrelationId(), decoder.RecordingId(), decoder.StartTimestamp(), decoder.StopTimestamp(), decoder.StartPosition(), decoder.StopPosition(), decoder.InitialTermId(), decoder.SegmentFileLength(), decoder.TermBufferLength(), decoder.MtuLength(), decoder.SessionId(), decoder.StreamId(), decoder.StrippedChannel(), decoder.OriginalChannel(), decoder.SourceIdentity());
+            consumer.OnRecordingDescriptor(
+                decoder.ControlSessionId(),
+                decoder.CorrelationId(),
+                decoder.RecordingId(),
+                decoder.StartTimestamp(),
+                decoder.StopTimestamp(),
+                decoder.StartPosition(),
+                decoder.StopPosition(),
+                decoder.InitialTermId(),
+                decoder.SegmentFileLength(),
+                decoder.TermBufferLength(),
+                decoder.MtuLength(),
+                decoder.SessionId(),
+                decoder.StreamId(),
+                decoder.StrippedChannel(),
+                decoder.OriginalChannel(),
+                decoder.SourceIdentity());
         }
 
         public void OnFragment(IDirectBuffer buffer, int offset, int length, Header header)
         {
             messageHeaderDecoder.Wrap(buffer, offset);
 
+            int schemaId = messageHeaderDecoder.SchemaId();
+            if (schemaId != MessageHeaderDecoder.SCHEMA_ID)
+            {
+                throw new ArchiveException("expected schemaId=" + MessageHeaderDecoder.SCHEMA_ID + ", actual=" + schemaId);
+            }
+            
             int templateId = messageHeaderDecoder.TemplateId();
             switch (templateId)
             {
@@ -78,9 +100,6 @@ namespace Adaptive.Archiver
                 case RecordingDescriptorDecoder.TEMPLATE_ID:
                     HandleRecordingDescriptor(listener, buffer, offset);
                     break;
-
-                default:
-                    throw new ArchiveException("unknown templateId: " + templateId);
             }
         }
 

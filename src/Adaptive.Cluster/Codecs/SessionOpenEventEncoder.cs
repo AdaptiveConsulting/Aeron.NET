@@ -10,9 +10,9 @@ namespace Adaptive.Cluster.Codecs {
 public class SessionOpenEventEncoder
 {
     public const ushort BLOCK_LENGTH = 36;
-    public const ushort TEMPLATE_ID = 22;
-    public const ushort SCHEMA_ID = 1;
-    public const ushort SCHEMA_VERSION = 1;
+    public const ushort TEMPLATE_ID = 21;
+    public const ushort SCHEMA_ID = 111;
+    public const ushort SCHEMA_VERSION = 4;
 
     private SessionOpenEventEncoder _parentMessage;
     private IMutableDirectBuffer _buffer;

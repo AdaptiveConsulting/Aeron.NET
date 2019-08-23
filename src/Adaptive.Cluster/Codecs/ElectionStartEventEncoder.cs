@@ -7,19 +7,19 @@ using Adaptive.Agrona;
 
 namespace Adaptive.Cluster.Codecs {
 
-public class EgressMessageHeaderEncoder
+public class ElectionStartEventEncoder
 {
-    public const ushort BLOCK_LENGTH = 24;
-    public const ushort TEMPLATE_ID = 2;
-    public const ushort SCHEMA_ID = 1;
-    public const ushort SCHEMA_VERSION = 1;
+    public const ushort BLOCK_LENGTH = 8;
+    public const ushort TEMPLATE_ID = 43;
+    public const ushort SCHEMA_ID = 111;
+    public const ushort SCHEMA_VERSION = 4;
 
-    private EgressMessageHeaderEncoder _parentMessage;
+    private ElectionStartEventEncoder _parentMessage;
     private IMutableDirectBuffer _buffer;
     protected int _offset;
     protected int _limit;
 
-    public EgressMessageHeaderEncoder()
+    public ElectionStartEventEncoder()
     {
         _parentMessage = this;
     }
@@ -59,7 +59,7 @@ public class EgressMessageHeaderEncoder
         return _offset;
     }
 
-    public EgressMessageHeaderEncoder Wrap(IMutableDirectBuffer buffer, int offset)
+    public ElectionStartEventEncoder Wrap(IMutableDirectBuffer buffer, int offset)
     {
         this._buffer = buffer;
         this._offset = offset;
@@ -68,7 +68,7 @@ public class EgressMessageHeaderEncoder
         return this;
     }
 
-    public EgressMessageHeaderEncoder WrapAndApplyHeader(
+    public ElectionStartEventEncoder WrapAndApplyHeader(
         IMutableDirectBuffer buffer, int offset, MessageHeaderEncoder headerEncoder)
     {
         headerEncoder
@@ -96,98 +96,34 @@ public class EgressMessageHeaderEncoder
         this._limit = limit;
     }
 
-    public static int LeadershipTermIdEncodingOffset()
+    public static int LogPositionEncodingOffset()
     {
         return 0;
     }
 
-    public static int LeadershipTermIdEncodingLength()
+    public static int LogPositionEncodingLength()
     {
         return 8;
     }
 
-    public static long LeadershipTermIdNullValue()
+    public static long LogPositionNullValue()
     {
         return -9223372036854775808L;
     }
 
-    public static long LeadershipTermIdMinValue()
+    public static long LogPositionMinValue()
     {
         return -9223372036854775807L;
     }
 
-    public static long LeadershipTermIdMaxValue()
+    public static long LogPositionMaxValue()
     {
         return 9223372036854775807L;
     }
 
-    public EgressMessageHeaderEncoder LeadershipTermId(long value)
+    public ElectionStartEventEncoder LogPosition(long value)
     {
         _buffer.PutLong(_offset + 0, value, ByteOrder.LittleEndian);
-        return this;
-    }
-
-
-    public static int ClusterSessionIdEncodingOffset()
-    {
-        return 8;
-    }
-
-    public static int ClusterSessionIdEncodingLength()
-    {
-        return 8;
-    }
-
-    public static long ClusterSessionIdNullValue()
-    {
-        return -9223372036854775808L;
-    }
-
-    public static long ClusterSessionIdMinValue()
-    {
-        return -9223372036854775807L;
-    }
-
-    public static long ClusterSessionIdMaxValue()
-    {
-        return 9223372036854775807L;
-    }
-
-    public EgressMessageHeaderEncoder ClusterSessionId(long value)
-    {
-        _buffer.PutLong(_offset + 8, value, ByteOrder.LittleEndian);
-        return this;
-    }
-
-
-    public static int TimestampEncodingOffset()
-    {
-        return 16;
-    }
-
-    public static int TimestampEncodingLength()
-    {
-        return 8;
-    }
-
-    public static long TimestampNullValue()
-    {
-        return -9223372036854775808L;
-    }
-
-    public static long TimestampMinValue()
-    {
-        return -9223372036854775807L;
-    }
-
-    public static long TimestampMaxValue()
-    {
-        return 9223372036854775807L;
-    }
-
-    public EgressMessageHeaderEncoder Timestamp(long value)
-    {
-        _buffer.PutLong(_offset + 16, value, ByteOrder.LittleEndian);
         return this;
     }
 
@@ -200,7 +136,7 @@ public class EgressMessageHeaderEncoder
 
     public StringBuilder AppendTo(StringBuilder builder)
     {
-        EgressMessageHeaderDecoder writer = new EgressMessageHeaderDecoder();
+        ElectionStartEventDecoder writer = new ElectionStartEventDecoder();
         writer.Wrap(_buffer, _offset, BLOCK_LENGTH, SCHEMA_VERSION);
 
         return writer.AppendTo(builder);

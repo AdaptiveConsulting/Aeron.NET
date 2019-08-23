@@ -35,6 +35,8 @@ namespace Adaptive.Aeron
         private int? _sessionId;
         private long? _linger;
         private bool? _sparse;
+        private bool? _eos;
+        private bool? _tether;
         private bool _isSessionIdTagged;
 
         /// <summary>
@@ -52,7 +54,6 @@ namespace Adaptive.Aeron
             _tags = null;
             _alias = null;
             _reliable = null;
-            _sparse = null;
             _ttl = null;
             _mtu = null;
             _termLength = null;
@@ -61,6 +62,9 @@ namespace Adaptive.Aeron
             _termOffset = null;
             _sessionId = null;
             _linger = null;
+            _sparse = null;
+            _eos = null;
+            _tether = null;
             _isSessionIdTagged = false;
 
             return this;
@@ -88,10 +92,24 @@ namespace Adaptive.Aeron
             count += null == _termId ? 0 : 1;
             count += null == _termOffset ? 0 : 1;
 
-            if (count > 0 && count < 3)
+            if (count > 3)
             {
-                throw new InvalidOperationException(
-                    "if any of then a complete set of 'initialTermId', 'termId', and 'termOffset' must be provided");
+                if (count < 3)
+                {
+                    throw new ArgumentException(
+                        "if any of then a complete set of 'initialTermId', 'termId', and 'termOffset' must be provided");
+                }
+
+                if (_termId - _initialTermId < 0)
+                {
+                    throw new ArgumentException(
+                        "difference greater than 2^31 - 1: termId=" + _termId + " - initialTermId=" + _initialTermId);
+                }
+
+                if (null != _termLength && _termOffset > _termLength)
+                {
+                    throw new ArgumentException("termOffset=" + _termOffset + " > termLength=" + _termLength);
+                }
             }
 
             return this;
@@ -516,13 +534,57 @@ namespace Adaptive.Aeron
         }
 
         /// <summary>
-        /// Get if a term log buffer should be sparse on disk or not. Sparse saves space at the potential expense of latency.
+        /// Should term log buffer be sparse on disk or not. Sparse saves space at the potential expense of latency.
         /// </summary>
         /// <returns> true if the term buffer log is sparse on disk. </returns>
         /// <see cref="Aeron.Context.SPARSE_PARAM_NAME"/>
         public bool? Sparse()
         {
             return _sparse;
+        }
+
+        /// <summary>
+        /// Set to indicate if an EOS should be sent on the media or not.
+        /// </summary>
+        /// <param name="eos"> true if the EOS should be sent. </param>
+        /// <returns> this for a fluent API. </returns>
+        /// <seealso cref="Aeron.Context.EOS_PARAM_NAME"/>
+        public ChannelUriStringBuilder Eos(bool? eos)
+        {
+            _eos = eos;
+            return this;
+        }
+
+        /// <summary>
+        /// Should an EOS flag be sent on the media or not.
+        /// </summary>
+        /// <returns> true if the EOS param should be set. </returns>
+        /// <seealso cref="Aeron.Context.EOS_PARAM_NAME"/>
+        public bool? Eos()
+        {
+            return _eos;
+        }
+
+        /// <summary>
+        /// Should the subscription channel be tethered or not for local flow control.
+        /// </summary>
+        /// <param name="tether"> value to be set for the tether param. </param>
+        /// <returns> this for a fluent API. </returns>
+        /// <seealso cref="Aeron.Context.TETHER_PARAM_NAME"/>
+        public ChannelUriStringBuilder Tether(bool? tether)
+        {
+            _tether = tether;
+            return this;
+        }
+
+        /// <summary>
+        /// Should the subscription channel be tethered or not for local flow control.
+        /// </summary>
+        /// <returns> value of the tether param. </returns>
+        /// <seealso cref="Aeron.Context.TETHER_PARAM_NAME"/>
+        public bool? Tether()
+        {
+            return _tether;
         }
         
         /// <summary>
@@ -596,7 +658,7 @@ namespace Adaptive.Aeron
         {
             return _alias;
         }
-        
+
         /// <summary>
         /// Initialise a channel for restarting a publication at a given position.
         /// </summary>
@@ -610,7 +672,7 @@ namespace Adaptive.Aeron
             {
                 throw new ArgumentException("invalid position: " + position);
             }
-            
+
             int bitsToShift = LogBufferDescriptor.PositionBitsToShift(termLength);
 
             _initialTermId = initialTermId;
@@ -640,7 +702,7 @@ namespace Adaptive.Aeron
             {
                 _sb.Append(Aeron.Context.TAGS_PARAM_NAME).Append('=').Append(_tags).Append('|');
             }
-            
+
             if (null != _endpoint)
             {
                 _sb.Append(Aeron.Context.ENDPOINT_PARAM_NAME).Append('=').Append(_endpoint).Append('|');
@@ -690,14 +752,15 @@ namespace Adaptive.Aeron
 
             if (null != _sessionId)
             {
-                _sb.Append(Aeron.Context.SESSION_ID_PARAM_NAME).Append('=').Append(PrefixTag(_isSessionIdTagged, _sessionId.Value)).Append('|');
+                _sb.Append(Aeron.Context.SESSION_ID_PARAM_NAME).Append('=')
+                    .Append(PrefixTag(_isSessionIdTagged, _sessionId.Value)).Append('|');
             }
 
             if (null != _ttl)
             {
                 _sb.Append(Aeron.Context.TTL_PARAM_NAME).Append('=').Append(_ttl.Value).Append('|');
             }
-            
+
             if (null != _reliable)
             {
                 _sb.Append(Aeron.Context.RELIABLE_STREAM_PARAM_NAME).Append('=').Append(_reliable).Append('|');
@@ -712,10 +775,20 @@ namespace Adaptive.Aeron
             {
                 _sb.Append(Aeron.Context.ALIAS_PARAM_NAME).Append('=').Append(_alias).Append('|');
             }
-            
+
             if (null != _sparse)
             {
                 _sb.Append(Aeron.Context.SPARSE_PARAM_NAME).Append('=').Append(_sparse).Append('|');
+            }
+            
+            if (null != _eos)
+            {
+                _sb.Append(Aeron.Context.EOS_PARAM_NAME).Append('=').Append(_eos).Append('|');
+            }
+
+            if (null != _tether)
+            {
+                _sb.Append(Aeron.Context.TETHER_PARAM_NAME).Append('=').Append(_tether).Append('|');
             }
 
             char lastChar = _sb[_sb.Length - 1];

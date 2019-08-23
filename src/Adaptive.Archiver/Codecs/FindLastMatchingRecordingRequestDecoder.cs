@@ -11,8 +11,8 @@ public class FindLastMatchingRecordingRequestDecoder
 {
     public const ushort BLOCK_LENGTH = 32;
     public const ushort TEMPLATE_ID = 16;
-    public const ushort SCHEMA_ID = 1;
-    public const ushort SCHEMA_VERSION = 0;
+    public const ushort SCHEMA_ID = 101;
+    public const ushort SCHEMA_VERSION = 2;
 
     private FindLastMatchingRecordingRequestDecoder _parentMessage;
     private IDirectBuffer _buffer;
@@ -443,7 +443,7 @@ public class FindLastMatchingRecordingRequestDecoder
     {
         int originalLimit = Limit();
         Limit(_offset + _actingBlockLength);
-        builder.Append("[findLastMatchingRecordingRequest](sbeTemplateId=");
+        builder.Append("[FindLastMatchingRecordingRequest](sbeTemplateId=");
         builder.Append(TEMPLATE_ID);
         builder.Append("|sbeSchemaId=");
         builder.Append(SCHEMA_ID);

@@ -15,6 +15,7 @@
  */
 
 using System;
+using System.Text;
 
 namespace Adaptive.Agrona
 {
@@ -233,6 +234,24 @@ namespace Adaptive.Agrona
         /// <param name="index">    at which the String begins. </param>
         /// <returns> the String as represented by the ASCII encoded bytes. </returns>
         string GetStringAscii(int index);
+
+        /// <summary>
+        /// Get a String from bytes encoded in ASCII format that is length prefixed and append to an <seealso cref="StringBuilder"/>.
+        /// </summary>
+        /// <param name="index">      at which the String begins. </param>
+        /// <param name="appendable"> to append the chars to. </param>
+        /// <returns> the number of bytes copied. </returns>
+        int GetStringAscii(int index, StringBuilder appendable);
+        
+        /// <summary>
+        /// Get part of a String from bytes encoded in ASCII format that is length prefixed and append to an
+        /// <seealso cref="StringBuilder"/>.
+        /// </summary>
+        /// <param name="index">      at which the String begins. </param>
+        /// <param name="length">     of the String in bytes to decode. </param>
+        /// <param name="appendable"> to append the chars to. </param>
+        /// <returns> the number of bytes copied. </returns>
+        int GetStringAscii(int index, int length, StringBuilder appendable);
 
         ///// <summary>
         ///// Get a String from bytes encoded in UTF-8 format that is length prefixed.

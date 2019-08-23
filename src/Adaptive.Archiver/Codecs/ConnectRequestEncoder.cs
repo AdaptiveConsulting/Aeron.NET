@@ -9,10 +9,10 @@ namespace Adaptive.Archiver.Codecs {
 
 public class ConnectRequestEncoder
 {
-    public const ushort BLOCK_LENGTH = 12;
+    public const ushort BLOCK_LENGTH = 16;
     public const ushort TEMPLATE_ID = 2;
-    public const ushort SCHEMA_ID = 1;
-    public const ushort SCHEMA_VERSION = 0;
+    public const ushort SCHEMA_ID = 101;
+    public const ushort SCHEMA_VERSION = 2;
 
     private ConnectRequestEncoder _parentMessage;
     private IMutableDirectBuffer _buffer;
@@ -160,9 +160,41 @@ public class ConnectRequestEncoder
     }
 
 
+    public static int VersionEncodingOffset()
+    {
+        return 12;
+    }
+
+    public static int VersionEncodingLength()
+    {
+        return 4;
+    }
+
+    public static int VersionNullValue()
+    {
+        return 0;
+    }
+
+    public static int VersionMinValue()
+    {
+        return 2;
+    }
+
+    public static int VersionMaxValue()
+    {
+        return 16777215;
+    }
+
+    public ConnectRequestEncoder Version(int value)
+    {
+        _buffer.PutInt(_offset + 12, value, ByteOrder.LittleEndian);
+        return this;
+    }
+
+
     public static int ResponseChannelId()
     {
-        return 3;
+        return 4;
     }
 
     public static string ResponseChannelCharacterEncoding()

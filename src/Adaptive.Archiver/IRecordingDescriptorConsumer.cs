@@ -24,6 +24,22 @@
         /// <param name="strippedChannel">   for the recorded publication. </param>
         /// <param name="originalChannel">   for the recorded publication. </param>
         /// <param name="sourceIdentity">    for the recorded publication. </param>
-        void OnRecordingDescriptor(long controlSessionId, long correlationId, long recordingId, long startTimestamp, long stopTimestamp, long startPosition, long stopPosition, int initialTermId, int segmentFileLength, int termBufferLength, int mtuLength, int sessionId, int streamId, string strippedChannel, string originalChannel, string sourceIdentity);
+        void OnRecordingDescriptor(
+            long controlSessionId,
+            long correlationId,
+            long recordingId,
+            long startTimestamp,
+            long stopTimestamp,
+            long startPosition,
+            long stopPosition,
+            int initialTermId,
+            int segmentFileLength,
+            int termBufferLength,
+            int mtuLength,
+            int sessionId,
+            int streamId,
+            string strippedChannel,
+            string originalChannel,
+            string sourceIdentity);
     }
 }

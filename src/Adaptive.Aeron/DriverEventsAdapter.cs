@@ -47,7 +47,8 @@ namespace Adaptive.Aeron
         private readonly long _clientId;
         private bool _isInvalid;
 
-        internal DriverEventsAdapter(CopyBroadcastReceiver broadcastReceiver, long clientId, IDriverEventsListener listener)
+        internal DriverEventsAdapter(CopyBroadcastReceiver broadcastReceiver, long clientId,
+            IDriverEventsListener listener)
         {
             _broadcastReceiver = broadcastReceiver;
             _clientId = clientId;
@@ -72,11 +73,11 @@ namespace Adaptive.Aeron
         }
 
         public long ReceivedCorrelationId => _receivedCorrelationId;
-        
+
         public bool IsInvalid => _isInvalid;
 
-        public long ClientId => _clientId; 
-        
+        public long ClientId => _clientId;
+
 
         public void OnMessage(int msgTypeId, IMutableDirectBuffer buffer, int index, int length)
         {
@@ -110,7 +111,6 @@ namespace Adaptive.Aeron
 
                     _listener.OnAvailableImage(
                         _imageReady.CorrelationId(),
-                        _imageReady.StreamId(),
                         _imageReady.SessionId(),
                         _imageReady.SubscriptionRegistrationId(),
                         _imageReady.SubscriberPositionId(),
@@ -173,7 +173,9 @@ namespace Adaptive.Aeron
                     _imageMessage.Wrap(buffer, index);
 
                     _listener.OnUnavailableImage(
-                        _imageMessage.CorrelationId(), _imageMessage.SubscriptionRegistrationId(), _imageMessage.StreamId());
+                        _imageMessage.CorrelationId(), 
+                        _imageMessage.SubscriptionRegistrationId()
+                    );
                     break;
                 }
 
@@ -236,7 +238,6 @@ namespace Adaptive.Aeron
 
                     break;
                 }
-                    
             }
         }
 

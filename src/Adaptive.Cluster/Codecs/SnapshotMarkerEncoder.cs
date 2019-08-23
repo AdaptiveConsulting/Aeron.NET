@@ -9,10 +9,10 @@ namespace Adaptive.Cluster.Codecs {
 
 public class SnapshotMarkerEncoder
 {
-    public const ushort BLOCK_LENGTH = 32;
+    public const ushort BLOCK_LENGTH = 40;
     public const ushort TEMPLATE_ID = 100;
-    public const ushort SCHEMA_ID = 1;
-    public const ushort SCHEMA_VERSION = 1;
+    public const ushort SCHEMA_ID = 111;
+    public const ushort SCHEMA_VERSION = 4;
 
     private SnapshotMarkerEncoder _parentMessage;
     private IMutableDirectBuffer _buffer;
@@ -239,6 +239,54 @@ public class SnapshotMarkerEncoder
         _buffer.PutInt(_offset + 28, (int)value, ByteOrder.LittleEndian);
         return this;
     }
+
+    public static int TimeUnitEncodingOffset()
+    {
+        return 32;
+    }
+
+    public static int TimeUnitEncodingLength()
+    {
+        return 4;
+    }
+
+    public SnapshotMarkerEncoder TimeUnit(ClusterTimeUnit value)
+    {
+        _buffer.PutInt(_offset + 32, (int)value, ByteOrder.LittleEndian);
+        return this;
+    }
+
+    public static int AppVersionEncodingOffset()
+    {
+        return 36;
+    }
+
+    public static int AppVersionEncodingLength()
+    {
+        return 4;
+    }
+
+    public static int AppVersionNullValue()
+    {
+        return 0;
+    }
+
+    public static int AppVersionMinValue()
+    {
+        return 1;
+    }
+
+    public static int AppVersionMaxValue()
+    {
+        return 16777215;
+    }
+
+    public SnapshotMarkerEncoder AppVersion(int value)
+    {
+        _buffer.PutInt(_offset + 36, value, ByteOrder.LittleEndian);
+        return this;
+    }
+
 
 
     public override string ToString()

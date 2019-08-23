@@ -9,7 +9,6 @@ using Adaptive.Cluster.Codecs.Mark;
 
 namespace Adaptive.Cluster
 {
-    
     /// <summary>
     /// Used to indicate if a cluster service is running and what configuration it is using. Errors encountered by
     /// the service are recorded in within this file by a <see cref="DistinctErrorLog"/>
@@ -21,7 +20,6 @@ namespace Adaptive.Cluster
         public const string SERVICE_FILE_NAME_PREFIX = "cluster-mark-service-";
         public const string SERVICE_FILE_NAME_FORMAT = SERVICE_FILE_NAME_PREFIX + "{0}" + FILE_EXTENSION;
         public const int HEADER_LENGTH = 8 * 1024;
-        public const int VERSION_READY = MarkFileHeaderDecoder.SCHEMA_VERSION;
         public const int VERSION_FAILED = -1;
 
         private readonly MarkFileHeaderDecoder headerDecoder = new MarkFileHeaderDecoder();
@@ -49,20 +47,17 @@ namespace Adaptive.Cluster
                 epochClock,
                 (version) =>
                 {
-                    if (version != MarkFileHeaderDecoder.SCHEMA_VERSION)
+                    if (VERSION_FAILED == version && markFileExists)
                     {
-                        if (VERSION_FAILED == version && markFileExists)
-                        {
-                            Console.WriteLine("mark file version -1 indicates error on previous startup.");
-                        }
-                        else
-                        {
-                            throw new ClusterException("mark file version " + version + " does not match software:" +
-                                                       MarkFileHeaderDecoder.SCHEMA_VERSION);
-                        }
+                        Console.WriteLine("mark file version -1 indicates error on previous startup.");
+                    }
+                    else if (SemanticVersion.Major(version) != AeronCluster.Configuration.MAJOR_VERSION)
+                    {
+                        throw new ArgumentException("mark file major version " + SemanticVersion.Major(version) +
+                                                           " does not match software:" + AeronCluster.Configuration.MAJOR_VERSION);
                     }
                 },
-                null);    
+                null);
 
             buffer = markFile.Buffer();
             errorBuffer = new UnsafeBuffer(buffer, HEADER_LENGTH, errorBufferLength);
@@ -89,7 +84,11 @@ namespace Adaptive.Cluster
 
             if (existingType != ClusterComponentType.NULL && existingType != type)
             {
-                throw new InvalidOperationException("existing Mark file type " + existingType + " not same as required type " + type);
+                if (existingType != ClusterComponentType.BACKUP || ClusterComponentType.CONSENSUS_MODULE != type)
+                {
+                    throw new InvalidOperationException(
+                        "existing Mark file type " + existingType + " not same as required type " + type);
+                }
             }
 
             headerEncoder.ComponentType(type);
@@ -99,7 +98,8 @@ namespace Adaptive.Cluster
             headerEncoder.StartTimestamp(epochClock.Time());
         }
 
-        public ClusterMarkFile(DirectoryInfo directory, string filename, IEpochClock epochClock, long timeoutMs, Action<string> logger)
+        public ClusterMarkFile(DirectoryInfo directory, string filename, IEpochClock epochClock, long timeoutMs,
+            Action<string> logger)
         {
             markFile = new MarkFile(
                 directory,
@@ -110,10 +110,12 @@ namespace Adaptive.Cluster
                 epochClock,
                 (version) =>
                 {
-                    if (version != MarkFileHeaderDecoder.SCHEMA_VERSION)
+                    if (SemanticVersion.Major(version) != AeronCluster.Configuration.MAJOR_VERSION)
                     {
-                        throw new ArgumentException("mark file version " + version + " does not match software:" + MarkFileHeaderDecoder.SCHEMA_VERSION);
+                        throw new ArgumentException("mark file major version " + SemanticVersion.Major(version) + 
+                                                    " does not match software:" + AeronCluster.Configuration.MAJOR_VERSION);
                     }
+
                 },
                 logger);
 
@@ -126,7 +128,7 @@ namespace Adaptive.Cluster
         {
             markFile?.Dispose();
         }
-        
+
         /// <summary>
         /// Get the current value of a candidate term id if a vote is placed in an election.
         /// </summary>
@@ -160,10 +162,10 @@ namespace Adaptive.Cluster
 
         public void SignalReady()
         {
-            markFile.SignalReady(MarkFileHeaderDecoder.SCHEMA_VERSION);
+            markFile.SignalReady(AeronCluster.Configuration.SEMANTIC_VERSION);
             markFile.MappedByteBuffer().Flush();
         }
-        
+
         public void SignalFailedStart()
         {
             markFile.SignalReady(VERSION_FAILED);
@@ -204,7 +206,8 @@ namespace Adaptive.Cluster
 
             if (observations > 0)
             {
-                var errorLogFilename = Path.Combine(markFile.DirectoryName, DateTime.Now.ToString("yyyy-MM-dd-HH-mm-ss-fff") + "-error.log");
+                var errorLogFilename = Path.Combine(markFile.DirectoryName,
+                    DateTime.Now.ToString("yyyy-MM-dd-HH-mm-ss-fff") + "-error.log");
 
                 logger?.WriteLine("WARNING: Existing errors saved to: " + errorLogFilename);
 
@@ -213,7 +216,7 @@ namespace Adaptive.Cluster
                     str.CopyTo(file);
                 }
             }
-            
+
             writer.Close();
         }
 
@@ -221,7 +224,8 @@ namespace Adaptive.Cluster
         {
             void ErrorConsumer(int count, long firstTimestamp, long lastTimestamp, string ex)
             {
-                writer.WriteLine($"***{writer.NewLine}{count} observations from {firstTimestamp} to {lastTimestamp} for:{writer.NewLine} {ex}");
+                writer.WriteLine(
+                    $"***{writer.NewLine}{count} observations from {firstTimestamp} to {lastTimestamp} for:{writer.NewLine} {ex}");
             }
 
             var distinctErrorCount = ErrorLogReader.Read(errorBuffer, ErrorConsumer);

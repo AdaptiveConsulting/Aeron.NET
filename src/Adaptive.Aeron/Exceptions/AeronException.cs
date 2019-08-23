@@ -8,20 +8,42 @@ namespace Adaptive.Aeron.Exceptions
     /// </summary>
     public class AeronException : Exception
     {
+        public Category Category { get; }
+
         public AeronException()
         {
+            Category = Category.ERROR;
+        }
+
+        public AeronException(Category category)
+        {
+            Category = category;
         }
 
         protected AeronException(SerializationInfo info, StreamingContext context) : base(info, context)
         {
+            Category = Category.ERROR;
         }
 
         public AeronException(string message) : base(message)
         {
+            Category = Category.ERROR;
+        }
+
+        public AeronException(string message, Category category) : base(message)
+        {
+            Category = category;
         }
 
         public AeronException(string message, Exception innerException) : base(message, innerException)
         {
+            Category = Category.ERROR;
+        }
+
+        public AeronException(string message, Exception innerException, Category category) : base(message,
+            innerException)
+        {
+            Category = category;
         }
     }
 }

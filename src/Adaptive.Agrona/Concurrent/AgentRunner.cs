@@ -33,7 +33,7 @@ namespace Adaptive.Agrona.Concurrent
         /// </summary>
         private static readonly Thread TOMBSTONE = new Thread(() => { });
 
-        private static readonly int RETRY_CLOSE_TIMEOUT_MS = 3000;
+        public static readonly int RETRY_CLOSE_TIMEOUT_MS = 3000;
         
         private volatile bool _isRunning = true;
 

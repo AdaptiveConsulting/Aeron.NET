@@ -11,8 +11,8 @@ public class RecordingPositionRequestEncoder
 {
     public const ushort BLOCK_LENGTH = 24;
     public const ushort TEMPLATE_ID = 12;
-    public const ushort SCHEMA_ID = 1;
-    public const ushort SCHEMA_VERSION = 0;
+    public const ushort SCHEMA_ID = 101;
+    public const ushort SCHEMA_VERSION = 2;
 
     private RecordingPositionRequestEncoder _parentMessage;
     private IMutableDirectBuffer _buffer;

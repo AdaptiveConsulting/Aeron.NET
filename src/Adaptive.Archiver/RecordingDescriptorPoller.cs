@@ -112,6 +112,13 @@ namespace Adaptive.Archiver
         {
             messageHeaderDecoder.Wrap(buffer, offset);
 
+            int schemaId = messageHeaderDecoder.SchemaId();
+            if (schemaId != MessageHeaderDecoder.SCHEMA_ID)
+            {
+                throw new ArchiveException("expected schemaId=" + MessageHeaderDecoder.SCHEMA_ID + ", actual=" +
+                                           schemaId);
+            }
+
             int templateId = messageHeaderDecoder.TemplateId();
             switch (templateId)
             {
@@ -164,7 +171,8 @@ namespace Adaptive.Archiver
                         messageHeaderDecoder.Version());
 
                     long correlationId = recordingDescriptorDecoder.CorrelationId();
-                    if (controlSessionId == recordingDescriptorDecoder.ControlSessionId() && correlationId == this.correlationId)
+                    if (controlSessionId == recordingDescriptorDecoder.ControlSessionId() &&
+                        correlationId == this.correlationId)
                     {
                         consumer.OnRecordingDescriptor(
                             controlSessionId,
@@ -193,9 +201,6 @@ namespace Adaptive.Archiver
 
                     break;
                 }
-
-                default:
-                    throw new ArchiveException("unknown templateId: " + templateId);
             }
 
             return ControlledFragmentHandlerAction.CONTINUE;

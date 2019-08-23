@@ -10,9 +10,9 @@ namespace Adaptive.Cluster.Codecs {
 public class SessionCloseRequestEncoder
 {
     public const ushort BLOCK_LENGTH = 16;
-    public const ushort TEMPLATE_ID = 5;
-    public const ushort SCHEMA_ID = 1;
-    public const ushort SCHEMA_VERSION = 1;
+    public const ushort TEMPLATE_ID = 4;
+    public const ushort SCHEMA_ID = 111;
+    public const ushort SCHEMA_VERSION = 4;
 
     private SessionCloseRequestEncoder _parentMessage;
     private IMutableDirectBuffer _buffer;

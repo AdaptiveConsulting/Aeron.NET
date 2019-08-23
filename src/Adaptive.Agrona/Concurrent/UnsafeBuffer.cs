@@ -787,6 +787,24 @@ namespace Adaptive.Agrona.Concurrent
             return GetStringAscii(index, length);
         }
 
+        public int GetStringAscii(int index, StringBuilder appendable)
+        {
+            var length = GetInt(index);
+            
+            return GetStringAscii(index, length, appendable);
+        }
+
+        public int GetStringAscii(int index, int length, StringBuilder appendable)
+        {
+            for (int i = index + BitUtil.SIZE_OF_INT, limit = index + BitUtil.SIZE_OF_INT + length; i < limit; i++)
+            {
+                char c = *(char*) (_pBuffer + index);
+                appendable.Append(c > (char) 127 ? '?' : c);
+            }
+
+            return length;
+        }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public string GetStringUtf8(int index, int length)
         {

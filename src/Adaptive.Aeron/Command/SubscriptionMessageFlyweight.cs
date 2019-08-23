@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+using System.Text;
 using Adaptive.Agrona;
 
 namespace Adaptive.Aeron.Command
@@ -99,6 +100,15 @@ namespace Adaptive.Aeron.Command
             return buffer.GetStringAscii(offset + CHANNEL_OFFSET);
         }
 
+        /// <summary>
+        /// Append the channel value to a <seealso cref="StringBuilder"/>.
+        /// </summary>
+        /// <param name="stringBuilder"> to append channel to. </param>
+        public void AppendChannel(StringBuilder stringBuilder)
+        {
+            buffer.GetStringAscii(offset + CHANNEL_OFFSET, stringBuilder);
+        }
+        
         /// <summary>
         /// Set channel field in ASCII
         /// </summary>

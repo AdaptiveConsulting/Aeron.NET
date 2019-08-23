@@ -9,6 +9,7 @@ public class MessageHeaderDecoder
     public static int ENCODED_LENGTH = 8;
     private int _offset;
     private IDirectBuffer _buffer;
+    public const int SCHEMA_ID = 111; // TODO fix SBE generation
 
     public MessageHeaderDecoder Wrap(IDirectBuffer buffer, int offset)
     {

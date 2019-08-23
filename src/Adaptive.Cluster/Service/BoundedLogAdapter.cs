@@ -3,6 +3,7 @@ using Adaptive.Aeron;
 using Adaptive.Aeron.LogBuffer;
 using Adaptive.Aeron.Status;
 using Adaptive.Agrona;
+using Adaptive.Cluster.Client;
 using Adaptive.Cluster.Codecs;
 
 namespace Adaptive.Cluster.Service
@@ -16,16 +17,19 @@ namespace Adaptive.Cluster.Service
         private const int INITIAL_BUFFER_LENGTH = 4096;
 
         private static readonly int SESSION_HEADER_LENGTH =
-            MessageHeaderEncoder.ENCODED_LENGTH + SessionHeaderEncoder.BLOCK_LENGTH;
+            MessageHeaderEncoder.ENCODED_LENGTH + SessionMessageHeaderEncoder.BLOCK_LENGTH;
 
         private readonly ImageControlledFragmentAssembler fragmentAssembler;
         private readonly MessageHeaderDecoder messageHeaderDecoder = new MessageHeaderDecoder();
         private readonly SessionOpenEventDecoder openEventDecoder = new SessionOpenEventDecoder();
         private readonly SessionCloseEventDecoder closeEventDecoder = new SessionCloseEventDecoder();
-        private readonly SessionHeaderDecoder sessionHeaderDecoder = new SessionHeaderDecoder();
+        private readonly SessionMessageHeaderDecoder sessionHeaderDecoder = new SessionMessageHeaderDecoder();
         private readonly TimerEventDecoder timerEventDecoder = new TimerEventDecoder();
         private readonly ClusterActionRequestDecoder actionRequestDecoder = new ClusterActionRequestDecoder();
-        private readonly NewLeadershipTermEventDecoder newLeadershipTermEventDecoder = new NewLeadershipTermEventDecoder();
+
+        private readonly NewLeadershipTermEventDecoder newLeadershipTermEventDecoder =
+            new NewLeadershipTermEventDecoder();
+
         private readonly MembershipChangeEventDecoder membershipChangeEventDecoder = new MembershipChangeEventDecoder();
 
         private readonly Image image;
@@ -65,7 +69,14 @@ namespace Adaptive.Cluster.Service
             messageHeaderDecoder.Wrap(buffer, offset);
             int templateId = messageHeaderDecoder.TemplateId();
 
-            if (templateId == SessionHeaderDecoder.TEMPLATE_ID)
+            int schemaId = messageHeaderDecoder.SchemaId();
+            if (schemaId != MessageHeaderDecoder.SCHEMA_ID)
+            {
+                throw new ClusterException("expected schemaId=" + MessageHeaderDecoder.SCHEMA_ID + ", actual=" +
+                                           schemaId);
+            }
+
+            if (templateId == SessionMessageHeaderEncoder.TEMPLATE_ID)
             {
                 sessionHeaderDecoder.Wrap(
                     buffer,
@@ -74,6 +85,7 @@ namespace Adaptive.Cluster.Service
                     messageHeaderDecoder.Version());
 
                 agent.OnSessionMessage(
+                    header.Position,
                     sessionHeaderDecoder.ClusterSessionId(),
                     sessionHeaderDecoder.Timestamp(),
                     buffer,
@@ -94,7 +106,11 @@ namespace Adaptive.Cluster.Service
                         messageHeaderDecoder.BlockLength(),
                         messageHeaderDecoder.Version());
 
-                    agent.OnTimerEvent(timerEventDecoder.CorrelationId(), timerEventDecoder.Timestamp());
+                    agent.OnTimerEvent(
+                        header.Position,
+                        timerEventDecoder.CorrelationId(),
+                        timerEventDecoder.Timestamp()
+                    );
                     break;
 
                 case SessionOpenEventDecoder.TEMPLATE_ID:
@@ -109,6 +125,8 @@ namespace Adaptive.Cluster.Service
                     openEventDecoder.GetEncodedPrincipal(encodedPrincipal, 0, encodedPrincipal.Length);
 
                     agent.OnSessionOpen(
+                        openEventDecoder.LeadershipTermId(),
+                        header.Position,
                         openEventDecoder.ClusterSessionId(),
                         openEventDecoder.Timestamp(),
                         openEventDecoder.ResponseStreamId(),
@@ -124,6 +142,8 @@ namespace Adaptive.Cluster.Service
                         messageHeaderDecoder.Version());
 
                     agent.OnSessionClose(
+                        openEventDecoder.LeadershipTermId(),
+                        header.Position,
                         closeEventDecoder.ClusterSessionId(),
                         closeEventDecoder.Timestamp(),
                         closeEventDecoder.CloseReason());
@@ -137,8 +157,8 @@ namespace Adaptive.Cluster.Service
                         messageHeaderDecoder.Version());
 
                     agent.OnServiceAction(
-                        actionRequestDecoder.LogPosition(),
                         actionRequestDecoder.LeadershipTermId(),
+                        actionRequestDecoder.LogPosition(),
                         actionRequestDecoder.Timestamp(),
                         actionRequestDecoder.Action());
                     break;
@@ -150,12 +170,20 @@ namespace Adaptive.Cluster.Service
                         messageHeaderDecoder.BlockLength(),
                         messageHeaderDecoder.Version());
 
+                    var clusterTimeUnit = newLeadershipTermEventDecoder.TimeUnit() == ClusterTimeUnit.NULL_VALUE
+                        ? ClusterTimeUnit.MILLIS
+                        : newLeadershipTermEventDecoder.TimeUnit();
+                    
                     agent.OnNewLeadershipTermEvent(
                         newLeadershipTermEventDecoder.LeadershipTermId(),
                         newLeadershipTermEventDecoder.LogPosition(),
                         newLeadershipTermEventDecoder.Timestamp(),
+                        newLeadershipTermEventDecoder.TermBaseLogPosition(),
                         newLeadershipTermEventDecoder.LeaderMemberId(),
-                        newLeadershipTermEventDecoder.LogSessionId());
+                        newLeadershipTermEventDecoder.LogSessionId(),
+                        clusterTimeUnit,
+                        newLeadershipTermEventDecoder.AppVersion()
+                    );
                     break;
 
                 case MembershipChangeEventDecoder.TEMPLATE_ID:

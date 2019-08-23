@@ -1,5 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using Adaptive.Aeron;
+using Adaptive.Aeron.LogBuffer;
+using Adaptive.Agrona;
+using Adaptive.Cluster.Client;
+using Adaptive.Cluster.Codecs;
 
 namespace Adaptive.Cluster.Service
 {
@@ -13,7 +18,7 @@ namespace Adaptive.Cluster.Service
         /// </summary>
         /// <returns> unique id for the hosting member of the cluster. </returns>
         int MemberId { get; }
-        
+
         /// <summary>
         /// The role the cluster node is playing.
         /// </summary>
@@ -31,64 +36,158 @@ namespace Adaptive.Cluster.Service
         /// </summary>
         /// <returns> the <seealso cref="ClusteredServiceContainer.Context"/> under which the container is running. </returns>
         ClusteredServiceContainer.Context Context { get; }
-        
+
         /// <summary>
         /// Get the <seealso cref="ClientSession"/> for a given cluster session id.
         /// </summary>
         /// <param name="clusterSessionId"> to be looked up. </param>
         /// <returns> the <seealso cref="ClientSession"/> that matches the clusterSessionId. </returns>
         ClientSession GetClientSession(long clusterSessionId);
-        
+
         /// <summary>
         /// Get all <seealso cref="ClientSession"/>s.
         /// </summary>
         /// <returns> the <seealso cref="ClientSession"/>s. </returns>
         ICollection<ClientSession> ClientSessions { get; }
-        
+
         /// <summary>
         /// Request the close of a <seealso cref="ClientSession"/> by sending the request to the consensus module.
         /// </summary>
         /// <param name="clusterSessionId"> to be closed. </param>
         /// <returns> true if the event to close a session was sent or false if back pressure was applied. </returns>
-        /// <exception cref="ArgumentException"> if the clusterSessionId is not recognised. </exception>
+        /// <exception cref="ClusterException"> if the clusterSessionId is not recognised. </exception>
         bool CloseSession(long clusterSessionId);
 
         /// <summary>
-        /// Current Epoch time in milliseconds.
+        /// Cluster time as <seealso cref="TimeUnit()"/>s since 1 Jan 1970 UTC.
         /// </summary>
-        /// <returns> Epoch time in milliseconds. </returns>
-        long TimeMs { get; }
+        /// <returns> time as <seealso cref="TimeUnit()"/>s since 1 Jan 1970 UTC. </returns>
+
+        long Time { get; }
+
+        /// <summary>
+        /// The unit of time applied to timestamps and <seealso cref="Time()"/>.
+        /// </summary>
+        /// <returns> the unit of time applied to timestamps and <seealso cref="Time()"/>. </returns>
+        ClusterTimeUnit TimeUnit();
+
+        /// <summary>
+        /// Position the log has reached in bytes as of the current message.
+        /// </summary>
+        /// <returns> position the log has reached in bytes as of the current message. </returns>
+        long LogPosition();
 
         /// <summary>
         /// Schedule a timer for a given deadline and provide a correlation id to identify the timer when it expires or
-        /// for cancellation.
-        /// 
-        /// If the correlationId is for an existing scheduled timer then it will be reschedule to the new deadline.
-        ///    
+        /// for cancellation. This action asynchronous and will race with the timer expiring.
+        /// <para>
+        /// If the correlationId is for an existing scheduled timer then it will be reschedule to the new deadline. However
+        /// it is best do generate correlationIds in a monotonic fashion and be aware of potential clashes with other
+        /// services in the same cluster. Service isolation can be achieved by using the upper bits for service id.
+        /// </para>
+        /// <para>
+        /// Timers should only be scheduled or cancelled in the context of processing a
+        /// <seealso cref="IClusteredService.OnSessionMessage(ClientSession, long, IDirectBuffer, int, int, Header)"/>,
+        /// <seealso cref="IClusteredService.OnTimerEvent(long, long)"/>,
+        /// <seealso cref="IClusteredService.OnSessionOpen(ClientSession, long)"/>, or
+        /// <seealso cref="IClusteredService.OnSessionClose(ClientSession, long, CloseReason)"/>.
+        /// If applied to other events then they are not guaranteed to be reliable.
+        ///   
+        /// </para>
         /// </summary>
-        /// <param name="correlationId"> to identify the timer when it expires. </param>
-        /// <param name="deadlineMs">  Epoch time in milliseconds after which the timer will fire. </param>
-        /// <returns> true if the event to schedule a timer has been sent or false if back pressure is applied. </returns>
-        /// <see cref="CancelTimer(long)"/>
-        bool ScheduleTimer(long correlationId, long deadlineMs);
+        /// <param name="correlationId"> to identify the timer when it expires. <seealso cref="long.MaxValue"/> not supported. </param>
+        /// <param name="deadline">      time in after which the timer will fire. <seealso cref="long.MaxValue"/> not supported. </param>
+        /// <returns> true if the event to schedule a timer request has been sent or false if back pressure is applied. </returns>
+        /// <seealso cref="CancelTimer(long)"/>
+        bool ScheduleTimer(long correlationId, long deadline);
 
         /// <summary>
-        /// Cancel a previous scheduled timer.
+        /// Cancel a previous scheduled timer. This action asynchronous and will race with the timer expiring.
+        /// <para>
+        /// Timers should only be scheduled or cancelled in the context of processing a
+        /// <seealso cref="IClusteredService.OnSessionMessage(ClientSession, long, IDirectBuffer, int, int, Header)"/>,
+        /// <seealso cref="IClusteredService.OnTimerEvent(long, long)"/>,
+        /// <seealso cref="IClusteredService.OnSessionOpen(ClientSession, long)"/>, or
+        /// <seealso cref="IClusteredService.OnSessionClose(ClientSession, long, CloseReason)"/>.
+        /// If applied to other events then they are not guaranteed to be reliable.
+        ///    
+        /// </para>
         /// </summary>
-        /// <param name="correlationId"> for the timer provided when it was scheduled. </param>
-        /// <returns> true if the event to cancel a scheduled timer has been sent or false if back pressure is applied. </returns>
-        /// <see cref="ScheduleTimer(long, long)"/>
+        /// <param name="correlationId"> for the timer provided when it was scheduled. <seealso cref="long.MaxValue"/> not supported. </param>
+        /// <returns> true if the event to cancel request has been sent or false if back pressure is applied. </returns>
+        /// <seealso cref="ScheduleTimer"/>
         bool CancelTimer(long correlationId);
 
         /// <summary>
-        /// Should be called by the service when it experiences back-pressure on egress, closing sessions, or making
-        /// timer requests.
+        /// Offer a message as ingress to the cluster for sequencing. This will happen efficiently over IPC to the
+        /// consensus module and have the cluster session of as the negative value of the
+        /// <seealso cref="ClusteredServiceContainer.Configuration.SERVICE_ID_PROP_NAME"/>.
+        /// </summary>
+        /// <param name="buffer"> containing the message to be offered. </param>
+        /// <param name="offset"> in the buffer at which the encoded message begins. </param>
+        /// <param name="length"> in the buffer of the encoded message. </param>
+        /// <returns> positive value if successful. </returns>
+        long Offer(IDirectBuffer buffer, int offset, int length);
+
+        /// <summary>
+        /// Offer a message as ingress to the cluster for sequencing. This will happen efficiently over IPC to the
+        /// consensus module and have the cluster session of as the negative value of the
+        /// <seealso cref="ClusteredServiceContainer.Configuration.SERVICE_ID_PROP_NAME"/>.
+        /// <para>
+        /// The first vector must be left free to be filled in for the session message header.
+        /// 
+        /// </para>
+        /// </summary>
+        /// <param name="vectors"> containing the message parts with the first left to be filled. </param>
+        /// <returns> positive value if successful. </returns>
+        long Offer(DirectBufferVector[] vectors);
+
+        /// <summary>
+        /// Try to claim a range in the publication log into which a message can be written with zero copy semantics.
+        /// Once the message has been written then <seealso cref="BufferClaim.Commit()"/> should be called thus making it available.
+        /// <para>
+        /// On successful claim, the Cluster egress header will be written to the start of the claimed buffer section.
+        /// Clients <b>MUST</b> write into the claimed buffer region at offset + <seealso cref="AeronCluster.SESSION_HEADER_LENGTH"/>.
+        /// <pre>{@code
+        ///     final IDirectBuffer srcBuffer = AcquireMessage();
+        ///    
+        ///     if (cluster.TryClaim(length, bufferClaim) > 0L)
+        ///     {
+        ///         try
+        ///         {
+        ///              final IMutableDirectBuffer buffer = bufferClaim.Buffer;
+        ///              final int offset = bufferClaim.Offset;
+        ///              // ensure that data is written at the correct offset
+        ///              buffer.PutBytes(offset + AeronCluster.SESSION_HEADER_LENGTH, srcBuffer, 0, length);
+        ///         }
+        ///         finally
+        ///         {
+        ///             bufferClaim.Commit();
+        ///         }
+        ///     }
+        /// }</pre>
+        ///    
+        /// </para>
+        /// </summary>
+        /// <param name="length">      of the range to claim, in bytes. </param>
+        /// <param name="bufferClaim"> to be populated if the claim succeeds. </param>
+        /// <returns> The new stream position, otherwise a negative error value as specified in
+        ///         <seealso cref="Publication.TryClaim(int, BufferClaim)"/>. </returns>
+        /// <exception cref="ArgumentException"> if the length is greater than <seealso cref="Publication.MaxPayloadLength"/>. </exception>
+        /// <seealso cref="Publication.TryClaim(int, BufferClaim)"/>
+        /// <seealso cref="BufferClaim.Commit()"/>
+        /// <seealso cref="BufferClaim.Abort()"/>
+        long TryClaim(int length, BufferClaim bufferClaim);
+
+        /// <summary>
+        /// Should be called by the service when it experiences back-pressure on egress, closing sessions, making
+        /// timer requests, or any long running actions.
         /// </summary>
         void Idle();
-        
+
         /// <summary>
         /// Should be called by the service when it experiences back-pressure on egress, closing sessions, or making
-        /// timer requests.
+        /// timer requests, or any long running actions.
         /// </summary>
         /// <param name="workCount"> a value of 0 will reset the idle strategy is a progressive back-off has been applied. </param>
         void Idle(int workCount);

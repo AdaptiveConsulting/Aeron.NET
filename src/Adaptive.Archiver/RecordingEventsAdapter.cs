@@ -20,7 +20,7 @@ namespace Adaptive.Archiver
         private readonly Subscription _subscription;
 
         /// <summary>
-        /// Create a poller for a given subscription to an archive for recording events.
+        /// Create an adapter for a given subscription to an archive for recording events.
         /// </summary>
         /// <param name="listener">      to which events are dispatched. </param>
         /// <param name="subscription">  to poll for new events. </param>
@@ -44,6 +44,13 @@ namespace Adaptive.Archiver
         public void OnFragment(IDirectBuffer buffer, int offset, int length, Header header)
         {
             _messageHeaderDecoder.Wrap(buffer, offset);
+
+            int schemaId = _messageHeaderDecoder.SchemaId();
+            if (schemaId != MessageHeaderDecoder.SCHEMA_ID)
+            {
+                throw new ArchiveException("expected schemaId=" + MessageHeaderDecoder.SCHEMA_ID + ", actual=" +
+                                           schemaId);
+            }
 
             int templateId = _messageHeaderDecoder.TemplateId();
             switch (templateId)
@@ -89,9 +96,6 @@ namespace Adaptive.Archiver
                         _recordingStoppedDecoder.StartPosition(),
                         _recordingStoppedDecoder.StopPosition());
                     break;
-
-                default:
-                    throw new ArchiveException("unknown templateId: " + templateId);
             }
         }
     }

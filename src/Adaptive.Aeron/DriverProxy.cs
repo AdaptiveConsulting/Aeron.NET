@@ -37,13 +37,17 @@ namespace Adaptive.Aeron
         /// </summary>
         public const int MSG_BUFFER_CAPACITY = 2048;
 
-        private readonly UnsafeBuffer _buffer = new UnsafeBuffer(BufferUtil.AllocateDirectAligned(MSG_BUFFER_CAPACITY,BitUtil.CACHE_LINE_LENGTH * 2)); // todo expandable
+        private readonly UnsafeBuffer _buffer =
+            new UnsafeBuffer(BufferUtil.AllocateDirectAligned(MSG_BUFFER_CAPACITY,
+                BitUtil.CACHE_LINE_LENGTH * 2)); // todo expandable
+
         private readonly PublicationMessageFlyweight _publicationMessage = new PublicationMessageFlyweight();
         private readonly SubscriptionMessageFlyweight _subscriptionMessage = new SubscriptionMessageFlyweight();
         private readonly RemoveMessageFlyweight _removeMessage = new RemoveMessageFlyweight();
         private readonly CorrelatedMessageFlyweight _correlatedMessage = new CorrelatedMessageFlyweight();
         private readonly DestinationMessageFlyweight _destinationMessage = new DestinationMessageFlyweight();
         private readonly CounterMessageFlyweight _counterMessage = new CounterMessageFlyweight();
+        private readonly TerminateDriverFlyweight _terminateDriver = new TerminateDriverFlyweight();
         private readonly IRingBuffer _toDriverCommandBuffer;
 
         public DriverProxy(IRingBuffer toDriverCommandBuffer, long clientId)
@@ -59,6 +63,7 @@ namespace Adaptive.Aeron
             _removeMessage.Wrap(_buffer, 0);
             _destinationMessage.Wrap(_buffer, 0);
             _counterMessage.Wrap(_buffer, 0);
+            _terminateDriver.Wrap(_buffer, 0);
 
             _correlatedMessage.ClientId(clientId);
         }
@@ -283,7 +288,22 @@ namespace Adaptive.Aeron
         public void ClientClose()
         {
             _correlatedMessage.CorrelationId(Aeron.NULL_VALUE);
-            _toDriverCommandBuffer.Write(ControlProtocolEvents.CLIENT_CLOSE, _buffer, 0, CorrelatedMessageFlyweight.LENGTH);
+            _toDriverCommandBuffer.Write(ControlProtocolEvents.CLIENT_CLOSE, _buffer, 0,
+                CorrelatedMessageFlyweight.LENGTH);
+        }
+
+        public bool TerminateDriver(IDirectBuffer tokenBuffer, int tokenOffset, int tokenLength)
+        {
+            _correlatedMessage.CorrelationId(Aeron.NULL_VALUE);
+
+            _terminateDriver.TokenBuffer(tokenBuffer, tokenOffset, tokenLength);
+
+            return _toDriverCommandBuffer.Write(
+                ControlProtocolEvents.TERMINATE_DRIVER,
+                _buffer,
+                0,
+                _terminateDriver.Length()
+            );
         }
     }
 }

@@ -14,16 +14,14 @@
  * limitations under the License.
  */
 
-using System;
-
 namespace Adaptive.Aeron.Exceptions
 {
     /// <summary>
     /// A timeout has occurred between service calls for the client conductor.
     /// </summary>
-    public class ConductorServiceTimeoutException : TimeoutException
+    public class ConductorServiceTimeoutException : AeronTimeoutException
     {
-        public ConductorServiceTimeoutException(string message) : base(message)
+        public ConductorServiceTimeoutException(string message) : base(message, Category.FATAL)
         {
         }
     }

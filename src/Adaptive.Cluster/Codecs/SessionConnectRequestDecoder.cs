@@ -9,10 +9,10 @@ namespace Adaptive.Cluster.Codecs {
 
 public class SessionConnectRequestDecoder
 {
-    public const ushort BLOCK_LENGTH = 12;
-    public const ushort TEMPLATE_ID = 4;
-    public const ushort SCHEMA_ID = 1;
-    public const ushort SCHEMA_VERSION = 1;
+    public const ushort BLOCK_LENGTH = 16;
+    public const ushort TEMPLATE_ID = 3;
+    public const ushort SCHEMA_ID = 111;
+    public const ushort SCHEMA_VERSION = 4;
 
     private SessionConnectRequestDecoder _parentMessage;
     private IDirectBuffer _buffer;
@@ -196,9 +196,68 @@ public class SessionConnectRequestDecoder
     }
 
 
-    public static int ResponseChannelId()
+    public static int VersionId()
     {
         return 3;
+    }
+
+    public static int VersionSinceVersion()
+    {
+        return 2;
+    }
+
+    public static int VersionEncodingOffset()
+    {
+        return 12;
+    }
+
+    public static int VersionEncodingLength()
+    {
+        return 4;
+    }
+
+    public static string VersionMetaAttribute(MetaAttribute metaAttribute)
+    {
+        switch (metaAttribute)
+        {
+            case MetaAttribute.EPOCH: return "unix";
+            case MetaAttribute.TIME_UNIT: return "nanosecond";
+            case MetaAttribute.SEMANTIC_TYPE: return "";
+            case MetaAttribute.PRESENCE: return "optional";
+        }
+
+        return "";
+    }
+
+    public static int VersionNullValue()
+    {
+        return 0;
+    }
+
+    public static int VersionMinValue()
+    {
+        return 1;
+    }
+
+    public static int VersionMaxValue()
+    {
+        return 16777215;
+    }
+
+    public int Version()
+    {
+        if (_parentMessage._actingVersion < 2)
+        {
+            return 0;
+        }
+
+        return _buffer.GetInt(_offset + 12, ByteOrder.LittleEndian);
+    }
+
+
+    public static int ResponseChannelId()
+    {
+        return 4;
     }
 
     public static int ResponseChannelSinceVersion()
@@ -273,7 +332,7 @@ public class SessionConnectRequestDecoder
 
     public static int EncodedCredentialsId()
     {
-        return 4;
+        return 5;
     }
 
     public static int EncodedCredentialsSinceVersion()
@@ -368,11 +427,16 @@ public class SessionConnectRequestDecoder
         builder.Append("ResponseStreamId=");
         builder.Append(ResponseStreamId());
         builder.Append('|');
-        //Token{signal=BEGIN_VAR_DATA, name='responseChannel', referencedName='null', description='null', id=3, version=0, deprecated=0, encodedLength=0, offset=12, componentTokenCount=6, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=BEGIN_FIELD, name='version', referencedName='null', description='null', id=3, version=2, deprecated=0, encodedLength=0, offset=12, componentTokenCount=3, encoding=Encoding{presence=OPTIONAL, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=ENCODING, name='version_t', referencedName='null', description='Protocol or application suite version.', id=-1, version=2, deprecated=0, encodedLength=4, offset=12, componentTokenCount=1, encoding=Encoding{presence=OPTIONAL, primitiveType=INT32, byteOrder=LITTLE_ENDIAN, minValue=1, maxValue=16777215, nullValue=0, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        builder.Append("Version=");
+        builder.Append(Version());
+        builder.Append('|');
+        //Token{signal=BEGIN_VAR_DATA, name='responseChannel', referencedName='null', description='null', id=4, version=0, deprecated=0, encodedLength=0, offset=16, componentTokenCount=6, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
         builder.Append("ResponseChannel=");
         builder.Append(ResponseChannel());
         builder.Append('|');
-        //Token{signal=BEGIN_VAR_DATA, name='encodedCredentials', referencedName='null', description='null', id=4, version=0, deprecated=0, encodedLength=0, offset=-1, componentTokenCount=6, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=BEGIN_VAR_DATA, name='encodedCredentials', referencedName='null', description='null', id=5, version=0, deprecated=0, encodedLength=0, offset=-1, componentTokenCount=6, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
         builder.Append("EncodedCredentials=");
         builder.Append(EncodedCredentialsLength() + " raw bytes");
 

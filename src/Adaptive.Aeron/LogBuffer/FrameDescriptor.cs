@@ -112,7 +112,7 @@ namespace Adaptive.Aeron.LogBuffer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int ComputeMaxMessageLength(int termLength)
         {
-            return Math.Min(termLength / 8, MAX_MESSAGE_LENGTH);
+            return Math.Min(termLength >> 3, MAX_MESSAGE_LENGTH);
         }
 
         /// <summary>
