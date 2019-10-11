@@ -1524,7 +1524,7 @@ namespace Adaptive.Archiver
         /// </summary>
         public class Context
         {
-            private readonly AtomicBoolean _isConcluded = new AtomicBoolean(false);
+            private int _isConcluded = 0;
 
             internal long messageTimeoutNs = Configuration.MessageTimeoutNs();
             internal string recordingEventsChannel = Configuration.RecordingEventsChannel();
@@ -1554,7 +1554,7 @@ namespace Adaptive.Archiver
             /// </summary>
             public void Conclude()
             {
-                if (!_isConcluded.CompareAndSet(false, true))
+                if (0 != Interlocked.Exchange(ref _isConcluded, 1))
                 {
                     throw new ConcurrentConcludeException();
                 }

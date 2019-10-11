@@ -386,8 +386,7 @@ namespace Adaptive.Cluster.Service
         /// </summary>
         public class Context
         {
-            private readonly AtomicBoolean _isConcluded = new AtomicBoolean(false);
-
+            private int _isConcluded = 0;
             private int appVersion = SemanticVersion.Compose(0, 0, 1);
             private int serviceId = Configuration.ServiceId();
             private string serviceName = Configuration.ServiceName();
@@ -432,7 +431,7 @@ namespace Adaptive.Cluster.Service
 
             public void Conclude()
             {
-                if (!_isConcluded.CompareAndSet(false, true))
+                if (0 != Interlocked.Exchange(ref _isConcluded, 1))
                 {
                     throw new ConcurrentConcludeException();
                 }

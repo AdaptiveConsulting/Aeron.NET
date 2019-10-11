@@ -7,12 +7,25 @@ namespace Adaptive.Aeron.Tests
     public class ContextText
     {
         [ExpectedException(typeof(ConcurrentConcludeException))]
+        [Test]
+        [Ignore("Media driver needs to be running")]
         public void ShouldNotAllowConcludeMoreThanOnce()
         {
             var ctx = new Aeron.Context();
 
             ctx.Conclude();
             ctx.Conclude();
+        }
+        [Test]
+        [Ignore("Media driver needs to be running")]
+        public void ShouldAllowConcludeOfClonedContext()
+        {
+            var ctx = new Aeron.Context();
+
+            var ctx2 = ctx.Clone();
+
+            ctx.Conclude();
+            ctx2.Conclude();
         }
     }
 }

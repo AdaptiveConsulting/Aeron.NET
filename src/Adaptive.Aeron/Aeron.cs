@@ -533,7 +533,7 @@ namespace Adaptive.Aeron
             private UnsafeBuffer _countersMetaDataBuffer;
             private UnsafeBuffer _countersValuesBuffer;
             private IThreadFactory _threadFactory = new DefaultThreadFactory();
-
+            private int _isConcluded = 0;
 
             static Context()
             {
@@ -716,8 +716,6 @@ namespace Adaptive.Aeron
             /// </summary>
             public const string TETHER_PARAM_NAME = "tether";
 
-            private AtomicBoolean _isConcluded = new AtomicBoolean(false);
-
             /// <summary>
             /// Get the default directory name to be used if <seealso cref="AeronDirectoryName(String)"/> is not set. This will take
             /// the <seealso cref="AERON_DIR_PROP_NAME"/> if set and if not then <seealso cref="AERON_DIR_PROP_DEFAULT"/>.
@@ -759,7 +757,7 @@ namespace Adaptive.Aeron
             /// <returns> this for a fluent API. </returns>
             public Context Conclude()
             {
-                if (!_isConcluded.CompareAndSet(false, true))
+                if (0 != Interlocked.Exchange(ref _isConcluded, 1))
                 {
                     throw new ConcurrentConcludeException();
                 }
@@ -1157,7 +1155,6 @@ namespace Adaptive.Aeron
             /// </summary>
             /// <param name="handler"> to be called for handling available counter notifications. </param>
             /// <returns> this for a fluent API. </returns>
-
             public Context AvailableCounterHandler(AvailableCounterHandler handler)
             {
                 _availableCounterHandler = handler;
@@ -1193,7 +1190,7 @@ namespace Adaptive.Aeron
             {
                 return _unavailableCounterHandler;
             }
-            
+
             /// <summary>
             /// Set a <seealso cref="Action"/> that is called when the client is closed by timeout or normal means.
             ///        
@@ -1303,7 +1300,7 @@ namespace Adaptive.Aeron
             {
                 return _driverTimeoutMs;
             }
-            
+
             /// <summary>
             /// Set the timeout between service calls the to <seealso cref="ClientConductor"/> duty cycles in nanoseconds.
             /// </summary>

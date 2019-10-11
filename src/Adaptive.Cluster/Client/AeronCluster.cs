@@ -935,7 +935,7 @@ namespace Adaptive.Cluster.Client
                 }
             }
 
-            private AtomicBoolean _isConcluded = new AtomicBoolean(false);
+            private int _isConcluded = 0;
             private long _messageTimeoutNs = Configuration.MessageTimeoutNs();
             private string _clusterMemberEndpoints = Configuration.ClusterMemberEndpoints();
             private string _ingressChannel = Configuration.IngressChannel();
@@ -964,7 +964,7 @@ namespace Adaptive.Cluster.Client
 
             public void Conclude()
             {
-                if (!_isConcluded.CompareAndSet(false, true))
+                if (0 != Interlocked.Exchange(ref _isConcluded, 1))
                 {
                     throw new ConcurrentConcludeException();
                 }
