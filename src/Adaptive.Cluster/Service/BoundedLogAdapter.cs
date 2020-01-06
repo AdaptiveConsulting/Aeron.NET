@@ -142,7 +142,7 @@ namespace Adaptive.Cluster.Service
                         messageHeaderDecoder.Version());
 
                     agent.OnSessionClose(
-                        openEventDecoder.LeadershipTermId(),
+                        closeEventDecoder.LeadershipTermId(),
                         header.Position,
                         closeEventDecoder.ClusterSessionId(),
                         closeEventDecoder.Timestamp(),
