@@ -221,10 +221,21 @@ namespace Adaptive.Aeron.Command
         }
 
         /// <summary>
-        /// Set the source identity string in ASCII
+        /// Append the source identity to an <seealso cref="StringBuilder"/>.
+        /// </summary>
+        /// <param name="stringBuilder"> to append source identity to. </param>
+        public void AppendSourceIdentity(StringBuilder stringBuilder)
+        {
+            _buffer.GetStringAscii(_offset + SourceIdentityOffset(), stringBuilder);
+        }
+
+        /// <summary>
+        /// Set the source identity string in ASCII.
+        /// Note: Can be called only after log file name was set!
         /// </summary>
         /// <param name="value"> for the source identity </param>
         /// <returns> flyweight </returns>
+        /// <see cref="LogFileName(string)"/>
         public ImageBuffersReadyFlyweight SourceIdentity(string value)
         {
             _buffer.PutStringAscii(_offset + SourceIdentityOffset(), value);

@@ -70,7 +70,7 @@ namespace Adaptive.Aeron
         /// Get the <see cref="BufferBuilder"/> for resetting this assembler.
         /// </summary>
         /// <returns> the <see cref="BufferBuilder"/> for resetting this assembler</returns>
-        public BufferBuilder Builder()
+        BufferBuilder Builder()
         {
             return _builder;
         }
@@ -102,9 +102,8 @@ namespace Adaptive.Aeron
             {
                 _builder.Reset().Append(buffer, offset, length);
             }
-            else
+            else if (_builder.Limit() > 0)
             {
-
                 _builder.Append(buffer, offset, length);
 
                 if ((flags & FrameDescriptor.END_FRAG_FLAG) == FrameDescriptor.END_FRAG_FLAG)

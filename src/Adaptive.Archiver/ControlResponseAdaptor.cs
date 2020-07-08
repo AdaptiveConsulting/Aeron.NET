@@ -32,7 +32,8 @@ namespace Adaptive.Archiver
         /// <param name="listener">      to which responses are dispatched. </param>
         /// <param name="subscription">  to poll for new events. </param>
         /// <param name="fragmentLimit"> to apply for each polling operation. </param>
-        public ControlResponseAdapter(IControlResponseListener listener, Subscription subscription, int fragmentLimit)
+        public ControlResponseAdapter(
+            IControlResponseListener listener, Subscription subscription, int fragmentLimit)
         {
             if (!InstanceFieldsInitialized)
             {
@@ -103,16 +104,31 @@ namespace Adaptive.Archiver
             }
         }
 
-        private void HandleControlResponse(IControlResponseListener listener, IDirectBuffer buffer, int offset)
+        private void HandleControlResponse(
+            IControlResponseListener listener, IDirectBuffer buffer, int offset)
         {
-            controlResponseDecoder.Wrap(buffer, offset + MessageHeaderEncoder.ENCODED_LENGTH, messageHeaderDecoder.BlockLength(), messageHeaderDecoder.Version());
+            controlResponseDecoder.Wrap(
+                buffer,
+                offset + MessageHeaderEncoder.ENCODED_LENGTH,
+                messageHeaderDecoder.BlockLength(),
+                messageHeaderDecoder.Version());
 
-            listener.OnResponse(controlResponseDecoder.ControlSessionId(), controlResponseDecoder.CorrelationId(), controlResponseDecoder.RelevantId(), controlResponseDecoder.Code(), controlResponseDecoder.ErrorMessage());
+            listener.OnResponse(
+                controlResponseDecoder.ControlSessionId(),
+                controlResponseDecoder.CorrelationId(),
+                controlResponseDecoder.RelevantId(),
+                controlResponseDecoder.Code(),
+                controlResponseDecoder.ErrorMessage());
         }
 
-        private void HandleRecordingDescriptor(IControlResponseListener listener, IDirectBuffer buffer, int offset)
+        private void HandleRecordingDescriptor(
+            IControlResponseListener listener, IDirectBuffer buffer, int offset)
         {
-            recordingDescriptorDecoder.Wrap(buffer, offset + MessageHeaderEncoder.ENCODED_LENGTH, messageHeaderDecoder.BlockLength(), messageHeaderDecoder.Version());
+            recordingDescriptorDecoder.Wrap(
+                buffer,
+                offset + MessageHeaderEncoder.ENCODED_LENGTH,
+                messageHeaderDecoder.BlockLength(),
+                messageHeaderDecoder.Version());
 
             DispatchDescriptor(recordingDescriptorDecoder, listener);
         }

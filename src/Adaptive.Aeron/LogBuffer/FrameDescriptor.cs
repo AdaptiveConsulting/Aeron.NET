@@ -17,6 +17,7 @@
 using System;
 using System.Runtime.CompilerServices;
 using Adaptive.Aeron.Protocol;
+using Adaptive.Agrona;
 using Adaptive.Agrona.Concurrent;
 
 namespace Adaptive.Aeron.LogBuffer
@@ -100,6 +101,11 @@ namespace Adaptive.Aeron.LogBuffer
         public const int TERM_ID_OFFSET = DataHeaderFlyweight.TERM_ID_FIELD_OFFSET;
 
         /// <summary>
+        /// Offset within a frame at which the session id field begins
+        /// </summary>
+        public const int SESSION_ID_OFFSET = DataHeaderFlyweight.SESSION_ID_FIELD_OFFSET;
+        
+        /// <summary>
         /// Padding frame type to indicate the message should be ignored.
         /// </summary>
         public const int PADDING_FRAME_TYPE = HeaderFlyweight.HDR_TYPE_PAD;
@@ -182,6 +188,16 @@ namespace Adaptive.Aeron.LogBuffer
         }
 
         /// <summary>
+        /// The buffer offset at which the session id field begins.
+        /// </summary>
+        /// <param name="termOffset"> at which the frame begins. </param>
+        /// <returns> the offset at which the session id field begins. </returns>
+        public static int SessionIdOffset(int termOffset)
+        {
+            return termOffset + SESSION_ID_OFFSET;
+        }
+        
+        /// <summary>
         /// Read the type of of the frame from header.
         /// </summary>
         /// <param name="buffer">     containing the frame. </param>
@@ -240,6 +256,28 @@ namespace Adaptive.Aeron.LogBuffer
         public static int FrameLength(IAtomicBuffer buffer, int termOffset)
         {
             return buffer.GetInt(termOffset);
+        }
+        
+        /// <summary>
+        /// Get the term id of a frame from the header.
+        /// </summary>
+        /// <param name="buffer">     containing the frame. </param>
+        /// <param name="termOffset"> at which a frame begins. </param>
+        /// <returns> the value for the term id field. </returns>
+        public static int FrameTermId(UnsafeBuffer buffer, int termOffset)
+        {
+            return buffer.GetInt(TermIdOffset(termOffset), ByteOrder.LittleEndian);
+        }
+
+        /// <summary>
+        /// Get the session id of a frame from the header.
+        /// </summary>
+        /// <param name="buffer">     containing the frame. </param>
+        /// <param name="termOffset"> at which a frame begins. </param>
+        /// <returns> the value for the session id field. </returns>
+        public static int FrameSessionId(UnsafeBuffer buffer, int termOffset)
+        {
+            return buffer.GetInt(SessionIdOffset(termOffset), ByteOrder.LittleEndian);
         }
 
         /// <summary>
@@ -318,6 +356,17 @@ namespace Adaptive.Aeron.LogBuffer
         public static void FrameTermId(UnsafeBuffer buffer, int termOffset, int termId)
         {
             buffer.PutInt(TermIdOffset(termOffset), termId);
+        }
+        
+        /// <summary>
+        /// Write the session id field for a frame.
+        /// </summary>
+        /// <param name="buffer">     containing the frame. </param>
+        /// <param name="termOffset"> at which a frame begins. </param>
+        /// <param name="sessionId">     value for the frame. </param>
+        public static void FrameSessionId(UnsafeBuffer buffer, int termOffset, int sessionId)
+        {
+            buffer.PutInt(SessionIdOffset(termOffset), sessionId, ByteOrder.LittleEndian);
         }
     }
 }

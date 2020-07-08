@@ -95,6 +95,11 @@ namespace Adaptive.Aeron.LogBuffer
         public static readonly int LOG_IS_CONNECTED_OFFSET;
 
         /// <summary>
+        /// Offset within the log metadata where the count of active transports is stored.
+        /// </summary>
+        public static readonly int LOG_ACTIVE_TRANSPORT_COUNT;
+        
+        /// <summary>
         ///     Offset within the log metadata where the active term id is stored.
         /// </summary>
         public static readonly int LOG_INITIAL_TERM_ID_OFFSET;
@@ -160,6 +165,8 @@ namespace Adaptive.Aeron.LogBuffer
         ///         +---------------------------------------------------------------+
         ///         |                        Is Connected                           |
         ///         +---------------------------------------------------------------+
+        ///         |                   Active Transport Count                      |
+        ///         +---------------------------------------------------------------+
         ///         |                      Cache Line Padding                      ...
         ///         ...                                                              |
         ///         +---------------------------------------------------------------+
@@ -197,6 +204,7 @@ namespace Adaptive.Aeron.LogBuffer
             offset = BitUtil.CACHE_LINE_LENGTH * 2;
             LOG_END_OF_STREAM_POSITION_OFFSET = offset;
             LOG_IS_CONNECTED_OFFSET = LOG_END_OF_STREAM_POSITION_OFFSET + BitUtil.SIZE_OF_LONG;
+            LOG_ACTIVE_TRANSPORT_COUNT = LOG_IS_CONNECTED_OFFSET + BitUtil.SIZE_OF_INT;
 
             offset += BitUtil.CACHE_LINE_LENGTH * 2;
             LOG_CORRELATION_ID_OFFSET = offset;
@@ -370,6 +378,26 @@ namespace Adaptive.Aeron.LogBuffer
         public static void IsConnected(UnsafeBuffer metaDataBuffer, bool isConnected)
         {
             metaDataBuffer.PutIntOrdered(LOG_IS_CONNECTED_OFFSET, isConnected ? 1 : 0);
+        }
+        
+        /// <summary>
+        /// Get the count of active transports for the Image.
+        /// </summary>
+        /// <param name="metadataBuffer"> containing the meta data. </param>
+        /// <returns> count of active transports. </returns>
+        public static int ActiveTransportCount(UnsafeBuffer metadataBuffer)
+        {
+            return metadataBuffer.GetIntVolatile(LOG_ACTIVE_TRANSPORT_COUNT);
+        }
+
+        /// <summary>
+        /// Set the number of active transports for the Image.
+        /// </summary>
+        /// <param name="metadataBuffer"> containing the meta data. </param>
+        /// <param name="numberOfActiveTransports"> value to be set. </param>
+        public static void ActiveTransportCount(UnsafeBuffer metadataBuffer, int numberOfActiveTransports)
+        {
+            metadataBuffer.PutIntOrdered(LOG_ACTIVE_TRANSPORT_COUNT, numberOfActiveTransports);
         }
 
         /// <summary>

@@ -73,11 +73,6 @@ namespace Adaptive.Aeron
             return _toDriverCommandBuffer.ConsumerHeartbeatTime();
         }
 
-        public long ClientId()
-        {
-            return _correlatedMessage.ClientId();
-        }
-
         public long AddPublication(string channel, int streamId)
         {
             long correlationId = _toDriverCommandBuffer.NextCorrelationId();
@@ -164,17 +159,6 @@ namespace Adaptive.Aeron
             return correlationId;
         }
 
-        public void SendClientKeepalive()
-        {
-            _correlatedMessage.CorrelationId(0);
-
-            if (!_toDriverCommandBuffer.Write(ControlProtocolEvents.CLIENT_KEEPALIVE, _buffer, 0,
-                CorrelatedMessageFlyweight.LENGTH))
-            {
-                throw new AeronException("Could not send client keepalive command");
-            }
-        }
-
         public long AddDestination(long registrationId, string endpointChannel)
         {
             long correlationId = _toDriverCommandBuffer.NextCorrelationId();
@@ -185,7 +169,7 @@ namespace Adaptive.Aeron
             if (!_toDriverCommandBuffer.Write(ControlProtocolEvents.ADD_DESTINATION, _buffer, 0,
                 _destinationMessage.Length()))
             {
-                throw new AeronException("Could not write destination command");
+                throw new AeronException("Could not write add destination command");
             }
 
             return correlationId;
@@ -201,7 +185,7 @@ namespace Adaptive.Aeron
             if (!_toDriverCommandBuffer.Write(ControlProtocolEvents.REMOVE_DESTINATION, _buffer, 0,
                 _destinationMessage.Length()))
             {
-                throw new AeronException("Could not write destination command");
+                throw new AeronException("Could not write remove destination command");
             }
 
             return correlationId;
@@ -217,7 +201,7 @@ namespace Adaptive.Aeron
             if (!_toDriverCommandBuffer.Write(ControlProtocolEvents.ADD_RCV_DESTINATION, _buffer, 0,
                 _destinationMessage.Length()))
             {
-                throw new AeronException("Could not write rcv destination command");
+                throw new AeronException("Could not write add rcv destination command");
             }
 
             return correlationId;
@@ -233,7 +217,7 @@ namespace Adaptive.Aeron
             if (!_toDriverCommandBuffer.Write(ControlProtocolEvents.REMOVE_RCV_DESTINATION, _buffer, 0,
                 _destinationMessage.Length()))
             {
-                throw new AeronException("Could not write rcv destination command");
+                throw new AeronException("Could not write remove rcv destination command");
             }
 
             return correlationId;
@@ -295,7 +279,6 @@ namespace Adaptive.Aeron
         public bool TerminateDriver(IDirectBuffer tokenBuffer, int tokenOffset, int tokenLength)
         {
             _correlatedMessage.CorrelationId(Aeron.NULL_VALUE);
-
             _terminateDriver.TokenBuffer(tokenBuffer, tokenOffset, tokenLength);
 
             return _toDriverCommandBuffer.Write(

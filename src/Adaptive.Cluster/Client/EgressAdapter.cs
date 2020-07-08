@@ -87,7 +87,7 @@ namespace Adaptive.Cluster.Client
                     var sessionId = _sessionEventDecoder.ClusterSessionId();
                     if (sessionId == _clusterSessionId)
                     {
-                        _listener.SessionEvent(
+                        _listener.OnSessionEvent(
                             _sessionEventDecoder.CorrelationId(),
                             sessionId,
                             _sessionEventDecoder.LeadershipTermId(),
@@ -110,11 +110,11 @@ namespace Adaptive.Cluster.Client
                     var sessionId = _newLeaderEventDecoder.ClusterSessionId();
                     if (sessionId == _clusterSessionId)
                     {
-                        _listener.NewLeader(
+                        _listener.OnNewLeader(
                             sessionId,
                             _sessionEventDecoder.LeadershipTermId(),
                             _newLeaderEventDecoder.LeaderMemberId(),
-                            _newLeaderEventDecoder.MemberEndpoints());
+                            _newLeaderEventDecoder.IngressEndpoints());
                     }
 
                     break;

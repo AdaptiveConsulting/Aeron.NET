@@ -7,6 +7,10 @@ namespace Adaptive.Aeron.LogBuffer
         /// <summary>
         /// Handler for reading data that is coming from a log buffer. The frame will either contain a whole message
         /// or a fragment of a message to be reassembled. Messages are fragmented if greater than the frame for MTU in length.
+        ///
+        /// Within this callback reentrant calls to the <see cref="Aeron"/> client are not permitted and
+        /// will result in undefined behaviour.
+        /// 
         /// </summary>
         /// <param name="buffer"> containing the data. </param>
         /// <param name="offset"> at which the data begins. </param>

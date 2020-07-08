@@ -110,9 +110,22 @@ namespace Adaptive.Aeron
         /// <returns> this for a fluent API. </returns>
         public ChannelUri Media(string media)
         {
+            ValidateMedia(media);
             _media = media;
             return this;
         }
+        
+        /// <summary>
+        /// Is the channel <seealso cref="Media()"/> equal to <seealso cref="Aeron.Context.UDP_MEDIA"/>.
+        /// </summary>
+        /// <returns> true the channel <seealso cref="Media()"/> equals <seealso cref="Aeron.Context.UDP_MEDIA"/>. </returns>
+        public bool Udp => Aeron.Context.UDP_MEDIA.Equals(_media);
+
+        /// <summary>
+        /// Is the channel <seealso cref="Media()"/> equal to <seealso cref="Aeron.Context.IPC_MEDIA"/>.
+        /// </summary>
+        /// <returns> true the channel <seealso cref="Media()"/> equals <seealso cref="Aeron.Context.IPC_MEDIA"/>. </returns>
+        public bool Ipc => Aeron.Context.IPC_MEDIA.Equals(_media);
 
         /// <summary>
         /// The scheme for the URI. Must be "aeron".
@@ -295,7 +308,7 @@ namespace Adaptive.Aeron
 
             if (!StartsWith(cs, position, AERON_PREFIX))
             {
-                throw new System.ArgumentException("Aeron URIs must start with 'aeron:', found: '" + cs + "'");
+                throw new ArgumentException("Aeron URIs must start with 'aeron:', found: " + cs);
             }
             else
             {
@@ -308,10 +321,9 @@ namespace Adaptive.Aeron
             string key = null;
 
             State state = State.MEDIA;
-            for (int i = position; i < cs.Length; i++)
+            for (int i = position, length = cs.Length; i < length; i++)
             {
                 char c = cs[i];
-
                 switch (state)
                 {
                     case State.MEDIA:
@@ -324,7 +336,9 @@ namespace Adaptive.Aeron
                                 break;
 
                             case ':':
-                                throw new ArgumentException("encountered ':' within media definition");
+                            case '|':
+                            case '=':
+                                throw new ArgumentException("encountered '" + c + "' within media definition at index " + i + " in " + cs);
 
                             default:
                                 builder.Append(c);
@@ -336,12 +350,22 @@ namespace Adaptive.Aeron
                     case State.PARAMS_KEY:
                         if (c == '=')
                         {
+                            if (0 == builder.Length)
+                            {
+                                throw new ArgumentException("empty key not allowed at index " + i + " in " + cs);
+                            }
+                            
                             key = builder.ToString();
                             builder.Length = 0;
                             state = State.PARAMS_VALUE;
                         }
                         else
                         {
+                            if (c == '|')
+                            {
+                                throw new ArgumentException("invalid end of key at index " + i + " in " + cs);
+                            }
+                            
                             builder.Append(c);
                         }
                         break;
@@ -361,7 +385,7 @@ namespace Adaptive.Aeron
                         break;
 
                     default:
-                        throw new InvalidOperationException("unexpected state=" + state);
+                        throw new ArgumentException("unexpected state=" + state + " in " + cs);
                 }
             }
 
@@ -369,6 +393,7 @@ namespace Adaptive.Aeron
             {
                 case State.MEDIA:
                     media = builder.ToString();
+                    ValidateMedia(media);
                     break;
 
                 case State.PARAMS_VALUE:
@@ -376,7 +401,7 @@ namespace Adaptive.Aeron
                     break;
 
                 default:
-                    throw new ArgumentException("no more input found, but was in state: " + state);
+                    throw new ArgumentException("no more input found, state=" + state + " in " + cs);
             }
 
             return new ChannelUri(prefix, media, @params);
@@ -420,6 +445,17 @@ namespace Adaptive.Aeron
             return IsTagged(paramValue) ? long.Parse(paramValue.Substring(4, paramValue.Length - 4)) : INVALID_TAG;
         }
 
+        private static void ValidateMedia(string media)
+        {
+            if (Aeron.Context.IPC_MEDIA.Equals(media) || Aeron.Context.UDP_MEDIA.Equals(media))
+            {
+                return;
+            }
+
+            throw new ArgumentException("unknown media: " + media);
+        }
+
+        
         private static bool StartsWith(string input, int position, string prefix)
         {
             if (input.Length - position < prefix.Length)

@@ -2,6 +2,7 @@
 using System.Threading;
 using Adaptive.Aeron;
 using Adaptive.Aeron.Exceptions;
+using Adaptive.Aeron.Security;
 using Adaptive.Agrona;
 using Adaptive.Agrona.Concurrent;
 using Adaptive.Archiver.Codecs;
@@ -37,9 +38,16 @@ namespace Adaptive.Archiver
         /// </summary>
         public const long NULL_LENGTH = Aeron.Aeron.NULL_VALUE;
 
+        /// <summary>
+        /// Indicates the client is no longer connected to an archive.
+        /// </summary>
+        public const string NOT_CONNECTED_MSG = "not connected";
+
         private const int FRAGMENT_LIMIT = 10;
 
         private bool isClosed = false;
+        private bool isInCallback = false;
+        private long lastCorrelationId = Aeron.Aeron.NULL_VALUE;
         private readonly long controlSessionId;
         private readonly long messageTimeoutNs;
         private readonly Context context;
@@ -47,32 +55,47 @@ namespace Adaptive.Archiver
         private readonly ArchiveProxy archiveProxy;
         private readonly IIdleStrategy idleStrategy;
         private readonly ControlResponsePoller controlResponsePoller;
-        private readonly RecordingDescriptorPoller recordingDescriptorPoller;
-        private readonly RecordingSubscriptionDescriptorPoller recordingSubscriptionDescriptorPoller;
         private readonly ILock _lock;
         private readonly INanoClock nanoClock;
         private readonly AgentInvoker aeronClientInvoker;
+        private RecordingDescriptorPoller recordingDescriptorPoller;
+        private RecordingSubscriptionDescriptorPoller recordingSubscriptionDescriptorPoller;
 
         internal AeronArchive(
-            Context ctx,
+            Context context,
             ControlResponsePoller controlResponsePoller,
             ArchiveProxy archiveProxy,
-            RecordingDescriptorPoller recordingDescriptorPoller,
-            RecordingSubscriptionDescriptorPoller recordingSubscriptionDescriptorPoller,
             long controlSessionId)
         {
-            this.context = ctx;
-            aeron = ctx.AeronClient();
+            this.context = context;
+            aeron = context.AeronClient();
             aeronClientInvoker = aeron.ConductorAgentInvoker;
-            idleStrategy = ctx.IdleStrategy();
-            messageTimeoutNs = ctx.MessageTimeoutNs();
-            _lock = ctx.Lock();
+            idleStrategy = context.IdleStrategy();
+            messageTimeoutNs = context.MessageTimeoutNs();
+            _lock = context.Lock();
             nanoClock = aeron.Ctx.NanoClock();
             this.controlResponsePoller = controlResponsePoller;
             this.archiveProxy = archiveProxy;
-            this.recordingDescriptorPoller = recordingDescriptorPoller;
-            this.recordingSubscriptionDescriptorPoller = recordingSubscriptionDescriptorPoller;
             this.controlSessionId = controlSessionId;
+        }
+
+        /// <summary>
+        /// Position of the recorded stream at the base of a segment file. If a recording starts within a term
+        /// then the base position can be before the recording started.
+        /// </summary>
+        /// <param name="startPosition">     of the stream. </param>
+        /// <param name="position">          of the stream to calculate the segment base position from. </param>
+        /// <param name="termBufferLength">  of the stream. </param>
+        /// <param name="segmentFileLength"> which is a multiple of term length. </param>
+        /// <returns> the position of the recorded stream at the beginning of a segment file. </returns>
+        public static long SegmentFileBasePosition(long startPosition, long position, int termBufferLength,
+            int segmentFileLength)
+        {
+            long startTermBasePosition = startPosition - (startPosition & (termBufferLength - 1));
+            long lengthFromBasePosition = position - startTermBasePosition;
+            long segments = (lengthFromBasePosition - (lengthFromBasePosition & (segmentFileLength - 1)));
+
+            return startTermBasePosition + segments;
         }
 
         /// <summary>
@@ -88,11 +111,17 @@ namespace Adaptive.Archiver
                 {
                     isClosed = true;
                     archiveProxy.CloseSession(controlSessionId);
+                    ErrorHandler errorHandler = context.ErrorHandler();
+
+                    if (archiveProxy.Pub().IsConnected)
+                    {
+                        CloseHelper.Dispose(errorHandler, () => archiveProxy.CloseSession(controlSessionId));
+                    }
 
                     if (!context.OwnsAeronClient())
                     {
-                        controlResponsePoller.Subscription()?.Dispose();
-                        archiveProxy.Pub()?.Dispose();
+                        CloseHelper.Dispose(errorHandler, archiveProxy.Pub());
+                        CloseHelper.Dispose(errorHandler, controlResponsePoller.Subscription());
                     }
 
                     context.Dispose();
@@ -143,8 +172,12 @@ namespace Adaptive.Archiver
                 publication = aeron.AddExclusivePublication(ctx.ControlRequestChannel(), ctx.ControlRequestStreamId());
 
                 var archiveProxy = new ArchiveProxy(
-                    publication, ctx.IdleStrategy(), aeron.Ctx.NanoClock(), messageTimeoutNs,
-                    ArchiveProxy.DEFAULT_RETRY_ATTEMPTS);
+                    publication,
+                    ctx.IdleStrategy(),
+                    aeron.Ctx.NanoClock(),
+                    messageTimeoutNs,
+                    ArchiveProxy.DEFAULT_RETRY_ATTEMPTS,
+                    ctx.CredentialsSupplier());
 
                 asyncConnect = new AsyncConnect(ctx, controlResponsePoller, archiveProxy, deadlineNs);
                 var idleStrategy = ctx.IdleStrategy();
@@ -177,8 +210,7 @@ namespace Adaptive.Archiver
                 }
 
                 CloseHelper.QuietDispose(asyncConnect);
-
-                ctx.Dispose();
+                CloseHelper.QuietDispose(ctx.Dispose);
 
                 throw;
             }
@@ -216,11 +248,13 @@ namespace Adaptive.Archiver
                 ControlResponsePoller controlResponsePoller = new ControlResponsePoller(subscription);
 
                 publication = aeron.AddExclusivePublication(ctx.ControlRequestChannel(), ctx.ControlRequestStreamId());
-                ArchiveProxy archiveProxy = new ArchiveProxy(publication,
+                ArchiveProxy archiveProxy = new ArchiveProxy(
+                    publication,
                     ctx.IdleStrategy(),
                     aeron.Ctx.NanoClock(),
                     messageTimeoutNs,
-                    ArchiveProxy.DEFAULT_RETRY_ATTEMPTS);
+                    ArchiveProxy.DEFAULT_RETRY_ATTEMPTS,
+                    ctx.CredentialsSupplier());
 
                 return new AsyncConnect(ctx, controlResponsePoller, archiveProxy, deadlineNs);
             }
@@ -246,6 +280,15 @@ namespace Adaptive.Archiver
         public Context Ctx()
         {
             return context;
+        }
+
+        /// <summary>
+        /// The last correlation id used for sending a request to the archive via method on this class.
+        /// </summary>
+        /// <returns> last correlation id used for sending a request to the archive. </returns>
+        public long LastCorrelationId()
+        {
+            return lastCorrelationId;
         }
 
         /// <summary>
@@ -281,6 +324,12 @@ namespace Adaptive.Archiver
         /// <returns> the <seealso cref="RecordingDescriptorPoller"/> for polling recording descriptors on the control channel. </returns>
         public RecordingDescriptorPoller RecordingDescriptorPoller()
         {
+            if (null == recordingDescriptorPoller)
+            {
+                recordingDescriptorPoller = new RecordingDescriptorPoller(
+                    controlResponsePoller.Subscription(), context.ErrorHandler(), controlSessionId, FRAGMENT_LIMIT);
+            }
+
             return recordingDescriptorPoller;
         }
 
@@ -291,12 +340,18 @@ namespace Adaptive.Archiver
         /// channel. </returns>
         public RecordingSubscriptionDescriptorPoller RecordingSubscriptionDescriptorPoller()
         {
+            if (null == recordingSubscriptionDescriptorPoller)
+            {
+                recordingSubscriptionDescriptorPoller = new RecordingSubscriptionDescriptorPoller(
+                    controlResponsePoller.Subscription(), context.ErrorHandler(), controlSessionId, FRAGMENT_LIMIT);
+            }
+
             return recordingSubscriptionDescriptorPoller;
         }
 
         /// <summary>
         /// Poll the response stream once for an error. If another message is present then it will be skipped over
-        /// so only call when not expecting another response.
+        /// so only call when not expecting another response. If not connected then return <see cref="NOT_CONNECTED_MSG"/>.
         /// </summary>
         /// <returns> the error String otherwise null if no error is found. </returns>
         public string PollForErrorResponse()
@@ -306,10 +361,14 @@ namespace Adaptive.Archiver
             {
                 EnsureOpen();
 
-                if (controlResponsePoller.Poll() != 0 && controlResponsePoller.IsPollComplete())
+                if (!controlResponsePoller.Subscription().IsConnected)
+                {
+                    return NOT_CONNECTED_MSG;
+                }
+
+                if (controlResponsePoller.Poll() != 0 && controlResponsePoller.PollComplete)
                 {
                     if (controlResponsePoller.ControlSessionId() == controlSessionId &&
-                        controlResponsePoller.TemplateId() == ControlResponseDecoder.TEMPLATE_ID &&
                         controlResponsePoller.Code() == ControlResponseCode.ERROR)
                     {
                         return controlResponsePoller.ErrorMessage();
@@ -325,12 +384,14 @@ namespace Adaptive.Archiver
         }
 
         /// <summary>
-        /// Check if an error has been returned for the control session and throw a <seealso cref="ArchiveException"/> if
-        /// <see cref="Context.ErrorHandler(Adaptive.Agrona.ErrorHandler)"/> is not set.
-        /// 
+        /// Check if an error has been returned for the control session, or if it is no longer connected, and then throw
+        /// a <seealso cref="ArchiveException"/> if <seealso cref="Context.ErrorHandler(ErrorHandler)"/> is not set.
+        /// <para>
         /// To check for an error response without raising an exception then try <seealso cref="PollForErrorResponse()"/>.
+        ///    
+        /// </para>
         /// </summary>
-        ///  <seealso cref="PollForErrorResponse()"/>
+        /// <seealso cref="PollForErrorResponse()"></seealso>
         public void CheckForErrorResponse()
         {
             _lock.Lock();
@@ -338,14 +399,24 @@ namespace Adaptive.Archiver
             {
                 EnsureOpen();
 
-                if (controlResponsePoller.Poll() != 0 && controlResponsePoller.IsPollComplete())
+                if (!controlResponsePoller.Subscription().IsConnected)
+                {
+                    if (null != context.ErrorHandler())
+                    {
+                        context.ErrorHandler()(new ArchiveException(NOT_CONNECTED_MSG));
+                    }
+                    else
+                    {
+                        throw new ArchiveException(NOT_CONNECTED_MSG);
+                    }
+                }
+                else if (controlResponsePoller.Poll() != 0 && controlResponsePoller.PollComplete)
                 {
                     if (controlResponsePoller.ControlSessionId() == controlSessionId &&
-                        controlResponsePoller.TemplateId() == ControlResponseDecoder.TEMPLATE_ID &&
                         controlResponsePoller.Code() == ControlResponseCode.ERROR)
                     {
-                        var ex = new ArchiveException(controlResponsePoller.ErrorMessage(),
-                            (int) controlResponsePoller.RelevantId());
+                        ArchiveException ex = new ArchiveException(controlResponsePoller.ErrorMessage(),
+                            (int) controlResponsePoller.RelevantId(), controlResponsePoller.CorrelationId());
 
                         if (null != context.ErrorHandler())
                         {
@@ -366,7 +437,7 @@ namespace Adaptive.Archiver
 
         /// <summary>
         /// Add a <seealso cref="Publication"/> and set it up to be recorded. If this is not the first,
-        /// i.e. <seealso cref="Publication.IsOriginal"/> is true,  then an <seealso cref="ArchiveException"/>
+        /// i.e. <seealso cref="Publication.IsOriginal"/> is true, then an <seealso cref="ArchiveException"/>
         /// will be thrown and the recording not initiated.
         /// <para>
         /// This is a sessionId specific recording.
@@ -383,6 +454,7 @@ namespace Adaptive.Archiver
             try
             {
                 EnsureOpen();
+                EnsureNotReentrant();
 
                 publication = aeron.AddPublication(channel, streamId);
                 if (!publication.IsOriginal)
@@ -425,6 +497,7 @@ namespace Adaptive.Archiver
             try
             {
                 EnsureOpen();
+                EnsureNotReentrant();
 
                 publication = aeron.AddExclusivePublication(channel, streamId);
                 StartRecording(ChannelUri.AddSessionId(channel, publication.SessionId), streamId, SourceLocation.LOCAL);
@@ -446,30 +519,73 @@ namespace Adaptive.Archiver
         /// Start recording a channel and stream pairing.
         /// <para>
         /// Channels that include sessionId parameters are considered different than channels without sessionIds. If a
-        /// publication matches both a sessionId specific channel recording and a non-sessionId specific recording, it will
-        /// be recorded twice.
-        /// 
+        /// publication matches both a sessionId specific channel recording and a non-sessionId specific recording,
+        /// it will be recorded twice.
+        ///   
         /// </para>
         /// </summary>
         /// <param name="channel">        to be recorded. </param>
         /// <param name="streamId">       to be recorded. </param>
         /// <param name="sourceLocation"> of the publication to be recorded. </param>
-        /// <returns> the subscriptionId, i.e. <see cref="Subscription.RegistrationId"/>, of the recording. </returns>
+        /// <returns> the subscriptionId, i.e. <seealso cref="Subscription.RegistrationId"/>, of the recording. This can be
+        /// passed to <seealso cref="StopRecording(long)"/>. </returns>
         public long StartRecording(string channel, int streamId, SourceLocation sourceLocation)
         {
             _lock.Lock();
             try
             {
                 EnsureOpen();
+                EnsureNotReentrant();
 
-                long correlationId = aeron.NextCorrelationId();
+                lastCorrelationId = aeron.NextCorrelationId();
 
-                if (!archiveProxy.StartRecording(channel, streamId, sourceLocation, correlationId, controlSessionId))
+                if (!archiveProxy.StartRecording(channel, streamId, sourceLocation, lastCorrelationId,
+                    controlSessionId))
                 {
                     throw new ArchiveException("failed to send start recording request");
                 }
 
-                return PollForResponse(correlationId);
+                return PollForResponse(lastCorrelationId);
+            }
+            finally
+            {
+                _lock.Unlock();
+            }
+        }
+
+        /// <summary>
+        /// Start recording a channel and stream pairing.
+        /// <para>
+        /// Channels that include sessionId parameters are considered different than channels without sessionIds. If a
+        /// publication matches both a sessionId specific channel recording and a non-sessionId specific recording,
+        /// it will be recorded twice.
+        ///    
+        /// </para>
+        /// </summary>
+        /// <param name="channel">        to be recorded. </param>
+        /// <param name="streamId">       to be recorded. </param>
+        /// <param name="sourceLocation"> of the publication to be recorded. </param>
+        /// <param name="autoStop">       if the recording should be automatically stopped when complete. </param>
+        /// <returns> the subscriptionId, i.e. <seealso cref="Subscription.RegistrationId"/>, of the recording. This can be
+        /// passed to <seealso cref="StopRecording(long)"/>. However if is autoStop is true then no need to stop the recording
+        /// unless you want to abort early. </returns>
+        public long StartRecording(string channel, int streamId, SourceLocation sourceLocation, bool autoStop)
+        {
+            _lock.Lock();
+            try
+            {
+                EnsureOpen();
+                EnsureNotReentrant();
+
+                lastCorrelationId = aeron.NextCorrelationId();
+
+                if (!archiveProxy.StartRecording(channel, streamId, sourceLocation, autoStop, lastCorrelationId,
+                    controlSessionId))
+                {
+                    throw new ArchiveException("failed to send start recording request");
+                }
+
+                return PollForResponse(lastCorrelationId);
             }
             finally
             {
@@ -482,7 +598,46 @@ namespace Adaptive.Archiver
         /// <para>
         /// The channel must be configured for the initial position from which it will be extended. This can be done
         /// with <seealso cref="ChannelUriStringBuilder.InitialPosition(long, int, int)"/>. The details required to initialise can
-        /// be found by calling <seealso cref="ListRecording"/>.
+        /// be found by calling <seealso cref="ListRecording(long, IRecordingDescriptorConsumer)"/>.
+        /// 
+        /// </para>
+        /// </summary>
+        /// <param name="recordingId">    of the existing recording. </param>
+        /// <param name="channel">        to be recorded. </param>
+        /// <param name="streamId">       to be recorded. </param>
+        /// <param name="sourceLocation"> of the publication to be recorded. </param>
+        /// <returns> the subscriptionId, i.e. <seealso cref="Subscription.RegistrationId"/>, of the recording. This can be
+        /// passed to <seealso cref="StopRecording(long)"/>. </returns>
+        public long ExtendRecording(long recordingId, string channel, int streamId, SourceLocation sourceLocation)
+        {
+            _lock.Lock();
+            try
+            {
+                EnsureOpen();
+                EnsureNotReentrant();
+
+                lastCorrelationId = aeron.NextCorrelationId();
+
+                if (!archiveProxy.ExtendRecording(channel, streamId, sourceLocation, recordingId, lastCorrelationId,
+                    controlSessionId))
+                {
+                    throw new ArchiveException("failed to send extend recording request");
+                }
+
+                return PollForResponse(lastCorrelationId);
+            }
+            finally
+            {
+                _lock.Unlock();
+            }
+        }
+
+        /// <summary>
+        /// Extend an existing, non-active recording of a channel and stream pairing.
+        /// <para>
+        /// The channel must be configured for the initial position from which it will be extended. This can be done
+        /// with <seealso cref="ChannelUriStringBuilder.InitialPosition(long, int, int)"/>. The details required to initialise can
+        /// be found by calling <seealso cref="ListRecording(long, IRecordingDescriptorConsumer)"/>.
         ///    
         /// </para>
         /// </summary>
@@ -490,24 +645,28 @@ namespace Adaptive.Archiver
         /// <param name="channel">        to be recorded. </param>
         /// <param name="streamId">       to be recorded. </param>
         /// <param name="sourceLocation"> of the publication to be recorded. </param>
-        /// <returns> the subscriptionId, i.e. <seealso cref="Subscription.RegistrationId"/>, of the recording. </returns>
-        public long ExtendRecording(long recordingId, string channel, int streamId,
-            SourceLocation sourceLocation)
+        /// <param name="autoStop">       if the recording should be automatically stopped when complete. </param>
+        /// <returns> the subscriptionId, i.e. <seealso cref="Subscription.RegistrationId()"/>, of the recording. This can be
+        /// passed to <seealso cref="StopRecording(long)"/>. However if is autoStop is true then no need to stop the recording
+        /// unless you want to abort early. </returns>
+        public long ExtendRecording(long recordingId, string channel, int streamId, SourceLocation sourceLocation,
+            bool autoStop)
         {
             _lock.Lock();
             try
             {
                 EnsureOpen();
+                EnsureNotReentrant();
 
-                long correlationId = aeron.NextCorrelationId();
+                lastCorrelationId = aeron.NextCorrelationId();
 
-                if (!archiveProxy.ExtendRecording(channel, streamId, sourceLocation, recordingId, correlationId,
-                    controlSessionId))
+                if (!archiveProxy.ExtendRecording(channel, streamId, sourceLocation, autoStop, recordingId,
+                    lastCorrelationId, controlSessionId))
                 {
                     throw new ArchiveException("failed to send extend recording request");
                 }
 
-                return PollForResponse(correlationId);
+                return PollForResponse(lastCorrelationId);
             }
             finally
             {
@@ -521,7 +680,7 @@ namespace Adaptive.Archiver
         /// Channels that include sessionId parameters are considered different than channels without sessionIds. Stopping
         /// a recording on a channel without a sessionId parameter will not stop the recording of any sessionId specific
         /// recordings that use the same channel and streamId.
-        /// 
+        ///   
         /// </para>
         /// </summary>
         /// <param name="channel">  to stop recording for. </param>
@@ -532,15 +691,16 @@ namespace Adaptive.Archiver
             try
             {
                 EnsureOpen();
+                EnsureNotReentrant();
 
-                long correlationId = aeron.NextCorrelationId();
+                lastCorrelationId = aeron.NextCorrelationId();
 
-                if (!archiveProxy.StopRecording(channel, streamId, correlationId, controlSessionId))
+                if (!archiveProxy.StopRecording(channel, streamId, lastCorrelationId, controlSessionId))
                 {
                     throw new ArchiveException("failed to send stop recording request");
                 }
 
-                PollForResponse(correlationId);
+                PollForResponse(lastCorrelationId);
             }
             finally
             {
@@ -548,15 +708,40 @@ namespace Adaptive.Archiver
             }
         }
 
-        /// <summary>
-        /// Stop recording a sessionId specific recording that pertains to the given <seealso cref="Publication"/>.
-        /// </summary>
-        /// <param name="publication"> to stop recording for. </param>
-        public void StopRecording(Publication publication)
-        {
-            string recordingChannel = ChannelUri.AddSessionId(publication.Channel, publication.SessionId);
 
-            StopRecording(recordingChannel, publication.StreamId);
+        /// <summary>
+        /// Try to stop a recording for a channel and stream pairing.
+        /// <para>
+        /// Channels that include sessionId parameters are considered different than channels without sessionIds. Stopping
+        /// a recording on a channel without a sessionId parameter will not stop the recording of any sessionId specific
+        /// recordings that use the same channel and streamId.
+        ///    
+        /// </para>
+        /// </summary>
+        /// <param name="channel">  to stop recording for. </param>
+        /// <param name="streamId"> to stop recording for. </param>
+        /// <returns> true if the recording was stopped or false if the subscription is not currently active. </returns>
+        public bool TryStopRecording(string channel, int streamId)
+        {
+            _lock.Lock();
+            try
+            {
+                EnsureOpen();
+                EnsureNotReentrant();
+
+                lastCorrelationId = aeron.NextCorrelationId();
+
+                if (!archiveProxy.StopRecording(channel, streamId, lastCorrelationId, controlSessionId))
+                {
+                    throw new ArchiveException("failed to send stop recording request");
+                }
+
+                return PollForStopRecordingResponse(lastCorrelationId);
+            }
+            finally
+            {
+                _lock.Unlock();
+            }
         }
 
         /// <summary>
@@ -571,20 +756,88 @@ namespace Adaptive.Archiver
             try
             {
                 EnsureOpen();
+                EnsureNotReentrant();
 
-                long correlationId = aeron.NextCorrelationId();
+                lastCorrelationId = aeron.NextCorrelationId();
 
-                if (!archiveProxy.StopRecording(subscriptionId, correlationId, controlSessionId))
+                if (!archiveProxy.StopRecording(subscriptionId, lastCorrelationId, controlSessionId))
                 {
                     throw new ArchiveException("failed to send stop recording request");
                 }
 
-                PollForResponse(correlationId);
+                PollForResponse(lastCorrelationId);
             }
             finally
             {
                 _lock.Unlock();
             }
+        }
+
+        /// <summary>
+        /// Try stop a recording for a subscriptionId that has been returned from
+        /// <seealso cref="StartRecording(String, int, SourceLocation)"/> or
+        /// <seealso cref="ExtendRecording(long, String, int, SourceLocation)"/>.
+        /// </summary>
+        /// <param name="subscriptionId"> is the <seealso cref="Subscription.RegistrationId()"/> for the recording in the archive. </param>
+        /// <returns> true if the recording was stopped or false if the subscription is not currently active. </returns>
+        public bool TryStopRecording(long subscriptionId)
+        {
+            _lock.Lock();
+            try
+            {
+                EnsureOpen();
+                EnsureNotReentrant();
+
+                lastCorrelationId = aeron.NextCorrelationId();
+
+                if (!archiveProxy.StopRecording(subscriptionId, lastCorrelationId, controlSessionId))
+                {
+                    throw new ArchiveException("failed to send stop recording request");
+                }
+
+                return PollForStopRecordingResponse(lastCorrelationId);
+            }
+            finally
+            {
+                _lock.Unlock();
+            }
+        }
+
+        /// <summary>
+        /// Try stop an active recording by its recording id.
+        /// </summary>
+        /// <param name="recordingId"> for which active recording should be stopped. </param>
+        /// <returns> true if the recording was stopped or false if the recording is not currently active. </returns>
+        public bool TryStopRecordingByIdentity(long recordingId)
+        {
+            _lock.Lock();
+            try
+            {
+                EnsureOpen();
+                EnsureNotReentrant();
+
+                lastCorrelationId = aeron.NextCorrelationId();
+
+                if (!archiveProxy.StopRecordingByIdentity(recordingId, lastCorrelationId, controlSessionId))
+                {
+                    throw new ArchiveException("failed to send stop recording request");
+                }
+
+                return PollForResponse(lastCorrelationId) != 0;
+            }
+            finally
+            {
+                _lock.Unlock();
+            }
+        }
+
+        /// <summary>
+        /// Stop recording a sessionId specific recording that pertains to the given <seealso cref="Publication"/>.
+        /// </summary>
+        /// <param name="publication"> to stop recording for. </param>
+        public void StopRecording(Publication publication)
+        {
+            StopRecording(ChannelUri.AddSessionId(publication.Channel, publication.SessionId), publication.StreamId);
         }
 
 
@@ -611,16 +864,18 @@ namespace Adaptive.Archiver
             try
             {
                 EnsureOpen();
+                EnsureNotReentrant();
 
-                long correlationId = aeron.NextCorrelationId();
+                lastCorrelationId = aeron.NextCorrelationId();
 
-                if (!archiveProxy.Replay(recordingId, position, length, replayChannel, replayStreamId, correlationId,
+                if (!archiveProxy.Replay(recordingId, position, length, replayChannel, replayStreamId,
+                    lastCorrelationId,
                     controlSessionId))
                 {
                     throw new ArchiveException("failed to send replay request");
                 }
 
-                return PollForResponse(correlationId);
+                return PollForResponse(lastCorrelationId);
             }
             finally
             {
@@ -654,16 +909,17 @@ namespace Adaptive.Archiver
             try
             {
                 EnsureOpen();
+                EnsureNotReentrant();
 
-                long correlationId = aeron.NextCorrelationId();
+                lastCorrelationId = aeron.NextCorrelationId();
 
                 if (!archiveProxy.BoundedReplay(recordingId, position, length, limitCounterId, replayChannel,
-                    replayStreamId, correlationId, controlSessionId))
+                    replayStreamId, lastCorrelationId, controlSessionId))
                 {
                     throw new ArchiveException("failed to send bounded replay request");
                 }
 
-                return PollForResponse(correlationId);
+                return PollForResponse(lastCorrelationId);
             }
             finally
             {
@@ -681,15 +937,16 @@ namespace Adaptive.Archiver
             try
             {
                 EnsureOpen();
+                EnsureNotReentrant();
 
-                long correlationId = aeron.NextCorrelationId();
+                lastCorrelationId = aeron.NextCorrelationId();
 
-                if (!archiveProxy.StopReplay(replaySessionId, correlationId, controlSessionId))
+                if (!archiveProxy.StopReplay(replaySessionId, lastCorrelationId, controlSessionId))
                 {
                     throw new ArchiveException("failed to send stop recording request");
                 }
 
-                PollForResponse(correlationId);
+                PollForResponse(lastCorrelationId);
             }
             finally
             {
@@ -700,22 +957,23 @@ namespace Adaptive.Archiver
         /// <summary>
         /// Stop all replay sessions for a given recording Id or all replays in general.
         /// </summary>
-        /// <param name="recordingId"> to stop replay for or <seealso cref="Aeron.Aeron.NULL_VALUE"/> for all replays. </param>
+        /// <param name="recordingId"> to stop replay for or <seealso cref="Adaptive.Aeron.Aeron.NULL_VALUE"/> for all replays. </param>
         public void StopAllReplays(long recordingId)
         {
             _lock.Lock();
             try
             {
                 EnsureOpen();
+                EnsureNotReentrant();
 
-                long correlationId = aeron.NextCorrelationId();
+                lastCorrelationId = aeron.NextCorrelationId();
 
-                if (!archiveProxy.StopAllReplays(recordingId, correlationId, controlSessionId))
+                if (!archiveProxy.StopAllReplays(recordingId, lastCorrelationId, controlSessionId))
                 {
                     throw new ArchiveException("failed to send stop all replays request");
                 }
 
-                PollForResponse(correlationId);
+                PollForResponse(lastCorrelationId);
             }
             finally
             {
@@ -740,17 +998,19 @@ namespace Adaptive.Archiver
             try
             {
                 EnsureOpen();
+                EnsureNotReentrant();
 
                 ChannelUri replayChannelUri = ChannelUri.Parse(replayChannel);
-                long correlationId = aeron.NextCorrelationId();
+                lastCorrelationId = aeron.NextCorrelationId();
 
-                if (!archiveProxy.Replay(recordingId, position, length, replayChannel, replayStreamId, correlationId,
+                if (!archiveProxy.Replay(recordingId, position, length, replayChannel, replayStreamId,
+                    lastCorrelationId,
                     controlSessionId))
                 {
                     throw new ArchiveException("failed to send replay request");
                 }
 
-                int replaySessionId = (int) PollForResponse(correlationId);
+                int replaySessionId = (int) PollForResponse(lastCorrelationId);
                 replayChannelUri.Put(Aeron.Aeron.Context.SESSION_ID_PARAM_NAME, Convert.ToString(replaySessionId));
 
                 return aeron.AddSubscription(replayChannelUri.ToString(), replayStreamId);
@@ -781,17 +1041,19 @@ namespace Adaptive.Archiver
             try
             {
                 EnsureOpen();
+                EnsureNotReentrant();
 
                 ChannelUri replayChannelUri = ChannelUri.Parse(replayChannel);
-                long correlationId = aeron.NextCorrelationId();
+                lastCorrelationId = aeron.NextCorrelationId();
 
-                if (!archiveProxy.Replay(recordingId, position, length, replayChannel, replayStreamId, correlationId,
+                if (!archiveProxy.Replay(recordingId, position, length, replayChannel, replayStreamId,
+                    lastCorrelationId,
                     controlSessionId))
                 {
                     throw new ArchiveException("failed to send replay request");
                 }
 
-                int replaySessionId = (int) PollForResponse(correlationId);
+                int replaySessionId = (int) PollForResponse(lastCorrelationId);
                 replayChannelUri.Put(Aeron.Aeron.Context.SESSION_ID_PARAM_NAME, Convert.ToString(replaySessionId));
 
                 return aeron.AddSubscription(replayChannelUri.ToString(), replayStreamId, availableImageHandler,
@@ -820,18 +1082,21 @@ namespace Adaptive.Archiver
             try
             {
                 EnsureOpen();
+                EnsureNotReentrant();
 
-                long correlationId = aeron.NextCorrelationId();
+                isInCallback = true;
+                lastCorrelationId = aeron.NextCorrelationId();
 
-                if (!archiveProxy.ListRecordings(fromRecordingId, recordCount, correlationId, controlSessionId))
+                if (!archiveProxy.ListRecordings(fromRecordingId, recordCount, lastCorrelationId, controlSessionId))
                 {
                     throw new ArchiveException("failed to send list recordings request");
                 }
 
-                return PollForDescriptors(correlationId, recordCount, consumer);
+                return PollForDescriptors(lastCorrelationId, recordCount, consumer);
             }
             finally
             {
+                isInCallback = false;
                 _lock.Unlock();
             }
         }
@@ -860,20 +1125,23 @@ namespace Adaptive.Archiver
             try
             {
                 EnsureOpen();
+                EnsureNotReentrant();
 
-                long correlationId = aeron.NextCorrelationId();
+                isInCallback = true;
+                lastCorrelationId = aeron.NextCorrelationId();
 
                 if (!archiveProxy.ListRecordingsForUri(fromRecordingId, recordCount, channelFragment, streamId,
-                    correlationId,
+                    lastCorrelationId,
                     controlSessionId))
                 {
                     throw new ArchiveException("failed to send list recordings request");
                 }
 
-                return PollForDescriptors(correlationId, recordCount, consumer);
+                return PollForDescriptors(lastCorrelationId, recordCount, consumer);
             }
             finally
             {
+                isInCallback = false;
                 _lock.Unlock();
             }
         }
@@ -894,15 +1162,47 @@ namespace Adaptive.Archiver
             try
             {
                 EnsureOpen();
+                EnsureNotReentrant();
 
-                long correlationId = aeron.NextCorrelationId();
+                isInCallback = true;
+                lastCorrelationId = aeron.NextCorrelationId();
 
-                if (!archiveProxy.ListRecording(recordingId, correlationId, controlSessionId))
+                if (!archiveProxy.ListRecording(recordingId, lastCorrelationId, controlSessionId))
                 {
                     throw new ArchiveException("failed to send list recording request");
                 }
 
-                return PollForDescriptors(correlationId, 1, consumer);
+                return PollForDescriptors(lastCorrelationId, 1, consumer);
+            }
+            finally
+            {
+                isInCallback = false;
+                _lock.Unlock();
+            }
+        }
+
+        /// <summary>
+        /// Get the start position for a recording.
+        /// </summary>
+        /// <param name="recordingId"> of the recording for which the position is required. </param>
+        /// <returns> the start position of a recording. </returns>
+        /// <seealso cref="GetStopPosition(long)"></seealso>
+        public long GetStartPosition(long recordingId)
+        {
+            _lock.Lock();
+            try
+            {
+                EnsureOpen();
+                EnsureNotReentrant();
+
+                lastCorrelationId = aeron.NextCorrelationId();
+
+                if (!archiveProxy.GetStartPosition(recordingId, lastCorrelationId, controlSessionId))
+                {
+                    throw new ArchiveException("failed to send get start position request");
+                }
+
+                return PollForResponse(lastCorrelationId);
             }
             finally
             {
@@ -922,15 +1222,16 @@ namespace Adaptive.Archiver
             try
             {
                 EnsureOpen();
+                EnsureNotReentrant();
 
-                long correlationId = aeron.NextCorrelationId();
+                lastCorrelationId = aeron.NextCorrelationId();
 
-                if (!archiveProxy.GetRecordingPosition(recordingId, correlationId, controlSessionId))
+                if (!archiveProxy.GetRecordingPosition(recordingId, lastCorrelationId, controlSessionId))
                 {
                     throw new ArchiveException("failed to send get recording position request");
                 }
 
-                return PollForResponse(correlationId);
+                return PollForResponse(lastCorrelationId);
             }
             finally
             {
@@ -950,15 +1251,16 @@ namespace Adaptive.Archiver
             try
             {
                 EnsureOpen();
+                EnsureNotReentrant();
 
-                long correlationId = aeron.NextCorrelationId();
+                lastCorrelationId = aeron.NextCorrelationId();
 
-                if (!archiveProxy.GetStopPosition(recordingId, correlationId, controlSessionId))
+                if (!archiveProxy.GetStopPosition(recordingId, lastCorrelationId, controlSessionId))
                 {
                     throw new ArchiveException("failed to send get stop position request");
                 }
 
-                return PollForResponse(correlationId);
+                return PollForResponse(lastCorrelationId);
             }
             finally
             {
@@ -980,16 +1282,17 @@ namespace Adaptive.Archiver
             try
             {
                 EnsureOpen();
+                EnsureNotReentrant();
 
-                long correlationId = aeron.NextCorrelationId();
+                lastCorrelationId = aeron.NextCorrelationId();
 
                 if (!archiveProxy.FindLastMatchingRecording(
-                    minRecordingId, channelFragment, streamId, sessionId, correlationId, controlSessionId))
+                    minRecordingId, channelFragment, streamId, sessionId, lastCorrelationId, controlSessionId))
                 {
                     throw new ArchiveException("failed to send find last matching recording request");
                 }
 
-                return PollForResponse(correlationId);
+                return PollForResponse(lastCorrelationId);
             }
             finally
             {
@@ -1009,15 +1312,16 @@ namespace Adaptive.Archiver
             try
             {
                 EnsureOpen();
+                EnsureNotReentrant();
 
-                long correlationId = aeron.NextCorrelationId();
+                lastCorrelationId = aeron.NextCorrelationId();
 
-                if (!archiveProxy.TruncateRecording(recordingId, position, correlationId, controlSessionId))
+                if (!archiveProxy.TruncateRecording(recordingId, position, lastCorrelationId, controlSessionId))
                 {
                     throw new ArchiveException("failed to send truncate recording request");
                 }
 
-                PollForResponse(correlationId);
+                PollForResponse(lastCorrelationId);
             }
             finally
             {
@@ -1044,28 +1348,332 @@ namespace Adaptive.Archiver
             string channelFragment,
             int streamId,
             bool applyStreamId,
-            RecordingSubscriptionDescriptorConsumer consumer)
+            IRecordingSubscriptionDescriptorConsumer consumer)
         {
             _lock.Lock();
             try
             {
                 EnsureOpen();
+                EnsureNotReentrant();
 
-                long correlationId = aeron.NextCorrelationId();
+                isInCallback = true;
+                lastCorrelationId = aeron.NextCorrelationId();
 
                 if (!archiveProxy.ListRecordingSubscriptions(pseudoIndex, subscriptionCount, channelFragment, streamId,
-                    applyStreamId, correlationId, controlSessionId))
+                    applyStreamId, lastCorrelationId, controlSessionId))
                 {
                     throw new ArchiveException("failed to send list recording subscriptions request");
                 }
 
-                return PollForSubscriptionDescriptors(correlationId, subscriptionCount, consumer);
+                return PollForSubscriptionDescriptors(lastCorrelationId, subscriptionCount, consumer);
+            }
+            finally
+            {
+                isInCallback = false;
+                _lock.Unlock();
+            }
+        }
+
+        /// <summary>
+        /// Replicate a recording from a source archive to a destination which can be considered a backup for a primary
+        /// archive. The source recording will be replayed via the provided replay channel and use the original stream id.
+        /// If the destination recording id is <seealso cref="Adaptive.Aeron.Aeron.NULL_VALUE"/> then a new destination recording is created,
+        /// otherwise the provided destination recording id will be extended. The details of the source recording
+        /// descriptor will be replicated.
+        /// <para>
+        /// For a source recording that is still active the replay can merge with the live stream and then follow it
+        /// directly and no longer require the replay from the source. This would require a multicast live destination.
+        /// </para>
+        /// <para>
+        /// Errors will be reported asynchronously and can be checked for with <seealso cref="AeronArchive.PollForErrorResponse()"/>
+        /// or <seealso cref="AeronArchive.CheckForErrorResponse()"/>. Follow progress with <seealso cref="RecordingSignalAdapter"/>.
+        ///   
+        /// </para>
+        /// </summary>
+        /// <param name="srcRecordingId">     recording id which must exist in the source archive. </param>
+        /// <param name="dstRecordingId">     recording to extend in the destination, otherwise <seealso cref="Adaptive.Aeron.Aeron.NULL_VALUE"/>. </param>
+        /// <param name="srcControlStreamId"> remote control stream id for the source archive to instruct the replay on. </param>
+        /// <param name="srcControlChannel">  remote control channel for the source archive to instruct the replay on. </param>
+        /// <param name="liveDestination">    destination for the live stream if merge is required. Empty or null for no merge. </param>
+        /// <returns> return the replication session id which can be passed later to <seealso cref="StopReplication(long)"/>. </returns>
+        public long Replicate(long srcRecordingId, long dstRecordingId, int srcControlStreamId,
+            string srcControlChannel, string liveDestination)
+        {
+            _lock.Lock();
+            try
+            {
+                EnsureOpen();
+                EnsureNotReentrant();
+
+                lastCorrelationId = aeron.NextCorrelationId();
+
+                if (!archiveProxy.Replicate(srcRecordingId, dstRecordingId, srcControlStreamId, srcControlChannel,
+                    liveDestination, lastCorrelationId, controlSessionId))
+                {
+                    throw new ArchiveException("failed to send replicate request");
+                }
+
+                return PollForResponse(lastCorrelationId);
             }
             finally
             {
                 _lock.Unlock();
             }
         }
+
+        /// <summary>
+        /// Replicate a recording from a source archive to a destination which can be considered a backup for a primary
+        /// archive. The source recording will be replayed via the provided replay channel and use the original stream id.
+        /// If the destination recording id is <seealso cref="Adaptive.Aeron.Aeron.NULL_VALUE"/> then a new destination recording is created,
+        /// otherwise the provided destination recording id will be extended. The details of the source recording
+        /// descriptor will be replicated. The subscription used in the archive will be tagged with the provided tags.
+        /// <para>
+        /// For a source recording that is still active the replay can merge with the live stream and then follow it
+        /// directly and no longer require the replay from the source. This would require a multicast live destination.
+        /// </para>
+        /// <para>
+        /// Errors will be reported asynchronously and can be checked for with <seealso cref="AeronArchive.PollForErrorResponse()"/>
+        /// or <seealso cref="AeronArchive.CheckForErrorResponse()"/>. Follow progress with <seealso cref="RecordingSignalAdapter"/>.
+        /// 
+        /// </para>
+        /// </summary>
+        /// <param name="srcRecordingId">     recording id which must exist in the source archive. </param>
+        /// <param name="dstRecordingId">     recording to extend in the destination, otherwise <seealso cref="Adaptive.Aeron.Aeron.NULL_VALUE"/>. </param>
+        /// <param name="channelTagId">       used to tag the replication subscription. </param>
+        /// <param name="subscriptionTagId">  used to tag the replication subscription. </param>
+        /// <param name="srcControlStreamId"> remote control stream id for the source archive to instruct the replay on. </param>
+        /// <param name="srcControlChannel">  remote control channel for the source archive to instruct the replay on. </param>
+        /// <param name="liveDestination">    destination for the live stream if merge is required. Empty or null for no merge. </param>
+        /// <returns> return the replication session id which can be passed later to <seealso cref="StopReplication(long)"/>. </returns>
+        public long TaggedReplicate(long srcRecordingId, long dstRecordingId, long channelTagId, long subscriptionTagId,
+            int srcControlStreamId, string srcControlChannel, string liveDestination)
+        {
+            _lock.Lock();
+            try
+            {
+                EnsureOpen();
+                EnsureNotReentrant();
+
+                lastCorrelationId = aeron.NextCorrelationId();
+
+                if (!archiveProxy.TaggedReplicate(srcRecordingId, dstRecordingId, channelTagId, subscriptionTagId,
+                    srcControlStreamId, srcControlChannel, liveDestination, lastCorrelationId, controlSessionId))
+                {
+                    throw new ArchiveException("failed to send tagged replicate request");
+                }
+
+                return PollForResponse(lastCorrelationId);
+            }
+            finally
+            {
+                _lock.Unlock();
+            }
+        }
+
+        /// <summary>
+        /// Stop a replication session by id returned from <seealso cref="Replicate(long, long, int, String, String)"/>.
+        /// </summary>
+        /// <param name="replicationId"> to stop replication for. </param>
+        /// <seealso cref="Replicate(long, long, int, String, String)"></seealso>
+        public void StopReplication(long replicationId)
+        {
+            _lock.Lock();
+            try
+            {
+                EnsureOpen();
+                EnsureNotReentrant();
+
+                lastCorrelationId = aeron.NextCorrelationId();
+
+                if (!archiveProxy.StopReplication(replicationId, lastCorrelationId, controlSessionId))
+                {
+                    throw new ArchiveException("failed to send stop replication request");
+                }
+
+                PollForResponse(lastCorrelationId);
+            }
+            finally
+            {
+                _lock.Unlock();
+            }
+        }
+
+        /// <summary>
+        /// Detach segments from the beginning of a recording up to the provided new start position.
+        /// <para>
+        /// The new start position must be first byte position of a segment after the existing start position.
+        /// </para>
+        /// <para>
+        /// It is not possible to detach segments which are active for recording or being replayed.
+        /// 
+        /// </para>
+        /// </summary>
+        /// <param name="recordingId">      to which the operation applies. </param>
+        /// <param name="newStartPosition"> for the recording after the segments are detached. </param>
+        /// <seealso cref="SegmentFileBasePosition(long, long, int, int)"></seealso>
+        public void DetachSegments(long recordingId, long newStartPosition)
+        {
+            _lock.Lock();
+            try
+            {
+                EnsureOpen();
+                EnsureNotReentrant();
+
+                lastCorrelationId = aeron.NextCorrelationId();
+
+                if (!archiveProxy.DetachSegments(recordingId, newStartPosition, lastCorrelationId, controlSessionId))
+                {
+                    throw new ArchiveException("failed to send detach segments request");
+                }
+
+                PollForResponse(lastCorrelationId);
+            }
+            finally
+            {
+                _lock.Unlock();
+            }
+        }
+
+        /// <summary>
+        /// Delete segments which have been previously detached from a recording.
+        /// </summary>
+        /// <param name="recordingId"> to which the operation applies. </param>
+        /// <returns> count of deleted segment files. </returns>
+        /// <seealso cref="DetachSegments(long, long)"></seealso>
+        public long DeleteDetachedSegments(long recordingId)
+        {
+            _lock.Lock();
+            try
+            {
+                EnsureOpen();
+                EnsureNotReentrant();
+
+                lastCorrelationId = aeron.NextCorrelationId();
+
+                if (!archiveProxy.DeleteDetachedSegments(recordingId, lastCorrelationId, controlSessionId))
+                {
+                    throw new ArchiveException("failed to send delete detached segments request");
+                }
+
+                return PollForResponse(lastCorrelationId);
+            }
+            finally
+            {
+                _lock.Unlock();
+            }
+        }
+
+        /// <summary>
+        /// Purge (detach and delete) segments from the beginning of a recording up to the provided new start position.
+        /// <para>
+        /// The new start position must be first byte position of a segment after the existing start position.
+        /// </para>
+        /// <para>
+        /// It is not possible to detach segments which are active for recording or being replayed.
+        /// 
+        /// </para>
+        /// </summary>
+        /// <param name="recordingId">      to which the operation applies. </param>
+        /// <param name="newStartPosition"> for the recording after the segments are detached. </param>
+        /// <returns> count of deleted segment files. </returns>
+        /// <seealso cref="DetachSegments(long, long)"></seealso>
+        /// <seealso cref="DeleteDetachedSegments(long)"></seealso>
+        /// <seealso cref="SegmentFileBasePosition(long, long, int, int)"></seealso>
+        public long PurgeSegments(long recordingId, long newStartPosition)
+        {
+            _lock.Lock();
+            try
+            {
+                EnsureOpen();
+                EnsureNotReentrant();
+
+                lastCorrelationId = aeron.NextCorrelationId();
+
+                if (!archiveProxy.PurgeSegments(recordingId, newStartPosition, lastCorrelationId, controlSessionId))
+                {
+                    throw new ArchiveException("failed to send purge segments request");
+                }
+
+                return PollForResponse(lastCorrelationId);
+            }
+            finally
+            {
+                _lock.Unlock();
+            }
+        }
+
+        /// <summary>
+        /// Attach segments to the beginning of a recording to restore history that was previously detached.
+        /// <para>
+        /// Segment files must match the existing recording and join exactly to the start position of the recording
+        /// they are being attached to.
+        /// 
+        /// </para>
+        /// </summary>
+        /// <param name="recordingId"> to which the operation applies. </param>
+        /// <returns> count of attached segment files. </returns>
+        /// <seealso cref="DetachSegments(long, long)"></seealso>
+        public long AttachSegments(long recordingId)
+        {
+            _lock.Lock();
+            try
+            {
+                EnsureOpen();
+                EnsureNotReentrant();
+
+                lastCorrelationId = aeron.NextCorrelationId();
+
+                if (!archiveProxy.AttachSegments(recordingId, lastCorrelationId, controlSessionId))
+                {
+                    throw new ArchiveException("failed to send attach segments request");
+                }
+
+                return PollForResponse(lastCorrelationId);
+            }
+            finally
+            {
+                _lock.Unlock();
+            }
+        }
+
+        /// <summary>
+        /// Migrate segments from a source recording and attach them to the beginning of a destination recording.
+        /// <para>
+        /// The source recording must match the destination recording for segment length, term length, mtu length,
+        /// stream id, plus the stop position and term id of the source must join with the start position of the destination
+        /// and be on a segment boundary.
+        /// </para>
+        /// <para>
+        /// The source recording will be effectively truncated back to its start position after the migration.
+        /// 
+        /// </para>
+        /// </summary>
+        /// <param name="srcRecordingId"> source recording from which the segments will be migrated. </param>
+        /// <param name="dstRecordingId"> destination recording to which the segments will be attached. </param>
+        /// <returns> count of attached segment files. </returns>
+        public long MigrateSegments(long srcRecordingId, long dstRecordingId)
+        {
+            _lock.Lock();
+            try
+            {
+                EnsureOpen();
+                EnsureNotReentrant();
+
+                lastCorrelationId = aeron.NextCorrelationId();
+
+                if (!archiveProxy.MigrateSegments(srcRecordingId, dstRecordingId, lastCorrelationId, controlSessionId))
+                {
+                    throw new ArchiveException("failed to send migrate segments request");
+                }
+
+                return PollForResponse(lastCorrelationId);
+            }
+            finally
+            {
+                _lock.Unlock();
+            }
+        }
+
 
         private void CheckDeadline(long deadlineNs, string errorMessage, long correlationId)
         {
@@ -1078,6 +1686,35 @@ namespace Adaptive.Archiver
             }
         }
 
+        private void PollNextResponse(long correlationId, long deadlineNs, ControlResponsePoller poller)
+        {
+            idleStrategy.Reset();
+
+            while (true)
+            {
+                int fragments = poller.Poll();
+
+                if (poller.PollComplete)
+                {
+                    break;
+                }
+
+                if (fragments > 0)
+                {
+                    continue;
+                }
+
+                if (!poller.Subscription().IsConnected)
+                {
+                    throw new ArchiveException("subscription to archive is not connected");
+                }
+
+                CheckDeadline(deadlineNs, "awaiting response", correlationId);
+                idleStrategy.Idle();
+                InvokeAeronClient();
+            }
+        }
+
         private long PollForResponse(long correlationId)
         {
             long deadlineNs = nanoClock.NanoTime() + messageTimeoutNs;
@@ -1087,8 +1724,7 @@ namespace Adaptive.Archiver
             {
                 PollNextResponse(correlationId, deadlineNs, poller);
 
-                if (poller.ControlSessionId() != controlSessionId ||
-                    poller.TemplateId() != ControlResponseDecoder.TEMPLATE_ID)
+                if (poller.ControlSessionId() != controlSessionId)
                 {
                     InvokeAeronClient();
                     continue;
@@ -1098,7 +1734,8 @@ namespace Adaptive.Archiver
                 if (code == ControlResponseCode.ERROR)
                 {
                     var ex = new ArchiveException("response for correlationId=" + correlationId + ", error: " +
-                                                  poller.ErrorMessage(), (int) poller.RelevantId());
+                                                  poller.ErrorMessage(), (int) poller.RelevantId(),
+                        poller.CorrelationId());
 
                     if (poller.CorrelationId() == correlationId)
                     {
@@ -1122,42 +1759,61 @@ namespace Adaptive.Archiver
             }
         }
 
-        private void PollNextResponse(long correlationId, long deadlineNs, ControlResponsePoller poller)
+        private bool PollForStopRecordingResponse(long correlationId)
         {
-            idleStrategy.Reset();
+            long deadlineNs = nanoClock.NanoTime() + messageTimeoutNs;
+            ControlResponsePoller poller = controlResponsePoller;
 
             while (true)
             {
-                int fragments = poller.Poll();
+                PollNextResponse(correlationId, deadlineNs, poller);
 
-                if (poller.IsPollComplete())
+                if (poller.ControlSessionId() != controlSessionId)
                 {
-                    break;
-                }
-
-                if (fragments > 0)
-                {
+                    InvokeAeronClient();
                     continue;
                 }
 
-                if (!poller.Subscription().IsConnected)
+                ControlResponseCode code = poller.Code();
+                if (ControlResponseCode.ERROR == code)
                 {
-                    throw new ArchiveException("subscription to archive is not connected");
+                    long relevantId = poller.RelevantId();
+                    if (poller.CorrelationId() == correlationId)
+                    {
+                        if (relevantId == ArchiveException.UNKNOWN_SUBSCRIPTION)
+                        {
+                            return false;
+                        }
+
+                        throw new ArchiveException(
+                            "response for correlationId=" + correlationId + ", error: " + poller.ErrorMessage(),
+                            (int) relevantId, poller.CorrelationId());
+                    }
+                    else if (context.ErrorHandler() != null)
+                    {
+                        context.ErrorHandler()(new ArchiveException(
+                            "response for correlationId=" + correlationId + ", error: " + poller.ErrorMessage(),
+                            (int) relevantId, poller.CorrelationId()));
+                    }
                 }
+                else if (poller.CorrelationId() == correlationId)
+                {
+                    if (ControlResponseCode.OK != code)
+                    {
+                        throw new ArchiveException("unexpected response code: " + code);
+                    }
 
-                CheckDeadline(deadlineNs, "awaiting response", correlationId);
-
-                idleStrategy.Idle();
-                InvokeAeronClient();
+                    return true;
+                }
             }
         }
 
-        private int PollForDescriptors(long correlationId, int recordCount, IRecordingDescriptorConsumer consumer)
+        private int PollForDescriptors(long correlationId, int count, IRecordingDescriptorConsumer consumer)
         {
-            int existingRemainCount = recordCount;
+            int existingRemainCount = count;
             long deadlineNs = nanoClock.NanoTime() + messageTimeoutNs;
-            RecordingDescriptorPoller poller = recordingDescriptorPoller;
-            poller.Reset(correlationId, recordCount, consumer);
+            RecordingDescriptorPoller poller = RecordingDescriptorPoller();
+            poller.Reset(correlationId, count, consumer);
             idleStrategy.Reset();
 
             while (true)
@@ -1167,7 +1823,7 @@ namespace Adaptive.Archiver
 
                 if (poller.IsDispatchComplete())
                 {
-                    return recordCount - remainingRecordCount;
+                    return count - remainingRecordCount;
                 }
 
                 if (remainingRecordCount != existingRemainCount)
@@ -1193,13 +1849,13 @@ namespace Adaptive.Archiver
             }
         }
 
-        private int PollForSubscriptionDescriptors(long correlationId, int recordCount,
-            RecordingSubscriptionDescriptorConsumer consumer)
+        private int PollForSubscriptionDescriptors(long correlationId, int count,
+            IRecordingSubscriptionDescriptorConsumer consumer)
         {
-            int existingRemainCount = recordCount;
+            int existingRemainCount = count;
             long deadlineNs = nanoClock.NanoTime() + messageTimeoutNs;
-            RecordingSubscriptionDescriptorPoller poller = recordingSubscriptionDescriptorPoller;
-            poller.Reset(correlationId, recordCount, consumer);
+            RecordingSubscriptionDescriptorPoller poller = RecordingSubscriptionDescriptorPoller();
+            poller.Reset(correlationId, count, consumer);
             idleStrategy.Reset();
 
             while (true)
@@ -1209,7 +1865,7 @@ namespace Adaptive.Archiver
 
                 if (poller.DispatchComplete)
                 {
-                    return recordCount - remainingSubscriptionCount;
+                    return count - remainingSubscriptionCount;
                 }
 
                 if (remainingSubscriptionCount != existingRemainCount)
@@ -1251,17 +1907,25 @@ namespace Adaptive.Archiver
             }
         }
 
+        private void EnsureNotReentrant()
+        {
+            if (isInCallback)
+            {
+                throw new AeronException("reentrant calls not permitted during callbacks");
+            }
+        }
+
         /// <summary>
         /// Common configuration properties for communicating with an Aeron archive.
         /// </summary>
         public class Configuration
         {
-            public const int MAJOR_VERSION = 0;
-            public const int MINOR_VERSION = 2;
-            public const int PATCH_VERSION = 1;
+            public const int PROTOCOL_MAJOR_VERSION = 1;
+            public const int PROTOCOL_MINOR_VERSION = 5;
+            public const int PROTOCOL_PATCH_VERSION = 0;
 
-            public static readonly int SEMANTIC_VERSION =
-                SemanticVersion.Compose(MAJOR_VERSION, MINOR_VERSION, PATCH_VERSION);
+            public static readonly int PROTOCOL_SEMANTIC_VERSION =
+                SemanticVersion.Compose(PROTOCOL_MAJOR_VERSION, PROTOCOL_MINOR_VERSION, PROTOCOL_PATCH_VERSION);
 
             /// <summary>
             /// Timeout in nanoseconds when waiting on a message to be sent or received.
@@ -1355,6 +2019,16 @@ namespace Adaptive.Archiver
             /// Stream id within a channel for receiving progress of recordings from an archive.
             /// </summary>
             public const int RECORDING_EVENTS_STREAM_ID_DEFAULT = 30;
+
+            /// <summary>
+            /// Is channel enabled for recording progress events of recordings from an archive.
+            /// </summary>
+            public const string RECORDING_EVENTS_ENABLED_PROP_NAME = "aeron.archive.recording.events.enabled";
+
+            /// <summary>
+            /// Channel enabled for recording progress events of recordings from an archive which defaults to true.
+            /// </summary>
+            public const bool RECORDING_EVENTS_ENABLED_DEFAULT = true;
 
             /// <summary>
             /// Sparse term buffer indicator for control streams.
@@ -1451,7 +2125,7 @@ namespace Adaptive.Archiver
 
             /// <summary>
             /// The value <seealso cref="LOCAL_CONTROL_CHANNEL_DEFAULT"/> or system property
-            /// <seealso cref="CONTROL_CHANNEL_PROP_NAME"/> if set.
+            /// <seealso cref="LOCAL_CONTROL_CHANNEL_PROP_NAME"/> if set.
             /// </summary>
             /// <returns> <seealso cref="LOCAL_CONTROL_CHANNEL_DEFAULT"/> or system property
             /// <seealso cref="LOCAL_CONTROL_CHANNEL_PROP_NAME"/> if set. </returns>
@@ -1514,6 +2188,17 @@ namespace Adaptive.Archiver
             {
                 return Config.GetInteger(RECORDING_EVENTS_STREAM_ID_PROP_NAME, RECORDING_EVENTS_STREAM_ID_DEFAULT);
             }
+
+            /// <summary>
+            /// Should the recording events stream be enabled.
+            /// </summary>
+            /// <returns> true if the recording events stream be enabled. </returns>
+            /// <seealso cref="RECORDING_EVENTS_ENABLED_PROP_NAME"></seealso>
+            public static bool RecordingEventsEnabled()
+            {
+                string propValue = Config.GetProperty(RECORDING_EVENTS_ENABLED_PROP_NAME);
+                return null != propValue ? "true".Equals(propValue) : RECORDING_EVENTS_ENABLED_DEFAULT;
+            }
         }
 
         /// <summary>
@@ -1542,6 +2227,7 @@ namespace Adaptive.Archiver
             internal string aeronDirectoryName = Aeron.Aeron.Context.GetAeronDirectoryName();
             internal Aeron.Aeron aeron;
             private ErrorHandler errorHandler;
+            private ICredentialsSupplier credentialsSupplier;
             internal bool ownsAeronClient = false;
 
             public Context Clone()
@@ -1577,6 +2263,11 @@ namespace Adaptive.Archiver
                         Agrona.Concurrent.Configuration.IDLE_MAX_YIELDS,
                         Agrona.Concurrent.Configuration.IDLE_MIN_PARK_MS,
                         Agrona.Concurrent.Configuration.IDLE_MAX_PARK_MS);
+                }
+
+                if (null == credentialsSupplier)
+                {
+                    credentialsSupplier = new NullCredentialsSupplier();
                 }
 
                 if (null == _lock)
@@ -1950,6 +2641,26 @@ namespace Adaptive.Archiver
             }
 
             /// <summary>
+            /// Set the <seealso cref="ICredentialsSupplier"/> to be used for authentication with the archive.
+            /// </summary>
+            /// <param name="credentialsSupplier"> to be used for authentication with the archive. </param>
+            /// <returns> this for fluent API. </returns>
+            public Context CredentialsSupplier(ICredentialsSupplier credentialsSupplier)
+            {
+                this.credentialsSupplier = credentialsSupplier;
+                return this;
+            }
+
+            /// <summary>
+            /// Get the <seealso cref="ICredentialsSupplier"/> to be used for authentication with the archive.
+            /// </summary>
+            /// <returns> the <seealso cref="ICredentialsSupplier"/> to be used for authentication with the archive. </returns>
+            public ICredentialsSupplier CredentialsSupplier()
+            {
+                return credentialsSupplier;
+            }
+
+            /// <summary>
             /// Close the context and free applicable resources.
             /// <para>
             /// If <seealso cref="OwnsAeronClient()"/> is true then the <seealso cref="AeronClient()"/> client will be closed.
@@ -1975,6 +2686,8 @@ namespace Adaptive.Archiver
             private readonly INanoClock nanoClock;
             private readonly long deadlineNs;
             private long correlationId = Aeron.Aeron.NULL_VALUE;
+            private long challengeControlSessionId = Aeron.Aeron.NULL_VALUE;
+            private byte[] encodedCredentialsFromChallenge = null;
             private int _step = 0;
 
             internal AsyncConnect(
@@ -1997,10 +2710,32 @@ namespace Adaptive.Archiver
             {
                 if (5 != _step)
                 {
+                    ErrorHandler errorHandler = ctx.ErrorHandler();
+                    CloseHelper.Dispose(errorHandler, controlResponsePoller.Subscription());
+                    CloseHelper.Dispose(errorHandler, archiveProxy.Pub());
+
                     controlResponsePoller.Subscription()?.Dispose();
                     archiveProxy.Pub()?.Dispose();
                     ctx.Dispose();
                 }
+            }
+
+            /// <summary>
+            /// Get the <seealso cref="AeronArchive.Context"/> used for this client.
+            /// </summary>
+            /// <returns> the <seealso cref="AeronArchive.Context"/> used for this client. </returns>
+            public Context Ctx()
+            {
+                return ctx;
+            }
+
+            /// <summary>
+            /// Get the index of the current step.
+            /// </summary>
+            /// <returns> the index of the current step. </returns>
+            public int Step()
+            {
+                return _step;
             }
 
             /// <summary>
@@ -2051,37 +2786,53 @@ namespace Adaptive.Archiver
                     Step(4);
                 }
 
-                controlResponsePoller.Poll();
-                if (controlResponsePoller.IsPollComplete() &&
-                    controlResponsePoller.CorrelationId() == correlationId &&
-                    controlResponsePoller.TemplateId() == ControlResponseDecoder.TEMPLATE_ID)
+                if (6 == _step)
                 {
-                    ControlResponseCode code = controlResponsePoller.Code();
-                    if (code != ControlResponseCode.OK)
+                    if (!archiveProxy.TryChallengeResponse(encodedCredentialsFromChallenge, correlationId,
+                        challengeControlSessionId))
                     {
-                        if (code == ControlResponseCode.ERROR)
-                        {
-                            throw new ArchiveException("error: " + controlResponsePoller.ErrorMessage(),
-                                (int) controlResponsePoller.RelevantId());
-                        }
-
-                        throw new ArchiveException("unexpected response: code=" + code);
+                        return null;
                     }
 
-                    long sessionId = controlResponsePoller.ControlSessionId();
-                    var subscription = controlResponsePoller.Subscription();
-                    var errorHandler = ctx.ErrorHandler();
+                    Step(7);
+                }
 
-                    aeronArchive = new AeronArchive(
-                        ctx,
-                        controlResponsePoller,
-                        archiveProxy,
-                        new RecordingDescriptorPoller(subscription, errorHandler, sessionId, FRAGMENT_LIMIT),
-                        new RecordingSubscriptionDescriptorPoller(subscription, errorHandler, sessionId,
-                            FRAGMENT_LIMIT),
-                        sessionId);
+                controlResponsePoller.Poll();
 
-                    Step(5);
+                if (controlResponsePoller.PollComplete && controlResponsePoller.CorrelationId() == correlationId)
+                {
+                    long controlSessionId = controlResponsePoller.ControlSessionId();
+                    if (controlResponsePoller.WasChallenged())
+                    {
+                        encodedCredentialsFromChallenge = ctx.CredentialsSupplier()
+                            .OnChallenge(controlResponsePoller.EncodedChallenge());
+
+                        correlationId = ctx.AeronClient().NextCorrelationId();
+                        challengeControlSessionId = controlSessionId;
+
+                        Step(6);
+                    }
+                    else
+                    {
+                        ControlResponseCode code = controlResponsePoller.Code();
+                        if (code != ControlResponseCode.OK)
+                        {
+                            if (code == ControlResponseCode.ERROR)
+                            {
+                                archiveProxy.CloseSession(controlSessionId);
+
+                                throw new ArchiveException("error: " + controlResponsePoller.ErrorMessage(),
+                                    (int) controlResponsePoller.RelevantId());
+                            }
+
+                            throw new ArchiveException("unexpected response: code=" + code);
+                        }
+
+                        archiveProxy.KeepAlive(controlSessionId, controlResponsePoller.CorrelationId());
+                        aeronArchive = new AeronArchive(ctx, controlResponsePoller, archiveProxy, controlSessionId);
+
+                        Step(5);
+                    }
                 }
 
                 return aeronArchive;
@@ -2094,7 +2845,7 @@ namespace Adaptive.Archiver
                 if (deadlineNs - nanoClock.NanoTime() < 0)
                 {
                     throw new AeronTimeoutException(
-                        "connect timeout for correlation id: " + correlationId + " step " + _step,
+                        "Archive connect timeout for correlation id: " + correlationId + " step " + _step,
                         Category.ERROR);
                 }
             }

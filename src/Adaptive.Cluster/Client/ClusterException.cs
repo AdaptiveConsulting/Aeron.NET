@@ -4,6 +4,9 @@ using Adaptive.Aeron.Exceptions;
 
 namespace Adaptive.Cluster.Client
 {
+    /// <summary>
+    /// Exceptions specific to Cluster operation. 
+    /// </summary>
     public class ClusterException : AeronException
     {
         public ClusterException()

@@ -5,23 +5,23 @@ using System.Collections.Generic;
 using Adaptive.Agrona;
 
 
-namespace Adaptive.Cluster.Codecs {
+namespace Adaptive.Archiver.Codecs {
 
-public class ElectionStartEventDecoder
+public class KeepAliveRequestDecoder
 {
-    public const ushort BLOCK_LENGTH = 8;
-    public const ushort TEMPLATE_ID = 43;
-    public const ushort SCHEMA_ID = 111;
+    public const ushort BLOCK_LENGTH = 16;
+    public const ushort TEMPLATE_ID = 61;
+    public const ushort SCHEMA_ID = 101;
     public const ushort SCHEMA_VERSION = 4;
 
-    private ElectionStartEventDecoder _parentMessage;
+    private KeepAliveRequestDecoder _parentMessage;
     private IDirectBuffer _buffer;
     protected int _offset;
     protected int _limit;
     protected int _actingBlockLength;
     protected int _actingVersion;
 
-    public ElectionStartEventDecoder()
+    public KeepAliveRequestDecoder()
     {
         _parentMessage = this;
     }
@@ -61,7 +61,7 @@ public class ElectionStartEventDecoder
         return _offset;
     }
 
-    public ElectionStartEventDecoder Wrap(
+    public KeepAliveRequestDecoder Wrap(
         IDirectBuffer buffer, int offset, int actingBlockLength, int actingVersion)
     {
         this._buffer = buffer;
@@ -88,27 +88,27 @@ public class ElectionStartEventDecoder
         this._limit = limit;
     }
 
-    public static int LogPositionId()
+    public static int ControlSessionIdId()
     {
         return 1;
     }
 
-    public static int LogPositionSinceVersion()
+    public static int ControlSessionIdSinceVersion()
     {
         return 0;
     }
 
-    public static int LogPositionEncodingOffset()
+    public static int ControlSessionIdEncodingOffset()
     {
         return 0;
     }
 
-    public static int LogPositionEncodingLength()
+    public static int ControlSessionIdEncodingLength()
     {
         return 8;
     }
 
-    public static string LogPositionMetaAttribute(MetaAttribute metaAttribute)
+    public static string ControlSessionIdMetaAttribute(MetaAttribute metaAttribute)
     {
         switch (metaAttribute)
         {
@@ -121,24 +121,78 @@ public class ElectionStartEventDecoder
         return "";
     }
 
-    public static long LogPositionNullValue()
+    public static long ControlSessionIdNullValue()
     {
         return -9223372036854775808L;
     }
 
-    public static long LogPositionMinValue()
+    public static long ControlSessionIdMinValue()
     {
         return -9223372036854775807L;
     }
 
-    public static long LogPositionMaxValue()
+    public static long ControlSessionIdMaxValue()
     {
         return 9223372036854775807L;
     }
 
-    public long LogPosition()
+    public long ControlSessionId()
     {
         return _buffer.GetLong(_offset + 0, ByteOrder.LittleEndian);
+    }
+
+
+    public static int CorrelationIdId()
+    {
+        return 2;
+    }
+
+    public static int CorrelationIdSinceVersion()
+    {
+        return 0;
+    }
+
+    public static int CorrelationIdEncodingOffset()
+    {
+        return 8;
+    }
+
+    public static int CorrelationIdEncodingLength()
+    {
+        return 8;
+    }
+
+    public static string CorrelationIdMetaAttribute(MetaAttribute metaAttribute)
+    {
+        switch (metaAttribute)
+        {
+            case MetaAttribute.EPOCH: return "unix";
+            case MetaAttribute.TIME_UNIT: return "nanosecond";
+            case MetaAttribute.SEMANTIC_TYPE: return "";
+            case MetaAttribute.PRESENCE: return "required";
+        }
+
+        return "";
+    }
+
+    public static long CorrelationIdNullValue()
+    {
+        return -9223372036854775808L;
+    }
+
+    public static long CorrelationIdMinValue()
+    {
+        return -9223372036854775807L;
+    }
+
+    public static long CorrelationIdMaxValue()
+    {
+        return 9223372036854775807L;
+    }
+
+    public long CorrelationId()
+    {
+        return _buffer.GetLong(_offset + 8, ByteOrder.LittleEndian);
     }
 
 
@@ -152,7 +206,7 @@ public class ElectionStartEventDecoder
     {
         int originalLimit = Limit();
         Limit(_offset + _actingBlockLength);
-        builder.Append("[ElectionStartEvent](sbeTemplateId=");
+        builder.Append("[KeepAliveRequest](sbeTemplateId=");
         builder.Append(TEMPLATE_ID);
         builder.Append("|sbeSchemaId=");
         builder.Append(SCHEMA_ID);
@@ -171,10 +225,15 @@ public class ElectionStartEventDecoder
         }
         builder.Append(BLOCK_LENGTH);
         builder.Append("):");
-        //Token{signal=BEGIN_FIELD, name='logPosition', referencedName='null', description='null', id=1, version=0, deprecated=0, encodedLength=0, offset=0, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=BEGIN_FIELD, name='controlSessionId', referencedName='null', description='null', id=1, version=0, deprecated=0, encodedLength=0, offset=0, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
         //Token{signal=ENCODING, name='int64', referencedName='null', description='null', id=-1, version=0, deprecated=0, encodedLength=8, offset=0, componentTokenCount=1, encoding=Encoding{presence=REQUIRED, primitiveType=INT64, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
-        builder.Append("LogPosition=");
-        builder.Append(LogPosition());
+        builder.Append("ControlSessionId=");
+        builder.Append(ControlSessionId());
+        builder.Append('|');
+        //Token{signal=BEGIN_FIELD, name='correlationId', referencedName='null', description='null', id=2, version=0, deprecated=0, encodedLength=0, offset=8, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=ENCODING, name='int64', referencedName='null', description='null', id=-1, version=0, deprecated=0, encodedLength=8, offset=8, componentTokenCount=1, encoding=Encoding{presence=REQUIRED, primitiveType=INT64, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        builder.Append("CorrelationId=");
+        builder.Append(CorrelationId());
 
         Limit(originalLimit);
 

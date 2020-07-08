@@ -332,6 +332,18 @@ namespace Adaptive.Agrona.Concurrent.Status
 
             return MetaDataBuffer.GetIntVolatile(MetaDataOffset(counterId));
         }
+        
+        /// <summary>
+        /// Get the type id for a given counter id.
+        /// </summary>
+        /// <param name="counterId"> to be read. </param>
+        /// <returns> the type id for a given counter id. </returns>
+        public int GetCounterTypeId(int counterId)
+        {
+            ValidateCounterId(counterId);
+
+            return MetaDataBuffer.GetInt(MetaDataOffset(counterId) + TYPE_ID_OFFSET);
+        }
 
         /// <summary>
         /// Get the deadline (in milliseconds) for when a given counter id may be reused.

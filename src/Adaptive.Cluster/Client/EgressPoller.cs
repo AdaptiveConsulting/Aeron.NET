@@ -25,7 +25,8 @@ namespace Adaptive.Cluster.Client
         private long leadershipTermId = Aeron.Aeron.NULL_VALUE;
         private int leaderMemberId = Aeron.Aeron.NULL_VALUE;
         private int templateId = Aeron.Aeron.NULL_VALUE;
-        private bool pollComplete;
+        private int version = 0;
+        private bool isPollComplete = false;
         private EventCode eventCode;
         private string detail = "";
         private byte[] encodedChallenge;
@@ -100,6 +101,15 @@ namespace Adaptive.Cluster.Client
         {
             return eventCode;
         }
+        
+        /// <summary>
+        /// Version response from the server in semantic version form.
+        /// </summary>
+        /// <returns> response from the server in semantic version form. </returns>
+        public int Version()
+        {
+            return version;
+        }
 
         /// <summary>
         /// Get the detail returned in the last session event.
@@ -125,7 +135,7 @@ namespace Adaptive.Cluster.Client
         /// <returns> true if the last polling action received a complete event. </returns>
         public bool IsPollComplete()
         {
-            return pollComplete;
+            return isPollComplete;
         }
 
         /// <summary>
@@ -144,17 +154,18 @@ namespace Adaptive.Cluster.Client
             leadershipTermId = Aeron.Aeron.NULL_VALUE;
             leaderMemberId = Aeron.Aeron.NULL_VALUE;
             templateId = Aeron.Aeron.NULL_VALUE;
+            version = 0;
             eventCode = Codecs.EventCode.NULL_VALUE;
             detail = "";
             encodedChallenge = null;
-            pollComplete = false;
+            isPollComplete = false;
 
             return subscription.ControlledPoll(fragmentAssembler, fragmentLimit);
         }
 
         public ControlledFragmentHandlerAction OnFragment(IDirectBuffer buffer, int offset, int length, Header header)
         {
-            if (pollComplete)
+            if (isPollComplete)
             {
                 return ABORT;
             }
@@ -177,7 +188,7 @@ namespace Adaptive.Cluster.Client
 
                     leadershipTermId = sessionMessageHeaderDecoder.LeadershipTermId();
                     clusterSessionId = sessionMessageHeaderDecoder.ClusterSessionId();
-                    pollComplete = true;
+                    isPollComplete = true;
                     return BREAK;
 
                 case SessionEventDecoder.TEMPLATE_ID:
@@ -189,8 +200,9 @@ namespace Adaptive.Cluster.Client
                     leadershipTermId = sessionEventDecoder.LeadershipTermId();
                     leaderMemberId = sessionEventDecoder.LeaderMemberId();
                     eventCode = sessionEventDecoder.Code();
+                    version = sessionEventDecoder.Version();
                     detail = sessionEventDecoder.Detail();
-                    pollComplete = true;
+                    isPollComplete = true;
                     return BREAK;
 
                 case NewLeaderEventDecoder.TEMPLATE_ID:
@@ -200,8 +212,8 @@ namespace Adaptive.Cluster.Client
                     clusterSessionId = newLeaderEventDecoder.ClusterSessionId();
                     leadershipTermId = newLeaderEventDecoder.LeadershipTermId();
                     leaderMemberId = newLeaderEventDecoder.LeaderMemberId();
-                    detail = newLeaderEventDecoder.MemberEndpoints();
-                    pollComplete = true;
+                    detail = newLeaderEventDecoder.IngressEndpoints();
+                    isPollComplete = true;
                     return BREAK;
 
                 case ChallengeDecoder.TEMPLATE_ID:
@@ -214,7 +226,7 @@ namespace Adaptive.Cluster.Client
 
                     clusterSessionId = challengeDecoder.ClusterSessionId();
                     correlationId = challengeDecoder.CorrelationId();
-                    pollComplete = true;
+                    isPollComplete = true;
                     return BREAK;
             }
 

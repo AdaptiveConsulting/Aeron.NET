@@ -11,6 +11,7 @@
         public readonly int memberId;
         public readonly int sessionId;
         public readonly int streamId;
+        public readonly bool isStartup;
         public readonly string channel;
 
         internal ActiveLogEvent(
@@ -20,6 +21,7 @@
             int memberId,
             int sessionId,
             int streamId,
+            bool isStartup,
             string channel)
         {
             this.leadershipTermId = leadershipTermId;
@@ -28,6 +30,7 @@
             this.memberId = memberId;
             this.sessionId = sessionId;
             this.streamId = streamId;
+            this.isStartup = isStartup;
             this.channel = channel;
         }
 
@@ -40,6 +43,7 @@
                    + ", memberId=" + memberId
                    + ", sessionId=" + sessionId
                    + ", streamId=" + streamId
+                   + ", isStartup=" + isStartup 
                    + ", channel='" + channel + "'"
                    + '}';
         }

@@ -9,10 +9,10 @@ namespace Adaptive.Cluster.Codecs {
 
 public class ClusterMembersQueryDecoder
 {
-    public const ushort BLOCK_LENGTH = 8;
+    public const ushort BLOCK_LENGTH = 12;
     public const ushort TEMPLATE_ID = 34;
     public const ushort SCHEMA_ID = 111;
-    public const ushort SCHEMA_VERSION = 4;
+    public const ushort SCHEMA_VERSION = 6;
 
     private ClusterMembersQueryDecoder _parentMessage;
     private IDirectBuffer _buffer;
@@ -142,6 +142,47 @@ public class ClusterMembersQueryDecoder
     }
 
 
+    public static int ExtendedId()
+    {
+        return 2;
+    }
+
+    public static int ExtendedSinceVersion()
+    {
+        return 5;
+    }
+
+    public static int ExtendedEncodingOffset()
+    {
+        return 8;
+    }
+
+    public static int ExtendedEncodingLength()
+    {
+        return 4;
+    }
+
+    public static string ExtendedMetaAttribute(MetaAttribute metaAttribute)
+    {
+        switch (metaAttribute)
+        {
+            case MetaAttribute.EPOCH: return "unix";
+            case MetaAttribute.TIME_UNIT: return "nanosecond";
+            case MetaAttribute.SEMANTIC_TYPE: return "";
+            case MetaAttribute.PRESENCE: return "optional";
+        }
+
+        return "";
+    }
+
+    public BooleanType Extended()
+    {
+        if (_actingVersion < 5) return BooleanType.NULL_VALUE;
+
+        return (BooleanType)_buffer.GetInt(_offset + 8, ByteOrder.LittleEndian);
+    }
+
+
 
     public override string ToString()
     {
@@ -175,6 +216,11 @@ public class ClusterMembersQueryDecoder
         //Token{signal=ENCODING, name='int64', referencedName='null', description='null', id=-1, version=0, deprecated=0, encodedLength=8, offset=0, componentTokenCount=1, encoding=Encoding{presence=REQUIRED, primitiveType=INT64, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
         builder.Append("CorrelationId=");
         builder.Append(CorrelationId());
+        builder.Append('|');
+        //Token{signal=BEGIN_FIELD, name='extended', referencedName='null', description='null', id=2, version=5, deprecated=0, encodedLength=0, offset=8, componentTokenCount=6, encoding=Encoding{presence=OPTIONAL, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=BEGIN_ENUM, name='BooleanType', referencedName='null', description='Language independent boolean type.', id=-1, version=5, deprecated=0, encodedLength=4, offset=8, componentTokenCount=4, encoding=Encoding{presence=REQUIRED, primitiveType=INT32, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='null', timeUnit=null, semanticType='null'}}
+        builder.Append("Extended=");
+        builder.Append(Extended());
 
         Limit(originalLimit);
 

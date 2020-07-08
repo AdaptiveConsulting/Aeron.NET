@@ -8,12 +8,12 @@ namespace Adaptive.Cluster.Service
     {
         private readonly ClientSessionEncoder _clientSessionEncoder = new ClientSessionEncoder();
 
-        internal ServiceSnapshotTaker(Publication publication, IIdleStrategy idleStrategy, AgentInvoker aeronClientInvoker) 
+        internal ServiceSnapshotTaker(ExclusivePublication publication, IIdleStrategy idleStrategy, AgentInvoker aeronClientInvoker) 
             : base(publication, idleStrategy, aeronClientInvoker)
         {
         }
 
-        public void SnapshotSession(ClientSession session)
+        internal void SnapshotSession(ClientSession session)
         {
             string responseChannel = session.ResponseChannel;
             byte[] encodedPrincipal = session.EncodedPrincipal;

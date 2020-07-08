@@ -9,10 +9,10 @@ namespace Adaptive.Cluster.Codecs {
 
 public class RemoveMemberDecoder
 {
-    public const ushort BLOCK_LENGTH = 16;
+    public const ushort BLOCK_LENGTH = 8;
     public const ushort TEMPLATE_ID = 35;
     public const ushort SCHEMA_ID = 111;
-    public const ushort SCHEMA_VERSION = 4;
+    public const ushort SCHEMA_VERSION = 6;
 
     private RemoveMemberDecoder _parentMessage;
     private IDirectBuffer _buffer;
@@ -88,63 +88,9 @@ public class RemoveMemberDecoder
         this._limit = limit;
     }
 
-    public static int CorrelationIdId()
-    {
-        return 1;
-    }
-
-    public static int CorrelationIdSinceVersion()
-    {
-        return 0;
-    }
-
-    public static int CorrelationIdEncodingOffset()
-    {
-        return 0;
-    }
-
-    public static int CorrelationIdEncodingLength()
-    {
-        return 8;
-    }
-
-    public static string CorrelationIdMetaAttribute(MetaAttribute metaAttribute)
-    {
-        switch (metaAttribute)
-        {
-            case MetaAttribute.EPOCH: return "unix";
-            case MetaAttribute.TIME_UNIT: return "nanosecond";
-            case MetaAttribute.SEMANTIC_TYPE: return "";
-            case MetaAttribute.PRESENCE: return "required";
-        }
-
-        return "";
-    }
-
-    public static long CorrelationIdNullValue()
-    {
-        return -9223372036854775808L;
-    }
-
-    public static long CorrelationIdMinValue()
-    {
-        return -9223372036854775807L;
-    }
-
-    public static long CorrelationIdMaxValue()
-    {
-        return 9223372036854775807L;
-    }
-
-    public long CorrelationId()
-    {
-        return _buffer.GetLong(_offset + 0, ByteOrder.LittleEndian);
-    }
-
-
     public static int MemberIdId()
     {
-        return 2;
+        return 1;
     }
 
     public static int MemberIdSinceVersion()
@@ -154,7 +100,7 @@ public class RemoveMemberDecoder
 
     public static int MemberIdEncodingOffset()
     {
-        return 8;
+        return 0;
     }
 
     public static int MemberIdEncodingLength()
@@ -192,13 +138,13 @@ public class RemoveMemberDecoder
 
     public int MemberId()
     {
-        return _buffer.GetInt(_offset + 8, ByteOrder.LittleEndian);
+        return _buffer.GetInt(_offset + 0, ByteOrder.LittleEndian);
     }
 
 
     public static int IsPassiveId()
     {
-        return 3;
+        return 2;
     }
 
     public static int IsPassiveSinceVersion()
@@ -208,7 +154,7 @@ public class RemoveMemberDecoder
 
     public static int IsPassiveEncodingOffset()
     {
-        return 12;
+        return 4;
     }
 
     public static int IsPassiveEncodingLength()
@@ -231,7 +177,7 @@ public class RemoveMemberDecoder
 
     public BooleanType IsPassive()
     {
-        return (BooleanType)_buffer.GetInt(_offset + 12, ByteOrder.LittleEndian);
+        return (BooleanType)_buffer.GetInt(_offset + 4, ByteOrder.LittleEndian);
     }
 
 
@@ -264,18 +210,13 @@ public class RemoveMemberDecoder
         }
         builder.Append(BLOCK_LENGTH);
         builder.Append("):");
-        //Token{signal=BEGIN_FIELD, name='correlationId', referencedName='null', description='null', id=1, version=0, deprecated=0, encodedLength=0, offset=0, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
-        //Token{signal=ENCODING, name='int64', referencedName='null', description='null', id=-1, version=0, deprecated=0, encodedLength=8, offset=0, componentTokenCount=1, encoding=Encoding{presence=REQUIRED, primitiveType=INT64, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
-        builder.Append("CorrelationId=");
-        builder.Append(CorrelationId());
-        builder.Append('|');
-        //Token{signal=BEGIN_FIELD, name='memberId', referencedName='null', description='null', id=2, version=0, deprecated=0, encodedLength=0, offset=8, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
-        //Token{signal=ENCODING, name='int32', referencedName='null', description='null', id=-1, version=0, deprecated=0, encodedLength=4, offset=8, componentTokenCount=1, encoding=Encoding{presence=REQUIRED, primitiveType=INT32, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=BEGIN_FIELD, name='memberId', referencedName='null', description='null', id=1, version=0, deprecated=0, encodedLength=0, offset=0, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=ENCODING, name='int32', referencedName='null', description='null', id=-1, version=0, deprecated=0, encodedLength=4, offset=0, componentTokenCount=1, encoding=Encoding{presence=REQUIRED, primitiveType=INT32, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
         builder.Append("MemberId=");
         builder.Append(MemberId());
         builder.Append('|');
-        //Token{signal=BEGIN_FIELD, name='isPassive', referencedName='null', description='null', id=3, version=0, deprecated=0, encodedLength=0, offset=12, componentTokenCount=6, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
-        //Token{signal=BEGIN_ENUM, name='BooleanType', referencedName='null', description='Language independent boolean type.', id=-1, version=0, deprecated=0, encodedLength=4, offset=12, componentTokenCount=4, encoding=Encoding{presence=REQUIRED, primitiveType=INT32, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='null', timeUnit=null, semanticType='null'}}
+        //Token{signal=BEGIN_FIELD, name='isPassive', referencedName='null', description='null', id=2, version=0, deprecated=0, encodedLength=0, offset=4, componentTokenCount=6, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=BEGIN_ENUM, name='BooleanType', referencedName='null', description='Language independent boolean type.', id=-1, version=0, deprecated=0, encodedLength=4, offset=4, componentTokenCount=4, encoding=Encoding{presence=REQUIRED, primitiveType=INT32, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='null', timeUnit=null, semanticType='null'}}
         builder.Append("IsPassive=");
         builder.Append(IsPassive());
 

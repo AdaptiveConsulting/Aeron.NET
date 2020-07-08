@@ -15,6 +15,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using Adaptive.Aeron.Exceptions;
 using Adaptive.Aeron.LogBuffer;
@@ -258,6 +259,23 @@ namespace Adaptive.Aeron
         public int ChannelStatusId => _channelStatusId;
 
         /// <summary>
+        /// Fetches the local socket address for this publication. If the channel is not
+        /// <seealso cref="ChannelEndpointStatus.ACTIVE"/>, then this will return an empty list.
+        ///    
+        /// The format is as follows:
+        /// IPv4: <code>ip address:port</code>
+        /// IPv6: <code>[ip6 address]:port</code>
+        /// This is to match the formatting used in the Aeron URI. For publications this will be the control address and
+        /// is likely to only contain a single entry.
+        /// </summary>
+        /// <returns> local socket addresses for this publication. </returns>
+        /// <seealso cref="ChannelStatus"/>
+        public List<string> LocalSocketAddresses()
+        {
+            return LocalSocketAddressStatus.FindAddresses(_conductor.CountersReader(), ChannelStatus, _channelStatusId);
+        }
+        
+        /// <summary>
         /// Get the current position to which the publication has advanced for this stream.
         /// </summary>
         /// <returns> the current position to which the publication has advanced for this stream or <see cref="CLOSED"/>. </returns>
@@ -435,6 +453,46 @@ namespace Adaptive.Aeron
             }
 
             _conductor.RemoveDestination(_originalRegistrationId, endpointChannel);
+        }
+        
+        /// <summary>
+        /// Asynchronously add a destination manually to a multi-destination-cast Publication.
+        /// <para>
+        /// Errors will be delivered asynchronously to the <seealso cref="Aeron.Context.ErrorHandler()"/>. Completion can be
+        /// tracked by passing the returned correlation id to <seealso cref="Aeron.IsCommandActive(long)"/>.
+        ///    
+        /// </para>
+        /// </summary>
+        /// <param name="endpointChannel"> for the destination to add. </param>
+        /// <returns> the correlationId for the command. </returns>
+        public long AsyncAddDestination(string endpointChannel)
+        {
+            if (_isClosed)
+            {
+                throw new AeronException("Publication is closed");
+            }
+
+            return _conductor.AsyncAddDestination(RegistrationId, endpointChannel);
+        }
+
+        /// <summary>
+        /// Asynchronously remove a previously added destination from a multi-destination-cast Publication.
+        /// <para>
+        /// Errors will be delivered asynchronously to the <seealso cref="Aeron.Context.ErrorHandler()"/>. Completion can be
+        /// tracked by passing the returned correlation id to <seealso cref="Aeron.IsCommandActive(long)"/>.
+        /// 
+        /// </para>
+        /// </summary>
+        /// <param name="endpointChannel"> for the destination to remove. </param>
+        /// <returns> the correlationId for the command. </returns>
+        public long AsyncRemoveDestination(string endpointChannel)
+        {
+            if (_isClosed)
+            {
+                throw new AeronException("Publication is closed");
+            }
+
+            return _conductor.AsyncRemoveDestination(RegistrationId, endpointChannel);
         }
 
         internal void InternalClose()

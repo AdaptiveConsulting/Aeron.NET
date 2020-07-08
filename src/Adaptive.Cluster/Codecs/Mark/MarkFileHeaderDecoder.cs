@@ -16,6 +16,7 @@ public class MarkFileHeaderDecoder
 
     private MarkFileHeaderDecoder _parentMessage;
     private IDirectBuffer _buffer;
+    protected int _initialOffset;
     protected int _offset;
     protected int _limit;
     protected int _actingBlockLength;
@@ -60,11 +61,17 @@ public class MarkFileHeaderDecoder
     {
         return _offset;
     }
+    
+    public int InitialOffset()
+    {
+        return _initialOffset;
+    }
 
     public MarkFileHeaderDecoder Wrap(
         IDirectBuffer buffer, int offset, int actingBlockLength, int actingVersion)
     {
         this._buffer = buffer;
+        this._initialOffset = offset;
         this._offset = offset;
         this._actingBlockLength = actingBlockLength;
         this._actingVersion = actingVersion;
@@ -829,9 +836,63 @@ public class MarkFileHeaderDecoder
     }
 
 
-    public static int AeronDirectoryId()
+    public static int ClusterIdId()
     {
         return 15;
+    }
+
+    public static int ClusterIdSinceVersion()
+    {
+        return 0;
+    }
+
+    public static int ClusterIdEncodingOffset()
+    {
+        return 72;
+    }
+
+    public static int ClusterIdEncodingLength()
+    {
+        return 4;
+    }
+
+    public static string ClusterIdMetaAttribute(MetaAttribute metaAttribute)
+    {
+        switch (metaAttribute)
+        {
+            case MetaAttribute.EPOCH: return "unix";
+            case MetaAttribute.TIME_UNIT: return "nanosecond";
+            case MetaAttribute.SEMANTIC_TYPE: return "";
+            case MetaAttribute.PRESENCE: return "required";
+        }
+
+        return "";
+    }
+
+    public static int ClusterIdNullValue()
+    {
+        return -2147483648;
+    }
+
+    public static int ClusterIdMinValue()
+    {
+        return -2147483647;
+    }
+
+    public static int ClusterIdMaxValue()
+    {
+        return 2147483647;
+    }
+
+    public int ClusterId()
+    {
+        return _buffer.GetInt(_offset + 72, ByteOrder.LittleEndian);
+    }
+
+
+    public static int AeronDirectoryId()
+    {
+        return 16;
     }
 
     public static int AeronDirectorySinceVersion()
@@ -904,97 +965,22 @@ public class MarkFileHeaderDecoder
         return Encoding.ASCII.GetString(tmp);
     }
 
-    public static int ArchiveChannelId()
-    {
-        return 16;
-    }
-
-    public static int ArchiveChannelSinceVersion()
-    {
-        return 0;
-    }
-
-    public static string ArchiveChannelCharacterEncoding()
-    {
-        return "US-ASCII";
-    }
-
-    public static string ArchiveChannelMetaAttribute(MetaAttribute metaAttribute)
-    {
-        switch (metaAttribute)
-        {
-            case MetaAttribute.EPOCH: return "unix";
-            case MetaAttribute.TIME_UNIT: return "nanosecond";
-            case MetaAttribute.SEMANTIC_TYPE: return "";
-            case MetaAttribute.PRESENCE: return "required";
-        }
-
-        return "";
-    }
-
-    public static int ArchiveChannelHeaderLength()
-    {
-        return 4;
-    }
-
-    public int ArchiveChannelLength()
-    {
-        int limit = _parentMessage.Limit();
-        return (int)unchecked((uint)_buffer.GetInt(limit, ByteOrder.LittleEndian));
-    }
-
-    public int GetArchiveChannel(IMutableDirectBuffer dst, int dstOffset, int length)
-    {
-        int headerLength = 4;
-        int limit = _parentMessage.Limit();
-        int dataLength = (int)unchecked((uint)_buffer.GetInt(limit, ByteOrder.LittleEndian));
-        int bytesCopied = Math.Min(length, dataLength);
-        _parentMessage.Limit(limit + headerLength + dataLength);
-        _buffer.GetBytes(limit + headerLength, dst, dstOffset, bytesCopied);
-
-        return bytesCopied;
-    }
-
-    public int GetArchiveChannel(byte[] dst, int dstOffset, int length)
-    {
-        int headerLength = 4;
-        int limit = _parentMessage.Limit();
-        int dataLength = (int)unchecked((uint)_buffer.GetInt(limit, ByteOrder.LittleEndian));
-        int bytesCopied = Math.Min(length, dataLength);
-        _parentMessage.Limit(limit + headerLength + dataLength);
-        _buffer.GetBytes(limit + headerLength, dst, dstOffset, bytesCopied);
-
-        return bytesCopied;
-    }
-
-    public string ArchiveChannel()
-    {
-        int headerLength = 4;
-        int limit = _parentMessage.Limit();
-        int dataLength = (int)unchecked((uint)_buffer.GetInt(limit, ByteOrder.LittleEndian));
-        _parentMessage.Limit(limit + headerLength + dataLength);
-        byte[] tmp = new byte[dataLength];
-        _buffer.GetBytes(limit + headerLength, tmp, 0, dataLength);
-
-        return Encoding.ASCII.GetString(tmp);
-    }
-
-    public static int ServiceControlChannelId()
+    public static int ControlChannelId()
     {
         return 17;
     }
 
-    public static int ServiceControlChannelSinceVersion()
+    public static int ControlChannelSinceVersion()
     {
         return 0;
     }
 
-    public static string ServiceControlChannelCharacterEncoding()
+    public static string ControlChannelCharacterEncoding()
     {
         return "US-ASCII";
     }
 
-    public static string ServiceControlChannelMetaAttribute(MetaAttribute metaAttribute)
+    public static string ControlChannelMetaAttribute(MetaAttribute metaAttribute)
     {
         switch (metaAttribute)
         {
@@ -1007,18 +993,18 @@ public class MarkFileHeaderDecoder
         return "";
     }
 
-    public static int ServiceControlChannelHeaderLength()
+    public static int ControlChannelHeaderLength()
     {
         return 4;
     }
 
-    public int ServiceControlChannelLength()
+    public int ControlChannelLength()
     {
         int limit = _parentMessage.Limit();
         return (int)unchecked((uint)_buffer.GetInt(limit, ByteOrder.LittleEndian));
     }
 
-    public int GetServiceControlChannel(IMutableDirectBuffer dst, int dstOffset, int length)
+    public int GetControlChannel(IMutableDirectBuffer dst, int dstOffset, int length)
     {
         int headerLength = 4;
         int limit = _parentMessage.Limit();
@@ -1030,7 +1016,7 @@ public class MarkFileHeaderDecoder
         return bytesCopied;
     }
 
-    public int GetServiceControlChannel(byte[] dst, int dstOffset, int length)
+    public int GetControlChannel(byte[] dst, int dstOffset, int length)
     {
         int headerLength = 4;
         int limit = _parentMessage.Limit();
@@ -1042,7 +1028,7 @@ public class MarkFileHeaderDecoder
         return bytesCopied;
     }
 
-    public string ServiceControlChannel()
+    public string ControlChannel()
     {
         int headerLength = 4;
         int limit = _parentMessage.Limit();
@@ -1378,17 +1364,18 @@ public class MarkFileHeaderDecoder
         builder.Append("ErrorBufferLength=");
         builder.Append(ErrorBufferLength());
         builder.Append('|');
-        //Token{signal=BEGIN_VAR_DATA, name='aeronDirectory', referencedName='null', description='null', id=15, version=0, deprecated=0, encodedLength=0, offset=128, componentTokenCount=6, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=BEGIN_FIELD, name='clusterId', referencedName='null', description='null', id=15, version=0, deprecated=0, encodedLength=0, offset=72, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=ENCODING, name='int32', referencedName='null', description='null', id=-1, version=0, deprecated=0, encodedLength=4, offset=72, componentTokenCount=1, encoding=Encoding{presence=REQUIRED, primitiveType=INT32, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        builder.Append("ClusterId=");
+        builder.Append(ClusterId());
+        builder.Append('|');
+        //Token{signal=BEGIN_VAR_DATA, name='aeronDirectory', referencedName='null', description='null', id=16, version=0, deprecated=0, encodedLength=0, offset=128, componentTokenCount=6, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
         builder.Append("AeronDirectory=");
         builder.Append(AeronDirectory());
         builder.Append('|');
-        //Token{signal=BEGIN_VAR_DATA, name='archiveChannel', referencedName='null', description='null', id=16, version=0, deprecated=0, encodedLength=0, offset=-1, componentTokenCount=6, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
-        builder.Append("ArchiveChannel=");
-        builder.Append(ArchiveChannel());
-        builder.Append('|');
-        //Token{signal=BEGIN_VAR_DATA, name='serviceControlChannel', referencedName='null', description='null', id=17, version=0, deprecated=0, encodedLength=0, offset=-1, componentTokenCount=6, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
-        builder.Append("ServiceControlChannel=");
-        builder.Append(ServiceControlChannel());
+        //Token{signal=BEGIN_VAR_DATA, name='controlChannel', referencedName='null', description='null', id=17, version=0, deprecated=0, encodedLength=0, offset=-1, componentTokenCount=6, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        builder.Append("ControlChannel=");
+        builder.Append(ControlChannel());
         builder.Append('|');
         //Token{signal=BEGIN_VAR_DATA, name='ingressChannel', referencedName='null', description='null', id=18, version=0, deprecated=0, encodedLength=0, offset=-1, componentTokenCount=6, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
         builder.Append("IngressChannel=");

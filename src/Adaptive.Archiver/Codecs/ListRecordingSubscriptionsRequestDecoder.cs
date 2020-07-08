@@ -12,7 +12,7 @@ public class ListRecordingSubscriptionsRequestDecoder
     public const ushort BLOCK_LENGTH = 32;
     public const ushort TEMPLATE_ID = 17;
     public const ushort SCHEMA_ID = 101;
-    public const ushort SCHEMA_VERSION = 2;
+    public const ushort SCHEMA_VERSION = 4;
 
     private ListRecordingSubscriptionsRequestDecoder _parentMessage;
     private IDirectBuffer _buffer;
@@ -321,7 +321,7 @@ public class ListRecordingSubscriptionsRequestDecoder
 
     public static int ApplyStreamIdEncodingLength()
     {
-        return 1;
+        return 4;
     }
 
     public static string ApplyStreamIdMetaAttribute(MetaAttribute metaAttribute)
@@ -339,7 +339,7 @@ public class ListRecordingSubscriptionsRequestDecoder
 
     public BooleanType ApplyStreamId()
     {
-        return (BooleanType)_buffer.GetByte(_offset + 24);
+        return (BooleanType)_buffer.GetInt(_offset + 24, ByteOrder.LittleEndian);
     }
 
 
@@ -522,7 +522,7 @@ public class ListRecordingSubscriptionsRequestDecoder
         builder.Append(SubscriptionCount());
         builder.Append('|');
         //Token{signal=BEGIN_FIELD, name='applyStreamId', referencedName='null', description='null', id=5, version=0, deprecated=0, encodedLength=0, offset=24, componentTokenCount=6, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
-        //Token{signal=BEGIN_ENUM, name='BooleanType', referencedName='null', description='Language independent boolean type.', id=-1, version=0, deprecated=0, encodedLength=1, offset=24, componentTokenCount=4, encoding=Encoding{presence=REQUIRED, primitiveType=UINT8, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='null', timeUnit=null, semanticType='null'}}
+        //Token{signal=BEGIN_ENUM, name='BooleanType', referencedName='null', description='Language independent boolean type.', id=-1, version=0, deprecated=0, encodedLength=4, offset=24, componentTokenCount=4, encoding=Encoding{presence=REQUIRED, primitiveType=INT32, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='null', timeUnit=null, semanticType='null'}}
         builder.Append("ApplyStreamId=");
         builder.Append(ApplyStreamId());
         builder.Append('|');

@@ -2,6 +2,8 @@
 {
     public class NoOpLock : ILock
     {
+        public static readonly NoOpLock Instance = new NoOpLock();
+        
         public void Lock()
         {
         }

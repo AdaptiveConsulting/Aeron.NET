@@ -7,6 +7,7 @@ namespace Adaptive.Cluster.Codecs {
         ERROR = 1,
         REDIRECT = 2,
         AUTHENTICATION_REJECTED = 3,
+        CLOSED = 4,
         NULL_VALUE = -2147483648
     }
 }

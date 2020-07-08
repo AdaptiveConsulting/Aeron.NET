@@ -12,7 +12,7 @@ public class BoundedReplayRequestDecoder
     public const ushort BLOCK_LENGTH = 48;
     public const ushort TEMPLATE_ID = 18;
     public const ushort SCHEMA_ID = 101;
-    public const ushort SCHEMA_VERSION = 2;
+    public const ushort SCHEMA_VERSION = 4;
 
     private BoundedReplayRequestDecoder _parentMessage;
     private IDirectBuffer _buffer;

@@ -12,7 +12,7 @@ public class NewLeaderEventEncoder
     public const ushort BLOCK_LENGTH = 20;
     public const ushort TEMPLATE_ID = 6;
     public const ushort SCHEMA_ID = 111;
-    public const ushort SCHEMA_VERSION = 4;
+    public const ushort SCHEMA_VERSION = 6;
 
     private NewLeaderEventEncoder _parentMessage;
     private IMutableDirectBuffer _buffer;
@@ -192,17 +192,17 @@ public class NewLeaderEventEncoder
     }
 
 
-    public static int MemberEndpointsId()
+    public static int IngressEndpointsId()
     {
         return 4;
     }
 
-    public static string MemberEndpointsCharacterEncoding()
+    public static string IngressEndpointsCharacterEncoding()
     {
         return "US-ASCII";
     }
 
-    public static string MemberEndpointsMetaAttribute(MetaAttribute metaAttribute)
+    public static string IngressEndpointsMetaAttribute(MetaAttribute metaAttribute)
     {
         switch (metaAttribute)
         {
@@ -215,12 +215,12 @@ public class NewLeaderEventEncoder
         return "";
     }
 
-    public static int MemberEndpointsHeaderLength()
+    public static int IngressEndpointsHeaderLength()
     {
         return 4;
     }
 
-    public NewLeaderEventEncoder PutMemberEndpoints(IDirectBuffer src, int srcOffset, int length)
+    public NewLeaderEventEncoder PutIngressEndpoints(IDirectBuffer src, int srcOffset, int length)
     {
         if (length > 1073741824)
         {
@@ -236,7 +236,7 @@ public class NewLeaderEventEncoder
         return this;
     }
 
-    public NewLeaderEventEncoder PutMemberEndpoints(byte[] src, int srcOffset, int length)
+    public NewLeaderEventEncoder PutIngressEndpoints(byte[] src, int srcOffset, int length)
     {
         if (length > 1073741824)
         {
@@ -252,7 +252,7 @@ public class NewLeaderEventEncoder
         return this;
     }
 
-    public NewLeaderEventEncoder MemberEndpoints(string value)
+    public NewLeaderEventEncoder IngressEndpoints(string value)
     {
         int length = value.Length;
         if (length > 1073741824)

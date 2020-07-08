@@ -3,9 +3,9 @@ using Adaptive.Aeron;
 namespace Adaptive.Archiver
 {
     /// <summary>
-    /// Consumer for descriptors os active archive recording <seealso cref="Subscription"/>s.
+    /// Consumer for descriptors of active archive recording <seealso cref="Subscription"/>s.
     /// </summary>
-    public interface RecordingSubscriptionDescriptorConsumer
+    public interface IRecordingSubscriptionDescriptorConsumer
     {
         /// <summary>
         /// Descriptor for an active recording subscription on the archive.

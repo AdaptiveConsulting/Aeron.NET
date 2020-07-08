@@ -284,7 +284,15 @@ namespace Adaptive.Agrona
         /// <param name="length"> of the String in bytes to decode. </param>
         /// <returns> the String as represented by the UTF-8 encoded bytes. </returns>
         string GetStringWithoutLengthUtf8(int index, int length);
-
+        
+        /// <summary>
+        /// Get an encoded ASCII String from the buffer that does not have a length prefix.
+        /// </summary>
+        /// <param name="index">  at which the String begins. </param>
+        /// <param name="length"> of the String in bytes to decode. </param>
+        /// <returns> the String as represented by the Ascii encoded bytes. </returns>
+        string GetStringWithoutLengthAscii(int index, int length);
+        
         /// <summary>
         /// Check that a given length of bytes is within the bounds from a given index.
         /// </summary>

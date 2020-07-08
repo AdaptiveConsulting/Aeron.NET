@@ -12,7 +12,7 @@ public class ListRecordingSubscriptionsRequestEncoder
     public const ushort BLOCK_LENGTH = 32;
     public const ushort TEMPLATE_ID = 17;
     public const ushort SCHEMA_ID = 101;
-    public const ushort SCHEMA_VERSION = 2;
+    public const ushort SCHEMA_VERSION = 4;
 
     private ListRecordingSubscriptionsRequestEncoder _parentMessage;
     private IMutableDirectBuffer _buffer;
@@ -231,12 +231,12 @@ public class ListRecordingSubscriptionsRequestEncoder
 
     public static int ApplyStreamIdEncodingLength()
     {
-        return 1;
+        return 4;
     }
 
     public ListRecordingSubscriptionsRequestEncoder ApplyStreamId(BooleanType value)
     {
-        _buffer.PutByte(_offset + 24, (byte)value);
+        _buffer.PutInt(_offset + 24, (int)value, ByteOrder.LittleEndian);
         return this;
     }
 

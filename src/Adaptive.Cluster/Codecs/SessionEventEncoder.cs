@@ -9,10 +9,10 @@ namespace Adaptive.Cluster.Codecs {
 
 public class SessionEventEncoder
 {
-    public const ushort BLOCK_LENGTH = 32;
+    public const ushort BLOCK_LENGTH = 36;
     public const ushort TEMPLATE_ID = 2;
     public const ushort SCHEMA_ID = 111;
-    public const ushort SCHEMA_VERSION = 4;
+    public const ushort SCHEMA_VERSION = 6;
 
     private SessionEventEncoder _parentMessage;
     private IMutableDirectBuffer _buffer;
@@ -240,9 +240,41 @@ public class SessionEventEncoder
         return this;
     }
 
+    public static int VersionEncodingOffset()
+    {
+        return 32;
+    }
+
+    public static int VersionEncodingLength()
+    {
+        return 4;
+    }
+
+    public static int VersionNullValue()
+    {
+        return 0;
+    }
+
+    public static int VersionMinValue()
+    {
+        return 1;
+    }
+
+    public static int VersionMaxValue()
+    {
+        return 16777215;
+    }
+
+    public SessionEventEncoder Version(int value)
+    {
+        _buffer.PutInt(_offset + 32, value, ByteOrder.LittleEndian);
+        return this;
+    }
+
+
     public static int DetailId()
     {
-        return 6;
+        return 7;
     }
 
     public static string DetailCharacterEncoding()

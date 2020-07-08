@@ -15,6 +15,7 @@
  */
 
 using System.Text;
+using Adaptive.Aeron.Exceptions;
 using Adaptive.Agrona;
 
 namespace Adaptive.Aeron.Command
@@ -43,6 +44,8 @@ namespace Adaptive.Aeron.Command
         private static readonly int STREAM_ID_FIELD_OFFSET = CORRELATION_ID_FIELD_OFFSET + BitUtil.SIZE_OF_LONG;
         private static readonly int CHANNEL_OFFSET = STREAM_ID_FIELD_OFFSET + BitUtil.SIZE_OF_INT;
 
+        private static readonly int MINIMUM_LENGTH = CHANNEL_OFFSET + BitUtil.SIZE_OF_INT;
+        
         private int _lengthOfChannel;
 
         /// <summary>
@@ -106,6 +109,23 @@ namespace Adaptive.Aeron.Command
         {
             return CHANNEL_OFFSET + _lengthOfChannel;
         }
-    }
+        
+        /// <summary>
+        /// Validate buffer length is long enough for message.
+        /// </summary>
+        /// <param name="msgTypeId"> type of message. </param>
+        /// <param name="length"> of message in bytes to validate. </param>
+        public new void ValidateLength(int msgTypeId, int length)
+        {
+            if (length < MINIMUM_LENGTH)
+            {
+                throw new ControlProtocolException(ErrorCode.MALFORMED_COMMAND, "command=" + msgTypeId + " too short: length=" + length);
+            }
 
+            if ((length - MINIMUM_LENGTH) < buffer.GetInt(offset + CHANNEL_OFFSET))
+            {
+                throw new ControlProtocolException(ErrorCode.MALFORMED_COMMAND, "command=" + msgTypeId + " too short for channel: length=" + length);
+            }
+        }
+    }
 }

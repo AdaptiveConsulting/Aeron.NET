@@ -12,7 +12,7 @@ public class ConsensusModuleDecoder
     public const ushort BLOCK_LENGTH = 28;
     public const ushort TEMPLATE_ID = 105;
     public const ushort SCHEMA_ID = 111;
-    public const ushort SCHEMA_VERSION = 4;
+    public const ushort SCHEMA_VERSION = 6;
 
     private ConsensusModuleDecoder _parentMessage;
     private IDirectBuffer _buffer;
@@ -300,11 +300,6 @@ public class ConsensusModuleDecoder
 
     public int PendingMessageCapacity()
     {
-        if (_parentMessage._actingVersion < 3)
-        {
-            return 0;
-        }
-
         return _buffer.GetInt(_offset + 24, ByteOrder.LittleEndian);
     }
 
@@ -354,7 +349,7 @@ public class ConsensusModuleDecoder
         builder.Append(LogServiceSessionId());
         builder.Append('|');
         //Token{signal=BEGIN_FIELD, name='pendingMessageCapacity', referencedName='null', description='null', id=4, version=3, deprecated=0, encodedLength=0, offset=24, componentTokenCount=3, encoding=Encoding{presence=OPTIONAL, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
-        //Token{signal=ENCODING, name='capacity_t', referencedName='null', description='Capacity of a container.', id=-1, version=3, deprecated=0, encodedLength=4, offset=24, componentTokenCount=1, encoding=Encoding{presence=OPTIONAL, primitiveType=INT32, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=0, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=ENCODING, name='capacity_t', referencedName='null', description='Capacity of a container.', id=-1, version=0, deprecated=0, encodedLength=4, offset=24, componentTokenCount=1, encoding=Encoding{presence=OPTIONAL, primitiveType=INT32, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=0, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
         builder.Append("PendingMessageCapacity=");
         builder.Append(PendingMessageCapacity());
 

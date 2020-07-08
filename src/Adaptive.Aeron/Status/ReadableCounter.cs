@@ -32,9 +32,10 @@ namespace Adaptive.Aeron.Status
         /// <exception cref="InvalidOperationException"> if the id has for the counter has not been allocated. </exception>
         public ReadableCounter(CountersReader countersReader, long registrationId, int counterId)
         {
-            if (countersReader.GetCounterState(counterId) != CountersReader.RECORD_ALLOCATED)
+            var counterState = countersReader.GetCounterState(counterId);
+            if (counterState != CountersReader.RECORD_ALLOCATED)
             {
-                throw new InvalidOperationException("Counter id has not been allocated: " + counterId);
+                throw new InvalidOperationException("Counter not allocated: id=" + counterId + " state=" + counterState);
             }
 
             _countersReader = countersReader;
@@ -55,7 +56,8 @@ namespace Adaptive.Aeron.Status
         /// <param name="countersReader"> for getting access to the buffers. </param>
         /// <param name="counterId">      for the counter to be viewed. </param>
         /// <exception cref="InvalidOperationException"> if the id has for the counter has not been allocated. </exception>
-        public ReadableCounter(CountersReader countersReader, int counterId) : this(countersReader, Aeron.NULL_VALUE, counterId)
+        public ReadableCounter(CountersReader countersReader, int counterId) : this(countersReader, Aeron.NULL_VALUE,
+            counterId)
         {
         }
 
@@ -98,7 +100,7 @@ namespace Adaptive.Aeron.Status
         public long Get()
         {
             // return UnsafeAccess.UNSAFE.getLongVolatile(buffer, addressOffset);
-            
+
             return _valuesBuffer.GetLongVolatile(_addressOffset);
         }
 
@@ -109,7 +111,7 @@ namespace Adaptive.Aeron.Status
         public long GetWeak()
         {
             // UnsafeAccess.UNSAFE.getLong(buffer, addressOffset);
-            
+
             return _valuesBuffer.GetLong(_addressOffset);
         }
 

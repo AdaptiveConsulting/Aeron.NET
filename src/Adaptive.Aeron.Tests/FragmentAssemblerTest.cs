@@ -58,7 +58,7 @@ namespace Adaptive.Aeron.Tests
             adapter.OnFragment(srcBuffer, offset, length, header);
 
             A.CallTo(() => delegateFragmentHandler.OnFragment(srcBuffer, offset, length, header))
-                .MustHaveHappened(Repeated.Exactly.Once);
+                .MustHaveHappened(1, Times.Exactly);
         }
 
         [Test]
@@ -96,7 +96,7 @@ namespace Adaptive.Aeron.Tests
                 offset,
                 length*2,
                 A<Header>.That.Matches(headerAssertion, "header")))
-                .MustHaveHappened(Repeated.Exactly.Once);
+                .MustHaveHappened(1, Times.Exactly);
         }
 
         [Test]
@@ -139,7 +139,7 @@ namespace Adaptive.Aeron.Tests
                 offset,
                 length*4,
                 A<Header>.That.Matches(headerAssertion, "header")))
-                .MustHaveHappened(Repeated.Exactly.Once);
+                .MustHaveHappened(1, Times.Exactly);
         }
 
         [Test]

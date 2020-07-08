@@ -919,6 +919,15 @@ namespace Adaptive.Agrona.Concurrent
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public string GetStringWithoutLengthAscii(int index, int length)
+        {
+            var stringInBytes = new byte[length];
+            GetBytes(index, stringInBytes);
+
+            return Encoding.ASCII.GetString(stringInBytes);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int PutStringWithoutLengthUtf8(int index, string value)
         {
             var bytes = value == null

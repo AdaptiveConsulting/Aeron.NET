@@ -9,10 +9,10 @@ namespace Adaptive.Cluster.Codecs {
 
 public class StopCatchupEncoder
 {
-    public const ushort BLOCK_LENGTH = 20;
+    public const ushort BLOCK_LENGTH = 12;
     public const ushort TEMPLATE_ID = 57;
     public const ushort SCHEMA_ID = 111;
-    public const ushort SCHEMA_VERSION = 4;
+    public const ushort SCHEMA_VERSION = 6;
 
     private StopCatchupEncoder _parentMessage;
     private IMutableDirectBuffer _buffer;
@@ -128,41 +128,9 @@ public class StopCatchupEncoder
     }
 
 
-    public static int LogPositionEncodingOffset()
-    {
-        return 8;
-    }
-
-    public static int LogPositionEncodingLength()
-    {
-        return 8;
-    }
-
-    public static long LogPositionNullValue()
-    {
-        return -9223372036854775808L;
-    }
-
-    public static long LogPositionMinValue()
-    {
-        return -9223372036854775807L;
-    }
-
-    public static long LogPositionMaxValue()
-    {
-        return 9223372036854775807L;
-    }
-
-    public StopCatchupEncoder LogPosition(long value)
-    {
-        _buffer.PutLong(_offset + 8, value, ByteOrder.LittleEndian);
-        return this;
-    }
-
-
     public static int FollowerMemberIdEncodingOffset()
     {
-        return 16;
+        return 8;
     }
 
     public static int FollowerMemberIdEncodingLength()
@@ -187,7 +155,7 @@ public class StopCatchupEncoder
 
     public StopCatchupEncoder FollowerMemberId(int value)
     {
-        _buffer.PutInt(_offset + 16, value, ByteOrder.LittleEndian);
+        _buffer.PutInt(_offset + 8, value, ByteOrder.LittleEndian);
         return this;
     }
 

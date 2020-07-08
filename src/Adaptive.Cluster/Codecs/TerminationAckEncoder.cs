@@ -12,7 +12,7 @@ public class TerminationAckEncoder
     public const ushort BLOCK_LENGTH = 12;
     public const ushort TEMPLATE_ID = 76;
     public const ushort SCHEMA_ID = 111;
-    public const ushort SCHEMA_VERSION = 4;
+    public const ushort SCHEMA_VERSION = 6;
 
     private TerminationAckEncoder _parentMessage;
     private IMutableDirectBuffer _buffer;

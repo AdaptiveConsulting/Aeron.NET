@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+using Adaptive.Aeron.Exceptions;
 using Adaptive.Agrona;
 
 namespace Adaptive.Aeron.Command
@@ -39,6 +40,7 @@ namespace Adaptive.Aeron.Command
     public class RemoveMessageFlyweight : CorrelatedMessageFlyweight
     {
         private static readonly int REGISTRATION_ID_OFFSET = CORRELATION_ID_FIELD_OFFSET + BitUtil.SIZE_OF_LONG;
+        private static readonly int MINIMUM_LENGTH = REGISTRATION_ID_OFFSET + BitUtil.SIZE_OF_LONG;
 
         /// <summary>
         /// Get the registration id field
@@ -64,6 +66,19 @@ namespace Adaptive.Aeron.Command
         public static int Length()
         {
             return LENGTH + BitUtil.SIZE_OF_LONG;
+        }
+        
+        /// <summary>
+        /// Validate buffer length is long enough for message.
+        /// </summary>
+        /// <param name="msgTypeId"> type of message. </param>
+        /// <param name="length"> of message in bytes to validate. </param>
+        public new void ValidateLength(int msgTypeId, int length)
+        {
+            if (length < MINIMUM_LENGTH)
+            {
+                throw new ControlProtocolException(ErrorCode.MALFORMED_COMMAND, "command=" + msgTypeId + " too short: length=" + length);
+            }
         }
     }
 }

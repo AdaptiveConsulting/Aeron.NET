@@ -19,33 +19,35 @@ namespace Adaptive.Cluster.Service
         private readonly MessageHeaderDecoder messageHeaderDecoder = new MessageHeaderDecoder();
         private readonly SnapshotMarkerDecoder snapshotMarkerDecoder = new SnapshotMarkerDecoder();
         private readonly ClientSessionDecoder clientSessionDecoder = new ClientSessionDecoder();
+        private readonly ImageControlledFragmentAssembler fragmentAssembler;
         private readonly Image image;
         private readonly ClusteredServiceAgent agent;
 
         internal ServiceSnapshotLoader(Image image, ClusteredServiceAgent agent)
         {
+            this.fragmentAssembler = new ImageControlledFragmentAssembler(this);
             this.image = image;
             this.agent = agent;
         }
 
-        public bool IsDone()
+        internal bool IsDone()
         {
             return isDone;
         }
 
-        public int AppVersion()
+        internal int AppVersion()
         {
             return appVersion;
         }
 
-        public ClusterTimeUnit TimeUnit()
+        internal ClusterTimeUnit TimeUnit()
         {
             return timeUnit;
         }
 
-        public int Poll()
+        internal int Poll()
         {
-            return image.ControlledPoll(this, FRAGMENT_LIMIT);
+            return image.ControlledPoll(fragmentAssembler, FRAGMENT_LIMIT);
         }
 
         public ControlledFragmentHandlerAction OnFragment(IDirectBuffer buffer, int offset, int length, Header header)
@@ -70,7 +72,7 @@ namespace Adaptive.Cluster.Service
                         messageHeaderDecoder.Version());
 
                     long typeId = snapshotMarkerDecoder.TypeId();
-                    if (typeId != ClusteredServiceContainer.SNAPSHOT_TYPE_ID)
+                    if (typeId != ClusteredServiceContainer.Configuration.SNAPSHOT_TYPE_ID)
                     {
                         throw new ClusterException("unexpected snapshot type: " + typeId);
                     }

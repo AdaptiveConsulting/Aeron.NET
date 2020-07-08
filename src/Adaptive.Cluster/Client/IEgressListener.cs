@@ -26,7 +26,16 @@ namespace Adaptive.Cluster.Client
             int length,
             Header header);
 
-        void SessionEvent(
+        /// <summary>
+        /// Session event emitted from the cluster which after connect can indicate an error or session close.
+        /// </summary>
+        /// <param name="correlationId">    associated with the cluster ingress. </param>
+        /// <param name="clusterSessionId"> to which the event belongs. </param>
+        /// <param name="leadershipTermId"> for identifying the active term of leadership </param>
+        /// <param name="leaderMemberId">   identity of the active leader. </param>
+        /// <param name="code">             to indicate the type of event. </param>
+        /// <param name="detail">           Textual detail to explain the event. </param>
+        void OnSessionEvent(
             long correlationId,
             long clusterSessionId,
             long leadershipTermId,
@@ -34,6 +43,13 @@ namespace Adaptive.Cluster.Client
             EventCode code,
             string detail);
 
-        void NewLeader(long clusterSessionId, long leadershipTermId, int leaderMemberId, string memberEndpoints);
+        /// <summary>
+        /// Event indicating a new leader has been elected.
+        /// </summary>
+        /// <param name="clusterSessionId"> to which the event belongs. </param>
+        /// <param name="leadershipTermId"> for identifying the active term of leadership </param>
+        /// <param name="leaderMemberId">   identity of the active leader. </param>
+        /// <param name="ingressEndpoints">  for connecting to the cluster which can be updated due to dynamic membership. </param>
+        void OnNewLeader(long clusterSessionId, long leadershipTermId, int leaderMemberId, string ingressEndpoints);
     }
 }

@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+using Adaptive.Aeron.Exceptions;
 using Adaptive.Agrona;
 
 namespace Adaptive.Aeron.Command
@@ -95,6 +96,18 @@ namespace Adaptive.Aeron.Command
 
             return this;
         }
+        
+        /// <summary>
+        /// Validate buffer length is long enough for message.
+        /// </summary>
+        /// <param name="msgTypeId"> type of message. </param>
+        /// <param name="length"> of message in bytes to validate. </param>
+        public void ValidateLength(int msgTypeId, int length)
+        {
+            if (length < LENGTH)
+            {
+                throw new ControlProtocolException(ErrorCode.MALFORMED_COMMAND, "command=" + msgTypeId + " too short: length=" + length);
+            }
+        }
     }
-
 }

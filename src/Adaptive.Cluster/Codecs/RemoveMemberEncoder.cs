@@ -9,10 +9,10 @@ namespace Adaptive.Cluster.Codecs {
 
 public class RemoveMemberEncoder
 {
-    public const ushort BLOCK_LENGTH = 16;
+    public const ushort BLOCK_LENGTH = 8;
     public const ushort TEMPLATE_ID = 35;
     public const ushort SCHEMA_ID = 111;
-    public const ushort SCHEMA_VERSION = 4;
+    public const ushort SCHEMA_VERSION = 6;
 
     private RemoveMemberEncoder _parentMessage;
     private IMutableDirectBuffer _buffer;
@@ -96,41 +96,9 @@ public class RemoveMemberEncoder
         this._limit = limit;
     }
 
-    public static int CorrelationIdEncodingOffset()
-    {
-        return 0;
-    }
-
-    public static int CorrelationIdEncodingLength()
-    {
-        return 8;
-    }
-
-    public static long CorrelationIdNullValue()
-    {
-        return -9223372036854775808L;
-    }
-
-    public static long CorrelationIdMinValue()
-    {
-        return -9223372036854775807L;
-    }
-
-    public static long CorrelationIdMaxValue()
-    {
-        return 9223372036854775807L;
-    }
-
-    public RemoveMemberEncoder CorrelationId(long value)
-    {
-        _buffer.PutLong(_offset + 0, value, ByteOrder.LittleEndian);
-        return this;
-    }
-
-
     public static int MemberIdEncodingOffset()
     {
-        return 8;
+        return 0;
     }
 
     public static int MemberIdEncodingLength()
@@ -155,14 +123,14 @@ public class RemoveMemberEncoder
 
     public RemoveMemberEncoder MemberId(int value)
     {
-        _buffer.PutInt(_offset + 8, value, ByteOrder.LittleEndian);
+        _buffer.PutInt(_offset + 0, value, ByteOrder.LittleEndian);
         return this;
     }
 
 
     public static int IsPassiveEncodingOffset()
     {
-        return 12;
+        return 4;
     }
 
     public static int IsPassiveEncodingLength()
@@ -172,7 +140,7 @@ public class RemoveMemberEncoder
 
     public RemoveMemberEncoder IsPassive(BooleanType value)
     {
-        _buffer.PutInt(_offset + 12, (int)value, ByteOrder.LittleEndian);
+        _buffer.PutInt(_offset + 4, (int)value, ByteOrder.LittleEndian);
         return this;
     }
 

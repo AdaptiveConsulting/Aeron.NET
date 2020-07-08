@@ -9,7 +9,6 @@ using Adaptive.Agrona.Concurrent.Errors;
 using Adaptive.Agrona.Concurrent.Status;
 using Adaptive.Archiver;
 using Adaptive.Cluster.Client;
-using Adaptive.Cluster.Codecs;
 using Adaptive.Cluster.Codecs.Mark;
 
 namespace Adaptive.Cluster.Service
@@ -21,16 +20,6 @@ namespace Adaptive.Cluster.Service
     /// </summary>
     public sealed class ClusteredServiceContainer : IDisposable
     {
-        public const int SYSTEM_COUNTER_TYPE_ID = 0;
-
-        /// <summary>
-        /// Type of snapshot for this service.
-        /// </summary>
-        public const long SNAPSHOT_TYPE_ID = 2;
-
-        private readonly Context ctx;
-        private readonly AgentRunner serviceAgentRunner;
-
         /// <summary>
         /// Launch the clustered service container and await a shutdown signal.
         /// </summary>
@@ -44,6 +33,9 @@ namespace Adaptive.Cluster.Service
                 Console.WriteLine("Shutdown ClusteredServiceContainer...");
             }
         }
+
+        private readonly Context ctx;
+        private readonly AgentRunner serviceAgentRunner;
 
         private ClusteredServiceContainer(Context ctx)
         {
@@ -68,12 +60,6 @@ namespace Adaptive.Cluster.Service
             serviceAgentRunner = new AgentRunner(ctx.IdleStrategy(), ctx.ErrorHandler(), ctx.ErrorCounter(), agent);
         }
 
-        private ClusteredServiceContainer Start()
-        {
-            AgentRunner.StartOnThread(serviceAgentRunner, ctx.ThreadFactory());
-            return this;
-        }
-
         /// <summary>
         /// Launch an ClusteredServiceContainer using a default configuration.
         /// </summary>
@@ -90,7 +76,11 @@ namespace Adaptive.Cluster.Service
         /// <returns> a new instance of a ClusteredServiceContainer. </returns>
         public static ClusteredServiceContainer Launch(Context ctx)
         {
-            return (new ClusteredServiceContainer(ctx)).Start();
+            ClusteredServiceContainer clusteredServiceContainer = new ClusteredServiceContainer(ctx);
+            AgentRunner.StartOnThread(clusteredServiceContainer.serviceAgentRunner,
+                clusteredServiceContainer.ctx.ThreadFactory());
+
+            return clusteredServiceContainer;
         }
 
         /// <summary>
@@ -112,6 +102,26 @@ namespace Adaptive.Cluster.Service
         /// </summary>
         public class Configuration
         {
+            /// <summary>
+            /// Type of snapshot for this service.
+            /// </summary>
+            public const long SNAPSHOT_TYPE_ID = 2;
+
+            /// <summary>
+            /// Update interval for cluster mark file.
+            /// </summary>
+            public static readonly long MARK_FILE_UPDATE_INTERVAL_NS = 1_000_000_000L;
+
+            /// <summary>
+            /// Property name for the identity of the cluster instance.
+            /// </summary>
+            public const string CLUSTER_ID_PROP_NAME = "aeron.cluster.id";
+
+            /// <summary>
+            /// Default identity for a clustered instance.
+            /// </summary>
+            public const int CLUSTER_ID_DEFAULT = 0;
+
             /// <summary>
             /// Identity for a clustered service. Services should be numbered from 0 and be contiguous.
             /// </summary>
@@ -159,24 +169,24 @@ namespace Adaptive.Cluster.Service
             public const int REPLAY_STREAM_ID_DEFAULT = 103;
 
             /// <summary>
-            /// Channel for communications between the local consensus module and services.
+            /// Channel for control communications between the local consensus module and services.
             /// </summary>
-            public const string SERVICE_CONTROL_CHANNEL_PROP_NAME = "aeron.cluster.service.control.channel";
+            public const string CONTROL_CHANNEL_PROP_NAME = "aeron.cluster.control.channel";
 
             /// <summary>
             ///  Default channel for communications between the local consensus module and services. This should be IPC.
             /// </summary>
-            public const string SERVICE_CONTROL_CHANNEL_DEFAULT = "aeron:ipc?term-length=64k|mtu=8k";
+            public const string CONTROL_CHANNEL_DEFAULT = "aeron:ipc?term-length=64k|mtu=8k";
 
             /// <summary>
-            /// Stream id within a channel for communications from the consensus module to the services.
+            /// Stream id within the control channel for communications from the consensus module to the services.
             /// </summary>
             public const string SERVICE_STREAM_ID_PROP_NAME = "aeron.cluster.service.stream.id";
 
             /// <summary>
-            /// Default stream id within a channel for communications from the consensus module to the services.
+            /// Default stream id within the control channel for communications from the consensus module to the services.
             /// </summary>
-            public const int SERVICE_CONTROL_STREAM_ID_DEFAULT = 104;
+            public const int SERVICE_STREAM_ID_DEFAULT = 104;
 
             /// <summary>
             /// Stream id within a channel for communications from the services to the consensus module.
@@ -196,7 +206,7 @@ namespace Adaptive.Cluster.Service
             /// <summary>
             /// Channel to be used for archiving snapshots.
             /// </summary>
-            public static readonly string SNAPSHOT_CHANNEL_DEFAULT = Aeron.Aeron.Context.IPC_CHANNEL;
+            public static readonly string SNAPSHOT_CHANNEL_DEFAULT = "aeron:ipc?alias=snapshot";
 
             /// <summary>
             /// Stream id within a channel for archiving snapshots.
@@ -239,6 +249,36 @@ namespace Adaptive.Cluster.Service
             public const bool RESPONDER_SERVICE_DEFAULT = true;
 
             /// <summary>
+            /// Delegating <seealso cref="ErrorHandler"/> which will be first in the chain before delegating to the
+            /// <seealso cref="Context.ErrorHandler()"/>.
+            /// </summary>
+            public const string DELEGATING_ERROR_HANDLER_PROP_NAME = "aeron.cluster.service.delegating.error.handler";
+
+            /// <summary>
+            /// Counter type id for the cluster node role.
+            /// </summary>
+            public const int CLUSTER_NODE_ROLE_TYPE_ID = 201;
+
+            /// <summary>
+            /// Counter type id of the commit position.
+            /// </summary>
+            public const int COMMIT_POSITION_TYPE_ID = 203;
+
+            /// <summary>
+            /// Counter type id for the clustered service error count.
+            /// </summary>
+            public const int CLUSTERED_SERVICE_ERROR_COUNT_TYPE_ID = 215;
+
+            /// <summary>
+            /// The value <seealso cref="CLUSTER_ID_DEFAULT"/> or system property <seealso cref="CLUSTER_ID_PROP_NAME"/> if set.
+            /// </summary>
+            /// <returns> <seealso cref="CLUSTER_ID_DEFAULT"/> or system property <seealso cref="CLUSTER_ID_PROP_NAME"/> if set. </returns>
+            public static int ClusterId()
+            {
+                return Config.GetInteger(CLUSTER_ID_PROP_NAME, CLUSTER_ID_DEFAULT);
+            }
+
+            /// <summary>
             /// The value <seealso cref="SERVICE_ID_DEFAULT"/> or system property <seealso cref="SERVICE_ID_PROP_NAME"/> if set.
             /// </summary>
             /// <returns> <seealso cref="SERVICE_ID_DEFAULT"/> or system property <seealso cref="SERVICE_ID_PROP_NAME"/> if set. </returns>
@@ -277,14 +317,14 @@ namespace Adaptive.Cluster.Service
             }
 
             /// <summary>
-            /// The value <seealso cref="SERVICE_CONTROL_CHANNEL_DEFAULT"/> or system property
-            /// <seealso cref="SERVICE_CONTROL_CHANNEL_PROP_NAME"/> if set.
+            /// The value <seealso cref="CONTROL_CHANNEL_DEFAULT"/> or system property
+            /// <seealso cref="CONTROL_CHANNEL_PROP_NAME"/> if set.
             /// </summary>
-            /// <returns> <seealso cref="SERVICE_CONTROL_CHANNEL_DEFAULT"/> or system property
-            /// <seealso cref="SERVICE_CONTROL_CHANNEL_PROP_NAME"/> if set. </returns>
-            public static string ServiceControlChannel()
+            /// <returns> <seealso cref="CONTROL_CHANNEL_DEFAULT"/> or system property
+            /// <seealso cref="CONTROL_CHANNEL_PROP_NAME"/> if set. </returns>
+            public static string ControlChannel()
             {
-                return Config.GetProperty(SERVICE_CONTROL_CHANNEL_PROP_NAME, SERVICE_CONTROL_CHANNEL_DEFAULT);
+                return Config.GetProperty(CONTROL_CHANNEL_PROP_NAME, CONTROL_CHANNEL_DEFAULT);
             }
 
             /// <summary>
@@ -299,14 +339,14 @@ namespace Adaptive.Cluster.Service
             }
 
             /// <summary>
-            /// The value <seealso cref="SERVICE_CONTROL_STREAM_ID_DEFAULT"/> or system property
+            /// The value <seealso cref="SERVICE_STREAM_ID_DEFAULT"/> or system property
             /// <seealso cref="SERVICE_STREAM_ID_PROP_NAME"/> if set.
             /// </summary>
-            /// <returns> <seealso cref="SERVICE_CONTROL_STREAM_ID_DEFAULT"/> or system property
+            /// <returns> <seealso cref="SERVICE_STREAM_ID_DEFAULT"/> or system property
             /// <seealso cref="SERVICE_STREAM_ID_PROP_NAME"/> if set. </returns>
             public static int ServiceStreamId()
             {
-                return Config.GetInteger(SERVICE_STREAM_ID_PROP_NAME, SERVICE_CONTROL_STREAM_ID_DEFAULT);
+                return Config.GetInteger(SERVICE_STREAM_ID_PROP_NAME, SERVICE_STREAM_ID_DEFAULT);
             }
 
             /// <summary>
@@ -328,7 +368,14 @@ namespace Adaptive.Cluster.Service
                 return Config.GetInteger(SNAPSHOT_STREAM_ID_PROP_NAME, SNAPSHOT_STREAM_ID_DEFAULT);
             }
 
+            /// <summary>
+            /// Default <see cref="IIdleStrategy"/> to be employed for cluster agents.
+            /// </summary>
             public const string DEFAULT_IDLE_STRATEGY = "BackoffIdleStrategy";
+
+            /// <summary>
+            /// <see cref="IIdleStrategy"/> to be employed for cluster agents.
+            /// </summary>
             public const string CLUSTER_IDLE_STRATEGY_PROP_NAME = "aeron.cluster.idle.strategy";
 
             /// <summary>
@@ -378,6 +425,37 @@ namespace Adaptive.Cluster.Service
 
                 return "true".Equals(property);
             }
+
+            /// <summary>
+            /// Create a new <seealso cref="IClusteredService"/> based on the configured <seealso cref="SERVICE_CLASS_NAME_PROP_NAME"/>.
+            /// </summary>
+            /// <returns> a new <seealso cref="IClusteredService"/> based on the configured <seealso cref="SERVICE_CLASS_NAME_PROP_NAME"/>. </returns>
+            public static IClusteredService NewClusteredService()
+            {
+                string className = Config.GetProperty(SERVICE_CLASS_NAME_PROP_NAME);
+                if (null == className)
+                {
+                    throw new ClusterException("either a instance or class name for the service must be provided");
+                }
+
+                return (IClusteredService) Activator.CreateInstance(Type.GetType(className));
+            }
+
+            /// <summary>
+            /// Create a new <seealso cref="DelegatingErrorHandler"/> defined by <seealso cref="DELEGATING_ERROR_HANDLER_PROP_NAME"/>.
+            /// </summary>
+            /// <returns> a new <seealso cref="DelegatingErrorHandler"/> defined by <seealso cref="DELEGATING_ERROR_HANDLER_PROP_NAME"/> or
+            /// null if property not set. </returns>
+            public static DelegatingErrorHandler NewDelegatingErrorHandler()
+            {
+                string className = Config.GetProperty(DELEGATING_ERROR_HANDLER_PROP_NAME);
+                if (null != className)
+                {
+                    return (DelegatingErrorHandler) Activator.CreateInstance(Type.GetType(className));
+                }
+
+                return null;
+            }
         }
 
         /// <summary>
@@ -388,11 +466,12 @@ namespace Adaptive.Cluster.Service
         {
             private int _isConcluded = 0;
             private int appVersion = SemanticVersion.Compose(0, 0, 1);
+            private int clusterId = Configuration.ClusterId();
             private int serviceId = Configuration.ServiceId();
             private string serviceName = Configuration.ServiceName();
             private string replayChannel = Configuration.ReplayChannel();
             private int replayStreamId = Configuration.ReplayStreamId();
-            private string serviceControlChannel = Configuration.ServiceControlChannel();
+            private string controlChannel = Configuration.ControlChannel();
             private int consensusModuleStreamId = Configuration.ConsensusModuleStreamId();
             private int serviceStreamId = Configuration.ServiceStreamId();
             private string snapshotChannel = Configuration.SnapshotChannel();
@@ -406,6 +485,7 @@ namespace Adaptive.Cluster.Service
             private IEpochClock epochClock;
             private DistinctErrorLog errorLog;
             private ErrorHandler errorHandler;
+            private DelegatingErrorHandler delegatingErrorHandler;
             private AtomicCounter errorCounter;
             private CountedErrorHandler countedErrorHandler;
             private AeronArchive.Context archiveContext;
@@ -436,9 +516,9 @@ namespace Adaptive.Cluster.Service
                     throw new ConcurrentConcludeException();
                 }
 
-                if (serviceId < 0)
+                if (serviceId < 0 || serviceId > 127)
                 {
-                    throw new ConfigurationException("service id cannot be negative: " + serviceId);
+                    throw new ConfigurationException("service id outside allowed range (0-127): " + serviceId);
                 }
 
                 if (null == threadFactory)
@@ -453,7 +533,7 @@ namespace Adaptive.Cluster.Service
 
                 if (null == epochClock)
                 {
-                    epochClock = new SystemEpochClock();
+                    epochClock = SystemEpochClock.INSTANCE;
                 }
 
                 if (null == clusterDir)
@@ -476,12 +556,27 @@ namespace Adaptive.Cluster.Service
 
                 if (null == errorLog)
                 {
-                    errorLog = new DistinctErrorLog(markFile.ErrorBuffer, epochClock);
+                    errorLog = new DistinctErrorLog(markFile.ErrorBuffer, epochClock); // US_ASCII
                 }
 
                 if (null == errorHandler)
                 {
                     errorHandler = new LoggingErrorHandler(errorLog).OnError; // TODO Use interface
+                }
+
+                if (null == delegatingErrorHandler)
+                {
+                    delegatingErrorHandler = Configuration.NewDelegatingErrorHandler();
+                    if (null != delegatingErrorHandler)
+                    {
+                        delegatingErrorHandler.Next(errorHandler);
+                        errorHandler = delegatingErrorHandler.OnError;
+                    }
+                }
+                else
+                {
+                    delegatingErrorHandler.Next(errorHandler);
+                    errorHandler = delegatingErrorHandler.OnError;
                 }
 
                 if (null == aeron)
@@ -490,6 +585,7 @@ namespace Adaptive.Cluster.Service
                         new Aeron.Aeron.Context()
                             .AeronDirectoryName(aeronDirectoryName)
                             .ErrorHandler(errorHandler)
+                            .AwaitingIdleStrategy(YieldingIdleStrategy.INSTANCE)
                             .EpochClock(epochClock));
 
                     ownsAeronClient = true;
@@ -497,7 +593,8 @@ namespace Adaptive.Cluster.Service
 
                 if (null == errorCounter)
                 {
-                    errorCounter = aeron.AddCounter(SYSTEM_COUNTER_TYPE_ID, "Cluster errors - service " + serviceId);
+                    String label = "Cluster Container Errors - clusterId=" + clusterId + " serviceId=" + serviceId;
+                    errorCounter = aeron.AddCounter(Configuration.CLUSTERED_SERVICE_ERROR_COUNT_TYPE_ID, label);
                 }
 
                 if (null == countedErrorHandler)
@@ -521,7 +618,7 @@ namespace Adaptive.Cluster.Service
                     .AeronClient(aeron)
                     .OwnsAeronClient(false)
                     .ErrorHandler(countedErrorHandler.OnError)
-                    .Lock(new NoOpLock());
+                    .Lock(NoOpLock.Instance);
 
                 if (null == shutdownSignalBarrier)
                 {
@@ -535,19 +632,13 @@ namespace Adaptive.Cluster.Service
 
                 if (null == clusteredService)
                 {
-                    string className = Config.GetProperty(Configuration.SERVICE_CLASS_NAME_PROP_NAME);
-                    if (null == className)
-                    {
-                        throw new ClusterException(
-                            "either a ClusteredService instance or class name for the service must be provided");
-                    }
-
-                    clusteredService = (IClusteredService) Activator.CreateInstance(Type.GetType(className));
+                    clusteredService = Configuration.NewClusteredService();
                 }
 
                 abortLatch = new CountdownEvent(aeron.ConductorAgentInvoker == null ? 1 : 0);
                 ConcludeMarkFile();
             }
+
             /// <summary>
             /// User assigned application version which appended to the log as the appVersion in new leadership events.
             /// <para>
@@ -576,6 +667,28 @@ namespace Adaptive.Cluster.Service
             public int AppVersion()
             {
                 return appVersion;
+            }
+
+            /// <summary>
+            /// Set the id for this cluster instance. This must match with the Consensus Module.
+            /// </summary>
+            /// <param name="clusterId"> for this clustered instance. </param>
+            /// <returns> this for a fluent API </returns>
+            /// <seealso cref="Configuration.CLUSTER_ID_PROP_NAME"></seealso>
+            public Context ClusterId(int clusterId)
+            {
+                this.clusterId = clusterId;
+                return this;
+            }
+
+            /// <summary>
+            /// Get the id for this cluster instance. This must match with the Consensus Module.
+            /// </summary>
+            /// <returns> the id for this cluster instance. </returns>
+            /// <seealso cref="Configuration.CLUSTER_ID_PROP_NAME"></seealso>
+            public int ClusterId()
+            {
+                return clusterId;
             }
 
             /// <summary>
@@ -672,10 +785,10 @@ namespace Adaptive.Cluster.Service
             /// </summary>
             /// <param name="channel"> parameter for sending messages to the Consensus Module. </param>
             /// <returns> this for a fluent API. </returns>
-            /// <seealso cref="Configuration.SERVICE_CONTROL_CHANNEL_PROP_NAME"></seealso>
-            public Context ServiceControlChannel(string channel)
+            /// <seealso cref="Configuration.CONTROL_CHANNEL_PROP_NAME"></seealso>
+            public Context ControlChannel(string channel)
             {
-                serviceControlChannel = channel;
+                controlChannel = channel;
                 return this;
             }
 
@@ -683,10 +796,10 @@ namespace Adaptive.Cluster.Service
             /// Get the channel parameter for sending messages to the Consensus Module.
             /// </summary>
             /// <returns> the channel parameter for sending messages to the Consensus Module. </returns>
-            /// <seealso cref="Configuration.SERVICE_CONTROL_CHANNEL_PROP_NAME"></seealso>
-            public string ServiceControlChannel()
+            /// <seealso cref="Configuration.CONTROL_CHANNEL_PROP_NAME"></seealso>
+            public string ControlChannel()
             {
-                return serviceControlChannel;
+                return controlChannel;
             }
 
             /// <summary>
@@ -840,9 +953,9 @@ namespace Adaptive.Cluster.Service
             }
 
             /// <summary>
-            /// Set the <seealso cref="IEpochClock"/> to be used for tracking wall clock time when interacting with the archive.
+            /// Set the <seealso cref="IEpochClock"/> to be used for tracking wall clock time when interacting with the container.
             /// </summary>
-            /// <param name="clock"> <seealso cref="IEpochClock"/> to be used for tracking wall clock time when interacting with the archive. </param>
+            /// <param name="clock"> <seealso cref="IEpochClock"/> to be used for tracking wall clock time when interacting with the container. </param>
             /// <returns> this for a fluent API. </returns>
             public Context EpochClock(IEpochClock clock)
             {
@@ -851,27 +964,27 @@ namespace Adaptive.Cluster.Service
             }
 
             /// <summary>
-            /// Get the <seealso cref="IEpochClock"/> to used for tracking wall clock time within the archive.
+            /// Get the <seealso cref="IEpochClock"/> to used for tracking wall clock time within the container.
             /// </summary>
-            /// <returns> the <seealso cref="IEpochClock"/> to used for tracking wall clock time within the archive. </returns>
+            /// <returns> the <seealso cref="IEpochClock"/> to used for tracking wall clock time within the container. </returns>
             public IEpochClock EpochClock()
             {
                 return epochClock;
             }
 
             /// <summary>
-            /// Get the <seealso cref="Agrona.ErrorHandler"/> to be used by the Archive.
+            /// Get the <seealso cref="Agrona.ErrorHandler"/> to be used by the <seealso cref="ClusteredServiceContainer"/>.
             /// </summary>
-            /// <returns> the <seealso cref="Agrona.ErrorHandler"/> to be used by the Archive. </returns>
+            /// <returns> the <seealso cref="Agrona.ErrorHandler"/> to be used by the <seealso cref="ClusteredServiceContainer"/>. </returns>
             public ErrorHandler ErrorHandler()
             {
                 return errorHandler;
             }
 
             /// <summary>
-            /// Set the <seealso cref="Agrona.ErrorHandler"/> to be used by the Archive.
+            /// Set the <seealso cref="Agrona.ErrorHandler"/> to be used by the <seealso cref="ClusteredServiceContainer"/>.
             /// </summary>
-            /// <param name="errorHandler"> the error handler to be used by the Archive. </param>
+            /// <param name="errorHandler"> the error handler to be used by the <seealso cref="ClusteredServiceContainer"/>. </param>
             /// <returns> this for a fluent API </returns>
             public Context ErrorHandler(ErrorHandler errorHandler)
             {
@@ -880,13 +993,38 @@ namespace Adaptive.Cluster.Service
             }
 
             /// <summary>
-            /// Get the error counter that will record the number of errors the archive has observed.
+            /// Get the <seealso cref="Agrona.DelegatingErrorHandler"/> to be used by the <seealso cref="ClusteredServiceContainer"/> which will
+            /// delegate to <seealso cref="ErrorHandler()"/> as next in the chain.
             /// </summary>
-            /// <returns> the error counter that will record the number of errors the archive has observed. </returns>
+            /// <returns> the <seealso cref="Agrona.DelegatingErrorHandler"/> to be used by the <seealso cref="ClusteredServiceContainer"/>. </returns>
+            /// <seealso cref="Configuration.DELEGATING_ERROR_HANDLER_PROP_NAME"></seealso>
+            public DelegatingErrorHandler DelegatingErrorHandler()
+            {
+                return delegatingErrorHandler;
+            }
+
+            /// <summary>
+            /// Set the <seealso cref="Agrona.DelegatingErrorHandler"/> to be used by the <seealso cref="ClusteredServiceContainer"/> which will
+            /// delegate to <seealso cref="ErrorHandler()"/> as next in the chain.
+            /// </summary>
+            /// <param name="delegatingErrorHandler"> the error handler to be used by the <seealso cref="ClusteredServiceContainer"/>. </param>
+            /// <returns> this for a fluent API </returns>
+            /// <seealso cref="Configuration.DELEGATING_ERROR_HANDLER_PROP_NAME"> </seealso>
+            public Context DelegatingErrorHandler(DelegatingErrorHandler delegatingErrorHandler)
+            {
+                this.delegatingErrorHandler = delegatingErrorHandler;
+                return this;
+            }
+
+            /// <summary>
+            /// Get the error counter that will record the number of errors the container has observed.
+            /// </summary>
+            /// <returns> the error counter that will record the number of errors the container has observed. </returns>
             public AtomicCounter ErrorCounter()
             {
                 return errorCounter;
             }
+
 
             /// <summary>
             /// Set the error counter that will record the number of errors the cluster node has observed.
@@ -1190,8 +1328,9 @@ namespace Adaptive.Cluster.Service
             /// </summary>
             public void Dispose()
             {
-                markFile?.Dispose();
-                
+                ErrorHandler errorHandler = CountedErrorHandler().OnError;
+                CloseHelper.Dispose(errorHandler, markFile);
+
                 if (ownsAeronClient)
                 {
                     aeron?.Dispose();
@@ -1207,8 +1346,7 @@ namespace Adaptive.Cluster.Service
             {
                 ClusterMarkFile.CheckHeaderLength(
                     aeron.Ctx.AeronDirectoryName(),
-                    archiveContext.ControlRequestChannel(),
-                    ServiceControlChannel(),
+                    ControlChannel(),
                     null,
                     serviceName,
                     null);
@@ -1219,15 +1357,15 @@ namespace Adaptive.Cluster.Service
                     .ArchiveStreamId(archiveContext.ControlRequestStreamId())
                     .ServiceStreamId(serviceStreamId)
                     .ConsensusModuleStreamId(consensusModuleStreamId)
-                    .IngressStreamId(0)
+                    .IngressStreamId(Adaptive.Aeron.Aeron.NULL_VALUE)
                     .MemberId(Adaptive.Aeron.Aeron.NULL_VALUE)
                     .ServiceId(serviceId)
+                    .ClusterId(clusterId)
                     .AeronDirectory(aeron.Ctx.AeronDirectoryName())
-                    .ArchiveChannel(archiveContext.ControlRequestChannel())
-                    .ServiceControlChannel(serviceControlChannel)
-                    .IngressChannel("")
+                    .ControlChannel(controlChannel)
+                    .IngressChannel(null)
                     .ServiceName(serviceName)
-                    .Authenticator("");
+                    .Authenticator(null);
 
                 markFile.UpdateActivityTimestamp(epochClock.Time());
                 markFile.SignalReady();

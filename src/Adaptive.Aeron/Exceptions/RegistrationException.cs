@@ -17,18 +17,31 @@
 namespace Adaptive.Aeron.Exceptions
 {
     /// <summary>
-    /// Caused when a error occurs during addition or release of <seealso cref="Publication"/>s
-    /// or <seealso cref="Subscription"/>s
+    /// Caused when a error occurs during addition, modification, or release of client resources such as
+    /// <seealso cref="Publication"/>s, <seealso cref="Subscription"/>s, or <seealso cref="Counter"/>s.
     /// </summary>
     public class RegistrationException : AeronException
     {
+        private readonly long _correlationId;
         private readonly int _errorCodeValue;
         private readonly ErrorCode _code;
 
-        public RegistrationException(int errorCodeValue, ErrorCode code, string msg) : base(msg)
+        public RegistrationException(long correlationId, int errorCodeValue, ErrorCode code, string msg) :
+            base(msg,
+                Adaptive.Aeron.ErrorCode.RESOURCE_TEMPORARILY_UNAVAILABLE == code ? Category.WARN : Category.ERROR)
         {
+            _correlationId = correlationId;
             _errorCodeValue = errorCodeValue;
             _code = code;
+        }
+
+        /// <summary>
+        /// Get the correlation id of the command to register the resource action.
+        /// </summary>
+        /// <returns> the correlation id of the command to register the resource action. </returns>
+        public long CorrelationId()
+        {
+            return _correlationId;
         }
 
         /// <summary>
@@ -50,6 +63,7 @@ namespace Adaptive.Aeron.Exceptions
             return _errorCodeValue;
         }
 
-        public override string Message => "errorCodeValue=" + _errorCodeValue + " " + base.Message;
+        public override string Message =>
+            "correlationId=" + _correlationId + ", errorCodeValue=" + _errorCodeValue + ", " + base.Message;
     }
 }

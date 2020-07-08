@@ -71,7 +71,8 @@ namespace Adaptive.Aeron.Status
         /// <summary>
         /// The maximum length in bytes of the encoded channel identity.
         /// </summary>
-        public static readonly int MAX_CHANNEL_LENGTH = CountersReader.MAX_KEY_LENGTH - (CHANNEL_OFFSET + BitUtil.SIZE_OF_INT);
+        public static readonly int MAX_CHANNEL_LENGTH =
+            CountersReader.MAX_KEY_LENGTH - (CHANNEL_OFFSET + BitUtil.SIZE_OF_INT);
 
         /// <summary>
         /// Allocate an indicator for tracking the status of a channel endpoint.
@@ -86,7 +87,8 @@ namespace Adaptive.Aeron.Status
             CountersManager countersManager, string channel)
         {
             int keyLength =
-                tempBuffer.PutStringWithoutLengthAscii(CHANNEL_OFFSET + BitUtil.SIZE_OF_INT, channel, 0, MAX_CHANNEL_LENGTH);
+                tempBuffer.PutStringWithoutLengthAscii(CHANNEL_OFFSET + BitUtil.SIZE_OF_INT, channel, 0,
+                    MAX_CHANNEL_LENGTH);
             tempBuffer.PutInt(CHANNEL_OFFSET, keyLength);
 
             int labelLength = 0;
@@ -94,6 +96,13 @@ namespace Adaptive.Aeron.Status
             labelLength += tempBuffer.PutStringWithoutLengthAscii(keyLength + labelLength, ": ");
             labelLength += tempBuffer.PutStringWithoutLengthAscii(keyLength + labelLength, channel, 0,
                 CountersReader.MAX_LABEL_LENGTH - labelLength);
+
+
+            if (labelLength < CountersReader.MAX_LABEL_LENGTH)
+            {
+                tempBuffer.PutByte(keyLength + labelLength, (byte) ' ');
+                labelLength += 1;
+            }
 
             return countersManager.NewCounter(typeId, tempBuffer, 0, keyLength, tempBuffer, keyLength, labelLength);
         }

@@ -26,7 +26,7 @@ namespace Adaptive.Aeron.Tests
     public class PublicationTest
     {
         private const string Channel = "aeron:udp?endpoint=localhost:40124";
-        private const int StreamID1 = 2;
+        private const int StreamID1 = 1002;
         private const int SessionID1 = 13;
         private const int TermID1 = 1;
         private const int CorrelationID = 2000;
@@ -93,7 +93,7 @@ namespace Adaptive.Aeron.Tests
         public void ShouldEnsureThePublicationIsOpenBeforeReadingPosition()
         {
             _publication.Dispose();
-            Assert.AreEqual(_publication.Position, Publication.CLOSED);
+            Assert.AreEqual(Publication.CLOSED, _publication.Position);
 
             A.CallTo(() => _conductor.ReleasePublication(_publication)).MustHaveHappened();
         }
@@ -103,7 +103,7 @@ namespace Adaptive.Aeron.Tests
         {
             _publication.Dispose();
             Assert.True(_publication.IsClosed);
-            Assert.AreEqual(_publication.Offer(_atomicSendBuffer), Publication.CLOSED);
+            Assert.AreEqual(Publication.CLOSED, _publication.Offer(_atomicSendBuffer));
         }
 
         [Test]
@@ -111,7 +111,7 @@ namespace Adaptive.Aeron.Tests
         {
             _publication.Dispose();
             var bufferClaim = new BufferClaim();
-            Assert.AreEqual(_publication.TryClaim(SendBufferCapacity, bufferClaim), Publication.CLOSED);
+            Assert.AreEqual(Publication.CLOSED, _publication.TryClaim(SendBufferCapacity, bufferClaim));
         }
 
         [Test]
@@ -133,13 +133,13 @@ namespace Adaptive.Aeron.Tests
         [Test]
         public void ShouldReportInitialPosition()
         {
-            Assert.AreEqual(_publication.Position, 0L);
+            Assert.AreEqual(0L, _publication.Position);
         }
 
         [Test]
         public void ShouldReportMaxMessageLength()
         {
-            Assert.AreEqual(_publication.MaxMessageLength, FrameDescriptor.ComputeMaxMessageLength(LogBufferDescriptor.TERM_MIN_LENGTH));
+            Assert.AreEqual(FrameDescriptor.ComputeMaxMessageLength(LogBufferDescriptor.TERM_MIN_LENGTH), _publication.MaxMessageLength);
         }
 
         [Test]

@@ -75,7 +75,7 @@ namespace Adaptive.Cluster.Service
         {
             if (null != _clusteredServiceAgent.GetClientSession(Id))
             {
-                _clusteredServiceAgent.CloseSession(Id);
+                _clusteredServiceAgent.CloseClientSession(Id);
             }
         }
 
@@ -85,8 +85,8 @@ namespace Adaptive.Cluster.Service
         /// <param name="buffer"> containing message. </param>
         /// <param name="offset"> offset in the buffer at which the encoded message begins. </param>
         /// <param name="length"> in bytes of the encoded message. </param>
-        /// <returns> the same as <seealso cref="Publication.Offer(IDirectBuffer, int, int, ReservedValueSupplier)"/> when in <seealso cref="ClusterRole.Leader"/>
-        /// otherwise <see cref="MOCKED_OFFER"/>. </returns>
+        /// <returns> the same as <seealso cref="Publication.Offer(IDirectBuffer, int, int, ReservedValueSupplier)"/> when in <seealso cref="ClusterRole.Leader"/>,
+        /// otherwise <see cref="MOCKED_OFFER"/> when a follower. </returns>
         public long Offer(IDirectBuffer buffer, int offset, int length)
         {
             return _clusteredServiceAgent.Offer(Id, _responsePublication, buffer, offset, length);
@@ -98,8 +98,8 @@ namespace Adaptive.Cluster.Service
         /// </summary>
         /// <param name="vectors"> which make up the message. </param>
         /// <returns> the same as <seealso cref="Publication.Offer(DirectBufferVector[], ReservedValueSupplier)"/>. </returns>
-        /// <seealso cref="Publication.Offer(DirectBufferVector[], ReservedValueSupplier)"/> when in <seealso cref="ClusterRole.Leader"/>
-        /// otherwise <seealso cref="MOCKED_OFFER"/>.
+        /// <seealso cref="Publication.Offer(DirectBufferVector[], ReservedValueSupplier)"/> when in <seealso cref="ClusterRole.Leader"/>,
+        /// otherwise <seealso cref="MOCKED_OFFER"/> when a follower.
         public long Offer(DirectBufferVector[] vectors)
         {
             return _clusteredServiceAgent.Offer(Id, _responsePublication, vectors);
@@ -131,10 +131,11 @@ namespace Adaptive.Cluster.Service
         ///    
         /// </para>
         /// </summary>
-        /// <param name="length">      of the range to claim, in bytes. </param>
+        /// <param name="length">      of the range to claim in bytes. The additional bytes for the session header will be added. </param>
         /// <param name="bufferClaim"> to be populated if the claim succeeds. </param>
         /// <returns> The new stream position, otherwise a negative error value as specified in
-        ///         <seealso cref="Publication.TryClaim(int, BufferClaim)"/>. </returns>
+        ///         <seealso cref="Publication.TryClaim(int, BufferClaim)"/>.when in <seealso cref="ClusterRole.Leader"/>,
+        ///         otherwise <seealso cref="MOCKED_OFFER"/> when a follower.</returns>
         /// <exception cref="ArgumentException"> if the length is greater than <seealso cref="Publication.MaxPayloadLength"/>. </exception>
         /// <seealso cref="Publication.TryClaim(int, BufferClaim)"/>
         /// <seealso cref="BufferClaim.Commit()"/>
@@ -169,10 +170,23 @@ namespace Adaptive.Cluster.Service
             IsClosing = false;
         }
 
-        internal void Disconnect()
+        internal void Disconnect(ErrorHandler errorHandler)
         {
-            _responsePublication?.Dispose();
+            CloseHelper.Dispose(errorHandler, _responsePublication);
             _responsePublication = null;
+        }
+
+        public override string ToString()
+        {
+            return "ClientSession{" +
+                   "id=" + Id +
+                   ", responseStreamId=" + ResponseStreamId +
+                   ", responseChannel='" + ResponseChannel + '\'' +
+                   ", encodedPrincipal=" + EncodedPrincipal +
+                   ", clusteredServiceAgent=" + _clusteredServiceAgent +
+                   ", responsePublication=" + _responsePublication +
+                   ", isClosing=" + IsClosing +
+                   '}';
         }
     }
 }

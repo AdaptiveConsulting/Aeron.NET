@@ -72,6 +72,11 @@ namespace Adaptive.Aeron.Protocol
         /// header type RTT Measurement 
         /// </summary>
         public const int HDR_TYPE_RTTM = 0x06;
+        
+        /// <summary>
+        /// header type RESOLUTION
+        /// </summary>
+        public const int HDR_TYPE_RES = 0x07;
 
         /// <summary>
         /// header type EXT 

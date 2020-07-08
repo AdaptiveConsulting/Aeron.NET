@@ -1,3 +1,4 @@
+using Adaptive.Aeron.Exceptions;
 using Adaptive.Agrona;
 
 namespace Adaptive.Aeron.Command
@@ -22,14 +23,16 @@ namespace Adaptive.Aeron.Command
     public class TerminateDriverFlyweight : CorrelatedMessageFlyweight
     {
         private static readonly int TOKEN_LENGTH_OFFSET = CORRELATION_ID_FIELD_OFFSET + BitUtil.SIZE_OF_LONG;
+        static readonly int TOKEN_BUFFER_OFFSET = TOKEN_LENGTH_OFFSET + BitUtil.SIZE_OF_INT;
+        private static readonly int MINIMUM_LENGTH = TOKEN_LENGTH_OFFSET + BitUtil.SIZE_OF_INT;
 
         /// <summary>
-        /// Offset of the token buffer
+        /// Relative offset of the token buffer
         /// </summary>
-        /// <returns> offset of the token buffer </returns>
+        /// <returns> relative offset of the token buffer </returns>
         public int TokenBufferOffset()
         {
-            return TOKEN_LENGTH_OFFSET + BitUtil.SIZE_OF_INT;
+            return TOKEN_BUFFER_OFFSET;
         }
 
         /// <summary>
@@ -50,10 +53,10 @@ namespace Adaptive.Aeron.Command
         /// <returns> flyweight </returns>
         public TerminateDriverFlyweight TokenBuffer(IDirectBuffer tokenBuffer, int tokenOffset, int tokenLength)
         {
-            buffer.PutInt(TOKEN_LENGTH_OFFSET, tokenLength);
+            buffer.PutInt(offset + TOKEN_LENGTH_OFFSET, tokenLength);
             if (null != tokenBuffer && tokenLength > 0)
             {
-                buffer.PutBytes(TokenBufferOffset(), tokenBuffer, tokenOffset, tokenLength);
+                buffer.PutBytes(offset + TokenBufferOffset(), tokenBuffer, tokenOffset, tokenLength);
             }
 
             return this;
@@ -69,7 +72,27 @@ namespace Adaptive.Aeron.Command
         /// <returns> the length of the current message </returns>
         public int Length()
         {
-            return TokenBufferOffset() + buffer.GetInt(offset + TOKEN_LENGTH_OFFSET);
+            return TokenBufferOffset() + TokenBufferLength();
+        }
+
+        /// <summary>
+        /// Validate buffer length is long enough for message.
+        /// </summary>
+        /// <param name="msgTypeId"> type of message. </param>
+        /// <param name="length">    of message in bytes to validate. </param>
+        public new void ValidateLength(int msgTypeId, int length)
+        {
+            if (length < MINIMUM_LENGTH)
+            {
+                throw new ControlProtocolException(ErrorCode.MALFORMED_COMMAND,
+                    "command=" + msgTypeId + " too short: length=" + length);
+            }
+
+            if ((length - MINIMUM_LENGTH) < buffer.GetInt(offset + TOKEN_LENGTH_OFFSET))
+            {
+                throw new ControlProtocolException(ErrorCode.MALFORMED_COMMAND,
+                    "command=" + msgTypeId + " too short for token buffer: length=" + length);
+            }
         }
     }
 }

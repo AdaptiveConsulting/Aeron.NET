@@ -52,10 +52,33 @@ namespace Adaptive.Aeron
         UNKNOWN_COUNTER = 5,
 
         /// <summary>
+        /// Attempted to send a command unknown by the driver.
+        /// </summary>
+        UNKNOWN_COMMAND_TYPE_ID = 6,
+
+        /// <summary>
+        /// Attempted to send a command that is malformed. Typically, too short.
+        /// </summary>
+        MALFORMED_COMMAND = 7,
+
+        /// <summary>
+        /// Attempted to send a command known by the driver, but not currently supported.
+        /// </summary>
+        NOT_SUPPORTED = 8,
+
+        /// <summary>
+        /// Attempted to send a command that had a host name the could be resolved.
+        /// </summary>
+        UNKNOWN_HOST = 9,
+
+        /// <summary>
+        /// Attempted to send a command that referred to a resource that was unavailable.
+        /// </summary>
+        RESOURCE_TEMPORARILY_UNAVAILABLE = 10,
+
+        /// <summary>
         /// A code value returned was not known.
         /// </summary>
         UNKNOWN_CODE_VALUE = -1
-
-        // Note: ErrorCode has option for unknown value in Java 
     }
 }

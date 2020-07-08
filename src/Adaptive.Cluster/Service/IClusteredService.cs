@@ -16,14 +16,15 @@ namespace Adaptive.Cluster.Service
         /// Start event for the service where the service can perform any initialisation required and load snapshot state.
         /// The snapshot image can be null if no previous snapshot exists.
         /// <para>
-        /// <b>Note:</b> As this is a potentially long running operation the implementation should occasional call
-        /// <seealso cref="ICluster.Idle()"/> or <seealso cref="ICluster.Idle(int)"/>, especially when polling the snapshot <seealso cref="Image"/>
-        /// returns 0.
-        ///     
+        /// <b>Note:</b> As this is a potentially long running operation the implementation should use
+        /// <seealso cref="ICluster.IdleStrategy()"/> and then occasional call <seealso cref="IIdleStrategy.Idle()"/> or
+        /// <seealso cref="IIdleStrategy.Idle(int)"/>, especially when polling the <seealso cref="Image"/> returns 0.
+        ///    
         /// </para>
         /// </summary>
         /// <param name="cluster">       with which the service can interact. </param>
         /// <param name="snapshotImage"> from which the service can load its archived state which can be null when no snapshot. </param>
+
         void OnStart(ICluster cluster, Image snapshotImage);
 
         /// <summary>
@@ -68,9 +69,10 @@ namespace Adaptive.Cluster.Service
         /// <summary>
         /// The service should take a snapshot and store its state to the provided archive <seealso cref="Publication"/>.
         /// <para>
-        /// <b>Note:</b> As this is a potentially long running operation the implementation should occasional call
-        /// <seealso cref="ICluster.Idle()"/> or <seealso cref="ICluster.Idle(int)"/>, especially in the event of back pressure.
-        ///     
+        /// <b>Note:</b> As this is a potentially long running operation the implementation should use
+        /// <seealso cref="ICluster.IdleStrategy()"/> and then occasional call <seealso cref="IIdleStrategy.Idle()"/> or
+        /// <seealso cref="IIdleStrategy.Idle(int)"/>, especially when polling the <seealso cref="Image"/> returns 0.
+        /// 
         /// </para>
         /// </summary>
         /// <param name="snapshotPublication"> to which the state should be recorded. </param>
@@ -87,5 +89,19 @@ namespace Adaptive.Cluster.Service
         /// </summary>
         /// <param name="cluster"> with which the service can interact. </param>
         void OnTerminate(ICluster cluster);
+
+        /// <summary>
+        /// An election has been successful and a leader has entered a new term.
+        /// </summary>
+        /// <param name="leadershipTermId">    identity for the new leadership term. </param>
+        /// <param name="logPosition">         position the log has reached as the result of this message. </param>
+        /// <param name="timestamp">           for the new leadership term. </param>
+        /// <param name="termBaseLogPosition"> position at the beginning of the leadership term. </param>
+        /// <param name="leaderMemberId">      who won the election. </param>
+        /// <param name="logSessionId">        session id for the publication of the log. </param>
+        /// <param name="timeUnit">            for the timestamps in the coming leadership term. </param>
+        /// <param name="appVersion">          for the application configured in the consensus module. </param>
+        void OnNewLeadershipTermEvent(long leadershipTermId, long logPosition, long timestamp, long termBaseLogPosition,
+            int leaderMemberId, int logSessionId, ClusterTimeUnit timeUnit, int appVersion);
     }
 }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Adaptive.Aeron;
 using Adaptive.Aeron.LogBuffer;
 using Adaptive.Agrona;
+using Adaptive.Agrona.Concurrent;
 using Adaptive.Cluster.Client;
 using Adaptive.Cluster.Codecs;
 
@@ -20,6 +21,12 @@ namespace Adaptive.Cluster.Service
         int MemberId { get; }
 
         /// <summary>
+        /// Position the log has reached in bytes as of the current message.
+        /// </summary>
+        /// <returns> position the log has reached in bytes as of the current message. </returns>
+        long LogPosition();
+        
+        /// <summary>
         /// The role the cluster node is playing.
         /// </summary>
         /// <returns> the role the cluster node is playing. </returns>
@@ -32,7 +39,7 @@ namespace Adaptive.Cluster.Service
         Aeron.Aeron Aeron { get; }
 
         /// <summary>
-        /// Get the  <seealso cref="ClusteredServiceContainer.Context"/> under which the container is running.
+        /// Get the <seealso cref="ClusteredServiceContainer.Context"/> under which the container is running.
         /// </summary>
         /// <returns> the <seealso cref="ClusteredServiceContainer.Context"/> under which the container is running. </returns>
         ClusteredServiceContainer.Context Context { get; }
@@ -49,6 +56,12 @@ namespace Adaptive.Cluster.Service
         /// </summary>
         /// <returns> the <seealso cref="ClientSession"/>s. </returns>
         ICollection<ClientSession> ClientSessions { get; }
+        
+        /// <summary>
+        /// For each iterator over <seealso cref="ClientSession"/>s using the most efficient method possible.
+        /// </summary>
+        /// <param name="action"> to be taken for each <seealso cref="ClientSession"/> in turn. </param>
+        void ForEachClientSession(Action<ClientSession> action);
 
         /// <summary>
         /// Request the close of a <seealso cref="ClientSession"/> by sending the request to the consensus module.
@@ -56,7 +69,7 @@ namespace Adaptive.Cluster.Service
         /// <param name="clusterSessionId"> to be closed. </param>
         /// <returns> true if the event to close a session was sent or false if back pressure was applied. </returns>
         /// <exception cref="ClusterException"> if the clusterSessionId is not recognised. </exception>
-        bool CloseSession(long clusterSessionId);
+        bool CloseClientSession(long clusterSessionId);
 
         /// <summary>
         /// Cluster time as <seealso cref="TimeUnit()"/>s since 1 Jan 1970 UTC.
@@ -72,17 +85,11 @@ namespace Adaptive.Cluster.Service
         ClusterTimeUnit TimeUnit();
 
         /// <summary>
-        /// Position the log has reached in bytes as of the current message.
-        /// </summary>
-        /// <returns> position the log has reached in bytes as of the current message. </returns>
-        long LogPosition();
-
-        /// <summary>
         /// Schedule a timer for a given deadline and provide a correlation id to identify the timer when it expires or
-        /// for cancellation. This action asynchronous and will race with the timer expiring.
+        /// for cancellation. This action is asynchronous and will race with the timer expiring.
         /// <para>
         /// If the correlationId is for an existing scheduled timer then it will be reschedule to the new deadline. However
-        /// it is best do generate correlationIds in a monotonic fashion and be aware of potential clashes with other
+        /// it is best to generate correlationIds in a monotonic fashion and be aware of potential clashes with other
         /// services in the same cluster. Service isolation can be achieved by using the upper bits for service id.
         /// </para>
         /// <para>
@@ -96,13 +103,13 @@ namespace Adaptive.Cluster.Service
         /// </para>
         /// </summary>
         /// <param name="correlationId"> to identify the timer when it expires. <seealso cref="long.MaxValue"/> not supported. </param>
-        /// <param name="deadline">      time in after which the timer will fire. <seealso cref="long.MaxValue"/> not supported. </param>
+        /// <param name="deadline">      time after which the timer will fire. <seealso cref="long.MaxValue"/> not supported. </param>
         /// <returns> true if the event to schedule a timer request has been sent or false if back pressure is applied. </returns>
         /// <seealso cref="CancelTimer(long)"/>
         bool ScheduleTimer(long correlationId, long deadline);
 
         /// <summary>
-        /// Cancel a previous scheduled timer. This action asynchronous and will race with the timer expiring.
+        /// Cancel a previously scheduled timer. This action is asynchronous and will race with the timer expiring.
         /// <para>
         /// Timers should only be scheduled or cancelled in the context of processing a
         /// <seealso cref="IClusteredService.OnSessionMessage(ClientSession, long, IDirectBuffer, int, int, Header)"/>,
@@ -114,7 +121,7 @@ namespace Adaptive.Cluster.Service
         /// </para>
         /// </summary>
         /// <param name="correlationId"> for the timer provided when it was scheduled. <seealso cref="long.MaxValue"/> not supported. </param>
-        /// <returns> true if the event to cancel request has been sent or false if back pressure is applied. </returns>
+        /// <returns> true if the event to cancel request has been sent or false if back-pressure is applied. </returns>
         /// <seealso cref="ScheduleTimer"/>
         bool CancelTimer(long correlationId);
 
@@ -180,16 +187,10 @@ namespace Adaptive.Cluster.Service
         long TryClaim(int length, BufferClaim bufferClaim);
 
         /// <summary>
-        /// Should be called by the service when it experiences back-pressure on egress, closing sessions, making
-        /// timer requests, or any long running actions.
+        /// <seealso cref="IdleStrategy"/> which should be used by the service when it experiences back-pressure on egress,
+        /// closing sessions, making timer requests, or any long running actions.
         /// </summary>
-        void Idle();
-
-        /// <summary>
-        /// Should be called by the service when it experiences back-pressure on egress, closing sessions, or making
-        /// timer requests, or any long running actions.
-        /// </summary>
-        /// <param name="workCount"> a value of 0 will reset the idle strategy is a progressive back-off has been applied. </param>
-        void Idle(int workCount);
+        /// <returns> the <seealso cref="IdleStrategy"/> which should be used by the service when it experiences back-pressure. </returns>
+        IIdleStrategy IdleStrategy();
     }
 }

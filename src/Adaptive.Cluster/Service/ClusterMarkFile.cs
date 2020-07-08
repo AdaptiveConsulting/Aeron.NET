@@ -6,6 +6,7 @@ using Adaptive.Agrona.Concurrent;
 using Adaptive.Agrona.Concurrent.Errors;
 using Adaptive.Cluster.Client;
 using Adaptive.Cluster.Codecs.Mark;
+using Adaptive.Cluster.Service;
 
 namespace Adaptive.Cluster
 {
@@ -15,12 +16,17 @@ namespace Adaptive.Cluster
     /// </summary>
     public class ClusterMarkFile : IDisposable
     {
-        public const string FILE_EXTENSION = ".dat";
-        public const string FILENAME = "cluster-mark" + FILE_EXTENSION;
-        public const string SERVICE_FILE_NAME_PREFIX = "cluster-mark-service-";
-        public const string SERVICE_FILE_NAME_FORMAT = SERVICE_FILE_NAME_PREFIX + "{0}" + FILE_EXTENSION;
+        public const int MAJOR_VERSION = 0;
+        public const int MINOR_VERSION = 2;
+        public const int PATCH_VERSION = 0;
+        public static readonly int SEMANTIC_VERSION = SemanticVersion.Compose(MAJOR_VERSION, MINOR_VERSION, PATCH_VERSION);
+
         public const int HEADER_LENGTH = 8 * 1024;
         public const int VERSION_FAILED = -1;
+        
+        public const string FILE_EXTENSION = ".dat";
+        public const string FILENAME = "cluster-mark" + FILE_EXTENSION;
+        public const string SERVICE_FILENAME_PREFIX = "cluster-mark-service-";
 
         private readonly MarkFileHeaderDecoder headerDecoder = new MarkFileHeaderDecoder();
         private readonly MarkFileHeaderEncoder headerEncoder = new MarkFileHeaderEncoder();
@@ -51,10 +57,10 @@ namespace Adaptive.Cluster
                     {
                         Console.WriteLine("mark file version -1 indicates error on previous startup.");
                     }
-                    else if (SemanticVersion.Major(version) != AeronCluster.Configuration.MAJOR_VERSION)
+                    else if (SemanticVersion.Major(version) != MAJOR_VERSION)
                     {
-                        throw new ArgumentException("mark file major version " + SemanticVersion.Major(version) +
-                                                           " does not match software:" + AeronCluster.Configuration.MAJOR_VERSION);
+                        throw new ClusterException("mark file major version " + SemanticVersion.Major(version) +
+                                                   " does not match software:" + MAJOR_VERSION);
                     }
                 },
                 null);
@@ -73,7 +79,7 @@ namespace Adaptive.Cluster
 
                 SaveExistingErrors(file, existingErrorBuffer, Console.Error);
 
-                errorBuffer.SetMemory(0, errorBufferLength, 0);
+                existingErrorBuffer.SetMemory(0, errorBufferLength, 0);
             }
             else
             {
@@ -86,7 +92,7 @@ namespace Adaptive.Cluster
             {
                 if (existingType != ClusterComponentType.BACKUP || ClusterComponentType.CONSENSUS_MODULE != type)
                 {
-                    throw new InvalidOperationException(
+                    throw new ClusterException(
                         "existing Mark file type " + existingType + " not same as required type " + type);
                 }
             }
@@ -110,10 +116,10 @@ namespace Adaptive.Cluster
                 epochClock,
                 (version) =>
                 {
-                    if (SemanticVersion.Major(version) != AeronCluster.Configuration.MAJOR_VERSION)
+                    if (SemanticVersion.Major(version) != MAJOR_VERSION)
                     {
-                        throw new ArgumentException("mark file major version " + SemanticVersion.Major(version) + 
-                                                    " does not match software:" + AeronCluster.Configuration.MAJOR_VERSION);
+                        throw new ClusterException("mark file major version " + SemanticVersion.Major(version) + 
+                                                    " does not match software:" + AeronCluster.Configuration.PROTOCOL_MAJOR_VERSION);
                     }
 
                 },
@@ -143,10 +149,15 @@ namespace Adaptive.Cluster
         /// Record the fact that a node has voted in a current election for a candidate so it can survive a restart.
         /// </summary>
         /// <param name="candidateTermId"> to record that a vote has taken place. </param>
-        public void CandidateTermId(long candidateTermId)
+        /// <param name="fileSyncLevel"> as defined by cluster file sync level.</param>
+        public void CandidateTermId(long candidateTermId, int fileSyncLevel)
         {
             buffer.PutLongVolatile(MarkFileHeaderEncoder.CandidateTermIdEncodingOffset(), candidateTermId);
-            markFile.MappedByteBuffer().Flush();
+
+            if (fileSyncLevel > 0)
+            {
+                markFile.MappedByteBuffer().Flush();
+            }
         }
 
         public int MemberId()
@@ -157,19 +168,26 @@ namespace Adaptive.Cluster
         public void MemberId(int memberId)
         {
             buffer.PutIntVolatile(MarkFileHeaderEncoder.MemberIdEncodingOffset(), memberId);
-            markFile.MappedByteBuffer().Flush();
+        }
+        
+        public int ClusterId()
+        {
+            return buffer.GetInt(MarkFileHeaderDecoder.ClusterIdEncodingOffset());
+        }
+
+        public void ClusterId(int clusterId)
+        {
+            buffer.PutInt(MarkFileHeaderEncoder.ClusterIdEncodingOffset(), clusterId);
         }
 
         public void SignalReady()
         {
-            markFile.SignalReady(AeronCluster.Configuration.SEMANTIC_VERSION);
-            markFile.MappedByteBuffer().Flush();
+            markFile.SignalReady(SEMANTIC_VERSION);
         }
 
         public void SignalFailedStart()
         {
             markFile.SignalReady(VERSION_FAILED);
-            markFile.MappedByteBuffer().Flush();
         }
 
         public void UpdateActivityTimestamp(long nowMs)
@@ -200,7 +218,7 @@ namespace Adaptive.Cluster
         {
             var str = new MemoryStream();
             var writer = new StreamWriter(str);
-            var observations = SaveErrorLog(writer, errorBuffer);
+            var observations = Aeron.Aeron.Context.PrintErrorLog(errorBuffer, writer);
             writer.Flush();
             str.Seek(0, SeekOrigin.Begin);
 
@@ -209,7 +227,7 @@ namespace Adaptive.Cluster
                 var errorLogFilename = Path.Combine(markFile.DirectoryName,
                     DateTime.Now.ToString("yyyy-MM-dd-HH-mm-ss-fff") + "-error.log");
 
-                logger?.WriteLine("WARNING: Existing errors saved to: " + errorLogFilename);
+                logger?.WriteLine("WARNING: existing errors saved to: " + errorLogFilename);
 
                 using (var file = new FileStream(errorLogFilename, FileMode.CreateNew))
                 {
@@ -220,39 +238,18 @@ namespace Adaptive.Cluster
             writer.Close();
         }
 
-        private static int SaveErrorLog(TextWriter writer, IAtomicBuffer errorBuffer)
-        {
-            void ErrorConsumer(int count, long firstTimestamp, long lastTimestamp, string ex)
-            {
-                writer.WriteLine(
-                    $"***{writer.NewLine}{count} observations from {firstTimestamp} to {lastTimestamp} for:{writer.NewLine} {ex}");
-            }
-
-            var distinctErrorCount = ErrorLogReader.Read(errorBuffer, ErrorConsumer);
-
-            writer.WriteLine($"{writer.NewLine}{distinctErrorCount} distinct errors observed.");
-
-            return distinctErrorCount;
-        }
-
         public static void CheckHeaderLength(
             string aeronDirectory,
-            string archiveChannel,
-            string serviceControlChannel,
+            string controlChannel,
             string ingressChannel,
             string serviceName,
             string authenticator)
         {
-            if (aeronDirectory == null) throw new ArgumentNullException(nameof(aeronDirectory));
-            if (archiveChannel == null) throw new ArgumentNullException(nameof(archiveChannel));
-            if (serviceControlChannel == null) throw new ArgumentNullException(nameof(serviceControlChannel));
-
             var lengthRequired =
                 MarkFileHeaderEncoder.BLOCK_LENGTH +
-                6 * VarAsciiEncodingEncoder.LengthEncodingLength() +
-                aeronDirectory.Length +
-                archiveChannel.Length +
-                serviceControlChannel.Length +
+                5 * VarAsciiEncodingEncoder.LengthEncodingLength() +
+                (aeronDirectory?.Length ?? 0) +
+                (controlChannel?.Length ?? 0) +
                 (ingressChannel?.Length ?? 0) +
                 (serviceName?.Length ?? 0) +
                 (authenticator?.Length ?? 0);
@@ -265,7 +262,23 @@ namespace Adaptive.Cluster
 
         public static string MarkFilenameForService(int serviceId)
         {
-            return string.Format(SERVICE_FILE_NAME_FORMAT, serviceId);
+            return SERVICE_FILENAME_PREFIX + serviceId + FILE_EXTENSION;
+        }
+        
+        public ClusterNodeControlProperties LoadControlProperties()
+        {
+            MarkFileHeaderDecoder decoder = new MarkFileHeaderDecoder();
+            decoder.Wrap(
+                headerDecoder.Buffer(),
+                headerDecoder.InitialOffset(),
+                MarkFileHeaderDecoder.BLOCK_LENGTH,
+                MarkFileHeaderDecoder.SCHEMA_VERSION);
+
+            return new ClusterNodeControlProperties(
+                decoder.ServiceStreamId(),
+                decoder.ConsensusModuleStreamId(),
+                decoder.AeronDirectory(),
+                decoder.ControlChannel());
         }
     }
 }

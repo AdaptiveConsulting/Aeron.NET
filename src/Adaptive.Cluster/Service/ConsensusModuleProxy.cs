@@ -182,7 +182,8 @@ namespace Adaptive.Cluster.Service
                 {
                     _clusterMembersQueryEncoder
                         .WrapAndApplyHeader(_bufferClaim.Buffer, _bufferClaim.Offset, _messageHeaderEncoder)
-                        .CorrelationId(correlationId);
+                        .CorrelationId(correlationId)
+                        .Extended(BooleanType.TRUE);
 
                     _bufferClaim.Commit();
 
@@ -195,7 +196,7 @@ namespace Adaptive.Cluster.Service
             return false;
         }
 
-        public bool RemoveMember(long correlationId, int memberId, BooleanType isPassive)
+        public bool RemoveMember(int memberId, BooleanType isPassive)
         {
             int length = MessageHeaderEncoder.ENCODED_LENGTH + RemoveMemberEncoder.BLOCK_LENGTH;
 
@@ -207,7 +208,6 @@ namespace Adaptive.Cluster.Service
                 {
                     _removeMemberEncoder
                         .WrapAndApplyHeader(_bufferClaim.Buffer, _bufferClaim.Offset, _messageHeaderEncoder)
-                        .CorrelationId(correlationId)
                         .MemberId(memberId)
                         .IsPassive(isPassive);
 

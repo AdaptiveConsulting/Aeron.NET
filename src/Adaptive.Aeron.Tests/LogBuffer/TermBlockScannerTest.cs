@@ -42,7 +42,7 @@ namespace Adaptive.Aeron.Tests.LogBuffer
             int limit = _termBuffer.Capacity;
 
             int newOffset = TermBlockScanner.Scan(_termBuffer, offset, limit);
-            Assert.That(newOffset, Is.EqualTo(offset));
+            Assert.AreEqual(offset, newOffset);
         }
 
         [Test]
@@ -59,7 +59,7 @@ namespace Adaptive.Aeron.Tests.LogBuffer
                 .Returns((short)HeaderFlyweight.HDR_TYPE_DATA);
 
             int newOffset = TermBlockScanner.Scan(_termBuffer, offset, limit);
-            Assert.That(newOffset, Is.EqualTo(alignedMessageLength));
+            Assert.AreEqual(alignedMessageLength, newOffset);
         }
 
         [Test]
@@ -81,7 +81,7 @@ namespace Adaptive.Aeron.Tests.LogBuffer
 
             int newOffset = TermBlockScanner.Scan(_termBuffer, offset, limit);
 
-            Assert.That(newOffset, Is.EqualTo(alignedMessageLength * 2));
+            Assert.AreEqual(alignedMessageLength * 2, newOffset);
         }
 
         [Test]
@@ -108,7 +108,7 @@ namespace Adaptive.Aeron.Tests.LogBuffer
          
             int newOffset = TermBlockScanner.Scan(_termBuffer, offset, limit);
 
-            Assert.That(newOffset, Is.EqualTo(limit));
+            Assert.AreEqual(limit, newOffset);
         }
 
         [Test]
@@ -134,7 +134,7 @@ namespace Adaptive.Aeron.Tests.LogBuffer
             
             int newOffset = TermBlockScanner.Scan(_termBuffer, offset, limit);
 
-            Assert.That(newOffset, Is.EqualTo(alignedMessageLength * 2));
+            Assert.AreEqual(alignedMessageLength * 2, newOffset);
         }
 
         [Test]
@@ -152,7 +152,7 @@ namespace Adaptive.Aeron.Tests.LogBuffer
 
             int newOffset = TermBlockScanner.Scan(_termBuffer, offset, limit);
 
-            Assert.That(newOffset, Is.EqualTo(offset));
+            Assert.AreEqual(offset, newOffset);
         }
 
         [Test]
@@ -168,7 +168,7 @@ namespace Adaptive.Aeron.Tests.LogBuffer
 
             int newOffset = TermBlockScanner.Scan(_termBuffer, offset, limit);
 
-            Assert.That(newOffset, Is.EqualTo(alignedMessageLength));
+            Assert.AreEqual(alignedMessageLength, newOffset);
         }
 
         [Test]
@@ -185,10 +185,10 @@ namespace Adaptive.Aeron.Tests.LogBuffer
             A.CallTo(() => _termBuffer.GetShort(FrameDescriptor.TypeOffset(alignedMessageLength))).Returns((short)HeaderFlyweight.HDR_TYPE_PAD);
             
             int firstOffset = TermBlockScanner.Scan(_termBuffer, offset, limit);
-            Assert.That(firstOffset, Is.EqualTo(alignedMessageLength));
+            Assert.AreEqual(alignedMessageLength, firstOffset);
 
             int secondOffset = TermBlockScanner.Scan(_termBuffer, firstOffset, limit);
-            Assert.That(secondOffset, Is.EqualTo(alignedMessageLength * 2));
+            Assert.AreEqual(alignedMessageLength * 2, secondOffset);
         }
     }
 }

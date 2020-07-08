@@ -6,7 +6,6 @@ namespace Adaptive.Aeron.Tests
     [TestFixture]
     public class ContextText
     {
-        [ExpectedException(typeof(ConcurrentConcludeException))]
         [Test]
         [Ignore("Media driver needs to be running")]
         public void ShouldNotAllowConcludeMoreThanOnce()
@@ -14,7 +13,7 @@ namespace Adaptive.Aeron.Tests
             var ctx = new Aeron.Context();
 
             ctx.Conclude();
-            ctx.Conclude();
+            Assert.Throws(typeof(ConcurrentConcludeException), () => ctx.Conclude());
         }
         [Test]
         [Ignore("Media driver needs to be running")]

@@ -9,10 +9,10 @@ namespace Adaptive.Archiver.Codecs {
 
 public class ControlResponseEncoder
 {
-    public const ushort BLOCK_LENGTH = 28;
+    public const ushort BLOCK_LENGTH = 32;
     public const ushort TEMPLATE_ID = 1;
     public const ushort SCHEMA_ID = 101;
-    public const ushort SCHEMA_VERSION = 2;
+    public const ushort SCHEMA_VERSION = 4;
 
     private ControlResponseEncoder _parentMessage;
     private IMutableDirectBuffer _buffer;
@@ -208,9 +208,41 @@ public class ControlResponseEncoder
         return this;
     }
 
+    public static int VersionEncodingOffset()
+    {
+        return 28;
+    }
+
+    public static int VersionEncodingLength()
+    {
+        return 4;
+    }
+
+    public static int VersionNullValue()
+    {
+        return 0;
+    }
+
+    public static int VersionMinValue()
+    {
+        return 2;
+    }
+
+    public static int VersionMaxValue()
+    {
+        return 16777215;
+    }
+
+    public ControlResponseEncoder Version(int value)
+    {
+        _buffer.PutInt(_offset + 28, value, ByteOrder.LittleEndian);
+        return this;
+    }
+
+
     public static int ErrorMessageId()
     {
-        return 5;
+        return 6;
     }
 
     public static string ErrorMessageCharacterEncoding()

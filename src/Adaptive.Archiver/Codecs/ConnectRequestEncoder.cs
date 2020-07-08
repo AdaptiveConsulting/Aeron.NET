@@ -12,7 +12,7 @@ public class ConnectRequestEncoder
     public const ushort BLOCK_LENGTH = 16;
     public const ushort TEMPLATE_ID = 2;
     public const ushort SCHEMA_ID = 101;
-    public const ushort SCHEMA_VERSION = 2;
+    public const ushort SCHEMA_VERSION = 4;
 
     private ConnectRequestEncoder _parentMessage;
     private IMutableDirectBuffer _buffer;

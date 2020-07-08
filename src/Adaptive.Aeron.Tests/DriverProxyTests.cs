@@ -34,7 +34,7 @@ namespace Adaptive.Aeron.Tests
         
         public const string CHANNEL = "aeron:udp?interface=localhost:40123|endpoint=localhost:40124";
 
-        private const int STREAM_ID = 1;
+        private const int STREAM_ID = 1001;
         private const long CORRELATION_ID = 3;
         private const long CLIENT_ID = 7;
         private IRingBuffer conductorBuffer;
@@ -54,8 +54,8 @@ namespace Adaptive.Aeron.Tests
             {
                 RemoveMessageFlyweight message = new RemoveMessageFlyweight();
                 message.Wrap(buffer, index);
-                Assert.That(msgTypeId, Is.EqualTo(ControlProtocolEvents.REMOVE_PUBLICATION));
-                Assert.That(message.RegistrationId(), Is.EqualTo(CORRELATION_ID));
+                Assert.AreEqual(ControlProtocolEvents.REMOVE_PUBLICATION, msgTypeId);
+                Assert.AreEqual(CORRELATION_ID, message.RegistrationId());
             });
         }
 
@@ -67,9 +67,9 @@ namespace Adaptive.Aeron.Tests
             {
                 PublicationMessageFlyweight publicationMessage = new PublicationMessageFlyweight();
                 publicationMessage.Wrap(buffer, index);
-                Assert.That(msgTypeId, Is.EqualTo(expectedMsgTypeId));
-                Assert.That(publicationMessage.Channel(), Is.EqualTo(CHANNEL));
-                Assert.That(publicationMessage.StreamId(), Is.EqualTo(STREAM_ID));
+                Assert.AreEqual(expectedMsgTypeId, msgTypeId);
+                Assert.AreEqual(CHANNEL, publicationMessage.Channel());
+                Assert.AreEqual(STREAM_ID, publicationMessage.StreamId());
             });
         }
 
@@ -82,15 +82,15 @@ namespace Adaptive.Aeron.Tests
             {
                 RemoveMessageFlyweight removeMessage = new RemoveMessageFlyweight();
                 removeMessage.Wrap(buffer, index);
-                Assert.That(msgTypeId, Is.EqualTo(ControlProtocolEvents.REMOVE_SUBSCRIPTION));
-                Assert.That(removeMessage.RegistrationId(), Is.EqualTo(CORRELATION_ID));
+                Assert.AreEqual(ControlProtocolEvents.REMOVE_SUBSCRIPTION, msgTypeId);
+                Assert.AreEqual(CORRELATION_ID, removeMessage.RegistrationId());
             });
         }
 
         private void AssertReadsOneMessage(MessageHandler handler)
         {
             int messageCount = conductorBuffer.Read(handler);
-            Assert.That(messageCount, Is.EqualTo(1));
+            Assert.AreEqual(1, messageCount);
         }
     }
 

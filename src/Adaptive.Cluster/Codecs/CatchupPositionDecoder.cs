@@ -12,7 +12,7 @@ public class CatchupPositionDecoder
     public const ushort BLOCK_LENGTH = 20;
     public const ushort TEMPLATE_ID = 56;
     public const ushort SCHEMA_ID = 111;
-    public const ushort SCHEMA_VERSION = 4;
+    public const ushort SCHEMA_VERSION = 6;
 
     private CatchupPositionDecoder _parentMessage;
     private IDirectBuffer _buffer;

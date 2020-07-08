@@ -528,9 +528,41 @@ public class MarkFileHeaderEncoder
     }
 
 
+    public static int ClusterIdEncodingOffset()
+    {
+        return 72;
+    }
+
+    public static int ClusterIdEncodingLength()
+    {
+        return 4;
+    }
+
+    public static int ClusterIdNullValue()
+    {
+        return -2147483648;
+    }
+
+    public static int ClusterIdMinValue()
+    {
+        return -2147483647;
+    }
+
+    public static int ClusterIdMaxValue()
+    {
+        return 2147483647;
+    }
+
+    public MarkFileHeaderEncoder ClusterId(int value)
+    {
+        _buffer.PutInt(_offset + 72, value, ByteOrder.LittleEndian);
+        return this;
+    }
+
+
     public static int AeronDirectoryId()
     {
-        return 15;
+        return 16;
     }
 
     public static string AeronDirectoryCharacterEncoding()
@@ -605,94 +637,17 @@ public class MarkFileHeaderEncoder
         return this;
     }
 
-    public static int ArchiveChannelId()
-    {
-        return 16;
-    }
-
-    public static string ArchiveChannelCharacterEncoding()
-    {
-        return "US-ASCII";
-    }
-
-    public static string ArchiveChannelMetaAttribute(MetaAttribute metaAttribute)
-    {
-        switch (metaAttribute)
-        {
-            case MetaAttribute.EPOCH: return "unix";
-            case MetaAttribute.TIME_UNIT: return "nanosecond";
-            case MetaAttribute.SEMANTIC_TYPE: return "";
-            case MetaAttribute.PRESENCE: return "required";
-        }
-
-        return "";
-    }
-
-    public static int ArchiveChannelHeaderLength()
-    {
-        return 4;
-    }
-
-    public MarkFileHeaderEncoder PutArchiveChannel(IDirectBuffer src, int srcOffset, int length)
-    {
-        if (length > 1073741824)
-        {
-            throw new InvalidOperationException("length > maxValue for type: " + length);
-        }
-
-        int headerLength = 4;
-        int limit = _parentMessage.Limit();
-        _parentMessage.Limit(limit + headerLength + length);
-        _buffer.PutInt(limit, unchecked((int)length), ByteOrder.LittleEndian);
-        _buffer.PutBytes(limit + headerLength, src, srcOffset, length);
-
-        return this;
-    }
-
-    public MarkFileHeaderEncoder PutArchiveChannel(byte[] src, int srcOffset, int length)
-    {
-        if (length > 1073741824)
-        {
-            throw new InvalidOperationException("length > maxValue for type: " + length);
-        }
-
-        int headerLength = 4;
-        int limit = _parentMessage.Limit();
-        _parentMessage.Limit(limit + headerLength + length);
-        _buffer.PutInt(limit, unchecked((int)length), ByteOrder.LittleEndian);
-        _buffer.PutBytes(limit + headerLength, src, srcOffset, length);
-
-        return this;
-    }
-
-    public MarkFileHeaderEncoder ArchiveChannel(string value)
-    {
-        int length = value.Length;
-        if (length > 1073741824)
-        {
-            throw new InvalidOperationException("length > maxValue for type: " + length);
-        }
-
-        int headerLength = 4;
-        int limit = _parentMessage.Limit();
-        _parentMessage.Limit(limit + headerLength + length);
-        _buffer.PutInt(limit, unchecked((int)length), ByteOrder.LittleEndian);
-        _buffer.PutStringWithoutLengthAscii(limit + headerLength, value);
-
-        return this;
-    }
-
-    public static int ServiceControlChannelId()
+    public static int ControlChannelId()
     {
         return 17;
     }
 
-    public static string ServiceControlChannelCharacterEncoding()
+    public static string ControlChannelCharacterEncoding()
     {
         return "US-ASCII";
     }
 
-    public static string ServiceControlChannelMetaAttribute(MetaAttribute metaAttribute)
+    public static string ControlChannelMetaAttribute(MetaAttribute metaAttribute)
     {
         switch (metaAttribute)
         {
@@ -705,12 +660,12 @@ public class MarkFileHeaderEncoder
         return "";
     }
 
-    public static int ServiceControlChannelHeaderLength()
+    public static int ControlChannelHeaderLength()
     {
         return 4;
     }
 
-    public MarkFileHeaderEncoder PutServiceControlChannel(IDirectBuffer src, int srcOffset, int length)
+    public MarkFileHeaderEncoder PutControlChannel(IDirectBuffer src, int srcOffset, int length)
     {
         if (length > 1073741824)
         {
@@ -726,7 +681,7 @@ public class MarkFileHeaderEncoder
         return this;
     }
 
-    public MarkFileHeaderEncoder PutServiceControlChannel(byte[] src, int srcOffset, int length)
+    public MarkFileHeaderEncoder PutControlChannel(byte[] src, int srcOffset, int length)
     {
         if (length > 1073741824)
         {
@@ -742,7 +697,7 @@ public class MarkFileHeaderEncoder
         return this;
     }
 
-    public MarkFileHeaderEncoder ServiceControlChannel(string value)
+    public MarkFileHeaderEncoder ControlChannel(string value)
     {
         int length = value.Length;
         if (length > 1073741824)
@@ -821,7 +776,7 @@ public class MarkFileHeaderEncoder
 
     public MarkFileHeaderEncoder IngressChannel(string value)
     {
-        int length = value.Length;
+        int length = null == value ? 0 : value.Length;
         if (length > 1073741824)
         {
             throw new InvalidOperationException("length > maxValue for type: " + length);
@@ -975,7 +930,7 @@ public class MarkFileHeaderEncoder
 
     public MarkFileHeaderEncoder Authenticator(string value)
     {
-        int length = value.Length;
+        int length = null == value ? 0 : value.Length;
         if (length > 1073741824)
         {
             throw new InvalidOperationException("length > maxValue for type: " + length);

@@ -7,19 +7,19 @@ using Adaptive.Agrona;
 
 namespace Adaptive.Cluster.Codecs {
 
-public class ElectionStartEventEncoder
+public class AppendPositionEncoder
 {
-    public const ushort BLOCK_LENGTH = 8;
-    public const ushort TEMPLATE_ID = 43;
+    public const ushort BLOCK_LENGTH = 20;
+    public const ushort TEMPLATE_ID = 54;
     public const ushort SCHEMA_ID = 111;
-    public const ushort SCHEMA_VERSION = 4;
+    public const ushort SCHEMA_VERSION = 6;
 
-    private ElectionStartEventEncoder _parentMessage;
+    private AppendPositionEncoder _parentMessage;
     private IMutableDirectBuffer _buffer;
     protected int _offset;
     protected int _limit;
 
-    public ElectionStartEventEncoder()
+    public AppendPositionEncoder()
     {
         _parentMessage = this;
     }
@@ -59,7 +59,7 @@ public class ElectionStartEventEncoder
         return _offset;
     }
 
-    public ElectionStartEventEncoder Wrap(IMutableDirectBuffer buffer, int offset)
+    public AppendPositionEncoder Wrap(IMutableDirectBuffer buffer, int offset)
     {
         this._buffer = buffer;
         this._offset = offset;
@@ -68,7 +68,7 @@ public class ElectionStartEventEncoder
         return this;
     }
 
-    public ElectionStartEventEncoder WrapAndApplyHeader(
+    public AppendPositionEncoder WrapAndApplyHeader(
         IMutableDirectBuffer buffer, int offset, MessageHeaderEncoder headerEncoder)
     {
         headerEncoder
@@ -96,9 +96,41 @@ public class ElectionStartEventEncoder
         this._limit = limit;
     }
 
-    public static int LogPositionEncodingOffset()
+    public static int LeadershipTermIdEncodingOffset()
     {
         return 0;
+    }
+
+    public static int LeadershipTermIdEncodingLength()
+    {
+        return 8;
+    }
+
+    public static long LeadershipTermIdNullValue()
+    {
+        return -9223372036854775808L;
+    }
+
+    public static long LeadershipTermIdMinValue()
+    {
+        return -9223372036854775807L;
+    }
+
+    public static long LeadershipTermIdMaxValue()
+    {
+        return 9223372036854775807L;
+    }
+
+    public AppendPositionEncoder LeadershipTermId(long value)
+    {
+        _buffer.PutLong(_offset + 0, value, ByteOrder.LittleEndian);
+        return this;
+    }
+
+
+    public static int LogPositionEncodingOffset()
+    {
+        return 8;
     }
 
     public static int LogPositionEncodingLength()
@@ -121,9 +153,41 @@ public class ElectionStartEventEncoder
         return 9223372036854775807L;
     }
 
-    public ElectionStartEventEncoder LogPosition(long value)
+    public AppendPositionEncoder LogPosition(long value)
     {
-        _buffer.PutLong(_offset + 0, value, ByteOrder.LittleEndian);
+        _buffer.PutLong(_offset + 8, value, ByteOrder.LittleEndian);
+        return this;
+    }
+
+
+    public static int FollowerMemberIdEncodingOffset()
+    {
+        return 16;
+    }
+
+    public static int FollowerMemberIdEncodingLength()
+    {
+        return 4;
+    }
+
+    public static int FollowerMemberIdNullValue()
+    {
+        return -2147483648;
+    }
+
+    public static int FollowerMemberIdMinValue()
+    {
+        return -2147483647;
+    }
+
+    public static int FollowerMemberIdMaxValue()
+    {
+        return 2147483647;
+    }
+
+    public AppendPositionEncoder FollowerMemberId(int value)
+    {
+        _buffer.PutInt(_offset + 16, value, ByteOrder.LittleEndian);
         return this;
     }
 
@@ -136,7 +200,7 @@ public class ElectionStartEventEncoder
 
     public StringBuilder AppendTo(StringBuilder builder)
     {
-        ElectionStartEventDecoder writer = new ElectionStartEventDecoder();
+        AppendPositionDecoder writer = new AppendPositionDecoder();
         writer.Wrap(_buffer, _offset, BLOCK_LENGTH, SCHEMA_VERSION);
 
         return writer.AppendTo(builder);

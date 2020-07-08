@@ -15,6 +15,7 @@
  */
 
 using System;
+using System.Text;
 using Adaptive.Agrona;
 
 namespace Adaptive.Aeron.Command
@@ -73,7 +74,7 @@ namespace Adaptive.Aeron.Command
         /// <summary>
         /// Set correlation ID of the offending command.
         /// </summary>
-        /// <param name="correlationId"> of the offending command </param>
+        /// <param name="correlationId"> of the offending command. </param>
         /// <returns> flyweight </returns>
         public ErrorResponseFlyweight OffendingCommandCorrelationId(long correlationId)
         {
@@ -84,7 +85,7 @@ namespace Adaptive.Aeron.Command
         /// <summary>
         /// Error code for the command.
         /// </summary>
-        /// <returns> error code for the command </returns>
+        /// <returns> error code for the command. </returns>
         public ErrorCode ErrorCode()
         {
             
@@ -95,7 +96,7 @@ namespace Adaptive.Aeron.Command
         /// <summary>
         /// Error code value for the command.
         /// </summary>
-        /// <returns>error code value for the command </returns>
+        /// <returns>error code value for the command.</returns>
         public int ErrorCodeValue()
         {
             return _buffer.GetInt(_offset + ERROR_CODE_OFFSET);
@@ -104,7 +105,7 @@ namespace Adaptive.Aeron.Command
         /// <summary>
         /// Set the error code for the command.
         /// </summary>
-        /// <param name="code"> for the error </param>
+        /// <param name="code"> for the error.</param>
         /// <returns> flyweight </returns>
         public ErrorResponseFlyweight ErrorCode(ErrorCode code)
         {
@@ -118,9 +119,19 @@ namespace Adaptive.Aeron.Command
         /// <returns> error message </returns>
         public string ErrorMessage()
         {
-            return _buffer.GetStringUtf8(_offset + ERROR_MESSAGE_OFFSET);
+            return _buffer.GetStringAscii(_offset + ERROR_MESSAGE_OFFSET);
         }
 
+        /// <summary>
+        /// Append the error message to an appendable without allocation.
+        /// </summary>
+        /// <param name="stringBuilder"> to append error message to. </param>
+        /// <returns> number bytes copied. </returns>
+        public int AppendMessage(StringBuilder stringBuilder)
+        {
+            return _buffer.GetStringAscii(_offset + ERROR_MESSAGE_OFFSET, stringBuilder);
+        }
+        
         /// <summary>
         /// Set the error message
         /// </summary>
@@ -128,7 +139,7 @@ namespace Adaptive.Aeron.Command
         /// <returns> flyweight </returns>
         public ErrorResponseFlyweight ErrorMessage(string message)
         {
-            _buffer.PutStringUtf8(_offset + ERROR_MESSAGE_OFFSET, message);
+            _buffer.PutStringAscii(_offset + ERROR_MESSAGE_OFFSET, message);
             return this;
         }
 

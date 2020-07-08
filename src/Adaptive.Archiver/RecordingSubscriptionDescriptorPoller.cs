@@ -9,6 +9,9 @@ namespace Adaptive.Archiver
     /// <summary>
     /// Encapsulate the polling, decoding, dispatching of recording descriptors from an archive.
     /// </summary>
+    /// <seealso cref="IRecordingSubscriptionDescriptorConsumer"></seealso>
+    /// <seealso cref="ArchiveProxy.ListRecordingSubscriptions(int, int, string, int, bool, long, long)"></seealso>
+    /// <seealso cref="AeronArchive.ListRecordingSubscriptions(int, int, string, int, bool, IRecordingSubscriptionDescriptorConsumer)"></seealso>
     public class RecordingSubscriptionDescriptorPoller : IControlledFragmentHandler
     {
         private readonly MessageHeaderDecoder messageHeaderDecoder = new MessageHeaderDecoder();
@@ -26,7 +29,7 @@ namespace Adaptive.Archiver
         private long correlationId;
         private int remainingSubscriptionCount;
         private bool isDispatchComplete = false;
-        private RecordingSubscriptionDescriptorConsumer consumer;
+        private IRecordingSubscriptionDescriptorConsumer consumer;
 
         /// <summary>
         /// Create a poller for a given subscription to an archive for control response messages.
@@ -55,7 +58,7 @@ namespace Adaptive.Archiver
         }
 
         /// <summary>
-        /// Poll for recording subscriptions.
+        /// Poll for recording recording subscriptions and delegate to the <seealso cref="IRecordingSubscriptionDescriptorConsumer"/>.
         /// </summary>
         /// <returns> the number of fragments read during the operation. Zero if no events are available. </returns>
         public int Poll()
@@ -98,7 +101,7 @@ namespace Adaptive.Archiver
         /// <param name="correlationId">     for the response. </param>
         /// <param name="subscriptionCount"> of descriptors to expect. </param>
         /// <param name="consumer">          to which the recording subscription descriptors are to be dispatched. </param>
-        public void Reset(long correlationId, int subscriptionCount, RecordingSubscriptionDescriptorConsumer consumer)
+        public void Reset(long correlationId, int subscriptionCount, IRecordingSubscriptionDescriptorConsumer consumer)
         {
             this.correlationId = correlationId;
             this.consumer = consumer;
@@ -108,6 +111,11 @@ namespace Adaptive.Archiver
 
         public ControlledFragmentHandlerAction OnFragment(IDirectBuffer buffer, int offset, int length, Header header)
         {
+            if (isDispatchComplete)
+            {
+                return ABORT;
+            }
+            
             messageHeaderDecoder.Wrap(buffer, offset);
 
             int schemaId = messageHeaderDecoder.SchemaId();
@@ -143,7 +151,8 @@ namespace Adaptive.Archiver
                         {
                             ArchiveException ex = new ArchiveException(
                                 "response for correlationId=" + this.correlationId + ", error: " +
-                                controlResponseDecoder.ErrorMessage(), (int) controlResponseDecoder.RelevantId());
+                                controlResponseDecoder.ErrorMessage(), (int) controlResponseDecoder.RelevantId(),
+                                correlationId);
 
                             if (correlationId == this.correlationId)
                             {

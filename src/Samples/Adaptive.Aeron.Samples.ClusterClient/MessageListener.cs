@@ -15,12 +15,12 @@ namespace Adaptive.Aeron.Samples.ClusterClient
             Console.WriteLine("Received Message: " + buffer.GetStringWithoutLengthUtf8(offset, length));
         }
 
-        public void SessionEvent(long correlationId, long clusterSessionId, long leadershipTermId, int leaderMemberId, EventCode code, string detail)
+        public void OnSessionEvent(long correlationId, long clusterSessionId, long leadershipTermId, int leaderMemberId, EventCode code, string detail)
         {
             Console.WriteLine($"Session Event:  leadershipTermId={leadershipTermId}, leaderMemberId={leaderMemberId}, code={code}, detail={detail}");
         }
 
-        public void NewLeader(long clusterSessionId, long leadershipTermId, int leaderMemberId, string memberEndpoints)
+        public void OnNewLeader(long clusterSessionId, long leadershipTermId, int leaderMemberId, string memberEndpoints)
         {
             Console.WriteLine($"New Leader:  leadershipTermId={leadershipTermId}, leaderMemberId={leaderMemberId}, memberEndpoints={memberEndpoints}");
         }

@@ -25,10 +25,10 @@ namespace Adaptive.Aeron.Tests
     public class SubscriptionTest
     {
         private const string CHANNEL = "aeron:udp?endpoint=localhost:40124";
-        private const int STREAM_ID_1 = 2;
+        private const int STREAM_ID_1 = 1002;
+        private const int INITIAL_TERM_ID = 7;
         private const long SUBSCRIPTION_CORRELATION_ID = 100;
         private const int READ_BUFFER_CAPACITY = 1024;
-        private static readonly byte FLAGS = FrameDescriptor.UNFRAGMENTED;
         private static readonly int FRAGMENT_COUNT_LIMIT = int.MaxValue;
         private const int HEADER_LENGTH = DataHeaderFlyweight.HEADER_LENGTH;
 
@@ -36,8 +36,9 @@ namespace Adaptive.Aeron.Tests
         private ClientConductor Conductor;
         private IFragmentHandler FragmentHandler;
         private Image ImageOneMock;
-        private Header Header;
         private Image ImageTwoMock;
+        private Header Header = new Header(
+            INITIAL_TERM_ID, LogBufferDescriptor.PositionBitsToShift(LogBufferDescriptor.TERM_MIN_LENGTH));
         private AvailableImageHandler AvailableImageHandler;
         private UnavailableImageHandler UnavailableImageHandler;
 
@@ -55,11 +56,8 @@ namespace Adaptive.Aeron.Tests
             AtomicReadBuffer = new UnsafeBuffer(new byte[READ_BUFFER_CAPACITY]);
             Conductor = A.Fake<ClientConductor>();
             FragmentHandler = A.Fake<IFragmentHandler>();
-            Header = A.Fake<Header>();
             AvailableImageHandler = A.Fake<AvailableImageHandler>();
             UnavailableImageHandler = A.Fake<UnavailableImageHandler>();
-
-            A.CallTo(() => Header.Flags).Returns(FLAGS);
 
             Subscription = new Subscription(
                 Conductor,
@@ -84,7 +82,7 @@ namespace Adaptive.Aeron.Tests
         [Test]
         public void ShouldReadNothingWhenNoImages()
         {
-            Assert.AreEqual(Subscription.Poll(FragmentHandler, 1), 0);
+            Assert.AreEqual(0, Subscription.Poll(FragmentHandler, 1));
         }
 
         [Test]
@@ -95,7 +93,7 @@ namespace Adaptive.Aeron.Tests
 
             A.CallTo(() => ImageOneMock.Poll(A<IFragmentHandler>._, A<int>._)).Returns(0);
 
-            Assert.AreEqual(Subscription.Poll(FragmentHandler, 1), 0);
+            Assert.AreEqual(0, Subscription.Poll(FragmentHandler, 1));
         }
 
         [Test]
@@ -110,7 +108,7 @@ namespace Adaptive.Aeron.Tests
                 return 1;
             });
 
-            Assert.AreEqual(Subscription.Poll(FragmentHandler, FRAGMENT_COUNT_LIMIT), 1);
+            Assert.AreEqual(1, Subscription.Poll(FragmentHandler, FRAGMENT_COUNT_LIMIT));
 
             A.CallTo(() => FragmentHandler.OnFragment(AtomicReadBuffer, HEADER_LENGTH, READ_BUFFER_CAPACITY - HEADER_LENGTH, A<Header>._)).MustHaveHappened();
         }
@@ -135,7 +133,7 @@ namespace Adaptive.Aeron.Tests
                 return 1;
             });
 
-            Assert.AreEqual(Subscription.Poll(FragmentHandler, FRAGMENT_COUNT_LIMIT), 2);
+            Assert.AreEqual(2, Subscription.Poll(FragmentHandler, FRAGMENT_COUNT_LIMIT));
         }
     }
 }

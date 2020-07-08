@@ -12,7 +12,7 @@ public class NewLeaderEventDecoder
     public const ushort BLOCK_LENGTH = 20;
     public const ushort TEMPLATE_ID = 6;
     public const ushort SCHEMA_ID = 111;
-    public const ushort SCHEMA_VERSION = 4;
+    public const ushort SCHEMA_VERSION = 6;
 
     private NewLeaderEventDecoder _parentMessage;
     private IDirectBuffer _buffer;
@@ -250,22 +250,22 @@ public class NewLeaderEventDecoder
     }
 
 
-    public static int MemberEndpointsId()
+    public static int IngressEndpointsId()
     {
         return 4;
     }
 
-    public static int MemberEndpointsSinceVersion()
+    public static int IngressEndpointsSinceVersion()
     {
         return 0;
     }
 
-    public static string MemberEndpointsCharacterEncoding()
+    public static string IngressEndpointsCharacterEncoding()
     {
         return "US-ASCII";
     }
 
-    public static string MemberEndpointsMetaAttribute(MetaAttribute metaAttribute)
+    public static string IngressEndpointsMetaAttribute(MetaAttribute metaAttribute)
     {
         switch (metaAttribute)
         {
@@ -278,18 +278,18 @@ public class NewLeaderEventDecoder
         return "";
     }
 
-    public static int MemberEndpointsHeaderLength()
+    public static int IngressEndpointsHeaderLength()
     {
         return 4;
     }
 
-    public int MemberEndpointsLength()
+    public int IngressEndpointsLength()
     {
         int limit = _parentMessage.Limit();
         return (int)unchecked((uint)_buffer.GetInt(limit, ByteOrder.LittleEndian));
     }
 
-    public int GetMemberEndpoints(IMutableDirectBuffer dst, int dstOffset, int length)
+    public int GetIngressEndpoints(IMutableDirectBuffer dst, int dstOffset, int length)
     {
         int headerLength = 4;
         int limit = _parentMessage.Limit();
@@ -301,7 +301,7 @@ public class NewLeaderEventDecoder
         return bytesCopied;
     }
 
-    public int GetMemberEndpoints(byte[] dst, int dstOffset, int length)
+    public int GetIngressEndpoints(byte[] dst, int dstOffset, int length)
     {
         int headerLength = 4;
         int limit = _parentMessage.Limit();
@@ -313,7 +313,7 @@ public class NewLeaderEventDecoder
         return bytesCopied;
     }
 
-    public string MemberEndpoints()
+    public string IngressEndpoints()
     {
         int headerLength = 4;
         int limit = _parentMessage.Limit();
@@ -369,9 +369,9 @@ public class NewLeaderEventDecoder
         builder.Append("LeaderMemberId=");
         builder.Append(LeaderMemberId());
         builder.Append('|');
-        //Token{signal=BEGIN_VAR_DATA, name='memberEndpoints', referencedName='null', description='null', id=4, version=0, deprecated=0, encodedLength=0, offset=20, componentTokenCount=6, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
-        builder.Append("MemberEndpoints=");
-        builder.Append(MemberEndpoints());
+        //Token{signal=BEGIN_VAR_DATA, name='ingressEndpoints', referencedName='null', description='null', id=4, version=0, deprecated=0, encodedLength=0, offset=20, componentTokenCount=6, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        builder.Append("IngressEndpoints=");
+        builder.Append(IngressEndpoints());
 
         Limit(originalLimit);
 

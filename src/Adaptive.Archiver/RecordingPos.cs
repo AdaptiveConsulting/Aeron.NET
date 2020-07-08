@@ -3,6 +3,7 @@ using Adaptive.Aeron;
 using Adaptive.Agrona;
 using Adaptive.Agrona.Concurrent;
 using Adaptive.Agrona.Concurrent.Status;
+using static Adaptive.Agrona.Concurrent.Status.CountersReader;
 
 namespace Adaptive.Archiver
 {
@@ -54,7 +55,8 @@ namespace Adaptive.Archiver
             tempBuffer.PutLong(RECORDING_ID_OFFSET, recordingId);
             tempBuffer.PutInt(SESSION_ID_OFFSET, sessionId);
 
-            var sourceIdentityLength = Math.Min(sourceIdentity.Length, CountersReader.MAX_KEY_LENGTH - SOURCE_IDENTITY_OFFSET);
+            var sourceIdentityLength =
+                Math.Min(sourceIdentity.Length, MAX_KEY_LENGTH - SOURCE_IDENTITY_OFFSET);
             tempBuffer.PutStringAscii(SOURCE_IDENTITY_LENGTH_OFFSET, sourceIdentity);
             var keyLength = SOURCE_IDENTITY_OFFSET + sourceIdentityLength;
 
@@ -67,9 +69,11 @@ namespace Adaptive.Archiver
             labelLength += tempBuffer.PutStringWithoutLengthAscii(labelOffset + labelLength, " ");
             labelLength += tempBuffer.PutIntAscii(labelOffset + labelLength, streamId);
             labelLength += tempBuffer.PutStringWithoutLengthAscii(labelOffset + labelLength, " ");
-            labelLength += tempBuffer.PutStringWithoutLengthAscii(labelOffset + labelLength, strippedChannel, 0, CountersReader.MAX_LABEL_LENGTH - labelLength);
+            labelLength += tempBuffer.PutStringWithoutLengthAscii(labelOffset + labelLength, strippedChannel, 0,
+                MAX_LABEL_LENGTH - labelLength);
 
-            return aeron.AddCounter(RECORDING_POSITION_TYPE_ID, tempBuffer, 0, keyLength, tempBuffer, labelOffset, labelLength);
+            return aeron.AddCounter(RECORDING_POSITION_TYPE_ID, tempBuffer, 0, keyLength, tempBuffer, labelOffset,
+                labelLength);
         }
 
         /// <summary>
@@ -84,19 +88,18 @@ namespace Adaptive.Archiver
 
             for (int i = 0, size = countersReader.MaxCounterId; i < size; i++)
             {
-                if (countersReader.GetCounterState(i) == CountersReader.RECORD_ALLOCATED)
+                if (countersReader.GetCounterState(i) == RECORD_ALLOCATED &&
+                    countersReader.GetCounterTypeId(i) == RECORDING_POSITION_TYPE_ID)
                 {
-                    int recordOffset = CountersReader.MetaDataOffset(i);
-
-                    if (buffer.GetInt(recordOffset + CountersReader.TYPE_ID_OFFSET) == RECORDING_POSITION_TYPE_ID &&
-                        buffer.GetLong(recordOffset + CountersReader.KEY_OFFSET + RECORDING_ID_OFFSET) == recordingId)
+                    if (buffer.GetLong(MetaDataOffset(i) + KEY_OFFSET +
+                                       RECORDING_ID_OFFSET) == recordingId)
                     {
                         return i;
                     }
                 }
             }
 
-            return CountersReader.NULL_COUNTER_ID;
+            return NULL_COUNTER_ID;
         }
 
         /// <summary>
@@ -111,19 +114,18 @@ namespace Adaptive.Archiver
 
             for (int i = 0, size = countersReader.MaxCounterId; i < size; i++)
             {
-                if (countersReader.GetCounterState(i) == CountersReader.RECORD_ALLOCATED)
+                if (countersReader.GetCounterState(i) == RECORD_ALLOCATED &&
+                    countersReader.GetCounterTypeId(i) == RECORDING_POSITION_TYPE_ID)
                 {
-                    int recordOffset = CountersReader.MetaDataOffset(i);
-
-                    if (buffer.GetInt(recordOffset + CountersReader.TYPE_ID_OFFSET) == RECORDING_POSITION_TYPE_ID &&
-                        buffer.GetInt(recordOffset + CountersReader.KEY_OFFSET + SESSION_ID_OFFSET) == sessionId)
+                    if (buffer.GetInt(MetaDataOffset(i) + KEY_OFFSET +
+                                      SESSION_ID_OFFSET) == sessionId)
                     {
                         return i;
                     }
                 }
             }
 
-            return CountersReader.NULL_COUNTER_ID;
+            return NULL_COUNTER_ID;
         }
 
         /// <summary>
@@ -136,14 +138,11 @@ namespace Adaptive.Archiver
         {
             IDirectBuffer buffer = countersReader.MetaDataBuffer;
 
-            if (countersReader.GetCounterState(counterId) == CountersReader.RECORD_ALLOCATED)
+            if (countersReader.GetCounterState(counterId) == RECORD_ALLOCATED &&
+                countersReader.GetCounterTypeId(counterId) == RECORDING_POSITION_TYPE_ID)
             {
-                int recordOffset = CountersReader.MetaDataOffset(counterId);
-
-                if (buffer.GetInt(recordOffset + CountersReader.TYPE_ID_OFFSET) == RECORDING_POSITION_TYPE_ID)
-                {
-                    return buffer.GetLong(recordOffset + CountersReader.KEY_OFFSET + RECORDING_ID_OFFSET);
-                }
+                return buffer.GetLong(MetaDataOffset(counterId) + KEY_OFFSET +
+                                      RECORDING_ID_OFFSET);
             }
 
             return NULL_RECORDING_ID;
@@ -152,21 +151,18 @@ namespace Adaptive.Archiver
         /// <summary>
         /// Get the <seealso cref="Image.SourceIdentity()"/> for the recording.
         /// </summary>
-        /// <param name="countersReader"> to search within. </param>
-        /// <param name="counterId">      for the active recording. </param>
+        /// <param name="counters"> to search within. </param>
+        /// <param name="counterId"> for the active recording. </param>
         /// <returns> <seealso cref="Image.SourceIdentity()"/> for the recording or null if not found. </returns>
-        public static string GetSourceIdentity(CountersReader countersReader, int counterId)
+        public static string GetSourceIdentity(CountersReader counters, int counterId)
         {
-            IDirectBuffer buffer = countersReader.MetaDataBuffer;
+            IDirectBuffer buffer = counters.MetaDataBuffer;
 
-            if (countersReader.GetCounterState(counterId) == CountersReader.RECORD_ALLOCATED)
+            if (counters.GetCounterState(counterId) == RECORD_ALLOCATED &&
+                counters.GetCounterTypeId(counterId) == RECORDING_POSITION_TYPE_ID)
             {
-                int recordOffset = CountersReader.MetaDataOffset(counterId);
-
-                if (buffer.GetInt(recordOffset + CountersReader.TYPE_ID_OFFSET) == RECORDING_POSITION_TYPE_ID)
-                {
-                    return buffer.GetStringAscii(recordOffset + CountersReader.KEY_OFFSET + SOURCE_IDENTITY_LENGTH_OFFSET);
-                }
+                int recordOffset = MetaDataOffset(counterId);
+                return buffer.GetStringAscii(recordOffset + KEY_OFFSET + SOURCE_IDENTITY_LENGTH_OFFSET);
             }
 
             return null;
@@ -175,23 +171,18 @@ namespace Adaptive.Archiver
         /// <summary>
         /// Is the recording counter still active.
         /// </summary>
-        /// <param name="countersReader"> to search within. </param>
-        /// <param name="counterId">      to search for. </param>
-        /// <param name="recordingId">    to confirm it is still the same value. </param>
+        /// <param name="counters"> to search within. </param>
+        /// <param name="counterId">   to search for. </param>
+        /// <param name="recordingId"> to confirm it is still the same value. </param>
         /// <returns> true if the counter is still active otherwise false. </returns>
-        public static bool IsActive(CountersReader countersReader, int counterId, long recordingId)
+        public static bool IsActive(CountersReader counters, int counterId, long recordingId)
         {
-            IDirectBuffer buffer = countersReader.MetaDataBuffer;
+            IDirectBuffer buffer = counters.MetaDataBuffer;
+            int recordOffset = MetaDataOffset(counterId);
 
-            if (countersReader.GetCounterState(counterId) == CountersReader.RECORD_ALLOCATED)
-            {
-                int recordOffset = CountersReader.MetaDataOffset(counterId);
-
-                return buffer.GetInt(recordOffset + CountersReader.TYPE_ID_OFFSET) == RECORDING_POSITION_TYPE_ID &&
-                       buffer.GetLong(recordOffset + CountersReader.KEY_OFFSET + RECORDING_ID_OFFSET) == recordingId;
-            }
-
-            return false;
+            return counters.GetCounterTypeId(counterId) == RECORDING_POSITION_TYPE_ID &&
+                   buffer.GetLong(recordOffset + KEY_OFFSET + RECORDING_ID_OFFSET) == recordingId &&
+                   counters.GetCounterState(counterId) == RECORD_ALLOCATED;
         }
     }
 }

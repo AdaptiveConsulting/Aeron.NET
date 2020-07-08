@@ -76,7 +76,8 @@ namespace Adaptive.Aeron
         {
             if (limit < 0 || limit >= _buffer.Capacity)
             {
-                ThrowHelper.ThrowArgumentException($"limit outside range: capacity={_buffer.Capacity:D} limit={limit:D}");
+                ThrowHelper.ThrowArgumentException(
+                    $"limit outside range: capacity={_buffer.Capacity:D} limit={limit:D}");
             }
 
             _limit = limit;
@@ -99,13 +100,13 @@ namespace Adaptive.Aeron
         {
             _limit = 0;
             return this;
-            }
+        }
 
         /// <summary>
         /// Compact the buffer to reclaim unused space above the limit.
         /// </summary>
         /// <returns> the builder for fluent API usage. </returns>
-	    public BufferBuilder Compact()
+        public BufferBuilder Compact()
         {
             Resize(Math.Max(BufferBuilderUtil.MIN_ALLOCATED_CAPACITY, _limit));
             return this;
@@ -130,7 +131,7 @@ namespace Adaptive.Aeron
 
         private void EnsureCapacity(int additionalCapacity)
         {
-            long requiredCapacity = (long)_limit + additionalCapacity;
+            long requiredCapacity = (long) _limit + additionalCapacity;
 
             if (requiredCapacity > BufferBuilderUtil.MAX_CAPACITY)
             {
@@ -141,7 +142,7 @@ namespace Adaptive.Aeron
             int capacity = _buffer.Capacity;
             if (requiredCapacity > capacity)
             {
-                int newCapacity = BufferBuilderUtil.FindSuitableCapacity(capacity, (int)requiredCapacity);
+                int newCapacity = BufferBuilderUtil.FindSuitableCapacity(capacity, (int) requiredCapacity);
                 Resize(newCapacity);
             }
         }

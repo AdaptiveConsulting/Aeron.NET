@@ -3,7 +3,7 @@ using Adaptive.Agrona.Util;
 
 namespace Adaptive.Aeron
 {
-    static class BufferBuilderUtil
+    internal static class BufferBuilderUtil
     {
         /// <summary>
         /// Maximum capacity to which the buffer can grow.
@@ -14,7 +14,6 @@ namespace Adaptive.Aeron
         /// Initial minimum capacity for the internal buffer when used, zero if not used.
         /// </summary>
         internal const int MIN_ALLOCATED_CAPACITY = 4096;
-
 
         internal static int FindSuitableCapacity(int capacity, int requiredCapacity)
         {

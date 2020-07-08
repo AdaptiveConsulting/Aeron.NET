@@ -78,6 +78,17 @@ namespace Adaptive.Aeron.Protocol
         }
 
         /// <summary>
+        /// Get the fragment length field from the header.
+        /// </summary>
+        /// <param name="termBuffer">  container the header. </param>
+        /// <param name="frameOffset"> in the buffer where the header starts. </param>
+        /// <returns> the fragment length field from the header. </returns>
+        public static int FragmentLength(UnsafeBuffer termBuffer, int frameOffset)
+        {
+            return termBuffer.GetInt(frameOffset + FRAME_LENGTH_FIELD_OFFSET, ByteOrder.LittleEndian);
+        }
+        
+        /// <summary>
         /// Is the frame at data frame at the beginning of packet a heartbeat message?
         /// </summary>
         /// <param name="packet"> containing the data frame. </param>
@@ -99,24 +110,30 @@ namespace Adaptive.Aeron.Protocol
         }
 
         /// <summary>
-        /// return session id field
+        /// return session-id field from the header.
         /// </summary>
-        /// <returns> session id field </returns>
+        /// <returns> session-id field from the header.</returns>
         public int SessionId()
         {
             return GetInt(SESSION_ID_FIELD_OFFSET);
         }
 
+        /// <summary>
+        /// Get the session-id field from the header.
+        /// </summary>
+        /// <param name="termBuffer">  container the header. </param>
+        /// <param name="frameOffset"> in the buffer where the header starts. </param>
+        /// <returns> the session-id field from the header. </returns>
         public static int SessionId(UnsafeBuffer termBuffer, int frameOffset)
         {
             return termBuffer.GetInt(frameOffset + SESSION_ID_FIELD_OFFSET, ByteOrder.LittleEndian);
         }
 
         /// <summary>
-        /// set session id field
+        /// Set the session-id field in the header.
         /// </summary>
-        /// <param name="sessionId"> field value </param>
-        /// <returns> flyweight </returns>
+        /// <param name="sessionId"> value to set.</param>
+        /// <returns> this for a fluent API. </returns>
         public DataHeaderFlyweight SessionId(int sessionId)
         {
             PutInt(SESSION_ID_FIELD_OFFSET, sessionId);
@@ -125,24 +142,29 @@ namespace Adaptive.Aeron.Protocol
         }
 
         /// <summary>
-        /// return stream id field
+        /// Get the stream-id field from the header.
         /// </summary>
-        /// <returns> stream id field </returns>
+        /// <returns> he stream-id field from the header. </returns>
         public int StreamId()
         {
             return GetInt(STREAM_ID_FIELD_OFFSET);
         }
-
+        /// <summary>
+        /// Get the stream-id field from the header.
+        /// </summary>
+        /// <param name="termBuffer">  containing the header. </param>
+        /// <param name="frameOffset"> in the buffer where the header starts. </param>
+        /// <returns> the stream-id field from the header. </returns>
         public static int StreamId(UnsafeBuffer termBuffer, int frameOffset)
         {
             return termBuffer.GetInt(frameOffset + STREAM_ID_FIELD_OFFSET, ByteOrder.LittleEndian);
         }
 
         /// <summary>
-        /// set stream id field
+        /// Set the stream-id field in the header.
         /// </summary>
-        /// <param name="streamId"> field value </param>
-        /// <returns> flyweight </returns>
+        /// <param name="streamId"> value to set. </param>
+        /// <returns> this for a fluent API. </returns>
         public DataHeaderFlyweight StreamId(int streamId)
         {
             PutInt(STREAM_ID_FIELD_OFFSET, streamId);
@@ -151,24 +173,30 @@ namespace Adaptive.Aeron.Protocol
         }
 
         /// <summary>
-        /// return term id field
+        /// Get the term-id field from the header.
         /// </summary>
-        /// <returns> term id field </returns>
+        /// <returns> the term-id field from the header. </returns>
         public int TermId()
         {
             return GetInt(TERM_ID_FIELD_OFFSET);
         }
 
+        /// <summary>
+        /// Get the term-id field from the header.
+        /// </summary>
+        /// <param name="termBuffer">  container the header. </param>
+        /// <param name="frameOffset"> in the buffer where the header starts. </param>
+        /// <returns> the term-id field from the header. </returns>
         public static int TermId(UnsafeBuffer termBuffer, int frameOffset)
         {
             return termBuffer.GetInt(frameOffset + TERM_ID_FIELD_OFFSET, ByteOrder.LittleEndian);
         }
 
         /// <summary>
-        /// set term id field
+        /// Set the term-id field in the header.
         /// </summary>
-        /// <param name="termId"> field value </param>
-        /// <returns> flyweight </returns>
+        /// <param name="termId"> value to set. </param>
+        /// <returns> this for a fluent API. </returns>
         public DataHeaderFlyweight TermId(int termId)
         {
             PutInt(TERM_ID_FIELD_OFFSET, termId);
@@ -177,24 +205,30 @@ namespace Adaptive.Aeron.Protocol
         }
 
         /// <summary>
-        /// return term offset field
+        /// Get the term-offset field from the header.
         /// </summary>
-        /// <returns> term offset field </returns>
+        /// <returns> the term-offset field from the header. </returns>
         public int TermOffset()
         {
             return GetInt(TERM_OFFSET_FIELD_OFFSET);
         }
 
+        /// <summary>
+        /// Get the term-offset field from the header.
+        /// </summary>
+        /// <param name="termBuffer">  containing the header. </param>
+        /// <param name="frameOffset"> in the buffer where the header starts. </param>
+        /// <returns> the term-offset field from the header. </returns>
         public static int TermOffset(UnsafeBuffer termBuffer, int frameOffset)
         {
             return termBuffer.GetInt(frameOffset + TERM_OFFSET_FIELD_OFFSET, ByteOrder.LittleEndian);
         }
 
         /// <summary>
-        /// set term offset field
+        /// Set the term-offset field in the header.
         /// </summary>
-        /// <param name="termOffset"> field value </param>
-        /// <returns> flyweight </returns>
+        /// <param name="termOffset"> value to set. </param>
+        /// <returns> this for a fluent API. </returns>
         public DataHeaderFlyweight TermOffset(int termOffset)
         {
             PutInt(TERM_OFFSET_FIELD_OFFSET, termOffset);
@@ -209,6 +243,17 @@ namespace Adaptive.Aeron.Protocol
         public long ReservedValue()
         {
             return GetLong(RESERVED_VALUE_OFFSET);
+        }
+        
+        /// <summary>
+        /// Get the reserved value field from the header.
+        /// </summary>
+        /// <param name="termBuffer">  containing the header. </param>
+        /// <param name="frameOffset"> in the buffer where the header starts. </param>
+        /// <returns> the reserved value field from the header. </returns>
+        public static long ReservedValue(UnsafeBuffer termBuffer, int frameOffset)
+        {
+            return termBuffer.GetLong(frameOffset + RESERVED_VALUE_OFFSET, ByteOrder.LittleEndian);
         }
 
         /// <summary>

@@ -50,6 +50,10 @@ namespace Adaptive.Aeron
         /// <param name="logFileName"></param>
         public LogBuffers(string logFileName)
         {
+            int termLength = 0;
+            UnsafeBuffer logMetaDataBuffer = null;
+            MappedByteBuffer[] mappedByteBuffers = null;
+
             try
             {
                 var fileInfo = new FileInfo(logFileName);
@@ -62,19 +66,17 @@ namespace Adaptive.Aeron
                     var mappedBuffer =
                         IoUtil.MapExistingFile(logFileName,
                             MapMode.ReadWrite); // TODO Java has sparse hint & Little Endian
-                    _mappedByteBuffers = new[] {mappedBuffer};
+                    mappedByteBuffers = new[] {mappedBuffer};
 
-                    _logMetaDataBuffer = new UnsafeBuffer(mappedBuffer.Pointer,
+                    logMetaDataBuffer = new UnsafeBuffer(mappedBuffer.Pointer,
                         (int) (logLength - LogBufferDescriptor.LOG_META_DATA_LENGTH),
                         LogBufferDescriptor.LOG_META_DATA_LENGTH);
 
-                    int termLength = LogBufferDescriptor.TermLength(_logMetaDataBuffer);
-                    int pageSize = LogBufferDescriptor.PageSize(_logMetaDataBuffer);
+                    termLength = LogBufferDescriptor.TermLength(logMetaDataBuffer);
+                    int pageSize = LogBufferDescriptor.PageSize(logMetaDataBuffer);
 
                     LogBufferDescriptor.CheckTermLength(termLength);
                     LogBufferDescriptor.CheckPageSize(pageSize);
-
-                    _termLength = termLength;
 
                     for (var i = 0; i < LogBufferDescriptor.PARTITION_COUNT; i++)
                     {
@@ -83,7 +85,7 @@ namespace Adaptive.Aeron
                 }
                 else
                 {
-                    _mappedByteBuffers = new MappedByteBuffer[LogBufferDescriptor.PARTITION_COUNT + 1];
+                    mappedByteBuffers = new MappedByteBuffer[LogBufferDescriptor.PARTITION_COUNT + 1];
 
                     int assumedTermLength = LogBufferDescriptor.TERM_MAX_LENGTH;
                     long metaDataSectionOffset = assumedTermLength * (long) LogBufferDescriptor.PARTITION_COUNT;
@@ -95,14 +97,14 @@ namespace Adaptive.Aeron
                         new MappedByteBuffer(memoryMappedFile, metaDataSectionOffset,
                             metaDataMappingLength); // Little Endian
 
-                    _mappedByteBuffers[LogBufferDescriptor.LOG_META_DATA_SECTION_INDEX] = metaDataMappedBuffer;
-                    _logMetaDataBuffer = new UnsafeBuffer(
+                    mappedByteBuffers[LogBufferDescriptor.LOG_META_DATA_SECTION_INDEX] = metaDataMappedBuffer;
+                    logMetaDataBuffer = new UnsafeBuffer(
                         metaDataMappedBuffer.Pointer,
                         (int) metaDataMappingLength - LogBufferDescriptor.LOG_META_DATA_LENGTH,
                         LogBufferDescriptor.LOG_META_DATA_LENGTH);
 
-                    int metaDataTermLength = LogBufferDescriptor.TermLength(_logMetaDataBuffer);
-                    int pageSize = LogBufferDescriptor.PageSize(_logMetaDataBuffer);
+                    int metaDataTermLength = LogBufferDescriptor.TermLength(logMetaDataBuffer);
+                    int pageSize = LogBufferDescriptor.PageSize(logMetaDataBuffer);
 
                     LogBufferDescriptor.CheckPageSize(pageSize);
                     if (metaDataTermLength != assumedTermLength)
@@ -111,23 +113,27 @@ namespace Adaptive.Aeron
                             $"assumed term length {assumedTermLength} does not match metadta: termLength = {metaDataTermLength}");
                     }
 
-                    _termLength = assumedTermLength;
+                    termLength = assumedTermLength;
 
                     for (var i = 0; i < LogBufferDescriptor.PARTITION_COUNT; i++)
                     {
                         long position = assumedTermLength * (long) i;
 
-                        _mappedByteBuffers[i] =
+                        mappedByteBuffers[i] =
                             new MappedByteBuffer(memoryMappedFile, position, assumedTermLength); // Little Endian
-                        _termBuffers[i] = new UnsafeBuffer(_mappedByteBuffers[i].Pointer, 0, assumedTermLength);
+                        _termBuffers[i] = new UnsafeBuffer(mappedByteBuffers[i].Pointer, 0, assumedTermLength);
                     }
                 }
             }
-            catch (InvalidOperationException ex)
+            catch (InvalidOperationException)
             {
                 Dispose();
-                throw ex;
+                throw;
             }
+            
+            _termLength = termLength;
+            _logMetaDataBuffer = logMetaDataBuffer;
+            _mappedByteBuffers = mappedByteBuffers;
         }
 
         public UnsafeBuffer[] DuplicateTermBuffers()

@@ -12,7 +12,7 @@ public class TruncateRecordingRequestDecoder
     public const ushort BLOCK_LENGTH = 32;
     public const ushort TEMPLATE_ID = 13;
     public const ushort SCHEMA_ID = 101;
-    public const ushort SCHEMA_VERSION = 2;
+    public const ushort SCHEMA_VERSION = 4;
 
     private TruncateRecordingRequestDecoder _parentMessage;
     private IDirectBuffer _buffer;

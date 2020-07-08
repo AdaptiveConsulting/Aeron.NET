@@ -19,7 +19,7 @@ using Adaptive.Agrona;
 namespace Adaptive.Aeron
 {
     /// <summary>
-    /// Default mapping byteBuffer lifecycle strategy for the client
+    /// Default factory for mapping log buffers in the client.
     /// </summary>
     internal class MappedLogBuffersFactory : ILogBuffersFactory
     {

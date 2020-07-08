@@ -6,7 +6,7 @@ using Adaptive.Cluster.Client;
 namespace Adaptive.Cluster.Service
 {
     /// <summary>
-    /// Counter representing the Recovery state for the cluster.
+    /// Counter representing the Recovery State for the cluster.
     /// 
     /// Key layout as follows:
     ///
@@ -22,7 +22,7 @@ namespace Adaptive.Cluster.Service
     ///  |              Timestamp at beginning of Recovery               |
     ///  |                                                               |
     ///  +---------------------------------------------------------------+
-    ///  |                    Replay required flag                       |
+    ///  |                         Cluster ID                            |
     ///  +---------------------------------------------------------------+
     ///  |                     Count of Services                         |
     ///  +---------------------------------------------------------------+
@@ -44,85 +44,32 @@ namespace Adaptive.Cluster.Service
         /// <summary>
         /// Human readable name for the counter.
         /// </summary>
-        public const string NAME = "cluster recovery: leadershipTermId=";
+        public const string NAME = "Cluster recovery: leadershipTermId=";
 
         public const int LEADERSHIP_TERM_ID_OFFSET = 0;
         public static readonly int LOG_POSITION_OFFSET = LEADERSHIP_TERM_ID_OFFSET + BitUtil.SIZE_OF_LONG;
         public static readonly int TIMESTAMP_OFFSET = LOG_POSITION_OFFSET + BitUtil.SIZE_OF_LONG;
-        public static readonly int REPLAY_FLAG_OFFSET = TIMESTAMP_OFFSET + BitUtil.SIZE_OF_LONG;
-        public static readonly int SERVICE_COUNT_OFFSET = REPLAY_FLAG_OFFSET + BitUtil.SIZE_OF_INT;
+        public static readonly int CLUSTER_ID_OFFSET = TIMESTAMP_OFFSET + BitUtil.SIZE_OF_LONG;
+        public static readonly int SERVICE_COUNT_OFFSET = CLUSTER_ID_OFFSET + BitUtil.SIZE_OF_INT;
         public static readonly int SNAPSHOT_RECORDING_IDS_OFFSET = SERVICE_COUNT_OFFSET + BitUtil.SIZE_OF_INT;
-
-
-        /// <summary>
-        /// Allocate a counter to represent the snapshot services should load on start.
-        /// </summary>
-        /// <param name="aeron">                to allocate the counter. </param>
-        /// <param name="tempBuffer">           to use for building the key and label without allocation. </param>
-        /// <param name="leadershipTermId">     at which the snapshot was taken. </param>
-        /// <param name="logPosition">          at which the snapshot was taken. </param>
-        /// <param name="timestamp">            the snapshot was taken. </param>
-        /// <param name="hasReplay">            flag is true if all or part of the log must be replayed. </param>
-        /// <param name="snapshotRecordingIds"> for the services to use during recovery indexed by service id. </param>
-        /// <returns> the <seealso cref="Counter"/> for the recovery state. </returns>
-        public static Counter Allocate(
-            Aeron.Aeron aeron,
-            IMutableDirectBuffer tempBuffer,
-            long leadershipTermId,
-            long logPosition,
-            long timestamp,
-            bool hasReplay,
-            params long[] snapshotRecordingIds)
-        {
-            tempBuffer.PutLong(LEADERSHIP_TERM_ID_OFFSET, leadershipTermId);
-            tempBuffer.PutLong(LOG_POSITION_OFFSET, logPosition);
-            tempBuffer.PutLong(TIMESTAMP_OFFSET, timestamp);
-            tempBuffer.PutInt(REPLAY_FLAG_OFFSET, hasReplay ? 1 : 0);
-
-            int serviceCount = snapshotRecordingIds.Length;
-            tempBuffer.PutInt(SERVICE_COUNT_OFFSET, serviceCount);
-
-            int keyLength = SNAPSHOT_RECORDING_IDS_OFFSET + (serviceCount * BitUtil.SIZE_OF_LONG);
-            int maxRecordingIdsLength = SNAPSHOT_RECORDING_IDS_OFFSET + (serviceCount * BitUtil.SIZE_OF_LONG);
-
-            if (maxRecordingIdsLength > CountersReader.MAX_KEY_LENGTH)
-            {
-                throw new ClusterException(maxRecordingIdsLength + " execeeds max key length " + CountersReader.MAX_KEY_LENGTH);
-            }
-
-            for (int i = 0; i < serviceCount; i++)
-            {
-                tempBuffer.PutLong(SNAPSHOT_RECORDING_IDS_OFFSET + (i * BitUtil.SIZE_OF_LONG), snapshotRecordingIds[i]);
-            }
-
-            int labelOffset = BitUtil.Align(keyLength, BitUtil.SIZE_OF_INT);
-            int labelLength = 0;
-            labelLength += tempBuffer.PutStringWithoutLengthAscii(labelOffset + labelLength, NAME);
-            labelLength += tempBuffer.PutLongAscii(keyLength + labelLength, leadershipTermId);
-            labelLength += tempBuffer.PutStringWithoutLengthAscii(labelOffset + labelLength, " logPosition=");
-            labelLength += tempBuffer.PutLongAscii(labelOffset + labelLength, logPosition);
-            labelLength += tempBuffer.PutStringWithoutLengthAscii(labelOffset + labelLength, " hasReplay=" + hasReplay);
-
-            return aeron.AddCounter(RECOVERY_STATE_TYPE_ID, tempBuffer, 0, keyLength, tempBuffer, labelOffset, labelLength);
-
-        }
 
         /// <summary>
         /// Find the active counter id for recovery state.
         /// </summary>
         /// <param name="counters"> to search within. </param>
+        /// <param name="clusterId"> to constrain the search. </param>
         /// <returns> the counter id if found otherwise <seealso cref="CountersReader.NULL_COUNTER_ID"/>. </returns>
-        public static int FindCounterId(CountersReader counters)
+        public static int FindCounterId(CountersReader counters, int clusterId)
         {
             IDirectBuffer buffer = counters.MetaDataBuffer;
 
             for (int i = 0, size = counters.MaxCounterId; i < size; i++)
             {
-                if (counters.GetCounterState(i) == CountersReader.RECORD_ALLOCATED)
+                if (counters.GetCounterState(i) == CountersReader.RECORD_ALLOCATED &&
+                    counters.GetCounterTypeId(i) == RECOVERY_STATE_TYPE_ID)
                 {
-                    int recordOffset = CountersReader.MetaDataOffset(i);
-
-                    if (buffer.GetInt(recordOffset + CountersReader.TYPE_ID_OFFSET) == RECOVERY_STATE_TYPE_ID)
+                    if (buffer.GetInt(CountersReader.MetaDataOffset(i) + CountersReader.KEY_OFFSET +
+                                      CLUSTER_ID_OFFSET) == clusterId)
                     {
                         return i;
                     }
@@ -142,14 +89,11 @@ namespace Adaptive.Cluster.Service
         {
             IDirectBuffer buffer = counters.MetaDataBuffer;
 
-            if (counters.GetCounterState(counterId) == CountersReader.RECORD_ALLOCATED)
+            if (counters.GetCounterState(counterId) == CountersReader.RECORD_ALLOCATED &&
+                counters.GetCounterTypeId(counterId) == RECOVERY_STATE_TYPE_ID)
             {
-                int recordOffset = CountersReader.MetaDataOffset(counterId);
-
-                if (buffer.GetInt(recordOffset + CountersReader.TYPE_ID_OFFSET) == RECOVERY_STATE_TYPE_ID)
-                {
-                    return buffer.GetLong(recordOffset + CountersReader.KEY_OFFSET + LEADERSHIP_TERM_ID_OFFSET);
-                }
+                return buffer.GetLong(CountersReader.MetaDataOffset(counterId) + CountersReader.KEY_OFFSET +
+                                      LEADERSHIP_TERM_ID_OFFSET);
             }
 
             return Aeron.Aeron.NULL_VALUE;
@@ -165,14 +109,11 @@ namespace Adaptive.Cluster.Service
         {
             IDirectBuffer buffer = counters.MetaDataBuffer;
 
-            if (counters.GetCounterState(counterId) == CountersReader.RECORD_ALLOCATED)
+            if (counters.GetCounterState(counterId) == CountersReader.RECORD_ALLOCATED &&
+                counters.GetCounterTypeId(counterId) == RECOVERY_STATE_TYPE_ID)
             {
-                int recordOffset = CountersReader.MetaDataOffset(counterId);
-
-                if (buffer.GetInt(recordOffset + CountersReader.TYPE_ID_OFFSET) == RECOVERY_STATE_TYPE_ID)
-                {
-                    return buffer.GetLong(recordOffset + CountersReader.KEY_OFFSET + LOG_POSITION_OFFSET);
-                }
+                return buffer.GetLong(CountersReader.MetaDataOffset(counterId) + CountersReader.KEY_OFFSET +
+                                      LOG_POSITION_OFFSET);
             }
 
             return Aeron.Aeron.NULL_VALUE;
@@ -189,40 +130,13 @@ namespace Adaptive.Cluster.Service
         {
             IDirectBuffer buffer = counters.MetaDataBuffer;
 
-            if (counters.GetCounterState(counterId) == CountersReader.RECORD_ALLOCATED)
+            if (counters.GetCounterState(counterId) == CountersReader.RECORD_ALLOCATED &&
+                counters.GetCounterTypeId(counterId) == RECOVERY_STATE_TYPE_ID)
             {
-                int recordOffset = CountersReader.MetaDataOffset(counterId);
-
-                if (buffer.GetInt(recordOffset + CountersReader.TYPE_ID_OFFSET) == RECOVERY_STATE_TYPE_ID)
-                {
-                    return buffer.GetLong(recordOffset + CountersReader.KEY_OFFSET + TIMESTAMP_OFFSET);
-                }
+                return buffer.GetLong(CountersReader.MetaDataOffset(counterId) + CountersReader.KEY_OFFSET + TIMESTAMP_OFFSET);
             }
 
             return Aeron.Aeron.NULL_VALUE;
-        }
-
-        /// <summary>
-        /// Has the recovery process got a log to replay?
-        /// </summary>
-        /// <param name="counters">  to search within. </param>
-        /// <param name="counterId"> for the active recovery counter. </param>
-        /// <returns> true if a replay is required. </returns>
-        public static bool HasReplay(CountersReader counters, int counterId)
-        {
-            IDirectBuffer buffer = counters.MetaDataBuffer;
-
-            if (counters.GetCounterState(counterId) == CountersReader.RECORD_ALLOCATED)
-            {
-                int recordOffset = CountersReader.MetaDataOffset(counterId);
-
-                if (buffer.GetInt(recordOffset + CountersReader.TYPE_ID_OFFSET) == RECOVERY_STATE_TYPE_ID)
-                {
-                    return buffer.GetInt(recordOffset + CountersReader.KEY_OFFSET + REPLAY_FLAG_OFFSET) == 1;
-                }
-            }
-
-            return false;
         }
 
         /// <summary>
@@ -236,23 +150,22 @@ namespace Adaptive.Cluster.Service
         {
             IDirectBuffer buffer = counters.MetaDataBuffer;
 
-            if (counters.GetCounterState(counterId) == CountersReader.RECORD_ALLOCATED)
+            if (counters.GetCounterState(counterId) == CountersReader.RECORD_ALLOCATED &&
+                counters.GetCounterTypeId(counterId) == RECOVERY_STATE_TYPE_ID)
             {
                 int recordOffset = CountersReader.MetaDataOffset(counterId);
 
-                if (buffer.GetInt(recordOffset + CountersReader.TYPE_ID_OFFSET) == RECOVERY_STATE_TYPE_ID)
+                int serviceCount = buffer.GetInt(recordOffset + CountersReader.KEY_OFFSET + SERVICE_COUNT_OFFSET);
+                if (serviceId < 0 || serviceId >= serviceCount)
                 {
-                    int serviceCount = buffer.GetInt(recordOffset + CountersReader.KEY_OFFSET + SERVICE_COUNT_OFFSET);
-                    if (serviceId < 0 || serviceId >= serviceCount)
-                    {
-                        throw new ClusterException("invalid serviceId " + serviceId + " for count of " + serviceCount);
-                    }
-
-                    return buffer.GetLong(recordOffset + CountersReader.KEY_OFFSET + SNAPSHOT_RECORDING_IDS_OFFSET + (serviceId * BitUtil.SIZE_OF_LONG));
+                    throw new ClusterException("invalid serviceId " + serviceId + " for count of " + serviceCount);
                 }
+
+                return buffer.GetLong(recordOffset + CountersReader.KEY_OFFSET + SNAPSHOT_RECORDING_IDS_OFFSET +
+                                      (serviceId * BitUtil.SIZE_OF_LONG));
             }
 
-            throw new ClusterException("Active counter not found " + counterId);
+            throw new ClusterException("active counter not found " + counterId);
         }
     }
 }

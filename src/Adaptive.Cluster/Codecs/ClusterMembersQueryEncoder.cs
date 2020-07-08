@@ -9,10 +9,10 @@ namespace Adaptive.Cluster.Codecs {
 
 public class ClusterMembersQueryEncoder
 {
-    public const ushort BLOCK_LENGTH = 8;
+    public const ushort BLOCK_LENGTH = 12;
     public const ushort TEMPLATE_ID = 34;
     public const ushort SCHEMA_ID = 111;
-    public const ushort SCHEMA_VERSION = 4;
+    public const ushort SCHEMA_VERSION = 6;
 
     private ClusterMembersQueryEncoder _parentMessage;
     private IMutableDirectBuffer _buffer;
@@ -127,6 +127,22 @@ public class ClusterMembersQueryEncoder
         return this;
     }
 
+
+    public static int ExtendedEncodingOffset()
+    {
+        return 8;
+    }
+
+    public static int ExtendedEncodingLength()
+    {
+        return 4;
+    }
+
+    public ClusterMembersQueryEncoder Extended(BooleanType value)
+    {
+        _buffer.PutInt(_offset + 8, (int)value, ByteOrder.LittleEndian);
+        return this;
+    }
 
 
     public override string ToString()

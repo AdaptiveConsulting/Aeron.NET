@@ -23,6 +23,8 @@ namespace Adaptive.Agrona.Concurrent
     /// </summary>
     public sealed class YieldingIdleStrategy : IIdleStrategy
     {
+        public static readonly YieldingIdleStrategy INSTANCE = new YieldingIdleStrategy();
+
         public void Idle(int workCount)
         {
             if (workCount > 0)

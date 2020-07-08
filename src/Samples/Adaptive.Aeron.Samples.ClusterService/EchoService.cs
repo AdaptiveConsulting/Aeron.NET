@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Resources;
 using Adaptive.Aeron.LogBuffer;
 using Adaptive.Agrona;
 using Adaptive.Cluster.Codecs;
@@ -34,7 +35,7 @@ namespace Adaptive.Aeron.Samples.ClusterService
             
             while (session.Offer(buffer, offset, length) <= 0)
             {
-                _cluster.Idle();
+                _cluster.IdleStrategy().Idle();
             }
         }
 
@@ -61,6 +62,19 @@ namespace Adaptive.Aeron.Samples.ClusterService
         public void OnTerminate(ICluster cluster)
         {
             Console.WriteLine("OnTerminate");
+        }
+
+        public void OnNewLeadershipTermEvent(
+            long leadershipTermId,
+            long logPosition,
+            long timestamp,
+            long termBaseLogPosition,
+            int leaderMemberId,
+            int logSessionId,
+            ClusterTimeUnit timeUnit,
+            int appVersion)
+        {
+            Console.WriteLine($"OnNewLeadershipTerm: leadershipTermId={leadershipTermId}");
         }
     }
 }

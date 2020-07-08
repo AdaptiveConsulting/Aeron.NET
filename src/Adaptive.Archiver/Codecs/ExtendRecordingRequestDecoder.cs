@@ -9,10 +9,10 @@ namespace Adaptive.Archiver.Codecs {
 
 public class ExtendRecordingRequestDecoder
 {
-    public const ushort BLOCK_LENGTH = 29;
+    public const ushort BLOCK_LENGTH = 32;
     public const ushort TEMPLATE_ID = 11;
     public const ushort SCHEMA_ID = 101;
-    public const ushort SCHEMA_VERSION = 2;
+    public const ushort SCHEMA_VERSION = 4;
 
     private ExtendRecordingRequestDecoder _parentMessage;
     private IDirectBuffer _buffer;
@@ -321,7 +321,7 @@ public class ExtendRecordingRequestDecoder
 
     public static int SourceLocationEncodingLength()
     {
-        return 1;
+        return 4;
     }
 
     public static string SourceLocationMetaAttribute(MetaAttribute metaAttribute)
@@ -339,7 +339,7 @@ public class ExtendRecordingRequestDecoder
 
     public SourceLocation SourceLocation()
     {
-        return (SourceLocation)_buffer.GetByte(_offset + 28);
+        return (SourceLocation)_buffer.GetInt(_offset + 28, ByteOrder.LittleEndian);
     }
 
 
@@ -468,11 +468,11 @@ public class ExtendRecordingRequestDecoder
         builder.Append(StreamId());
         builder.Append('|');
         //Token{signal=BEGIN_FIELD, name='sourceLocation', referencedName='null', description='null', id=5, version=0, deprecated=0, encodedLength=0, offset=28, componentTokenCount=6, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
-        //Token{signal=BEGIN_ENUM, name='SourceLocation', referencedName='null', description='Source location for recorded stream.', id=-1, version=0, deprecated=0, encodedLength=1, offset=28, componentTokenCount=4, encoding=Encoding{presence=REQUIRED, primitiveType=UINT8, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='null', timeUnit=null, semanticType='null'}}
+        //Token{signal=BEGIN_ENUM, name='SourceLocation', referencedName='null', description='Source location for recorded stream.', id=-1, version=0, deprecated=0, encodedLength=4, offset=28, componentTokenCount=4, encoding=Encoding{presence=REQUIRED, primitiveType=INT32, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='null', timeUnit=null, semanticType='null'}}
         builder.Append("SourceLocation=");
         builder.Append(SourceLocation());
         builder.Append('|');
-        //Token{signal=BEGIN_VAR_DATA, name='channel', referencedName='null', description='null', id=6, version=0, deprecated=0, encodedLength=0, offset=29, componentTokenCount=6, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=BEGIN_VAR_DATA, name='channel', referencedName='null', description='null', id=6, version=0, deprecated=0, encodedLength=0, offset=32, componentTokenCount=6, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
         builder.Append("Channel=");
         builder.Append(Channel());
 

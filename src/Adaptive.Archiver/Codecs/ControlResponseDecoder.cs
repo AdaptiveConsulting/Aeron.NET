@@ -9,10 +9,10 @@ namespace Adaptive.Archiver.Codecs {
 
 public class ControlResponseDecoder
 {
-    public const ushort BLOCK_LENGTH = 28;
+    public const ushort BLOCK_LENGTH = 32;
     public const ushort TEMPLATE_ID = 1;
     public const ushort SCHEMA_ID = 101;
-    public const ushort SCHEMA_VERSION = 2;
+    public const ushort SCHEMA_VERSION = 4;
 
     private ControlResponseDecoder _parentMessage;
     private IDirectBuffer _buffer;
@@ -289,9 +289,63 @@ public class ControlResponseDecoder
     }
 
 
-    public static int ErrorMessageId()
+    public static int VersionId()
     {
         return 5;
+    }
+
+    public static int VersionSinceVersion()
+    {
+        return 4;
+    }
+
+    public static int VersionEncodingOffset()
+    {
+        return 28;
+    }
+
+    public static int VersionEncodingLength()
+    {
+        return 4;
+    }
+
+    public static string VersionMetaAttribute(MetaAttribute metaAttribute)
+    {
+        switch (metaAttribute)
+        {
+            case MetaAttribute.EPOCH: return "unix";
+            case MetaAttribute.TIME_UNIT: return "nanosecond";
+            case MetaAttribute.SEMANTIC_TYPE: return "";
+            case MetaAttribute.PRESENCE: return "optional";
+        }
+
+        return "";
+    }
+
+    public static int VersionNullValue()
+    {
+        return 0;
+    }
+
+    public static int VersionMinValue()
+    {
+        return 2;
+    }
+
+    public static int VersionMaxValue()
+    {
+        return 16777215;
+    }
+
+    public int Version()
+    {
+        return _buffer.GetInt(_offset + 28, ByteOrder.LittleEndian);
+    }
+
+
+    public static int ErrorMessageId()
+    {
+        return 6;
     }
 
     public static int ErrorMessageSinceVersion()
@@ -408,12 +462,17 @@ public class ControlResponseDecoder
         builder.Append("RelevantId=");
         builder.Append(RelevantId());
         builder.Append('|');
-        //Token{signal=BEGIN_FIELD, name='code', referencedName='null', description='Code type of the response.', id=4, version=0, deprecated=0, encodedLength=0, offset=24, componentTokenCount=8, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=BEGIN_FIELD, name='code', referencedName='null', description='Code type of the response which is one of ControlResponseCode.', id=4, version=0, deprecated=0, encodedLength=0, offset=24, componentTokenCount=8, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
         //Token{signal=BEGIN_ENUM, name='ControlResponseCode', referencedName='null', description='Control protocol response code.', id=-1, version=0, deprecated=0, encodedLength=4, offset=24, componentTokenCount=6, encoding=Encoding{presence=REQUIRED, primitiveType=INT32, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='null', timeUnit=null, semanticType='null'}}
         builder.Append("Code=");
         builder.Append(Code());
         builder.Append('|');
-        //Token{signal=BEGIN_VAR_DATA, name='errorMessage', referencedName='null', description='Detailed error message which is provided when code is ERROR.', id=5, version=0, deprecated=0, encodedLength=0, offset=28, componentTokenCount=6, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=BEGIN_FIELD, name='version', referencedName='null', description='Protocol version for the server using semantic version form.', id=5, version=4, deprecated=0, encodedLength=0, offset=28, componentTokenCount=3, encoding=Encoding{presence=OPTIONAL, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=ENCODING, name='version_t', referencedName='null', description='Protocol suite version using semantic version form.', id=-1, version=0, deprecated=0, encodedLength=4, offset=28, componentTokenCount=1, encoding=Encoding{presence=OPTIONAL, primitiveType=INT32, byteOrder=LITTLE_ENDIAN, minValue=2, maxValue=16777215, nullValue=0, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        builder.Append("Version=");
+        builder.Append(Version());
+        builder.Append('|');
+        //Token{signal=BEGIN_VAR_DATA, name='errorMessage', referencedName='null', description='Detailed error message which is provided when code is ERROR.', id=6, version=0, deprecated=0, encodedLength=0, offset=32, componentTokenCount=6, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
         builder.Append("ErrorMessage=");
         builder.Append(ErrorMessage());
 

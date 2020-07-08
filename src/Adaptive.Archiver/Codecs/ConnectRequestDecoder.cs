@@ -12,7 +12,7 @@ public class ConnectRequestDecoder
     public const ushort BLOCK_LENGTH = 16;
     public const ushort TEMPLATE_ID = 2;
     public const ushort SCHEMA_ID = 101;
-    public const ushort SCHEMA_VERSION = 2;
+    public const ushort SCHEMA_VERSION = 4;
 
     private ConnectRequestDecoder _parentMessage;
     private IDirectBuffer _buffer;
@@ -246,11 +246,6 @@ public class ConnectRequestDecoder
 
     public int Version()
     {
-        if (_parentMessage._actingVersion < 2)
-        {
-            return 0;
-        }
-
         return _buffer.GetInt(_offset + 12, ByteOrder.LittleEndian);
     }
 
@@ -370,7 +365,7 @@ public class ConnectRequestDecoder
         builder.Append(ResponseStreamId());
         builder.Append('|');
         //Token{signal=BEGIN_FIELD, name='version', referencedName='null', description='null', id=3, version=2, deprecated=0, encodedLength=0, offset=12, componentTokenCount=3, encoding=Encoding{presence=OPTIONAL, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
-        //Token{signal=ENCODING, name='version_t', referencedName='null', description='Protocol suite version', id=-1, version=2, deprecated=0, encodedLength=4, offset=12, componentTokenCount=1, encoding=Encoding{presence=OPTIONAL, primitiveType=INT32, byteOrder=LITTLE_ENDIAN, minValue=2, maxValue=16777215, nullValue=0, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=ENCODING, name='version_t', referencedName='null', description='Protocol suite version using semantic version form.', id=-1, version=0, deprecated=0, encodedLength=4, offset=12, componentTokenCount=1, encoding=Encoding{presence=OPTIONAL, primitiveType=INT32, byteOrder=LITTLE_ENDIAN, minValue=2, maxValue=16777215, nullValue=0, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
         builder.Append("Version=");
         builder.Append(Version());
         builder.Append('|');

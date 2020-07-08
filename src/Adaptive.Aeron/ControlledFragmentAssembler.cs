@@ -99,20 +99,23 @@ namespace Adaptive.Aeron
                     if (_builderBySessionIdMap.TryGetValue(header.SessionId, out builder))
                     {
                         int limit = builder.Limit();
-                        builder.Append(buffer, offset, length);
-
-                        if ((flags & FrameDescriptor.END_FRAG_FLAG) == FrameDescriptor.END_FRAG_FLAG)
+                        if (limit > 0)
                         {
-                            int msgLength = builder.Limit();
-                            action = _delegate.OnFragment(builder.Buffer(), 0, msgLength, header);
+                            builder.Append(buffer, offset, length);
 
-                            if (ControlledFragmentHandlerAction.ABORT == action)
+                            if ((flags & FrameDescriptor.END_FRAG_FLAG) == FrameDescriptor.END_FRAG_FLAG)
                             {
-                                builder.Limit(limit);
-                            }
-                            else
-                            {
-                                builder.Reset();
+                                int msgLength = builder.Limit();
+                                action = _delegate.OnFragment(builder.Buffer(), 0, msgLength, header);
+
+                                if (ControlledFragmentHandlerAction.ABORT == action)
+                                {
+                                    builder.Limit(limit);
+                                }
+                                else
+                                {
+                                    builder.Reset();
+                                }
                             }
                         }
                     }

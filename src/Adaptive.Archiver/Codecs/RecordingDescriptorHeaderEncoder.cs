@@ -12,7 +12,7 @@ public class RecordingDescriptorHeaderEncoder
     public const ushort BLOCK_LENGTH = 32;
     public const ushort TEMPLATE_ID = 21;
     public const ushort SCHEMA_ID = 101;
-    public const ushort SCHEMA_VERSION = 2;
+    public const ushort SCHEMA_VERSION = 4;
 
     private RecordingDescriptorHeaderEncoder _parentMessage;
     private IMutableDirectBuffer _buffer;

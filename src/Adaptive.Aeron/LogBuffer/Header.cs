@@ -30,7 +30,7 @@ namespace Adaptive.Aeron.LogBuffer
         private readonly int _initialTermId;
         private IDirectBuffer _buffer;
         private readonly object _context;
-        
+
         /// <summary>
         /// Construct a header that references a buffer for the log.
         /// </summary>
@@ -54,7 +54,7 @@ namespace Adaptive.Aeron.LogBuffer
             _positionBitsToShift = positionBitsToShift;
             _context = context;
         }
-        
+
         /// <summary>
         /// Context for storing state related to the context of the callback where the header is used.
         /// </summary>
@@ -69,8 +69,11 @@ namespace Adaptive.Aeron.LogBuffer
         {
             get
             {
-                var resultingOffset = BitUtil.Align(TermOffset + FrameLength, FrameDescriptor.FRAME_ALIGNMENT);
-                return LogBufferDescriptor.ComputePosition(TermId, resultingOffset, _positionBitsToShift, _initialTermId);
+                int frameLength = _buffer.GetInt(Offset, ByteOrder.LittleEndian);
+                int resultingOffset = BitUtil.Align(Offset + frameLength, FrameDescriptor.FRAME_ALIGNMENT);
+                int termId = _buffer.GetInt(Offset + DataHeaderFlyweight.TERM_ID_FIELD_OFFSET, ByteOrder.LittleEndian);
+                return LogBufferDescriptor.ComputePosition(termId, resultingOffset, _positionBitsToShift,
+                    _initialTermId);
             }
         }
 
@@ -98,14 +101,15 @@ namespace Adaptive.Aeron.LogBuffer
         public IDirectBuffer Buffer
         {
             get => _buffer;
-            set {
+            set
+            {
                 if (value != _buffer)
                 {
                     _buffer = value;
                 }
             }
         }
-        
+
         /// <summary>
         /// The total length of the frame including the header.
         /// </summary>

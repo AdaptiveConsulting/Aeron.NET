@@ -34,9 +34,9 @@ namespace Adaptive.Aeron.Tests
         [Test]
         public void ShouldInitialiseToDefaultValues()
         {
-            Assert.That(_bufferBuilder.Capacity(), Is.EqualTo(0));
-            Assert.That(_bufferBuilder.Buffer().Capacity, Is.EqualTo(0));
-            Assert.That(_bufferBuilder.Limit(), Is.EqualTo(0));
+            Assert.AreEqual(0, _bufferBuilder.Capacity());
+            Assert.AreEqual(0, _bufferBuilder.Buffer().Capacity);
+            Assert.AreEqual(0, _bufferBuilder.Limit());
         }
 
         [Test]
@@ -46,18 +46,18 @@ namespace Adaptive.Aeron.Tests
 
             _bufferBuilder.Append(srcBuffer, 0, 0);
 
-            Assert.That(_bufferBuilder.Limit(), Is.EqualTo(0));
+            Assert.AreEqual(0, _bufferBuilder.Limit());
         }
 
         [Test]
-        public void ShouldGrowToMultipleOfInitialCapaity()
+        public void ShouldGrowToMultipleOfInitialCapacity()
         {
             int srcCapacity = BufferBuilderUtil.MIN_ALLOCATED_CAPACITY * 5;
             UnsafeBuffer srcBuffer = new UnsafeBuffer(new byte[srcCapacity]);
 
             _bufferBuilder.Append(srcBuffer, 0, srcBuffer.Capacity);
 
-            Assert.That(_bufferBuilder.Limit(), Is.EqualTo(srcCapacity));
+            Assert.AreEqual(srcCapacity, _bufferBuilder.Limit());
             Assert.That(_bufferBuilder.Capacity, Is.GreaterThanOrEqualTo(srcCapacity));
         }
 
@@ -68,11 +68,11 @@ namespace Adaptive.Aeron.Tests
 
             _bufferBuilder.Append(srcBuffer, 0, srcBuffer.Capacity);
 
-            Assert.That(_bufferBuilder.Limit(), Is.EqualTo(srcBuffer.Capacity));
+            Assert.AreEqual(srcBuffer.Capacity, _bufferBuilder.Limit());
 
             _bufferBuilder.Reset();
 
-            Assert.That(_bufferBuilder.Limit(), Is.EqualTo(0));
+            Assert.AreEqual(0, _bufferBuilder.Limit());
         }
 
         [Test]
@@ -87,9 +87,9 @@ namespace Adaptive.Aeron.Tests
             byte[] temp = new byte[bytes.Length];
             _bufferBuilder.Buffer().GetBytes(0, temp, 0, bytes.Length);
 
-            Assert.That(_bufferBuilder.Limit(), Is.EqualTo(bytes.Length));
-            Assert.That(_bufferBuilder.Capacity(), Is.EqualTo(BufferBuilderUtil.MIN_ALLOCATED_CAPACITY));
-            Assert.That(temp, Is.EqualTo(bytes));
+            Assert.AreEqual(bytes.Length, _bufferBuilder.Limit());
+            Assert.AreEqual(BufferBuilderUtil.MIN_ALLOCATED_CAPACITY, _bufferBuilder.Capacity());
+            Assert.AreEqual(bytes, temp);
         }
 
         [Test]
@@ -105,9 +105,9 @@ namespace Adaptive.Aeron.Tests
             byte[] temp = new byte[bytes.Length];
             _bufferBuilder.Buffer().GetBytes(0, temp, 0, bytes.Length);
 
-            Assert.That(_bufferBuilder.Limit(), Is.EqualTo(bytes.Length));
-            Assert.That(_bufferBuilder.Capacity(), Is.EqualTo(BufferBuilderUtil.MIN_ALLOCATED_CAPACITY));
-            Assert.That(temp, Is.EqualTo(bytes));
+            Assert.AreEqual(bytes.Length, _bufferBuilder.Limit());
+            Assert.AreEqual(BufferBuilderUtil.MIN_ALLOCATED_CAPACITY, _bufferBuilder.Capacity());
+            Assert.AreEqual(bytes, temp);
         }
 
         [Test]
@@ -125,9 +125,9 @@ namespace Adaptive.Aeron.Tests
             byte[] temp = new byte[bufferLength];
             bufferBuilder.Buffer().GetBytes(0, temp, 0, bufferLength);
 
-            Assert.That(bufferBuilder.Limit(), Is.EqualTo(bufferLength));
-            Assert.That(bufferBuilder.Capacity(), Is.EqualTo(bufferLength));
-            Assert.That(temp, Is.EqualTo(buffer));
+            Assert.AreEqual(bufferLength, bufferBuilder.Limit());
+            Assert.AreEqual(bufferLength, bufferBuilder.Capacity());
+            Assert.AreEqual(buffer, temp);
         }
 
         [Test]
@@ -145,9 +145,9 @@ namespace Adaptive.Aeron.Tests
             byte[] temp = new byte[buffer.Length];
             bufferBuilder.Buffer().GetBytes(0, temp, 0, buffer.Length);
 
-            Assert.That(bufferBuilder.Limit(), Is.EqualTo(buffer.Length));
+            Assert.AreEqual(buffer.Length, bufferBuilder.Limit());
             Assert.That(bufferBuilder.Capacity(), Is.GreaterThan(bufferLength));
-            Assert.That(temp, Is.EqualTo(buffer));
+            Assert.AreEqual(buffer, temp);
         }
 
         [Test]
@@ -168,9 +168,9 @@ namespace Adaptive.Aeron.Tests
             byte[] temp = new byte[buffer.Length];
             bufferBuilder.Buffer().GetBytes(0, temp, 0, secondLength + firstLength);
 
-            Assert.That(bufferBuilder.Limit(), Is.EqualTo(firstLength + secondLength));
+            Assert.AreEqual(firstLength + secondLength, bufferBuilder.Limit());
             Assert.That(bufferBuilder.Capacity(), Is.GreaterThanOrEqualTo(firstLength + secondLength));
-            Assert.That(temp, Is.EqualTo(buffer));
+            Assert.AreEqual(buffer, temp);
         }
 
         [Test]
@@ -189,7 +189,7 @@ namespace Adaptive.Aeron.Tests
             }
 
             int expectedLimit = buffer.Length * bufferCount;
-            Assert.That(bufferBuilder.Limit(), Is.EqualTo(expectedLimit));
+            Assert.AreEqual(expectedLimit, bufferBuilder.Limit());
             int expandedCapacity = bufferBuilder.Capacity();
             Assert.That(expandedCapacity, Is.GreaterThan(expectedLimit));
 
@@ -201,11 +201,11 @@ namespace Adaptive.Aeron.Tests
 
             bufferBuilder.Compact();
 
-            Assert.That(bufferBuilder.Limit(), Is.EqualTo(buffer.Length * 3));
+            Assert.AreEqual(buffer.Length * 3, bufferBuilder.Limit());
             Assert.That(bufferBuilder.Capacity(), Is.LessThan(expandedCapacity));
         }
 
-        internal static class Arrays
+        private static class Arrays
         {
             internal static void Fill<T>(T[] array, T value)
             {

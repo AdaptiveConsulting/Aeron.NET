@@ -17,6 +17,7 @@
 using System;
 using System.Runtime.CompilerServices;
 using Adaptive.Aeron.LogBuffer;
+using Adaptive.Aeron.Protocol;
 using Adaptive.Agrona;
 using Adaptive.Agrona.Concurrent;
 using Adaptive.Agrona.Concurrent.Status;
@@ -122,6 +123,24 @@ namespace Adaptive.Aeron
             }
         }
 
+        /// <summary>
+        /// The current term-id of the publication.
+        /// </summary>
+        /// <returns> the current term-id of the publication. </returns>
+        public int TermId()
+        {
+            return _termId;
+        }
+
+        /// <summary>
+        /// The current term-offset of the publication.
+        /// </summary>
+        /// <returns> the current term-offset of the publication. </returns>
+        public int TermOffset()
+        {
+            return _termOffset;
+        }
+
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override long Offer(
@@ -166,7 +185,8 @@ namespace Adaptive.Aeron
 
 
         /// <inheritdoc />
-        public override long Offer(IDirectBuffer bufferOne, int offsetOne, int lengthOne, IDirectBuffer bufferTwo, int offsetTwo, int lengthTwo, ReservedValueSupplier reservedValueSupplier = null)
+        public override long Offer(IDirectBuffer bufferOne, int offsetOne, int lengthOne, IDirectBuffer bufferTwo,
+            int offsetTwo, int lengthTwo, ReservedValueSupplier reservedValueSupplier = null)
         {
             long newPosition = CLOSED;
             if (!_isClosed)
@@ -326,6 +346,87 @@ namespace Adaptive.Aeron
             return newPosition;
         }
 
+        /// <summary>
+        /// Offer a block of pre-formatted message fragments directly into the current term.
+        /// </summary>
+        /// <param name="buffer"> containing the pre-formatted block of message fragments. </param>
+        /// <param name="offset"> offset in the buffer at which the first fragment begins. </param>
+        /// <param name="length"> in bytes of the encoded block. </param>
+        /// <returns> The new stream position, otherwise a negative error value of <seealso cref="Publication.NOT_CONNECTED"/>,
+        /// <seealso cref="Publication.BACK_PRESSURED"/>, <seealso cref="Publication.ADMIN_ACTION"/>, <seealso cref="Publication.CLOSED"/>,
+        /// or <seealso cref="Publication.MAX_POSITION_EXCEEDED"/>. </returns>
+        /// <exception cref="ArgumentException"> if the length is greater than remaining size of the current term. </exception>
+        /// <exception cref="ArgumentException"> if the first frame within the block is not properly formatted, i.e. if the
+        /// <code>streamId</code> is not equal to the value returned by the <seealso cref="Publication.StreamId"/>
+        /// method or if the <code>sessionId</code> is not equal to the value returned by the
+        /// <seealso cref="Publication.SessionId"/> method or if the frame type is not equal to the
+        /// <seealso cref="HeaderFlyweight.HDR_TYPE_DATA"/>. </exception>
+        public long OfferBlock(IMutableDirectBuffer buffer, int offset, int length)
+        {
+            if (IsClosed)
+            {
+                return CLOSED;
+            }
+
+            if (_termOffset >= TermBufferLength)
+            {
+                RotateTerm();
+            }
+
+            long limit = _positionLimit.GetVolatile();
+            long position = _termBeginPosition + _termOffset;
+
+            if (position < limit)
+            {
+                CheckBlockLength(length);
+                CheckFirstFrame(buffer, offset);
+
+                ExclusiveTermAppender termAppender = _termAppenders[_activePartitionIndex];
+                int result = termAppender.AppendBlock(_termId, _termOffset, buffer, offset, length);
+
+                return NewPosition(result);
+            }
+            else
+            {
+                return BackPressureStatus(position, length);
+            }
+        }
+
+        private void CheckBlockLength(int length)
+        {
+            int remaining = TermBufferLength - _termOffset;
+            if (length > remaining)
+            {
+                throw new ArgumentException("invalid block length " + length + ", remaining space in term is " +
+                                            remaining);
+            }
+        }
+
+        private void CheckFirstFrame(IMutableDirectBuffer buffer, int offset)
+        {
+            int frameType = HeaderFlyweight.HDR_TYPE_DATA;
+            int blockTermOffset = buffer.GetInt(offset + DataHeaderFlyweight.TERM_OFFSET_FIELD_OFFSET,
+                ByteOrder.LittleEndian);
+            int blockSessionId =
+                buffer.GetInt(offset + DataHeaderFlyweight.SESSION_ID_FIELD_OFFSET, ByteOrder.LittleEndian);
+            int blockStreamId =
+                buffer.GetInt(offset + DataHeaderFlyweight.STREAM_ID_FIELD_OFFSET, ByteOrder.LittleEndian);
+            int blockTermId = buffer.GetInt(offset + DataHeaderFlyweight.TERM_ID_FIELD_OFFSET, ByteOrder.LittleEndian);
+            int blockFrameType = buffer.GetShort(offset + HeaderFlyweight.TYPE_FIELD_OFFSET, ByteOrder.LittleEndian) &
+                                 0xFFFF;
+
+            if (blockTermOffset != _termOffset || blockSessionId != SessionId || blockStreamId != StreamId ||
+                blockTermId != _termId || frameType != blockFrameType)
+            {
+                throw new ArgumentException("improperly formatted block:" + " termOffset=" + blockTermOffset +
+                                            " (expected=" + _termOffset + ")," + " sessionId=" + blockSessionId +
+                                            " (expected=" + SessionId + ")," + " streamId=" + blockStreamId +
+                                            " (expected=" + StreamId + ")," + " termId=" + blockTermId +
+                                            " (expected=" + _termId + ")," + " frameType=" + blockFrameType +
+                                            " (expected=" + frameType + ")");
+            }
+        }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private long NewPosition(int resultingOffset)
         {
@@ -341,6 +442,13 @@ namespace Adaptive.Aeron
                 return MAX_POSITION_EXCEEDED;
             }
 
+            RotateTerm();
+            
+            return ADMIN_ACTION;
+        }
+
+        private void RotateTerm()
+        {
             int nextIndex = LogBufferDescriptor.NextPartitionIndex(_activePartitionIndex);
             int nextTermId = _termId + 1;
 
@@ -353,8 +461,6 @@ namespace Adaptive.Aeron
 
             LogBufferDescriptor.InitialiseTailWithTermId(_logMetaDataBuffer, nextIndex, nextTermId);
             LogBufferDescriptor.ActiveTermCountOrdered(_logMetaDataBuffer, termCount);
-
-            return ADMIN_ACTION;
         }
     }
 }

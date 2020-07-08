@@ -12,7 +12,7 @@ public class SnapshotMarkerDecoder
     public const ushort BLOCK_LENGTH = 40;
     public const ushort TEMPLATE_ID = 100;
     public const ushort SCHEMA_ID = 111;
-    public const ushort SCHEMA_VERSION = 4;
+    public const ushort SCHEMA_VERSION = 6;
 
     private SnapshotMarkerDecoder _parentMessage;
     private IDirectBuffer _buffer;
@@ -434,11 +434,6 @@ public class SnapshotMarkerDecoder
 
     public int AppVersion()
     {
-        if (_parentMessage._actingVersion < 2)
-        {
-            return 0;
-        }
-
         return _buffer.GetInt(_offset + 36, ByteOrder.LittleEndian);
     }
 
@@ -503,7 +498,7 @@ public class SnapshotMarkerDecoder
         builder.Append(TimeUnit());
         builder.Append('|');
         //Token{signal=BEGIN_FIELD, name='appVersion', referencedName='null', description='null', id=7, version=4, deprecated=0, encodedLength=0, offset=36, componentTokenCount=3, encoding=Encoding{presence=OPTIONAL, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
-        //Token{signal=ENCODING, name='version_t', referencedName='null', description='Protocol or application suite version.', id=-1, version=2, deprecated=0, encodedLength=4, offset=36, componentTokenCount=1, encoding=Encoding{presence=OPTIONAL, primitiveType=INT32, byteOrder=LITTLE_ENDIAN, minValue=1, maxValue=16777215, nullValue=0, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=ENCODING, name='version_t', referencedName='null', description='Protocol or application suite version.', id=-1, version=0, deprecated=0, encodedLength=4, offset=36, componentTokenCount=1, encoding=Encoding{presence=OPTIONAL, primitiveType=INT32, byteOrder=LITTLE_ENDIAN, minValue=1, maxValue=16777215, nullValue=0, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
         builder.Append("AppVersion=");
         builder.Append(AppVersion());
 

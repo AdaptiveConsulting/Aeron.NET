@@ -9,10 +9,10 @@ namespace Adaptive.Cluster.Codecs {
 
 public class JoinLogEncoder
 {
-    public const ushort BLOCK_LENGTH = 36;
+    public const ushort BLOCK_LENGTH = 40;
     public const ushort TEMPLATE_ID = 40;
     public const ushort SCHEMA_ID = 111;
-    public const ushort SCHEMA_VERSION = 4;
+    public const ushort SCHEMA_VERSION = 6;
 
     private JoinLogEncoder _parentMessage;
     private IMutableDirectBuffer _buffer;
@@ -288,9 +288,25 @@ public class JoinLogEncoder
     }
 
 
+    public static int IsStartupEncodingOffset()
+    {
+        return 36;
+    }
+
+    public static int IsStartupEncodingLength()
+    {
+        return 4;
+    }
+
+    public JoinLogEncoder IsStartup(BooleanType value)
+    {
+        _buffer.PutInt(_offset + 36, (int)value, ByteOrder.LittleEndian);
+        return this;
+    }
+
     public static int LogChannelId()
     {
-        return 7;
+        return 8;
     }
 
     public static string LogChannelCharacterEncoding()

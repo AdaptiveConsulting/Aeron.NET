@@ -12,7 +12,7 @@ public class CloseSessionRequestDecoder
     public const ushort BLOCK_LENGTH = 8;
     public const ushort TEMPLATE_ID = 3;
     public const ushort SCHEMA_ID = 101;
-    public const ushort SCHEMA_VERSION = 2;
+    public const ushort SCHEMA_VERSION = 4;
 
     private CloseSessionRequestDecoder _parentMessage;
     private IDirectBuffer _buffer;

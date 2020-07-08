@@ -17,18 +17,33 @@ namespace Adaptive.Cluster.Service
 
         protected readonly BufferClaim bufferClaim = new BufferClaim();
         protected readonly MessageHeaderEncoder messageHeaderEncoder = new MessageHeaderEncoder();
-        protected readonly Publication publication;
+        protected readonly ExclusivePublication publication;
         protected readonly IIdleStrategy idleStrategy;
         protected readonly AgentInvoker aeronAgentInvoker;
         private readonly SnapshotMarkerEncoder snapshotMarkerEncoder = new SnapshotMarkerEncoder();
 
-        public SnapshotTaker(Publication publication, IIdleStrategy idleStrategy, AgentInvoker aeronAgentInvoker)
+        /// <summary>
+        /// Construct a <seealso cref="SnapshotTaker"/> which will encode the snapshot to a publication.
+        /// </summary>
+        /// <param name="publication">       into which the snapshot will be encoded. </param>
+        /// <param name="idleStrategy">      to call when the publication is back pressured. </param>
+        /// <param name="aeronAgentInvoker"> to call when idling so it stays active. </param>
+        public SnapshotTaker(ExclusivePublication publication, IIdleStrategy idleStrategy, AgentInvoker aeronAgentInvoker)
         {
             this.publication = publication;
             this.idleStrategy = idleStrategy;
             this.aeronAgentInvoker = aeronAgentInvoker;
         }
 
+        /// <summary>
+        /// Mark the beginning of the encoded snapshot.
+        /// </summary>
+        /// <param name="snapshotTypeId">   type to identify snapshot within a cluster. </param>
+        /// <param name="logPosition">      at which the snapshot was taken. </param>
+        /// <param name="leadershipTermId"> at which the snapshot was taken. </param>
+        /// <param name="snapshotIndex">    so the snapshot can be sectioned. </param>
+        /// <param name="timeUnit">         of the cluster timestamps stored in the snapshot. </param>
+        /// <param name="appVersion">       associated with the snapshot from <seealso cref="ClusteredServiceContainer.Context.AppVersion()"/>. </param>
         public void MarkBegin(
             long snapshotTypeId,
             long logPosition,
@@ -41,6 +56,15 @@ namespace Adaptive.Cluster.Service
                 snapshotTypeId, logPosition, leadershipTermId, snapshotIndex, SnapshotMark.BEGIN, timeUnit, appVersion);
         }
 
+        /// <summary>
+        /// Mark the end of the encoded snapshot.
+        /// </summary>
+        /// <param name="snapshotTypeId">   type to identify snapshot within a cluster. </param>
+        /// <param name="logPosition">      at which the snapshot was taken. </param>
+        /// <param name="leadershipTermId"> at which the snapshot was taken. </param>
+        /// <param name="snapshotIndex">    so the snapshot can be sectioned. </param>
+        /// <param name="timeUnit">         of the cluster timestamps stored in the snapshot. </param>
+        /// <param name="appVersion">       associated with the snapshot from <seealso cref="ClusteredServiceContainer.Context.AppVersion()"/>. </param>
         public void MarkEnd(
             long snapshotTypeId,
             long logPosition,
@@ -53,6 +77,16 @@ namespace Adaptive.Cluster.Service
                 snapshotTypeId, logPosition, leadershipTermId, snapshotIndex, SnapshotMark.END, timeUnit, appVersion);
         }
 
+        /// <summary>
+        /// Generically <seealso cref="SnapshotMark"/> a snapshot.
+        /// </summary>
+        /// <param name="snapshotTypeId">   type to identify snapshot within a cluster. </param>
+        /// <param name="logPosition">      at which the snapshot was taken. </param>
+        /// <param name="leadershipTermId"> at which the snapshot was taken. </param>
+        /// <param name="snapshotIndex">    so the snapshot can be sectioned. </param>
+        /// <param name="snapshotMark">     which specifies the type of snapshot mark. </param>
+        /// <param name="timeUnit">         of the cluster timestamps stored in the snapshot. </param>
+        /// <param name="appVersion">       associated with the snapshot from <seealso cref="ClusteredServiceContainer.Context.AppVersion()"/>. </param>
         public void MarkSnapshot(
             long snapshotTypeId,
             long logPosition,
@@ -86,7 +120,7 @@ namespace Adaptive.Cluster.Service
             }
         }
 
-        protected static void CheckInterruptedStatus()
+        protected static void CheckInterruptStatus()
         {
             try
             {
@@ -110,7 +144,7 @@ namespace Adaptive.Cluster.Service
         protected void CheckResultAndIdle(long result)
         {
             CheckResult(result);
-            CheckInterruptedStatus();
+            CheckInterruptStatus();
             InvokeAgentClient();
             idleStrategy.Idle();
         }

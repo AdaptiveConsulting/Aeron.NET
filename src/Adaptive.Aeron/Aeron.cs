@@ -15,6 +15,8 @@
  */
 
 using System;
+using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.IO;
 using System.Threading;
 using Adaptive.Aeron.Exceptions;
@@ -56,22 +58,34 @@ namespace Adaptive.Aeron
 
         internal Aeron(Context ctx)
         {
-            ctx.Conclude();
-
-            _ctx = ctx;
-            _clientId = ctx.ClientId();
-            _commandBuffer = ctx.ToDriverBuffer();
-            _conductor = new ClientConductor(ctx, this);
-
-            if (ctx.UseConductorAgentInvoker())
+            try
             {
-                _conductorInvoker = new AgentInvoker(ctx.ErrorHandler(), null, _conductor);
-                _conductorRunner = null;
+                ctx.Conclude();
+
+                _ctx = ctx;
+                _clientId = ctx.ClientId();
+                _commandBuffer = ctx.ToDriverBuffer();
+                _conductor = new ClientConductor(ctx, this);
+
+                if (ctx.UseConductorAgentInvoker())
+                {
+                    _conductorInvoker = new AgentInvoker(ctx.ErrorHandler(), null, _conductor);
+                    _conductorRunner = null;
+                }
+                else
+                {
+                    _conductorInvoker = null;
+                    _conductorRunner = new AgentRunner(ctx.IdleStrategy(), ctx.ErrorHandler(), null, _conductor);
+                }
             }
-            else
+            catch (ConcurrentConcludeException)
             {
-                _conductorInvoker = null;
-                _conductorRunner = new AgentRunner(ctx.IdleStrategy(), ctx.ErrorHandler(), null, _conductor);
+                throw;
+            }
+            catch (Exception)
+            {
+                CloseHelper.QuietDispose(ctx);
+                throw;
             }
         }
 
@@ -159,6 +173,18 @@ namespace Adaptive.Aeron
         public AgentInvoker ConductorAgentInvoker => _conductorInvoker;
 
         /// <summary>
+        /// Is the command still active for a given correlation id.
+        /// </summary>
+        /// <param name="correlationId"> to check if it is still active. </param>
+        /// <returns> true in the command is still in active processing or false if completed successfully or errored. </returns>
+        /// <seealso cref="Publication.AsyncAddDestination(String)"></seealso>
+        /// <seealso cref="Subscription.AsyncAddDestination(String)"></seealso>
+        public bool IsCommandActive(long correlationId)
+        {
+            return _conductor.IsCommandActive(correlationId);
+        }
+
+        /// <summary>
         /// Clean up and release all Aeron client resources and shutdown conducator thread if not using
         /// <see cref="Context.UseConductorAgentInvoker(bool)"/>.
         /// 
@@ -169,13 +195,14 @@ namespace Adaptive.Aeron
         {
             if (_isClosed.CompareAndSet(false, true))
             {
+                ErrorHandler errorHandler = _ctx.ErrorHandler();
                 if (null != _conductorRunner)
                 {
-                    _conductorRunner.Dispose();
+                    CloseHelper.Dispose(errorHandler, _conductorRunner);
                 }
                 else
                 {
-                    _conductorInvoker.Dispose();
+                    CloseHelper.Dispose(errorHandler, _conductorInvoker);
                 }
             }
         }
@@ -361,7 +388,7 @@ namespace Adaptive.Aeron
         /// <returns> true if found and removed otherwise false. </returns>
         public bool RemoveCloseHandler(Action handler)
         {
-            return _conductor.RemoveCloserHandler(handler);
+            return _conductor.RemoveCloseHandler(handler);
         }
 
         /// <summary>
@@ -378,6 +405,11 @@ namespace Adaptive.Aeron
              * Duration in milliseconds for which the client conductor will sleep between duty cycles.
              */
             public static readonly int IdleSleepMs = 16;
+
+            /// <summary>
+            /// Duration in milliseconds for which the client will sleep when awaiting a response from the driver.
+            /// </summary>
+            public static readonly int AWAITING_IDLE_SLEEP_MS = 1;
 
             /*
             * Duration in nanoseconds for which the client conductor will sleep between duty cycles.
@@ -437,14 +469,17 @@ namespace Adaptive.Aeron
             /// <seealso cref="Context.ErrorHandler(ErrorHandler)" />
             public static readonly ErrorHandler DEFAULT_ERROR_HANDLER = (throwable) =>
             {
-                Console.WriteLine(throwable);
+                lock (Console.Error)
+                {
+                    Console.Error.WriteLine(throwable);
+                }
 
                 if (throwable is DriverTimeoutException)
                 {
-                    Console.WriteLine();
-                    Console.WriteLine("***");
-                    Console.WriteLine("*** Timeout for the Media Driver - is it currently running? exiting");
-                    Console.WriteLine("***");
+                    Console.Error.WriteLine();
+                    Console.Error.WriteLine("***");
+                    Console.Error.WriteLine("*** Timeout for the Media Driver - is it currently running? exiting");
+                    Console.Error.WriteLine("***");
                     Environment.Exit(-1);
                 }
             };
@@ -501,15 +536,17 @@ namespace Adaptive.Aeron
         /// The context will be owned be <see cref="ClientConductor"/> after a successful
         /// <see cref="Aeron.Connect(Context)"/> and closed via <see cref="Aeron.Dispose"/>
         /// </summary>
-        public class Context
+        public class Context : IDisposable
         {
             private long _clientId;
             private bool _useConductorAgentInvoker = false;
             private bool _preTouchMappedMemory = Configuration.PreTouchMappedMemory();
+            private AgentInvoker _driverAgentInvoker;
             private ILock _clientLock;
             private IEpochClock _epochClock;
             private INanoClock _nanoClock;
             private IIdleStrategy _idleStrategy;
+            private IIdleStrategy _awaitingIdleStrategy;
             private CopyBroadcastReceiver _toClientBuffer;
             private IRingBuffer _toDriverBuffer;
             private DriverProxy _driverProxy;
@@ -552,7 +589,7 @@ namespace Adaptive.Aeron
                     baseDirName = Path.Combine(Path.GetTempPath(), "aeron");
                 }
 
-                AERON_DIR_PROP_DEFAULT = baseDirName + '-' + Environment.UserName;
+                AERON_DIR_PROP_DEFAULT = baseDirName + "-" + Environment.UserName;
             }
 
             /// <summary>
@@ -596,6 +633,12 @@ namespace Adaptive.Aeron
             /// The network interface via which the socket will be routed.
             /// </summary>
             public const string INTERFACE_PARAM_NAME = "interface";
+
+            /// <summary>
+            /// Property name for the timeout to use in debug mode. By default this is not set and the configured
+            /// timeouts will be used. Setting this value adjusts timeouts to make debugging easier.
+            /// </summary>
+            public const string DEBUG_TIMEOUT_PROP_NAME = "aeron.debug.timeout";
 
             /// <summary>
             /// Timeout in which the driver is expected to respond.
@@ -701,6 +744,8 @@ namespace Adaptive.Aeron
 
             /// <summary>
             /// Parameter name for channel URI param to indicate an alias for the given URI. Value not interpreted by Aeron.
+            ///
+            /// This is a reserved application level param used to identify a particular channel for application purposes.
             /// </summary>
             public const string ALIAS_PARAM_NAME = "alias";
 
@@ -715,6 +760,41 @@ namespace Adaptive.Aeron
             /// true then that subscription is included in flow control. If only one subscription then it tethers pace.
             /// </summary>
             public const string TETHER_PARAM_NAME = "tether";
+
+            /// <summary>
+            /// Parameter name for channel URI param to indicate if a Subscription represents a group member or individual
+            /// from the perspective of message reception. This can inform loss handling and similar semantics.
+            /// <para>
+            /// When configuring an subscription for an MDC publication then should be added as this is effective multicast.
+            ///    
+            /// </para>
+            /// </summary>
+            /// <seealso cref="MDC_CONTROL_MODE_PARAM_NAME"></seealso>
+            /// <seealso cref="MDC_CONTROL_PARAM_NAME"></seealso>
+            public const string GROUP_PARAM_NAME = "group";
+
+            /// <summary>
+            /// Parameter name for Subscription URI param to indicate if Images that go unavailable should be allowed to
+            /// rejoin after a short cooldown or not.
+            /// </summary>
+            public const string REJOIN_PARAM_NAME = "rejoin";
+
+            /// <summary>
+            /// Parameter name for Subscription URI param to indicate the congestion control algorithm to be used.
+            /// Options include {@code static} and {@code cubic}.
+            /// </summary>
+            public const string CONGESTION_CONTROL_PARAM_NAME = "cc";
+
+            /// <summary>
+            /// Parameter name for Publication URI param to indicate the flow control strategy to be used.
+            /// Options include {@code min}, {@code max}, and {@code pref}.
+            /// </summary>
+            public const string FLOW_CONTROL_PARAM_NAME = "fc";
+
+            /// <summary>
+            /// Parameter name for Subscription URI param to indicate the receiver tag to be sent in SMs.
+            /// </summary>
+            public const string GROUP_TAG_PARAM_NAME = "gtag";
 
             /// <summary>
             /// Get the default directory name to be used if <seealso cref="AeronDirectoryName(String)"/> is not set. This will take
@@ -773,17 +853,22 @@ namespace Adaptive.Aeron
 
                 if (_epochClock == null)
                 {
-                    _epochClock = new SystemEpochClock();
+                    _epochClock = SystemEpochClock.INSTANCE;
                 }
 
                 if (_nanoClock == null)
                 {
-                    _nanoClock = new SystemNanoClock();
+                    _nanoClock = SystemNanoClock.INSTANCE;
                 }
 
                 if (_idleStrategy == null)
                 {
                     _idleStrategy = new SleepingIdleStrategy(Configuration.IdleSleepMs);
+                }
+
+                if (null == _awaitingIdleStrategy)
+                {
+                    _awaitingIdleStrategy = new SleepingIdleStrategy(Configuration.AWAITING_IDLE_SLEEP_MS);
                 }
 
                 if (CncFile() != null)
@@ -913,6 +998,30 @@ namespace Adaptive.Aeron
             {
                 return _preTouchMappedMemory;
             }
+            
+            /// <summary>
+            /// Set the <seealso cref="AgentInvoker"/> for the Media Driver to be used while awaiting a synchronous response.
+            /// <para>
+            /// Useful for when running on a low thread count scenario.
+            /// 
+            /// </para>
+            /// </summary>
+            /// <param name="driverAgentInvoker"> to be invoked while awaiting a response in the client. </param>
+            /// <returns> this for a fluent API. </returns>
+            public Context DriverAgentInvoker(AgentInvoker driverAgentInvoker)
+            {
+                _driverAgentInvoker = driverAgentInvoker;
+                return this;
+            }
+
+            /// <summary>
+            /// Get the <seealso cref="AgentInvoker"/> that is used to run the Media Driver while awaiting a synchronous response.
+            /// </summary>
+            /// <returns> the <seealso cref="AgentInvoker"/> that is used for running the Media Driver. </returns>
+            public AgentInvoker DriverAgentInvoker()
+            {
+                return _driverAgentInvoker;
+            }
 
             /// <summary>
             /// The <see cref="ILock"/> that is used to provide mutual exclusion in the Aeron client.
@@ -980,9 +1089,9 @@ namespace Adaptive.Aeron
             }
 
             /// <summary>
-            /// Provides an IdleStrategy for the thread responsible for communicating with the Aeron Media Driver.
+            /// Provides an <seealso cref="IIdleStrategy"/> for the thread responsible for the client duty cycle.
             /// </summary>
-            /// <param name="idleStrategy"> Thread idle strategy for communication with the Media Driver. </param>
+            /// <param name="idleStrategy"> Thread idle strategy for the client duty cycle. </param>
             /// <returns> this for a fluent API. </returns>
             public Context IdleStrategy(IIdleStrategy idleStrategy)
             {
@@ -991,12 +1100,37 @@ namespace Adaptive.Aeron
             }
 
             /// <summary>
-            /// Get the <seealso cref="IIdleStrategy"/> employed by the client conductor thread.
+            /// Get the <seealso cref="IIdleStrategy"/> employed by the client for the client duty cycle.
             /// </summary>
-            /// <returns> the <seealso cref="IIdleStrategy"/> employed by the client conductor thread. </returns>
+            /// <returns> the <seealso cref="IIdleStrategy"/> employed by the client for the client duty cycle. </returns>
             public IIdleStrategy IdleStrategy()
             {
                 return _idleStrategy;
+            }
+
+            /// <summary>
+            /// Provides an <seealso cref="IIdleStrategy"/> to be used when awaiting a response from the Media Driver.
+            /// </summary>
+            /// <param name="idleStrategy"> Thread idle strategy for awaiting a response from the Media Driver. </param>
+            /// <returns> this for a fluent API. </returns>
+            public Context AwaitingIdleStrategy(IIdleStrategy idleStrategy)
+            {
+                _awaitingIdleStrategy = idleStrategy;
+                return this;
+            }
+
+            /// <summary>
+            /// The <seealso cref="IIdleStrategy"/> to be used when awaiting a response from the Media Driver.
+            /// <para>
+            /// This can be change to a <seealso cref="BusySpinIdleStrategy"/> or <seealso cref="YieldingIdleStrategy"/> for lower response time,
+            /// especially for adding counters or releasing resources, at the expense of CPU usage.
+            /// 
+            /// </para>
+            /// </summary>
+            /// <returns> the <seealso cref="IIdleStrategy"/> to be used when awaiting a response from the Media Driver. </returns>
+            public IIdleStrategy AwaitingIdleStrategy()
+            {
+                return _awaitingIdleStrategy;
             }
 
             /// <summary>
@@ -1017,17 +1151,6 @@ namespace Adaptive.Aeron
             public CopyBroadcastReceiver ToClientBuffer()
             {
                 return _toClientBuffer;
-            }
-
-            /// <summary>
-            /// This method is used for testing and debugging.
-            /// </summary>
-            /// <param name="toDriverBuffer"> Injected RingBuffer. </param>
-            /// <returns> this for a fluent API. </returns>
-            internal Context ToDriverBuffer(IRingBuffer toDriverBuffer)
-            {
-                _toDriverBuffer = toDriverBuffer;
-                return this;
             }
 
             /// <summary>
@@ -1298,7 +1421,46 @@ namespace Adaptive.Aeron
             /// <returns> driver timeout in milliseconds. </returns>
             public long DriverTimeoutMs()
             {
-                return _driverTimeoutMs;
+                return CheckDebugTimeout(_driverTimeoutMs, TimeUnit.MILLIS, nameof(DriverTimeoutMs));
+            }
+
+            private static readonly ConcurrentDictionary<string, bool> DebugFieldsSeen =
+                new ConcurrentDictionary<string, bool>();
+
+            /// <summary>
+            /// Override the supplied timeout with the debug value if it has been set and we are in debug mode.
+            /// </summary>
+            /// <param name="timeout">  The timeout value currently in use. </param>
+            /// <param name="timeUnit"> The units of the timeout value. Debug timeout is specified in ns, so will be converted to this
+            ///                 unit. </param>
+            /// <param name="debugFieldName"> The field name to be added to the map.</param>
+            /// <returns> The debug timeout if specified and we are being debugged or the supplied value if not. Will be in
+            /// timeUnit units. </returns>
+            public static long CheckDebugTimeout(long timeout, TimeUnit timeUnit, string debugFieldName)
+            {
+                string debugTimeoutString = Config.GetProperty(DEBUG_TIMEOUT_PROP_NAME);
+                if (null == debugTimeoutString || !Debugger.IsAttached)
+                {
+                    return timeout;
+                }
+
+                try
+                {
+                    long debugTimeoutNs = SystemUtil.ParseDuration(DEBUG_TIMEOUT_PROP_NAME, debugTimeoutString);
+                    long debugTimeout = timeUnit.Convert(debugTimeoutNs, TimeUnit.NANOSECONDS);
+                    if (DebugFieldsSeen.TryAdd(debugFieldName, true))
+                    {
+                        string message = "Using debug timeout [" + debugTimeout + "] for " + debugFieldName +
+                                         " replacing [" + timeout + "]";
+                        Console.WriteLine(message);
+                    }
+
+                    return debugTimeout;
+                }
+                catch (FormatException)
+                {
+                    return timeout;
+                }
             }
 
             /// <summary>
@@ -1324,7 +1486,7 @@ namespace Adaptive.Aeron
             /// <returns> the timeout between service calls in nanoseconds. </returns>
             public long InterServiceTimeoutNs()
             {
-                return _interServiceTimeoutNs;
+                return CheckDebugTimeout(_interServiceTimeoutNs, TimeUnit.NANOSECONDS, nameof(InterServiceTimeoutNs));
             }
 
             /// <summary>
@@ -1448,10 +1610,8 @@ namespace Adaptive.Aeron
             /// </summary>
             public void Dispose()
             {
-                var cncByteBuffer = _cncByteBuffer;
+                IoUtil.Unmap(_cncByteBuffer);
                 _cncByteBuffer = null;
-                IoUtil.Unmap(cncByteBuffer);
-
 
                 _cncMetaDataBuffer?.Dispose();
                 _countersMetaDataBuffer?.Dispose();
@@ -1481,7 +1641,7 @@ namespace Adaptive.Aeron
                         cncFile.Refresh();
                     }
 
-                    _cncByteBuffer = WaitForFileMapping(cncFile, deadLineMs, _epochClock);
+                    _cncByteBuffer = WaitForFileMapping(cncFile, _epochClock, deadLineMs);
                     _cncMetaDataBuffer = CncFileDescriptor.CreateMetaDataBuffer(_cncByteBuffer);
 
                     int cncVersion;
@@ -1492,7 +1652,7 @@ namespace Adaptive.Aeron
                             throw new DriverTimeoutException("CnC file is created but not initialised");
                         }
 
-                        Sleep(1);
+                        Sleep(Configuration.AWAITING_IDLE_SLEEP_MS);
                     }
 
                     CncFileDescriptor.CheckVersion(cncVersion);
@@ -1508,7 +1668,7 @@ namespace Adaptive.Aeron
                             throw new DriverTimeoutException("no driver heartbeat detected.");
                         }
 
-                        Sleep(1);
+                        Sleep(Configuration.AWAITING_IDLE_SLEEP_MS);
                     }
 
                     long timeMs = _epochClock.Time();
@@ -1531,31 +1691,37 @@ namespace Adaptive.Aeron
                 }
             }
 
-            private static MappedByteBuffer WaitForFileMapping(FileInfo cncFile, long deadLineMs,
-                IEpochClock epochClock)
+            private static MappedByteBuffer WaitForFileMapping(FileInfo cncFile,
+                IEpochClock epochClock, long deadLineMs)
             {
-                try
+                while (true)
                 {
-                    var fileAccess = FileAccess.ReadWrite;
-                    var fileShare = FileShare.ReadWrite | FileShare.Delete;
-
-                    var fileStream = cncFile.Open(FileMode.Open, fileAccess, fileShare);
-
-                    while (fileStream.Length < CncFileDescriptor.CNC_VERSION_FIELD_OFFSET + BitUtil.SIZE_OF_INT)
+                    try
                     {
-                        if (epochClock.Time() > deadLineMs)
+                        var fileAccess = FileAccess.ReadWrite;
+                        var fileShare = FileShare.ReadWrite | FileShare.Delete;
+
+                        var fileStream = cncFile.Open(FileMode.Open, fileAccess, fileShare);
+                        var fileSize = fileStream.Length;
+
+                        if (fileSize < CncFileDescriptor.META_DATA_LENGTH)
                         {
-                            throw new AeronException("CnC file is created but not populated.");
+                            if (epochClock.Time() > deadLineMs)
+                            {
+                                throw new DriverTimeoutException("CnC file is created but not populated.");
+                            }
+
+                            fileStream.Dispose();
+                            Sleep(Configuration.IdleSleepMs);
+                            continue;
                         }
 
-                        Sleep(Configuration.IdleSleepMs);
+                        return IoUtil.MapExistingFile(fileStream);
                     }
-
-                    return IoUtil.MapExistingFile(fileStream);
-                }
-                catch (Exception ex)
-                {
-                    throw new AeronException("cannot open CnC file", ex);
+                    catch (Exception ex)
+                    {
+                        throw new AeronException("cannot open CnC file", ex);
+                    }
                 }
             }
 
@@ -1685,8 +1851,11 @@ namespace Adaptive.Aeron
             /// <param name="tokenOffset"> within the tokenBuffer at which the token begins. </param>
             /// <param name="tokenLength"> of the token in the tokenBuffer. </param>
             /// <returns> true if request was sent or false if request could not be sent. </returns>
-            public static bool requestDriverTermination(DirectoryInfo directory, IDirectBuffer tokenBuffer,
-                int tokenOffset, int tokenLength)
+            public static bool RequestDriverTermination(
+                DirectoryInfo directory,
+                IDirectBuffer tokenBuffer,
+                int tokenOffset,
+                int tokenLength)
             {
                 FileInfo cncFile = new FileInfo(Path.Combine(directory.FullName, CncFileDescriptor.CNC_FILE));
 
@@ -1750,53 +1919,49 @@ namespace Adaptive.Aeron
                     return 0;
                 }
 
+                return PrintErrorLog(ErrorLogBuffer(cncByteBuffer), writer);
+            }
 
+            /// <summary>
+            /// Print the contents of an error log to a <seealso cref="TextWriter"/> in human readable format.
+            /// </summary>
+            /// <param name="errorBuffer"> to read errors from. </param>
+            /// <param name="out">         print the errors to. </param>
+            /// <returns> number of distinct errors observed. </returns>
+            public static int PrintErrorLog(IAtomicBuffer errorBuffer, TextWriter @out)
+            {
+                int distinctErrorCount = 0;
+                if (ErrorLogReader.HasErrors(errorBuffer))
+                {
+                    void ErrorConsumer(int count, long firstTimestamp, long lastTimestamp, string ex)
+                        => @out.WriteLine(
+                            $"***{Environment.NewLine}{count} observations from {new DateTime(firstTimestamp)} " +
+                            $"to {new DateTime(lastTimestamp)} " +
+                            $"for:{Environment.NewLine} {ex}");
+
+                    distinctErrorCount = ErrorLogReader.Read(errorBuffer, ErrorConsumer);
+                }
+
+                @out.WriteLine();
+                @out.WriteLine("{0} distinct errors observed.", distinctErrorCount);
+
+                return distinctErrorCount;
+            }
+
+            private static IAtomicBuffer ErrorLogBuffer(MappedByteBuffer cncByteBuffer)
+            {
                 UnsafeBuffer cncMetaDataBuffer = CncFileDescriptor.CreateMetaDataBuffer(cncByteBuffer);
                 int cncVersion = cncMetaDataBuffer.GetInt(CncFileDescriptor.CncVersionOffset(0));
 
                 CncFileDescriptor.CheckVersion(cncVersion);
 
-                int distinctErrorCount = 0;
-                UnsafeBuffer buffer = CncFileDescriptor.CreateErrorLogBuffer(cncByteBuffer, cncMetaDataBuffer);
-
-                if (ErrorLogReader.HasErrors(buffer))
-                {
-                    void ErrorConsumer(int count, long firstTimestamp, long lastTimestamp, string ex)
-                        => FormatError(writer, count, firstTimestamp, lastTimestamp, ex);
-
-                    distinctErrorCount = ErrorLogReader.Read(buffer, ErrorConsumer);
-                }
-
-                writer.WriteLine();
-                writer.WriteLine("{0} distinct errors observed.", distinctErrorCount);
-
-                return distinctErrorCount;
-            }
-
-            private static void FormatError(
-                TextWriter writer,
-                int observationCount,
-                long firstObservationTimestamp,
-                long lastObservationTimestamp,
-                string encodedException)
-            {
-                writer.WriteLine(
-                    $"***{Environment.NewLine}{observationCount} observations from {new DateTime(firstObservationTimestamp)} " +
-                    $"to {new DateTime(lastObservationTimestamp)} " +
-                    $"for:{Environment.NewLine} {encodedException}");
+                return CncFileDescriptor.CreateErrorLogBuffer(cncByteBuffer, cncMetaDataBuffer);
             }
         }
 
         internal static void Sleep(int durationMs)
         {
-            try
-            {
-                Thread.Sleep(durationMs);
-            }
-            catch (ThreadInterruptedException)
-            {
-                Thread.CurrentThread.Interrupt();
-            }
+            Thread.Sleep(durationMs);
         }
     }
 }

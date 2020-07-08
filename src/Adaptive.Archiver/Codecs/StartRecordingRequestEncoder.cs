@@ -9,10 +9,10 @@ namespace Adaptive.Archiver.Codecs {
 
 public class StartRecordingRequestEncoder
 {
-    public const ushort BLOCK_LENGTH = 21;
+    public const ushort BLOCK_LENGTH = 24;
     public const ushort TEMPLATE_ID = 4;
     public const ushort SCHEMA_ID = 101;
-    public const ushort SCHEMA_VERSION = 2;
+    public const ushort SCHEMA_VERSION = 4;
 
     private StartRecordingRequestEncoder _parentMessage;
     private IMutableDirectBuffer _buffer;
@@ -199,12 +199,12 @@ public class StartRecordingRequestEncoder
 
     public static int SourceLocationEncodingLength()
     {
-        return 1;
+        return 4;
     }
 
     public StartRecordingRequestEncoder SourceLocation(SourceLocation value)
     {
-        _buffer.PutByte(_offset + 20, (byte)value);
+        _buffer.PutInt(_offset + 20, (int)value, ByteOrder.LittleEndian);
         return this;
     }
 

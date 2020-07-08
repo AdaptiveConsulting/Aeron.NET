@@ -78,7 +78,7 @@ namespace Adaptive.Aeron
         /// <summary>
         /// Version of the CnC file using semantic versioning <see cref="SemanticVersion"/> stored in an integer.
         /// </summary>
-        private static readonly int CNC_VERSION = SemanticVersion.Compose(0, 0, 16);
+        private static readonly int CNC_VERSION = SemanticVersion.Compose(0, 2, 0);
 
         public static readonly int CNC_VERSION_FIELD_OFFSET;
         public static readonly int TO_DRIVER_BUFFER_LENGTH_FIELD_OFFSET;

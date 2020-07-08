@@ -12,7 +12,7 @@ public class ScheduleTimerDecoder
     public const ushort BLOCK_LENGTH = 16;
     public const ushort TEMPLATE_ID = 31;
     public const ushort SCHEMA_ID = 111;
-    public const ushort SCHEMA_VERSION = 4;
+    public const ushort SCHEMA_VERSION = 6;
 
     private ScheduleTimerDecoder _parentMessage;
     private IDirectBuffer _buffer;

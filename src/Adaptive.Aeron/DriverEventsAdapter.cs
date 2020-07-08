@@ -15,6 +15,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using Adaptive.Aeron.Command;
 using Adaptive.Agrona;
@@ -25,12 +26,10 @@ using static Adaptive.Aeron.Command.ControlProtocolEvents;
 namespace Adaptive.Aeron
 {
     /// <summary>
-    /// Analogue of the <see cref="DriverProxy"/> on the client side
+    /// Analogue of the <see cref="DriverProxy"/> on the client side for dispatching driver events to the client conductor.
     /// </summary>
     internal class DriverEventsAdapter
     {
-        private readonly CopyBroadcastReceiver _broadcastReceiver;
-
         private readonly ErrorResponseFlyweight _errorResponse = new ErrorResponseFlyweight();
         private readonly PublicationBuffersReadyFlyweight _publicationReady = new PublicationBuffersReadyFlyweight();
         private readonly SubscriptionReadyFlyweight _subscriptionReady = new SubscriptionReadyFlyweight();
@@ -39,6 +38,8 @@ namespace Adaptive.Aeron
         private readonly ImageMessageFlyweight _imageMessage = new ImageMessageFlyweight();
         private readonly CounterUpdateFlyweight _counterUpdate = new CounterUpdateFlyweight();
         private readonly ClientTimeoutFlyweight _clientTimeout = new ClientTimeoutFlyweight();
+        private readonly HashSet<long> asyncCommandIdSet;
+        private readonly CopyBroadcastReceiver receiver;
         private readonly IDriverEventsListener _listener;
         private readonly MessageHandler _messageHandler;
 
@@ -47,12 +48,16 @@ namespace Adaptive.Aeron
         private readonly long _clientId;
         private bool _isInvalid;
 
-        internal DriverEventsAdapter(CopyBroadcastReceiver broadcastReceiver, long clientId,
-            IDriverEventsListener listener)
+        internal DriverEventsAdapter(
+            CopyBroadcastReceiver receiver, 
+            long clientId,
+            IDriverEventsListener listener,
+            HashSet<long> asyncCommandIdSet)
         {
-            _broadcastReceiver = broadcastReceiver;
+            this.receiver = receiver;
             _clientId = clientId;
             _listener = listener;
+            this.asyncCommandIdSet = asyncCommandIdSet;
             _messageHandler = OnMessage;
         }
 
@@ -63,7 +68,7 @@ namespace Adaptive.Aeron
 
             try
             {
-                return _broadcastReceiver.Receive(_messageHandler);
+                return receiver.Receive(_messageHandler);
             }
             catch (InvalidOperationException)
             {
@@ -72,12 +77,11 @@ namespace Adaptive.Aeron
             }
         }
 
-        public long ReceivedCorrelationId => _receivedCorrelationId;
+        internal long ReceivedCorrelationId => _receivedCorrelationId;
 
-        public bool IsInvalid => _isInvalid;
+        internal bool IsInvalid => _isInvalid;
 
-        public long ClientId => _clientId;
-
+        internal long ClientId => _clientId;
 
         public void OnMessage(int msgTypeId, IMutableDirectBuffer buffer, int index, int length)
         {
@@ -87,19 +91,26 @@ namespace Adaptive.Aeron
                 {
                     _errorResponse.Wrap(buffer, index);
 
-                    int correlationId = (int) _errorResponse.OffendingCommandCorrelationId();
+                    long correlationId = _errorResponse.OffendingCommandCorrelationId();
                     int errorCodeValue = _errorResponse.ErrorCodeValue();
                     var errorCode = GetErrorCode(_errorResponse.ErrorCodeValue());
-                    var message = _errorResponse.ErrorMessage();
+                    bool notProcessed = true;
 
                     if (ErrorCode.CHANNEL_ENDPOINT_ERROR == errorCode)
                     {
-                        _listener.OnChannelEndpointError(correlationId, message);
+                        notProcessed = false;
+                        _listener.OnChannelEndpointError((int)correlationId, _errorResponse.ErrorMessage());
                     }
                     else if (correlationId == _activeCorrelationId)
                     {
+                        notProcessed = false;
                         _receivedCorrelationId = correlationId;
-                        _listener.OnError(correlationId, errorCodeValue, errorCode, message);
+                        _listener.OnError(correlationId, errorCodeValue, errorCode, _errorResponse.ErrorMessage());
+                    }
+                    
+                    if (asyncCommandIdSet.Remove(correlationId) && notProcessed)
+                    {
+                        _listener.OnAsyncError(correlationId, errorCodeValue, errorCode, _errorResponse.ErrorMessage());
                     }
 
                     break;
@@ -160,6 +171,7 @@ namespace Adaptive.Aeron
                     _operationSucceeded.Wrap(buffer, index);
 
                     long correlationId = _operationSucceeded.CorrelationId();
+                    asyncCommandIdSet.Remove(correlationId);
                     if (correlationId == _activeCorrelationId)
                     {
                         _receivedCorrelationId = correlationId;

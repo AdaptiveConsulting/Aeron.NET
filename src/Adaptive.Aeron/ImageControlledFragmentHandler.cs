@@ -59,9 +59,8 @@ namespace Adaptive.Aeron
         /// <returns> <see cref="ControlledFragmentHandlerAction"/> to be taken after processing fragment.</returns>
         public ControlledFragmentHandlerAction OnFragment(IDirectBuffer buffer, int offset, int length, Header header)
         {
-            byte flags = header.Flags;
-
             var action = ControlledFragmentHandlerAction.CONTINUE;
+            byte flags = header.Flags;
 
             if ((flags & FrameDescriptor.UNFRAGMENTED) == FrameDescriptor.UNFRAGMENTED)
             {
@@ -76,20 +75,22 @@ namespace Adaptive.Aeron
                 else
                 {
                     int limit = _builder.Limit();
-                    _builder.Append(buffer, offset, length);
-
-                    if ((flags & FrameDescriptor.END_FRAG_FLAG) == FrameDescriptor.END_FRAG_FLAG)
+                    if (limit > 0)
                     {
-                        int msgLength = _builder.Limit();
-                        action = _delegate.OnFragment(_builder.Buffer(), 0, msgLength, header);
+                        _builder.Append(buffer, offset, length);
 
-                        if (ControlledFragmentHandlerAction.ABORT == action)
+                        if ((flags & FrameDescriptor.END_FRAG_FLAG) == FrameDescriptor.END_FRAG_FLAG)
                         {
-                            _builder.Limit(limit);
-                        }
-                        else
-                        {
-                            _builder.Reset();
+                            action = _delegate.OnFragment(_builder.Buffer(), 0, _builder.Limit(), header);
+
+                            if (ControlledFragmentHandlerAction.ABORT == action)
+                            {
+                                _builder.Limit(limit);
+                            }
+                            else
+                            {
+                                _builder.Reset();
+                            }
                         }
                     }
                 }

@@ -12,7 +12,7 @@ public class ClusterActionRequestDecoder
     public const ushort BLOCK_LENGTH = 28;
     public const ushort TEMPLATE_ID = 23;
     public const ushort SCHEMA_ID = 111;
-    public const ushort SCHEMA_VERSION = 4;
+    public const ushort SCHEMA_VERSION = 6;
 
     private ClusterActionRequestDecoder _parentMessage;
     private IDirectBuffer _buffer;

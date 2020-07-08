@@ -110,6 +110,11 @@ namespace Adaptive.Archiver
 
         public ControlledFragmentHandlerAction OnFragment(IDirectBuffer buffer, int offset, int length, Header header)
         {
+            if (isDispatchComplete)
+            {
+                return ControlledFragmentHandlerAction.ABORT;
+            }
+
             messageHeaderDecoder.Wrap(buffer, offset);
 
             int schemaId = messageHeaderDecoder.SchemaId();
@@ -144,9 +149,10 @@ namespace Adaptive.Archiver
                         if (ControlResponseCode.ERROR == code)
                         {
                             ArchiveException ex = new ArchiveException(
-                                "response for correlationId=" + this.correlationId +
-                                ", error: " + controlResponseDecoder.ErrorMessage(),
-                                (int) controlResponseDecoder.RelevantId());
+                                "response for correlationId=" + this.correlationId + ", error: " +
+                                controlResponseDecoder.ErrorMessage(),
+                                (int) controlResponseDecoder.RelevantId(),
+                                correlationId);
 
                             if (correlationId == this.correlationId)
                             {
@@ -204,6 +210,16 @@ namespace Adaptive.Archiver
             }
 
             return ControlledFragmentHandlerAction.CONTINUE;
+        }
+
+        public override string ToString()
+        {
+            return "RecordingDescriptorPoller{" +
+                   "controlSessionId=" + controlSessionId +
+                   ", correlationId=" + correlationId +
+                   ", remainingRecordCount=" + remainingRecordCount +
+                   ", isDispatchComplete=" + isDispatchComplete +
+                   '}';
         }
     }
 }

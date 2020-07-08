@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Text;
 using Adaptive.Aeron.LogBuffer;
+using Adaptive.Agrona;
 using static Adaptive.Aeron.LogBuffer.FrameDescriptor;
 
 namespace Adaptive.Aeron
@@ -25,6 +26,8 @@ namespace Adaptive.Aeron
         private string _controlMode;
         private string _tags;
         private string _alias;
+        private string cc;
+        private string fc;
         private bool? _reliable;
         private int? _ttl;
         private int? _mtu;
@@ -33,10 +36,13 @@ namespace Adaptive.Aeron
         private int? _termId;
         private int? _termOffset;
         private int? _sessionId;
+        private long? groupTag;
         private long? _linger;
         private bool? _sparse;
         private bool? _eos;
         private bool? _tether;
+        private bool? group;
+        private bool? rejoin;
         private bool _isSessionIdTagged;
 
         /// <summary>
@@ -53,6 +59,8 @@ namespace Adaptive.Aeron
             _controlMode = null;
             _tags = null;
             _alias = null;
+            cc = null;
+            fc = null;
             _reliable = null;
             _ttl = null;
             _mtu = null;
@@ -61,10 +69,13 @@ namespace Adaptive.Aeron
             _termId = null;
             _termOffset = null;
             _sessionId = null;
+            groupTag = null;
             _linger = null;
             _sparse = null;
             _eos = null;
             _tether = null;
+            group = null;
+            rejoin = null;
             _isSessionIdTagged = false;
 
             return this;
@@ -133,6 +144,17 @@ namespace Adaptive.Aeron
         }
 
         /// <summary>
+        /// Set the prefix value to be what is in the <seealso cref="ChannelUri"/>.
+        /// </summary>
+        /// <param name="channelUri"> to read the value from. </param>
+        /// <returns> this for a fluent API. </returns>
+        /// <seealso cref="ChannelUri.SPY_QUALIFIER"/>
+        public ChannelUriStringBuilder Prefix(ChannelUri channelUri)
+        {
+            return Prefix(channelUri.Prefix());
+        }
+
+        /// <summary>
         /// Get the prefix for the additional action to be taken on the request.
         /// </summary>
         /// <returns> the prefix for the additional action to be taken on the request. </returns>
@@ -163,6 +185,16 @@ namespace Adaptive.Aeron
         }
 
         /// <summary>
+        /// Set the endpoint value to be what is in the <seealso cref="ChannelUri"/>.
+        /// </summary>
+        /// <param name="channelUri"> to read the value from. </param>
+        /// <returns> this for a fluent API. </returns>
+        public ChannelUriStringBuilder Media(ChannelUri channelUri)
+        {
+            return Media(channelUri.Media());
+        }
+
+        /// <summary>
         /// The media over which the channel transmits.
         /// </summary>
         /// <returns> the media over which the channel transmits. </returns>
@@ -182,6 +214,17 @@ namespace Adaptive.Aeron
         {
             _endpoint = endpoint;
             return this;
+        }
+
+        /// <summary>
+        /// Set the endpoint value to be what is in the <seealso cref="ChannelUri"/> which may be null.
+        /// </summary>
+        /// <param name="channelUri"> to read the value from. </param>
+        /// <returns> this for a fluent API. </returns>
+        /// <seealso cref="Aeron.Context.ENDPOINT_PARAM_NAME"/>
+        public ChannelUriStringBuilder Endpoint(ChannelUri channelUri)
+        {
+            return Endpoint(channelUri.Get(Aeron.Context.ENDPOINT_PARAM_NAME));
         }
 
         /// <summary>
@@ -207,6 +250,17 @@ namespace Adaptive.Aeron
         }
 
         /// <summary>
+        /// Set the network interface value to be what is in the <seealso cref="ChannelUri"/> which may be null.
+        /// </summary>
+        /// <param name="channelUri"> to read the value from. </param>
+        /// <returns> this for a fluent API. </returns>
+        /// <seealso cref="Aeron.Context.INTERFACE_PARAM_NAME"/>
+        public ChannelUriStringBuilder NetworkInterface(ChannelUri channelUri)
+        {
+            return NetworkInterface(channelUri.Get(Aeron.Context.INTERFACE_PARAM_NAME));
+        }
+
+        /// <summary>
         /// Get the address of the local interface in the form host:[port]/[subnet mask] for routing traffic.
         /// </summary>
         /// <returns> the address of the local interface in the form host:[port]/[subnet mask] for routing traffic. </returns>
@@ -226,6 +280,17 @@ namespace Adaptive.Aeron
         {
             _controlEndpoint = controlEndpoint;
             return this;
+        }
+
+        /// <summary>
+        /// Set the control endpoint value to be what is in the <seealso cref="ChannelUri"/> which may be null.
+        /// </summary>
+        /// <param name="channelUri"> to read the value from. </param>
+        /// <returns> this for a fluent API. </returns>
+        /// <seealso cref="Aeron.Context.MDC_CONTROL_PARAM_NAME"/>
+        public ChannelUriStringBuilder ControlEndpoint(ChannelUri channelUri)
+        {
+            return ControlEndpoint(channelUri.Get(Aeron.Context.MDC_CONTROL_PARAM_NAME));
         }
 
         /// <summary>
@@ -263,6 +328,17 @@ namespace Adaptive.Aeron
         }
 
         /// <summary>
+        /// Set the control mode to be what is in the <seealso cref="ChannelUri"/> which may be null.
+        /// </summary>
+        /// <param name="channelUri"> to read the value from. </param>
+        /// <returns> this for a fluent API. </returns>
+        /// <seealso cref="Aeron.Context.MDC_CONTROL_MODE_PARAM_NAME"/>
+        public ChannelUriStringBuilder ControlMode(ChannelUri channelUri)
+        {
+            return ControlMode(channelUri.Get(Aeron.Context.MDC_CONTROL_MODE_PARAM_NAME));
+        }
+
+        /// <summary>
         /// Get the control mode for multi-destination-cast.
         /// </summary>
         /// <returns> the control mode for multi-destination-cast. </returns>
@@ -284,6 +360,26 @@ namespace Adaptive.Aeron
         {
             _reliable = isReliable;
             return this;
+        }
+
+        /// <summary>
+        /// Set the reliable value to be what is in the <seealso cref="ChannelUri"/> which may be null.
+        /// </summary>
+        /// <param name="channelUri"> to read the value from. </param>
+        /// <returns> this for a fluent API. </returns>
+        /// <seealso cref="Aeron.Context.RELIABLE_STREAM_PARAM_NAME"/>
+        public ChannelUriStringBuilder Reliable(ChannelUri channelUri)
+        {
+            string reliableValue = channelUri.Get(Aeron.Context.RELIABLE_STREAM_PARAM_NAME);
+            if (null == reliableValue)
+            {
+                _reliable = null;
+                return this;
+            }
+            else
+            {
+                return Reliable(Convert.ToBoolean(reliableValue));
+            }
         }
 
         /// <summary>
@@ -312,6 +408,26 @@ namespace Adaptive.Aeron
 
             _ttl = ttl;
             return this;
+        }
+
+        /// <summary>
+        /// Set the ttl value to be what is in the <seealso cref="ChannelUri"/> which may be null.
+        /// </summary>
+        /// <param name="channelUri"> to read the value from. </param>
+        /// <returns> this for a fluent API. </returns>
+        /// <seealso cref="Aeron.Context.TTL_PARAM_NAME"/>
+        public ChannelUriStringBuilder Ttl(ChannelUri channelUri)
+        {
+            string ttlValue = channelUri.Get(Aeron.Context.TTL_PARAM_NAME);
+            if (null == ttlValue)
+            {
+                _ttl = null;
+                return this;
+            }
+            else
+            {
+                return Ttl(Convert.ToInt32(ttlValue));
+            }
         }
 
         /// <summary>
@@ -351,6 +467,33 @@ namespace Adaptive.Aeron
         }
 
         /// <summary>
+        /// Set the mtu value to be what is in the <seealso cref="ChannelUri"/> which may be null.
+        /// </summary>
+        /// <param name="channelUri"> to read the value from. </param>
+        /// <returns> this for a fluent API. </returns>
+        /// <seealso cref="Aeron.Context.MTU_LENGTH_PARAM_NAME"/>
+        public ChannelUriStringBuilder Mtu(ChannelUri channelUri)
+        {
+            string mtuValue = channelUri.Get(Aeron.Context.MTU_LENGTH_PARAM_NAME);
+            if (null == mtuValue)
+            {
+                _mtu = null;
+                return this;
+            }
+            else
+            {
+                long value = SystemUtil.ParseSize(Aeron.Context.MTU_LENGTH_PARAM_NAME, mtuValue);
+                if (value > int.MaxValue)
+                {
+                    throw new InvalidOperationException(Aeron.Context.MTU_LENGTH_PARAM_NAME + " " + value + " > " +
+                                                        int.MaxValue);
+                }
+
+                return Mtu((int) value);
+            }
+        }
+
+        /// <summary>
         /// Get the maximum transmission unit (MTU) including Aeron header for a datagram payload. If this is greater
         /// than the network MTU for UDP then the packet will be fragmented and can amplify the impact of loss.
         /// </summary>
@@ -379,6 +522,34 @@ namespace Adaptive.Aeron
         }
 
         /// <summary>
+        /// Set the termLength value to be what is in the <seealso cref="ChannelUri"/> which may be null.
+        /// </summary>
+        /// <param name="channelUri"> to read the value from. </param>
+        /// <returns> this for a fluent API. </returns>
+        /// <seealso cref="Aeron.Context.TERM_LENGTH_PARAM_NAME"/>
+        public ChannelUriStringBuilder TermLength(ChannelUri channelUri)
+        {
+            string termLengthValue = channelUri.Get(Aeron.Context.TERM_LENGTH_PARAM_NAME);
+            if (null == termLengthValue)
+            {
+                _termLength = null;
+                return this;
+            }
+            else
+            {
+                long value = SystemUtil.ParseSize(Aeron.Context.TERM_LENGTH_PARAM_NAME, termLengthValue);
+                if (value > int.MaxValue)
+                {
+                    throw new InvalidOperationException("Term length more than max length of " +
+                                                        LogBufferDescriptor.TERM_MAX_LENGTH + ": length=" +
+                                                        _termLength);
+                }
+
+                return TermLength((int) value);
+            }
+        }
+
+        /// <summary>
         /// Get the length of buffer used for each term of the log.
         /// </summary>
         /// <returns> the length of buffer used for each term of the log. </returns>
@@ -398,6 +569,26 @@ namespace Adaptive.Aeron
         {
             _initialTermId = initialTermId;
             return this;
+        }
+
+        /// <summary>
+        /// Set the initialTermId value to be what is in the <seealso cref="ChannelUri"/> which may be null.
+        /// </summary>
+        /// <param name="channelUri"> to read the value from. </param>
+        /// <returns> this for a fluent API. </returns>
+        /// <seealso cref="Aeron.Context.INITIAL_TERM_ID_PARAM_NAME"/>
+        public ChannelUriStringBuilder InitialTermId(ChannelUri channelUri)
+        {
+            string initialTermIdValue = channelUri.Get(Aeron.Context.INITIAL_TERM_ID_PARAM_NAME);
+            if (null == initialTermIdValue)
+            {
+                _initialTermId = null;
+                return this;
+            }
+            else
+            {
+                return InitialTermId(Convert.ToInt32(initialTermIdValue));
+            }
         }
 
         /// <summary>
@@ -421,6 +612,26 @@ namespace Adaptive.Aeron
         {
             _termId = termId;
             return this;
+        }
+
+        /// <summary>
+        /// Set the termId value to be what is in the <seealso cref="ChannelUri"/> which may be null.
+        /// </summary>
+        /// <param name="channelUri"> to read the value from. </param>
+        /// <returns> this for a fluent API. </returns>
+        /// <seealso cref="Aeron.Context.TERM_ID_PARAM_NAME"/>
+        public ChannelUriStringBuilder TermId(ChannelUri channelUri)
+        {
+            string termIdValue = channelUri.Get(Aeron.Context.TERM_ID_PARAM_NAME);
+            if (null == termIdValue)
+            {
+                _termId = null;
+                return this;
+            }
+            else
+            {
+                return TermId(Convert.ToInt32(termIdValue));
+            }
         }
 
         /// <summary>
@@ -460,6 +671,26 @@ namespace Adaptive.Aeron
         }
 
         /// <summary>
+        /// Set the termOffset value to be what is in the <seealso cref="ChannelUri"/> which may be null.
+        /// </summary>
+        /// <param name="channelUri"> to read the value from. </param>
+        /// <returns> this for a fluent API. </returns>
+        /// <seealso cref="Aeron.Context.TERM_OFFSET_PARAM_NAME"/>
+        public ChannelUriStringBuilder TermOffset(ChannelUri channelUri)
+        {
+            string termOffsetValue = channelUri.Get(Aeron.Context.TERM_OFFSET_PARAM_NAME);
+            if (null == termOffsetValue)
+            {
+                _termOffset = null;
+                return this;
+            }
+            else
+            {
+                return TermOffset(Convert.ToInt32(termOffsetValue));
+            }
+        }
+
+        /// <summary>
         /// Get the offset within a term at which a publication will start.
         /// </summary>
         /// <returns> the offset within a term at which a publication will start. </returns>
@@ -479,6 +710,26 @@ namespace Adaptive.Aeron
         {
             _sessionId = sessionId;
             return this;
+        }
+
+        /// <summary>
+        /// Set the sessionId value to be what is in the <seealso cref="ChannelUri"/> which may be null.
+        /// </summary>
+        /// <param name="channelUri"> to read the value from. </param>
+        /// <returns> this for a fluent API. </returns>
+        /// <seealso cref="Aeron.Context.SESSION_ID_PARAM_NAME"/>
+        public ChannelUriStringBuilder SessionId(ChannelUri channelUri)
+        {
+            string sessionIdValue = channelUri.Get(Aeron.Context.SESSION_ID_PARAM_NAME);
+            if (null == sessionIdValue)
+            {
+                _sessionId = null;
+                return this;
+            }
+            else
+            {
+                return SessionId(Convert.ToInt32(sessionIdValue));
+            }
         }
 
         /// <summary>
@@ -510,6 +761,26 @@ namespace Adaptive.Aeron
         }
 
         /// <summary>
+        /// Set the linger value to be what is in the <seealso cref="ChannelUri"/> which may be null.
+        /// </summary>
+        /// <param name="channelUri"> to read the value from. </param>
+        /// <returns> this for a fluent API. </returns>
+        /// <seealso cref="Aeron.Context.LINGER_PARAM_NAME"/>
+        public ChannelUriStringBuilder Linger(ChannelUri channelUri)
+        {
+            string lingerValue = channelUri.Get(Aeron.Context.LINGER_PARAM_NAME);
+            if (null == lingerValue)
+            {
+                _linger = null;
+                return this;
+            }
+            else
+            {
+                return Linger(SystemUtil.ParseDuration(Aeron.Context.LINGER_PARAM_NAME, lingerValue));
+            }
+        }
+
+        /// <summary>
         /// Get the time a network publication will linger in nanoseconds after being drained. This time is so that tail loss
         /// can be recovered.
         /// </summary>
@@ -531,6 +802,26 @@ namespace Adaptive.Aeron
         {
             _sparse = isSparse;
             return this;
+        }
+
+        /// <summary>
+        /// Set the sparse value to be what is in the <seealso cref="ChannelUri"/> which may be null.
+        /// </summary>
+        /// <param name="channelUri"> to read the value from. </param>
+        /// <returns> this for a fluent API. </returns>
+        /// <seealso cref="Aeron.Context.SPARSE_PARAM_NAME"/>
+        public ChannelUriStringBuilder Sparse(ChannelUri channelUri)
+        {
+            string sparseValue = channelUri.Get(Aeron.Context.SPARSE_PARAM_NAME);
+            if (null == sparseValue)
+            {
+                _sparse = null;
+                return this;
+            }
+            else
+            {
+                return Sparse(Convert.ToBoolean(sparseValue));
+            }
         }
 
         /// <summary>
@@ -556,6 +847,26 @@ namespace Adaptive.Aeron
         }
 
         /// <summary>
+        /// Set the eos value to be what is in the <seealso cref="ChannelUri"/> which may be null.
+        /// </summary>
+        /// <param name="channelUri"> to read the value from. </param>
+        /// <returns> this for a fluent API. </returns>
+        /// <seealso cref="Aeron.Context.EOS_PARAM_NAME"/>
+        public ChannelUriStringBuilder Eos(ChannelUri channelUri)
+        {
+            string eosValue = channelUri.Get(Aeron.Context.EOS_PARAM_NAME);
+            if (null == eosValue)
+            {
+                _eos = null;
+                return this;
+            }
+            else
+            {
+                return Eos(Convert.ToBoolean(eosValue));
+            }
+        }
+
+        /// <summary>
         /// Should an EOS flag be sent on the media or not.
         /// </summary>
         /// <returns> true if the EOS param should be set. </returns>
@@ -578,6 +889,26 @@ namespace Adaptive.Aeron
         }
 
         /// <summary>
+        /// Set the tether value to be what is in the <seealso cref="ChannelUri"/> which may be null.
+        /// </summary>
+        /// <param name="channelUri"> to read the value from. </param>
+        /// <returns> this for a fluent API. </returns>
+        /// <seealso cref="Aeron.Context.TETHER_PARAM_NAME"/>
+        public ChannelUriStringBuilder Tether(ChannelUri channelUri)
+        {
+            string tetherValue = channelUri.Get(Aeron.Context.TETHER_PARAM_NAME);
+            if (null == tetherValue)
+            {
+                _tether = null;
+                return this;
+            }
+            else
+            {
+                return Tether(Convert.ToBoolean(tetherValue));
+            }
+        }
+
+        /// <summary>
         /// Should the subscription channel be tethered or not for local flow control.
         /// </summary>
         /// <returns> value of the tether param. </returns>
@@ -586,7 +917,53 @@ namespace Adaptive.Aeron
         {
             return _tether;
         }
-        
+
+        /// <summary>
+        /// Is the receiver likely to be part of a group. This informs behaviour such as loss handling.
+        /// </summary>
+        /// <param name="group"> value to be set for the group param. </param>
+        /// <returns> this for a fluent API. </returns>
+        /// <seealso cref="Aeron.Context.GROUP_PARAM_NAME"/>
+        /// <seealso cref="ControlMode()"/>
+        /// <seealso cref="ControlEndpoint()"/>
+        public ChannelUriStringBuilder Group(bool? group)
+        {
+            this.group = group;
+            return this;
+        }
+
+        /// <summary>
+        /// Set the group value to be what is in the <seealso cref="ChannelUri"/> which may be null.
+        /// </summary>
+        /// <param name="channelUri"> to read the value from. </param>
+        /// <returns> this for a fluent API. </returns>
+        /// <seealso cref="Aeron.Context.GROUP_PARAM_NAME"/>
+        public ChannelUriStringBuilder Group(ChannelUri channelUri)
+        {
+            string groupValue = channelUri.Get(Aeron.Context.GROUP_PARAM_NAME);
+            if (null == groupValue)
+            {
+                group = null;
+                return this;
+            }
+            else
+            {
+                return Group(Convert.ToBoolean(groupValue));
+            }
+        }
+
+        /// <summary>
+        /// Is the receiver likely to be part of a group. This informs behaviour such as loss handling.
+        /// </summary>
+        /// <returns> value of the group param. </returns>
+        /// <seealso cref="Aeron.Context.GROUP_PARAM_NAME"/>
+        /// <seealso cref="ControlMode()"/>
+        /// <seealso cref="ControlEndpoint()"/>
+        public bool? Group()
+        {
+            return group;
+        }
+
         /// <summary>
         /// Set the tags for a channel used by a publication or subscription. Tags can be used to identify or tag a
         /// channel so that a configuration can be referenced and reused.
@@ -599,6 +976,17 @@ namespace Adaptive.Aeron
         {
             _tags = tags;
             return this;
+        }
+
+        /// <summary>
+        /// Set the tags to be value which is in the <seealso cref="ChannelUri"/> which may be null.
+        /// </summary>
+        /// <param name="channelUri"> to read the value from. </param>
+        /// <returns> this for a fluent API. </returns>
+        /// <seealso cref="Aeron.Context.TAGS_PARAM_NAME"/>
+        public ChannelUriStringBuilder Tags(ChannelUri channelUri)
+        {
+            return Tags(channelUri.Get(Aeron.Context.TAGS_PARAM_NAME));
         }
 
         /// <summary>
@@ -650,6 +1038,17 @@ namespace Adaptive.Aeron
         }
 
         /// <summary>
+        /// Set the alias to be value which is in the <seealso cref="ChannelUri"/> which may be null.
+        /// </summary>
+        /// <param name="channelUri"> to read the value from. </param>
+        /// <returns> this for a fluent API. </returns>
+        /// <seealso cref="Aeron.Context.ALIAS_PARAM_NAME"/>
+        public ChannelUriStringBuilder Alias(ChannelUri channelUri)
+        {
+            return Alias(channelUri.Get(Aeron.Context.ALIAS_PARAM_NAME));
+        }
+
+        /// <summary>
         /// Get the alias present in the URI.
         /// </summary>
         /// <returns> alias for the URI. </returns>
@@ -657,6 +1056,220 @@ namespace Adaptive.Aeron
         public string Alias()
         {
             return _alias;
+        }
+
+        /// <summary>
+        /// Set the congestion control algorithm to be used on a channel.
+        /// </summary>
+        /// <param name="congestionControl"> for the URI. </param>
+        /// <returns> this for a fluent API. </returns>
+        /// <seealso cref="Aeron.Context.CONGESTION_CONTROL_PARAM_NAME"/>
+        public ChannelUriStringBuilder CongestionControl(string congestionControl)
+        {
+            this.cc = congestionControl;
+            return this;
+        }
+
+        /// <summary>
+        /// Set the congestion control to be value which is in the <seealso cref="ChannelUri"/> which may be null.
+        /// </summary>
+        /// <param name="channelUri"> to read the value from. </param>
+        /// <returns> this for a fluent API. </returns>
+        /// <seealso cref="Aeron.Context.CONGESTION_CONTROL_PARAM_NAME"/>
+        public ChannelUriStringBuilder CongestionControl(ChannelUri channelUri)
+        {
+            return CongestionControl(channelUri.Get(Aeron.Context.CONGESTION_CONTROL_PARAM_NAME));
+        }
+
+        /// <summary>
+        /// Get the congestion control algorithm to be used on a channel.
+        /// </summary>
+        /// <returns> congestion control strategy for the channel. </returns>
+        /// <seealso cref="Aeron.Context.CONGESTION_CONTROL_PARAM_NAME"/>
+        public string CongestionControl()
+        {
+            return cc;
+        }
+
+        /// <summary>
+        /// Set the flow control strategy to be used on a channel.
+        /// </summary>
+        /// <param name="flowControl"> for the URI. </param>
+        /// <returns> this for a fluent API. </returns>
+        /// <seealso cref="Aeron.Context.FLOW_CONTROL_PARAM_NAME"/>
+        public ChannelUriStringBuilder FlowControl(string flowControl)
+        {
+            this.fc = flowControl;
+            return this;
+        }
+
+        /// <summary>
+        /// Set tagged flow control settings to be used on channel.  All specified values may be null and the default
+        /// specified in the MediaDriver.Context will be used instead.
+        /// </summary>
+        /// <param name="groupTag">  receiver tag for this channel. </param>
+        /// <param name="minGroupSize"> group size required to allow publications for this channel to be move to connected status. </param>
+        /// <param name="timeout">      timeout receivers, default is ns, but allows suffixing of time units (e.g. 5s). </param>
+        /// <returns> this for fluent API. </returns>
+        public ChannelUriStringBuilder TaggedFlowControl(long? groupTag, int? minGroupSize, string timeout)
+        {
+            string flowControlValue = "tagged";
+
+            if (null != groupTag || null != minGroupSize)
+            {
+                flowControlValue += ",g:";
+            }
+
+            if (null != groupTag)
+            {
+                flowControlValue += groupTag;
+            }
+
+            if (null != minGroupSize)
+            {
+                flowControlValue += "/";
+                flowControlValue += minGroupSize;
+            }
+
+            if (null != timeout)
+            {
+                flowControlValue += ",t:";
+                flowControlValue += timeout;
+            }
+
+            return FlowControl(flowControlValue);
+        }
+
+
+        /// <summary>
+        /// Set min flow control settings to be used on channel.  All specified values may be null and the default
+        /// specified in the MediaDriver.Context will be used instead.
+        /// </summary>
+        /// <param name="minGroupSize"> group size required to allow publications for this channel to be move to connected status. </param>
+        /// <param name="timeout">      timeout receivers, default is ns, but allows suffixing of time units (e.g. 5s). </param>
+        /// <returns> this for fluent API. </returns>
+        public ChannelUriStringBuilder MinFlowControl(int? minGroupSize, string timeout)
+        {
+            string flowControlValue = "min";
+
+            if (null != minGroupSize)
+            {
+                flowControlValue += ",g:/";
+                flowControlValue += minGroupSize;
+            }
+
+            if (null != timeout)
+            {
+                flowControlValue += ",t:";
+                flowControlValue += timeout;
+            }
+
+            return FlowControl(flowControlValue);
+        }
+
+        /// <summary>
+        /// Set the flow control to be value which is in the <seealso cref="ChannelUri"/> which may be null.
+        /// </summary>
+        /// <param name="channelUri"> to read the value from. </param>
+        /// <returns> this for a fluent API. </returns>
+        /// <seealso cref="Aeron.Context.FLOW_CONTROL_PARAM_NAME"/>
+        public ChannelUriStringBuilder FlowControl(ChannelUri channelUri)
+        {
+            return FlowControl(channelUri.Get(Aeron.Context.FLOW_CONTROL_PARAM_NAME));
+        }
+
+        /// <summary>
+        /// Get the flow control strategy to be used on a channel.
+        /// </summary>
+        /// <returns> flow control strategy for the channel. </returns>
+        /// <seealso cref="Aeron.Context.FLOW_CONTROL_PARAM_NAME"/>
+        public string FlowControl()
+        {
+            return fc;
+        }
+
+        /// <summary>
+        /// Set the group tag (gtag) to be sent in SMs.
+        /// </summary>
+        /// <param name="groupTag"> to be sent in SMs </param>
+        /// <returns> this for fluent API. </returns>
+        /// <seealso cref="Aeron.Context.GROUP_TAG_PARAM_NAME"/>
+        public ChannelUriStringBuilder GroupTag(long? groupTag)
+        {
+            this.groupTag = groupTag;
+            return this;
+        }
+
+        /// <summary>
+        /// Set the receiver tag to be value which is in the <seealso cref="ChannelUri"/> which may be null.
+        /// </summary>
+        /// <param name="channelUri"> to read the value from. </param>
+        /// <returns> this for a fluent API. </returns>
+        /// <seealso cref="Aeron.Context.GROUP_TAG_PARAM_NAME"/>
+        public ChannelUriStringBuilder GroupTag(ChannelUri channelUri)
+        {
+            string groupTagValue = channelUri.Get(Aeron.Context.GROUP_TAG_PARAM_NAME);
+            if (null == groupTagValue)
+            {
+                groupTag = null;
+                return this;
+            }
+            else
+            {
+                return GroupTag(Convert.ToInt64(groupTagValue));
+            }
+        }
+
+        /// <summary>
+        /// Get the group tag (gtag) to be sent in SMs.
+        /// </summary>
+        /// <returns> receiver tag to be sent in SMs. </returns>
+        /// <seealso cref="Aeron.Context.GROUP_TAG_PARAM_NAME"/>
+        public long? GroupTag()
+        {
+            return groupTag;
+        }
+
+        /// <summary>
+        /// Set the subscription semantics for if a stream should be rejoined after going unavailable.
+        /// </summary>
+        /// <param name="rejoin"> false if stream is not to be rejoined. </param>
+        /// <returns> this for a fluent API. </returns>
+        /// <seealso cref="Aeron.Context.REJOIN_PARAM_NAME"/>
+        public ChannelUriStringBuilder Rejoin(bool? rejoin)
+        {
+            this.rejoin = rejoin;
+            return this;
+        }
+
+        /// <summary>
+        /// Set the rejoin value to be what is in the <seealso cref="ChannelUri"/> which may be null.
+        /// </summary>
+        /// <param name="channelUri"> to read the value from. </param>
+        /// <returns> this for a fluent API. </returns>
+        /// <seealso cref="Aeron.Context.REJOIN_PARAM_NAME"/>
+        public ChannelUriStringBuilder Rejoin(ChannelUri channelUri)
+        {
+            string rejoinValue = channelUri.Get(Aeron.Context.REJOIN_PARAM_NAME);
+            if (null == rejoinValue)
+            {
+                rejoin = null;
+                return this;
+            }
+            else
+            {
+                return Rejoin(Convert.ToBoolean(rejoinValue));
+            }
+        }
+
+        /// <summary>
+        /// Get the subscription semantics for if a stream should be rejoined after going unavailable.
+        /// </summary>
+        /// <returns> the subscription semantics for if a stream should be rejoined after going unavailable. </returns>
+        /// <seealso cref="Aeron.Context.REJOIN_PARAM_NAME"/>
+        public bool? Rejoin()
+        {
+            return rejoin;
         }
 
         /// <summary>
@@ -776,11 +1389,26 @@ namespace Adaptive.Aeron
                 _sb.Append(Aeron.Context.ALIAS_PARAM_NAME).Append('=').Append(_alias).Append('|');
             }
 
+            if (null != cc)
+            {
+                _sb.Append(Aeron.Context.CONGESTION_CONTROL_PARAM_NAME).Append('=').Append(cc).Append('|');
+            }
+
+            if (null != fc)
+            {
+                _sb.Append(Aeron.Context.FLOW_CONTROL_PARAM_NAME).Append('=').Append(fc).Append('|');
+            }
+
+            if (null != groupTag)
+            {
+                _sb.Append(Aeron.Context.GROUP_TAG_PARAM_NAME).Append('=').Append(groupTag).Append('|');
+            }
+            
             if (null != _sparse)
             {
                 _sb.Append(Aeron.Context.SPARSE_PARAM_NAME).Append('=').Append(_sparse).Append('|');
             }
-            
+
             if (null != _eos)
             {
                 _sb.Append(Aeron.Context.EOS_PARAM_NAME).Append('=').Append(_eos).Append('|');
@@ -791,6 +1419,16 @@ namespace Adaptive.Aeron
                 _sb.Append(Aeron.Context.TETHER_PARAM_NAME).Append('=').Append(_tether).Append('|');
             }
 
+            if (null != group)
+            {
+                _sb.Append(Aeron.Context.GROUP_PARAM_NAME).Append('=').Append(group).Append('|');
+            }
+
+            if (null != rejoin)
+            {
+                _sb.Append(Aeron.Context.REJOIN_PARAM_NAME).Append('=').Append(rejoin).Append('|');
+            }
+            
             char lastChar = _sb[_sb.Length - 1];
             if (lastChar == '|' || lastChar == '?')
             {

@@ -5,16 +5,20 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="FakeItEasy" Version="4.9.1" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.9.0" />
-    <PackageReference Include="NUnit" Version="3.11.0" />
-    <PackageReference Include="NUnit3TestAdapter" Version="3.11.0" />
+    <PackageReference Include="FakeItEasy" Version="6.1.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.6.1" />
+    <PackageReference Include="NUnit" Version="3.12.0" />
+    <PackageReference Include="NUnit3TestAdapter" Version="3.12.0" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Adaptive.Aeron\Adaptive.Aeron.csproj" />
     <ProjectReference Include="..\Adaptive.Agrona.Tests\Adaptive.Agrona.Tests.csproj" />
     <ProjectReference Include="..\Adaptive.Agrona\Adaptive.Agrona.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Command" />
   </ItemGroup>
 
   <!-- .NET Standard 2.0 references, compilation flags and build options -->

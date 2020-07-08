@@ -18,28 +18,41 @@ namespace Adaptive.Archiver
 
         private readonly MessageHeaderDecoder messageHeaderDecoder = new MessageHeaderDecoder();
         private readonly ControlResponseDecoder controlResponseDecoder = new ControlResponseDecoder();
+        private readonly ChallengeDecoder challengeDecoder = new ChallengeDecoder();
 
         private readonly Subscription subscription;
         private ControlledFragmentAssembler fragmentAssembler;
         private long controlSessionId = Aeron.Aeron.NULL_VALUE;
         private long correlationId = Aeron.Aeron.NULL_VALUE;
         private long relevantId = Aeron.Aeron.NULL_VALUE;
-        private int templateId = Aeron.Aeron.NULL_VALUE;
+        private int version = 0;
         private readonly int fragmentLimit;
         private ControlResponseCode code;
         private string errorMessage;
-        private bool pollComplete = false;
+        private byte[] encodedChallenge = null;
+        private bool isPollComplete = false;
 
         /// <summary>
         /// Create a poller for a given subscription to an archive for control response messages.
         /// </summary>
         /// <param name="subscription">  to poll for new events. </param>
-        /// <param name="fragmentLimit"> to apply when polling.</param>
-        public ControlResponsePoller(Subscription subscription, int fragmentLimit = FRAGMENT_LIMIT)
+        /// <param name="fragmentLimit"> to apply when polling. </param>
+        private ControlResponsePoller(Subscription subscription, int fragmentLimit)
         {
             this.fragmentAssembler = new ControlledFragmentAssembler(this);
+
             this.subscription = subscription;
             this.fragmentLimit = fragmentLimit;
+        }
+
+        /// <summary>
+        /// Create a poller for a given subscription to an archive for control response messages with a default
+        /// fragment limit for polling as <seealso cref="FRAGMENT_LIMIT"/>.
+        /// </summary>
+        /// <param name="subscription">  to poll for new events. </param>
+        public ControlResponsePoller(Subscription subscription) : this(subscription, FRAGMENT_LIMIT)
+        {
+            fragmentAssembler = new ControlledFragmentAssembler(this);
         }
 
         /// <summary>
@@ -57,29 +70,30 @@ namespace Adaptive.Archiver
         /// <returns> the number of fragments read during the operation. Zero if no events are available. </returns>
         public int Poll()
         {
-            controlSessionId = -1;
-            correlationId = -1;
-            relevantId = -1;
-            templateId = -1;
+            controlSessionId = Aeron.Aeron.NULL_VALUE;
+            correlationId = Aeron.Aeron.NULL_VALUE;
+            relevantId = Aeron.Aeron.NULL_VALUE;
+            version = 0;
             errorMessage = null;
-            pollComplete = false;
+            encodedChallenge = null;
+            isPollComplete = false;
 
             return subscription.ControlledPoll(fragmentAssembler, fragmentLimit);
         }
 
         /// <summary>
-        /// Control session id of the last polled message or <see cref="Adaptive.Aeron.Aeron.NULL_VALUE"/> if poll returned nothing.
+        /// Control session id of the last polled message or <seealso cref="Adaptive.Aeron.Aeron.NULL_VALUE"/> if poll returned nothing.
         /// </summary>
-        /// <returns> control session id of the last polled message or <see cref="Adaptive.Aeron.Aeron.NULL_VALUE"/> if poll returned nothing. </returns>
+        /// <returns> control session id of the last polled message or <seealso cref="Adaptive.Aeron.Aeron.NULL_VALUE"/> if poll returned nothing. </returns>
         public long ControlSessionId()
         {
             return controlSessionId;
         }
 
         /// <summary>
-        /// Correlation id of the last polled message or <see cref="Adaptive.Aeron.Aeron.NULL_VALUE"/> if poll returned nothing.
+        /// Correlation id of the last polled message or <seealso cref="Adaptive.Aeron.Aeron.NULL_VALUE"/> if poll returned nothing.
         /// </summary>
-        /// <returns> correlation id of the last polled message or <see cref="Adaptive.Aeron.Aeron.NULL_VALUE"/> if poll returned nothing. </returns>
+        /// <returns> correlation id of the last polled message or <seealso cref="Adaptive.Aeron.Aeron.NULL_VALUE"/> if poll returned nothing. </returns>
         public long CorrelationId()
         {
             return correlationId;
@@ -95,21 +109,21 @@ namespace Adaptive.Archiver
         }
 
         /// <summary>
-        /// Has the last polling action received a complete message?
+        /// Version response from the server in semantic version form.
         /// </summary>
-        /// <returns> true if the last polling action received a complete message? </returns>
-        public bool IsPollComplete()
+        /// <returns> response from the server in semantic version form. </returns>
+        public int Version()
         {
-            return pollComplete;
+            return version;
         }
 
         /// <summary>
-        /// Get the template id of the last received message.
+        /// Has the last polling action received a complete message?
         /// </summary>
-        /// <returns> the template id of the last received message. </returns>
-        public int TemplateId()
+        /// <returns> true if the last polling action received a complete message? </returns>
+        public bool PollComplete
         {
-            return templateId;
+            get { return isPollComplete; }
         }
 
         /// <summary>
@@ -130,9 +144,27 @@ namespace Adaptive.Archiver
             return errorMessage;
         }
 
+        /// <summary>
+        /// Was the last polling action received a challenge message?
+        /// </summary>
+        /// <returns> true if the last polling action received was a challenge message, false if not. </returns>
+        public bool WasChallenged()
+        {
+            return null != encodedChallenge;
+        }
+
+        /// <summary>
+        /// Get the encoded challenge of the last challenge.
+        /// </summary>
+        /// <returns> the encoded challenge of the last challenge. </returns>
+        public byte[] EncodedChallenge()
+        {
+            return encodedChallenge;
+        }
+
         public ControlledFragmentHandlerAction OnFragment(IDirectBuffer buffer, int offset, int length, Header header)
         {
-            if (pollComplete)
+            if (isPollComplete)
             {
                 return ABORT;
             }
@@ -142,24 +174,43 @@ namespace Adaptive.Archiver
             int schemaId = messageHeaderDecoder.SchemaId();
             if (schemaId != MessageHeaderDecoder.SCHEMA_ID)
             {
-                throw new ArchiveException("expected schemaId=" + MessageHeaderDecoder.SCHEMA_ID + ", actual=" + schemaId);
+                throw new ArchiveException("expected schemaId=" + MessageHeaderDecoder.SCHEMA_ID + ", actual=" +
+                                           schemaId);
             }
 
-            templateId = messageHeaderDecoder.TemplateId();
-            if (templateId == ControlResponseDecoder.TEMPLATE_ID)
+            if (messageHeaderDecoder.TemplateId() == ControlResponseDecoder.TEMPLATE_ID)
             {
-                controlResponseDecoder.Wrap(
-                    buffer,
-                    offset + MessageHeaderEncoder.ENCODED_LENGTH,
-                    messageHeaderDecoder.BlockLength(),
-                    messageHeaderDecoder.Version());
+                controlResponseDecoder.Wrap(buffer, offset + MessageHeaderEncoder.ENCODED_LENGTH,
+                    messageHeaderDecoder.BlockLength(), messageHeaderDecoder.Version());
 
                 controlSessionId = controlResponseDecoder.ControlSessionId();
                 correlationId = controlResponseDecoder.CorrelationId();
                 relevantId = controlResponseDecoder.RelevantId();
                 code = controlResponseDecoder.Code();
+                version = controlResponseDecoder.Version();
                 errorMessage = controlResponseDecoder.ErrorMessage();
-                pollComplete = true;
+                isPollComplete = true;
+
+                return BREAK;
+            }
+
+            if (messageHeaderDecoder.TemplateId() == ChallengeDecoder.TEMPLATE_ID)
+            {
+                challengeDecoder.Wrap(buffer, offset + MessageHeaderEncoder.ENCODED_LENGTH,
+                    messageHeaderDecoder.BlockLength(), messageHeaderDecoder.Version());
+
+                controlSessionId = challengeDecoder.ControlSessionId();
+                correlationId = challengeDecoder.CorrelationId();
+                relevantId = Aeron.Aeron.NULL_VALUE;
+                code = ControlResponseCode.NULL_VALUE;
+                version = challengeDecoder.Version();
+                errorMessage = "";
+
+                int encodedChallengeLength = challengeDecoder.EncodedChallengeLength();
+                encodedChallenge = new byte[encodedChallengeLength];
+                challengeDecoder.GetEncodedChallenge(encodedChallenge, 0, encodedChallengeLength);
+
+                isPollComplete = true;
 
                 return BREAK;
             }
@@ -173,10 +224,10 @@ namespace Adaptive.Archiver
                    "controlSessionId=" + controlSessionId +
                    ", correlationId=" + correlationId +
                    ", relevantId=" + relevantId +
-                   ", templateId=" + templateId +
                    ", code=" + code +
+                   ", version=" + SemanticVersion.ToString(version) +
                    ", errorMessage='" + errorMessage + '\'' +
-                   ", pollComplete=" + pollComplete +
+                   ", isPollComplete=" + isPollComplete +
                    '}';
         }
     }

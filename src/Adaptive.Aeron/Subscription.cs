@@ -35,8 +35,8 @@ namespace Adaptive.Aeron
         private CacheLinePadding _padding1;
 
         internal readonly long registrationId;
-        internal int roundRobinIndex;
         internal readonly int streamId;
+        internal int roundRobinIndex;
         internal volatile bool isClosed;
         internal volatile Image[] images;
         internal readonly ClientConductor conductor;
@@ -104,7 +104,8 @@ namespace Adaptive.Aeron
             AvailableImageHandler availableImageHandler,
             UnavailableImageHandler unavailableImageHandler)
         {
-            _fields = new SubscriptionFields(registrationId, streamId, conductor, channel, availableImageHandler, unavailableImageHandler);
+            _fields = new SubscriptionFields(registrationId, streamId, conductor, channel, availableImageHandler,
+                unavailableImageHandler);
         }
 
         /// <summary>
@@ -409,9 +410,26 @@ namespace Adaptive.Aeron
         }
 
         /// <summary>
+        /// Fetches the local socket addresses for this subscription. If the channel is not
+        /// <seealso cref="ChannelEndpointStatus.ACTIVE"/>, then this will return an empty list.
+        ///    
+        /// The format is as follows:
+        /// IPv4: <code>ip address:port</code>
+        /// IPv6: <code>[ip6 address]:port</code>
+        /// This is to match the formatting used in the Aeron URI
+        /// </summary>
+        /// <returns> local socket address for this subscription. </returns>
+        /// <seealso cref="ChannelStatus"/>
+        public List<string> LocalSocketAddresses()
+        {
+            return LocalSocketAddressStatus.FindAddresses(_fields.conductor.CountersReader(), ChannelStatus,
+                ChannelStatusId);
+        }
+
+        /// <summary>
         /// Add a destination manually to a multi-destination Subscription.
         /// </summary>
-        /// <param name="endpointChannel"> for the destination to add </param>
+        /// <param name="endpointChannel"> for the destination to add. </param>
         public void AddDestination(string endpointChannel)
         {
             if (_fields.isClosed)
@@ -425,7 +443,7 @@ namespace Adaptive.Aeron
         /// <summary>
         /// Remove a previously added destination from a multi-destination Subscription.
         /// </summary>
-        /// <param name="endpointChannel"> for the destination to remove </param>
+        /// <param name="endpointChannel"> for the destination to remove. </param>
         public void RemoveDestination(string endpointChannel)
         {
             if (_fields.isClosed)
@@ -436,6 +454,45 @@ namespace Adaptive.Aeron
             _fields.conductor.RemoveRcvDestination(_fields.registrationId, endpointChannel);
         }
 
+        /// <summary>
+        /// Asynchronously add a destination manually to a multi-destination Subscription.
+        /// <para>
+        /// Errors will be delivered asynchronously to the <seealso cref="Aeron.Context.ErrorHandler()"/>. Completion can be
+        /// tracked by passing the returned correlation id to <seealso cref="Aeron.IsCommandActive(long)"/>.
+        ///    
+        /// </para>
+        /// </summary>
+        /// <param name="endpointChannel"> for the destination to add. </param>
+        /// <returns> the correlationId for the command. </returns>
+        public long AsyncAddDestination(string endpointChannel)
+        {
+            if (_fields.isClosed)
+            {
+                throw new AeronException("Subscription is closed");
+            }
+
+            return _fields.conductor.AsyncAddRcvDestination(_fields.registrationId, endpointChannel);
+        }
+
+        /// <summary>
+        /// Asynchronously remove a previously added destination from a multi-destination Subscription.
+        /// <para>
+        /// Errors will be delivered asynchronously to the <seealso cref="Aeron.Context.ErrorHandler()"/>. Completion can be
+        /// tracked by passing the returned correlation id to <seealso cref="Aeron.IsCommandActive(long)"/>.
+        /// 
+        /// </para>
+        /// </summary>
+        /// <param name="endpointChannel"> for the destination to remove. </param>
+        /// <returns> the correlationId for the command. </returns>
+        public long AsyncRemoveDestination(string endpointChannel)
+        {
+            if (_fields.isClosed)
+            {
+                throw new AeronException("Subscription is closed");
+            }
+
+            return _fields.conductor.AsyncRemoveRcvDestination(_fields.registrationId, endpointChannel);
+        }
 
         internal int ChannelStatusId
         {
@@ -478,22 +535,22 @@ namespace Adaptive.Aeron
 
             if (null != removedImage)
             {
-                _fields.images = ArrayUtil.Remove(oldArray, i);
                 removedImage.Close();
+                _fields.images = ArrayUtil.Remove(oldArray, i);
                 _fields.conductor.ReleaseLogBuffers(removedImage.LogBuffers, correlationId);
             }
 
             return removedImage;
         }
-        
+
         public override string ToString()
         {
-            return "Subscription{" + 
-                   "registrationId=" + RegistrationId + 
-                   ", isClosed=" + IsClosed + 
-                   ", streamId=" + StreamId + 
-                   ", channel='" + Channel + '\'' + 
-                   ", imageCount=" + ImageCount + 
+            return "Subscription{" +
+                   "registrationId=" + RegistrationId +
+                   ", isClosed=" + IsClosed +
+                   ", streamId=" + StreamId +
+                   ", channel='" + Channel + '\'' +
+                   ", imageCount=" + ImageCount +
                    '}';
         }
     }

@@ -589,6 +589,31 @@ namespace Adaptive.Aeron.LogBuffer
             return resultingOffset;
         }
 
+        /// <summary>
+        /// Append pre-formatted block of message fragments into the term buffer.
+        /// <para>
+        /// <em>WARNING: This is internal API used by {@code ExclusivePublication#offerBlock} method.</em>
+        /// </para>
+        /// </summary>
+        /// <param name="termId">     for the current term. </param>
+        /// <param name="termOffset"> in the term at which to append. </param>
+        /// <param name="buffer">     which contains block of messages. </param>
+        /// <param name="offset">     within the buffer at which the block begins. </param>
+        /// <param name="length">     of the block in bytes (always aligned). </param>
+        /// <returns> the resulting offset of the term after success otherwise <seealso cref="FAILED"/>. </returns>
+        public int AppendBlock(int termId, int termOffset, IMutableDirectBuffer buffer, int offset, int length)
+        {
+            int resultingOffset = termOffset + length;
+            int lengthOfFirstFrame = buffer.GetInt(offset, ByteOrder.LittleEndian);
+
+            buffer.PutInt(offset, 0, ByteOrder.LittleEndian);
+            _termBuffer.PutBytes(termOffset, buffer, offset, length);
+            FrameDescriptor.FrameLengthOrdered(_termBuffer, termOffset, lengthOfFirstFrame);
+            PutRawTailOrdered(termId, resultingOffset);
+
+            return resultingOffset;
+        }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static int HandleEndOfLogCondition(
             UnsafeBuffer termBuffer,

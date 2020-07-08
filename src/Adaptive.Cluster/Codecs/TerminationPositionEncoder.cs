@@ -12,7 +12,7 @@ public class TerminationPositionEncoder
     public const ushort BLOCK_LENGTH = 8;
     public const ushort TEMPLATE_ID = 75;
     public const ushort SCHEMA_ID = 111;
-    public const ushort SCHEMA_VERSION = 4;
+    public const ushort SCHEMA_VERSION = 6;
 
     private TerminationPositionEncoder _parentMessage;
     private IMutableDirectBuffer _buffer;

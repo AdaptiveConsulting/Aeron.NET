@@ -23,6 +23,8 @@ namespace Adaptive.Aeron
     {
         void OnError(long correlationId, int codeValue, ErrorCode errorCode, string message);
 
+        void OnAsyncError(long correlationId, int codeValue, ErrorCode errorCode, string message);
+        
         void OnAvailableImage(
             long correlationId,
             int sessionId,

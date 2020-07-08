@@ -2,7 +2,7 @@
 <sbe:messageSchema xmlns:sbe="http://fixprotocol.io/2016/sbe"
                    package="Adaptive.Cluster.Codecs"
                    id="111"
-                   version="4"
+                   version="6"
                    semanticVersion="5.2"
                    description="Message Codecs for communicating with, and within, an Aeron Cluster."
                    byteOrder="littleEndian">
@@ -26,100 +26,99 @@
             <type name="varData"        primitiveType="uint8" length="0"/>
         </composite>
         <enum name="BooleanType" encodingType="int32" description="Language independent boolean type.">
-            <validValue name="FALSE">0</validValue>
-            <validValue name="TRUE">1</validValue>
+            <validValue name="FALSE" description="Language independent boolean false.">0</validValue>
+            <validValue name="TRUE" description="Language independent boolean true.">1</validValue>
         </enum>
         <enum name="EventCode" encodingType="int32" description="Type of event for a response.">
-            <validValue name="OK">0</validValue>
-            <validValue name="ERROR">1</validValue>
-            <validValue name="REDIRECT">2</validValue>
-            <validValue name="AUTHENTICATION_REJECTED">3</validValue>
+            <validValue name="OK" description="Operation was successful">0</validValue>
+            <validValue name="ERROR" description="Error occurred during operation.">1</validValue>
+            <validValue name="REDIRECT" description="Redirect to cluster leader.">2</validValue>
+            <validValue name="AUTHENTICATION_REJECTED" description="Authentication credentials rejected.">3</validValue>
+            <validValue name="CLOSED" description="Session has been closed.">4</validValue>
         </enum>
         <enum name="CloseReason" encodingType="int32" description="Reason why a session was closed.">
-            <validValue name="CLIENT_ACTION">0</validValue>
-            <validValue name="SERVICE_ACTION">1</validValue>
-            <validValue name="TIMEOUT">2</validValue>
+            <validValue name="CLIENT_ACTION" description="Client closed the session.">0</validValue>
+            <validValue name="SERVICE_ACTION" description="Service closed the session.">1</validValue>
+            <validValue name="TIMEOUT" description="Session timed out due to inactivity.">2</validValue>
         </enum>
         <enum name="ClusterAction" encodingType="int32" description="Action to be taken by cluster nodes.">
-            <validValue name="SUSPEND">0</validValue>
-            <validValue name="RESUME">1</validValue>
-            <validValue name="SNAPSHOT">2</validValue>
+            <validValue name="SUSPEND" description="Suspend ingress to the cluster.">0</validValue>
+            <validValue name="RESUME" description="Resume ingress to the cluster.">1</validValue>
+            <validValue name="SNAPSHOT" description="Snapshot state in the cluster.">2</validValue>
         </enum>
         <enum name="SnapshotMark" encodingType="int32" description="Mark within a snapshot.">
-            <validValue name="BEGIN">0</validValue>
-            <validValue name="SECTION">1</validValue>
-            <validValue name="END">2</validValue>
+            <validValue name="BEGIN" description="Begin marker for a snapshot.">0</validValue>
+            <validValue name="SECTION" description="Section marker for a snapshot.">1</validValue>
+            <validValue name="END" description="End marker for a snapshot.">2</validValue>
         </enum>
         <enum name="ChangeType" encodingType="int32" description="Type of Cluster Change Event.">
-            <validValue name="JOIN">0</validValue>
-            <validValue name="QUIT">1</validValue>
+            <validValue name="JOIN" description="Join cluster as dynamic member.">0</validValue>
+            <validValue name="QUIT" description="Quit cluster as dynamic member.">1</validValue>
         </enum>
-        <enum name="ClusterTimeUnit" encodingType="int32" description="Type the time unit used for timestamps."
-              sinceVersion="4">
-            <validValue name="MILLIS">0</validValue>
-            <validValue name="MICROS">1</validValue>
-            <validValue name="NANOS">2</validValue>
+        <enum name="ClusterTimeUnit" encodingType="int32" description="Type the time unit used for timestamps.">
+            <validValue name="MILLIS" description="Time unit of milliseconds for timestamps.">0</validValue>
+            <validValue name="MICROS" description="Time unit of microseconds for timestamps.">1</validValue>
+            <validValue name="NANOS" description="Time unit of nanoseconds for timestamps.">2</validValue>
         </enum>
         <type name="time_t"    primitiveType="int64" description="Epoch time since 1 Jan 1970 UTC."/>
         <type name="version_t" primitiveType="int32" description="Protocol or application suite version."
-              presence="optional" nullValue="0" minValue="1" maxValue="16777215" sinceVersion="2"/>
+              presence="optional" nullValue="0" minValue="1" maxValue="16777215"/>
         <type name="capacity_t" primitiveType="int32" description="Capacity of a container."
-              presence="optional" nullValue="0" sinceVersion="3"/>
+              presence="optional" nullValue="0"/>
     </types>
 
-    <!--
-        Cluster Session Protocol
-        ========================
+<!--
+    Cluster Session Protocol
+    ========================
 
-        Session Protocol:
-            -> session-connect, *[session-message | session-keep-alive], session-close
-                      \
-            <-          +session-event, *[session-event | session-message | new-leader-event]
+    Session Protocol:
+        -> session-connect, *[session-message | session-keep-alive], session-close
+                          \
+        <-                 +session-event, *[session-event | session-message | new-leader-event]
 
-        1. Session Connect
-          - An attempt is made to establish a connection with the cluster via multicast or multi-destination-cast.
-          - If successful, a OK session-event will be sent in the return path with the list of endpoint destinations
-            for the cluster members. The leader will come first.
-          - Followers can respond with a REDIRECT code and a list of member endpoint destinations in the
-            detail that will have the leader first.
-          - If a change of leader occurs mid session then a new-leader-event will be sent from the new leader.
+    1. Session Connect
+        - An attempt is made to establish a connection with the cluster via multicast or multi-destination-cast.
+        - If successful, a OK session-event will be sent in the return path with the list of endpoint destinations
+          for the cluster members. The leader will come first.
+        - Followers can respond with a REDIRECT code and a list of member endpoint destinations in the
+          detail that will have the leader first.
+        - If a change of leader occurs mid session then a new-leader-event will be sent from the new leader.
 
-        2. Ingress/Egress Messages - Session Messages which make up application protocol.
-          - Messages are sent to a clustered service with a SessionMessageHeader followed by an application payload.
-          - The service may emit responses and events with a SessionMessageHeader followed by an application payload.
-          - The application protocol is the user defined messages for interacting with the service being clustered.
-          - Keep alive messages should be sent when insufficient ingress messages are sent to keep the session open.
+    2. Ingress/Egress Messages - Session Messages which make up application protocol.
+        - Messages are sent to a clustered service with a SessionMessageHeader followed by an application payload.
+        - The service may emit responses and events with a SessionMessageHeader followed by an application payload.
+        - The application protocol is the user defined messages for interacting with the service being clustered.
+        - Keep alive messages should be sent when insufficient ingress messages are sent to keep the session open.
 
-        3. Session Close
-          - A cluster session can be closed with a CloseSessionRequest
-          - If the session is not explicitly closed then it will timeout if the connection becomes unavailable.
+    3. Session Close
+        - A cluster session can be closed with a CloseSessionRequest
+        - If the session is not explicitly closed then it will timeout if the connection becomes unavailable.
 
-        Cluster Authentication Protocol
-        ===============================
+    Cluster Authentication Protocol
+    ===============================
 
-        Connect protocol can occur in multiple valid sequences
+    Connect protocol can occur in multiple valid sequences
 
-        1. Authenticated via Session Connect
-            -> session-connect, ...
-                      \
-            <-          *session-event (OK), ...
+    1. Authenticated via Session Connect
+        -> session-connect, ...
+                          \
+        <-                 *session-event (OK), ...
 
-        2. Authenticated via Challenge Response
-            -> session-connect,   challenge-response, ...
-                      \            /              \
-            <-          challenge,                  session-event (OK), ...
+    2. Authenticated via Challenge Response
+        -> session-connect           challenge-response, ...
+                          \         /                  \
+        <-                 challenge                    session-event (OK), ...
 
-        3. Rejected via Session Connect
-            -> session-connect
-                      \
-            <-          *session-event (AUTHENTICATION_REJECTED)
+    3. Rejected via Session Connect
+        -> session-connect
+                          \
+        <-                 *session-event (AUTHENTICATION_REJECTED)
 
-        4. Rejected via Challenge Response
-            -> session-connect,   challenge-response
-                      \            /              \
-            <-          challenge,                  session-event (AUTHENTICATION_REJECTED)
-
-    -->
+    4. Rejected via Challenge Response
+        -> session-connect           challenge-response
+                          \         /                  \
+        <-                 challenge                     session-event (AUTHENTICATION_REJECTED)
+-->
 
     <sbe:message name="SessionMessageHeader"
                  id="1"
@@ -139,11 +138,13 @@
         <field name="leadershipTermId"         id="3" type="int64"
                description="Current leadership term identifier."/>
         <field name="leaderMemberId"           id="4" type="int32"
-               description="current leader of the cluster."/>
+               description="Current leader of the cluster."/>
         <field name="code"                     id="5" type="EventCode"
                description="Code type of the response."/>
-        <data  name="detail"                   id="6" type="varAsciiEncoding"
-               description="Further detail such as an error message or list of cluster member endpoints."/>
+        <field name="version"                  id="6" type="version_t" presence="optional" sinceVersion="6"
+               description="Protocol version for the server using semantic version form."/>
+        <data  name="detail"                   id="7" type="varAsciiEncoding"
+               description="Further detail such as an error message or list of cluster ingress endpoints."/>
     </sbe:message>
 
     <sbe:message name="SessionConnectRequest"
@@ -176,7 +177,7 @@
         <field name="leadershipTermId"         id="1" type="int64"/>
         <field name="clusterSessionId"         id="2" type="int64"/>
         <field name="leaderMemberId"           id="3" type="int32"/>
-        <data  name="memberEndpoints"          id="4" type="varAsciiEncoding"/>
+        <data  name="ingressEndpoints"         id="4" type="varAsciiEncoding"/>
     </sbe:message>
 
     <sbe:message name="Challenge"
@@ -195,7 +196,7 @@
         <data  name="encodedCredentials"       id="3" type="varDataEncoding"/>
     </sbe:message>
 
-    <!-- Codecs for messages that get encoded into the log by the Consensus Module -->
+<!-- Codecs for messages that get encoded into the log by the Consensus Module -->
 
     <sbe:message name="TimerEvent"
                  id="20"
@@ -261,7 +262,7 @@
         <data  name="clusterMembers"           id="8" type="varAsciiEncoding"/>
     </sbe:message>
 
-    <!-- Messages for service control between clustered services and the Consensus Module -->
+<!-- Messages for the control protocol between clustered services, or cluster tool, and the Consensus Module -->
 
     <sbe:message name="CloseSession"
                  id="30"
@@ -296,14 +297,14 @@
                  id="34"
                  description="Request list of cluster members and passive followers to be sent.">
         <field name="correlationId"            id="1" type="int64"/>
+        <field name="extended"                 id="2" type="BooleanType" sinceVersion="5" presence="optional"/>
     </sbe:message>
 
     <sbe:message name="RemoveMember"
                  id="35"
                  description="Remove a cluster member either as normal member or passive member.">
-        <field name="correlationId"            id="1" type="int64"/>
-        <field name="memberId"                 id="2" type="int32"/>
-        <field name="isPassive"                id="3" type="BooleanType"/>
+        <field name="memberId"                 id="1" type="int32"/>
+        <field name="isPassive"                id="2" type="BooleanType"/>
     </sbe:message>
 
     <sbe:message name="JoinLog"
@@ -315,7 +316,8 @@
         <field name="memberId"                 id="4" type="int32"/>
         <field name="logSessionId"             id="5" type="int32"/>
         <field name="logStreamId"              id="6" type="int32"/>
-        <data  name="logChannel"               id="7" type="varAsciiEncoding"/>
+        <field name="isStartup"                id="7" type="BooleanType"/>
+        <data  name="logChannel"               id="8" type="varAsciiEncoding"/>
     </sbe:message>
 
     <sbe:message name="ClusterMembersResponse"
@@ -333,30 +335,55 @@
         <field name="logPosition"              id="1" type="int64"/>
     </sbe:message>
 
-    <sbe:message name="ElectionStartEvent"
+    <sbe:message name="ClusterMembersExtendedResponse"
                  id="43"
-                 description="Consensus Module instructing a service that an election has been entered at position.">
-        <field name="logPosition"              id="1" type="int64"/>
+                 description="Cluster Members status for active and passive members">
+        <field name="correlationId"            id="1" type="int64"/>
+        <field name="currentTimeNs"            id="2" type="time_t"/>
+        <field name="leaderMemberId"           id="3" type="int32"/>
+        <field name="memberId"                 id="4" type="int32"/>
+        <group name="activeMembers"            id="5" dimensionType="groupSizeEncoding">
+            <field name="leadershipTermId"     id="6" type="int64"/>
+            <field name="logPosition"          id="7" type="int64"/>
+            <field name="timeOfLastAppendNs"   id="8" type="time_t"/>
+            <field name="memberId"             id="9" type="int32"/>
+            <data name="ingressEndpoint"       id="10" type="varAsciiEncoding"/>
+            <data name="consensusEndpoint"     id="11" type="varAsciiEncoding"/>
+            <data name="logEndpoint"           id="12" type="varAsciiEncoding"/>
+            <data name="catchupEndpoint"       id="13" type="varAsciiEncoding"/>
+            <data name="archiveEndpoint"       id="14" type="varAsciiEncoding"/>
+        </group>
+        <group name="passiveMembers"           id="15" dimensionType="groupSizeEncoding">
+            <field name="leadershipTermId"     id="16" type="int64"/>
+            <field name="logPosition"          id="17" type="int64"/>
+            <field name="timeOfLastAppendNs"   id="18" type="time_t"/>
+            <field name="memberId"             id="19" type="int32"/>
+            <data name="ingressEndpoint"       id="20" type="varAsciiEncoding"/>
+            <data name="consensusEndpoint"     id="21" type="varAsciiEncoding"/>
+            <data name="logEndpoint"           id="22" type="varAsciiEncoding"/>
+            <data name="catchupEndpoint"       id="23" type="varAsciiEncoding"/>
+            <data name="archiveEndpoint"       id="24" type="varAsciiEncoding"/>
+        </group>
     </sbe:message>
 
-    <!--
-        Cluster Consensus Protocol
-        ==========================
+<!--
+    Cluster Consensus Protocol
+    ==========================
 
-        The leader replicates a log stream to all followers for its term as leader. Leadership term ids are monotonic.
+    The leader replicates a log stream to all followers for its term as leader. Leadership term ids are monotonic.
 
-        The followers persist the replicated log locally and send updates to the leader with the highest position they
-        have persisted. The log position is an accumulation of the term positions over the leadership terms.
-        Each leadership term starts with base log position for the accumulated term positions.
+    The followers persist the replicated log locally and send updates to the leader with the highest position they
+    have persisted. The log position is an accumulation of the term positions over the leadership terms.
+    Each leadership term starts with base log position for the accumulated term positions.
 
-        The leader gathers the positions reached by the followers, plus its own locally persisted log, and publishes
-        the highest position for a quorum of the member nodes including itself which can be committed to the state
-        machines. If the quorum position does not progress within a timeout then the latest position will be
-        re-transmitted as a heartbeat from the leader.
+    The leader gathers the positions reached by the followers, plus its own locally persisted log, and publishes
+    the highest position for a quorum of the member nodes including itself which can be committed to the state
+    machines. If the quorum position does not progress within a timeout then the latest position will be
+    re-transmitted as a heartbeat from the leader.
 
-        Messages are only valid within the context of a leadership term and all updates are applied as monotonically
-        increasing state.
-    -->
+    Messages are only valid within the context of a leadership term and all updates are applied as monotonically
+    increasing state.
+-->
 
     <sbe:message name="CanvassPosition"
                  id="50"
@@ -390,16 +417,18 @@
                  id="53"
                  description="A leader has been successfully elected and has begun a new term.">
         <field name="logLeadershipTermId"       id="1" type="int64"/>
-        <field name="leadershipTermId"          id="2" type="int64"/>
-        <field name="logPosition"               id="3" type="int64"/>
-        <field name="timestamp"                 id="4" type="time_t"/>
-        <field name="leaderMemberId"            id="5" type="int32"/>
-        <field name="logSessionId"              id="6" type="int32"/>
-        <field name="appVersion"                id="7" type="version_t"/>
+        <field name="logTruncatePosition"       id="2" type="int64"/>
+        <field name="leadershipTermId"          id="3" type="int64"/>
+        <field name="logPosition"               id="4" type="int64"/>
+        <field name="timestamp"                 id="5" type="time_t"/>
+        <field name="leaderMemberId"            id="6" type="int32"/>
+        <field name="logSessionId"              id="7" type="int32"/>
+        <field name="appVersion"                id="8" type="version_t"/>
+        <field name="isStartup"                 id="9" type="BooleanType"/>
     </sbe:message>
 
     <!-- keep this under 32 - 8 = 24 bytes for efficiency -->
-    <sbe:message name="AppendedPosition"
+    <sbe:message name="AppendPosition"
                  id="54"
                  description="The highest position a follower has appended to their local log.">
         <field name="leadershipTermId"         id="1" type="int64"/>
@@ -428,8 +457,7 @@
                  id="57"
                  description="The leader informs the follower it can stop the catchup process.">
         <field name="leadershipTermId"         id="1" type="int64"/>
-        <field name="logPosition"              id="2" type="int64"/>
-        <field name="followerMemberId"         id="3" type="int32"/>
+        <field name="followerMemberId"         id="2" type="int32"/>
     </sbe:message>
 
     <sbe:message name="AddPassiveMember"
@@ -492,7 +520,7 @@
 
     <sbe:message name="BackupQuery"
                  id="77"
-                 description="Query a leader for the info on latest backup information.">
+                 description="Query a leader for the latest backup information.">
         <field name="correlationId"            id="1"  type="int64"/>
         <field name="responseStreamId"         id="2"  type="int32"/>
         <field name="version"                  id="3"  type="version_t" presence="optional" sinceVersion="2"/>
@@ -522,7 +550,7 @@
         <data  name="clusterMembers"           id="16" type="varAsciiEncoding"/>
     </sbe:message>
 
-    <!-- Serialisation of major entities in addition to others above that can be in a snapshot -->
+<!-- Serialisation of major entities in addition to others above that can be in a snapshot -->
 
     <sbe:message name="SnapshotMarker"
                  id="100"

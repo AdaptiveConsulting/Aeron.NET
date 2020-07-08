@@ -8,8 +8,8 @@ namespace Adaptive.Aeron.Tests
         public void ShouldFindMaxCapacityWhenRequested()
         {
             
-            Assert.That(BufferBuilderUtil.FindSuitableCapacity(0, BufferBuilderUtil.MAX_CAPACITY), 
-                Is.EqualTo(BufferBuilderUtil.MAX_CAPACITY));
+            Assert.AreEqual(BufferBuilderUtil.MAX_CAPACITY, 
+                BufferBuilderUtil.FindSuitableCapacity(0, BufferBuilderUtil.MAX_CAPACITY));
         }
     }
 }

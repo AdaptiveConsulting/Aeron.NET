@@ -15,7 +15,6 @@ namespace Adaptive.Cluster.Service
         private readonly MessageHeaderDecoder messageHeaderDecoder = new MessageHeaderDecoder();
         private readonly JoinLogDecoder joinLogDecoder = new JoinLogDecoder();
         private readonly ServiceTerminationPositionDecoder serviceTerminationPositionDecoder = new ServiceTerminationPositionDecoder();
-        private readonly ElectionStartEventDecoder electionStartEventDecoder = new ElectionStartEventDecoder();
         
         public ServiceAdapter(Subscription subscription, ClusteredServiceAgent clusteredServiceAgent)
         {
@@ -61,6 +60,7 @@ namespace Adaptive.Cluster.Service
                         joinLogDecoder.MemberId(),
                         joinLogDecoder.LogSessionId(),
                         joinLogDecoder.LogStreamId(),
+                        joinLogDecoder.IsStartup() == BooleanType.TRUE,
                         joinLogDecoder.LogChannel());
                     break;
                 
@@ -72,16 +72,6 @@ namespace Adaptive.Cluster.Service
                         messageHeaderDecoder.Version());
                 
                     clusteredServiceAgent.OnServiceTerminationPosition(serviceTerminationPositionDecoder.LogPosition());
-                    break;
-                
-                case ElectionStartEventDecoder.TEMPLATE_ID:
-                    electionStartEventDecoder.Wrap(
-                        buffer,
-                        offset + MessageHeaderDecoder.ENCODED_LENGTH,
-                        messageHeaderDecoder.BlockLength(),
-                        messageHeaderDecoder.Version());
-
-                    clusteredServiceAgent.OnElectionStartEvent(electionStartEventDecoder.LogPosition());
                     break;
             }
         }

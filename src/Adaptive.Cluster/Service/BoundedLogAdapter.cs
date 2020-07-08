@@ -1,10 +1,12 @@
 ﻿using System;
 using Adaptive.Aeron;
 using Adaptive.Aeron.LogBuffer;
+using Adaptive.Aeron.Protocol;
 using Adaptive.Aeron.Status;
 using Adaptive.Agrona;
 using Adaptive.Cluster.Client;
 using Adaptive.Cluster.Codecs;
+using static Adaptive.Aeron.LogBuffer.FrameDescriptor;
 
 namespace Adaptive.Cluster.Service
 {
@@ -14,17 +16,17 @@ namespace Adaptive.Cluster.Service
     internal sealed class BoundedLogAdapter : IControlledFragmentHandler, IDisposable
     {
         private const int FRAGMENT_LIMIT = 100;
-        private const int INITIAL_BUFFER_LENGTH = 4096;
 
-        private static readonly int SESSION_HEADER_LENGTH =
-            MessageHeaderEncoder.ENCODED_LENGTH + SessionMessageHeaderEncoder.BLOCK_LENGTH;
+        private long maxLogPosition;
+        private Image image;
 
-        private readonly ImageControlledFragmentAssembler fragmentAssembler;
+        private readonly ClusteredServiceAgent agent;
+        private readonly BufferBuilder builder = new BufferBuilder();
         private readonly MessageHeaderDecoder messageHeaderDecoder = new MessageHeaderDecoder();
-        private readonly SessionOpenEventDecoder openEventDecoder = new SessionOpenEventDecoder();
-        private readonly SessionCloseEventDecoder closeEventDecoder = new SessionCloseEventDecoder();
         private readonly SessionMessageHeaderDecoder sessionHeaderDecoder = new SessionMessageHeaderDecoder();
         private readonly TimerEventDecoder timerEventDecoder = new TimerEventDecoder();
+        private readonly SessionOpenEventDecoder openEventDecoder = new SessionOpenEventDecoder();
+        private readonly SessionCloseEventDecoder closeEventDecoder = new SessionCloseEventDecoder();
         private readonly ClusterActionRequestDecoder actionRequestDecoder = new ClusterActionRequestDecoder();
 
         private readonly NewLeadershipTermEventDecoder newLeadershipTermEventDecoder =
@@ -32,39 +34,88 @@ namespace Adaptive.Cluster.Service
 
         private readonly MembershipChangeEventDecoder membershipChangeEventDecoder = new MembershipChangeEventDecoder();
 
-        private readonly Image image;
-        private readonly ReadableCounter upperBound;
-        private readonly ClusteredServiceAgent agent;
-
-        internal BoundedLogAdapter(Image image, ReadableCounter upperBound, ClusteredServiceAgent agent)
+        internal BoundedLogAdapter(ClusteredServiceAgent agent)
         {
-            fragmentAssembler = new ImageControlledFragmentAssembler(this, INITIAL_BUFFER_LENGTH);
-            this.image = image;
-            this.upperBound = upperBound;
             this.agent = agent;
         }
 
         public void Dispose()
         {
-            image.Subscription?.Dispose();
+            if (null != image)
+            {
+                image.Subscription?.Dispose();
+                image = null;
+            }
+        }
+
+        public ControlledFragmentHandlerAction OnFragment(IDirectBuffer buffer, int offset, int length, Header header)
+        {
+            ControlledFragmentHandlerAction action = ControlledFragmentHandlerAction.CONTINUE;
+            byte flags = header.Flags;
+
+            if ((flags & UNFRAGMENTED) == UNFRAGMENTED)
+            {
+                action = OnMessage(buffer, offset, length, header);
+            }
+            else
+            {
+                if ((flags & BEGIN_FRAG_FLAG) == BEGIN_FRAG_FLAG)
+                {
+                    builder.Reset().Append(buffer, offset, length);
+                }
+                else
+                {
+                    int limit = builder.Limit();
+                    if (limit > 0)
+                    {
+                        builder.Append(buffer, offset, length);
+
+                        if ((flags & END_FRAG_FLAG) == END_FRAG_FLAG)
+                        {
+                            action = OnMessage(builder.Buffer(), 0, builder.Limit(), header);
+
+                            if (ControlledFragmentHandlerAction.ABORT == action)
+                            {
+                                builder.Limit(limit);
+                            }
+                            else
+                            {
+                                builder.Reset();
+                            }
+                        }
+                    }
+                }
+            }
+
+            return action;
+        }
+
+        internal void MaxLogPosition(long position)
+        {
+            maxLogPosition = position;
         }
 
         public bool IsDone()
         {
-            return image.IsEndOfStream || image.Closed;
+            return image.Position >= maxLogPosition || image.IsEndOfStream || image.Closed;
         }
 
-        public long Position()
+        internal void Image(Image image)
         {
-            return image.Position;
+            this.image = image;
         }
 
-        public int Poll()
+        internal Image Image()
         {
-            return image.BoundedControlledPoll(fragmentAssembler, upperBound.Get(), FRAGMENT_LIMIT);
+            return image;
         }
 
-        public ControlledFragmentHandlerAction OnFragment(IDirectBuffer buffer, int offset, int length, Header header)
+        public int Poll(long limit)
+        {
+            return image.BoundedControlledPoll(this, limit, FRAGMENT_LIMIT);
+        }
+
+        private ControlledFragmentHandlerAction OnMessage(IDirectBuffer buffer, int offset, int length, Header header)
         {
             messageHeaderDecoder.Wrap(buffer, offset);
             int templateId = messageHeaderDecoder.TemplateId();
@@ -89,8 +140,8 @@ namespace Adaptive.Cluster.Service
                     sessionHeaderDecoder.ClusterSessionId(),
                     sessionHeaderDecoder.Timestamp(),
                     buffer,
-                    offset + SESSION_HEADER_LENGTH,
-                    length - SESSION_HEADER_LENGTH,
+                    offset + AeronCluster.SESSION_HEADER_LENGTH,
+                    length - AeronCluster.SESSION_HEADER_LENGTH,
                     header);
 
                 return ControlledFragmentHandlerAction.CONTINUE;
@@ -173,7 +224,7 @@ namespace Adaptive.Cluster.Service
                     var clusterTimeUnit = newLeadershipTermEventDecoder.TimeUnit() == ClusterTimeUnit.NULL_VALUE
                         ? ClusterTimeUnit.MILLIS
                         : newLeadershipTermEventDecoder.TimeUnit();
-                    
+
                     agent.OnNewLeadershipTermEvent(
                         newLeadershipTermEventDecoder.LeadershipTermId(),
                         newLeadershipTermEventDecoder.LogPosition(),
@@ -195,14 +246,10 @@ namespace Adaptive.Cluster.Service
                     );
 
                     agent.OnMembershipChange(
-                        membershipChangeEventDecoder.LeadershipTermId(),
                         membershipChangeEventDecoder.LogPosition(),
                         membershipChangeEventDecoder.Timestamp(),
-                        membershipChangeEventDecoder.LeaderMemberId(),
-                        membershipChangeEventDecoder.ClusterSize(),
                         membershipChangeEventDecoder.ChangeType(),
-                        membershipChangeEventDecoder.MemberId(),
-                        membershipChangeEventDecoder.ClusterMembers());
+                        membershipChangeEventDecoder.MemberId());
                     break;
             }
 

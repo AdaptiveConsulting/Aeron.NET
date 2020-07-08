@@ -5,21 +5,21 @@ using System.Collections.Generic;
 using Adaptive.Agrona;
 
 
-namespace Adaptive.Cluster.Codecs {
+namespace Adaptive.Archiver.Codecs {
 
-public class AppendedPositionEncoder
+public class StopRecordingByIdentityRequestEncoder
 {
-    public const ushort BLOCK_LENGTH = 20;
-    public const ushort TEMPLATE_ID = 54;
-    public const ushort SCHEMA_ID = 111;
+    public const ushort BLOCK_LENGTH = 24;
+    public const ushort TEMPLATE_ID = 65;
+    public const ushort SCHEMA_ID = 101;
     public const ushort SCHEMA_VERSION = 4;
 
-    private AppendedPositionEncoder _parentMessage;
+    private StopRecordingByIdentityRequestEncoder _parentMessage;
     private IMutableDirectBuffer _buffer;
     protected int _offset;
     protected int _limit;
 
-    public AppendedPositionEncoder()
+    public StopRecordingByIdentityRequestEncoder()
     {
         _parentMessage = this;
     }
@@ -59,7 +59,7 @@ public class AppendedPositionEncoder
         return _offset;
     }
 
-    public AppendedPositionEncoder Wrap(IMutableDirectBuffer buffer, int offset)
+    public StopRecordingByIdentityRequestEncoder Wrap(IMutableDirectBuffer buffer, int offset)
     {
         this._buffer = buffer;
         this._offset = offset;
@@ -68,7 +68,7 @@ public class AppendedPositionEncoder
         return this;
     }
 
-    public AppendedPositionEncoder WrapAndApplyHeader(
+    public StopRecordingByIdentityRequestEncoder WrapAndApplyHeader(
         IMutableDirectBuffer buffer, int offset, MessageHeaderEncoder headerEncoder)
     {
         headerEncoder
@@ -96,98 +96,98 @@ public class AppendedPositionEncoder
         this._limit = limit;
     }
 
-    public static int LeadershipTermIdEncodingOffset()
+    public static int ControlSessionIdEncodingOffset()
     {
         return 0;
     }
 
-    public static int LeadershipTermIdEncodingLength()
+    public static int ControlSessionIdEncodingLength()
     {
         return 8;
     }
 
-    public static long LeadershipTermIdNullValue()
+    public static long ControlSessionIdNullValue()
     {
         return -9223372036854775808L;
     }
 
-    public static long LeadershipTermIdMinValue()
+    public static long ControlSessionIdMinValue()
     {
         return -9223372036854775807L;
     }
 
-    public static long LeadershipTermIdMaxValue()
+    public static long ControlSessionIdMaxValue()
     {
         return 9223372036854775807L;
     }
 
-    public AppendedPositionEncoder LeadershipTermId(long value)
+    public StopRecordingByIdentityRequestEncoder ControlSessionId(long value)
     {
         _buffer.PutLong(_offset + 0, value, ByteOrder.LittleEndian);
         return this;
     }
 
 
-    public static int LogPositionEncodingOffset()
+    public static int CorrelationIdEncodingOffset()
     {
         return 8;
     }
 
-    public static int LogPositionEncodingLength()
+    public static int CorrelationIdEncodingLength()
     {
         return 8;
     }
 
-    public static long LogPositionNullValue()
+    public static long CorrelationIdNullValue()
     {
         return -9223372036854775808L;
     }
 
-    public static long LogPositionMinValue()
+    public static long CorrelationIdMinValue()
     {
         return -9223372036854775807L;
     }
 
-    public static long LogPositionMaxValue()
+    public static long CorrelationIdMaxValue()
     {
         return 9223372036854775807L;
     }
 
-    public AppendedPositionEncoder LogPosition(long value)
+    public StopRecordingByIdentityRequestEncoder CorrelationId(long value)
     {
         _buffer.PutLong(_offset + 8, value, ByteOrder.LittleEndian);
         return this;
     }
 
 
-    public static int FollowerMemberIdEncodingOffset()
+    public static int RecordingIdEncodingOffset()
     {
         return 16;
     }
 
-    public static int FollowerMemberIdEncodingLength()
+    public static int RecordingIdEncodingLength()
     {
-        return 4;
+        return 8;
     }
 
-    public static int FollowerMemberIdNullValue()
+    public static long RecordingIdNullValue()
     {
-        return -2147483648;
+        return -9223372036854775808L;
     }
 
-    public static int FollowerMemberIdMinValue()
+    public static long RecordingIdMinValue()
     {
-        return -2147483647;
+        return -9223372036854775807L;
     }
 
-    public static int FollowerMemberIdMaxValue()
+    public static long RecordingIdMaxValue()
     {
-        return 2147483647;
+        return 9223372036854775807L;
     }
 
-    public AppendedPositionEncoder FollowerMemberId(int value)
+    public StopRecordingByIdentityRequestEncoder RecordingId(long value)
     {
-        _buffer.PutInt(_offset + 16, value, ByteOrder.LittleEndian);
+        _buffer.PutLong(_offset + 16, value, ByteOrder.LittleEndian);
         return this;
     }
 
@@ -200,7 +200,7 @@ public class AppendedPositionEncoder
 
     public StringBuilder AppendTo(StringBuilder builder)
     {
-        AppendedPositionDecoder writer = new AppendedPositionDecoder();
+        StopRecordingByIdentityRequestDecoder writer = new StopRecordingByIdentityRequestDecoder();
         writer.Wrap(_buffer, _offset, BLOCK_LENGTH, SCHEMA_VERSION);
 
         return writer.AppendTo(builder);
