@@ -224,12 +224,14 @@ namespace Adaptive.Aeron.Tests
             A.CallTo(() => LogBuffersFactory.Map(SESSION_ID_1 + "-log")).MustHaveHappened();
         }
 
+        # if NETFULL
         [Test]
         [Timeout(5000)]
         public void AddPublicationShouldTimeoutWithoutReadyMessage()
         {
             Assert.Throws(typeof(DriverTimeoutException), () => Conductor.AddPublication(CHANNEL, STREAM_ID_1));
         }
+        #endif
 
         [Test]
         public void ClosingPublicationShouldNotifyMediaDriver()
@@ -376,12 +378,14 @@ namespace Adaptive.Aeron.Tests
             A.CallTo(() => DriverProxy.RemoveSubscription(CORRELATION_ID)).MustHaveHappened();
         }
         
+        #if NETFULL
         [Test]
         [Timeout(5000)]
         public void AddSubscriptionShouldTimeoutWithoutOperationSuccessful()
         {
             Assert.Throws(typeof(DriverTimeoutException), () => Conductor.AddSubscription(CHANNEL, STREAM_ID_1));
         }
+        #endif
         
         [Test]
         public void ShouldFailToAddSubscriptionOnMediaDriverError()

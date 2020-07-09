@@ -26,15 +26,16 @@
     <DefineConstants>$(DefineConstants);NET45;NETFULL</DefineConstants>
   </PropertyGroup>
   <ItemGroup Condition=" '$(Configuration)' == 'Debug' ">
-    <PackageReference Include="Fody" Version="6.2.0">
+    <PackageReference Include="Fody" Version="3.2.16">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Virtuosity.Fody" Version="3.1.0">
-      <PrivateAssets>all</PrivateAssets>
-    </PackageReference>
+    <PackageReference Include="Virtuosity.Fody" Version="1.21.3" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="4.7.1" />
+    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="4.5.2" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Remove="FodyWeavers.xsd" />
   </ItemGroup>
 </Project>
