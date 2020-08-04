@@ -151,7 +151,7 @@ namespace Adaptive.Agrona.Concurrent.Status
         /// <summary>
         /// Free the counter slot for reuse.
         /// </summary>
-        public void Dispose()
+        public virtual void Dispose()
         {
             if (!IsClosed)
             {
