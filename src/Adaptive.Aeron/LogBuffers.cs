@@ -40,6 +40,14 @@ namespace Adaptive.Aeron
         private readonly UnsafeBuffer _logMetaDataBuffer;
         private readonly MappedByteBuffer[] _mappedByteBuffers;
 
+        // ReSharper disable once UnusedMember.Global
+        //
+        // Necessary for testing
+        internal LogBuffers()
+        {
+            
+        }
+        
         /// <summary>
         /// Construct the log buffers for a given log file.
         /// </summary>
