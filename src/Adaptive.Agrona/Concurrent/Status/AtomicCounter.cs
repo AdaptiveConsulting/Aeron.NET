@@ -48,7 +48,7 @@ namespace Adaptive.Agrona.Concurrent.Status
             Id = counterId;
             _countersManager = countersManager;
             _offset = CountersReader.CounterOffset(counterId);
-            buffer.PutLong(_offset, 0);
+            buffer.BoundsCheck(_offset, BitUtil.SIZE_OF_LONG);
         }
 
         /// <summary>
@@ -151,7 +151,7 @@ namespace Adaptive.Agrona.Concurrent.Status
         /// <summary>
         /// Free the counter slot for reuse.
         /// </summary>
-        public virtual void Dispose()
+        public void Dispose()
         {
             if (!IsClosed)
             {
