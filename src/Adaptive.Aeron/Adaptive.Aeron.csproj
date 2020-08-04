@@ -7,7 +7,7 @@
     <Company>Adaptive Financial Consulting Ltd.</Company>
     <Product>Aeron Client</Product>
     <Copyright>Copyright 2018</Copyright>
-    <PackageLicenseUrl>https://github.com/AdaptiveConsulting/Aeron.NET/blob/master/LICENSE</PackageLicenseUrl>
+    <PackageLicense>https://github.com/AdaptiveConsulting/Aeron.NET/blob/master/LICENSE</PackageLicense>
     <PackageProjectUrl>https://github.com/AdaptiveConsulting/Aeron.NET/</PackageProjectUrl>
     <PackageIconUrl>https://raw.githubusercontent.com/AdaptiveConsulting/Aeron.NET/master/images/adaptive.png</PackageIconUrl>
     <Description>Efficient reliable UDP unicast, UDP multicast, and IPC transport protocol.</Description>

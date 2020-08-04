@@ -8,7 +8,7 @@
     <Company>Adaptive Financial Consulting Ltd.</Company>
     <Product>Archiving over the Aeron transport</Product>
     <Copyright>Copyright 2020</Copyright>
-    <PackageLicenseUrl>https://github.com/AdaptiveConsulting/Aeron.NET/blob/master/LICENSE</PackageLicenseUrl>
+    <PackageLicense>https://github.com/AdaptiveConsulting/Aeron.NET/blob/master/LICENSE</PackageLicense>
     <PackageProjectUrl>https://github.com/AdaptiveConsulting/Aeron.NET/</PackageProjectUrl>
     <PackageIconUrl>https://raw.githubusercontent.com/AdaptiveConsulting/Aeron.NET/master/images/adaptive.png</PackageIconUrl>
     <Description>Archiving over the Aeron transport</Description>
