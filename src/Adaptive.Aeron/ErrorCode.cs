@@ -67,7 +67,7 @@ namespace Adaptive.Aeron
         NOT_SUPPORTED = 8,
 
         /// <summary>
-        /// Attempted to send a command that had a host name the could be resolved.
+        /// Attempted to send a command that had a host name that could not be resolved.
         /// </summary>
         UNKNOWN_HOST = 9,
 

@@ -43,6 +43,7 @@ namespace Adaptive.Aeron
         private bool? _tether;
         private bool? group;
         private bool? rejoin;
+        private bool? ssc;
         private bool _isSessionIdTagged;
 
         /// <summary>
@@ -1026,7 +1027,7 @@ namespace Adaptive.Aeron
         }
 
         /// <summary>
-        /// Set the alias for a URI. Alias's are not interpreted by Aeron and are to be used by the application
+        /// Set the alias for a URI. Alias's are not interpreted by Aeron and are to be used by the application.
         /// </summary>
         /// <param name="alias"> for the URI. </param>
         /// <returns> this for a fluent API. </returns>
@@ -1059,7 +1060,7 @@ namespace Adaptive.Aeron
         }
 
         /// <summary>
-        /// Set the congestion control algorithm to be used on a channel.
+        /// Set the congestion control algorithm to be used on a stream.
         /// </summary>
         /// <param name="congestionControl"> for the URI. </param>
         /// <returns> this for a fluent API. </returns>
@@ -1082,7 +1083,7 @@ namespace Adaptive.Aeron
         }
 
         /// <summary>
-        /// Get the congestion control algorithm to be used on a channel.
+        /// Get the congestion control algorithm to be used on a stream.
         /// </summary>
         /// <returns> congestion control strategy for the channel. </returns>
         /// <seealso cref="Aeron.Context.CONGESTION_CONTROL_PARAM_NAME"/>
@@ -1092,7 +1093,7 @@ namespace Adaptive.Aeron
         }
 
         /// <summary>
-        /// Set the flow control strategy to be used on a channel.
+        /// Set the flow control strategy to be used on a stream.
         /// </summary>
         /// <param name="flowControl"> for the URI. </param>
         /// <returns> this for a fluent API. </returns>
@@ -1104,10 +1105,10 @@ namespace Adaptive.Aeron
         }
 
         /// <summary>
-        /// Set tagged flow control settings to be used on channel.  All specified values may be null and the default
+        /// Set tagged flow control settings to be used on stream. All specified values may be null and the default
         /// specified in the MediaDriver.Context will be used instead.
         /// </summary>
-        /// <param name="groupTag">  receiver tag for this channel. </param>
+        /// <param name="groupTag">  receiver tag for this stream. </param>
         /// <param name="minGroupSize"> group size required to allow publications for this channel to be move to connected status. </param>
         /// <param name="timeout">      timeout receivers, default is ns, but allows suffixing of time units (e.g. 5s). </param>
         /// <returns> this for fluent API. </returns>
@@ -1140,12 +1141,11 @@ namespace Adaptive.Aeron
             return FlowControl(flowControlValue);
         }
 
-
         /// <summary>
-        /// Set min flow control settings to be used on channel.  All specified values may be null and the default
+        /// Set min flow control settings to be used on a stream. All specified values may be null and the default
         /// specified in the MediaDriver.Context will be used instead.
         /// </summary>
-        /// <param name="minGroupSize"> group size required to allow publications for this channel to be move to connected status. </param>
+        /// <param name="minGroupSize"> group size required to allow publications for this stream to be move to connected status. </param>
         /// <param name="timeout">      timeout receivers, default is ns, but allows suffixing of time units (e.g. 5s). </param>
         /// <returns> this for fluent API. </returns>
         public ChannelUriStringBuilder MinFlowControl(int? minGroupSize, string timeout)
@@ -1179,9 +1179,9 @@ namespace Adaptive.Aeron
         }
 
         /// <summary>
-        /// Get the flow control strategy to be used on a channel.
+        /// Get the flow control strategy to be used on a stream.
         /// </summary>
-        /// <returns> flow control strategy for the channel. </returns>
+        /// <returns> flow control strategy for the stream. </returns>
         /// <seealso cref="Aeron.Context.FLOW_CONTROL_PARAM_NAME"/>
         public string FlowControl()
         {
@@ -1189,7 +1189,7 @@ namespace Adaptive.Aeron
         }
 
         /// <summary>
-        /// Set the group tag (gtag) to be sent in SMs.
+        /// Set the group tag (gtag) to be sent in SMs (Status Messages).
         /// </summary>
         /// <param name="groupTag"> to be sent in SMs </param>
         /// <returns> this for fluent API. </returns>
@@ -1201,7 +1201,7 @@ namespace Adaptive.Aeron
         }
 
         /// <summary>
-        /// Set the receiver tag to be value which is in the <seealso cref="ChannelUri"/> which may be null.
+        /// Set the group tag (gtag) to be the value which is in the <seealso cref="ChannelUri"/> which may be null.
         /// </summary>
         /// <param name="channelUri"> to read the value from. </param>
         /// <returns> this for a fluent API. </returns>
@@ -1221,7 +1221,7 @@ namespace Adaptive.Aeron
         }
 
         /// <summary>
-        /// Get the group tag (gtag) to be sent in SMs.
+        /// Get the group tag (gtag) to be sent in SMs (Status Messages).
         /// </summary>
         /// <returns> receiver tag to be sent in SMs. </returns>
         /// <seealso cref="Aeron.Context.GROUP_TAG_PARAM_NAME"/>
@@ -1270,6 +1270,49 @@ namespace Adaptive.Aeron
         public bool? Rejoin()
         {
             return rejoin;
+        }
+        
+        /// <summary>
+        /// Set the publication semantics for whether the presence of spy subscriptions simulate a connection.
+        /// </summary>
+        /// <param name="spiesSimulateConnection"> true if the presence of spy subscriptions simulate a connection. </param>
+        /// <returns> this for a fluent API. </returns>
+        /// <seealso cref="Aeron.Context.SPIES_SIMULATE_CONNECTION_PARAM_NAME"></seealso>
+        public ChannelUriStringBuilder SpiesSimulateConnection(bool? spiesSimulateConnection)
+        {
+            this.ssc = spiesSimulateConnection;
+            return this;
+        }
+
+        /// <summary>
+        /// Set the publication semantics for whether the presence of spy subscriptions simulate a connection to be what is in
+        /// the <seealso cref="ChannelUri"/> which may be null.
+        /// </summary>
+        /// <param name="channelUri"> to read the value from. </param>
+        /// <returns> this for a fluent API. </returns>
+        /// <seealso cref="Aeron.Context.SPIES_SIMULATE_CONNECTION_PARAM_NAME"></seealso>
+        public ChannelUriStringBuilder SpiesSimulateConnection(ChannelUri channelUri)
+        {
+            string sscValue = channelUri.Get(Aeron.Context.SPIES_SIMULATE_CONNECTION_PARAM_NAME);
+            if (null == sscValue)
+            {
+                ssc = null;
+                return this;
+            }
+            else
+            {
+                return SpiesSimulateConnection(Convert.ToBoolean(sscValue));
+            }
+        }
+
+        /// <summary>
+        /// Get the publication semantics for whether the presence of spy subscriptions simulate a connection.
+        /// </summary>
+        /// <returns> true if the presence of spy subscriptions simulate a connection, otherwise false. </returns>
+        /// <seealso cref="Aeron.Context.SPIES_SIMULATE_CONNECTION_PARAM_NAME"></seealso>
+        public bool? SpiesSimulateConnection()
+        {
+            return ssc;
         }
 
         /// <summary>
@@ -1429,6 +1472,11 @@ namespace Adaptive.Aeron
                 _sb.Append(Aeron.Context.REJOIN_PARAM_NAME).Append('=').Append(rejoin).Append('|');
             }
             
+            if (null != ssc)
+            {
+                _sb.Append(Aeron.Context.SPIES_SIMULATE_CONNECTION_PARAM_NAME).Append('=').Append(ssc).Append('|');
+            }
+            
             char lastChar = _sb[_sb.Length - 1];
             if (lastChar == '|' || lastChar == '?')
             {
@@ -1436,6 +1484,11 @@ namespace Adaptive.Aeron
             }
 
             return _sb.ToString();
+        }
+
+        public override string ToString()
+        {
+            return Build();
         }
 
         private static string PrefixTag(bool isTagged, int value)

@@ -80,7 +80,7 @@ namespace Adaptive.Aeron.Protocol
         /// <summary>
         /// Get the fragment length field from the header.
         /// </summary>
-        /// <param name="termBuffer">  container the header. </param>
+        /// <param name="termBuffer">  containing the header. </param>
         /// <param name="frameOffset"> in the buffer where the header starts. </param>
         /// <returns> the fragment length field from the header. </returns>
         public static int FragmentLength(UnsafeBuffer termBuffer, int frameOffset)
@@ -121,7 +121,7 @@ namespace Adaptive.Aeron.Protocol
         /// <summary>
         /// Get the session-id field from the header.
         /// </summary>
-        /// <param name="termBuffer">  container the header. </param>
+        /// <param name="termBuffer">  containing the header. </param>
         /// <param name="frameOffset"> in the buffer where the header starts. </param>
         /// <returns> the session-id field from the header. </returns>
         public static int SessionId(UnsafeBuffer termBuffer, int frameOffset)
@@ -184,7 +184,7 @@ namespace Adaptive.Aeron.Protocol
         /// <summary>
         /// Get the term-id field from the header.
         /// </summary>
-        /// <param name="termBuffer">  container the header. </param>
+        /// <param name="termBuffer">  containing the header. </param>
         /// <param name="frameOffset"> in the buffer where the header starts. </param>
         /// <returns> the term-id field from the header. </returns>
         public static int TermId(UnsafeBuffer termBuffer, int frameOffset)

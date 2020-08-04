@@ -11,7 +11,16 @@ namespace Adaptive.Cluster.Service
 {
     /// <summary>
     /// Interface for a <seealso cref="IClusteredService"/> to interact with cluster hosting it.
+    /// <para>
+    /// This object should only be used to send messages to the cluster or schedule timers in response to other messages
+    /// and timers. Sending messages and timers should not happen from cluster lifecycle methods like
+    /// <seealso cref="IClusteredService.OnStart(ICluster, Image)"/>, <seealso cref="IClusteredService.OnRoleChange(ClusterRole)"/> or
+    /// <seealso cref="IClusteredService.OnTakeSnapshot(ExclusivePublication)"/>, or <seealso cref="IClusteredService.OnTerminate(ICluster)"/>,
+    /// with the exception of the session lifecycle methods <seealso cref="IClusteredService.OnSessionOpen(ClientSession, long)"/> and
+    /// <seealso cref="IClusteredService.OnSessionClose(ClientSession, long, CloseReason)"/>.
+    /// </para>
     /// </summary>
+
     public interface ICluster
     {
         /// <summary>

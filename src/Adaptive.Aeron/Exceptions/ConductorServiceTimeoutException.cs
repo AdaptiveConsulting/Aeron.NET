@@ -18,6 +18,10 @@ namespace Adaptive.Aeron.Exceptions
 {
     /// <summary>
     /// A timeout has occurred between service calls for the client conductor.
+    /// <para>
+    /// This is likely to occur due to GC or resource starvation where the client conductor thread has not being able to
+    /// run within the <code>aeron.client.liveness.timeout</code> property set on the media driver.
+    /// </para>
     /// </summary>
     public class ConductorServiceTimeoutException : AeronTimeoutException
     {

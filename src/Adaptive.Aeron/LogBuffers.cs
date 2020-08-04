@@ -30,19 +30,15 @@ namespace Adaptive.Aeron
     /// Takes a log file name and maps the file into memory and wraps it with <seealso cref="UnsafeBuffer"/>s as appropriate.
     /// </summary>
     /// <seealso cref="LogBufferDescriptor" />
-    public class LogBuffers : IDisposable, IManagedResource
+    public class LogBuffers : IDisposable
     {
-        private long _timeOfLastStateChangeNs;
+        private long lingerDeadlineNs = long.MaxValue;
         private int _refCount;
 
         private readonly int _termLength;
         private readonly UnsafeBuffer[] _termBuffers = new UnsafeBuffer[LogBufferDescriptor.PARTITION_COUNT];
         private readonly UnsafeBuffer _logMetaDataBuffer;
         private readonly MappedByteBuffer[] _mappedByteBuffers;
-
-        internal LogBuffers()
-        {
-        }
 
         /// <summary>
         /// Construct the log buffers for a given log file.
@@ -200,19 +196,14 @@ namespace Adaptive.Aeron
             return --_refCount;
         }
 
-        public void TimeOfLastStateChange(long timeNs)
+        public void LingerDeadlineNs(long timeNs)
         {
-            _timeOfLastStateChangeNs = timeNs;
+            lingerDeadlineNs = timeNs;
         }
 
-        public long TimeOfLastStateChange()
+        public long LingerDeadlineNs()
         {
-            return _timeOfLastStateChangeNs;
-        }
-
-        public void Delete()
-        {
-            Dispose();
+            return lingerDeadlineNs;
         }
     }
 }

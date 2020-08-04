@@ -559,7 +559,7 @@ namespace Adaptive.Cluster.Client
         /// <summary>
         /// Send a keep alive message to the cluster to keep this session open.
         ///
-        /// Note: keepalives can fail during a leadership transition. The consumer should continue to call
+        /// Note: Sending keep-alives can fail during a leadership transition. The application should continue to call
         /// <see cref="PollEgress"/> to ensure a connection to the new leader is established.
         /// 
         /// </summary>
@@ -776,7 +776,7 @@ namespace Adaptive.Cluster.Client
         public class Configuration
         {
             public const int PROTOCOL_MAJOR_VERSION = 0;
-            public const int PROTOCOL_MINOR_VERSION = 0;
+            public const int PROTOCOL_MINOR_VERSION = 1;
             public const int PROTOCOL_PATCH_VERSION = 1;
 
             public static readonly int PROTOCOL_SEMANTIC_VERSION =
@@ -1427,7 +1427,6 @@ namespace Adaptive.Cluster.Client
             private int leaderMemberId;
             private int step = 0;
             private int messageLength = 0;
-            private bool isChallenged = false;
 
             private readonly Context ctx;
             private readonly INanoClock nanoClock;
@@ -1515,12 +1514,7 @@ namespace Adaptive.Cluster.Client
                 {
                     aeronCluster = NewInstance();
                     ingressPublication = null;
-                    MemberIngress endpoint = memberByIdMap[leaderMemberId];
-                    if (null != endpoint)
-                    {
-                        endpoint.publication = null;
-                    }
-
+                    memberByIdMap.Remove(leaderMemberId);
                     CloseHelper.CloseAll(memberByIdMap.Values);
 
                     Step(5);
@@ -1535,7 +1529,9 @@ namespace Adaptive.Cluster.Client
 
                 if (deadlineNs - nanoClock.NanoTime() < 0)
                 {
-                    throw new AeronTimeoutException("connect timeout, step=" + step, Category.ERROR);
+                    throw new AeronTimeoutException(
+                        "connect timeout, step=" + step + " egress.isConnected=" + egressSubscription.IsConnected,
+                        Category.ERROR);
                 }
             }
 
@@ -1580,22 +1576,20 @@ namespace Adaptive.Cluster.Client
 
             private void PrepareConnectRequest()
             {
-                if (Aeron.Aeron.NULL_VALUE == correlationId || isChallenged)
-                {
-                    correlationId = ctx.Aeron().NextCorrelationId();
-                    var encodedCredentials = ctx.CredentialsSupplier().EncodedCredentials();
 
-                    var encoder = new SessionConnectRequestEncoder();
-                    encoder
-                        .WrapAndApplyHeader(buffer, 0, messageHeaderEncoder)
-                        .CorrelationId(correlationId)
-                        .ResponseStreamId(ctx.EgressStreamId())
-                        .Version(Configuration.PROTOCOL_SEMANTIC_VERSION)
-                        .ResponseChannel(ctx.EgressChannel())
-                        .PutEncodedCredentials(encodedCredentials, 0, encodedCredentials.Length);
+                correlationId = ctx.Aeron().NextCorrelationId();
+                var encodedCredentials = ctx.CredentialsSupplier().EncodedCredentials();
 
-                    messageLength = MessageHeaderEncoder.ENCODED_LENGTH + encoder.EncodedLength();
-                }
+                var encoder = new SessionConnectRequestEncoder();
+                encoder
+                    .WrapAndApplyHeader(buffer, 0, messageHeaderEncoder)
+                    .CorrelationId(correlationId)
+                    .ResponseStreamId(ctx.EgressStreamId())
+                    .Version(Configuration.PROTOCOL_SEMANTIC_VERSION)
+                    .ResponseChannel(ctx.EgressChannel())
+                    .PutEncodedCredentials(encodedCredentials, 0, encodedCredentials.Length);
+
+                messageLength = MessageHeaderEncoder.ENCODED_LENGTH + encoder.EncodedLength();
 
                 Step(2);
             }
@@ -1620,7 +1614,7 @@ namespace Adaptive.Cluster.Client
                 {
                     if (egressPoller.IsChallenged())
                     {
-                        isChallenged = true;
+                        correlationId = Aeron.Aeron.NULL_VALUE;
                         clusterSessionId = egressPoller.ClusterSessionId();
                         PrepareChallengeResponse(ctx.CredentialsSupplier()
                             .OnChallenge(egressPoller.EncodedChallenge()));
@@ -1661,7 +1655,7 @@ namespace Adaptive.Cluster.Client
                     .PutEncodedCredentials(encodedCredentials, 0, encodedCredentials.Length);
 
                 messageLength = MessageHeaderEncoder.ENCODED_LENGTH + encoder.EncodedLength();
-                
+
                 Step(2);
             }
 
@@ -1722,7 +1716,7 @@ namespace Adaptive.Cluster.Client
                 publication?.Dispose();
                 publication = null;
             }
-            
+
             public override string ToString()
             {
                 return "MemberEndpoint{" +

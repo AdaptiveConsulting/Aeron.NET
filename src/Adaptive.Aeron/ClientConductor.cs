@@ -38,7 +38,6 @@ namespace Adaptive.Aeron
     {
         private const long NO_CORRELATION_ID = Aeron.NULL_VALUE;
 
-        private readonly long _resourceLingerDurationNs;
         private readonly long _keepAliveIntervalNs;
         private readonly long _driverTimeoutMs;
         private readonly long _driverTimeoutNs;
@@ -63,8 +62,8 @@ namespace Adaptive.Aeron
         private readonly IDictionary<long, LogBuffers> _logBuffersByIdMap =
             new DefaultDictionary<long, LogBuffers>(null);
 
+        private readonly List<LogBuffers> _lingeringLogBuffers = new List<LogBuffers>();
         private readonly IDictionary<long, object> _resourceByRegIdMap = new DefaultDictionary<long, object>(null);
-        private readonly List<IManagedResource> _lingeringResources = new List<IManagedResource>();
         private readonly HashSet<long> _asyncCommandIdSet = new HashSet<long>();
         private readonly AvailableImageHandler _defaultAvailableImageHandler;
         private readonly UnavailableImageHandler _defaultUnavailableImageHandler;
@@ -96,7 +95,6 @@ namespace Adaptive.Aeron
             _driverProxy = ctx.DriverProxy();
             _logBuffersFactory = ctx.LogBuffersFactory();
             _keepAliveIntervalNs = ctx.KeepAliveIntervalNs();
-            _resourceLingerDurationNs = ctx.ResourceLingerDurationNs();
             _driverTimeoutMs = ctx.DriverTimeoutMs();
             _driverTimeoutNs = _driverTimeoutMs * 1000000;
             _interServiceTimeoutNs = ctx.InterServiceTimeoutNs();
@@ -165,9 +163,9 @@ namespace Adaptive.Aeron
                         isInterrupted = true;
                     }
 
-                    for (int i = 0, size = _lingeringResources.Count; i < size; i++)
+                    for (int i = 0, size = _lingeringLogBuffers.Count; i < size; i++)
                     {
-                        DeleteResource(_lingeringResources[i]);
+                        CloseHelper.Dispose(_ctx.ErrorHandler(), _lingeringLogBuffers[i]);
                     }
 
                     _driverProxy.ClientClose();
@@ -901,9 +899,9 @@ namespace Adaptive.Aeron
         {
             if (logBuffers.DecRef() == 0)
             {
-                logBuffers.TimeOfLastStateChange(_nanoClock.NanoTime());
+                logBuffers.LingerDeadlineNs(_nanoClock.NanoTime() + _ctx.ResourceLingerDurationNs());
                 _logBuffersByIdMap.Remove(registrationId);
-                _lingeringResources.Add(logBuffers);
+                _lingeringLogBuffers.Add(logBuffers);
             }
         }
 
@@ -1154,17 +1152,15 @@ namespace Adaptive.Aeron
         {
             int workCount = 0;
 
-            var lingeringResources = _lingeringResources;
-
-            for (int lastIndex = lingeringResources.Count - 1, i = lastIndex; i >= 0; i--)
+            for (int lastIndex = _lingeringLogBuffers.Count - 1, i = lastIndex; i >= 0; i--)
             {
-                IManagedResource resource = lingeringResources[i];
+                LogBuffers logBuffers = _lingeringLogBuffers[i];
 
-                if ((resource.TimeOfLastStateChange() + _resourceLingerDurationNs) - nowNs < 0)
+                if (logBuffers.LingerDeadlineNs() - nowNs < 0)
                 {
-                    ListUtil.FastUnorderedRemove(lingeringResources, i, lastIndex--);
-                    DeleteResource(resource);
-                    workCount++;
+                    ListUtil.FastUnorderedRemove(_lingeringLogBuffers, i, lastIndex--);
+                    CloseHelper.Dispose(_ctx.ErrorHandler(), logBuffers);
+                    workCount += 1;
                 }
             }
 
@@ -1192,18 +1188,6 @@ namespace Adaptive.Aeron
             }
 
             _resourceByRegIdMap.Clear();
-        }
-        
-        private void DeleteResource(IManagedResource resource)
-        {
-            try
-            {
-                resource.Delete();
-            }
-            catch (Exception throwable)
-            {
-                HandleError(throwable);
-            }
         }
 
         private void NotifyUnavailableCounterHandlers(long registrationId, int counterId)

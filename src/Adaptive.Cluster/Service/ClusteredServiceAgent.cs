@@ -56,6 +56,7 @@ namespace Adaptive.Cluster.Service
         private readonly Dictionary<long, ClientSession> sessionByIdMap = new Dictionary<long, ClientSession>();
 
         private BoundedLogAdapter logAdapter;
+        private string activeLifecycleCallbackName;
         private ReadableCounter roleCounter;
         private ReadableCounter commitPosition;
         private ActiveLogEvent activeLogEvent;
@@ -171,7 +172,16 @@ namespace Adaptive.Cluster.Service
                 if (value != role)
                 {
                     role = value;
-                    service.OnRoleChange(value);
+                   
+                    activeLifecycleCallbackName = "onRoleChange";
+                    try
+                    {
+                        service.OnRoleChange(value);
+                    }
+                    finally
+                    {
+                        activeLifecycleCallbackName = null;
+                    }
                 }
             }
         }
@@ -199,6 +209,8 @@ namespace Adaptive.Cluster.Service
 
         public bool CloseClientSession(long clusterSessionId)
         {
+            CheckForLifecycleCallback();
+            
             if (!sessionByIdMap.ContainsKey(clusterSessionId))
             {
                 throw new ClusterException("unknown clusterSessionId: " + clusterSessionId);
@@ -234,16 +246,21 @@ namespace Adaptive.Cluster.Service
 
         public bool ScheduleTimer(long correlationId, long deadline)
         {
+            CheckForLifecycleCallback();
+            
             return _consensusModuleProxy.ScheduleTimer(correlationId, deadline);
         }
 
         public bool CancelTimer(long correlationId)
         {
+            CheckForLifecycleCallback();
+            
             return _consensusModuleProxy.CancelTimer(correlationId);
         }
 
         public long Offer(IDirectBuffer buffer, int offset, int length)
         {
+            CheckForLifecycleCallback();
             _sessionMessageHeaderEncoder.ClusterSessionId(0);
 
             return _consensusModuleProxy.Offer(headerBuffer, 0, SESSION_HEADER_LENGTH, buffer, offset, length);
@@ -251,6 +268,7 @@ namespace Adaptive.Cluster.Service
 
         public long Offer(DirectBufferVector[] vectors)
         {
+            CheckForLifecycleCallback();
             _sessionMessageHeaderEncoder.ClusterSessionId(0);
             vectors[0] = headerVector;
 
@@ -259,6 +277,7 @@ namespace Adaptive.Cluster.Service
 
         public long TryClaim(int length, BufferClaim bufferClaim)
         {
+            CheckForLifecycleCallback();
             _sessionMessageHeaderEncoder.ClusterSessionId(0);
 
             return _consensusModuleProxy.TryClaim(length + SESSION_HEADER_LENGTH, bufferClaim, headerBuffer);
@@ -459,6 +478,8 @@ namespace Adaptive.Cluster.Service
         internal long Offer(long clusterSessionId, Publication publication, IDirectBuffer buffer, int offset,
             int length)
         {
+            CheckForLifecycleCallback();
+            
             if (role != ClusterRole.Leader)
             {
                 return ClientSession.MOCKED_OFFER;
@@ -476,6 +497,8 @@ namespace Adaptive.Cluster.Service
 
         internal long Offer(long clusterSessionId, Publication publication, DirectBufferVector[] vectors)
         {
+            CheckForLifecycleCallback();
+            
             if (role != ClusterRole.Leader)
             {
                 return ClientSession.MOCKED_OFFER;
@@ -495,13 +518,15 @@ namespace Adaptive.Cluster.Service
 
         internal long TryClaim(long clusterSessionId, Publication publication, int length, BufferClaim bufferClaim)
         {
+            CheckForLifecycleCallback();
+            
             if (role != ClusterRole.Leader)
             {
                 int maxPayloadLength = headerBuffer.Capacity - SESSION_HEADER_LENGTH;
                 if (length > maxPayloadLength)
                 {
                     throw new ArgumentException(
-                        "claim exceeds maxPayloadLength of " + maxPayloadLength + ", length=" + length);
+                        "claim exceeds maxPayloadLength=" + maxPayloadLength + ", length=" + length);
                 }
 
                 bufferClaim.Wrap(headerBuffer, 0, length + SESSION_HEADER_LENGTH);
@@ -533,13 +558,21 @@ namespace Adaptive.Cluster.Service
             _sessionMessageHeaderEncoder.LeadershipTermId(leadershipTermId);
             isServiceActive = true;
 
-            if (NULL_VALUE != leadershipTermId)
+            activeLifecycleCallbackName = "onStart";
+            try
             {
-                LoadSnapshot(RecoveryState.GetSnapshotRecordingId(counters, recoveryCounterId, serviceId));
+                if (NULL_VALUE != leadershipTermId)
+                {
+                    LoadSnapshot(RecoveryState.GetSnapshotRecordingId(counters, recoveryCounterId, serviceId));
+                }
+                else
+                {
+                    service.OnStart(this, null);
+                }
             }
-            else
+            finally
             {
-                service.OnStart(this, null);
+                activeLifecycleCallbackName = null;
             }
 
             long id = ackId++;
@@ -711,7 +744,7 @@ namespace Adaptive.Cluster.Service
                 string channel = ChannelUri.AddSessionId(ctx.SnapshotChannel(), publication.SessionId);
                 archive.StartRecording(channel, ctx.SnapshotStreamId(), SourceLocation.LOCAL, true);
                 CountersReader counters = aeron.CountersReader;
-                int counterId = AwaitRecordingCounter(publication.SessionId, counters);
+                int counterId = AwaitRecordingCounter(publication.SessionId, counters, archive);
                 recordingId = RecordingPos.GetRecordingId(counters, counterId);
 
                 SnapshotState(publication, logPosition, leadershipTermId);
@@ -776,29 +809,18 @@ namespace Adaptive.Cluster.Service
             }
         }
 
-        private int AwaitRecordingCounter(int sessionId, CountersReader counters)
+        private int AwaitRecordingCounter(int sessionId, CountersReader counters, AeronArchive archive)
         {
             idleStrategy.Reset();
             int counterId = RecordingPos.FindCounterIdBySession(counters, sessionId);
             while (CountersReader.NULL_COUNTER_ID == counterId)
             {
                 Idle();
+                archive.CheckForErrorResponse();
                 counterId = RecordingPos.FindCounterIdBySession(counters, sessionId);
             }
 
             return counterId;
-        }
-
-        private static void CheckInterruptedStatus()
-        {
-            try
-            {
-                Thread.Sleep(0);
-            }
-            catch (ThreadInterruptedException)
-            {
-                throw new AgentTerminationException("unexpected interrupt during operation");
-            }
         }
 
         private bool CheckForClockTick()
@@ -865,7 +887,7 @@ namespace Adaptive.Cluster.Service
         private void Terminate()
         {
             isServiceActive = false;
-
+            activeLifecycleCallbackName = "onTerminate";
             try
             {
                 service.OnTerminate(this);
@@ -873,6 +895,10 @@ namespace Adaptive.Cluster.Service
             catch (Exception ex)
             {
                 ctx.CountedErrorHandler().OnError(ex);
+            } 
+            finally
+            {
+                activeLifecycleCallbackName = null;
             }
 
             long id = ackId++;
@@ -885,6 +911,16 @@ namespace Adaptive.Cluster.Service
             ctx.TerminationHook().Invoke();
         }
 
+        
+        private void CheckForLifecycleCallback()
+        {
+            if (null != activeLifecycleCallbackName)
+            {
+                throw new ClusterException(
+                    "sending messages or scheduling timers is not allowed from " + activeLifecycleCallbackName);
+            }
+        }
+        
         private void Abort()
         {
             isAbort = true;

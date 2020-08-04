@@ -9,6 +9,13 @@ namespace Adaptive.Cluster.Service
 {
     /// <summary>
     /// Interface which a service must implement to be contained in the cluster.
+    /// <para>
+    /// The {@code cluster} object should only be used to send messages to the cluster or schedule timers in
+    /// response to other messages and timers. Sending messages and timers should not happen from cluster lifecycle
+    /// methods like <seealso cref="OnStart(ICluster, Image)"/>, <seealso cref="OnRoleChange(ClusterRole)"/> or
+    /// <seealso cref="OnTakeSnapshot(ExclusivePublication)"/>, or <seealso cref="OnTerminate(ICluster)"/>, with the exception of
+    /// the session lifecycle methods.
+    /// </para>
     /// </summary>
     public interface IClusteredService
     {
@@ -70,13 +77,13 @@ namespace Adaptive.Cluster.Service
         /// The service should take a snapshot and store its state to the provided archive <seealso cref="Publication"/>.
         /// <para>
         /// <b>Note:</b> As this is a potentially long running operation the implementation should use
-        /// <seealso cref="ICluster.IdleStrategy()"/> and then occasional call <seealso cref="IIdleStrategy.Idle()"/> or
-        /// <seealso cref="IIdleStrategy.Idle(int)"/>, especially when polling the <seealso cref="Image"/> returns 0.
+        /// <seealso cref="ICluster.IdleStrategy()"/> and then occasionally call <seealso cref="IIdleStrategy.Idle()"/> or
+        /// <seealso cref="IIdleStrategy.Idle(int)"/>, especially when the <seealso cref="ExclusivePublication"/> returns <seealso cref="Publication.BACK_PRESSURED"/>.
         /// 
         /// </para>
         /// </summary>
         /// <param name="snapshotPublication"> to which the state should be recorded. </param>
-        void OnTakeSnapshot(Publication snapshotPublication);
+        void OnTakeSnapshot(ExclusivePublication snapshotPublication);
 
         /// <summary>
         /// Notify that the cluster node has changed role.

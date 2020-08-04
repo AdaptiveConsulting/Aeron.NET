@@ -44,7 +44,7 @@ namespace Adaptive.Aeron.Samples.ClusterService
             Console.WriteLine($"OnTimerEvent: correlationId={correlationId}, timestamp={timestampMs}");
         }
 
-        public void OnTakeSnapshot(Publication snapshotPublication)
+        public void OnTakeSnapshot(ExclusivePublication snapshotPublication)
         {
             Console.WriteLine("OnTakeSnapshot");
         }

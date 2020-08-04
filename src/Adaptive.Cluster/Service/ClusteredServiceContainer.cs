@@ -176,7 +176,7 @@ namespace Adaptive.Cluster.Service
             /// <summary>
             ///  Default channel for communications between the local consensus module and services. This should be IPC.
             /// </summary>
-            public const string CONTROL_CHANNEL_DEFAULT = "aeron:ipc?term-length=64k|mtu=8k";
+            public const string CONTROL_CHANNEL_DEFAULT = "aeron:ipc?term-length=128k";
 
             /// <summary>
             /// Stream id within the control channel for communications from the consensus module to the services.
@@ -617,8 +617,8 @@ namespace Adaptive.Cluster.Service
                 archiveContext
                     .AeronClient(aeron)
                     .OwnsAeronClient(false)
-                    .ErrorHandler(countedErrorHandler.OnError)
-                    .Lock(NoOpLock.Instance);
+                    .Lock(NoOpLock.Instance)
+                    .ErrorHandler(countedErrorHandler.OnError);
 
                 if (null == shutdownSignalBarrier)
                 {

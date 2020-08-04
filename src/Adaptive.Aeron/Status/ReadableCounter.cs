@@ -6,10 +6,10 @@ using Adaptive.Agrona.Concurrent.Status;
 namespace Adaptive.Aeron.Status
 {
     /// <summary>
-    /// Readonly View of an associated <seealso cref="Counter"/>.
+    /// Readonly view of an associated <seealso cref="Counter"/>.
     /// <para>
     /// <b>Note:</b>The user should call <seealso cref="IsClosed"/> and ensure the result is false to avoid a race on reading a
-    /// closed counter.
+    /// closed <seealso cref="Counter"/>.
     /// 
     /// </para>
     /// </summary>

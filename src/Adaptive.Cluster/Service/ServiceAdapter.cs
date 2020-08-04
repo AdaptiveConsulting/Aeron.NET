@@ -7,10 +7,11 @@ using Adaptive.Cluster.Codecs;
 
 namespace Adaptive.Cluster.Service
 {
-    sealed class ServiceAdapter : IFragmentHandler, IDisposable
+    sealed class ServiceAdapter : IDisposable
     {
         private readonly Subscription subscription;
         private readonly ClusteredServiceAgent clusteredServiceAgent;
+        private readonly FragmentAssembler fragmentAssembler;
 
         private readonly MessageHeaderDecoder messageHeaderDecoder = new MessageHeaderDecoder();
         private readonly JoinLogDecoder joinLogDecoder = new JoinLogDecoder();
@@ -20,6 +21,7 @@ namespace Adaptive.Cluster.Service
         {
             this.subscription = subscription;
             this.clusteredServiceAgent = clusteredServiceAgent;
+            this.fragmentAssembler = new FragmentAssembler(OnFragment);
         }
 
         public void Dispose()
@@ -29,10 +31,10 @@ namespace Adaptive.Cluster.Service
 
         public int Poll()
         {
-            return subscription.Poll(this, 1);
+            return subscription.Poll(fragmentAssembler, 10);
         }
 
-        public void OnFragment(IDirectBuffer buffer, int offset, int length, Header header)
+        private void OnFragment(IDirectBuffer buffer, int offset, int length, Header header)
         {
             messageHeaderDecoder.Wrap(buffer, offset);
 

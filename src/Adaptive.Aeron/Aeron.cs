@@ -774,6 +774,11 @@ namespace Adaptive.Aeron
             public const string GROUP_PARAM_NAME = "group";
 
             /// <summary>
+            /// Parameter name for Publication URI param to indicate whether spy subscriptions should simulate a connection.
+            /// </summary>
+            public const string SPIES_SIMULATE_CONNECTION_PARAM_NAME = "ssc";
+            
+            /// <summary>
             /// Parameter name for Subscription URI param to indicate if Images that go unavailable should be allowed to
             /// rejoin after a short cooldown or not.
             /// </summary>
@@ -1465,6 +1470,8 @@ namespace Adaptive.Aeron
 
             /// <summary>
             /// Set the timeout between service calls the to <seealso cref="ClientConductor"/> duty cycles in nanoseconds.
+            ///
+            /// Note: this method is used for testing only.
             /// </summary>
             /// <param name="interServiceTimeout"> the timeout (ns) between service calls the to <seealso cref="ClientConductor"/> duty cycle. </param>
             /// <returns> this Aeron.Context for method chaining. </returns>
@@ -1476,12 +1483,14 @@ namespace Adaptive.Aeron
 
             /// <summary>
             /// Return the timeout between service calls to the duty cycle for the client.
-            /// 
-            /// When exceeded, <seealso cref="Agrona.ErrorHandler"/> will be called and the active <seealso cref="Publication"/>s and <seealso cref="Image"/>s
-            /// closed.
-            /// 
+            /// <para>
+            /// When exceeded, <seealso cref="Agrona.ErrorHandler"/> will be called and the active <seealso cref="Publication"/>s, <seealso cref="Image"/>s,
+            /// and <seealso cref="Counter"/>s will be closed.
+            /// </para>
+            /// <para>
             /// This value is controlled by the driver and included in the CnC file. It can be configured by adjusting
-            /// the aeron.client.liveness.timeout property on the media driver.
+            /// the <code>aeron.client.liveness.timeout</code> property set on the media driver.
+            /// </para>
             /// </summary>
             /// <returns> the timeout between service calls in nanoseconds. </returns>
             public long InterServiceTimeoutNs()
