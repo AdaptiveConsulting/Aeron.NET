@@ -63,7 +63,7 @@ namespace Adaptive.Agrona
         {
             try
             {
-                disposable.Dispose();
+                disposable?.Dispose();
             }
             catch (Exception ex)
             {
