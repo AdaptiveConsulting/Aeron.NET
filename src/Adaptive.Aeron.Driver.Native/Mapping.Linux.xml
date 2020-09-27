@@ -1,0 +1,10 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<config id="Aeron.Driver.Native.Linux" xmlns="urn:SharpGen.Config">
+   <bindings>
+     <!-- These bindings are only valid on Linux (long is 32-bit on Windows) -->
+     <!-- This file is only included in Linux builds, as uint64_t is mapped to unsigned long on that platform -->
+     <!-- The resulting mapping will be valid on both platforms (not including this file on Windows ensures that it does not use long) -->
+     <bind from="long" to="System.Int64" />
+     <bind from="unsigned long" to="System.UInt64" />
+  </bindings>
+</config>

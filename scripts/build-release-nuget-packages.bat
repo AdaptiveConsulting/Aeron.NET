@@ -9,11 +9,13 @@ call dotnet pack src\Adaptive.Agrona\Adaptive.Agrona.csproj              -c Rele
 call dotnet pack src\Adaptive.Cluster\Adaptive.Cluster.csproj            -c Release --output ..\..\nupkgs
 call dotnet pack src\Adaptive.Archiver\Adaptive.Archiver.csproj          -c Release --output ..\..\nupkgs
 call .\scripts\nuget pack .\driver\Aeron.Driver.nuspec                   -OutputDirectory nupkgs
+call dotnet pack src\Adaptive.Aeron.Driver.Native\Adaptive.Aeron.Driver.Native.csproj          -c Release --output ..\..\nupkgs
 
 call dotnet nuget push nupkgs\Agrona.*.nupkg -s %nuget_source%
 call dotnet nuget push nupkgs\Aeron.Client.*.nupkg -s %nuget_source%
 call dotnet nuget push nupkgs\Aeron.Archiver.*.nupkg -s %nuget_source%
 call dotnet nuget push nupkgs\Aeron.Driver.*.nupkg -s %nuget_source%
 call dotnet nuget push nupkgs\Aeron.Cluster.*.nupkg -s %nuget_source%
+call dotnet nuget push nupkgs\Adaptive.Aeron.Driver.Native.*.nupkg -s %nuget_source%
 
 popd

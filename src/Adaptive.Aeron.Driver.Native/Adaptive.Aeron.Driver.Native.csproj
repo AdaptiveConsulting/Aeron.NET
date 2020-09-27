@@ -1,0 +1,53 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.0;net45</TargetFrameworks>
+    <Nullable>enable</Nullable>
+    <LangVersion>8</LangVersion>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <PlatformTarget>x64</PlatformTarget>
+    <NoWarn>$(NoWarn),1591</NoWarn>
+    <PackageId>Aeron.Driver.Native</PackageId>
+    <Version>1.26.0-beta</Version>
+    <Authors>Adaptive Financial Consulting Ltd., Abc Arbitrage Asset Management</Authors>
+    <Company>Adaptive Financial Consulting Ltd.</Company>
+    <Product>Aeron.Driver.Native</Product>
+    <Copyright>Copyright 2020</Copyright>
+    <PackageLicense>https://github.com/AdaptiveConsulting/Aeron.NET/blob/master/LICENSE</PackageLicense>
+    <PackageProjectUrl>https://github.com/AdaptiveConsulting/Aeron.NET/</PackageProjectUrl>
+    <PackageIconUrl>https://raw.githubusercontent.com/AdaptiveConsulting/Aeron.NET/master/images/adaptive.png</PackageIconUrl>
+    <Description>Embedded Aeron C media driver.</Description>
+    <PackageTags>aeron client messaging networking transport udp ipc</PackageTags>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);1591</NoWarn>
+    <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
+    <DebugType>embedded</DebugType>
+    <DebugSymbols>true</DebugSymbols>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="log4net" Version="2.0.9" />
+    <PackageReference Include="SharpGenTools.Sdk" Version="1.2.1" PrivateAssets="all" />
+    <PackageReference Include="System.Memory" Version="4.5.4" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <CastXmlPath Condition="$([MSBuild]::IsOsPlatform('Linux'))">/usr/bin/castxml</CastXmlPath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <SharpGenMapping Include="Mapping.Linux.xml" Condition="$([MSBuild]::IsOsPlatform('Linux'))" />
+    <SharpGenMapping Include="Mapping.xml" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <None Include="..\..\driver\native\runtimes\**\*.*">
+      <Pack>true</Pack>
+      <PackagePath>runtimes</PackagePath>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Adaptive.Aeron\Adaptive.Aeron.csproj" />
+  </ItemGroup>
+  
+</Project>
