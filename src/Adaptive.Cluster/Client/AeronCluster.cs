@@ -1456,7 +1456,6 @@ namespace Adaptive.Cluster.Client
                 {
                     ErrorHandler errorHandler = ctx.ErrorHandler();
                     CloseHelper.Dispose(errorHandler, ingressPublication);
-                    CloseHelper.Dispose(errorHandler, ingressPublication);
 
                     foreach (var memberEndpoint in memberByIdMap.Values)
                     {
