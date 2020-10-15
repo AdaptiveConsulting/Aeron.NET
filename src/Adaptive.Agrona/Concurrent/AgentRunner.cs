@@ -75,10 +75,8 @@ namespace Adaptive.Agrona.Concurrent
         /// <returns>  the new thread that has been started.</returns>
         public static Thread StartOnThread(AgentRunner runner)
         {
-            var thread = new Thread(runner.Run)
-            {
-                Name = runner.Agent().RoleName()
-            };
+            var thread = new Thread(runner.Run);
+            ConfigureThread(thread, runner);
             thread.Start();
             return thread;
         }
@@ -92,9 +90,15 @@ namespace Adaptive.Agrona.Concurrent
         public static Thread StartOnThread(AgentRunner runner, IThreadFactory threadFactory)
         {
             var thread = threadFactory.NewThread(runner.Run);
-            thread.Name = runner.Agent().RoleName();
+            ConfigureThread(thread, runner);
             thread.Start();
             return thread;
+        }
+
+        private static void ConfigureThread(Thread thread, AgentRunner runner)
+        {
+            thread.Name = runner.Agent().RoleName();
+            thread.IsBackground = true;
         }
 
         /// <summary>
