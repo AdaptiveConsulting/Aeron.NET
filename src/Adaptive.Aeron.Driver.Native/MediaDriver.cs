@@ -151,10 +151,17 @@ namespace Adaptive.Aeron.Driver.Native
                 throw new MediaDriverException(
                     $"AeronDriverContextSetSocketSoSndbuf: ({AeronErrcode()}) {AeronErrmsg()}");
 
-            if (AeronDriverContextSetClientLivenessTimeoutNs(_ctx,
-                (ulong) (Debugger.IsAttached ? 120 * 60 : 30) * 1_000_000_000) < 0)
-                throw new MediaDriverException(
-                    $"AeronDriverContextSetClientLivenessTimeoutNs: ({AeronErrcode()}) {AeronErrmsg()}");
+            if (Debugger.IsAttached)
+            {
+                if (AeronDriverContextSetClientLivenessTimeoutNs(_ctx, 120L * 60 * 1_000_000_000) < 0)
+                    throw new MediaDriverException(
+                        $"AeronDriverContextSetClientLivenessTimeoutNs: ({AeronErrcode()}) {AeronErrmsg()}");
+                
+                if (AeronDriverContextSetPublicationUnblockTimeoutNs(_ctx, 120L * 60 * 1_000_000_000) < 0)
+                    throw new MediaDriverException(
+                        $"AeronDriverContextSetClientLivenessTimeoutNs: ({AeronErrcode()}) {AeronErrmsg()}");
+            }
+
 
             if (AeronDriverContextSetSocketSoRcvbuf(_ctx, (IntPtr) config.SocketSoRcvBuf) < 0)
                 throw new MediaDriverException(

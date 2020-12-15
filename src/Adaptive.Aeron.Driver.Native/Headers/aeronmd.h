@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2019 Real Logic Ltd.
+ * Copyright 2014-2020 Real Logic Limited.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -251,10 +251,12 @@ uint64_t aeron_driver_context_get_rcv_status_message_timeout_ns(aeron_driver_con
 
 typedef struct aeron_flow_control_strategy_stct aeron_flow_control_strategy_t;
 
+typedef struct aeron_udp_channel_stct aeron_udp_channel_t;
+
 typedef int (*aeron_flow_control_strategy_supplier_func_t)(
     aeron_flow_control_strategy_t **strategy,
-    size_t channel_length,
-    const char *channel,
+    aeron_driver_context_t *context,
+    const aeron_udp_channel_t *channel,
     int32_t stream_id,
     int64_t registration_id,
     int32_t initial_term_id,
@@ -262,6 +264,7 @@ typedef int (*aeron_flow_control_strategy_supplier_func_t)(
 
 #define AERON_MULTICAST_MIN_FLOW_CONTROL_STRATEGY_NAME "multicast_min"
 #define AERON_MULTICAST_MAX_FLOW_CONTROL_STRATEGY_NAME "multicast_max"
+#define AERON_MULTICAST_TAGGED_FLOW_CONTROL_STRATEGY_NAME "multicast_tagged"
 #define AERON_UNICAST_MAX_FLOW_CONTROL_STRATEGY_NAME "unicast_max"
 
 /**
@@ -315,6 +318,25 @@ size_t aeron_driver_context_get_rcv_initial_window_length(aeron_driver_context_t
 #define AERON_CONGESTIONCONTROL_SUPPLIER_ENV_VAR "AERON_CONGESTIONCONTROL_SUPPLIER"
 
 typedef struct aeron_congestion_control_strategy_stct aeron_congestion_control_strategy_t;
+
+/**
+ * Should Cubic congestion control measure RTT.
+ */
+#define AERON_CUBICCONGESTIONCONTROL_MEASURERTT_ENV_VAR "AERON_CUBICCONGESTIONCONTROL_MEASURERTT"
+
+/**
+ * Initial RTT measurement in nanoseconds for Cubic congestion control.
+ */
+#define AERON_CUBICCONGESTIONCONTROL_INITIALRTT_ENV_VAR "AERON_CUBICCONGESTIONCONTROL_INITIALRTT"
+
+/**
+ * Should Cubic congestion control account for TCP behavior in low RTT values after a loss.
+ * <p>
+ * <b>WARNING:</b> Be aware that throughput utilization becomes important. Turning this on may drastically be off
+ * the necessary throughput if utilization is low.
+ */
+#define AERON_CUBICCONGESTIONCONTROL_TCPMODE_ENV_VAR "AERON_CUBICCONGESTIONCONTROL_TCPMODE"
+
 typedef struct aeron_counters_manager_stct aeron_counters_manager_t;
 struct sockaddr_storage;
 
@@ -474,6 +496,35 @@ uint64_t aeron_driver_context_get_counters_free_to_reuse_timeout_ns(aeron_driver
  */
 #define AERON_MIN_MULTICAST_FLOW_CONTROL_RECEIVER_TIMEOUT_ENV_VAR "AERON_MIN_MULTICAST_FLOW_CONTROL_RECEIVER_TIMEOUT"
 
+int aeron_driver_context_set_flow_control_receiver_timeout_ns(aeron_driver_context_t *context, uint64_t value);
+
+uint64_t aeron_driver_context_get_flow_control_receiver_timeout_ns(aeron_driver_context_t *context);
+
+/**
+ * Default receiver tag for publishers to group endpoints by using tagged flow control.
+ */
+#define AERON_FLOW_CONTROL_GROUP_TAG_ENV_VAR "AERON_FLOW_CONTROL_GROUP_TAG"
+
+int aeron_driver_context_set_flow_control_group_tag(aeron_driver_context_t *context, int64_t value);
+int64_t aeron_driver_context_get_flow_control_group_tag(aeron_driver_context_t *context);
+
+/**
+ * Default required group size to use in tagged multicast flow control.
+ */
+#define AERON_FLOW_CONTROL_GROUP_MIN_SIZE_ENV_VAR "AERON_FLOW_CONTROL_GROUP_MIN_SIZE"
+
+int aeron_driver_context_set_flow_control_group_min_size(aeron_driver_context_t *context, int32_t value);
+int32_t aeron_driver_context_get_flow_control_group_min_size(aeron_driver_context_t *context);
+
+/**
+ * Default receiver tag to be sent on status messages from channel to handle tagged flow control.
+ */
+#define AERON_RECEIVER_GROUP_TAG_ENV_VAR "AERON_RECEIVER_GROUP_TAG"
+
+int aeron_driver_context_set_receiver_group_tag(aeron_driver_context_t *context, bool is_present, int64_t value);
+bool aeron_driver_context_get_receiver_group_tag_is_present(aeron_driver_context_t *context);
+int64_t aeron_driver_context_get_receiver_group_tag_value(aeron_driver_context_t *context);
+
 /**
  * Function name to call for termination validation.
  */
@@ -485,17 +536,14 @@ int aeron_driver_context_set_driver_termination_validator(
     aeron_driver_context_t *context, aeron_driver_termination_validator_func_t value, void *state);
 aeron_driver_termination_validator_func_t aeron_driver_context_get_driver_termination_validator(
     aeron_driver_context_t *context);
-void *aeron_driver_context_get_driver_termination_validator_state(
-    aeron_driver_context_t *context);
+void *aeron_driver_context_get_driver_termination_validator_state(aeron_driver_context_t *context);
 
 typedef void (*aeron_driver_termination_hook_func_t)(void *clientd);
 
 int aeron_driver_context_set_driver_termination_hook(
     aeron_driver_context_t *context, aeron_driver_termination_hook_func_t value, void *state);
-aeron_driver_termination_hook_func_t aeron_driver_context_get_driver_termination_hook(
-    aeron_driver_context_t *context);
-void *aeron_driver_context_get_driver_termination_hook_state(
-    aeron_driver_context_t *context);
+aeron_driver_termination_hook_func_t aeron_driver_context_get_driver_termination_hook(aeron_driver_context_t *context);
+void *aeron_driver_context_get_driver_termination_hook_state(aeron_driver_context_t *context);
 
 /**
  * Should the driver print its configuration on start to stdout.
@@ -525,6 +573,7 @@ bool aeron_driver_context_get_tether_subscriptions(aeron_driver_context_t *conte
  * Untethered subscriptions window limit timeout after which they are removed from flow control.
  */
 #define AERON_UNTETHERED_WINDOW_LIMIT_TIMEOUT_ENV_VAR "AERON_UNTETHERED_WINDOW_LIMIT_TIMEOUT"
+
 
 int aeron_driver_context_set_untethered_window_limit_timeout_ns(aeron_driver_context_t *context, uint64_t value);
 uint64_t aeron_driver_context_get_untethered_window_limit_timeout_ns(aeron_driver_context_t *context);
@@ -618,7 +667,7 @@ bool aeron_driver_context_get_rejoin_stream(aeron_driver_context_t *context);
 /**
  * Bindings for UDP Channel Transports.
  */
-#define AERON_UDP_CHANNEL_TRANSPORT_BINDINGS_ENV_VAR "AERON_UDP_CHANNEL_TRANSPORT_BINDINGS"
+#define AERON_UDP_CHANNEL_TRANSPORT_BINDINGS_MEDIA_ENV_VAR "AERON_UDP_CHANNEL_TRANSPORT_BINDINGS_MEDIA"
 
 typedef struct aeron_udp_channel_transport_bindings_stct aeron_udp_channel_transport_bindings_t;
 
@@ -626,6 +675,96 @@ int aeron_driver_context_set_udp_channel_transport_bindings(
     aeron_driver_context_t *context, aeron_udp_channel_transport_bindings_t *value);
 aeron_udp_channel_transport_bindings_t *aeron_driver_context_get_udp_channel_transport_bindings(
     aeron_driver_context_t *context);
+
+#define AERON_UDP_CHANNEL_OUTGOING_INTERCEPTORS_ENV_VAR "AERON_UDP_CHANNEL_OUTGOING_INTERCEPTORS"
+#define AERON_UDP_CHANNEL_INCOMING_INTERCEPTORS_ENV_VAR "AERON_UDP_CHANNEL_INCOMING_INTERCEPTORS"
+
+typedef struct aeron_udp_channel_interceptor_bindings_stct aeron_udp_channel_interceptor_bindings_t;
+
+int aeron_driver_context_set_udp_channel_outgoing_interceptors(
+    aeron_driver_context_t *context, aeron_udp_channel_interceptor_bindings_t *value);
+aeron_udp_channel_interceptor_bindings_t *aeron_driver_context_get_udp_channel_outgoing_interceptors(
+    aeron_driver_context_t *context);
+
+int aeron_driver_context_set_udp_channel_incoming_interceptors(
+    aeron_driver_context_t *context, aeron_udp_channel_interceptor_bindings_t *value);
+aeron_udp_channel_interceptor_bindings_t *aeron_driver_context_get_udp_channel_incoming_interceptors(
+    aeron_driver_context_t *context);
+
+#define AERON_PUBLICATION_RESERVED_SESSION_ID_LOW_ENV_VAR "AERON_PUBLICATION_RESERVED_SESSION_ID_LOW"
+
+int aeron_driver_context_set_publication_reserved_session_id_low(aeron_driver_context_t *context, int32_t value);
+int32_t aeron_driver_context_get_publication_reserved_session_id_low(aeron_driver_context_t *context);
+
+#define AERON_PUBLICATION_RESERVED_SESSION_ID_HIGH_ENV_VAR "AERON_PUBLICATION_RESERVED_SESSION_ID_HIGH"
+
+int aeron_driver_context_set_publication_reserved_session_id_high(aeron_driver_context_t *context, int32_t value);
+int32_t aeron_driver_context_get_publication_reserved_session_id_high(aeron_driver_context_t *context);
+
+typedef struct aeron_name_resolver_stct aeron_name_resolver_t;
+typedef int (*aeron_name_resolver_supplier_func_t)(
+    aeron_name_resolver_t *resolver,
+    const char *args,
+    aeron_driver_context_t *context);
+
+/**
+ * Set the name of the MediaDriver for name resolver purposes.
+ */
+#define AERON_DRIVER_RESOLVER_NAME_ENV_VAR "AERON_DRIVER_RESOLVER_NAME"
+
+int aeron_driver_context_set_resolver_name(aeron_driver_context_t *context, const char *value);
+const char *aeron_driver_context_get_resolver_name(aeron_driver_context_t *context);
+
+/**
+* The interface of the MediaDriver for name resolver purposes.
+*
+* The format is hostname:port and follows the URI format for the interface parameter.
+*/
+#define AERON_DRIVER_RESOLVER_INTERFACE_ENV_VAR "AERON_DRIVER_RESOLVER_INTERFACE"
+
+int aeron_driver_context_set_resolver_interface(aeron_driver_context_t *context, const char *value);
+const char *aeron_driver_context_get_resolver_interface(aeron_driver_context_t *context);
+
+/**
+ * Get the bootstrap neighbor of the {@link MediaDriver} for name resolver purposes.
+ *
+ * The format is hostname:port and follows the URI format for the endpoint parameter.
+ */
+#define AERON_DRIVER_RESOLVER_BOOTSTRAP_NEIGHBOR_ENV_VAR "AERON_DRIVER_RESOLVER_BOOTSTRAP_NEIGHBOR"
+
+int aeron_driver_context_set_resolver_bootstrap_neighbor(aeron_driver_context_t *context, const char *value);
+const char *aeron_driver_context_get_resolver_bootstrap_neighbor(aeron_driver_context_t *context);
+
+/**
+* Specify the name of the name resolver (supplier) to be used by this media driver
+*/
+#define AERON_NAME_RESOLVER_SUPPLIER_ENV_VAR "AERON_NAME_RESOLVER_SUPPLIER"
+#define AERON_NAME_RESOLVER_SUPPLIER_DEFAULT "default"
+
+int aeron_driver_context_set_name_resolver_supplier(
+    aeron_driver_context_t *context, aeron_name_resolver_supplier_func_t value);
+aeron_name_resolver_supplier_func_t aeron_driver_context_get_name_resolver_supplier(aeron_driver_context_t *context);
+
+/**
+ * Specify the name of the name resolver (supplier) to be used by this media driver
+ */
+#define AERON_NAME_RESOLVER_INIT_ARGS_ENV_VAR "AERON_NAME_RESOLVER_INIT_ARGS"
+
+int aeron_driver_context_set_name_resolver_init_args(aeron_driver_context_t *context, const char *value);
+const char *aeron_driver_context_get_name_resolver_init_args(aeron_driver_context_t *context);
+
+/**
+ * Specify the interval which checks for re-resolutions of names occurs.
+ */
+#define AERON_DRIVER_RERESOLUTION_CHECK_INTERVAL_ENV_VAR "AERON_DRIVER_RERESOLUTION_CHECK_INTERVAL"
+
+int aeron_driver_context_set_re_resolution_check_interval_ns(aeron_driver_context_t *context, uint64_t value);
+uint64_t aeron_driver_context_get_re_resolution_check_interval_ns(aeron_driver_context_t *context);
+
+/**
+ * Set the list of filenames to dynamic libraries to load upon context init.
+ */
+#define AERON_DRIVER_DYNAMIC_LIBRARIES_ENV_VAR "AERON_DRIVER_DYNAMIC_LIBRARIES"
 
 /**
  * Return full version and build string.
@@ -810,6 +949,16 @@ int aeron_errcode();
  * @return aeron error message for calling thread.
  */
 const char *aeron_errmsg();
+
+/**
+ * Get the default path used by the Aeron media driver.
+ *
+ * @param path buffer to store the path.
+ * @param path_length space available in the buffer
+ * @return -1 if there is an issue or the number of bytes written to path excluding the terminator `\0`. If this
+ * is equal to or greater than the path_length then the path has been truncated.
+ */
+int aeron_default_path(char *path, size_t path_length);
 
 #ifdef __cplusplus
 }
