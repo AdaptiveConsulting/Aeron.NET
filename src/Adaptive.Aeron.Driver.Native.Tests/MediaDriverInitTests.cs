@@ -26,15 +26,12 @@ namespace Adaptive.Aeron.Driver.Native.Tests
             Assert.AreEqual(counter + 1, md.GetNewClientStreamId());
 
             Console.WriteLine($"Counter: {counter + 1}");
-
+            
             md.Dispose();
 
             Assert.IsFalse(MediaDriver.IsDriverActive(config.Dir, config.DriverTimeout));
-
             Assert.IsTrue(config.DirDeleteOnShutdown, "Should delete dir on shutdown setting is on");
-            // TODO when https://github.com/real-logic/aeron/issues/1108 is fixed,
-            // this should print false and we should assert that.
-            Console.WriteLine($"Dir exists [{Directory.Exists(config.Dir)}]: {config.Dir}");
+            Assert.IsFalse(Directory.Exists(config.Dir), $"Dir exists [{Directory.Exists(config.Dir)}]: {config.Dir}");
         }
 
         [Test]

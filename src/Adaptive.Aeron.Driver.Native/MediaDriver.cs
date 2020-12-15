@@ -94,11 +94,30 @@ namespace Adaptive.Aeron.Driver.Native
             if (!Environment.Is64BitProcess)
                 throw new InvalidOperationException("Embedded Aeron Media Driver is not supported on 32 bits");
 
+            if (string.IsNullOrEmpty(config.Dir))
+                throw new ArgumentException("Aeron directory must be a valid path.");
+
             _log.Info($"Aeron Media Driver: {AeronVersionFull()}");
             _log.Info($"Using embedded C media driver at dir: {config.Dir}");
 
             if (AeronDriverContextInit(out _ctx) < 0)
                 throw new MediaDriverException($"AeronDriverContextInit: ({AeronErrcode()}) {AeronErrmsg()}");
+
+            if (config.DirDeleteOnStart && Directory.Exists(config.Dir))
+            {
+                try
+                {
+                    Directory.Delete(config.Dir, true);
+                }
+                catch (Exception ex)
+                {
+                    _log.Warn($"Cannot remove Aeron directory before media driver start:\n{Config.Dir}\n{ex}");
+                }
+            }
+
+            Directory.CreateDirectory(config.Dir);
+            if (AeronDriverContextSetDir(_ctx, config.Dir) < 0)
+                throw new MediaDriverException($"AeronDriverContextSetDir: ({AeronErrcode()}) {AeronErrmsg()}");
 
             if (AeronDriverContextSetDirDeleteOnStart(_ctx, config.DirDeleteOnStart) < 0)
                 throw new MediaDriverException(
@@ -111,10 +130,6 @@ namespace Adaptive.Aeron.Driver.Native
             if (AeronDriverContextSetDirWarnIfExists(_ctx, false) < 0)
                 throw new MediaDriverException(
                     $"AeronDriverContextSetDirWarnIfExists: ({AeronErrcode()}) {AeronErrmsg()}");
-
-            Directory.CreateDirectory(config.Dir);
-            if (AeronDriverContextSetDir(_ctx, config.Dir) < 0)
-                throw new MediaDriverException($"AeronDriverContextSetDir: ({AeronErrcode()}) {AeronErrmsg()}");
 
             if (AeronDriverContextSetDriverTimeoutMs(_ctx, (ulong) config.DriverTimeout) < 0)
                 throw new MediaDriverException(
@@ -245,6 +260,18 @@ namespace Adaptive.Aeron.Driver.Native
                     return;
 
                 throw new MediaDriverException($"AeronDriverContextClose: ({AeronErrcode()}) {AeronErrmsg()}");
+            }
+
+            if (Config.DirDeleteOnShutdown && Directory.Exists(Config.Dir))
+            {
+                try
+                {
+                    Directory.Delete(Config.Dir, true);
+                }
+                catch (Exception ex)
+                {
+                    _log.Warn($"Cannot remove Aeron directory after media driver shutdown:\n{Config.Dir}\n{ex}");
+                }
             }
         }
 

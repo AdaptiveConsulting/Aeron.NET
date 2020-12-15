@@ -17,6 +17,8 @@ namespace Adaptive.Aeron.Driver.Native
 
         public MediaDriverConfig(string dir)
         {
+            if (string.IsNullOrWhiteSpace(dir))
+                throw new ArgumentException("Aeron directory must be a valid path.");
             Dir = Path.GetFullPath(dir);
         }
 
