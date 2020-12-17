@@ -1,6 +1,0 @@
-<Project>
-  <PropertyGroup Label="BasePath">
-    <VersionPrefix>1.29.0</VersionPrefix>
-    <VersionSuffix></VersionSuffix>
-  </PropertyGroup>
-</Project>
