@@ -1,4 +1,5 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
+    <Import Project="..\..\common.props" />
     <PropertyGroup>
         <TargetFramework>netstandard2.0</TargetFramework>
         <Nullable>enable</Nullable>
@@ -7,7 +8,7 @@
         <PlatformTarget>x64</PlatformTarget>
         <NoWarn>$(NoWarn),1591</NoWarn>
         <PackageId>Aeron.Driver.Native</PackageId>
-        <Version>1.32.0-alpha1</Version>
+        <VersionSuffix>alpha2</VersionSuffix>
         <Authors>Adaptive Financial Consulting Ltd., Abc Arbitrage Asset Management</Authors>
         <Company>Adaptive Financial Consulting Ltd.</Company>
         <Product>Aeron.Driver.Native</Product>
@@ -25,9 +26,8 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="log4net" Version="2.0.9"/>
-        <PackageReference Include="SharpGenTools.Sdk" Version="1.2.1" PrivateAssets="all"/>
-        <PackageReference Include="System.Memory" Version="4.5.4"/>
+        <PackageReference Include="SharpGenTools.Sdk" Version="1.2.1" PrivateAssets="all" />
+        <PackageReference Include="System.Memory" Version="4.5.4" />
     </ItemGroup>
 
     <PropertyGroup>
@@ -35,8 +35,8 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <SharpGenMapping Include="Mapping.Linux.xml" Condition="$([MSBuild]::IsOsPlatform('Linux'))"/>
-        <SharpGenMapping Include="Mapping.xml"/>
+        <SharpGenMapping Include="Mapping.Linux.xml" Condition="$([MSBuild]::IsOsPlatform('Linux'))" />
+        <SharpGenMapping Include="Mapping.xml" />
     </ItemGroup>
 
     <ItemGroup>
@@ -47,7 +47,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\Adaptive.Aeron\Adaptive.Aeron.csproj"/>
+        <ProjectReference Include="..\Adaptive.Aeron\Adaptive.Aeron.csproj" />
     </ItemGroup>
 
 </Project>

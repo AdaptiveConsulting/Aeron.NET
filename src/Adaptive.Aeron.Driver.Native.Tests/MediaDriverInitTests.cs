@@ -2,8 +2,9 @@
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
+using Adaptive.Agrona.Concurrent;
 using NUnit.Framework;
-using static Adaptive.Aeron.Driver.Native.Tests.DriverConfigUtil;
+using static Adaptive.Aeron.Driver.Native.Tests.DriverContextUtil;
 
 namespace Adaptive.Aeron.Driver.Native.Tests
 {
@@ -13,25 +14,17 @@ namespace Adaptive.Aeron.Driver.Native.Tests
         [Test]
         public void CouldStartAndStopMediaDriverEmbedded()
         {
-            var config = CreateMediaDriverConfig();
-            config.DirDeleteOnStart = true;
-            config.DirDeleteOnShutdown = true;
+            var driverCtx = CreateDriverCtx();
+            
+            var md = AeronDriver.Start(driverCtx);
 
-            var md = MediaDriver.Start(config);
-
-            Assert.IsTrue(MediaDriver.IsDriverActive(config.Dir));
-
-            var counter = md.GetNewClientStreamId();
-
-            Assert.AreEqual(counter + 1, md.GetNewClientStreamId());
-
-            Console.WriteLine($"Counter: {counter + 1}");
+            Assert.IsTrue(AeronDriver.IsDriverActive(driverCtx.Ctx.AeronDirectoryName()));
             
             md.Dispose();
 
-            Assert.IsFalse(MediaDriver.IsDriverActive(config.Dir, config.DriverTimeout));
-            Assert.IsTrue(config.DirDeleteOnShutdown, "Should delete dir on shutdown setting is on");
-            Assert.IsFalse(Directory.Exists(config.Dir), $"Dir exists [{Directory.Exists(config.Dir)}]: {config.Dir}");
+            Assert.IsFalse(AeronDriver.IsDriverActive(driverCtx.Ctx.AeronDirectoryName(), driverCtx.Ctx.DriverTimeoutMs()));
+            Assert.IsTrue(driverCtx.DirDeleteOnShutdown(), "Should delete dir on shutdown setting is on");
+            Assert.IsFalse(Directory.Exists(driverCtx.Ctx.AeronDirectoryName()), $"Dir exists [{Directory.Exists(driverCtx.Ctx.AeronDirectoryName())}]: {driverCtx.Ctx.AeronDirectoryName()}");
         }
 
         [Test]
@@ -45,10 +38,10 @@ namespace Adaptive.Aeron.Driver.Native.Tests
                 udpc.Close();
             }
 
-            var config = CreateMediaDriverConfig();
-            using var c = new AeronConnection(config);
-
-            using var _ = c.Aeron.AddSubscription($"aeron:udp?endpoint=0.0.0.0:{port}", 1);
+            var driverCtx = CreateDriverCtx();
+            var md = AeronDriver.Start(driverCtx);
+            
+            using var _ = md.AddSubscription($"aeron:udp?endpoint=0.0.0.0:{port}", 1);
         }
     }
 }
