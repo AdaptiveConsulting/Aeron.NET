@@ -49,5 +49,14 @@ namespace Adaptive.Agrona.Concurrent
         {
             Interlocked.Add(ref _long, add);
         }
+        
+        /// <summary>
+        /// Atomically increments the current value
+        /// </summary>
+        /// <returns> the udpated value.</returns>
+        public long IncrementAndGet()
+        {
+            return Interlocked.Increment(ref _long);
+        }
     }
 }
