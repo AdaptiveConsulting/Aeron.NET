@@ -64,9 +64,13 @@ namespace Adaptive.Agrona.Tests.Concurrent.RingBuffer
 
             Assert.True(_ringBuffer.Write(MsgTypeID, srcBuffer, srcIndex, length));
 
-            A.CallTo(() => _buffer.PutLongOrdered((int) tail, RecordDescriptor.MakeHeader(-recordLength, MsgTypeID))).MustHaveHappened()
-                .Then(A.CallTo(() => _buffer.PutBytes(RecordDescriptor.EncodedMsgOffset((int) tail), srcBuffer, srcIndex, length)).MustHaveHappened())
-                .Then(A.CallTo(() => _buffer.PutIntOrdered(RecordDescriptor.LengthOffset((int) tail), recordLength)).MustHaveHappened());
+            A.CallTo(() => _buffer.PutLongOrdered((int) tail, RecordDescriptor.MakeHeader(-recordLength, MsgTypeID)))
+                .MustHaveHappened()
+                .Then(A.CallTo(() =>
+                        _buffer.PutBytes(RecordDescriptor.EncodedMsgOffset((int) tail), srcBuffer, srcIndex, length))
+                    .MustHaveHappened())
+                .Then(A.CallTo(() => _buffer.PutIntOrdered(RecordDescriptor.LengthOffset((int) tail), recordLength))
+                    .MustHaveHappened());
         }
 
         [Test]
@@ -74,7 +78,8 @@ namespace Adaptive.Agrona.Tests.Concurrent.RingBuffer
         {
             const int length = 200;
             const long head = 0L;
-            var tail = head + (Capacity - BitUtil.Align(length - RecordDescriptor.Alignment, RecordDescriptor.Alignment));
+            var tail = head +
+                       (Capacity - BitUtil.Align(length - RecordDescriptor.Alignment, RecordDescriptor.Alignment));
 
             A.CallTo(() => _buffer.GetLongVolatile(HeadCounterIndex)).Returns(head);
             A.CallTo(() => _buffer.GetLongVolatile(TailCounterIndex)).Returns(tail);
@@ -118,11 +123,13 @@ namespace Adaptive.Agrona.Tests.Concurrent.RingBuffer
             var recordLength = length + RecordDescriptor.HeaderLength;
             var alignedRecordLength = BitUtil.Align(recordLength, RecordDescriptor.Alignment);
             long tail = Capacity - RecordDescriptor.HeaderLength;
-            var head = tail - (RecordDescriptor.Alignment*4);
+            var head = tail - (RecordDescriptor.Alignment * 4);
 
             A.CallTo(() => _buffer.GetLongVolatile(HeadCounterIndex)).Returns(head);
             A.CallTo(() => _buffer.GetLongVolatile(TailCounterIndex)).Returns(tail);
-            A.CallTo(() => _buffer.CompareAndSetLong(TailCounterIndex, tail, tail + alignedRecordLength + RecordDescriptor.Alignment)).Returns(true);
+            A.CallTo(() =>
+                _buffer.CompareAndSetLong(TailCounterIndex, tail,
+                    tail + alignedRecordLength + RecordDescriptor.Alignment)).Returns(true);
 
             var srcBuffer = new UnsafeBuffer(new byte[1024]);
 
@@ -130,10 +137,16 @@ namespace Adaptive.Agrona.Tests.Concurrent.RingBuffer
             Assert.True(_ringBuffer.Write(MsgTypeID, srcBuffer, srcIndex, length));
 
 
-            A.CallTo(() => _buffer.PutLongOrdered((int) tail, RecordDescriptor.MakeHeader(RecordDescriptor.HeaderLength, ManyToOneRingBuffer.PaddingMsgTypeId))).MustHaveHappened()
-                .Then(A.CallTo(() => _buffer.PutLongOrdered(0, RecordDescriptor.MakeHeader(-recordLength, MsgTypeID))).MustHaveHappened())
-                .Then(A.CallTo(() => _buffer.PutBytes(RecordDescriptor.EncodedMsgOffset(0), srcBuffer, srcIndex, length)).MustHaveHappened())
-                .Then(A.CallTo(() => _buffer.PutIntOrdered(RecordDescriptor.LengthOffset(0), recordLength)).MustHaveHappened());
+            A.CallTo(() => _buffer.PutLongOrdered((int) tail,
+                    RecordDescriptor.MakeHeader(RecordDescriptor.HeaderLength, ManyToOneRingBuffer.PaddingMsgTypeId)))
+                .MustHaveHappened()
+                .Then(A.CallTo(() => _buffer.PutLongOrdered(0, RecordDescriptor.MakeHeader(-recordLength, MsgTypeID)))
+                    .MustHaveHappened())
+                .Then(A.CallTo(
+                        () => _buffer.PutBytes(RecordDescriptor.EncodedMsgOffset(0), srcBuffer, srcIndex, length))
+                    .MustHaveHappened())
+                .Then(A.CallTo(() => _buffer.PutIntOrdered(RecordDescriptor.LengthOffset(0), recordLength))
+                    .MustHaveHappened());
         }
 
         [Test]
@@ -147,7 +160,9 @@ namespace Adaptive.Agrona.Tests.Concurrent.RingBuffer
 
             A.CallTo(() => _buffer.GetLongVolatile(HeadCounterIndex)).Returns(head);
             A.CallTo(() => _buffer.GetLongVolatile(TailCounterIndex)).Returns(tail);
-            A.CallTo(() => _buffer.CompareAndSetLong(TailCounterIndex, tail, tail + alignedRecordLength + RecordDescriptor.Alignment)).Returns(true);
+            A.CallTo(() =>
+                _buffer.CompareAndSetLong(TailCounterIndex, tail,
+                    tail + alignedRecordLength + RecordDescriptor.Alignment)).Returns(true);
 
             var srcBuffer = new UnsafeBuffer(new byte[1024]);
 
@@ -155,10 +170,16 @@ namespace Adaptive.Agrona.Tests.Concurrent.RingBuffer
             Assert.True(_ringBuffer.Write(MsgTypeID, srcBuffer, srcIndex, length));
 
 
-            A.CallTo(() => _buffer.PutLongOrdered((int) tail, RecordDescriptor.MakeHeader(RecordDescriptor.HeaderLength, ManyToOneRingBuffer.PaddingMsgTypeId))).MustHaveHappened()
-                .Then(A.CallTo(() => _buffer.PutLongOrdered(0, RecordDescriptor.MakeHeader(-recordLength, MsgTypeID))).MustHaveHappened())
-                .Then(A.CallTo(() => _buffer.PutBytes(RecordDescriptor.EncodedMsgOffset(0), srcBuffer, srcIndex, length)).MustHaveHappened())
-                .Then(A.CallTo(() => _buffer.PutIntOrdered(RecordDescriptor.LengthOffset(0), recordLength)).MustHaveHappened());
+            A.CallTo(() => _buffer.PutLongOrdered((int) tail,
+                    RecordDescriptor.MakeHeader(RecordDescriptor.HeaderLength, ManyToOneRingBuffer.PaddingMsgTypeId)))
+                .MustHaveHappened()
+                .Then(A.CallTo(() => _buffer.PutLongOrdered(0, RecordDescriptor.MakeHeader(-recordLength, MsgTypeID)))
+                    .MustHaveHappened())
+                .Then(A.CallTo(
+                        () => _buffer.PutBytes(RecordDescriptor.EncodedMsgOffset(0), srcBuffer, srcIndex, length))
+                    .MustHaveHappened())
+                .Then(A.CallTo(() => _buffer.PutIntOrdered(RecordDescriptor.LengthOffset(0), recordLength))
+                    .MustHaveHappened());
         }
 
         [Test]
@@ -192,7 +213,7 @@ namespace Adaptive.Agrona.Tests.Concurrent.RingBuffer
             Assert.AreEqual(messagesRead, 0);
             Assert.AreEqual(times[0], 0);
 
-            A.CallTo(() => _buffer.GetLongVolatile(headIndex)).MustHaveHappened(Repeated.Exactly.Once);
+            A.CallTo(() => _buffer.GetLongVolatile(headIndex)).MustHaveHappened(1, Times.Exactly);
             A.CallTo(() => _buffer.SetMemory(headIndex, 0, 0)).MustNotHaveHappened();
             A.CallTo(() => _buffer.PutLongOrdered(HeadCounterIndex, headIndex)).MustNotHaveHappened();
         }
@@ -204,13 +225,15 @@ namespace Adaptive.Agrona.Tests.Concurrent.RingBuffer
 
             var recordLength = RecordDescriptor.HeaderLength + msgLength;
             var alignedRecordLength = BitUtil.Align(recordLength, RecordDescriptor.Alignment);
-            long tail = alignedRecordLength*2;
+            long tail = alignedRecordLength * 2;
             const long head = 0L;
             var headIndex = (int) head;
 
             A.CallTo(() => _buffer.GetLong(HeadCounterIndex)).Returns(head);
-            A.CallTo(() => _buffer.GetLongVolatile(headIndex)).Returns(RecordDescriptor.MakeHeader(recordLength, MsgTypeID));
-            A.CallTo(() => _buffer.GetLongVolatile(headIndex + alignedRecordLength)).Returns(RecordDescriptor.MakeHeader(recordLength, MsgTypeID));
+            A.CallTo(() => _buffer.GetLongVolatile(headIndex))
+                .Returns(RecordDescriptor.MakeHeader(recordLength, MsgTypeID));
+            A.CallTo(() => _buffer.GetLongVolatile(headIndex + alignedRecordLength))
+                .Returns(RecordDescriptor.MakeHeader(recordLength, MsgTypeID));
 
             var times = new int[1];
             MessageHandler handler = (msgTypeId, buffer, index, length) => times[0]++;
@@ -219,8 +242,9 @@ namespace Adaptive.Agrona.Tests.Concurrent.RingBuffer
             Assert.AreEqual(messagesRead, 2);
             Assert.AreEqual(times[0], 2);
 
-            A.CallTo(() => _buffer.SetMemory(headIndex, alignedRecordLength*2, 0)).MustHaveHappened(Repeated.Exactly.Once).Then(
-                A.CallTo(() => _buffer.PutLongOrdered(HeadCounterIndex, tail)).MustHaveHappened(Repeated.Exactly.Once));
+            A.CallTo(() => _buffer.SetMemory(headIndex, alignedRecordLength * 2, 0)).MustHaveHappened(1, Times.Exactly)
+                .Then(
+                    A.CallTo(() => _buffer.PutLongOrdered(HeadCounterIndex, tail)).MustHaveHappened(1, Times.Exactly));
         }
 
         [Test]
@@ -233,7 +257,8 @@ namespace Adaptive.Agrona.Tests.Concurrent.RingBuffer
             var headIndex = (int) head;
 
             A.CallTo(() => _buffer.GetLong(HeadCounterIndex)).Returns(head);
-            A.CallTo(() => _buffer.GetLongVolatile(headIndex)).Returns(RecordDescriptor.MakeHeader(recordLength, MsgTypeID));
+            A.CallTo(() => _buffer.GetLongVolatile(headIndex))
+                .Returns(RecordDescriptor.MakeHeader(recordLength, MsgTypeID));
 
             var times = new int[1];
 
@@ -244,8 +269,10 @@ namespace Adaptive.Agrona.Tests.Concurrent.RingBuffer
             Assert.AreEqual(messagesRead, 1);
             Assert.AreEqual(times[0], 1);
 
-            A.CallTo(() => _buffer.SetMemory(headIndex, alignedRecordLength, 0)).MustHaveHappened(Repeated.Exactly.Once).Then(
-                A.CallTo(() => _buffer.PutLongOrdered(HeadCounterIndex, head + alignedRecordLength)).MustHaveHappened(Repeated.Exactly.Once));
+            A.CallTo(() => _buffer.SetMemory(headIndex, alignedRecordLength, 0)).MustHaveHappened(1, Times.Exactly)
+                .Then(
+                    A.CallTo(() => _buffer.PutLongOrdered(HeadCounterIndex, head + alignedRecordLength))
+                        .MustHaveHappened(1, Times.Exactly));
         }
 
         [Test]
@@ -254,13 +281,15 @@ namespace Adaptive.Agrona.Tests.Concurrent.RingBuffer
             const int msgLength = 16;
             var recordLength = RecordDescriptor.HeaderLength + msgLength;
             var alignedRecordLength = BitUtil.Align(recordLength, RecordDescriptor.Alignment);
-            long tail = alignedRecordLength*2;
+            long tail = alignedRecordLength * 2;
             const long head = 0L;
             var headIndex = (int) head;
 
             A.CallTo(() => _buffer.GetLong(HeadCounterIndex)).Returns(head);
-            A.CallTo(() => _buffer.GetLongVolatile(headIndex)).Returns(RecordDescriptor.MakeHeader(recordLength, MsgTypeID));
-            A.CallTo(() => _buffer.GetLongVolatile(headIndex + alignedRecordLength)).Returns(RecordDescriptor.MakeHeader(recordLength, MsgTypeID));
+            A.CallTo(() => _buffer.GetLongVolatile(headIndex))
+                .Returns(RecordDescriptor.MakeHeader(recordLength, MsgTypeID));
+            A.CallTo(() => _buffer.GetLongVolatile(headIndex + alignedRecordLength))
+                .Returns(RecordDescriptor.MakeHeader(recordLength, MsgTypeID));
 
             var times = new int[1];
             MessageHandler handler = (msgTypeId, buffer, index, length) =>
@@ -280,8 +309,10 @@ namespace Adaptive.Agrona.Tests.Concurrent.RingBuffer
             {
                 Assert.AreEqual(times[0], 2);
 
-                A.CallTo(() => _buffer.SetMemory(headIndex, alignedRecordLength*2, 0)).MustHaveHappened(Repeated.Exactly.Once)
-                    .Then(A.CallTo(() => _buffer.PutLongOrdered(HeadCounterIndex, tail)).MustHaveHappened(Repeated.Exactly.Once));
+                A.CallTo(() => _buffer.SetMemory(headIndex, alignedRecordLength * 2, 0))
+                    .MustHaveHappened(1, Times.Exactly)
+                    .Then(A.CallTo(() => _buffer.PutLongOrdered(HeadCounterIndex, tail))
+                        .MustHaveHappened(1, Times.Exactly));
 
                 return;
             }
@@ -292,7 +323,7 @@ namespace Adaptive.Agrona.Tests.Concurrent.RingBuffer
         [Test]
         public void ShouldNotUnblockWhenEmpty()
         {
-            long position = RecordDescriptor.Alignment*4;
+            long position = RecordDescriptor.Alignment * 4;
             A.CallTo(() => _buffer.GetLongVolatile(HeadCounterIndex)).Returns(position);
             A.CallTo(() => _buffer.GetLongVolatile(TailCounterIndex)).Returns(position);
 
@@ -302,54 +333,60 @@ namespace Adaptive.Agrona.Tests.Concurrent.RingBuffer
         [Test]
         public void ShouldUnblockMessageWithHeader()
         {
-            var messageLength = RecordDescriptor.Alignment*4;
+            var messageLength = RecordDescriptor.Alignment * 4;
             A.CallTo(() => _buffer.GetLongVolatile(HeadCounterIndex)).Returns(messageLength);
-            A.CallTo(() => _buffer.GetLongVolatile(TailCounterIndex)).Returns((long) messageLength*2);
+            A.CallTo(() => _buffer.GetLongVolatile(TailCounterIndex)).Returns((long) messageLength * 2);
             A.CallTo(() => _buffer.GetIntVolatile(messageLength)).Returns(-messageLength);
 
             Assert.True(_ringBuffer.Unblock());
 
-            A.CallTo(() => _buffer.PutLongOrdered(messageLength, RecordDescriptor.MakeHeader(messageLength, ManyToOneRingBuffer.PaddingMsgTypeId))).MustHaveHappened();
+            A.CallTo(() => _buffer.PutLongOrdered(messageLength,
+                RecordDescriptor.MakeHeader(messageLength, ManyToOneRingBuffer.PaddingMsgTypeId))).MustHaveHappened();
         }
 
         public void ShouldUnblockGapWithZeros()
         {
-            var messageLength = RecordDescriptor.Alignment*4;
+            var messageLength = RecordDescriptor.Alignment * 4;
             A.CallTo(() => _buffer.GetLongVolatile(HeadCounterIndex)).Returns(messageLength);
-            A.CallTo(() => _buffer.GetLongVolatile(TailCounterIndex)).Returns((long) messageLength*3);
-            A.CallTo(() => _buffer.GetIntVolatile(messageLength*2)).Returns(messageLength);
+            A.CallTo(() => _buffer.GetLongVolatile(TailCounterIndex)).Returns((long) messageLength * 3);
+            A.CallTo(() => _buffer.GetIntVolatile(messageLength * 2)).Returns(messageLength);
 
             Assert.True(_ringBuffer.Unblock());
 
 
-            A.CallTo(() => _buffer.PutLongOrdered(messageLength, RecordDescriptor.MakeHeader(messageLength, ManyToOneRingBuffer.PaddingMsgTypeId))).MustHaveHappened();
+            A.CallTo(() => _buffer.PutLongOrdered(messageLength,
+                RecordDescriptor.MakeHeader(messageLength, ManyToOneRingBuffer.PaddingMsgTypeId))).MustHaveHappened();
         }
 
         [Test]
         public void ShouldNotUnblockGapWithMessageRaceOnSecondMessageIncreasingTailThenInterrupting()
         {
-            var messageLength = RecordDescriptor.Alignment*4;
+            var messageLength = RecordDescriptor.Alignment * 4;
             A.CallTo(() => _buffer.GetLongVolatile(HeadCounterIndex)).Returns(messageLength);
-            A.CallTo(() => _buffer.GetLongVolatile(TailCounterIndex)).Returns((long) messageLength*3);
-            A.CallTo(() => _buffer.GetIntVolatile(messageLength*2)).ReturnsNextFromSequence(0, messageLength);
+            A.CallTo(() => _buffer.GetLongVolatile(TailCounterIndex)).Returns((long) messageLength * 3);
+            A.CallTo(() => _buffer.GetIntVolatile(messageLength * 2)).ReturnsNextFromSequence(0, messageLength);
 
             Assert.False(_ringBuffer.Unblock());
 
-            A.CallTo(() => _buffer.PutLongOrdered(messageLength, RecordDescriptor.MakeHeader(messageLength, ManyToOneRingBuffer.PaddingMsgTypeId))).MustNotHaveHappened();
+            A.CallTo(() => _buffer.PutLongOrdered(messageLength,
+                    RecordDescriptor.MakeHeader(messageLength, ManyToOneRingBuffer.PaddingMsgTypeId)))
+                .MustNotHaveHappened();
         }
 
         [Test]
         public void ShouldNotUnblockGapWithMessageRaceWhenScanForwardTakesAnInterrupt()
         {
-            var messageLength = RecordDescriptor.Alignment*4;
+            var messageLength = RecordDescriptor.Alignment * 4;
             A.CallTo(() => _buffer.GetLongVolatile(HeadCounterIndex)).Returns(messageLength);
-            A.CallTo(() => _buffer.GetLongVolatile(TailCounterIndex)).Returns((long) messageLength*3);
-            A.CallTo(() => _buffer.GetIntVolatile(messageLength*2)).ReturnsNextFromSequence(0, messageLength);
-            A.CallTo(() => _buffer.GetIntVolatile(messageLength*2 + RecordDescriptor.Alignment)).Returns(7);
+            A.CallTo(() => _buffer.GetLongVolatile(TailCounterIndex)).Returns((long) messageLength * 3);
+            A.CallTo(() => _buffer.GetIntVolatile(messageLength * 2)).ReturnsNextFromSequence(0, messageLength);
+            A.CallTo(() => _buffer.GetIntVolatile(messageLength * 2 + RecordDescriptor.Alignment)).Returns(7);
 
             Assert.False(_ringBuffer.Unblock());
 
-            A.CallTo(() => _buffer.PutLongOrdered(messageLength, RecordDescriptor.MakeHeader(messageLength, ManyToOneRingBuffer.PaddingMsgTypeId))).MustNotHaveHappened();
+            A.CallTo(() => _buffer.PutLongOrdered(messageLength,
+                    RecordDescriptor.MakeHeader(messageLength, ManyToOneRingBuffer.PaddingMsgTypeId)))
+                .MustNotHaveHappened();
         }
 
         [Test]
@@ -384,7 +421,7 @@ namespace Adaptive.Agrona.Tests.Concurrent.RingBuffer
             var recordLength = messageLength + RecordDescriptor.HeaderLength;
             var alignedRecordLength = BitUtil.Align(recordLength, RecordDescriptor.Alignment);
 
-            long tail = 2*Capacity - padding;
+            long tail = 2 * Capacity - padding;
             var head = tail;
 
             // free space is (200 + 300) more than message length (400) but contiguous space (300) is less than message length (400)
@@ -393,7 +430,8 @@ namespace Adaptive.Agrona.Tests.Concurrent.RingBuffer
             A.CallTo(() => _buffer.GetLongVolatile(HeadCounterIndex)).Returns(head);
             A.CallTo(() => _buffer.GetLongVolatile(TailCounterIndex)).Returns(tail);
             A.CallTo(() => _buffer.GetLongVolatile(HeadCounterCacheIndex)).Returns(headCache);
-            A.CallTo(() => _buffer.CompareAndSetLong(TailCounterIndex, tail, tail + alignedRecordLength + padding)).Returns(true);
+            A.CallTo(() => _buffer.CompareAndSetLong(TailCounterIndex, tail, tail + alignedRecordLength + padding))
+                .Returns(true);
 
             var srcBuffer = new UnsafeBuffer(new byte[messageLength]);
             Assert.True(_ringBuffer.Write(MsgTypeID, srcBuffer, 0, messageLength));
