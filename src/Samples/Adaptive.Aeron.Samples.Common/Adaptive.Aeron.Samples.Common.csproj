@@ -1,19 +1,19 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>net45</TargetFramework>
-    <ApplicationIcon />
-    <OutputType>Library</OutputType>
-    <StartupObject />
-  </PropertyGroup>
+    <PropertyGroup>
+        <TargetFramework>netstandard2.0</TargetFramework>
+        <ApplicationIcon/>
+        <OutputType>Library</OutputType>
+        <StartupObject/>
+    </PropertyGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\..\Adaptive.Aeron\Adaptive.Aeron.csproj" />
-    <ProjectReference Include="..\..\Adaptive.Agrona\Adaptive.Agrona.csproj" />
-  </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\..\Adaptive.Aeron\Adaptive.Aeron.csproj"/>
+        <ProjectReference Include="..\..\Adaptive.Agrona\Adaptive.Agrona.csproj"/>
+    </ItemGroup>
 
-  <ItemGroup>
-    <Reference Include="System.Management" />
-  </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="System.Management" Version="5.0.0"/>
+    </ItemGroup>
 
 </Project>

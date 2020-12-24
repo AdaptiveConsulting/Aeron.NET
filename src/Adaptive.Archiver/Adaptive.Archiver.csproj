@@ -1,13 +1,13 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;net45</TargetFrameworks>
+    <TargetFramework>netstandard2.0</TargetFramework>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <PackageId>Aeron.Archiver</PackageId>
     <VersionPrefix>1.29.0</VersionPrefix>
     <Authors>Adaptive Financial Consulting Ltd.</Authors>
     <Company>Adaptive Financial Consulting Ltd.</Company>
     <Product>Archiving over the Aeron transport</Product>
-    <Copyright>Copyright 2020</Copyright>
+    <Copyright>Copyright 2021</Copyright>
     <PackageLicense>https://github.com/AdaptiveConsulting/Aeron.NET/blob/master/LICENSE</PackageLicense>
     <PackageProjectUrl>https://github.com/AdaptiveConsulting/Aeron.NET/</PackageProjectUrl>
     <PackageIconUrl>https://raw.githubusercontent.com/AdaptiveConsulting/Aeron.NET/master/images/adaptive.png</PackageIconUrl>

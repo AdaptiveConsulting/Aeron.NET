@@ -1,12 +1,12 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;net45</TargetFrameworks>
+    <TargetFramework>netstandard2.0</TargetFramework>
     <PackageId>Aeron.Client</PackageId>
     <VersionPrefix>1.29.0</VersionPrefix>
     <Authors>Adaptive Financial Consulting Ltd.</Authors>
     <Company>Adaptive Financial Consulting Ltd.</Company>
     <Product>Aeron Client</Product>
-    <Copyright>Copyright 2018</Copyright>
+    <Copyright>Copyright 2021</Copyright>
     <PackageLicense>https://github.com/AdaptiveConsulting/Aeron.NET/blob/master/LICENSE</PackageLicense>
     <PackageProjectUrl>https://github.com/AdaptiveConsulting/Aeron.NET/</PackageProjectUrl>
     <PackageIconUrl>https://raw.githubusercontent.com/AdaptiveConsulting/Aeron.NET/master/images/adaptive.png</PackageIconUrl>
@@ -17,11 +17,13 @@
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
   </PropertyGroup>
   <ItemGroup Condition=" '$(Configuration)' == 'Debug' ">
-    <PackageReference Include="Fody" Version="3.2.16">
+    <PackageReference Include="Fody" Version="6.3.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Virtuosity.Fody" Version="1.21.3" />
+    <PackageReference Include="Virtuosity.Fody" Version="3.1.0">
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Adaptive.Agrona\Adaptive.Agrona.csproj" />
