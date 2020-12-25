@@ -16,8 +16,10 @@
 
 using System;
 using System.Diagnostics;
-using System.Management;
+using System.Linq;
 using System.Text;
+using HardwareInformation;
+using HardwareInformation.Information.Cpu;
 
 namespace Adaptive.Aeron.Samples.Common
 {
@@ -30,64 +32,40 @@ namespace Adaptive.Aeron.Samples.Common
     {
         public readonly string OperatingSystem;
         public readonly string OperatingSystemVersion;
-        public readonly int OperatingSystemServicePack;
+        public readonly string OperatingSystemServicePack;
 
         public readonly int NumberOfProcessors;
         public readonly string ProcessorName;
         public readonly string ProcessorDescription;
         public readonly int ProcessorClockSpeedMhz;
 
-        public readonly int MemoryMBytes;
-        public readonly int L1KBytes;
-        public readonly int L2KBytes;
-        public readonly int NumberOfCores;
+        public readonly ulong MemoryMBytes;
+        public readonly ulong L1KBytes;
+        public readonly ulong L2KBytes;
+        public readonly uint NumberOfCores;
         public readonly int NumberOfLogicalProcessors;
-        public readonly int L3KBytes;
+        public readonly ulong L3KBytes;
 
         public ComputerSpecifications()
         {
-            var searcher = new ManagementObjectSearcher("Select * from Win32_ComputerSystem");
-
-            foreach (var mo in searcher.Get())
-            {
-                MemoryMBytes = (int) ((ulong) mo["TotalPhysicalMemory"]/(1024*1024));
-            }
-
+            var info = MachineInformationGatherer.GatherInformation();
+            
+            MemoryMBytes = (ulong) info.RAMSticks.Select(i => (long) i.Capacity).Sum();
             NumberOfLogicalProcessors = Environment.ProcessorCount;
 
-            searcher = new ManagementObjectSearcher("Select * from Win32_OperatingSystem");
-            foreach (var mo in searcher.Get())
-            {
-                OperatingSystem = (string) mo["Caption"];
-                OperatingSystemVersion = (string) mo["Version"];
-                OperatingSystemServicePack = (ushort) mo["ServicePackMajorVersion"];
-                break;
-            }
+            OperatingSystem = info.OperatingSystem.Platform.ToString();
+            OperatingSystemVersion = info.OperatingSystem.VersionString;
+            OperatingSystemServicePack = info.OperatingSystem.ServicePack;
 
-            searcher = new ManagementObjectSearcher("Select * from Win32_Processor");
-            var processors = searcher.Get();
-            NumberOfProcessors = processors.Count;
-            foreach (var mo in processors)
-            {
-                ProcessorName = (string) mo["Name"];
-                ProcessorDescription = (string) mo["Description"];
-                ProcessorClockSpeedMhz = (int) (uint) mo["MaxClockSpeed"];
-                L3KBytes = (int) (uint) mo["L3CacheSize"];
-                NumberOfCores += int.Parse(mo["NumberOfCores"].ToString());
+            NumberOfProcessors = Environment.ProcessorCount;
 
-                break;
-            }
-
-            searcher = new ManagementObjectSearcher("Select * from Win32_CacheMemory");
-            foreach (var mo in searcher.Get())
-            {
-                var level = (ushort) mo["Level"] - 2;
-                if (level == 1)
-                    L1KBytes += (int) (uint) mo["InstalledSize"];
-                else if (level == 2)
-                    L2KBytes += (int) (uint) mo["InstalledSize"];
-            }
-
+            ProcessorName = info.Cpu.Name;
+            ProcessorDescription = info.Cpu.Vendor;
+            ProcessorClockSpeedMhz = (int) info.Cpu.MaxClockSpeed;
+            L1KBytes = info.Cpu.Caches.First(c => c.Level == Cache.CacheLevel.LEVEL1).Capacity;
+            L2KBytes = info.Cpu.Caches.First(c => c.Level == Cache.CacheLevel.LEVEL2).Capacity;
+            L3KBytes = info.Cpu.Caches.First(c => c.Level == Cache.CacheLevel.LEVEL3).Capacity;
+            NumberOfCores = info.Cpu.PhysicalCores;
             ClrVersion = RuntimeInformation.GetClrVersion();
             Architecture = GetArchitecture();
             HasAttachedDebugger = Debugger.IsAttached;
@@ -133,8 +111,10 @@ namespace Adaptive.Aeron.Samples.Common
             builder.Append(" - # Logical processors: ").AppendLine(NumberOfLogicalProcessors.ToString());
             builder.Append(" - Hyperthreading: ").AppendLine(IsHyperThreaded ? "ON" : "OFF");
             builder.AppendLine();
-            builder.AppendLine($"Memory: {MemoryMBytes}MB, L1Cache: {L1KBytes}KB, L2Cache: {L2KBytes}KB, L3Cache: {L3KBytes}KB");
-            builder.AppendLine($".NET Runtime: CLR={ClrVersion}, Arch={Architecture} {Configuration}{GetDebuggerFlag()}{GetJitFlag()}");
+            builder.AppendLine(
+                $"Memory: {MemoryMBytes}MB, L1Cache: {L1KBytes}KB, L2Cache: {L2KBytes}KB, L3Cache: {L3KBytes}KB");
+            builder.AppendLine(
+                $".NET Runtime: CLR={ClrVersion}, Arch={Architecture} {Configuration}{GetDebuggerFlag()}{GetJitFlag()}");
 
             if (Config.Params.Count > 0)
             {

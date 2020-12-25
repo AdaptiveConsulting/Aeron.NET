@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>netcoreapp3.1</TargetFramework>
+        <RootNamespace>Adaptive.Aeron.Samples.Common.Tests</RootNamespace>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="FakeItEasy" Version="6.2.1" />
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.8.3" />
+        <PackageReference Include="NUnit" Version="3.12.0" />
+        <PackageReference Include="NUnit3TestAdapter" Version="3.12.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Adaptive.Aeron.Samples.Common\Adaptive.Aeron.Samples.Common.csproj" />
+    </ItemGroup>
+
+</Project>
