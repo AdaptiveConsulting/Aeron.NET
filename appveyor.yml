@@ -1,5 +1,5 @@
 version: 1.0.{build}
-image: Visual Studio 2017
+image: Visual Studio 2019
 build_script:
 - ps: >-
     # CLI tooling still not first class citizen https://github.com/appveyor/ci/issues/1404
