@@ -14,9 +14,9 @@ test:
     - Adaptive.Aeron.Tests.dll
 after_test:
 - ps: >-
-    dotnet test -f netcoreapp2.0 ./Adaptive.Agrona.Tests/Adaptive.Agrona.Tests.csproj --logger "trx;LogFileName=AgronaResults.trx"
+    dotnet test -f netcoreapp3.1 ./Adaptive.Agrona.Tests/Adaptive.Agrona.Tests.csproj --logger "trx;LogFileName=AgronaResults.trx"
 
-    dotnet test -f netcoreapp2.0 ./Adaptive.Aeron.Tests/Adaptive.Aeron.Tests.csproj --logger "trx;LogFileName=AeronResults.trx"
+    dotnet test -f netcoreapp3.1 ./Adaptive.Aeron.Tests/Adaptive.Aeron.Tests.csproj --logger "trx;LogFileName=AeronResults.trx"
 
 
     # upload results to AppVeyor
