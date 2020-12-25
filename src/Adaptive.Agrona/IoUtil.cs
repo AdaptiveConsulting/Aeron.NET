@@ -57,15 +57,8 @@ namespace Adaptive.Agrona
             var fileAccess = FileAccess.ReadWrite;
             var fileShare = FileShare.ReadWrite | FileShare.Delete;
             var memoryMappedFileAccess = MemoryMappedFileAccess.ReadWrite;
-
             var f = new FileStream(cncFile.FullName, FileMode.CreateNew, fileAccess, fileShare);
-
-#if NETFULL
-            var mmFile = MemoryMappedFile.CreateFromFile(f, null, length, memoryMappedFileAccess, new MemoryMappedFileSecurity(), HandleInheritability.None, false);
-#else
             var mmFile = MemoryMappedFile.CreateFromFile(f, null, length, memoryMappedFileAccess, HandleInheritability.None, false);
-#endif
-            
             var mappedByteBuffer = new MappedByteBuffer(mmFile, 0, length);
 
             if (fillWithZeros)
@@ -82,15 +75,9 @@ namespace Adaptive.Agrona
             var fileAccess = FileAccess.ReadWrite;
             var fileShare = FileShare.ReadWrite | FileShare.Delete;
             var memoryMappedFileAccess = MemoryMappedFileAccess.ReadWrite;
-
-            var f = new FileStream(cncFile.FullName, FileMode.OpenOrCreate, fileAccess, fileShare);
-
-#if NETFULL
-            var mmFile = MemoryMappedFile.CreateFromFile(f, null, length, memoryMappedFileAccess, new MemoryMappedFileSecurity(), HandleInheritability.None, false);
-#else
-            var mmFile = MemoryMappedFile.CreateFromFile(f, null, length, memoryMappedFileAccess, HandleInheritability.None, false);
-#endif
             
+            var f = new FileStream(cncFile.FullName, FileMode.OpenOrCreate, fileAccess, fileShare);
+            var mmFile = MemoryMappedFile.CreateFromFile(f, null, length, memoryMappedFileAccess, HandleInheritability.None, false);
             var mappedByteBuffer = new MappedByteBuffer(mmFile, 0, length);
 
             return mappedByteBuffer;
@@ -119,12 +106,8 @@ namespace Adaptive.Agrona
         private static MemoryMappedFile OpenMemoryMappedFile(FileStream f)
         {
             var memoryMappedFileAccess = MemoryMappedFileAccess.ReadWrite;
-#if NETFULL
-            return MemoryMappedFile.CreateFromFile(f, null, 0, memoryMappedFileAccess, new MemoryMappedFileSecurity(), HandleInheritability.None, false);
-#else
             return MemoryMappedFile.CreateFromFile(f, null, 0, memoryMappedFileAccess, HandleInheritability.None,
                 false);
-#endif
         }
 
         /// <summary>

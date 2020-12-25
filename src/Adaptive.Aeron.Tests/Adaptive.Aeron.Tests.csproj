@@ -16,14 +16,4 @@
     <ProjectReference Include="..\Adaptive.Agrona.Tests\Adaptive.Agrona.Tests.csproj" />
     <ProjectReference Include="..\Adaptive.Agrona\Adaptive.Agrona.csproj" />
   </ItemGroup>
-
-  <!-- .NET Standard 2.0 references, compilation flags and build options -->
-  <PropertyGroup Condition=" '$(TargetFramework)' == 'netstandard2.0'">
-    <DefineConstants>NETCORE;NETSTANDARD;NETSTANDARD2_0</DefineConstants>
-  </PropertyGroup>
-
-  <PropertyGroup Condition=" '$(TargetFramework)' == 'net45'">
-    <DefineConstants>NET45;NETFULL</DefineConstants>
-  </PropertyGroup>
-  
 </Project>

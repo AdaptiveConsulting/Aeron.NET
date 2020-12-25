@@ -17,14 +17,6 @@
     <NoWarn>$(NoWarn);1591</NoWarn>
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
   </PropertyGroup>
-  <!--Bounds check only on Debug mode, rest of define constants need to concatenate this one-->
-  <!-- .NET Standard 2.0 references, compilation flags and build options -->
-  <PropertyGroup Condition=" '$(TargetFramework)' == 'netstandard2.0'">
-    <DefineConstants>$(DefineConstants);NETCORE;NETSTANDARD;NETSTANDARD2_0</DefineConstants>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(TargetFramework)' == 'net45'">
-    <DefineConstants>$(DefineConstants);NET45;NETFULL</DefineConstants>
-  </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\Adaptive.Aeron\Adaptive.Aeron.csproj" />
   </ItemGroup>
