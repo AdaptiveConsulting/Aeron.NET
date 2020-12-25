@@ -1,6 +1,7 @@
 # Aeron.NET
 [![TravisCI](https://travis-ci.org/AdaptiveConsulting/Aeron.NET.svg?branch=master)](https://travis-ci.org/AdaptiveConsulting/Aeron.NET)
 [![AppVeyor](https://ci.appveyor.com/api/projects/status/rqomfiby1rl7xe2y/branch/master?svg=true)](https://ci.appveyor.com/project/Adaptive/aeron-net/branch/master)
+[![GitHub Actions](https://github.com/AdaptiveConsulting/Aeron.NET/workflows/build/badge.svg)](https://github.com/AdaptiveConsulting/Aeron.NET/actions?query=workflow%3Abuild)
 [![NuGet](https://img.shields.io/nuget/v/Aeron.Client.svg)](https://www.nuget.org/packages/Aeron.Client/)
 
 A .NET port of the [Aeron Client](https://github.com/real-logic/Aeron).
