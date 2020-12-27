@@ -12,7 +12,6 @@ namespace Adaptive.Aeron.Driver.Native.Tests
 
             var ctx = new Aeron.Context()
                 .AeronDirectoryName(dir)
-                .DriverTimeoutMs(1000)
                 .DriverContext()
                 .DebugTimeoutMs(60 * 1000)
                 .ThreadingMode(AeronThreadingModeEnum.AeronThreadingModeShared)
