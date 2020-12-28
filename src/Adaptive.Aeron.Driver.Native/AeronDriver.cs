@@ -159,54 +159,54 @@ namespace Adaptive.Aeron.Driver.Native
             dCtx.LogInfo($"TermBufferLength: " +
                          $"{AssertEqual("TermBufferLength", (IntPtr) dCtx.TermBufferLength(), AeronDriverContextGetTermBufferLength(nativeCtx))}");
 
-            if (AeronDriverContextSetPublicationTermWindowLength(nativeCtx,
-                (IntPtr) dCtx.PublicationTermWindowLength()) < 0)
-                throw new MediaDriverException(
-                    $"AeronDriverContextSetPublicationTermWindowLength: ({AeronErrcode()}) {AeronErrmsg()}");
-            dCtx.LogInfo($"PublicationTermWindowLength: " +
-                         $"{AssertEqual("PublicationTermWindowLength", (IntPtr) dCtx.PublicationTermWindowLength(), AeronDriverContextGetPublicationTermWindowLength(nativeCtx))}");
+            // if (AeronDriverContextSetPublicationTermWindowLength(nativeCtx,
+            //     (IntPtr) dCtx.PublicationTermWindowLength()) < 0)
+            //     throw new MediaDriverException(
+            //         $"AeronDriverContextSetPublicationTermWindowLength: ({AeronErrcode()}) {AeronErrmsg()}");
+            // dCtx.LogInfo($"PublicationTermWindowLength: " +
+            //              $"{AssertEqual("PublicationTermWindowLength", (IntPtr) dCtx.PublicationTermWindowLength(), AeronDriverContextGetPublicationTermWindowLength(nativeCtx))}");
+            //
+            // if (AeronDriverContextSetRcvInitialWindowLength(nativeCtx, (IntPtr) dCtx.InitialWindowLength()) < 0)
+            //     throw new MediaDriverException(
+            //         $"AeronDriverContextSetRcvInitialWindowLength: ({AeronErrcode()}) {AeronErrmsg()}");
+            // dCtx.LogInfo($"InitialWindowLength: " +
+            //              $"{AssertEqual("InitialWindowLength", (IntPtr) dCtx.InitialWindowLength(), AeronDriverContextGetRcvInitialWindowLength(nativeCtx))}");
+            //
+            // if (AeronDriverContextSetSocketSoRcvbuf(nativeCtx, (IntPtr) dCtx.SocketRcvbufLength()) < 0)
+            //     throw new MediaDriverException(
+            //         $"AeronDriverContextSetSocketSoRcvbuf: ({AeronErrcode()}) {AeronErrmsg()}");
+            // dCtx.LogInfo($"SocketRcvbufLength: " +
+            //              $"{AssertEqual("SocketRcvbufLength", (IntPtr) dCtx.SocketRcvbufLength(), AeronDriverContextGetSocketSoRcvbuf(nativeCtx))}");
+            //
+            // if (AeronDriverContextSetSocketSoSndbuf(nativeCtx, (IntPtr) dCtx.SocketSndbufLength()) < 0)
+            //     throw new MediaDriverException(
+            //         $"AeronDriverContextSetSocketSoSndbuf: ({AeronErrcode()}) {AeronErrmsg()}");
+            // dCtx.LogInfo($"SocketSndbufLength: " +
+            //              $"{AssertEqual("SocketSndbufLength", (IntPtr) dCtx.SocketSndbufLength(), AeronDriverContextGetSocketSoSndbuf(nativeCtx))}");
+            //
+            // if (AeronDriverContextSetMtuLength(nativeCtx, (IntPtr) dCtx.MtuLength()) < 0)
+            //     throw new MediaDriverException($"AeronDriverContextSetMtuLength: ({AeronErrcode()}) {AeronErrmsg()}");
+            // dCtx.LogInfo($"MtuLength: " +
+            //              $"{AssertEqual("MtuLength", (IntPtr) dCtx.MtuLength(), AeronDriverContextGetMtuLength(nativeCtx))}");
 
-            if (AeronDriverContextSetRcvInitialWindowLength(nativeCtx, (IntPtr) dCtx.InitialWindowLength()) < 0)
-                throw new MediaDriverException(
-                    $"AeronDriverContextSetRcvInitialWindowLength: ({AeronErrcode()}) {AeronErrmsg()}");
-            dCtx.LogInfo($"InitialWindowLength: " +
-                         $"{AssertEqual("InitialWindowLength", (IntPtr) dCtx.InitialWindowLength(), AeronDriverContextGetRcvInitialWindowLength(nativeCtx))}");
+            // if (AeronDriverContextSetDriverTimeoutMs(nativeCtx, (ulong) dCtx.DriverTimeoutMs()) < 0)
+            //     throw new MediaDriverException(
+            //         $"AeronDriverContextSetDriverTimeoutMs: ({AeronErrcode()}) {AeronErrmsg()}");
+            // dCtx.LogInfo($"DriverTimeoutMs: " +
+            //              $"{AssertEqual("DriverTimeoutMs", (ulong) dCtx.DriverTimeoutMs(), AeronDriverContextGetDriverTimeoutMs(nativeCtx))}");
+            //
+            // if (AeronDriverContextSetClientLivenessTimeoutNs(nativeCtx, (ulong) dCtx.ClientLivenessTimeoutNs()) < 0)
+            //     throw new MediaDriverException(
+            //         $"AeronDriverContextSetClientLivenessTimeoutNs: ({AeronErrcode()}) {AeronErrmsg()}");
+            // dCtx.LogInfo($"ClientLivenessTimeoutNs: " +
+            //              $"{AssertEqual("ClientLivenessTimeoutNs", (ulong) dCtx.ClientLivenessTimeoutNs(), AeronDriverContextGetClientLivenessTimeoutNs(nativeCtx))}");
 
-            if (AeronDriverContextSetSocketSoRcvbuf(nativeCtx, (IntPtr) dCtx.SocketRcvbufLength()) < 0)
-                throw new MediaDriverException(
-                    $"AeronDriverContextSetSocketSoRcvbuf: ({AeronErrcode()}) {AeronErrmsg()}");
-            dCtx.LogInfo($"SocketRcvbufLength: " +
-                         $"{AssertEqual("SocketRcvbufLength", (IntPtr) dCtx.SocketRcvbufLength(), AeronDriverContextGetSocketSoRcvbuf(nativeCtx))}");
-
-            if (AeronDriverContextSetSocketSoSndbuf(nativeCtx, (IntPtr) dCtx.SocketSndbufLength()) < 0)
-                throw new MediaDriverException(
-                    $"AeronDriverContextSetSocketSoSndbuf: ({AeronErrcode()}) {AeronErrmsg()}");
-            dCtx.LogInfo($"SocketSndbufLength: " +
-                         $"{AssertEqual("SocketSndbufLength", (IntPtr) dCtx.SocketSndbufLength(), AeronDriverContextGetSocketSoSndbuf(nativeCtx))}");
-
-            if (AeronDriverContextSetMtuLength(nativeCtx, (IntPtr) dCtx.MtuLength()) < 0)
-                throw new MediaDriverException($"AeronDriverContextSetMtuLength: ({AeronErrcode()}) {AeronErrmsg()}");
-            dCtx.LogInfo($"MtuLength: " +
-                         $"{AssertEqual("MtuLength", (IntPtr) dCtx.MtuLength(), AeronDriverContextGetMtuLength(nativeCtx))}");
-
-            if (AeronDriverContextSetDriverTimeoutMs(nativeCtx, (ulong) dCtx.DriverTimeoutMs()) < 0)
-                throw new MediaDriverException(
-                    $"AeronDriverContextSetDriverTimeoutMs: ({AeronErrcode()}) {AeronErrmsg()}");
-            dCtx.LogInfo($"DriverTimeoutMs: " +
-                         $"{AssertEqual("DriverTimeoutMs", (ulong) dCtx.DriverTimeoutMs(), AeronDriverContextGetDriverTimeoutMs(nativeCtx))}");
-
-            if (AeronDriverContextSetClientLivenessTimeoutNs(nativeCtx, (ulong) dCtx.ClientLivenessTimeoutNs()) < 0)
-                throw new MediaDriverException(
-                    $"AeronDriverContextSetClientLivenessTimeoutNs: ({AeronErrcode()}) {AeronErrmsg()}");
-            dCtx.LogInfo($"ClientLivenessTimeoutNs: " +
-                         $"{AssertEqual("ClientLivenessTimeoutNs", (ulong) dCtx.ClientLivenessTimeoutNs(), AeronDriverContextGetClientLivenessTimeoutNs(nativeCtx))}");
-
-            if (AeronDriverContextSetPublicationUnblockTimeoutNs(nativeCtx,
-                (ulong) dCtx.PublicationUnblockTimeoutNs()) < 0)
-                throw new MediaDriverException(
-                    $"AeronDriverContextSetPublicationUnblockTimeoutNs: ({AeronErrcode()}) {AeronErrmsg()}");
-            dCtx.LogInfo($"PublicationUnblockTimeoutNs: " +
-                         $"{AssertEqual("PublicationUnblockTimeoutNs", (ulong) dCtx.PublicationUnblockTimeoutNs(), AeronDriverContextGetPublicationUnblockTimeoutNs(nativeCtx))}");
+            // if (AeronDriverContextSetPublicationUnblockTimeoutNs(nativeCtx,
+            //     (ulong) dCtx.PublicationUnblockTimeoutNs()) < 0)
+            //     throw new MediaDriverException(
+            //         $"AeronDriverContextSetPublicationUnblockTimeoutNs: ({AeronErrcode()}) {AeronErrmsg()}");
+            // dCtx.LogInfo($"PublicationUnblockTimeoutNs: " +
+            //              $"{AssertEqual("PublicationUnblockTimeoutNs", (ulong) dCtx.PublicationUnblockTimeoutNs(), AeronDriverContextGetPublicationUnblockTimeoutNs(nativeCtx))}");
 
             if (AeronDriverContextSetThreadingMode(nativeCtx, dCtx.ThreadingMode()) < 0)
                 throw new MediaDriverException($"AeronDriverContextSetDir: ({AeronErrcode()}) {AeronErrmsg()}");
