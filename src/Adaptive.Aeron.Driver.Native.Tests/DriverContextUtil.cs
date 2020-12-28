@@ -5,10 +5,10 @@ namespace Adaptive.Aeron.Driver.Native.Tests
 {
     public static class DriverContextUtil
     {
-        public static AeronDriver.DriverContext CreateDriverCtx(bool isServer = false)
+        public static AeronDriver.DriverContext CreateDriverCtx()
         {
             var baseDir = AppDomain.CurrentDomain.BaseDirectory;
-            var dir = Path.Combine(baseDir, "mediadrivers", (isServer ? "server_" : "") + Guid.NewGuid().ToString("N"));
+            var dir = Path.Combine(baseDir, "aeron-" + Guid.NewGuid().ToString("N"));
 
             var ctx = new AeronDriver.DriverContext()
                 .AeronDirectoryName(dir)
