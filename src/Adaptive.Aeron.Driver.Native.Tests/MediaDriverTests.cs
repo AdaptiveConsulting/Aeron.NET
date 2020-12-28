@@ -28,10 +28,10 @@ namespace Adaptive.Aeron.Driver.Native.Tests
                 var md = AeronDriver.Start(driverCtx);
                 aeronDrivers[i] = md;
 
-                aeronClients[i] = Aeron.Connect(new Aeron.Context().AeronDirectoryName(md.DriverCtx.AeronDirectoryName()));
+                aeronClients[i] = Aeron.Connect(new Aeron.Context().AeronDirectoryName(driverCtx.AeronDirectoryName()));
             }
 
-            for (int i = 1; i < driverCount; i++)
+            for (int i = 0; i < driverCount; i++)
             {
                 var i1 = i;
                 int port = 44500 + i;
@@ -40,15 +40,15 @@ namespace Adaptive.Aeron.Driver.Native.Tests
                     image => { Console.WriteLine($"Unavailable image {i1}"); });
             }
 
-            for (int i = 1; i < driverCount; i++)
+            for (int i = 0; i < driverCount; i++)
             {
                 int port = 44500 + i;
                 pubs[i] = aeronClients[i].AddPublication($"aeron:udp?endpoint={"127.0.0.1"}:{port}", 1);
             }
-
-            for (int i = 1; i < driverCount; i++)
+            
+            var ub = new UnsafeBuffer(new byte[10], 0, 10);
+            for (int i = 0; i < driverCount; i++)
             {
-                var ub = new UnsafeBuffer(new byte[10], 0, 10);
                 var c = 0;
                 while (pubs[i].Offer(ub) < 0 && ++c < 1_000_000)
                 {
@@ -60,7 +60,7 @@ namespace Adaptive.Aeron.Driver.Native.Tests
             }
 
 
-            for (int i = 1; i < driverCount; i++)
+            for (int i = 0; i < driverCount; i++)
             {
                 void FragmentHandler(IDirectBuffer buffer, int offset, int length, Header header)
                 {

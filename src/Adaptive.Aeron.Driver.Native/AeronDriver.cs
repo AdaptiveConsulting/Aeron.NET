@@ -37,7 +37,7 @@ namespace Adaptive.Aeron.Driver.Native
             AppDomain.CurrentDomain.ProcessExit += _processExitHandler;
         }
 
-        public DriverContext DriverCtx => _dCtx;
+        public DriverContext Ctx => _dCtx;
 
         public bool IsDriverRunning => _isDriverRunning == 1;
 
@@ -98,7 +98,7 @@ namespace Adaptive.Aeron.Driver.Native
 
             if (!IsDriverActive(aeronDir, driverTimeoutMs))
             {
-                NativeDriver native = StartEmbedded(dCtx);
+                var native = StartEmbedded(dCtx);
                 if (!IsDriverActive(aeronDir, driverTimeoutMs))
                     throw new MediaDriverException("Cannot start media driver");
                 return native;
@@ -129,21 +129,6 @@ namespace Adaptive.Aeron.Driver.Native
 
             if (AeronDriverContextInit(out var nativeCtx) < 0)
                 throw new MediaDriverException($"AeronDriverContextInit: ({AeronErrcode()}) {AeronErrmsg()}");
-
-            if (dCtx.DirDeleteOnStart() && Directory.Exists(aeronDir))
-            {
-                try
-                {
-                    Directory.Delete(aeronDir, true);
-                }
-                catch (Exception ex)
-                {
-                    dCtx.LogWarning(
-                        $"Cannot remove Aeron directory before media driver start:\n{aeronDir}\n{ex}");
-                }
-            }
-
-            Directory.CreateDirectory(aeronDir);
 
             if (AeronDriverContextSetDir(nativeCtx, aeronDir) < 0)
                 throw new MediaDriverException($"AeronDriverContextSetDir: ({AeronErrcode()}) {AeronErrmsg()}");
@@ -263,8 +248,8 @@ namespace Adaptive.Aeron.Driver.Native
 
             if (AeronDriverStart(nativeDriver, false) < 0)
                 throw new MediaDriverException($"AeronDriverStart: ({AeronErrcode()}) {AeronErrmsg()}");
-
-            Thread.Sleep(500);
+            
+            // TODO get aeron directory from context?
 
             return new NativeDriver(nativeDriver, nativeCtx);
         }
@@ -295,19 +280,6 @@ namespace Adaptive.Aeron.Driver.Native
                     return;
 
                 throw new MediaDriverException($"AeronDriverContextClose: ({AeronErrcode()}) {AeronErrmsg()}");
-            }
-
-            if (_dCtx.DirDeleteOnShutdown() && Directory.Exists(_dCtx.AeronDirectoryName()))
-            {
-                try
-                {
-                    Directory.Delete(_dCtx.AeronDirectoryName(), true);
-                }
-                catch (Exception ex)
-                {
-                    _dCtx.LogWarning(
-                        $"Cannot remove Aeron directory after media driver shutdown:\n{_dCtx.AeronDirectoryName()}\n{ex}");
-                }
             }
         }
 
