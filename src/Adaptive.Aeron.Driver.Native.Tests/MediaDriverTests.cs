@@ -17,6 +17,7 @@ namespace Adaptive.Aeron.Driver.Native.Tests
             var driverCount = 4;
             AeronDriver.DriverContext[] driverContexts = new AeronDriver.DriverContext[driverCount];
             AeronDriver[] aeronDrivers = new AeronDriver[driverCount];
+            Aeron[] aeronClients = new Aeron[driverCount];
             Subscription[] subs = new Subscription[driverCount];
             Publication[] pubs = new Publication[driverCount];
 
@@ -26,13 +27,15 @@ namespace Adaptive.Aeron.Driver.Native.Tests
                 driverContexts[i] = driverCtx;
                 var md = AeronDriver.Start(driverCtx);
                 aeronDrivers[i] = md;
+
+                aeronClients[i] = Aeron.Connect(new Aeron.Context().AeronDirectoryName(md.DriverCtx.AeronDirectoryName()));
             }
 
             for (int i = 1; i < driverCount; i++)
             {
                 var i1 = i;
                 int port = 44500 + i;
-                subs[i] = aeronDrivers[0].AddSubscription($"aeron:udp?endpoint={"127.0.0.1"}:{port}", 1,
+                subs[i] = aeronClients[0].AddSubscription($"aeron:udp?endpoint={"127.0.0.1"}:{port}", 1,
                     image => { Console.WriteLine($"Available image {i1}"); },
                     image => { Console.WriteLine($"Unavailable image {i1}"); });
             }
@@ -40,7 +43,7 @@ namespace Adaptive.Aeron.Driver.Native.Tests
             for (int i = 1; i < driverCount; i++)
             {
                 int port = 44500 + i;
-                pubs[i] = aeronDrivers[i].AddPublication($"aeron:udp?endpoint={"127.0.0.1"}:{port}", 1);
+                pubs[i] = aeronClients[i].AddPublication($"aeron:udp?endpoint={"127.0.0.1"}:{port}", 1);
             }
 
             for (int i = 1; i < driverCount; i++)
@@ -74,10 +77,11 @@ namespace Adaptive.Aeron.Driver.Native.Tests
 
             for (int i = 0; i < driverCount; i++)
             {
-                subs[i]?.Dispose();
-                pubs[i]?.Dispose();
+                subs[i].Dispose();
+                pubs[i].Dispose();
+                aeronClients[i].Dispose();
                 aeronDrivers[i].Dispose();
-                Assert.IsFalse(AeronDriver.IsDriverActive(driverContexts[i].Ctx.AeronDirectoryName(), driverContexts[i].Ctx.DriverTimeoutMs()));
+                Assert.IsFalse(AeronDriver.IsDriverActive(driverContexts[i].AeronDirectoryName(), driverContexts[i].DriverTimeoutMs()));
             }
         }
     }

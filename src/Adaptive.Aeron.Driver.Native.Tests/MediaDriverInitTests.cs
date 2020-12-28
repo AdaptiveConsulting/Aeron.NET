@@ -1,8 +1,6 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 using System.Net;
 using System.Net.Sockets;
-using Adaptive.Agrona.Concurrent;
 using NUnit.Framework;
 using static Adaptive.Aeron.Driver.Native.Tests.DriverContextUtil;
 
@@ -15,16 +13,17 @@ namespace Adaptive.Aeron.Driver.Native.Tests
         public void CouldStartAndStopMediaDriverEmbedded()
         {
             var driverCtx = CreateDriverCtx();
-            
+
             var md = AeronDriver.Start(driverCtx);
 
-            Assert.IsTrue(AeronDriver.IsDriverActive(driverCtx.Ctx.AeronDirectoryName()));
-            
+            Assert.IsTrue(AeronDriver.IsDriverActive(driverCtx.AeronDirectoryName()));
+
             md.Dispose();
 
-            Assert.IsFalse(AeronDriver.IsDriverActive(driverCtx.Ctx.AeronDirectoryName(), driverCtx.Ctx.DriverTimeoutMs()));
+            Assert.IsFalse(AeronDriver.IsDriverActive(driverCtx.AeronDirectoryName(), driverCtx.DriverTimeoutMs()));
             Assert.IsTrue(driverCtx.DirDeleteOnShutdown(), "Should delete dir on shutdown setting is on");
-            Assert.IsFalse(Directory.Exists(driverCtx.Ctx.AeronDirectoryName()), $"Dir exists [{Directory.Exists(driverCtx.Ctx.AeronDirectoryName())}]: {driverCtx.Ctx.AeronDirectoryName()}");
+            Assert.IsFalse(Directory.Exists(driverCtx.AeronDirectoryName()),
+                $"Dir exists [{Directory.Exists(driverCtx.AeronDirectoryName())}]: {driverCtx.AeronDirectoryName()}");
         }
 
         [Test]
@@ -40,8 +39,9 @@ namespace Adaptive.Aeron.Driver.Native.Tests
 
             var driverCtx = CreateDriverCtx();
             var md = AeronDriver.Start(driverCtx);
-            
-            using var _ = md.AddSubscription($"aeron:udp?endpoint=0.0.0.0:{port}", 1);
+
+            using var aeron = Aeron.Connect(new Aeron.Context().AeronDirectoryName(driverCtx.AeronDirectoryName()));
+            using var _ = aeron.AddSubscription($"aeron:udp?endpoint=0.0.0.0:{port}", 1);
         }
     }
 }

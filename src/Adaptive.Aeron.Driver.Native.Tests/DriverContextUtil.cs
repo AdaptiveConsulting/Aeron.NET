@@ -10,10 +10,9 @@ namespace Adaptive.Aeron.Driver.Native.Tests
             var baseDir = AppDomain.CurrentDomain.BaseDirectory;
             var dir = Path.Combine(baseDir, "mediadrivers", (isServer ? "server_" : "") + Guid.NewGuid().ToString("N"));
 
-            var ctx = new Aeron.Context()
+            var ctx = new AeronDriver.DriverContext()
                 .AeronDirectoryName(dir)
-                .DriverContext()
-                .DebugTimeoutMs(60 * 1000)
+                // .DebugTimeoutMs(60 * 1000)
                 .ThreadingMode(AeronThreadingModeEnum.AeronThreadingModeShared)
                 .SharedIdleStrategy(DriverIdleStrategy.SLEEPING)
                 .TermBufferLength(128 * 1024)

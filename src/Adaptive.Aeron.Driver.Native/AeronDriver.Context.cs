@@ -1,6 +1,4 @@
 using System;
-using System.Diagnostics.CodeAnalysis;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Adaptive.Agrona;
 
@@ -196,7 +194,8 @@ namespace Adaptive.Aeron.Driver.Native
             /// </summary>
             public const string THREADING_MODE_PROP_NAME = "aeron.threading.mode";
 
-            public const AeronThreadingModeEnum THREADING_MODE_DEFAULT = AeronThreadingModeEnum.AeronThreadingModeDedicated;
+            public const AeronThreadingModeEnum THREADING_MODE_DEFAULT =
+                AeronThreadingModeEnum.AeronThreadingModeDedicated;
 
             /// <summary>
             /// DEDICATED is a thread for each of the Conductor, Sender, and Receiver Agents. SHARED is one thread for all three Agents.
@@ -226,7 +225,8 @@ namespace Adaptive.Aeron.Driver.Native
 
             public static DriverIdleStrategy ConductorIdleStrategy()
             {
-                string value = Config.GetProperty(CONDUCTOR_IDLE_STRATEGY_PROP_NAME, CONDUCTOR_IDLE_STRATEGY_DEFAULT.Name);
+                string value = Config.GetProperty(CONDUCTOR_IDLE_STRATEGY_PROP_NAME,
+                    CONDUCTOR_IDLE_STRATEGY_DEFAULT.Name);
                 return DriverIdleStrategy.FromString(value);
             }
 
@@ -244,7 +244,8 @@ namespace Adaptive.Aeron.Driver.Native
 
             public static DriverIdleStrategy ReceiverIdleStrategy()
             {
-                string value = Config.GetProperty(RECEIVER_IDLE_STRATEGY_PROP_NAME, RECEIVER_IDLE_STRATEGY_DEFAULT.Name);
+                string value =
+                    Config.GetProperty(RECEIVER_IDLE_STRATEGY_PROP_NAME, RECEIVER_IDLE_STRATEGY_DEFAULT.Name);
                 return DriverIdleStrategy.FromString(value);
             }
 
@@ -253,7 +254,8 @@ namespace Adaptive.Aeron.Driver.Native
 
             public static DriverIdleStrategy SharedNetworkIdleStrategy()
             {
-                string value = Config.GetProperty(SHARED_NETWORK_IDLE_STRATEGY_PROP_NAME, SHARED_NETWORK_IDLE_STRATEGY_DEFAULT.Name);
+                string value = Config.GetProperty(SHARED_NETWORK_IDLE_STRATEGY_PROP_NAME,
+                    SHARED_NETWORK_IDLE_STRATEGY_DEFAULT.Name);
                 return DriverIdleStrategy.FromString(value);
             }
 
@@ -274,8 +276,6 @@ namespace Adaptive.Aeron.Driver.Native
         /// </summary>
         public class DriverContext
         {
-            private readonly Context _ctx;
-
             [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
             internal delegate void LogFuncDelegate([MarshalAs(UnmanagedType.LPStr)] string pChar);
 
@@ -305,23 +305,7 @@ namespace Adaptive.Aeron.Driver.Native
             private DriverIdleStrategy _receiverIdleStrategy = DriverConfiguration.ReceiverIdleStrategy();
             private DriverIdleStrategy _sharedNetworkIdleStrategy = DriverConfiguration.SharedNetworkIdleStrategy();
             private DriverIdleStrategy _sharedIdleStrategy = DriverConfiguration.SharedIdleStrategy();
-
-            internal DriverContext(Context ctx)
-            {
-                _ctx = ctx;
-            }
-
-            public Context Ctx => _ctx;
-
-            public static implicit operator Context(DriverContext driverCtx)
-            {
-                return driverCtx._ctx;
-            }
-
-            public static implicit operator DriverContext(Context clientContext)
-            {
-                return clientContext.DriverContext();
-            }
+            private string _aeronDirectoryName = "aeron-james"; // TODO;
 
             public DriverContext LoggerInfo(Action<string> logger)
             {
@@ -359,23 +343,6 @@ namespace Adaptive.Aeron.Driver.Native
             public bool UseActiveDriverIfPresent()
             {
                 return _useActiveDriverIfPresent;
-            }
-
-            public DriverContext DebugTimeoutMs(long debugTimeoutMs)
-            {
-                _debugTimeoutMs = debugTimeoutMs;
-                // override the property even if it's set by env
-                Config.Params[Context.DEBUG_TIMEOUT_PROP_NAME] = $"{debugTimeoutMs}ms";
-                return this;
-            }
-
-            /// <summary>
-            /// Get the driver timeout in milliseconds.
-            /// </summary>
-            /// <returns> driver timeout in milliseconds. </returns>
-            public long DebugTimeoutMs()
-            {
-                return Context.CheckDebugTimeout(_debugTimeoutMs, TimeUnit.MILLIS, nameof(DebugTimeoutMs));
             }
 
             /// <summary>
@@ -447,7 +414,7 @@ namespace Adaptive.Aeron.Driver.Native
             /// </summary>
             public long ClientLivenessTimeoutNs()
             {
-                return Context.CheckDebugTimeout(_clientLivenessTimeoutNs, TimeUnit.NANOSECONDS, nameof(ClientLivenessTimeoutNs));
+                return _clientLivenessTimeoutNs; // TODO
             }
 
             /// <summary>
@@ -465,7 +432,7 @@ namespace Adaptive.Aeron.Driver.Native
             /// </summary>
             public long PublicationUnblockTimeoutNs()
             {
-                return Context.CheckDebugTimeout(_publicationUnblockTimeoutNs, TimeUnit.NANOSECONDS, nameof(PublicationUnblockTimeoutNs)) + 1;
+                return _publicationUnblockTimeoutNs; // TODO
             }
 
             /// <summary>
@@ -656,35 +623,26 @@ namespace Adaptive.Aeron.Driver.Native
             {
                 return _sharedIdleStrategy;
             }
-        }
-    }
 
-    public static class DriverContextExtensions
-    {
-        // DriverContext acts as an attached property to Context, but since we do not have extension
-        // properties it's am extension method that fits matches nicely with the fluent interface. 
-        private static readonly ConditionalWeakTable<Aeron.Context, AeronDriver.DriverContext> DRIVER_CONTEXT_TABLE =
-            new ConditionalWeakTable<Aeron.Context, AeronDriver.DriverContext>();
-
-        public static AeronDriver.DriverContext DriverContext(this Aeron.Context ctx)
-        {
-            return DRIVER_CONTEXT_TABLE.GetValue(ctx, ctx1 => new AeronDriver.DriverContext(ctx1));
-        }
-
-        public static string ThreadingModeName(this AeronThreadingModeEnum threadingMode)
-        {
-            switch (threadingMode)
+            public long DriverTimeoutMs()
             {
-                case AeronThreadingModeEnum.AeronThreadingModeDedicated:
-                    return "DEDICATED";
-                case AeronThreadingModeEnum.AeronThreadingModeSharedNetwork:
-                    return "SHARED_NETWORK";
-                case AeronThreadingModeEnum.AeronThreadingModeShared:
-                    return "SHARED";
-                case AeronThreadingModeEnum.AeronThreadingModeInvoker:
-                    return "INVOKER";
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(threadingMode), threadingMode, null);
+                return 10000; // TODO make configurable...
+            }
+
+            public string AeronDirectoryName()
+            {
+                return _aeronDirectoryName;
+            }
+
+            public DriverContext AeronDirectoryName(string aeronDirectoryName)
+            {
+                _aeronDirectoryName = aeronDirectoryName;
+                return this;
+            }
+
+            public void ConcludeAeronDirectory()
+            {
+                // TODO
             }
         }
     }

@@ -15,6 +15,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Adaptive.Aeron.Driver.Native\Adaptive.Aeron.Driver.Native.csproj" />
+    <ProjectReference Include="..\Adaptive.Aeron\Adaptive.Aeron.csproj" />
   </ItemGroup>
 
   <ItemGroup>
