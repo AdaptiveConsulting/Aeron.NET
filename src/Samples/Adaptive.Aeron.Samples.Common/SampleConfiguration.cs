@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+using Adaptive.Agrona;
+
 namespace Adaptive.Aeron.Samples.Common
 {
     /// <summary>
