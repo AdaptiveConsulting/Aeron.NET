@@ -1,0 +1,63 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<config id="Adaptive.Aeron.Driver.Native" xmlns="urn:SharpGen.Config">
+    <assembly>Adaptive.Aeron.Driver.Native</assembly>
+    <namespace>Adaptive.Aeron.Driver.Native</namespace>
+
+    <include-dir override="true">$(THIS_CONFIG_PATH)/Headers</include-dir>
+    <include file="aeronmd.h" namespace="Adaptive.Aeron.Driver.Native" attach="true"/>
+    <include file="aeron_congestion_control.h" namespace="Adaptive.Aeron.Driver.Native" attach="true"/>
+
+    <bindings>
+        <!-- Standard bindings from https://github.com/SharpGenTools/SharpGenTools/blob/master/SharpGen.Runtime/Mapping.xml -->
+        <!-- (we don't want a dependency on SharpGen.Runtime) -->
+        <bind from="void" to="System.Void"/>
+        <bind from="int" to="System.Int32"/>
+        <bind from="unsigned int" to="System.UInt32"/>
+        <bind from="short" to="System.Int16"/>
+        <bind from="unsigned short" to="System.UInt16"/>
+        <bind from="unsigned char" to="System.Byte"/>
+        <bind from="longlong" to="System.Int64"/>
+        <bind from="unsigned longlong" to="System.UInt64"/>
+        <bind from="float" to="System.Single"/>
+        <bind from="double" to="System.Double"/>
+        <bind from="bool" to="System.Boolean" marshal="System.Byte"/>
+
+        <!-- Custom bindings -->
+        <bind from="size_t" to="System.IntPtr"/>
+        <bind from="aeron_driver_context_stct" to="System.IntPtr"/>
+        <bind from="aeron_udp_channel_transport_bindings_stct" to="System.IntPtr"/>
+        <bind from="aeron_driver_stct" to="System.IntPtr"/>
+        <bind from="aeron_flow_control_strategy_supplier_func_t" to="System.IntPtr"/>
+        <bind from="aeron_congestion_control_strategy_supplier_func_t" to="System.IntPtr"/>
+        <bind from="aeron_agent_on_start_func_t" to="System.IntPtr"/>
+        <bind from="aeron_driver_termination_validator_func_t" to="System.IntPtr"/>
+        <bind from="aeron_driver_termination_hook_func_t" to="System.IntPtr"/>
+        <bind from="aeron_log_func_t" to="System.IntPtr"/>
+        <bind from="aeron_name_resolver_supplier_func_t" to="System.IntPtr"/>
+        <bind from="aeron_udp_channel_interceptor_bindings_t" to="System.IntPtr"/>
+        
+        <bind from="sockaddr_storage" to="System.IntPtr"/>
+        <bind from="aeron_counters_manager_stct" to="System.IntPtr"/>
+        <bind from="aeron_udp_channel_stct" to="System.IntPtr"/>
+        <bind from="aeron_congestion_control_strategy_stct" to="System.IntPtr"/>
+        <bind from="aeron_congestion_control_strategy_should_measure_rtt_func_t" to="System.IntPtr"/>
+        <bind from="aeron_congestion_control_strategy_on_rttm_sent_func_t" to="System.IntPtr"/>
+        <bind from="aeron_congestion_control_strategy_on_rttm_func_t" to="System.IntPtr"/>
+        <bind from="aeron_congestion_control_strategy_initial_window_length_func_t" to="System.IntPtr"/>
+
+    </bindings>
+
+    <extension>
+        <create class="Adaptive.Aeron.Driver.Native.Interop" visibility="internal static"/>
+    </extension>
+
+    <mapping>
+        <map function="aeron_driver_context_init" group="Adaptive.Aeron.Driver.Native.Interop" dll='"aeron_driver"'
+             rawptr="true"/>
+        <map function="*" group="Adaptive.Aeron.Driver.Native.Interop" dll='"aeron_driver"'/>
+        <map param="aeron_driver_context_init::context" attribute="out"/>
+        <map param="aeron_congestion_control_default_strategy_supplier::strategy" attribute="out"/>
+        <map param="aeron_driver_init::driver" attribute="out"/>
+    </mapping>
+
+</config>

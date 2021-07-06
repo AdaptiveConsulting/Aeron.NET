@@ -25,17 +25,23 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="SharpGenTools.Sdk" Version="1.2.1" PrivateAssets="all" />
+        <PackageReference Include="SharpGenTools.Sdk" Version="1.2.1" PrivateAssets="all" Condition="$(GenerateNativeBindings)" />
         <PackageReference Include="System.Memory" Version="4.5.4" />
     </ItemGroup>
 
     <PropertyGroup>
+        <!-- Set to true to regenerate native bindings. May require fixing SDK to 3.1.101 in global.json or updating SharpGenTools. Do not commit as true. -->
+        <GenerateNativeBindings>false</GenerateNativeBindings>
+    </PropertyGroup>
+    
+    <PropertyGroup Condition="$(GenerateNativeBindings)">
         <CastXmlPath Condition="$([MSBuild]::IsOsPlatform('Linux'))">/usr/bin/castxml</CastXmlPath>
+        <SharpGenGeneratedCodeFolder>$(MSBuildProjectDirectory)/Native/Generated</SharpGenGeneratedCodeFolder>
     </PropertyGroup>
 
     <ItemGroup>
-        <SharpGenMapping Include="Mapping.Linux.xml" Condition="$([MSBuild]::IsOsPlatform('Linux'))" />
-        <SharpGenMapping Include="Mapping.xml" />
+        <SharpGenMapping Include="Native\Mapping.Linux.xml" Condition="$([MSBuild]::IsOsPlatform('Linux'))" />
+        <SharpGenMapping Include="Native\Mapping.xml" />
     </ItemGroup>
 
     <ItemGroup>

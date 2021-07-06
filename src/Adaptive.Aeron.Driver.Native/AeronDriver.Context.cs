@@ -270,9 +270,7 @@ namespace Adaptive.Aeron.Driver.Native
         }
 
         /// <summary>
-        /// Configures additional <see cref="AeronDriver"/> parameters not available via <see cref="Aeron.Context"/>.
-        /// Use an extension method <see cref="DriverContextExtensions.DriverContext"/> on <see cref="Aeron.Context"/>
-        /// to get an instance of <see cref="DriverContext"/>.
+        /// Configures <see cref="AeronDriver"/> parameters.
         /// </summary>
         public class DriverContext
         {

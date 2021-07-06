@@ -69,7 +69,7 @@ namespace Adaptive.Aeron.Driver.Native
         }
 
         /// <summary>
-        /// Check if there is an active driver at the <see cref="Aeron.Context.AeronDirectoryName()"/>>
+        /// Check if there is an active driver at the <see cref="DriverContext.AeronDirectoryName()"/>>
         /// or start an embedded driver at the same location.
         /// </summary>
         private static NativeDriver EnsureRunningDriver(DriverContext dCtx)
