@@ -52,6 +52,7 @@
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\Adaptive.Aeron\Adaptive.Aeron.csproj" />
       <ProjectReference Include="..\Adaptive.Agrona\Adaptive.Agrona.csproj" />
     </ItemGroup>
 </Project>

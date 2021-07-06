@@ -303,7 +303,7 @@ namespace Adaptive.Aeron.Driver.Native
             private DriverIdleStrategy _receiverIdleStrategy = DriverConfiguration.ReceiverIdleStrategy();
             private DriverIdleStrategy _sharedNetworkIdleStrategy = DriverConfiguration.SharedNetworkIdleStrategy();
             private DriverIdleStrategy _sharedIdleStrategy = DriverConfiguration.SharedIdleStrategy();
-            private string _aeronDirectoryName = "aeron-james"; // TODO;
+            private string? _aeronDirectoryName;
 
             public DriverContext LoggerInfo(Action<string> logger)
             {
@@ -624,23 +624,21 @@ namespace Adaptive.Aeron.Driver.Native
 
             public long DriverTimeoutMs()
             {
-                return 10000; // TODO make configurable...
+                return Aeron.Context.DRIVER_TIMEOUT_MS; // TODO make configurable
             }
 
             public string AeronDirectoryName()
             {
-                return _aeronDirectoryName;
+                return _aeronDirectoryName ??= Aeron.Context.GetAeronDirectoryName();
             }
 
             public DriverContext AeronDirectoryName(string aeronDirectoryName)
             {
+                if (string.IsNullOrWhiteSpace(aeronDirectoryName))
+                    throw new ArgumentNullException(nameof(aeronDirectoryName));
+                
                 _aeronDirectoryName = aeronDirectoryName;
                 return this;
-            }
-
-            public void ConcludeAeronDirectory()
-            {
-                // TODO
             }
         }
     }

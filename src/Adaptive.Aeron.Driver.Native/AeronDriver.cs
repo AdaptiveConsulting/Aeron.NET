@@ -49,9 +49,7 @@ namespace Adaptive.Aeron.Driver.Native
         {
             if (driverContext == null)
                 throw new ArgumentNullException(nameof(driverContext));
-
-            driverContext.ConcludeAeronDirectory();
-
+            
             // Start native embedded driver. Due to C# ctor execution order the embedded
             // driver must be already running before we call the ctor.
             var native = EnsureRunningDriver(driverContext);
