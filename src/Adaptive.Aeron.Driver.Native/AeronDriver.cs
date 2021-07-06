@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading;
 using static Adaptive.Aeron.Driver.Native.Interop;
@@ -62,8 +61,9 @@ namespace Adaptive.Aeron.Driver.Native
 
         public static bool IsDriverActive(string directory, long timeoutMs = 10000)
         {
-            var result = AeronIsDriverActive(directory, timeoutMs,
-                Marshal.GetFunctionPointerForDelegate(DriverContext.NOOP_LOGGER_NATIVE));
+            var result = AeronIsDriverActive(directory,
+                                             timeoutMs,
+                                             Marshal.GetFunctionPointerForDelegate(DriverContext.NOOP_LOGGER_NATIVE));
             GC.KeepAlive(DriverContext.NOOP_LOGGER_NATIVE);
             return result;
         }
@@ -80,7 +80,7 @@ namespace Adaptive.Aeron.Driver.Native
             {
                 for (int i = 0; i < 12; i++) // 20% more max
                 {
-                    Thread.Sleep((int) Math.Min(driverTimeoutMs / 10, int.MaxValue));
+                    Thread.Sleep((int)Math.Min(driverTimeoutMs / 10, int.MaxValue));
                     if (!IsDriverActive(aeronDir, driverTimeoutMs))
                     {
                         break;
@@ -107,12 +107,9 @@ namespace Adaptive.Aeron.Driver.Native
             return default;
         }
 
-        private static T AssertEqual<T>(string name, T config, T fromDriver)
+        private static void ThrowOnNativeError(string name)
         {
-            if (!EqualityComparer<T>.Default.Equals(config, fromDriver))
-                throw new MediaDriverException(
-                    $"Config {name}: value {config} is not set, the value from the driver is {fromDriver}");
-            return fromDriver;
+            throw new MediaDriverException($"{name}: ({AeronErrcode()}) {AeronErrmsg()}");
         }
 
         private static NativeDriver StartEmbedded(DriverContext dCtx)
@@ -122,133 +119,113 @@ namespace Adaptive.Aeron.Driver.Native
 
             var aeronDir = dCtx.AeronDirectoryName();
 
+            void LogAssertParameter<T>(string parameterName, T config, T fromDriver)
+            {
+                const string prefix = "AeronDriverContextSet";
+                if (parameterName.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+                    parameterName = parameterName.Substring(prefix.Length);
+
+                if (!EqualityComparer<T>.Default.Equals(config, fromDriver))
+                    throw new MediaDriverException($"Config {parameterName}: value {config} is not set, the value from the driver is {fromDriver}");
+
+                if (typeof(T) == typeof(long) || typeof(T) == typeof(int))
+                    dCtx.LogInfo($"{parameterName}: {((long)(object)fromDriver!):N0}");
+                else if (typeof(T) == typeof(ulong) || typeof(T) == typeof(uint))
+                    dCtx.LogInfo($"{parameterName}: {((ulong)(object)fromDriver!):N0}");
+                else
+                    dCtx.LogInfo($"{parameterName}: {fromDriver}");
+            }
+
             if (string.IsNullOrEmpty(aeronDir))
                 throw new ArgumentException("Aeron directory must be a valid path.");
 
             dCtx.LogInfo($"Aeron Media Driver: {AeronVersionFull()}");
 
             if (AeronDriverContextInit(out var nativeCtx) < 0)
-                throw new MediaDriverException($"AeronDriverContextInit: ({AeronErrcode()}) {AeronErrmsg()}");
+                ThrowOnNativeError(nameof(AeronDriverContextInit));
 
             if (AeronDriverContextSetDir(nativeCtx, aeronDir) < 0)
-                throw new MediaDriverException($"AeronDriverContextSetDir: ({AeronErrcode()}) {AeronErrmsg()}");
-            dCtx.LogInfo(
-                $"Starting embedded C media driver at dir: {AssertEqual("AeronDirectoryName", aeronDir, AeronDriverContextGetDir(nativeCtx))}");
+                ThrowOnNativeError(nameof(AeronDriverContextSetDir));
+            LogAssertParameter("AeronDirectoryName", aeronDir, AeronDriverContextGetDir(nativeCtx));
 
             if (AeronDriverContextSetPrintConfiguration(nativeCtx, dCtx.PrintConfigurationOnStart()) < 0)
-                throw new MediaDriverException(
-                    $"AeronDriverContextSetPrintConfiguration: ({AeronErrcode()}) {AeronErrmsg()}");
-            dCtx.LogInfo($"PrintConfigurationOnStart: " +
-                         $"{AssertEqual("PrintConfigurationOnStart", dCtx.PrintConfigurationOnStart(), AeronDriverContextGetPrintConfiguration(nativeCtx))}");
+                ThrowOnNativeError(nameof(AeronDriverContextSetPrintConfiguration));
+            LogAssertParameter(nameof(AeronDriverContextSetPrintConfiguration), dCtx.PrintConfigurationOnStart(), AeronDriverContextGetPrintConfiguration(nativeCtx));
 
             if (AeronDriverContextSetDirDeleteOnStart(nativeCtx, dCtx.DirDeleteOnStart()) < 0)
-                throw new MediaDriverException(
-                    $"AeronDriverContextSetDirDeleteOnStart: ({AeronErrcode()}) {AeronErrmsg()}");
-            dCtx.LogInfo($"DirDeleteOnStart: " +
-                         $"{AssertEqual("DirDeleteOnStart", dCtx.DirDeleteOnStart(), AeronDriverContextGetDirDeleteOnStart(nativeCtx))}");
+                ThrowOnNativeError(nameof(AeronDriverContextSetDirDeleteOnStart));
+            LogAssertParameter(nameof(AeronDriverContextSetDirDeleteOnStart), dCtx.DirDeleteOnStart(), AeronDriverContextGetDirDeleteOnStart(nativeCtx));
 
             if (AeronDriverContextSetDirDeleteOnShutdown(nativeCtx, dCtx.DirDeleteOnShutdown()) < 0)
-                throw new MediaDriverException(
-                    $"AeronDriverContextSetDirDeleteOnShutdown: ({AeronErrcode()}) {AeronErrmsg()}");
-            dCtx.LogInfo($"DirDeleteOnShutdown: " +
-                         $"{AssertEqual("DirDeleteOnShutdown", dCtx.DirDeleteOnShutdown(), AeronDriverContextGetDirDeleteOnShutdown(nativeCtx))}");
+                ThrowOnNativeError(nameof(AeronDriverContextSetDirDeleteOnShutdown));
+            LogAssertParameter(nameof(AeronDriverContextSetDirDeleteOnShutdown), dCtx.DirDeleteOnShutdown(), AeronDriverContextGetDirDeleteOnShutdown(nativeCtx));
 
-            if (AeronDriverContextSetTermBufferLength(nativeCtx, (IntPtr) dCtx.TermBufferLength()) < 0)
-                throw new MediaDriverException(
-                    $"AeronDriverContextSetTermBufferLength: ({AeronErrcode()}) {AeronErrmsg()}");
-            dCtx.LogInfo($"TermBufferLength: " +
-                         $"{AssertEqual("TermBufferLength", (IntPtr) dCtx.TermBufferLength(), AeronDriverContextGetTermBufferLength(nativeCtx))}");
+            if (AeronDriverContextSetTermBufferLength(nativeCtx, (IntPtr)dCtx.TermBufferLength()) < 0)
+                ThrowOnNativeError(nameof(AeronDriverContextSetTermBufferLength));
+            LogAssertParameter(nameof(AeronDriverContextSetTermBufferLength), dCtx.TermBufferLength(), (long)AeronDriverContextGetTermBufferLength(nativeCtx));
 
-            // if (AeronDriverContextSetPublicationTermWindowLength(nativeCtx,
-            //     (IntPtr) dCtx.PublicationTermWindowLength()) < 0)
-            //     throw new MediaDriverException(
-            //         $"AeronDriverContextSetPublicationTermWindowLength: ({AeronErrcode()}) {AeronErrmsg()}");
-            // dCtx.LogInfo($"PublicationTermWindowLength: " +
-            //              $"{AssertEqual("PublicationTermWindowLength", (IntPtr) dCtx.PublicationTermWindowLength(), AeronDriverContextGetPublicationTermWindowLength(nativeCtx))}");
-            //
-            // if (AeronDriverContextSetRcvInitialWindowLength(nativeCtx, (IntPtr) dCtx.InitialWindowLength()) < 0)
-            //     throw new MediaDriverException(
-            //         $"AeronDriverContextSetRcvInitialWindowLength: ({AeronErrcode()}) {AeronErrmsg()}");
-            // dCtx.LogInfo($"InitialWindowLength: " +
-            //              $"{AssertEqual("InitialWindowLength", (IntPtr) dCtx.InitialWindowLength(), AeronDriverContextGetRcvInitialWindowLength(nativeCtx))}");
-            //
-            // if (AeronDriverContextSetSocketSoRcvbuf(nativeCtx, (IntPtr) dCtx.SocketRcvbufLength()) < 0)
-            //     throw new MediaDriverException(
-            //         $"AeronDriverContextSetSocketSoRcvbuf: ({AeronErrcode()}) {AeronErrmsg()}");
-            // dCtx.LogInfo($"SocketRcvbufLength: " +
-            //              $"{AssertEqual("SocketRcvbufLength", (IntPtr) dCtx.SocketRcvbufLength(), AeronDriverContextGetSocketSoRcvbuf(nativeCtx))}");
-            //
-            // if (AeronDriverContextSetSocketSoSndbuf(nativeCtx, (IntPtr) dCtx.SocketSndbufLength()) < 0)
-            //     throw new MediaDriverException(
-            //         $"AeronDriverContextSetSocketSoSndbuf: ({AeronErrcode()}) {AeronErrmsg()}");
-            // dCtx.LogInfo($"SocketSndbufLength: " +
-            //              $"{AssertEqual("SocketSndbufLength", (IntPtr) dCtx.SocketSndbufLength(), AeronDriverContextGetSocketSoSndbuf(nativeCtx))}");
-            //
-            // if (AeronDriverContextSetMtuLength(nativeCtx, (IntPtr) dCtx.MtuLength()) < 0)
-            //     throw new MediaDriverException($"AeronDriverContextSetMtuLength: ({AeronErrcode()}) {AeronErrmsg()}");
-            // dCtx.LogInfo($"MtuLength: " +
-            //              $"{AssertEqual("MtuLength", (IntPtr) dCtx.MtuLength(), AeronDriverContextGetMtuLength(nativeCtx))}");
+            if (AeronDriverContextSetPublicationTermWindowLength(nativeCtx, (IntPtr)dCtx.PublicationTermWindowLength()) < 0)
+                ThrowOnNativeError(nameof(AeronDriverContextSetPublicationTermWindowLength));
+            LogAssertParameter(nameof(AeronDriverContextSetPublicationTermWindowLength), dCtx.PublicationTermWindowLength(), (long)AeronDriverContextGetPublicationTermWindowLength(nativeCtx));
 
-            // if (AeronDriverContextSetDriverTimeoutMs(nativeCtx, (ulong) dCtx.DriverTimeoutMs()) < 0)
-            //     throw new MediaDriverException(
-            //         $"AeronDriverContextSetDriverTimeoutMs: ({AeronErrcode()}) {AeronErrmsg()}");
-            // dCtx.LogInfo($"DriverTimeoutMs: " +
-            //              $"{AssertEqual("DriverTimeoutMs", (ulong) dCtx.DriverTimeoutMs(), AeronDriverContextGetDriverTimeoutMs(nativeCtx))}");
-            //
-            // if (AeronDriverContextSetClientLivenessTimeoutNs(nativeCtx, (ulong) dCtx.ClientLivenessTimeoutNs()) < 0)
-            //     throw new MediaDriverException(
-            //         $"AeronDriverContextSetClientLivenessTimeoutNs: ({AeronErrcode()}) {AeronErrmsg()}");
-            // dCtx.LogInfo($"ClientLivenessTimeoutNs: " +
-            //              $"{AssertEqual("ClientLivenessTimeoutNs", (ulong) dCtx.ClientLivenessTimeoutNs(), AeronDriverContextGetClientLivenessTimeoutNs(nativeCtx))}");
+            if (AeronDriverContextSetRcvInitialWindowLength(nativeCtx, (IntPtr)dCtx.InitialWindowLength()) < 0)
+                ThrowOnNativeError(nameof(AeronDriverContextSetRcvInitialWindowLength));
+            LogAssertParameter(nameof(AeronDriverContextSetRcvInitialWindowLength), dCtx.InitialWindowLength(), (long)AeronDriverContextGetRcvInitialWindowLength(nativeCtx));
 
-            // if (AeronDriverContextSetPublicationUnblockTimeoutNs(nativeCtx,
-            //     (ulong) dCtx.PublicationUnblockTimeoutNs()) < 0)
-            //     throw new MediaDriverException(
-            //         $"AeronDriverContextSetPublicationUnblockTimeoutNs: ({AeronErrcode()}) {AeronErrmsg()}");
-            // dCtx.LogInfo($"PublicationUnblockTimeoutNs: " +
-            //              $"{AssertEqual("PublicationUnblockTimeoutNs", (ulong) dCtx.PublicationUnblockTimeoutNs(), AeronDriverContextGetPublicationUnblockTimeoutNs(nativeCtx))}");
+            if (AeronDriverContextSetSocketSoRcvbuf(nativeCtx, (IntPtr)dCtx.SocketRcvbufLength()) < 0)
+                ThrowOnNativeError(nameof(AeronDriverContextSetSocketSoRcvbuf));
+            LogAssertParameter(nameof(AeronDriverContextSetSocketSoRcvbuf), dCtx.SocketRcvbufLength(), (long)AeronDriverContextGetSocketSoRcvbuf(nativeCtx));
+
+            if (AeronDriverContextSetSocketSoSndbuf(nativeCtx, (IntPtr)dCtx.SocketSndbufLength()) < 0)
+                ThrowOnNativeError(nameof(AeronDriverContextSetSocketSoSndbuf));
+            LogAssertParameter(nameof(AeronDriverContextSetSocketSoSndbuf), dCtx.SocketSndbufLength(), (long)AeronDriverContextGetSocketSoSndbuf(nativeCtx));
+
+            if (AeronDriverContextSetMtuLength(nativeCtx, (IntPtr)dCtx.MtuLength()) < 0)
+                ThrowOnNativeError(nameof(AeronDriverContextSetMtuLength));
+            LogAssertParameter(nameof(AeronDriverContextSetMtuLength), dCtx.MtuLength(), (long)AeronDriverContextGetMtuLength(nativeCtx));
+
+            if (AeronDriverContextSetDriverTimeoutMs(nativeCtx, (ulong)dCtx.DriverTimeoutMs()) < 0)
+                ThrowOnNativeError(nameof(AeronDriverContextSetDriverTimeoutMs));
+            LogAssertParameter(nameof(AeronDriverContextSetDriverTimeoutMs), (ulong)dCtx.DriverTimeoutMs(), AeronDriverContextGetDriverTimeoutMs(nativeCtx));
+
+            if (AeronDriverContextSetClientLivenessTimeoutNs(nativeCtx, (ulong)dCtx.ClientLivenessTimeoutNs()) < 0)
+                ThrowOnNativeError(nameof(AeronDriverContextSetClientLivenessTimeoutNs));
+            LogAssertParameter(nameof(AeronDriverContextSetClientLivenessTimeoutNs), (ulong)dCtx.ClientLivenessTimeoutNs(), AeronDriverContextGetClientLivenessTimeoutNs(nativeCtx));
+
+            if (AeronDriverContextSetPublicationUnblockTimeoutNs(nativeCtx, (ulong)dCtx.PublicationUnblockTimeoutNs()) < 0)
+                ThrowOnNativeError(nameof(AeronDriverContextSetPublicationUnblockTimeoutNs));
+            LogAssertParameter(nameof(AeronDriverContextSetPublicationUnblockTimeoutNs), (ulong)dCtx.PublicationUnblockTimeoutNs(), AeronDriverContextGetPublicationUnblockTimeoutNs(nativeCtx));
 
             if (AeronDriverContextSetThreadingMode(nativeCtx, dCtx.ThreadingMode()) < 0)
-                throw new MediaDriverException($"AeronDriverContextSetDir: ({AeronErrcode()}) {AeronErrmsg()}");
-            dCtx.LogInfo($"ThreadingMode: " +
-                         $"{AssertEqual("ThreadingMode", dCtx.ThreadingMode(), AeronDriverContextGetThreadingMode(nativeCtx))}");
+                ThrowOnNativeError(nameof(AeronDriverContextSetThreadingMode));
+            LogAssertParameter(nameof(AeronDriverContextSetThreadingMode), dCtx.ThreadingMode(), AeronDriverContextGetThreadingMode(nativeCtx));
 
             if (AeronDriverContextSetConductorIdleStrategy(nativeCtx, dCtx.ConductorIdleStrategy().Name) < 0)
-                throw new MediaDriverException(
-                    $"AeronDriverContextSetConductorIdleStrategy: ({AeronErrcode()}) {AeronErrmsg()}");
-            dCtx.LogInfo($"ConductorIdleStrategy: " +
-                         $"{AssertEqual("ConductorIdleStrategy", dCtx.ConductorIdleStrategy().Name, AeronDriverContextGetConductorIdleStrategy(nativeCtx))}");
+                ThrowOnNativeError(nameof(AeronDriverContextSetConductorIdleStrategy));
+            LogAssertParameter(nameof(AeronDriverContextSetConductorIdleStrategy), dCtx.ConductorIdleStrategy().Name, AeronDriverContextGetConductorIdleStrategy(nativeCtx));
 
             if (AeronDriverContextSetSenderIdleStrategy(nativeCtx, dCtx.SenderIdleStrategy().Name) < 0)
-                throw new MediaDriverException(
-                    $"AeronDriverContextSetSenderIdleStrategy: ({AeronErrcode()}) {AeronErrmsg()}");
-            dCtx.LogInfo($"SenderIdleStrategy: " +
-                         $"{AssertEqual("SenderIdleStrategy", dCtx.SenderIdleStrategy().Name, AeronDriverContextGetSenderIdleStrategy(nativeCtx))}");
+                ThrowOnNativeError(nameof(AeronDriverContextSetSenderIdleStrategy));
+            LogAssertParameter(nameof(AeronDriverContextSetSenderIdleStrategy), dCtx.SenderIdleStrategy().Name, AeronDriverContextGetSenderIdleStrategy(nativeCtx));
 
             if (AeronDriverContextSetReceiverIdleStrategy(nativeCtx, dCtx.ReceiverIdleStrategy().Name) < 0)
-                throw new MediaDriverException(
-                    $"AeronDriverContextSetReceiverIdleStrategy: ({AeronErrcode()}) {AeronErrmsg()}");
-            dCtx.LogInfo($"ReceiverIdleStrategy: " +
-                         $"{AssertEqual("ReceiverIdleStrategy", dCtx.ReceiverIdleStrategy().Name, AeronDriverContextGetReceiverIdleStrategy(nativeCtx))}");
+                ThrowOnNativeError(nameof(AeronDriverContextSetReceiverIdleStrategy));
+            LogAssertParameter(nameof(AeronDriverContextSetReceiverIdleStrategy), dCtx.ReceiverIdleStrategy().Name, AeronDriverContextGetReceiverIdleStrategy(nativeCtx));
 
             if (AeronDriverContextSetSharednetworkIdleStrategy(nativeCtx, dCtx.SharedNetworkIdleStrategy().Name) < 0)
-                throw new MediaDriverException(
-                    $"AeronDriverContextSetConductorIdleStrategy: ({AeronErrcode()}) {AeronErrmsg()}");
-            dCtx.LogInfo($"SharedNetworkIdleStrategy: " +
-                         $"{AssertEqual("SharedNetworkIdleStrategy", dCtx.SharedNetworkIdleStrategy().Name, AeronDriverContextGetSharednetworkIdleStrategy(nativeCtx))}");
+                ThrowOnNativeError(nameof(AeronDriverContextSetSharednetworkIdleStrategy));
+            LogAssertParameter(nameof(AeronDriverContextSetSharednetworkIdleStrategy), dCtx.SharedNetworkIdleStrategy().Name, AeronDriverContextGetSharednetworkIdleStrategy(nativeCtx));
 
             if (AeronDriverContextSetSharedIdleStrategy(nativeCtx, dCtx.SharedIdleStrategy().Name) < 0)
-                throw new MediaDriverException(
-                    $"AeronDriverContextSetSharedIdleStrategy: ({AeronErrcode()}) {AeronErrmsg()}");
-            dCtx.LogInfo($"SharedIdleStrategy: " +
-                         $"{AssertEqual("SharedIdleStrategy", dCtx.SharedIdleStrategy().Name, AeronDriverContextGetSharedIdleStrategy(nativeCtx))}");
+                ThrowOnNativeError(nameof(AeronDriverContextSetSharedIdleStrategy));
+            LogAssertParameter(nameof(AeronDriverContextSetSharedIdleStrategy), dCtx.SharedIdleStrategy().Name, AeronDriverContextGetSharedIdleStrategy(nativeCtx));
 
             if (AeronDriverInit(out var nativeDriver, nativeCtx) < 0)
-                throw new MediaDriverException($"AeronDriverInit: ({AeronErrcode()}) {AeronErrmsg()}");
+                ThrowOnNativeError(nameof(AeronDriverInit));
 
             if (AeronDriverStart(nativeDriver, false) < 0)
-                throw new MediaDriverException($"AeronDriverStart: ({AeronErrcode()}) {AeronErrmsg()}");
-            
+                ThrowOnNativeError(nameof(AeronDriverStart));
+
             // TODO get aeron directory from context?
 
             return new NativeDriver(nativeDriver, nativeCtx);
@@ -271,7 +248,7 @@ namespace Adaptive.Aeron.Driver.Native
                 if (!disposing)
                     return;
 
-                throw new MediaDriverException($"AeronDriverClose: ({AeronErrcode()}) {AeronErrmsg()}");
+                ThrowOnNativeError(nameof(AeronDriverClose));
             }
 
             if (AeronDriverContextClose(_native.Ctx) < 0)
@@ -279,7 +256,7 @@ namespace Adaptive.Aeron.Driver.Native
                 if (!disposing)
                     return;
 
-                throw new MediaDriverException($"AeronDriverContextClose: ({AeronErrcode()}) {AeronErrmsg()}");
+                ThrowOnNativeError(nameof(AeronDriverContextClose));
             }
         }
 
