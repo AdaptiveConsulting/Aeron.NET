@@ -28,7 +28,12 @@ namespace Adaptive.Aeron.Driver.Native.Tests
                 var md = AeronDriver.Start(driverCtx);
                 aeronDrivers[i] = md;
 
-                aeronClients[i] = Aeron.Connect(new Aeron.Context().AeronDirectoryName(driverCtx.AeronDirectoryName()));
+                var clientContext = new Aeron.Context()
+                    .AeronDirectoryName(driverCtx.AeronDirectoryName())
+                    .IdleStrategy(new SleepingIdleStrategy(10))
+                    .AwaitingIdleStrategy(new SleepingIdleStrategy(10));
+                
+                aeronClients[i] = Aeron.Connect(clientContext);
             }
 
             for (int i = 0; i < driverCount; i++)
@@ -52,14 +57,13 @@ namespace Adaptive.Aeron.Driver.Native.Tests
                 var c = 0;
                 while (pubs[i].Offer(ub) < 0 && ++c < 1_000_000)
                 {
-                    Thread.Sleep(0);
+                    Thread.Sleep(1);
                 }
                 Assert.AreNotEqual(1_000_000, c, "Could Offer");
 
                 Console.WriteLine($"Offered to {i}");
             }
-
-
+            
             for (int i = 0; i < driverCount; i++)
             {
                 void FragmentHandler(IDirectBuffer buffer, int offset, int length, Header header)
@@ -70,7 +74,7 @@ namespace Adaptive.Aeron.Driver.Native.Tests
                 var c = 0;
                 while (subs[i].Poll(FragmentHandler, 64) <= 0 && ++c < 1_000_000)
                 {
-                    Thread.Sleep(0);
+                    Thread.Sleep(1);
                 }
                 Assert.AreNotEqual(1_000_000, c, "Could Poll");
             }
