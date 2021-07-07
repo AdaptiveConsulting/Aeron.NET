@@ -10,6 +10,7 @@ namespace Adaptive.Aeron.Driver.Native.Tests
     public class MediaDriverInitTests
     {
         [Test]
+        [NonParallelizable]
         public void CouldStartAndStopMediaDriverEmbedded()
         {
             var driverCtx = CreateDriverCtx();
@@ -27,6 +28,7 @@ namespace Adaptive.Aeron.Driver.Native.Tests
         }
 
         [Test]
+        [NonParallelizable]
         public void CouldReusePort()
         {
             int port;

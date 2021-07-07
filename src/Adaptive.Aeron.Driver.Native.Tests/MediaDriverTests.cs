@@ -12,6 +12,7 @@ namespace Adaptive.Aeron.Driver.Native.Tests
     public class MediaDriverTests
     {
         [Test]
+        [NonParallelizable]
         public void RunManyMediaDrivers()
         {
             var driverCount = Math.Max(Math.Min(Environment.ProcessorCount, 8), 2);
