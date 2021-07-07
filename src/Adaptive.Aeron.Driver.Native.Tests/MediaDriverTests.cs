@@ -14,7 +14,7 @@ namespace Adaptive.Aeron.Driver.Native.Tests
         [Test]
         public void RunManyMediaDrivers()
         {
-            var driverCount = 4;
+            var driverCount = Math.Max(Math.Min(Environment.ProcessorCount, 8), 2);
             AeronDriver.DriverContext[] driverContexts = new AeronDriver.DriverContext[driverCount];
             AeronDriver[] aeronDrivers = new AeronDriver[driverCount];
             Aeron[] aeronClients = new Aeron[driverCount];
