@@ -279,6 +279,7 @@ namespace Adaptive.Aeron.Driver.Native
 
             private static readonly Action<string> NOOP_LOGGER = _ => { };
             internal static readonly LogFuncDelegate NOOP_LOGGER_NATIVE = new LogFuncDelegate(NOOP_LOGGER);
+            internal static readonly IntPtr NOOP_LOGGER_NATIVE_PTR = Marshal.GetFunctionPointerForDelegate(DriverContext.NOOP_LOGGER_NATIVE);
 
             private Action<string> _loggerInfo = NOOP_LOGGER;
             private Action<string>? _loggerWarn;
