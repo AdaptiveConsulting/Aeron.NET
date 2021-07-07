@@ -285,7 +285,7 @@ namespace Adaptive.Aeron.Driver.Native
             private Action<string>? _loggerError;
             private bool _useActiveDriverIfPresent;
 
-            private long _debugTimeoutMs;
+            private long _driverTimeoutMs = Aeron.Context.DRIVER_TIMEOUT_MS;
             private bool _printConfigurationOnStart;
             private bool _dirDeleteOnShutdown = DriverConfiguration.DirDeleteOnShutdown();
             private bool _dirDeleteOnStart = DriverConfiguration.DirDeleteOnStart();
@@ -412,7 +412,7 @@ namespace Adaptive.Aeron.Driver.Native
             /// </summary>
             public long ClientLivenessTimeoutNs()
             {
-                return _clientLivenessTimeoutNs; // TODO
+                return Aeron.Context.CheckDebugTimeout(_clientLivenessTimeoutNs, TimeUnit.NANOSECONDS, nameof(ClientLivenessTimeoutNs));
             }
 
             /// <summary>
@@ -430,7 +430,7 @@ namespace Adaptive.Aeron.Driver.Native
             /// </summary>
             public long PublicationUnblockTimeoutNs()
             {
-                return _publicationUnblockTimeoutNs; // TODO
+                return Aeron.Context.CheckDebugTimeout(_publicationUnblockTimeoutNs, TimeUnit.NANOSECONDS, nameof(PublicationUnblockTimeoutNs));
             }
 
             /// <summary>
@@ -622,9 +622,23 @@ namespace Adaptive.Aeron.Driver.Native
                 return _sharedIdleStrategy;
             }
 
+            /// <summary>
+            /// The timeout in milliseconds after which the driver is considered dead if it does not update its C'n'C timestamp.
+            /// </summary>
             public long DriverTimeoutMs()
             {
-                return Aeron.Context.DRIVER_TIMEOUT_MS; // TODO make configurable
+                return Aeron.Context.CheckDebugTimeout(_driverTimeoutMs, TimeUnit.MILLIS, nameof(DriverTimeoutMs));
+            }
+            
+            /// <summary>
+            /// The timeout in milliseconds after which the driver is considered dead if it does not update its C'n'C timestamp.
+            /// </summary>
+            /// <param name="driverTimeout"></param>
+            /// <returns></returns>
+            public DriverContext DriverTimeoutMs(long driverTimeout)
+            {
+                _driverTimeoutMs = driverTimeout;
+                return this;
             }
 
             public string AeronDirectoryName()

@@ -144,7 +144,7 @@ namespace Adaptive.Aeron.Driver.Native
 
             if (AeronDriverContextSetDir(nativeCtx, aeronDir) < 0)
                 ThrowOnNativeError(nameof(AeronDriverContextSetDir));
-            LogAssertParameter("AeronDirectoryName", aeronDir, AeronDriverContextGetDir(nativeCtx));
+            LogAssertParameter(nameof(AeronDriverContextSetDir), aeronDir, AeronDriverContextGetDir(nativeCtx));
 
             if (AeronDriverContextSetPrintConfiguration(nativeCtx, dCtx.PrintConfigurationOnStart()) < 0)
                 ThrowOnNativeError(nameof(AeronDriverContextSetPrintConfiguration));
@@ -223,8 +223,6 @@ namespace Adaptive.Aeron.Driver.Native
 
             if (AeronDriverStart(nativeDriver, false) < 0)
                 ThrowOnNativeError(nameof(AeronDriverStart));
-
-            // TODO get aeron directory from context?
 
             return new NativeDriver(nativeDriver, nativeCtx);
         }
