@@ -62,7 +62,6 @@ namespace Adaptive.Aeron.Driver.Native
             var result = AeronIsDriverActive(directory,
                                              timeoutMs,
                                              Marshal.GetFunctionPointerForDelegate(DriverContext.NOOP_LOGGER_NATIVE));
-            GC.KeepAlive(DriverContext.NOOP_LOGGER_NATIVE);
             return result;
         }
 
