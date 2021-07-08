@@ -8,11 +8,10 @@ namespace Adaptive.Aeron.Driver.Native.Tests
         public static AeronDriver.DriverContext CreateDriverCtx()
         {
             var baseDir = AppDomain.CurrentDomain.BaseDirectory;
-            var dir = Path.Combine(baseDir, "aeron-" + Guid.NewGuid().ToString("N"));
+            var dir = Path.Combine(baseDir!, "aeron-" + Guid.NewGuid().ToString("N"));
 
             var ctx = new AeronDriver.DriverContext()
                 .AeronDirectoryName(dir)
-                // .DebugTimeoutMs(60 * 1000)
                 .ThreadingMode(AeronThreadingModeEnum.AeronThreadingModeShared)
                 .SharedIdleStrategy(DriverIdleStrategy.SLEEPING)
                 .TermBufferLength(128 * 1024)

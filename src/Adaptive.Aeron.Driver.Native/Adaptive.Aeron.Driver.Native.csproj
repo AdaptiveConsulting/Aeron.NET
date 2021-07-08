@@ -7,11 +7,11 @@
         <PlatformTarget>x64</PlatformTarget>
         <NoWarn>$(NoWarn),1591</NoWarn>
         <PackageId>Aeron.Driver.Native</PackageId>
-        <Version>1.32.0-alpha2</Version>
+        <Version>1.34.0-beta1</Version>
         <Authors>Adaptive Financial Consulting Ltd., Abc Arbitrage Asset Management</Authors>
         <Company>Adaptive Financial Consulting Ltd.</Company>
         <Product>Aeron.Driver.Native</Product>
-        <Copyright>Copyright 2020</Copyright>
+        <Copyright>Copyright 2021</Copyright>
         <PackageLicense>https://github.com/AdaptiveConsulting/Aeron.NET/blob/master/LICENSE</PackageLicense>
         <PackageProjectUrl>https://github.com/AdaptiveConsulting/Aeron.NET/</PackageProjectUrl>
         <PackageIconUrl>https://raw.githubusercontent.com/AdaptiveConsulting/Aeron.NET/master/images/adaptive.png</PackageIconUrl>
