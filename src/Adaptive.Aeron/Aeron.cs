@@ -18,6 +18,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.IO;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using Adaptive.Aeron.Exceptions;
 using Adaptive.Aeron.LogBuffer;
@@ -28,6 +29,8 @@ using Adaptive.Agrona.Concurrent.Errors;
 using Adaptive.Agrona.Concurrent.RingBuffer;
 using Adaptive.Agrona.Concurrent.Status;
 using Adaptive.Agrona.Util;
+
+[assembly: InternalsVisibleTo("Adaptive.Aeron.Driver.Native")]
 
 namespace Adaptive.Aeron
 {
@@ -121,7 +124,7 @@ namespace Adaptive.Aeron
                 }
                 else
                 {
-                    AgentRunner.StartOnThread(aeron._conductorRunner, ctx.ThreadFactory());
+                    AgentRunner.StartOnThread(aeron.ConductorRunner, ctx.ThreadFactory());
                 }
 
                 return aeron;
@@ -137,6 +140,8 @@ namespace Adaptive.Aeron
             }
         }
 
+        internal AgentRunner ConductorRunner => _conductorRunner;
+        
         /// <summary>
         /// Print out the values from <seealso cref="CountersReader"/> which can be useful for debugging.
         /// </summary>
@@ -191,7 +196,7 @@ namespace Adaptive.Aeron
         /// This will close all currently open <see cref="Publication"/>s, <see cref="Subscription"/>s and <see cref="Counter"/>s created
         /// from this client.
         /// </summary>
-        public void Dispose()
+        public virtual void Dispose()
         {
             if (_isClosed.CompareAndSet(false, true))
             {

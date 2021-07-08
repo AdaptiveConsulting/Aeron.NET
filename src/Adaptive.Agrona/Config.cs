@@ -17,7 +17,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace Adaptive.Aeron
+namespace Adaptive.Agrona
 {
     public static class Config
     {

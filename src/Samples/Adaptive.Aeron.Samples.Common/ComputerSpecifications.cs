@@ -18,6 +18,7 @@ using System;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using Adaptive.Agrona;
 using HardwareInformation;
 using HardwareInformation.Information.Cpu;
 
