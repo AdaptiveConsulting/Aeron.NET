@@ -2,9 +2,9 @@
 
 namespace Adaptive.Agrona.Concurrent
 {
-    public class BackgoundThreadFactory : IThreadFactory
+    public class BackgroundThreadFactory : IThreadFactory
     {
-        public static readonly BackgoundThreadFactory Instance = new BackgoundThreadFactory();
+        public static readonly BackgroundThreadFactory Instance = new BackgroundThreadFactory();
 
         public Thread NewThread(ThreadStart runner)
         {
