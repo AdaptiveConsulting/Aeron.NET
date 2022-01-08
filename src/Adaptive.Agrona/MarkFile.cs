@@ -212,7 +212,7 @@ namespace Adaptive.Agrona
             return parentDir;
         }
 
-        public FileInfo CncFileName()
+        public FileInfo FileName()
         {
             return markFile;
         }

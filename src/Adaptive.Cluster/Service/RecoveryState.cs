@@ -34,15 +34,15 @@ namespace Adaptive.Cluster.Service
     ///  +---------------------------------------------------------------+
     ///
     /// </summary>
-    public class RecoveryState
+    public static class RecoveryState
     {
         /// <summary>
         /// Type id of a recovery state counter.
         /// </summary>
-        public const int RECOVERY_STATE_TYPE_ID = 204;
+        public const int RECOVERY_STATE_TYPE_ID = AeronCounters.CLUSTER_RECOVERY_STATE_TYPE_ID;
 
         /// <summary>
-        /// Human readable name for the counter.
+        /// Human-readable name for the counter.
         /// </summary>
         public const string NAME = "Cluster recovery: leadershipTermId=";
 
@@ -65,14 +65,19 @@ namespace Adaptive.Cluster.Service
 
             for (int i = 0, size = counters.MaxCounterId; i < size; i++)
             {
-                if (counters.GetCounterState(i) == CountersReader.RECORD_ALLOCATED &&
-                    counters.GetCounterTypeId(i) == RECOVERY_STATE_TYPE_ID)
+                var counterState = counters.GetCounterState(i);
+                if (CountersReader.RECORD_ALLOCATED == counterState &&
+                    RECOVERY_STATE_TYPE_ID == counters.GetCounterTypeId(i))
                 {
                     if (buffer.GetInt(CountersReader.MetaDataOffset(i) + CountersReader.KEY_OFFSET +
                                       CLUSTER_ID_OFFSET) == clusterId)
                     {
                         return i;
                     }
+                }
+                else if (CountersReader.RECORD_UNUSED == counterState)
+                {
+                    break;
                 }
             }
 
@@ -133,7 +138,8 @@ namespace Adaptive.Cluster.Service
             if (counters.GetCounterState(counterId) == CountersReader.RECORD_ALLOCATED &&
                 counters.GetCounterTypeId(counterId) == RECOVERY_STATE_TYPE_ID)
             {
-                return buffer.GetLong(CountersReader.MetaDataOffset(counterId) + CountersReader.KEY_OFFSET + TIMESTAMP_OFFSET);
+                return buffer.GetLong(CountersReader.MetaDataOffset(counterId) + CountersReader.KEY_OFFSET +
+                                      TIMESTAMP_OFFSET);
             }
 
             return Aeron.Aeron.NULL_VALUE;

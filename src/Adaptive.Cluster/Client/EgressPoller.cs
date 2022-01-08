@@ -31,6 +31,11 @@ namespace Adaptive.Cluster.Client
         private string detail = "";
         private byte[] encodedChallenge;
 
+        /// <summary>
+        /// Construct a poller on the egress subscription.
+        /// </summary>
+        /// <param name="subscription">  for egress from the cluster. </param>
+        /// <param name="fragmentLimit"> for each poll operation. </param>
         public EgressPoller(Subscription subscription, int fragmentLimit)
         {
             this.fragmentAssembler = new ControlledFragmentAssembler(this);
@@ -112,9 +117,9 @@ namespace Adaptive.Cluster.Client
         }
 
         /// <summary>
-        /// Get the detail returned in the last session event.
+        /// Get the detail returned from the last session event.
         /// </summary>
-        /// <returns> the detail returned in the last session event. </returns>
+        /// <returns> the detail returned from the last session event. </returns>
         public string Detail()
         {
             return detail;
@@ -147,22 +152,30 @@ namespace Adaptive.Cluster.Client
             return ChallengeDecoder.TEMPLATE_ID == templateId;
         }
 
+        /// <summary>
+        /// Reset last captured value and poll the egress subscription for output.
+        /// </summary>
+        /// <returns> number of fragments consumed. </returns>
         public int Poll()
         {
-            clusterSessionId = Aeron.Aeron.NULL_VALUE;
-            correlationId = Aeron.Aeron.NULL_VALUE;
-            leadershipTermId = Aeron.Aeron.NULL_VALUE;
-            leaderMemberId = Aeron.Aeron.NULL_VALUE;
-            templateId = Aeron.Aeron.NULL_VALUE;
-            version = 0;
-            eventCode = Codecs.EventCode.NULL_VALUE;
-            detail = "";
-            encodedChallenge = null;
-            isPollComplete = false;
+            if (isPollComplete)
+            {
+                clusterSessionId = Aeron.Aeron.NULL_VALUE;
+                correlationId = Aeron.Aeron.NULL_VALUE;
+                leadershipTermId = Aeron.Aeron.NULL_VALUE;
+                leaderMemberId = Aeron.Aeron.NULL_VALUE;
+                templateId = Aeron.Aeron.NULL_VALUE;
+                version = 0;
+                eventCode = Codecs.EventCode.NULL_VALUE;
+                detail = "";
+                encodedChallenge = null;
+                isPollComplete = false;
+            }
 
             return subscription.ControlledPoll(fragmentAssembler, fragmentLimit);
         }
 
+        /// <inheritdoc />
         public ControlledFragmentHandlerAction OnFragment(IDirectBuffer buffer, int offset, int length, Header header)
         {
             if (isPollComplete)

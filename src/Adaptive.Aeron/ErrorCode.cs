@@ -22,9 +22,9 @@ namespace Adaptive.Aeron
     public enum ErrorCode
     {
         /// <summary>
-        /// Aeron encountered an error condition. 
+        /// Old generic value, no longer used (0 value clashes with success). Retained for version compatibility. 
         /// </summary>
-        GENERIC_ERROR = 0,
+        UNUSED = 0,
 
         /// <summary>
         /// A failure occurred creating a new channel or parsing the channel string. 
@@ -67,7 +67,7 @@ namespace Adaptive.Aeron
         NOT_SUPPORTED = 8,
 
         /// <summary>
-        /// Attempted to send a command that had a host name that could not be resolved.
+        /// Attempted to send a command that had a hostname that could not be resolved.
         /// </summary>
         UNKNOWN_HOST = 9,
 
@@ -75,6 +75,11 @@ namespace Adaptive.Aeron
         /// Attempted to send a command that referred to a resource that was unavailable.
         /// </summary>
         RESOURCE_TEMPORARILY_UNAVAILABLE = 10,
+        
+        /// <summary>
+        /// Aeron encountered an error condition.
+        /// </summary>
+        GENERIC_ERROR = 11,
 
         /// <summary>
         /// A code value returned was not known.

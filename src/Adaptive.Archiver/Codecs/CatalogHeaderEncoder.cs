@@ -9,10 +9,10 @@ namespace Adaptive.Archiver.Codecs {
 
 public class CatalogHeaderEncoder
 {
-    public const ushort BLOCK_LENGTH = 8;
+    public const ushort BLOCK_LENGTH = 32;
     public const ushort TEMPLATE_ID = 20;
     public const ushort SCHEMA_ID = 101;
-    public const ushort SCHEMA_VERSION = 4;
+    public const ushort SCHEMA_VERSION = 6;
 
     private CatalogHeaderEncoder _parentMessage;
     private IMutableDirectBuffer _buffer;
@@ -128,34 +128,130 @@ public class CatalogHeaderEncoder
     }
 
 
-    public static int EntryLengthEncodingOffset()
+    public static int LengthEncodingOffset()
     {
         return 4;
     }
 
-    public static int EntryLengthEncodingLength()
+    public static int LengthEncodingLength()
     {
         return 4;
     }
 
-    public static int EntryLengthNullValue()
+    public static int LengthNullValue()
     {
         return -2147483648;
     }
 
-    public static int EntryLengthMinValue()
+    public static int LengthMinValue()
     {
         return -2147483647;
     }
 
-    public static int EntryLengthMaxValue()
+    public static int LengthMaxValue()
     {
         return 2147483647;
     }
 
-    public CatalogHeaderEncoder EntryLength(int value)
+    public CatalogHeaderEncoder Length(int value)
     {
         _buffer.PutInt(_offset + 4, value, ByteOrder.LittleEndian);
+        return this;
+    }
+
+
+    public static int NextRecordingIdEncodingOffset()
+    {
+        return 8;
+    }
+
+    public static int NextRecordingIdEncodingLength()
+    {
+        return 8;
+    }
+
+    public static long NextRecordingIdNullValue()
+    {
+        return -9223372036854775808L;
+    }
+
+    public static long NextRecordingIdMinValue()
+    {
+        return -9223372036854775807L;
+    }
+
+    public static long NextRecordingIdMaxValue()
+    {
+        return 9223372036854775807L;
+    }
+
+    public CatalogHeaderEncoder NextRecordingId(long value)
+    {
+        _buffer.PutLong(_offset + 8, value, ByteOrder.LittleEndian);
+        return this;
+    }
+
+
+    public static int AlignmentEncodingOffset()
+    {
+        return 16;
+    }
+
+    public static int AlignmentEncodingLength()
+    {
+        return 4;
+    }
+
+    public static int AlignmentNullValue()
+    {
+        return -2147483648;
+    }
+
+    public static int AlignmentMinValue()
+    {
+        return -2147483647;
+    }
+
+    public static int AlignmentMaxValue()
+    {
+        return 2147483647;
+    }
+
+    public CatalogHeaderEncoder Alignment(int value)
+    {
+        _buffer.PutInt(_offset + 16, value, ByteOrder.LittleEndian);
+        return this;
+    }
+
+
+    public static int ReservedEncodingOffset()
+    {
+        return 31;
+    }
+
+    public static int ReservedEncodingLength()
+    {
+        return 1;
+    }
+
+    public static sbyte ReservedNullValue()
+    {
+        return (sbyte)-128;
+    }
+
+    public static sbyte ReservedMinValue()
+    {
+        return (sbyte)-127;
+    }
+
+    public static sbyte ReservedMaxValue()
+    {
+        return (sbyte)127;
+    }
+
+    public CatalogHeaderEncoder Reserved(sbyte value)
+    {
+        _buffer.PutByte(_offset + 31, unchecked((byte)value));
         return this;
     }
 

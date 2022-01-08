@@ -12,7 +12,7 @@ public class BackupQueryEncoder
     public const ushort BLOCK_LENGTH = 16;
     public const ushort TEMPLATE_ID = 77;
     public const ushort SCHEMA_ID = 111;
-    public const ushort SCHEMA_VERSION = 6;
+    public const ushort SCHEMA_VERSION = 7;
 
     private BackupQueryEncoder _parentMessage;
     private IMutableDirectBuffer _buffer;

@@ -24,16 +24,23 @@ namespace Adaptive.Cluster.Service
             {
                 int recordOffset = CountersReader.MetaDataOffset(i);
 
-                if (counters.GetCounterState(i) == CountersReader.RECORD_ALLOCATED &&
-                    counters.GetCounterTypeId(i) == typeId &&
-                    buffer.GetInt(recordOffset + CountersReader.KEY_OFFSET) == clusterId)
+                var counterState = counters.GetCounterState(i);
+
+                if (CountersReader.RECORD_ALLOCATED == counterState)
                 {
-                    return i;
+                    if (counters.GetCounterTypeId(i) == typeId &&
+                        buffer.GetInt(recordOffset + CountersReader.KEY_OFFSET) == clusterId)
+                    {
+                        return i;
+                    }
+                }
+                else if (CountersReader.RECORD_UNUSED == counterState)
+                {
+                    break;
                 }
             }
 
             return Aeron.Aeron.NULL_VALUE;
         }
     }
-
 }

@@ -13,34 +13,59 @@ namespace Adaptive.Archiver
         private readonly MessageHeaderDecoder messageHeaderDecoder = new MessageHeaderDecoder();
         private readonly ControlResponseDecoder controlResponseDecoder = new ControlResponseDecoder();
         private readonly RecordingDescriptorDecoder recordingDescriptorDecoder = new RecordingDescriptorDecoder();
+        private readonly RecordingSignalEventDecoder recordingSignalEventDecoder = new RecordingSignalEventDecoder();
 
         private readonly long controlSessionId;
         private readonly int fragmentLimit;
         private readonly Subscription subscription;
         private readonly ControlledFragmentAssembler fragmentAssembler;
         private readonly ErrorHandler errorHandler;
-
+        private readonly IRecordingSignalConsumer recordingSignalConsumer;
 
         private long correlationId;
         private int remainingRecordCount;
         private bool isDispatchComplete = false;
-        private IRecordingDescriptorConsumer consumer;
+        private IRecordingDescriptorConsumer recordingDescriptorConsumer;
 
         /// <summary>
         /// Create a poller for a given subscription to an archive for control response messages.
         /// </summary>
         /// <param name="subscription">     to poll for new events. </param>
+        /// <param name="errorHandler">     to call for asynchronous errors. </param>
+        /// <param name="controlSessionId"> to filter the responses. </param>
+        /// <param name="fragmentLimit">    to apply for each polling operation. </param>
+        public RecordingDescriptorPoller(
+            Subscription subscription,
+            ErrorHandler errorHandler, 
+            long controlSessionId, 
+            int fragmentLimit) : 
+            this(
+                subscription,
+                errorHandler, 
+                AeronArchive.Configuration.NO_OP_RECORDING_SIGNAL_CONSUMER, 
+                controlSessionId, 
+                fragmentLimit)
+        {
+        }
+        
+        /// <summary>
+        /// Create a poller for a given subscription to an archive for control response messages.
+        /// </summary>
+        /// <param name="subscription">     to poll for new events. </param>
         /// <param name="errorHandler">     to call for asynchronous errors.</param>
+        /// <param name="recordingSignalConsumer"> for consuming interleaved recording signals on the control session.</param>
         /// <param name="controlSessionId"> to filter the responses. </param>
         /// <param name="fragmentLimit">    to apply for each polling operation. </param>
         public RecordingDescriptorPoller(
             Subscription subscription,
             ErrorHandler errorHandler,
+            IRecordingSignalConsumer recordingSignalConsumer,
             long controlSessionId,
             int fragmentLimit)
         {
             this.subscription = subscription;
             this.errorHandler = errorHandler;
+            this.recordingSignalConsumer = recordingSignalConsumer;
             this.fragmentLimit = fragmentLimit;
             this.controlSessionId = controlSessionId;
 
@@ -62,7 +87,10 @@ namespace Adaptive.Archiver
         /// <returns> the number of fragments read during the operation. Zero if no events are available. </returns>
         public int Poll()
         {
-            isDispatchComplete = false;
+            if (isDispatchComplete)
+            {
+                isDispatchComplete = false;
+            }
 
             return subscription.ControlledPoll(fragmentAssembler, fragmentLimit);
         }
@@ -103,7 +131,7 @@ namespace Adaptive.Archiver
         public void Reset(long correlationId, int recordCount, IRecordingDescriptorConsumer consumer)
         {
             this.correlationId = correlationId;
-            this.consumer = consumer;
+            this.recordingDescriptorConsumer = consumer;
             this.remainingRecordCount = recordCount;
             isDispatchComplete = false;
         }
@@ -176,13 +204,12 @@ namespace Adaptive.Archiver
                         messageHeaderDecoder.BlockLength(),
                         messageHeaderDecoder.Version());
 
-                    long correlationId = recordingDescriptorDecoder.CorrelationId();
-                    if (controlSessionId == recordingDescriptorDecoder.ControlSessionId() &&
-                        correlationId == this.correlationId)
+                    if (recordingDescriptorDecoder.ControlSessionId() == controlSessionId &&
+                        recordingDescriptorDecoder.CorrelationId() == correlationId)
                     {
-                        consumer.OnRecordingDescriptor(
+                        recordingDescriptorConsumer.OnRecordingDescriptor(
                             controlSessionId,
-                            correlationId,
+                            recordingDescriptorDecoder.CorrelationId(),
                             recordingDescriptorDecoder.RecordingId(),
                             recordingDescriptorDecoder.StartTimestamp(),
                             recordingDescriptorDecoder.StopTimestamp(),
@@ -207,11 +234,31 @@ namespace Adaptive.Archiver
 
                     break;
                 }
+                
+                case RecordingSignalEventDecoder.TEMPLATE_ID:
+                    recordingSignalEventDecoder.Wrap(
+                        buffer, 
+                        offset + MessageHeaderDecoder.ENCODED_LENGTH, 
+                        messageHeaderDecoder.BlockLength(),
+                        messageHeaderDecoder.Version());
+
+                    if (controlSessionId == recordingSignalEventDecoder.ControlSessionId())
+                    {
+                        recordingSignalConsumer.OnSignal(
+                            recordingSignalEventDecoder.ControlSessionId(), 
+                            recordingSignalEventDecoder.CorrelationId(), 
+                            recordingSignalEventDecoder.RecordingId(), 
+                            recordingSignalEventDecoder.SubscriptionId(), 
+                            recordingSignalEventDecoder.Position(), 
+                            recordingSignalEventDecoder.Signal());
+                    }
+                    break;
             }
 
             return ControlledFragmentHandlerAction.CONTINUE;
         }
 
+        /// <inheritdoc />
         public override string ToString()
         {
             return "RecordingDescriptorPoller{" +

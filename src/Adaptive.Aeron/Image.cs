@@ -26,8 +26,8 @@ using Adaptive.Agrona.Util;
 namespace Adaptive.Aeron
 {
     /// <summary>
-    /// Represents a replicated publication <seealso cref="Image"/> from a publisher to a <seealso cref="Subscription"/>.
-    /// Each <seealso cref="Image"/> identifies a source publisher by session id.
+    /// Represents a replicated <see cref="Publication"/> from a publisher which matches a <seealso cref="Subscription"/>.
+    /// Each <seealso cref="Image"/> identifies a source <see cref="Publication"/> by <see cref="SessionId"/>.
     /// 
     /// By default fragmented messages are not reassembled before delivery. If an application must
     /// receive whole messages, whether or not they were fragmented, then the Subscriber
@@ -324,6 +324,7 @@ namespace Adaptive.Aeron
                         continue;
                     }
 
+                    ++fragmentsRead;
                     header.Offset = frameOffset;
 
                     var action = handler.OnFragment(
@@ -332,19 +333,19 @@ namespace Adaptive.Aeron
                         length - DataHeaderFlyweight.HEADER_LENGTH,
                         header);
 
-                    if (action == ControlledFragmentHandlerAction.ABORT)
+                    if (ControlledFragmentHandlerAction.ABORT == action)
                     {
+                        --fragmentsRead;
                         offset -= alignedLength;
                         break;
                     }
 
-                    ++fragmentsRead;
-
-                    if (action == ControlledFragmentHandlerAction.BREAK)
+                    if (ControlledFragmentHandlerAction.BREAK == action)
                     {
                         break;
                     }
-                    else if (action == ControlledFragmentHandlerAction.COMMIT)
+
+                    if (ControlledFragmentHandlerAction.COMMIT == action)
                     {
                         initialPosition += (offset - initialOffset);
                         initialOffset = offset;
@@ -352,9 +353,9 @@ namespace Adaptive.Aeron
                     }
                 }
             }
-            catch (Exception t)
+            catch (Exception ex)
             {
-                _errorHandler(t);
+                _errorHandler(ex);
             }
             finally
             {
@@ -436,14 +437,14 @@ namespace Adaptive.Aeron
                         continue;
                     }
 
+                    ++fragmentsRead;
                     header.Offset = frameOffset;
                     handler.OnFragment(termBuffer, frameOffset + DataHeaderFlyweight.HEADER_LENGTH, length - DataHeaderFlyweight.HEADER_LENGTH, header);
-                    ++fragmentsRead;
                 }
             }
-            catch (Exception t)
+            catch (Exception ex)
             {
-                _errorHandler(t);
+                _errorHandler(ex);
             }
             finally
             {
@@ -531,25 +532,25 @@ namespace Adaptive.Aeron
                         continue;
                     }
 
+                    ++fragmentsRead;
                     header.Offset = frameOffset;
 
                     var action = handler.OnFragment(termBuffer,
                         frameOffset + DataHeaderFlyweight.HEADER_LENGTH,
                         length - DataHeaderFlyweight.HEADER_LENGTH, header);
 
-                    if (action == ControlledFragmentHandlerAction.ABORT)
+                    if (ControlledFragmentHandlerAction.ABORT == action)
                     {
+                        --fragmentsRead;
                         offset -= alignedLength;
                         break;
                     }
-
-                    ++fragmentsRead;
-
-                    if (action == ControlledFragmentHandlerAction.BREAK)
+                   
+                    if (ControlledFragmentHandlerAction.BREAK == action)
                     {
                         break;
                     }
-                    else if (action == ControlledFragmentHandlerAction.COMMIT)
+                    if (ControlledFragmentHandlerAction.COMMIT == action)
                     {
                         initialPosition += (offset - initialOffset);
                         initialOffset = offset;
@@ -557,9 +558,9 @@ namespace Adaptive.Aeron
                     }
                 }
             }
-            catch (Exception t)
+            catch (Exception ex)
             {
-                _errorHandler(t);
+                _errorHandler(ex);
             }
             finally
             {
@@ -662,7 +663,7 @@ namespace Adaptive.Aeron
                         length - DataHeaderFlyweight.HEADER_LENGTH,
                         _header);
 
-                    if (action == ControlledFragmentHandlerAction.ABORT)
+                    if (ControlledFragmentHandlerAction.ABORT == action)
                     {
                         break;
                     }
@@ -675,15 +676,15 @@ namespace Adaptive.Aeron
                         resultingPosition = position;
                     }
 
-                    if (action == ControlledFragmentHandlerAction.BREAK)
+                    if (ControlledFragmentHandlerAction.BREAK == action)
                     {
                         break;
                     }
                 }
             }
-            catch (Exception t)
+            catch (Exception ex)
             {
-                _errorHandler(t);
+                _errorHandler(ex);
             }
 
             return resultingPosition;
@@ -718,8 +719,8 @@ namespace Adaptive.Aeron
 
             var position = _subscriberPosition.Get();
             var offset = (int) position & _termLengthMask;
+            var limitOffset = Math.Min(offset + blockLengthLimit, _termLengthMask + 1);
             var termBuffer = ActiveTermBuffer(position);
-            var limitOffset = Math.Min(offset + blockLengthLimit, termBuffer.Capacity);
             var resultingOffset = TermBlockScanner.Scan(termBuffer, offset, limitOffset);
             var length = resultingOffset - offset;
 
@@ -731,9 +732,9 @@ namespace Adaptive.Aeron
 
                     handler(termBuffer, offset, length, SessionId, termId);
                 }
-                catch (Exception t)
+                catch (Exception ex)
                 {
-                    _errorHandler(t);
+                    _errorHandler(ex);
                 }
                 finally
                 {
@@ -786,6 +787,7 @@ namespace Adaptive.Aeron
                    $"termLength={TermBufferLength}, " +
                    $"joinPosition={JoinPosition}, " +
                    $"position={Position}, " +
+                   $"activeTransportCount={ActiveTransportCount()}, " +
                    $"sourceIdentity='{SourceIdentity}', " +
                    $"subscription={Subscription}" +
                    '}';

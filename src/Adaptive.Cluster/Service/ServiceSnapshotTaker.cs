@@ -13,7 +13,7 @@ namespace Adaptive.Cluster.Service
         {
         }
 
-        internal void SnapshotSession(ClientSession session)
+        internal void SnapshotSession(IClientSession session)
         {
             string responseChannel = session.ResponseChannel;
             byte[] encodedPrincipal = session.EncodedPrincipal;

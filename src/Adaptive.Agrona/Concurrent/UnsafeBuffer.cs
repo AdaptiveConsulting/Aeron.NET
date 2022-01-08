@@ -250,6 +250,11 @@ namespace Adaptive.Agrona.Concurrent
             ByteBuffer = null;
             ByteArray = null;
         }
+
+        public void Wrap(int memoryAddress, int length)
+        {
+            // JW TODO wrap a memory address that will cause the program to exit.
+        }
         
         public void Wrap(IntPtr pointer, int offset, int length)
         {
@@ -287,7 +292,7 @@ namespace Adaptive.Agrona.Concurrent
             Capacity = length;
 
             ByteBuffer = null;
-            ByteArray = null;
+            ByteArray = null; 
         }
 
         public IntPtr BufferPointer

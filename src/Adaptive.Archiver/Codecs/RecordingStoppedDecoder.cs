@@ -12,7 +12,7 @@ public class RecordingStoppedDecoder
     public const ushort BLOCK_LENGTH = 24;
     public const ushort TEMPLATE_ID = 103;
     public const ushort SCHEMA_ID = 101;
-    public const ushort SCHEMA_VERSION = 4;
+    public const ushort SCHEMA_VERSION = 6;
 
     private RecordingStoppedDecoder _parentMessage;
     private IDirectBuffer _buffer;

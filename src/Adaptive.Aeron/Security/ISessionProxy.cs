@@ -1,32 +1,33 @@
 namespace Adaptive.Aeron.Security
 {
     /// <summary>
-    /// Representation for a session which is going through the authentication process.
+    /// Representation of a session during the authentication process from the perspective of an <seealso cref="IAuthenticator"/>.
     /// </summary>
+    /// <seealso cref="IAuthenticator"/>
     public interface ISessionProxy
     {
         /// <summary>
-        /// The session Id of the potential session assigned by the system.
+        /// The identity of the potential session assigned by the system.
         /// </summary>
-        /// <value> session id for the potential session </value>
-        long SessionId { get; }
+        /// <returns> identity for the potential session. </returns>
+        long SessionId();
 
         /// <summary>
-        /// Inform the system that the session requires a challenge and to send the provided encoded challenge.
+        /// Inform the system that the session requires a challenge by sending the provided encoded challenge.
         /// </summary>
-        /// <param name="encodedChallenge"> to send to the client. </param>
-        /// <returns> true if challenge was sent or false if challenge could not be sent. </returns>
+        /// <param name="encodedChallenge"> to be sent to the client. </param>
+        /// <returns> true if challenge was accepted to be sent at present time or false if it will be retried later. </returns>
         bool Challenge(byte[] encodedChallenge);
 
         /// <summary>
         /// Inform the system that the session has met authentication requirements.
         /// </summary>
         /// <param name="encodedPrincipal"> that has passed authentication. </param>
-        /// <returns> true if success event was sent or false if success event could not be sent. </returns>
+        /// <returns> true if authentication was accepted at present time or false if it will be retried later. </returns>
         bool Authenticate(byte[] encodedPrincipal);
 
         /// <summary>
-        /// Inform the system that the session has NOT met authentication requirements and should be rejected.
+        /// Inform the system that the session should be rejected.
         /// </summary>
         void Reject();
     }

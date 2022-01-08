@@ -7,7 +7,7 @@ namespace Adaptive.Aeron
     /// <summary>
     /// Counter stored in a file managed by the media driver which can be observed with AeronStat.
     /// </summary>
-    public class Counter : AtomicCounter
+    public sealed class Counter : AtomicCounter
     {
         private readonly ClientConductor _clientConductor;
         private AtomicBoolean _isClosed = new AtomicBoolean(false);

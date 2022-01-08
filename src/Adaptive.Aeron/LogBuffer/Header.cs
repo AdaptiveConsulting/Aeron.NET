@@ -22,7 +22,7 @@ using Adaptive.Agrona;
 namespace Adaptive.Aeron.LogBuffer
 {
     /// <summary>
-    /// Represents the header of the data frame for accessing meta data fields.
+    /// Represents the header of the data frame for accessing metadata fields.
     /// </summary>
     public class Header
     {
@@ -76,6 +76,12 @@ namespace Adaptive.Aeron.LogBuffer
                     _initialTermId);
             }
         }
+
+        /// <summary>
+        /// The number of times to left shift the term count to multiply by term length.
+        /// </summary>
+        /// <returns> number of times to left shift the term count to multiply by term length. </returns>
+        public int PositionBitsToShift => _positionBitsToShift;
 
         /// <summary>
         /// Get the initial term id this stream started at.
@@ -141,9 +147,9 @@ namespace Adaptive.Aeron.LogBuffer
         public int TermOffset => Offset;
 
         /// <summary>
-        /// The type of the the frame which should always be <seealso cref="HeaderFlyweight.HDR_TYPE_DATA"/>
+        /// The type of the frame which should always be <seealso cref="HeaderFlyweight.HDR_TYPE_DATA"/>
         /// </summary>
-        /// <returns> type of the the frame which should always be <seealso cref="HeaderFlyweight.HDR_TYPE_DATA"/> </returns>
+        /// <returns> type of the frame which should always be <seealso cref="HeaderFlyweight.HDR_TYPE_DATA"/> </returns>
         public int Type => Buffer.GetShort(Offset + HeaderFlyweight.TYPE_FIELD_OFFSET) & 0xFFFF;
 
         /// <summary>

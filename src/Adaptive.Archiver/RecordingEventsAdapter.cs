@@ -41,6 +41,7 @@ namespace Adaptive.Archiver
             return _subscription.Poll(this, _fragmentLimit);
         }
 
+        /// <inheritdoc />
         public void OnFragment(IDirectBuffer buffer, int offset, int length, Header header)
         {
             _messageHeaderDecoder.Wrap(buffer, offset);
@@ -52,8 +53,7 @@ namespace Adaptive.Archiver
                                            schemaId);
             }
 
-            int templateId = _messageHeaderDecoder.TemplateId();
-            switch (templateId)
+            switch (_messageHeaderDecoder.TemplateId())
             {
                 case RecordingStartedDecoder.TEMPLATE_ID:
                     _recordingStartedDecoder.Wrap(

@@ -20,16 +20,19 @@ namespace Adaptive.Archiver
         private readonly RecordingSubscriptionDescriptorDecoder recordingSubscriptionDescriptorDecoder =
             new RecordingSubscriptionDescriptorDecoder();
 
+        private readonly RecordingSignalEventDecoder recordingSignalEventDecoder = new RecordingSignalEventDecoder();
+
         private readonly long controlSessionId;
         private readonly int fragmentLimit;
         private readonly Subscription subscription;
         private readonly ControlledFragmentAssembler fragmentAssembler;
         private readonly ErrorHandler errorHandler;
+        private readonly IRecordingSignalConsumer recordingSignalConsumer;
 
         private long correlationId;
         private int remainingSubscriptionCount;
         private bool isDispatchComplete = false;
-        private IRecordingSubscriptionDescriptorConsumer consumer;
+        private IRecordingSubscriptionDescriptorConsumer subscriptionDescriptorConsumer;
 
         /// <summary>
         /// Create a poller for a given subscription to an archive for control response messages.
@@ -38,12 +41,40 @@ namespace Adaptive.Archiver
         /// <param name="errorHandler">     to call for asynchronous errors. </param>
         /// <param name="controlSessionId"> to filter the responses. </param>
         /// <param name="fragmentLimit">    to apply for each polling operation. </param>
-        public RecordingSubscriptionDescriptorPoller(Subscription subscription, ErrorHandler errorHandler,
-            long controlSessionId, int fragmentLimit)
+        public RecordingSubscriptionDescriptorPoller(
+            Subscription subscription,
+            ErrorHandler errorHandler,
+            long controlSessionId,
+            int fragmentLimit) :
+            this(
+                subscription,
+                errorHandler,
+                AeronArchive.Configuration.NO_OP_RECORDING_SIGNAL_CONSUMER,
+                controlSessionId,
+                fragmentLimit)
+        {
+        }
+
+
+        /// <summary>
+        /// Create a poller for a given subscription to an archive for control response messages.
+        /// </summary>
+        /// <param name="subscription">     to poll for new events. </param>
+        /// <param name="errorHandler">     to call for asynchronous errors. </param>
+        /// <param name="recordingSignalConsumer">  for consuming interleaved recording signals on the control session.</param>
+        /// <param name="controlSessionId"> to filter the responses. </param>
+        /// <param name="fragmentLimit">    to apply for each polling operation. </param>
+        public RecordingSubscriptionDescriptorPoller(
+            Subscription subscription,
+            ErrorHandler errorHandler,
+            IRecordingSignalConsumer recordingSignalConsumer,
+            long controlSessionId,
+            int fragmentLimit)
         {
             this.fragmentAssembler = new ControlledFragmentAssembler(this);
             this.subscription = subscription;
             this.errorHandler = errorHandler;
+            this.recordingSignalConsumer = recordingSignalConsumer;
             this.fragmentLimit = fragmentLimit;
             this.controlSessionId = controlSessionId;
         }
@@ -58,12 +89,15 @@ namespace Adaptive.Archiver
         }
 
         /// <summary>
-        /// Poll for recording recording subscriptions and delegate to the <seealso cref="IRecordingSubscriptionDescriptorConsumer"/>.
+        /// Poll for recording subscriptions and delegate to the <seealso cref="IRecordingSubscriptionDescriptorConsumer"/>.
         /// </summary>
         /// <returns> the number of fragments read during the operation. Zero if no events are available. </returns>
         public int Poll()
         {
-            isDispatchComplete = false;
+            if (isDispatchComplete)
+            {
+                isDispatchComplete = false;
+            }
 
             return subscription.ControlledPoll(fragmentAssembler, fragmentLimit);
         }
@@ -104,7 +138,7 @@ namespace Adaptive.Archiver
         public void Reset(long correlationId, int subscriptionCount, IRecordingSubscriptionDescriptorConsumer consumer)
         {
             this.correlationId = correlationId;
-            this.consumer = consumer;
+            this.subscriptionDescriptorConsumer = consumer;
             this.remainingSubscriptionCount = subscriptionCount;
             isDispatchComplete = false;
         }
@@ -115,7 +149,7 @@ namespace Adaptive.Archiver
             {
                 return ABORT;
             }
-            
+
             messageHeaderDecoder.Wrap(buffer, offset);
 
             int schemaId = messageHeaderDecoder.SchemaId();
@@ -151,7 +185,7 @@ namespace Adaptive.Archiver
                         {
                             ArchiveException ex = new ArchiveException(
                                 "response for correlationId=" + this.correlationId + ", error: " +
-                                controlResponseDecoder.ErrorMessage(), (int) controlResponseDecoder.RelevantId(),
+                                controlResponseDecoder.ErrorMessage(), (int)controlResponseDecoder.RelevantId(),
                                 correlationId);
 
                             if (correlationId == this.correlationId)
@@ -176,13 +210,12 @@ namespace Adaptive.Archiver
                         messageHeaderDecoder.BlockLength(),
                         messageHeaderDecoder.Version());
 
-                    long correlationId = recordingSubscriptionDescriptorDecoder.CorrelationId();
                     if (recordingSubscriptionDescriptorDecoder.ControlSessionId() == controlSessionId &&
-                        correlationId == this.correlationId)
+                        recordingSubscriptionDescriptorDecoder.CorrelationId() == this.correlationId)
                     {
-                        consumer.OnSubscriptionDescriptor(
+                        subscriptionDescriptorConsumer.OnSubscriptionDescriptor(
                             controlSessionId,
-                            correlationId,
+                            recordingSubscriptionDescriptorDecoder.CorrelationId(),
                             recordingSubscriptionDescriptorDecoder.SubscriptionId(),
                             recordingSubscriptionDescriptorDecoder.StreamId(),
                             recordingSubscriptionDescriptorDecoder.StrippedChannel());
@@ -194,6 +227,26 @@ namespace Adaptive.Archiver
                         }
                     }
                 }
+                    break;
+
+                case RecordingSignalEventDecoder.TEMPLATE_ID:
+                    recordingSignalEventDecoder.Wrap(
+                        buffer,
+                        offset + MessageHeaderDecoder.ENCODED_LENGTH,
+                        messageHeaderDecoder.BlockLength(),
+                        messageHeaderDecoder.Version());
+
+                    if (controlSessionId == recordingSignalEventDecoder.ControlSessionId())
+                    {
+                        recordingSignalConsumer.OnSignal(
+                            recordingSignalEventDecoder.ControlSessionId(),
+                            recordingSignalEventDecoder.CorrelationId(),
+                            recordingSignalEventDecoder.RecordingId(),
+                            recordingSignalEventDecoder.SubscriptionId(),
+                            recordingSignalEventDecoder.Position(),
+                            recordingSignalEventDecoder.Signal());
+                    }
+
                     break;
             }
 

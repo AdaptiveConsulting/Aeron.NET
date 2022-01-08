@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
@@ -34,9 +35,10 @@ namespace Adaptive.Aeron
     /// Client conductor receives responses and notifications from Media Driver and acts on them in addition to forwarding
     /// commands from the Client API to the Media Driver conductor.
     /// </summary>
-    internal class ClientConductor : IAgent, IDriverEventsListener
+    internal class ClientConductor : IAgent
     {
         private const long NO_CORRELATION_ID = Aeron.NULL_VALUE;
+        private static readonly long EXPLICIT_CLOSE_LINGER_NS = 1000000000;
 
         private readonly long _keepAliveIntervalNs;
         private readonly long _driverTimeoutMs;
@@ -47,7 +49,6 @@ namespace Adaptive.Aeron
         private bool _isClosed;
         private bool _isInCallback;
         private bool _isTerminating;
-        private string _stashedChannel;
         private RegistrationException _driverException;
 
         private readonly Aeron.Context _ctx;
@@ -59,20 +60,24 @@ namespace Adaptive.Aeron
         private readonly DriverEventsAdapter _driverEventsAdapter;
         private readonly ILogBuffersFactory _logBuffersFactory;
 
-        private readonly IDictionary<long, LogBuffers> _logBuffersByIdMap =
-            new DefaultDictionary<long, LogBuffers>(null);
+        private readonly Map<long, LogBuffers> _logBuffersByIdMap = new Map<long, LogBuffers>();
 
         private readonly List<LogBuffers> _lingeringLogBuffers = new List<LogBuffers>();
-        private readonly IDictionary<long, object> _resourceByRegIdMap = new DefaultDictionary<long, object>(null);
+        private readonly Map<long, object> _resourceByRegIdMap = new Map<long, object>();
+
+        private readonly Map<long, string> _stashedChannelByRegistrationId = new Map<long, string>();
+
         private readonly HashSet<long> _asyncCommandIdSet = new HashSet<long>();
         private readonly AvailableImageHandler _defaultAvailableImageHandler;
         private readonly UnavailableImageHandler _defaultUnavailableImageHandler;
-        private readonly List<AvailableCounterHandler> _availableCounterHandlers = new List<AvailableCounterHandler>();
 
-        private readonly List<UnavailableCounterHandler> _unavailableCounterHandlers =
-            new List<UnavailableCounterHandler>();
+        private readonly Map<long, AvailableCounterHandler> _availableCounterHandlers =
+            new Map<long, AvailableCounterHandler>();
 
-        private readonly List<Action> _closeHandlers = new List<Action>();
+        private readonly Map<long, UnavailableCounterHandler> _unavailableCounterHandlers =
+            new Map<long, UnavailableCounterHandler>();
+
+        private readonly Map<long, Action> _closeHandlersByIdMap = new Map<long, Action>();
         private readonly DriverProxy _driverProxy;
         private readonly AgentInvoker _driverAgentInvoker;
         private readonly UnsafeBuffer _counterValuesBuffer;
@@ -101,7 +106,7 @@ namespace Adaptive.Aeron
             _defaultAvailableImageHandler = ctx.AvailableImageHandler();
             _defaultUnavailableImageHandler = ctx.UnavailableImageHandler();
             _driverEventsAdapter =
-                new DriverEventsAdapter(ctx.ToClientBuffer(), ctx.ClientId(), this, _asyncCommandIdSet);
+                new DriverEventsAdapter(ctx.ClientId(), ctx.ToClientBuffer(), this, _asyncCommandIdSet);
             _driverAgentInvoker = ctx.DriverAgentInvoker();
             _counterValuesBuffer = ctx.CountersValuesBuffer();
             _countersReader =
@@ -109,17 +114,17 @@ namespace Adaptive.Aeron
 
             if (null != ctx.AvailableCounterHandler())
             {
-                _availableCounterHandlers.Add(ctx.AvailableCounterHandler());
+                _availableCounterHandlers.Put(aeron.NextCorrelationId(), ctx.AvailableCounterHandler());
             }
 
             if (null != ctx.UnavailableCounterHandler())
             {
-                _unavailableCounterHandlers.Add(ctx.UnavailableCounterHandler());
+                _unavailableCounterHandlers.Put(aeron.NextCorrelationId(), ctx.UnavailableCounterHandler());
             }
 
             if (null != ctx.CloseHandler())
             {
-                _closeHandlers.Add(ctx.CloseHandler());
+                _closeHandlersByIdMap.Put(aeron.NextCorrelationId(), ctx.CloseHandler());
             }
 
             long nowNs = _nanoClock.NanoTime();
@@ -146,30 +151,35 @@ namespace Adaptive.Aeron
                         _aeron.InternalClose();
                     }
 
+                    bool isTerminating = _isTerminating;
+                    _isTerminating = true;
                     ForceCloseResources();
                     NotifyCloseHandlers();
 
                     try
                     {
-                        if (_isTerminating)
+                        if (isTerminating)
                         {
                             Thread.Sleep(Aeron.Configuration.IdleSleepMs);
                         }
 
-                        Thread.Sleep((int) TimeUnit.NANOSECONDS.toMillis(_ctx.CloseLingerDurationNs()));
+                        Thread.Sleep((int)TimeUnit.NANOSECONDS.toMillis(_ctx.CloseLingerDurationNs()));
                     }
                     catch (ThreadInterruptedException)
                     {
                         isInterrupted = true;
                     }
 
-                    for (int i = 0, size = _lingeringLogBuffers.Count; i < size; i++)
+                    foreach (var lingeringLogBuffer in _lingeringLogBuffers)
                     {
-                        CloseHelper.Dispose(_ctx.ErrorHandler(), _lingeringLogBuffers[i]);
+                        CloseHelper.Dispose(_ctx.ErrorHandler(), lingeringLogBuffer);
                     }
 
                     _driverProxy.ClientClose();
                     _ctx.Dispose();
+
+                    _ctx.CountersMetaDataBuffer().Wrap(0, 0);
+                    _ctx.CountersValuesBuffer().Wrap(0, 0);
                 }
             }
             finally
@@ -224,26 +234,33 @@ namespace Adaptive.Aeron
             return _isTerminating;
         }
 
-        public void OnError(long correlationId, int codeValue, ErrorCode errorCode, string message)
+        internal void OnError(long correlationId, int codeValue, ErrorCode errorCode, string message)
         {
             _driverException = new RegistrationException(correlationId, codeValue, errorCode, message);
 
-            var resource = _resourceByRegIdMap[correlationId];
-
+            var resource = _resourceByRegIdMap.Get(correlationId);
             if (resource is Subscription subscription)
             {
-                subscription.InternalClose();
+                subscription.InternalClose(Aeron.NULL_VALUE);
                 _resourceByRegIdMap.Remove(correlationId);
+            }
+            else if (_asyncCommandIdSet.Remove(correlationId))
+            {
+                _stashedChannelByRegistrationId.Remove(correlationId);
+                HandleError(new RegistrationException(correlationId, codeValue, errorCode, message));
             }
         }
 
-        public void OnAsyncError(long correlationId, int codeValue, ErrorCode errorCode, string message)
+        internal void OnAsyncError(long correlationId, int codeValue, ErrorCode errorCode, string message)
         {
+            _stashedChannelByRegistrationId.Remove(correlationId);
             HandleError(new RegistrationException(correlationId, codeValue, errorCode, message));
         }
 
-        public void OnChannelEndpointError(int statusIndicatorId, string message)
+        internal void OnChannelEndpointError(long correlationId, string message)
         {
+            int statusIndicatorId = (int)correlationId;
+
             foreach (var resource in _resourceByRegIdMap.Values)
             {
                 if (resource is Subscription subscription)
@@ -261,9 +278,16 @@ namespace Adaptive.Aeron
                     }
                 }
             }
+
+            if (_asyncCommandIdSet.Remove(correlationId))
+            {
+                _stashedChannelByRegistrationId.Remove(correlationId);
+                HandleError(new RegistrationException(
+                    correlationId, (int)ErrorCode.CHANNEL_ENDPOINT_ERROR, ErrorCode.CHANNEL_ENDPOINT_ERROR, message));
+            }
         }
 
-        public void OnNewPublication(
+        internal void OnNewPublication(
             long correlationId,
             long registrationId,
             int streamId,
@@ -272,22 +296,24 @@ namespace Adaptive.Aeron
             int statusIndicatorId,
             string logFileName)
         {
+            string stashedChannel = _stashedChannelByRegistrationId.Remove(correlationId);
             var publication = new ConcurrentPublication(
                 this,
-                _stashedChannel,
+                stashedChannel,
                 streamId,
                 sessionId,
                 new UnsafeBufferPosition(_counterValuesBuffer, publicationLimitId),
                 statusIndicatorId,
-                LogBuffers(registrationId, logFileName, _stashedChannel),
+                LogBuffers(registrationId, logFileName, stashedChannel),
                 registrationId,
                 correlationId
             );
 
-            _resourceByRegIdMap[correlationId] = publication;
+            _resourceByRegIdMap.Put(correlationId, publication);
+            _asyncCommandIdSet.Remove(correlationId);
         }
 
-        public void OnNewExclusivePublication(
+        internal void OnNewExclusivePublication(
             long correlationId,
             long registrationId,
             int streamId,
@@ -296,28 +322,36 @@ namespace Adaptive.Aeron
             int statusIndicatorId,
             string logFileName)
         {
+            if (correlationId != registrationId)
+            {
+                HandleError(new InvalidOperationException("correlationId=" + correlationId + " registrationId=" +
+                                                          registrationId));
+            }
+
+            string stashedChannel = _stashedChannelByRegistrationId.Remove(correlationId);
             var publication = new ExclusivePublication(
                 this,
-                _stashedChannel,
+                stashedChannel,
                 streamId,
                 sessionId,
                 new UnsafeBufferPosition(_counterValuesBuffer, publicationLimitId),
                 statusIndicatorId,
-                LogBuffers(registrationId, logFileName, _stashedChannel),
+                LogBuffers(registrationId, logFileName, stashedChannel),
                 registrationId,
                 correlationId
             );
 
-            _resourceByRegIdMap[correlationId] = publication;
+            _resourceByRegIdMap.Put(correlationId, publication);
+            _asyncCommandIdSet.Remove(correlationId);
         }
 
-        public void OnNewSubscription(long correlationId, int statusIndicatorId)
+        internal void OnNewSubscription(long correlationId, int statusIndicatorId)
         {
-            Subscription subscription = (Subscription) _resourceByRegIdMap[correlationId];
+            Subscription subscription = (Subscription)_resourceByRegIdMap.Get(correlationId);
             subscription.ChannelStatusId = statusIndicatorId;
         }
 
-        public void OnAvailableImage(
+        internal void OnAvailableImage(
             long correlationId,
             int sessionId,
             long subscriptionRegistrationId,
@@ -325,12 +359,16 @@ namespace Adaptive.Aeron
             string logFileName,
             string sourceIdentity)
         {
-            Subscription subscription = (Subscription) _resourceByRegIdMap[subscriptionRegistrationId];
+            Subscription subscription = (Subscription)_resourceByRegIdMap.Get(subscriptionRegistrationId);
             if (null != subscription)
             {
-                Image image = new Image(subscription, sessionId,
+                Image image = new Image(
+                    subscription,
+                    sessionId,
                     new UnsafeBufferPosition(_counterValuesBuffer, subscriberPositionId),
-                    LogBuffers(correlationId, logFileName, subscription.Channel), _ctx.ErrorHandler(), sourceIdentity,
+                    LogBuffers(correlationId, logFileName, subscription.Channel),
+                    _ctx.SubscriberErrorHandler(),
+                    sourceIdentity,
                     correlationId);
 
                 AvailableImageHandler handler = subscription.AvailableImageHandler;
@@ -356,9 +394,9 @@ namespace Adaptive.Aeron
             }
         }
 
-        public void OnUnavailableImage(long correlationId, long subscriptionRegistrationId)
+        internal void OnUnavailableImage(long correlationId, long subscriptionRegistrationId)
         {
-            Subscription subscription = (Subscription) _resourceByRegIdMap[subscriptionRegistrationId];
+            Subscription subscription = (Subscription)_resourceByRegIdMap.Get(subscriptionRegistrationId);
             if (null != subscription)
             {
                 Image image = subscription.RemoveImage(correlationId);
@@ -373,27 +411,26 @@ namespace Adaptive.Aeron
             }
         }
 
-        public void OnNewCounter(long correlationId, int counterId)
+        internal void OnNewCounter(long correlationId, int counterId)
         {
-            _resourceByRegIdMap[correlationId] = new Counter(correlationId, this, _counterValuesBuffer, counterId);
+            _resourceByRegIdMap.Put(correlationId, new Counter(correlationId, this, _counterValuesBuffer, counterId));
             OnAvailableCounter(correlationId, counterId);
         }
 
-        public void OnAvailableCounter(long registrationId, int counterId)
+        internal void OnAvailableCounter(long registrationId, int counterId)
         {
-            for (int i = 0; i < _availableCounterHandlers.Count; i++)
+            foreach (var handler in _availableCounterHandlers.Values)
             {
-                var handler = _availableCounterHandlers[i];
                 NotifyCounterAvailable(registrationId, counterId, handler);
             }
         }
 
-        public void OnUnavailableCounter(long registrationId, int counterId)
+        internal void OnUnavailableCounter(long registrationId, int counterId)
         {
             NotifyUnavailableCounterHandlers(registrationId, counterId);
         }
 
-        public void OnClientTimeout()
+        internal void OnClientTimeout()
         {
             if (!_isClosed)
             {
@@ -424,13 +461,11 @@ namespace Adaptive.Aeron
                 EnsureActive();
                 EnsureNotReentrant();
 
-                _stashedChannel = channel;
                 long registrationId = _driverProxy.AddPublication(channel, streamId);
+                _stashedChannelByRegistrationId.Put(registrationId, channel);
                 AwaitResponse(registrationId);
 
-                return
-                    (ConcurrentPublication) _resourceByRegIdMap[
-                        registrationId]; // TODO dictionary semantics if non-existant
+                return (ConcurrentPublication)_resourceByRegIdMap.Get(registrationId);
             }
             finally
             {
@@ -446,11 +481,93 @@ namespace Adaptive.Aeron
                 EnsureActive();
                 EnsureNotReentrant();
 
-                _stashedChannel = channel;
                 long registrationId = _driverProxy.AddExclusivePublication(channel, streamId);
+                _stashedChannelByRegistrationId.Put(registrationId, channel);
                 AwaitResponse(registrationId);
 
-                return (ExclusivePublication) _resourceByRegIdMap[registrationId];
+                return (ExclusivePublication)_resourceByRegIdMap.Get(registrationId);
+            }
+            finally
+            {
+                _clientLock.Unlock();
+            }
+        }
+
+        internal long AsyncAddPublication(string channel, int streamId)
+        {
+            _clientLock.Lock();
+            try
+            {
+                EnsureActive();
+                EnsureNotReentrant();
+
+                long registrationId = _driverProxy.AddPublication(channel, streamId);
+                _stashedChannelByRegistrationId.Put(registrationId, channel);
+                _asyncCommandIdSet.Add(registrationId);
+
+                return registrationId;
+            }
+            finally
+            {
+                _clientLock.Unlock();
+            }
+        }
+
+        internal long AsyncAddExclusivePublication(string channel, int streamId)
+        {
+            _clientLock.Lock();
+            try
+            {
+                EnsureActive();
+                EnsureNotReentrant();
+
+                long registrationId = _driverProxy.AddExclusivePublication(channel, streamId);
+                _stashedChannelByRegistrationId.Put(registrationId, channel);
+                _asyncCommandIdSet.Add(registrationId);
+
+                return registrationId;
+            }
+            finally
+            {
+                _clientLock.Unlock();
+            }
+        }
+
+        internal ConcurrentPublication GetPublication(long registrationId)
+        {
+            _clientLock.Lock();
+            try
+            {
+                EnsureActive();
+                EnsureNotReentrant();
+
+                if (_asyncCommandIdSet.Contains(registrationId))
+                {
+                    Service(NO_CORRELATION_ID);
+                }
+
+                return (ConcurrentPublication)_resourceByRegIdMap.Get(registrationId);
+            }
+            finally
+            {
+                _clientLock.Unlock();
+            }
+        }
+
+        internal ExclusivePublication GetExclusivePublication(long registrationId)
+        {
+            _clientLock.Lock();
+            try
+            {
+                EnsureActive();
+                EnsureNotReentrant();
+
+                if (_asyncCommandIdSet.Contains(registrationId))
+                {
+                    Service(NO_CORRELATION_ID);
+                }
+
+                return (ExclusivePublication)_resourceByRegIdMap.Get(registrationId);
             }
             finally
             {
@@ -474,11 +591,10 @@ namespace Adaptive.Aeron
 
                     publication.InternalClose();
 
-                    var removedPublication = _resourceByRegIdMap[publication.RegistrationId];
-
-                    if (_resourceByRegIdMap.Remove(publication.RegistrationId) && publication == removedPublication)
+                    if (publication == _resourceByRegIdMap.Remove(publication.RegistrationId))
                     {
-                        ReleaseLogBuffers(publication.LogBuffers, publication.OriginalRegistrationId);
+                        ReleaseLogBuffers(publication.LogBuffers, publication.OriginalRegistrationId,
+                            EXPLICIT_CLOSE_LINGER_NS);
                         _asyncCommandIdSet.Add(_driverProxy.RemovePublication(publication.RegistrationId));
                     }
                 }
@@ -507,7 +623,7 @@ namespace Adaptive.Aeron
                 Subscription subscription = new Subscription(this, channel, streamId, correlationId,
                     availableImageHandler, unavailableImageHandler);
 
-                _resourceByRegIdMap[correlationId] = subscription;
+                _resourceByRegIdMap.Put(correlationId, subscription);
                 AwaitResponse(correlationId);
 
                 return subscription;
@@ -532,13 +648,9 @@ namespace Adaptive.Aeron
                 {
                     EnsureNotReentrant();
 
-                    subscription.InternalClose();
-
+                    subscription.InternalClose(EXPLICIT_CLOSE_LINGER_NS);
                     long registrationId = subscription.RegistrationId;
-                    var resource = _resourceByRegIdMap[registrationId];
-                    _resourceByRegIdMap.Remove(registrationId);
-
-                    if (subscription == resource)
+                    if (subscription == _resourceByRegIdMap.Remove(registrationId))
                     {
                         _asyncCommandIdSet.Add(_driverProxy.RemoveSubscription(registrationId));
                     }
@@ -698,7 +810,32 @@ namespace Adaptive.Aeron
 
                 EnsureActive();
 
+                if (_asyncCommandIdSet.Contains(correlationId))
+                {
+                    Service(NO_CORRELATION_ID);
+                }
+
                 return _asyncCommandIdSet.Contains(correlationId);
+            }
+            finally
+            {
+                _clientLock.Unlock();
+            }
+        }
+
+        internal bool HasActiveCommands()
+        {
+            _clientLock.Lock();
+            try
+            {
+                if (_isClosed)
+                {
+                    return false;
+                }
+
+                EnsureActive();
+
+                return _asyncCommandIdSet.Count > 0;
             }
             finally
             {
@@ -729,7 +866,7 @@ namespace Adaptive.Aeron
                     labelOffset, labelLength);
                 AwaitResponse(registrationId);
 
-                return (Counter) _resourceByRegIdMap[registrationId];
+                return (Counter)_resourceByRegIdMap.Get(registrationId);
             }
             finally
             {
@@ -754,7 +891,7 @@ namespace Adaptive.Aeron
 
                 AwaitResponse(registrationId);
 
-                return (Counter) _resourceByRegIdMap[registrationId];
+                return (Counter)_resourceByRegIdMap.Get(registrationId);
             }
             finally
             {
@@ -762,14 +899,37 @@ namespace Adaptive.Aeron
             }
         }
 
-        internal void AddAvailableCounterHandler(AvailableCounterHandler handler)
+        internal long AddAvailableCounterHandler(AvailableCounterHandler handler)
         {
             _clientLock.Lock();
             try
             {
                 EnsureActive();
                 EnsureNotReentrant();
-                _availableCounterHandlers.Add(handler);
+
+                long registrationId = _aeron.NextCorrelationId();
+                _availableCounterHandlers.Put(registrationId, handler);
+                return registrationId;
+            }
+            finally
+            {
+                _clientLock.Unlock();
+            }
+        }
+
+        internal bool RemoveAvailableCounterHandler(long registrationId)
+        {
+            _clientLock.Lock();
+            try
+            {
+                if (_isTerminating || _isClosed)
+                {
+                    return false;
+                }
+
+                EnsureNotReentrant();
+
+                return _availableCounterHandlers.Remove(registrationId) != null;
             }
             finally
             {
@@ -789,7 +949,14 @@ namespace Adaptive.Aeron
 
                 EnsureNotReentrant();
 
-                return _availableCounterHandlers.Remove(handler);
+                foreach (var keyValuePair in _availableCounterHandlers.KeyValuePairs.Where(kvp => kvp.Value == handler)
+                             .ToList())
+                {
+                    _availableCounterHandlers.Remove(keyValuePair.Key);
+                    return true;
+                }
+
+                return false;
             }
             finally
             {
@@ -797,14 +964,29 @@ namespace Adaptive.Aeron
             }
         }
 
-        internal void AddUnavailableCounterHandler(UnavailableCounterHandler handler)
+        internal long AddUnavailableCounterHandler(UnavailableCounterHandler handler)
         {
             _clientLock.Lock();
             try
             {
                 EnsureActive();
                 EnsureNotReentrant();
-                _unavailableCounterHandlers.Add(handler);
+                long registrationId = _aeron.NextCorrelationId();
+                _unavailableCounterHandlers.Put(registrationId, handler);
+                return registrationId;
+            }
+            finally
+            {
+                _clientLock.Unlock();
+            }
+        }
+
+        internal bool RemoveUnavailableCounterHandler(long registrationId)
+        {
+            _clientLock.Lock();
+            try
+            {
+                return _unavailableCounterHandlers.Remove(registrationId) != null;
             }
             finally
             {
@@ -824,7 +1006,15 @@ namespace Adaptive.Aeron
 
                 EnsureNotReentrant();
 
-                return _unavailableCounterHandlers.Remove(handler);
+                foreach (var keyValuePair in _unavailableCounterHandlers.KeyValuePairs
+                             .Where(kvp => kvp.Value == handler)
+                             .ToList())
+                {
+                    _unavailableCounterHandlers.Remove(keyValuePair.Key);
+                    return true;
+                }
+
+                return false;
             }
             finally
             {
@@ -832,14 +1022,30 @@ namespace Adaptive.Aeron
             }
         }
 
-        internal void AddCloseHandler(Action handler)
+        internal long AddCloseHandler(Action handler)
         {
             _clientLock.Lock();
             try
             {
                 EnsureActive();
                 EnsureNotReentrant();
-                _closeHandlers.Add(handler);
+
+                long registrationId = _aeron.NextCorrelationId();
+                _closeHandlersByIdMap.Put(registrationId, handler);
+                return registrationId;
+            }
+            finally
+            {
+                _clientLock.Unlock();
+            }
+        }
+
+        internal bool RemoveCloseHandler(long registrationId)
+        {
+            _clientLock.Lock();
+            try
+            {
+                return _closeHandlersByIdMap.Remove(registrationId) != null;
             }
             finally
             {
@@ -859,7 +1065,16 @@ namespace Adaptive.Aeron
 
                 EnsureNotReentrant();
 
-                return _closeHandlers.Remove(handler);
+
+                foreach (var keyValuePair in _closeHandlersByIdMap.KeyValuePairs
+                             .Where(kvp => kvp.Value == handler)
+                             .ToList())
+                {
+                    _closeHandlersByIdMap.Remove(keyValuePair.Key);
+                    return true;
+                }
+
+                return false;
             }
             finally
             {
@@ -880,11 +1095,7 @@ namespace Adaptive.Aeron
                 EnsureNotReentrant();
 
                 long registrationId = counter.RegistrationId;
-
-
-                var resource = _resourceByRegIdMap[registrationId];
-                _resourceByRegIdMap.Remove(registrationId);
-                if (counter == resource)
+                if (counter == _resourceByRegIdMap.Remove(registrationId))
                 {
                     _asyncCommandIdSet.Add(_driverProxy.RemoveCounter(registrationId));
                 }
@@ -895,13 +1106,17 @@ namespace Adaptive.Aeron
             }
         }
 
-        internal void ReleaseLogBuffers(LogBuffers logBuffers, long registrationId)
+        internal void ReleaseLogBuffers(LogBuffers logBuffers, long registrationId, long lingerDurationNs)
         {
             if (logBuffers.DecRef() == 0)
             {
-                logBuffers.LingerDeadlineNs(_nanoClock.NanoTime() + _ctx.ResourceLingerDurationNs());
-                _logBuffersByIdMap.Remove(registrationId);
                 _lingeringLogBuffers.Add(logBuffers);
+                _logBuffersByIdMap.Remove(registrationId);
+
+                long lingerNs = Aeron.NULL_VALUE == lingerDurationNs
+                    ? _ctx.ResourceLingerDurationNs()
+                    : lingerDurationNs;
+                logBuffers.LingerDeadlineNs(_nanoClock.NanoTime() + lingerNs);
             }
         }
 
@@ -925,12 +1140,12 @@ namespace Adaptive.Aeron
             }
         }
 
-        internal void CloseImages(Image[] images, UnavailableImageHandler unavailableImageHandler)
+        internal void CloseImages(Image[] images, UnavailableImageHandler unavailableImageHandler, long lingerNs)
         {
             foreach (var image in images)
             {
                 image.Close();
-                ReleaseLogBuffers(image.LogBuffers, image.CorrelationId);
+                ReleaseLogBuffers(image.LogBuffers, image.CorrelationId, lingerNs);
             }
 
             if (null != unavailableImageHandler)
@@ -965,11 +1180,11 @@ namespace Adaptive.Aeron
 
         private LogBuffers LogBuffers(long registrationId, string logFileName, String channel)
         {
-            LogBuffers logBuffers = _logBuffersByIdMap[registrationId];
+            LogBuffers logBuffers = _logBuffersByIdMap.Get(registrationId);
             if (null == logBuffers)
             {
                 logBuffers = _logBuffersFactory.Map(logFileName);
-                _logBuffersByIdMap[registrationId] = logBuffers;
+                _logBuffersByIdMap.Put(registrationId, logBuffers);
 
                 if (_ctx.PreTouchMappedMemory() && !channel.Contains("sparse=true"))
                 {
@@ -989,14 +1204,21 @@ namespace Adaptive.Aeron
 
             try
             {
-                var nowNs = _nanoClock.NanoTime();
-                workCount += CheckTimeouts(nowNs);
+                workCount += CheckTimeouts(_nanoClock.NanoTime());
                 workCount += _driverEventsAdapter.Receive(correlationId);
             }
-            catch (Exception throwable)
+            catch (AgentTerminationException)
             {
-                HandleError(throwable);
+                if (IsClientApiCall(correlationId))
+                {
+                    _isTerminating = true;
+                    ForceCloseResources();
+                }
 
+                throw;
+            }
+            catch (Exception ex)
+            {
                 if (_driverEventsAdapter.IsInvalid)
                 {
                     _isTerminating = true;
@@ -1004,7 +1226,7 @@ namespace Adaptive.Aeron
 
                     if (!IsClientApiCall(correlationId))
                     {
-                        throw new InvalidOperationException("Driver events adapter is invalid");
+                        throw new AeronException("Driver events adapter is invalid");
                     }
                 }
 
@@ -1012,6 +1234,8 @@ namespace Adaptive.Aeron
                 {
                     throw;
                 }
+
+                HandleError(ex);
             }
 
             return workCount;
@@ -1045,8 +1269,7 @@ namespace Adaptive.Aeron
 
                 if (_driverEventsAdapter.ReceivedCorrelationId == correlationId)
                 {
-                    _stashedChannel = null;
-
+                    _stashedChannelByRegistrationId.Remove(correlationId);
                     RegistrationException ex = _driverException;
                     if (null != _driverException)
                     {
@@ -1064,7 +1287,7 @@ namespace Adaptive.Aeron
                 catch (ThreadInterruptedException)
                 {
                     _isTerminating = true;
-                    throw new AgentTerminationException("thread interrupted");
+                    throw new AeronException("thread interrupted");
                 }
             } while (deadlineNs - _nanoClock.NanoTime() > 0);
 
@@ -1104,21 +1327,22 @@ namespace Adaptive.Aeron
         {
             if ((_timeOfLastKeepAliveNs + _keepAliveIntervalNs) - nowNs < 0)
             {
-                long lastKeepAliveMs = _driverProxy.TimeOfLastDriverKeepaliveMs();
                 var nowMs = _epochClock.Time();
-                
+                long lastKeepAliveMs = _driverProxy.TimeOfLastDriverKeepaliveMs();
+
                 if (nowMs > (lastKeepAliveMs + _driverTimeoutMs))
                 {
                     _isTerminating = true;
                     ForceCloseResources();
 
-                    throw new DriverTimeoutException("MediaDriver keepalive age exceeded (ms): timeout= " +
-                                                     _driverTimeoutMs + ", actual=" + (nowMs - lastKeepAliveMs));
+                    throw new DriverTimeoutException("MediaDriver keepalive (ms): age=" +
+                                                     (nowMs - lastKeepAliveMs) + " > timeout=" + _driverTimeoutMs);
                 }
 
                 if (null == _heartbeatTimestamp)
                 {
-                    int counterId = HeartbeatTimestamp.FindCounterIdByRegistrationId(_countersReader, HeartbeatTimestamp.CLIENT_HEARTBEAT_TYPE_ID, _ctx.ClientId());
+                    int counterId = HeartbeatTimestamp.FindCounterIdByRegistrationId(_countersReader,
+                        HeartbeatTimestamp.HEARTBEAT_TYPE_ID, _ctx.ClientId());
 
                     if (counterId != Agrona.Concurrent.Status.CountersReader.NULL_COUNTER_ID)
                     {
@@ -1130,7 +1354,8 @@ namespace Adaptive.Aeron
                 else
                 {
                     int counterId = _heartbeatTimestamp.Id;
-                    if (!HeartbeatTimestamp.IsActive(_countersReader, counterId, HeartbeatTimestamp.CLIENT_HEARTBEAT_TYPE_ID, _ctx.ClientId()))
+                    if (!HeartbeatTimestamp.IsActive(_countersReader, counterId, HeartbeatTimestamp.HEARTBEAT_TYPE_ID,
+                            _ctx.ClientId()))
                     {
                         _isTerminating = true;
                         ForceCloseResources();
@@ -1173,12 +1398,12 @@ namespace Adaptive.Aeron
             {
                 if (resource is Subscription subscription)
                 {
-                    subscription.InternalClose();
+                    subscription.InternalClose(Aeron.NULL_VALUE);
                 }
                 else if (resource is Publication publication)
                 {
                     publication.InternalClose();
-                    ReleaseLogBuffers(publication.LogBuffers, publication.OriginalRegistrationId);
+                    ReleaseLogBuffers(publication.LogBuffers, publication.OriginalRegistrationId, Aeron.NULL_VALUE);
                 }
                 else if (resource is Counter counter)
                 {
@@ -1192,13 +1417,21 @@ namespace Adaptive.Aeron
 
         private void NotifyUnavailableCounterHandlers(long registrationId, int counterId)
         {
-            for (int i = 0, size = _unavailableCounterHandlers.Count; i < size; i++)
+            foreach (var handler in _unavailableCounterHandlers.Values)
             {
-                UnavailableCounterHandler handler = _unavailableCounterHandlers[i];
                 _isInCallback = true;
                 try
                 {
                     handler(_countersReader, registrationId, counterId);
+                }
+                catch (AgentTerminationException ex)
+                {
+                    if (!_isTerminating)
+                    {
+                        throw;
+                    }
+
+                    HandleError(ex);
                 }
                 catch (Exception ex)
                 {
@@ -1210,13 +1443,22 @@ namespace Adaptive.Aeron
                 }
             }
         }
-        
+
         private void NotifyImageUnavailable(UnavailableImageHandler handler, Image image)
         {
             _isInCallback = true;
             try
             {
                 handler(image);
+            }
+            catch (AgentTerminationException ex)
+            {
+                if (!_isTerminating)
+                {
+                    throw;
+                }
+
+                HandleError(ex);
             }
             catch (Exception ex)
             {
@@ -1235,6 +1477,10 @@ namespace Adaptive.Aeron
             {
                 handler(_countersReader, registrationId, counterId);
             }
+            catch (AgentTerminationException)
+            {
+                throw;
+            }
             catch (Exception ex)
             {
                 HandleError(ex);
@@ -1247,12 +1493,12 @@ namespace Adaptive.Aeron
 
         private void NotifyCloseHandlers()
         {
-            for (int i = _closeHandlers.Count - 1; i >= 0; i--)
+            foreach (var closeHandler in _closeHandlersByIdMap.Values)
             {
                 _isInCallback = true;
                 try
                 {
-                    _closeHandlers[i]();
+                    closeHandler();
                 }
                 catch (Exception ex)
                 {

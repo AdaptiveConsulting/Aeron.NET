@@ -59,7 +59,7 @@ namespace Adaptive.Agrona.Concurrent.RingBuffer
 
             buffer.VerifyAlignment();
 
-            _maxMsgLength = _capacity/8;
+            _maxMsgLength = _capacity / 8;
             _tailPositionIndex = _capacity + RingBufferDescriptor.TailPositionOffset;
             _headCachePositionIndex = _capacity + RingBufferDescriptor.HeadCachePositionOffset;
             _headPositionIndex = _capacity + RingBufferDescriptor.HeadPositionOffset;
@@ -76,40 +76,31 @@ namespace Adaptive.Agrona.Concurrent.RingBuffer
             return _capacity;
         }
 
-        /// <summary>
-        /// Non-blocking write of an message to an underlying ring-buffer.
-        /// </summary>
-        /// <param name="msgTypeId"> type of the message encoding. </param>
-        /// <param name="srcBuffer"> containing the encoded binary message. </param>
-        /// <param name="srcIndex"> at which the encoded message begins. </param>
-        /// <param name="length"> of the encoded message in bytes. </param>
-        /// <returns> true if written to the ring-buffer, or false if insufficient space exists. </returns>
-        /// <exception cref="ArgumentException"> if the length is greater than <seealso cref="IRingBuffer.MaxMsgLength()"/> </exception>
-        public bool Write(int msgTypeId, IDirectBuffer srcBuffer, int srcIndex, int length)
+        /// <inheritdoc />
+        public bool Write(int msgTypeId, IDirectBuffer srcBuffer, int offset, int length)
         {
             RecordDescriptor.CheckTypeId(msgTypeId);
             CheckMsgLength(length);
 
-            var isSuccessful = false;
+            IAtomicBuffer buffer = _buffer;
+            int recordLength = length + RecordDescriptor.HeaderLength;
+            int recordIndex = ClaimCapacity(buffer, recordLength);
 
-            var buffer = _buffer;
-            var recordLength = length + RecordDescriptor.HeaderLength;
-            var requiredCapacity = BitUtil.Align(recordLength, RecordDescriptor.Alignment);
-            var recordIndex = ClaimCapacity(buffer, requiredCapacity);
-
-            if (InsufficientCapacity != recordIndex)
+            if (InsufficientCapacity == recordIndex)
             {
-                buffer.PutLongOrdered(recordIndex, RecordDescriptor.MakeHeader(-recordLength, msgTypeId));
-                // TODO JPW original: UnsafeAccess.UNSAFE.storeFence();
-                Thread.MemoryBarrier();
-                buffer.PutBytes(RecordDescriptor.EncodedMsgOffset(recordIndex), srcBuffer, srcIndex, length);
-                buffer.PutIntOrdered(RecordDescriptor.LengthOffset(recordIndex), recordLength);
-
-                isSuccessful = true;
+                return false;
             }
 
-            return isSuccessful;
+            buffer.PutIntOrdered(RecordDescriptor.LengthOffset(recordIndex), -recordLength);
+            // TODO JPW original: UnsafeAccess.UNSAFE.storeFence();
+            Thread.MemoryBarrier();
+            buffer.PutInt(RecordDescriptor.TypeOffset(recordIndex), msgTypeId);
+            buffer.PutBytes(RecordDescriptor.EncodedMsgOffset(recordIndex), srcBuffer, offset, length);
+            buffer.PutIntOrdered(RecordDescriptor.LengthOffset(recordIndex), recordLength);
+
+            return true;
         }
+
 
         /// <summary>
         /// Read as many messages as are available from the ring buffer.
@@ -127,25 +118,25 @@ namespace Adaptive.Agrona.Concurrent.RingBuffer
         /// <param name="handler"> to be called for processing each message in turn. </param>
         /// <param name="messageCountLimit"> the number of messages will be read in a single invocation. </param>
         /// <returns> the number of messages that have been processed. </returns>
-        public int Read(MessageHandler handler, int messageCountLimit)
+        public virtual int Read(MessageHandler handler, int messageCountLimit)
         {
-            var messagesRead = 0;
-            var buffer = _buffer;
-            var head = buffer.GetLong(_headPositionIndex);
+            int messagesRead = 0;
 
-            var capacity = _capacity;
-            var headIndex = (int) head & (capacity - 1);
-            var maxBlockLength = capacity - headIndex;
-            var bytesRead = 0;
+            IAtomicBuffer buffer = _buffer;
+            int headPositionIndex = _headPositionIndex;
+            long head = buffer.GetLong(headPositionIndex);
+
+            int capacity = _capacity;
+            int headIndex = (int)head & (capacity - 1);
+            int maxBlockLength = capacity - headIndex;
+            int bytesRead = 0;
 
             try
             {
                 while ((bytesRead < maxBlockLength) && (messagesRead < messageCountLimit))
                 {
-                    var recordIndex = headIndex + bytesRead;
-                    var header = buffer.GetLongVolatile(recordIndex);
-
-                    var recordLength = RecordDescriptor.RecordLength(header);
+                    int recordIndex = headIndex + bytesRead;
+                    int recordLength = buffer.GetIntVolatile(RecordDescriptor.LengthOffset(recordIndex));
                     if (recordLength <= 0)
                     {
                         break;
@@ -153,27 +144,29 @@ namespace Adaptive.Agrona.Concurrent.RingBuffer
 
                     bytesRead += BitUtil.Align(recordLength, RecordDescriptor.Alignment);
 
-                    var messageTypeId = RecordDescriptor.MessageTypeId(header);
+                    int messageTypeId = buffer.GetInt(RecordDescriptor.TypeOffset(recordIndex));
                     if (PaddingMsgTypeId == messageTypeId)
                     {
                         continue;
                     }
 
                     ++messagesRead;
-                    handler(messageTypeId, buffer, recordIndex + RecordDescriptor.HeaderLength, recordLength - RecordDescriptor.HeaderLength);
+                    handler(messageTypeId, buffer, recordIndex + RecordDescriptor.HeaderLength,
+                        recordLength - RecordDescriptor.HeaderLength);
                 }
             }
             finally
             {
                 if (bytesRead != 0)
                 {
-                    buffer.SetMemory(headIndex, bytesRead, 0);
-                    buffer.PutLongOrdered(_headPositionIndex, head + bytesRead);
+                    buffer.SetMemory(headIndex, bytesRead, (byte)0);
+                    buffer.PutLongOrdered(headPositionIndex, head + bytesRead);
                 }
             }
 
             return messagesRead;
         }
+
 
         /// <summary>
         /// The maximum message length in bytes supported by the underlying ring buffer.
@@ -260,40 +253,38 @@ namespace Adaptive.Agrona.Concurrent.RingBuffer
                 headAfter = _buffer.GetLongVolatile(_headPositionIndex);
             } while (headAfter != headBefore);
 
-            return (int) (tail - headAfter);
+            return (int)(tail - headAfter);
         }
 
-        /// <summary>
-        /// Unblock a multi-producer ring buffer where a producer has died during the act of offering. The operation will scan from
-        /// the consumer position up to the producer position.
-        /// 
-        /// If no action is required at the position then none will be taken.
-        /// </summary>
-        /// <returns> true of an unblocking action was taken otherwise false. </returns>
+        /// <inheritdoc />
         public bool Unblock()
         {
-            var buffer = _buffer;
-            var mask = _capacity - 1;
-            var consumerIndex = (int) (buffer.GetLongVolatile(_headPositionIndex) & mask);
-            var producerIndex = (int) (buffer.GetLongVolatile(_tailPositionIndex) & mask);
+            IAtomicBuffer buffer = _buffer;
+            long headPosition = buffer.GetLongVolatile(_headPositionIndex);
+            long tailPosition = buffer.GetLongVolatile(_tailPositionIndex);
 
-            if (producerIndex == consumerIndex)
+            if (headPosition == tailPosition)
             {
                 return false;
             }
 
-            var unblocked = false;
-            var length = buffer.GetIntVolatile(consumerIndex);
+            int mask = _capacity - 1;
+            int consumerIndex = (int)(headPosition & mask);
+            int producerIndex = (int)(tailPosition & mask);
+
+            bool unblocked = false;
+            int length = buffer.GetIntVolatile(consumerIndex);
             if (length < 0)
             {
-                buffer.PutLongOrdered(consumerIndex, RecordDescriptor.MakeHeader(-length, PaddingMsgTypeId));
+                buffer.PutInt(RecordDescriptor.TypeOffset(consumerIndex), PaddingMsgTypeId);
+                buffer.PutIntOrdered(RecordDescriptor.LengthOffset(consumerIndex), -length);
                 unblocked = true;
             }
             else if (0 == length)
             {
                 // go from (consumerIndex to producerIndex) or (consumerIndex to capacity)
-                var limit = producerIndex > consumerIndex ? producerIndex : _capacity;
-                var i = consumerIndex + RecordDescriptor.Alignment;
+                int limit = producerIndex > consumerIndex ? producerIndex : _capacity;
+                int i = consumerIndex + RecordDescriptor.Alignment;
 
                 do
                 {
@@ -303,7 +294,8 @@ namespace Adaptive.Agrona.Concurrent.RingBuffer
                     {
                         if (ScanBackToConfirmStillZeroed(buffer, i, consumerIndex))
                         {
-                            buffer.PutLongOrdered(consumerIndex, RecordDescriptor.MakeHeader(i - consumerIndex, PaddingMsgTypeId));
+                            buffer.PutInt(RecordDescriptor.TypeOffset(consumerIndex), PaddingMsgTypeId);
+                            buffer.PutIntOrdered(RecordDescriptor.LengthOffset(consumerIndex), i - consumerIndex);
                             unblocked = true;
                         }
 
@@ -315,6 +307,47 @@ namespace Adaptive.Agrona.Concurrent.RingBuffer
             }
 
             return unblocked;
+        }
+
+        public int TryClaim(int msgTypeId, int length)
+        {
+            RecordDescriptor.CheckTypeId(msgTypeId);
+            CheckMsgLength(length);
+
+            IAtomicBuffer buffer = _buffer;
+            int recordLength = length + RecordDescriptor.HeaderLength;
+            int recordIndex = ClaimCapacity(buffer, recordLength);
+
+            if (InsufficientCapacity == recordIndex)
+            {
+                return recordIndex;
+            }
+
+            buffer.PutIntOrdered(RecordDescriptor.LengthOffset(recordIndex), -recordLength);
+            // TODO JPW original: UnsafeAccess.UNSAFE.storeFence();
+            Thread.MemoryBarrier();
+            buffer.PutInt(RecordDescriptor.TypeOffset(recordIndex), msgTypeId);
+
+            return RecordDescriptor.EncodedMsgOffset(recordIndex);
+        }
+
+        public void Commit(int index)
+        {
+            int recordIndex = ComputeRecordIndex(index);
+            IAtomicBuffer buffer = _buffer;
+            int recordLength = VerifyClaimedSpaceNotReleased(buffer, recordIndex);
+
+            buffer.PutIntOrdered(RecordDescriptor.LengthOffset(recordIndex), -recordLength);
+        }
+
+        public void Abort(int index)
+        {
+            int recordIndex = ComputeRecordIndex(index);
+            IAtomicBuffer buffer = _buffer;
+            int recordLength = VerifyClaimedSpaceNotReleased(buffer, recordIndex);
+
+            buffer.PutInt(RecordDescriptor.TypeOffset(recordIndex), PaddingMsgTypeId);
+            buffer.PutIntOrdered(RecordDescriptor.LengthOffset(recordIndex), -recordLength);
         }
 
         private static bool ScanBackToConfirmStillZeroed(IAtomicBuffer buffer, int from, int limit)
@@ -345,9 +378,10 @@ namespace Adaptive.Agrona.Concurrent.RingBuffer
             }
         }
 
-        private int ClaimCapacity(IAtomicBuffer buffer, int requiredCapacity)
+        private int ClaimCapacity(IAtomicBuffer buffer, int recordLength)
         {
-            var capacity = _capacity;
+            var requiredCapacity = BitUtil.Align(recordLength, RecordDescriptor.Alignment);
+            var capacity = this._capacity;
             var tailPositionIndex = _tailPositionIndex;
             var headCachePositionIndex = _headCachePositionIndex;
             var mask = capacity - 1;
@@ -360,13 +394,13 @@ namespace Adaptive.Agrona.Concurrent.RingBuffer
             do
             {
                 tail = buffer.GetLongVolatile(tailPositionIndex);
-                var availableCapacity = capacity - (int) (tail - head);
+                var availableCapacity = capacity - (int)(tail - head);
 
                 if (requiredCapacity > availableCapacity)
                 {
                     head = buffer.GetLongVolatile(_headPositionIndex);
 
-                    if (requiredCapacity > (capacity - (int) (tail - head)))
+                    if (requiredCapacity > (capacity - (int)(tail - head)))
                     {
                         return InsufficientCapacity;
                     }
@@ -375,17 +409,17 @@ namespace Adaptive.Agrona.Concurrent.RingBuffer
                 }
 
                 padding = 0;
-                tailIndex = (int) tail & mask;
+                tailIndex = (int)tail & mask;
                 var toBufferEndLength = capacity - tailIndex;
 
                 if (requiredCapacity > toBufferEndLength)
                 {
-                    var headIndex = (int) head & mask;
+                    var headIndex = (int)head & mask;
 
                     if (requiredCapacity > headIndex)
                     {
                         head = buffer.GetLongVolatile(_headPositionIndex);
-                        headIndex = (int) head & mask;
+                        headIndex = (int)head & mask;
                         if (requiredCapacity > headIndex)
                         {
                             return InsufficientCapacity;
@@ -400,11 +434,41 @@ namespace Adaptive.Agrona.Concurrent.RingBuffer
 
             if (0 != padding)
             {
-                buffer.PutLongOrdered(tailIndex, RecordDescriptor.MakeHeader(padding, PaddingMsgTypeId));
+                buffer.PutIntOrdered(RecordDescriptor.LengthOffset(tailIndex), -padding);
+                Thread.MemoryBarrier();
+
+                buffer.PutInt(RecordDescriptor.TypeOffset(tailIndex), PaddingMsgTypeId);
+                buffer.PutIntOrdered(RecordDescriptor.LengthOffset(tailIndex), padding);
                 tailIndex = 0;
             }
 
             return tailIndex;
+        }
+
+        private int ComputeRecordIndex(int index)
+        {
+            int recordIndex = index - RecordDescriptor.HeaderLength;
+            if (recordIndex < 0 || recordIndex > (_capacity - RecordDescriptor.HeaderLength))
+            {
+                throw new ArgumentException("invalid message index " + index);
+            }
+
+            return recordIndex;
+        }
+
+        private int VerifyClaimedSpaceNotReleased(IAtomicBuffer buffer, int recordIndex)
+        {
+            int recordLength = buffer.GetInt(RecordDescriptor.LengthOffset(recordIndex));
+            if (recordLength < 0)
+            {
+                return recordLength;
+            }
+
+            throw new InvalidOperationException("claimed space previously " +
+                                                (PaddingMsgTypeId ==
+                                                 buffer.GetInt(RecordDescriptor.TypeOffset(recordIndex))
+                                                    ? "aborted"
+                                                    : "committed"));
         }
     }
 }

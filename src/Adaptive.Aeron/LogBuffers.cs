@@ -155,7 +155,7 @@ namespace Adaptive.Aeron
         }
 
         /// <summary>
-        /// Pre touch memory pages so they are faulted in to be available before access.
+        /// Pre touch memory pages, so they are faulted in to be available before access.
         /// </summary>
         public void PreTouch()
         {
@@ -183,6 +183,8 @@ namespace Adaptive.Aeron
                 IoUtil.Unmap(buffer);
                 _mappedByteBuffers[i] = null;
             }
+            
+            _logMetaDataBuffer.Wrap(0, 0);
         }
 
         /// <summary>
@@ -194,21 +196,37 @@ namespace Adaptive.Aeron
             return _termLength;
         }
 
+        /// <summary>
+        /// Increment reference count.
+        /// </summary>
+        /// <returns> current reference count after increment. </returns>
         public int IncRef()
         {
             return ++_refCount;
         }
 
+        /// <summary>
+        /// Decrement reference count.
+        /// </summary>
+        /// <returns> current reference counter after decrement. </returns>
         public int DecRef()
         {
             return --_refCount;
         }
 
+        /// <summary>
+        /// Set the deadline for how long to linger around once unreferenced.
+        /// </summary>
+        /// <param name="timeNs"> the deadline for how long to linger around once unreferenced. </param>
         public void LingerDeadlineNs(long timeNs)
         {
             lingerDeadlineNs = timeNs;
         }
 
+        /// <summary>
+        /// The deadline for how long to linger around once unreferenced.
+        /// </summary>
+        /// <returns> the deadline for how long to linger around once unreferenced. </returns>
         public long LingerDeadlineNs()
         {
             return lingerDeadlineNs;

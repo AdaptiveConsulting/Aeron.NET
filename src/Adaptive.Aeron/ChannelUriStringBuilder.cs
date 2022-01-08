@@ -7,13 +7,19 @@ using static Adaptive.Aeron.LogBuffer.FrameDescriptor;
 namespace Adaptive.Aeron
 {
     /// <summary>
-    /// Type safe means of building a channel URI associated with a <seealso cref="Publication"/> or <seealso cref="Subscription"/>.
+    /// Typesafe means of building a channel URI associated with a <seealso cref="Publication"/> or <seealso cref="Subscription"/>.
     /// </summary>
     /// <seealso cref="Aeron.AddPublication"/>
     /// <seealso cref="Aeron.AddSubscription(string,int)"/>
     /// <seealso cref="ChannelUri"/>
-    public class ChannelUriStringBuilder
+    public sealed class ChannelUriStringBuilder
     {
+        /// <summary>
+        /// Can be used when the likes of session-id wants to reference another entity such as a tagged publication.
+        /// <para>
+        /// For example {@code session-id=tag:777} where the publication uses {@code tags=777}.
+        /// </para>
+        /// </summary>
         public const string TAG_PREFIX = "tag:";
 
         private readonly StringBuilder _sb = new StringBuilder(64);
@@ -26,8 +32,8 @@ namespace Adaptive.Aeron
         private string _controlMode;
         private string _tags;
         private string _alias;
-        private string cc;
-        private string fc;
+        private string _cc;
+        private string _fc;
         private bool? _reliable;
         private int? _ttl;
         private int? _mtu;
@@ -35,16 +41,80 @@ namespace Adaptive.Aeron
         private int? _initialTermId;
         private int? _termId;
         private int? _termOffset;
-        private int? _sessionId;
-        private long? groupTag;
+        private long? _sessionId;
+        private long? _groupTag;
         private long? _linger;
         private bool? _sparse;
         private bool? _eos;
         private bool? _tether;
-        private bool? group;
-        private bool? rejoin;
-        private bool? ssc;
+        private bool? _group;
+        private bool? _rejoin;
+        private bool? _ssc;
         private bool _isSessionIdTagged;
+        private int? _socketSndbufLength;
+        private int? _socketRcvbufLength;
+        private int? _receiverWindowLength;
+        private string _mediaReceiveTimestampOffset;
+        private string _channelReceiveTimestampOffset;
+        private string _channelSendTimestampOffset;
+
+        /// <summary>
+        /// Default constructor
+        /// </summary>
+        public ChannelUriStringBuilder()
+        {
+        }
+
+        /// <summary>
+        /// Constructs the ChannelUriStringBuilder with the initial values derived from the supplied URI. Will parse the
+        /// incoming URI during this process, so could through an exception at this point of the URI is badly formed.
+        /// </summary>
+        /// <param name="initialUri"> initial values for the builder. </param>
+        public ChannelUriStringBuilder(string initialUri) : this(ChannelUri.Parse(initialUri))
+        {
+        }
+
+        /// <summary>
+        /// Constructs the ChannelUriStringBuilder with the initial values derived from the supplied ChannelUri.
+        /// </summary>
+        /// <param name="channelUri"> initial values for the builder. </param>
+        public ChannelUriStringBuilder(ChannelUri channelUri)
+        {
+            _isSessionIdTagged = false;
+
+            Prefix(channelUri);
+            Media(channelUri);
+            Endpoint(channelUri);
+            NetworkInterface(channelUri);
+            ControlEndpoint(channelUri);
+            ControlMode(channelUri);
+            Tags(channelUri);
+            Alias(channelUri);
+            CongestionControl(channelUri);
+            FlowControl(channelUri);
+            Reliable(channelUri);
+            Ttl(channelUri);
+            Mtu(channelUri);
+            TermLength(channelUri);
+            InitialTermId(channelUri);
+            TermId(channelUri);
+            TermOffset(channelUri);
+            SessionId(channelUri);
+            Group(channelUri);
+            Linger(channelUri);
+            Sparse(channelUri);
+            Eos(channelUri);
+            Tether(channelUri);
+            GroupTag(channelUri);
+            Rejoin(channelUri);
+            SpiesSimulateConnection(channelUri);
+            SocketRcvbufLength(channelUri);
+            SocketSndbufLength(channelUri);
+            ReceiverWindowLength(channelUri);
+            MediaReceiveTimestampOffset(channelUri);
+            ChannelReceiveTimestampOffset(channelUri);
+            ChannelSendTimestampOffset(channelUri);
+        }
 
         /// <summary>
         /// Clear out all the values thus setting back to the initial state.
@@ -60,8 +130,8 @@ namespace Adaptive.Aeron
             _controlMode = null;
             _tags = null;
             _alias = null;
-            cc = null;
-            fc = null;
+            _cc = null;
+            _fc = null;
             _reliable = null;
             _ttl = null;
             _mtu = null;
@@ -70,14 +140,20 @@ namespace Adaptive.Aeron
             _termId = null;
             _termOffset = null;
             _sessionId = null;
-            groupTag = null;
+            _groupTag = null;
             _linger = null;
             _sparse = null;
             _eos = null;
             _tether = null;
-            group = null;
-            rejoin = null;
+            _group = null;
+            _rejoin = null;
             _isSessionIdTagged = false;
+            _socketRcvbufLength = null;
+            _socketSndbufLength = null;
+            _receiverWindowLength = null;
+            _mediaReceiveTimestampOffset = null;
+            _channelReceiveTimestampOffset = null;
+            _channelSendTimestampOffset = null;
 
             return this;
         }
@@ -104,7 +180,7 @@ namespace Adaptive.Aeron
             count += null == _termId ? 0 : 1;
             count += null == _termOffset ? 0 : 1;
 
-            if (count > 3)
+            if (count > 0)
             {
                 if (count < 3)
                 {
@@ -130,7 +206,7 @@ namespace Adaptive.Aeron
         /// <summary>
         /// Set the prefix for taking an addition action such as spying on an outgoing publication with "aeron-spy".
         /// </summary>
-        /// <param name="prefix"> to be applied to the URI before the the scheme. </param>
+        /// <param name="prefix"> to be applied to the URI before the scheme. </param>
         /// <returns> this for a fluent API. </returns>
         /// <seealso cref="ChannelUri.SPY_QUALIFIER"/>
         public ChannelUriStringBuilder Prefix(string prefix)
@@ -319,7 +395,7 @@ namespace Adaptive.Aeron
             if (null != controlMode &&
                 !controlMode.Equals(Aeron.Context.MDC_CONTROL_MODE_MANUAL) &&
                 !controlMode.Equals(Aeron.Context.MDC_CONTROL_MODE_DYNAMIC)
-            )
+               )
             {
                 throw new ArgumentException("invalid control mode: " + controlMode);
             }
@@ -354,7 +430,7 @@ namespace Adaptive.Aeron
         /// <summary>
         /// Set the subscription semantics for if loss is acceptable, or not, for a reliable message delivery.
         /// </summary>
-        /// <param name="isReliable"> false if loss can be be gap filled. </param>
+        /// <param name="isReliable"> false if loss can be gap-filled. </param>
         /// <returns> this for a fluent API. </returns>
         /// <seealso cref="Aeron.Context.RELIABLE_STREAM_PARAM_NAME"/>
         public ChannelUriStringBuilder Reliable(bool? isReliable)
@@ -490,7 +566,7 @@ namespace Adaptive.Aeron
                                                         int.MaxValue);
                 }
 
-                return Mtu((int) value);
+                return Mtu((int)value);
             }
         }
 
@@ -541,12 +617,12 @@ namespace Adaptive.Aeron
                 long value = SystemUtil.ParseSize(Aeron.Context.TERM_LENGTH_PARAM_NAME, termLengthValue);
                 if (value > int.MaxValue)
                 {
-                    throw new InvalidOperationException("Term length more than max length of " +
+                    throw new InvalidOperationException("term length more than max length of " +
                                                         LogBufferDescriptor.TERM_MAX_LENGTH + ": length=" +
                                                         _termLength);
                 }
 
-                return TermLength((int) value);
+                return TermLength((int)value);
             }
         }
 
@@ -701,6 +777,7 @@ namespace Adaptive.Aeron
             return _termOffset;
         }
 
+
         /// <summary>
         /// Set the session id for a publication or restricted subscription.
         /// </summary>
@@ -714,6 +791,48 @@ namespace Adaptive.Aeron
         }
 
         /// <summary>
+        /// Set the session id for a publication or restricted subscription from a formatted string.  Supports a format of
+        /// either a string encoded signed 32-bit number or 'tag:' followed by a signed 64 bit value.
+        /// </summary>
+        /// <param name="sessionIdStr"> for the publication or a restricted subscription. </param>
+        /// <returns> this for a fluent API. </returns>
+        /// <seealso cref="Aeron.Context.SESSION_ID_PARAM_NAME"/>seealso>
+        public ChannelUriStringBuilder SessionId(string sessionIdStr)
+        {
+            if (null != sessionIdStr)
+            {
+                if (ChannelUri.IsTagged(sessionIdStr))
+                {
+                    TaggedSessionId(ChannelUri.GetTag(sessionIdStr));
+                }
+                else
+                {
+                    IsSessionIdTagged(false);
+                    SessionId(Convert.ToInt32(sessionIdStr));
+                }
+            }
+            else
+            {
+                SessionId((int?)null);
+            }
+
+            return this;
+        }
+
+        /// <summary>
+        /// Set the session id for a publication or restricted subscription as a tag referenced value.
+        /// </summary>
+        /// <param name="sessionId"> for the publication or a restricted subscription. </param>
+        /// <returns> this for a fluent API. </returns>
+        /// <seealso cref="Aeron.Context.SESSION_ID_PARAM_NAME"/>
+        public ChannelUriStringBuilder TaggedSessionId(long? sessionId)
+        {
+            IsSessionIdTagged(true);
+            _sessionId = sessionId;
+            return this;
+        }
+
+        /// <summary>
         /// Set the sessionId value to be what is in the <seealso cref="ChannelUri"/> which may be null.
         /// </summary>
         /// <param name="channelUri"> to read the value from. </param>
@@ -721,16 +840,7 @@ namespace Adaptive.Aeron
         /// <seealso cref="Aeron.Context.SESSION_ID_PARAM_NAME"/>
         public ChannelUriStringBuilder SessionId(ChannelUri channelUri)
         {
-            string sessionIdValue = channelUri.Get(Aeron.Context.SESSION_ID_PARAM_NAME);
-            if (null == sessionIdValue)
-            {
-                _sessionId = null;
-                return this;
-            }
-            else
-            {
-                return SessionId(Convert.ToInt32(sessionIdValue));
-            }
+            return SessionId(channelUri.Get(Aeron.Context.SESSION_ID_PARAM_NAME));
         }
 
         /// <summary>
@@ -738,14 +848,18 @@ namespace Adaptive.Aeron
         /// </summary>
         /// <returns> the session id for a publication or restricted subscription. </returns>
         /// <seealso cref="Aeron.Context.SESSION_ID_PARAM_NAME"/>
+        /// @deprecated this method will not correctly handle tagged sessionId values that are outside the range of
+        /// a signed 32-bit number.  If this is called and a tagged value outside this range is currently held in this
+        /// object, then the result will be the the least significant bits. 
+        [Obsolete("this method will not correctly handle tagged sessionId values that are outside the range of")]
         public int? SessionId()
         {
-            return _sessionId;
+            return unchecked((int?)_sessionId);
         }
 
         /// <summary>
-        /// Set the time a network publication will linger in nanoseconds after being drained. This time is so that tail loss
-        /// can be recovered.
+        /// Set the time a network publication will linger in nanoseconds after being drained. This time is so that tail
+        /// loss can be recovered.
         /// </summary>
         /// <param name="lingerNs"> time for the publication after it is drained. </param>
         /// <returns> this for a fluent API. </returns>
@@ -782,10 +896,10 @@ namespace Adaptive.Aeron
         }
 
         /// <summary>
-        /// Get the time a network publication will linger in nanoseconds after being drained. This time is so that tail loss
-        /// can be recovered.
+        /// Get the time a network publication will linger in nanoseconds after being drained. This time is so that tail
+        /// loss can be recovered.
         /// </summary>
-        /// <returns> the linger time in nanoseconds a publication will wait around after being drained. </returns>
+        /// <returns> the linger time in nanoseconds a publication will linger after being drained. </returns>
         /// <seealso cref="Aeron.Context.LINGER_PARAM_NAME"></seealso>
         public long? Linger()
         {
@@ -929,7 +1043,7 @@ namespace Adaptive.Aeron
         /// <seealso cref="ControlEndpoint()"/>
         public ChannelUriStringBuilder Group(bool? group)
         {
-            this.group = group;
+            this._group = group;
             return this;
         }
 
@@ -944,7 +1058,7 @@ namespace Adaptive.Aeron
             string groupValue = channelUri.Get(Aeron.Context.GROUP_PARAM_NAME);
             if (null == groupValue)
             {
-                group = null;
+                _group = null;
                 return this;
             }
             else
@@ -962,7 +1076,7 @@ namespace Adaptive.Aeron
         /// <seealso cref="ControlEndpoint()"/>
         public bool? Group()
         {
-            return group;
+            return _group;
         }
 
         /// <summary>
@@ -991,6 +1105,30 @@ namespace Adaptive.Aeron
         }
 
         /// <summary>
+        /// Set the tags to the specified channel and publication/subscription tag <seealso cref="ChannelUri"/>. The
+        /// publication/subscription may be null. If channel tag is null, then the pubSubTag must be null.
+        /// </summary>
+        /// <param name="channelTag"> optional value for the channel tag. </param>
+        /// <param name="pubSubTag">  option value for the publication/subscription tag. </param>
+        /// <returns> this for a fluent API. </returns>
+        /// <exception cref="ArgumentException"> if channelTag is null and pubSubTag is not. </exception>
+        /// <seealso cref="Aeron.Context.TAGS_PARAM_NAME"></seealso>
+        public ChannelUriStringBuilder Tags(long? channelTag, long? pubSubTag)
+        {
+            if (null == channelTag && null != pubSubTag)
+            {
+                throw new ArgumentException("null == channelTag && null != pubSubTag");
+            }
+
+            if (null == channelTag)
+            {
+                return Tags((string)null);
+            }
+
+            return Tags(channelTag + (null != pubSubTag ? "," + pubSubTag : ""));
+        }
+
+        /// <summary>
         /// Get the tags for a channel used by a publication or subscription. Tags can be used to identify or tag a
         /// channel so that a configuration can be referenced and reused.
         /// </summary>
@@ -1016,7 +1154,7 @@ namespace Adaptive.Aeron
         }
 
         /// <summary>
-        /// Is the value for <seealso cref="SessionId()"/> a tagged.
+        /// Is the value for <seealso cref="SessionId()"/> a tag..
         /// </summary>
         /// <returns> whether the value for <seealso cref="SessionId()"/> a tag reference or not. </returns>
         /// <seealso cref="Aeron.Context.TAGS_PARAM_NAME"/>
@@ -1027,7 +1165,7 @@ namespace Adaptive.Aeron
         }
 
         /// <summary>
-        /// Set the alias for a URI. Alias's are not interpreted by Aeron and are to be used by the application.
+        /// Set the alias for a URI. Aliases are not interpreted by Aeron and are to be used by the application.
         /// </summary>
         /// <param name="alias"> for the URI. </param>
         /// <returns> this for a fluent API. </returns>
@@ -1067,7 +1205,7 @@ namespace Adaptive.Aeron
         /// <seealso cref="Aeron.Context.CONGESTION_CONTROL_PARAM_NAME"/>
         public ChannelUriStringBuilder CongestionControl(string congestionControl)
         {
-            this.cc = congestionControl;
+            this._cc = congestionControl;
             return this;
         }
 
@@ -1089,7 +1227,7 @@ namespace Adaptive.Aeron
         /// <seealso cref="Aeron.Context.CONGESTION_CONTROL_PARAM_NAME"/>
         public string CongestionControl()
         {
-            return cc;
+            return _cc;
         }
 
         /// <summary>
@@ -1100,16 +1238,16 @@ namespace Adaptive.Aeron
         /// <seealso cref="Aeron.Context.FLOW_CONTROL_PARAM_NAME"/>
         public ChannelUriStringBuilder FlowControl(string flowControl)
         {
-            this.fc = flowControl;
+            this._fc = flowControl;
             return this;
         }
 
         /// <summary>
-        /// Set tagged flow control settings to be used on stream. All specified values may be null and the default
+        /// Set tagged flow control settings to be used on a stream. All specified values may be null and the default
         /// specified in the MediaDriver.Context will be used instead.
         /// </summary>
         /// <param name="groupTag">  receiver tag for this stream. </param>
-        /// <param name="minGroupSize"> group size required to allow publications for this channel to be move to connected status. </param>
+        /// <param name="minGroupSize"> group size required to allow publications for this channel to be moved to connected status. </param>
         /// <param name="timeout">      timeout receivers, default is ns, but allows suffixing of time units (e.g. 5s). </param>
         /// <returns> this for fluent API. </returns>
         public ChannelUriStringBuilder TaggedFlowControl(long? groupTag, int? minGroupSize, string timeout)
@@ -1119,23 +1257,21 @@ namespace Adaptive.Aeron
             if (null != groupTag || null != minGroupSize)
             {
                 flowControlValue += ",g:";
-            }
 
-            if (null != groupTag)
-            {
-                flowControlValue += groupTag;
-            }
+                if (null != groupTag)
+                {
+                    flowControlValue += groupTag;
+                }
 
-            if (null != minGroupSize)
-            {
-                flowControlValue += "/";
-                flowControlValue += minGroupSize;
+                if (null != minGroupSize)
+                {
+                    flowControlValue += ("/" + minGroupSize);
+                }
             }
 
             if (null != timeout)
             {
-                flowControlValue += ",t:";
-                flowControlValue += timeout;
+                flowControlValue += (",t:" + timeout);
             }
 
             return FlowControl(flowControlValue);
@@ -1145,7 +1281,7 @@ namespace Adaptive.Aeron
         /// Set min flow control settings to be used on a stream. All specified values may be null and the default
         /// specified in the MediaDriver.Context will be used instead.
         /// </summary>
-        /// <param name="minGroupSize"> group size required to allow publications for this stream to be move to connected status. </param>
+        /// <param name="minGroupSize"> group size required to allow publications for this stream to be moved to connected status. </param>
         /// <param name="timeout">      timeout receivers, default is ns, but allows suffixing of time units (e.g. 5s). </param>
         /// <returns> this for fluent API. </returns>
         public ChannelUriStringBuilder MinFlowControl(int? minGroupSize, string timeout)
@@ -1154,14 +1290,12 @@ namespace Adaptive.Aeron
 
             if (null != minGroupSize)
             {
-                flowControlValue += ",g:/";
-                flowControlValue += minGroupSize;
+                flowControlValue += (",g:/" + minGroupSize);
             }
 
             if (null != timeout)
             {
-                flowControlValue += ",t:";
-                flowControlValue += timeout;
+                flowControlValue += (",t:" + timeout);
             }
 
             return FlowControl(flowControlValue);
@@ -1185,7 +1319,7 @@ namespace Adaptive.Aeron
         /// <seealso cref="Aeron.Context.FLOW_CONTROL_PARAM_NAME"/>
         public string FlowControl()
         {
-            return fc;
+            return _fc;
         }
 
         /// <summary>
@@ -1196,7 +1330,7 @@ namespace Adaptive.Aeron
         /// <seealso cref="Aeron.Context.GROUP_TAG_PARAM_NAME"/>
         public ChannelUriStringBuilder GroupTag(long? groupTag)
         {
-            this.groupTag = groupTag;
+            this._groupTag = groupTag;
             return this;
         }
 
@@ -1211,7 +1345,7 @@ namespace Adaptive.Aeron
             string groupTagValue = channelUri.Get(Aeron.Context.GROUP_TAG_PARAM_NAME);
             if (null == groupTagValue)
             {
-                groupTag = null;
+                _groupTag = null;
                 return this;
             }
             else
@@ -1227,7 +1361,7 @@ namespace Adaptive.Aeron
         /// <seealso cref="Aeron.Context.GROUP_TAG_PARAM_NAME"/>
         public long? GroupTag()
         {
-            return groupTag;
+            return _groupTag;
         }
 
         /// <summary>
@@ -1238,7 +1372,7 @@ namespace Adaptive.Aeron
         /// <seealso cref="Aeron.Context.REJOIN_PARAM_NAME"/>
         public ChannelUriStringBuilder Rejoin(bool? rejoin)
         {
-            this.rejoin = rejoin;
+            this._rejoin = rejoin;
             return this;
         }
 
@@ -1253,7 +1387,7 @@ namespace Adaptive.Aeron
             string rejoinValue = channelUri.Get(Aeron.Context.REJOIN_PARAM_NAME);
             if (null == rejoinValue)
             {
-                rejoin = null;
+                _rejoin = null;
                 return this;
             }
             else
@@ -1269,9 +1403,9 @@ namespace Adaptive.Aeron
         /// <seealso cref="Aeron.Context.REJOIN_PARAM_NAME"/>
         public bool? Rejoin()
         {
-            return rejoin;
+            return _rejoin;
         }
-        
+
         /// <summary>
         /// Set the publication semantics for whether the presence of spy subscriptions simulate a connection.
         /// </summary>
@@ -1280,7 +1414,7 @@ namespace Adaptive.Aeron
         /// <seealso cref="Aeron.Context.SPIES_SIMULATE_CONNECTION_PARAM_NAME"></seealso>
         public ChannelUriStringBuilder SpiesSimulateConnection(bool? spiesSimulateConnection)
         {
-            this.ssc = spiesSimulateConnection;
+            this._ssc = spiesSimulateConnection;
             return this;
         }
 
@@ -1296,7 +1430,7 @@ namespace Adaptive.Aeron
             string sscValue = channelUri.Get(Aeron.Context.SPIES_SIMULATE_CONNECTION_PARAM_NAME);
             if (null == sscValue)
             {
-                ssc = null;
+                _ssc = null;
                 return this;
             }
             else
@@ -1312,7 +1446,7 @@ namespace Adaptive.Aeron
         /// <seealso cref="Aeron.Context.SPIES_SIMULATE_CONNECTION_PARAM_NAME"></seealso>
         public bool? SpiesSimulateConnection()
         {
-            return ssc;
+            return _ssc;
         }
 
         /// <summary>
@@ -1333,10 +1467,301 @@ namespace Adaptive.Aeron
 
             _initialTermId = initialTermId;
             _termId = LogBufferDescriptor.ComputeTermIdFromPosition(position, bitsToShift, initialTermId);
-            _termOffset = (int) (position & (termLength - 1));
+            _termOffset = (int)(position & (termLength - 1));
             _termLength = termLength;
 
             return this;
+        }
+
+        /// <summary>
+        /// Set the underlying OS send buffer length.
+        /// </summary>
+        /// <param name="socketSndbufLength"> parameter to be passed as SO_SNDBUF value. </param>
+        /// <returns> this for a fluent API. </returns>
+        /// <seealso cref="Aeron.Context.SOCKET_SNDBUF_PARAM_NAME"/>
+        public ChannelUriStringBuilder SocketSndbufLength(int? socketSndbufLength)
+        {
+            _socketSndbufLength = socketSndbufLength;
+            return this;
+        }
+
+        /// <summary>
+        /// Set the underlying OS send buffer length from an existing <seealso cref="ChannelUri"/> which may be (null).
+        /// </summary>
+        /// <param name="channelUri"> to read the value from. </param>
+        /// <returns> this for a fluent API. </returns>
+        /// <seealso cref="Aeron.Context.SOCKET_SNDBUF_PARAM_NAME"/>
+        public ChannelUriStringBuilder SocketSndbufLength(ChannelUri channelUri)
+        {
+            string valueStr = channelUri.Get(Aeron.Context.SOCKET_SNDBUF_PARAM_NAME);
+            if (null == valueStr)
+            {
+                _socketSndbufLength = null;
+                return this;
+            }
+            else
+            {
+                long value = SystemUtil.ParseSize(Aeron.Context.SOCKET_SNDBUF_PARAM_NAME, valueStr);
+                if (value > int.MaxValue)
+                {
+                    throw new InvalidOperationException("value exceeds maximum permitted: value=" + value);
+                }
+
+                return SocketSndbufLength((int)value);
+            }
+        }
+
+        /// <summary>
+        /// Get the underling OS send buffer length setting
+        /// </summary>
+        /// <returns> underlying OS send buffer length setting or null if not specified. </returns>
+        /// <seealso cref="Aeron.Context.SOCKET_SNDBUF_PARAM_NAME"/>
+        public int? SocketSndbufLength()
+        {
+            return _socketSndbufLength;
+        }
+
+        /// <summary>
+        /// Set the underlying OS receive buffer length.
+        /// </summary>
+        /// <param name="socketRcvbufLength"> parameter to be passed as SO_SNDBUF value. </param>
+        /// <returns> this for a fluent API. </returns>
+        /// <seealso cref="Aeron.Context.SOCKET_SNDBUF_PARAM_NAME"/>
+        public ChannelUriStringBuilder SocketRcvbufLength(int? socketRcvbufLength)
+        {
+            _socketRcvbufLength = socketRcvbufLength;
+            return this;
+        }
+
+        /// <summary>
+        /// Set the underlying OS receive buffer length from an existing <seealso cref="ChannelUri"/>, which may have a null value for
+        /// this field.
+        /// </summary>
+        /// <param name="channelUri"> to read the value from. </param>
+        /// <returns> this for a fluent API. </returns>
+        /// <seealso cref="Aeron.Context.SOCKET_RCVBUF_PARAM_NAME"/>
+        public ChannelUriStringBuilder SocketRcvbufLength(ChannelUri channelUri)
+        {
+            string valueStr = channelUri.Get(Aeron.Context.SOCKET_RCVBUF_PARAM_NAME);
+            if (null == valueStr)
+            {
+                this._socketRcvbufLength = null;
+                return this;
+            }
+            else
+            {
+                long value = SystemUtil.ParseSize(Aeron.Context.SOCKET_RCVBUF_PARAM_NAME, valueStr);
+                if (value > int.MaxValue)
+                {
+                    throw new InvalidOperationException("value exceeds maximum permitted: value=" + value);
+                }
+
+                return SocketRcvbufLength((int)value);
+            }
+        }
+
+        /// <summary>
+        /// Get the underling OS receive buffer length setting.
+        /// </summary>
+        /// <returns> underlying OS receive buffer length setting or null if not specified. </returns>
+        /// <seealso cref="Aeron.Context.SOCKET_RCVBUF_PARAM_NAME"/>
+        public int? SocketRcvbufLength()
+        {
+            return _socketRcvbufLength;
+        }
+
+        /// <summary>
+        /// Set the flow control initial receiver window length for this channel.
+        /// </summary>
+        /// <param name="receiverWindowLength"> initial receiver window length. </param>
+        /// <returns> this for a fluent API. </returns>
+        /// <seealso cref="Aeron.Context.RECEIVER_WINDOW_LENGTH_PARAM_NAME"/>
+        public ChannelUriStringBuilder ReceiverWindowLength(int? receiverWindowLength)
+        {
+            _receiverWindowLength = receiverWindowLength;
+            return this;
+        }
+
+        /// <summary>
+        /// Set the flow control initial receiver window length for this channel from an existing <seealso cref="ChannelUri"/>,
+        /// which may have a null value for this field.
+        /// </summary>
+        /// <param name="channelUri"> to read the value from. </param>
+        /// <returns> this for a fluent API. </returns>
+        /// <seealso cref="Aeron.Context.RECEIVER_WINDOW_LENGTH_PARAM_NAME"/>
+        public ChannelUriStringBuilder ReceiverWindowLength(ChannelUri channelUri)
+        {
+            string valueStr = channelUri.Get(Aeron.Context.RECEIVER_WINDOW_LENGTH_PARAM_NAME);
+            if (null == valueStr)
+            {
+                this._receiverWindowLength = null;
+                return this;
+            }
+            else
+            {
+                long value = SystemUtil.ParseSize(Aeron.Context.RECEIVER_WINDOW_LENGTH_PARAM_NAME, valueStr);
+                if (value > int.MaxValue)
+                {
+                    throw new InvalidOperationException("value exceeds maximum permitted: value=" + value);
+                }
+
+                return ReceiverWindowLength((int)value);
+            }
+        }
+
+        /// <summary>
+        /// Get the receiver window length to be used as the initial receiver window for flow control.
+        /// </summary>
+        /// <returns> receiver window length. </returns>
+        /// <seealso cref="Aeron.Context.SOCKET_RCVBUF_PARAM_NAME"/>
+        public int? ReceiverWindowLength()
+        {
+            return _receiverWindowLength;
+        }
+
+        /// <summary>
+        /// Offset into a message to store the media receive timestamp. May also be the special value 'reserved' which means
+        /// to store the timestamp in the reserved value field.
+        /// </summary>
+        /// <returns> current mediaReceiveTimestampOffset value either as string representation of an integer index or the
+        /// special value 'reserved' </returns>
+        public string MediaReceiveTimestampOffset()
+        {
+            return _mediaReceiveTimestampOffset;
+        }
+
+        /// <summary>
+        /// Offset into a message to store the media receive timestamp. May also be the special value 'reserved' which means
+        /// to store the timestamp in the reserved value field.
+        /// </summary>
+        /// <param name="timestampOffset"> to use as the offset. </param>
+        /// <returns> this for a fluent API. </returns>
+        /// <exception cref="ArgumentException"> if the string is not null and doesn't represent an int or the 'reserved' value. </exception>
+        public ChannelUriStringBuilder MediaReceiveTimestampOffset(string timestampOffset)
+        {
+            if (null != timestampOffset && !Aeron.Context.RESERVED_OFFSET.Equals(timestampOffset))
+            {
+                try
+                {
+                    int.Parse(timestampOffset);
+                }
+                catch (FormatException)
+                {
+                    throw new ArgumentException("mediaReceiveTimestampOffset must be a number or the value '" +
+                                                       Aeron.Context.RESERVED_OFFSET + "'");
+                }
+            }
+
+            this._mediaReceiveTimestampOffset = timestampOffset;
+            return this;
+        }
+
+        /// <summary>
+        /// Offset into a message to store the media receive timestamp. May also be the special value 'reserved' which means
+        /// to store the timestamp in the reserved value field.
+        /// </summary>
+        /// <param name="channelUri"> the existing URI to extract the mediaReceiveTimestampOffset from </param>
+        /// <returns> this for a fluent API. </returns>
+        public ChannelUriStringBuilder MediaReceiveTimestampOffset(ChannelUri channelUri)
+        {
+            return MediaReceiveTimestampOffset(channelUri.Get(Aeron.Context.MEDIA_RCV_TIMESTAMP_OFFSET_PARAM_NAME));
+        }
+
+        /// <summary>
+        /// Offset into a message to store the channel receive timestamp. May also be the special value 'reserved' which
+        /// means to store the timestamp in the reserved value field.
+        /// </summary>
+        /// <returns> current channelReceiveTimestampOffset value either as string representation of an integer index or
+        /// the special value 'reserved' </returns>
+        public string ChannelReceiveTimestampOffset()
+        {
+            return _channelReceiveTimestampOffset;
+        }
+
+        /// <summary>
+        /// Offset into a message to store the channel receive timestamp. May also be the special value 'reserved' which
+        /// means to store the timestamp in the reserved value field.
+        /// </summary>
+        /// <param name="timestampOffset"> to use as the offset. </param>
+        /// <returns> this for a fluent API. </returns>
+        /// <exception cref="ArgumentException"> if the string doesn't represent an int or the 'reserved' value. </exception>
+        public ChannelUriStringBuilder ChannelReceiveTimestampOffset(string timestampOffset)
+        {
+            if (null != timestampOffset && !Aeron.Context.RESERVED_OFFSET.Equals(timestampOffset))
+            {
+                try
+                {
+                    int.Parse(timestampOffset);
+                }
+                catch (FormatException)
+                {
+                    throw new ArgumentException("channelReceiveTimestampOffset must be a number or the value '" +
+                                                       Aeron.Context.RESERVED_OFFSET + "'");
+                }
+            }
+
+            this._channelReceiveTimestampOffset = timestampOffset;
+            return this;
+        }
+
+        /// <summary>
+        /// Offset into a message to store the channel receive timestamp. May also be the special value 'reserved' which
+        /// means to store the timestamp in the reserved value field.
+        /// </summary>
+        /// <param name="channelUri"> the existing URI to extract the receiveTimestampOffset from. </param>
+        /// <returns> this for a fluent API. </returns>
+        public ChannelUriStringBuilder ChannelReceiveTimestampOffset(ChannelUri channelUri)
+        {
+            return ChannelReceiveTimestampOffset(channelUri.Get(Aeron.Context.CHANNEL_RECEIVE_TIMESTAMP_OFFSET_PARAM_NAME));
+        }
+
+        /// <summary>
+        /// Offset into a message to store the channel send timestamp. May also be the special value 'reserved' which means
+        /// to store the timestamp in the reserved value field.
+        /// </summary>
+        /// <returns> current sendTimestampOffset value either as string representation of an integer index or the special
+        /// value 'reserved'. </returns>
+        public string ChannelSendTimestampOffset()
+        {
+            return _channelSendTimestampOffset;
+        }
+
+        /// <summary>
+        /// Offset into a message to store the channel send timestamp. May also be the special value 'reserved' which means
+        /// to store the timestamp in the reserved value field.
+        /// </summary>
+        /// <param name="timestampOffset"> to use as the offset. </param>
+        /// <exception cref="ArgumentException"></exception>
+        /// <returns> this for a fluent API. </returns>
+        /// <exception cref="ArgumentException"> if the string is not null doesn't represent an int or the 'reserved' value. </exception>
+        public ChannelUriStringBuilder ChannelSendTimestampOffset(string timestampOffset)
+        {
+            if (null != timestampOffset && !Aeron.Context.RESERVED_OFFSET.Equals(timestampOffset))
+            {
+                try
+                {
+                    int.Parse(timestampOffset);
+                }
+                catch (FormatException)
+                {
+                    throw new ArgumentException("channelSendTimestampOffset must be a number or the value '" +
+                                                Aeron.Context.RESERVED_OFFSET + "' found: " + timestampOffset);
+                }
+            }
+
+            _channelSendTimestampOffset = timestampOffset;
+            return this;
+        }
+
+        /// <summary>
+        /// Offset into a message to store the channel send timestamp. May also be the special value 'reserved' which means
+        /// to store the timestamp in the reserved value field.
+        /// </summary>
+        /// <param name="channelUri"> the existing URI to extract the channelSendTimestampOffset from. </param>
+        /// <returns> this for a fluent API. </returns>
+        public ChannelUriStringBuilder ChannelSendTimestampOffset(ChannelUri channelUri)
+        {
+            return ChannelSendTimestampOffset(channelUri.Get(Aeron.Context.CHANNEL_SEND_TIMESTAMP_OFFSET_PARAM_NAME));
         }
 
         /// <summary>
@@ -1432,21 +1857,21 @@ namespace Adaptive.Aeron
                 _sb.Append(Aeron.Context.ALIAS_PARAM_NAME).Append('=').Append(_alias).Append('|');
             }
 
-            if (null != cc)
+            if (null != _cc)
             {
-                _sb.Append(Aeron.Context.CONGESTION_CONTROL_PARAM_NAME).Append('=').Append(cc).Append('|');
+                _sb.Append(Aeron.Context.CONGESTION_CONTROL_PARAM_NAME).Append('=').Append(_cc).Append('|');
             }
 
-            if (null != fc)
+            if (null != _fc)
             {
-                _sb.Append(Aeron.Context.FLOW_CONTROL_PARAM_NAME).Append('=').Append(fc).Append('|');
+                _sb.Append(Aeron.Context.FLOW_CONTROL_PARAM_NAME).Append('=').Append(_fc).Append('|');
             }
 
-            if (null != groupTag)
+            if (null != _groupTag)
             {
-                _sb.Append(Aeron.Context.GROUP_TAG_PARAM_NAME).Append('=').Append(groupTag).Append('|');
+                _sb.Append(Aeron.Context.GROUP_TAG_PARAM_NAME).Append('=').Append(_groupTag).Append('|');
             }
-            
+
             if (null != _sparse)
             {
                 _sb.Append(Aeron.Context.SPARSE_PARAM_NAME).Append('=').Append(_sparse).Append('|');
@@ -1462,19 +1887,49 @@ namespace Adaptive.Aeron
                 _sb.Append(Aeron.Context.TETHER_PARAM_NAME).Append('=').Append(_tether).Append('|');
             }
 
-            if (null != group)
+            if (null != _group)
             {
-                _sb.Append(Aeron.Context.GROUP_PARAM_NAME).Append('=').Append(group).Append('|');
+                _sb.Append(Aeron.Context.GROUP_PARAM_NAME).Append('=').Append(_group).Append('|');
             }
 
-            if (null != rejoin)
+            if (null != _rejoin)
             {
-                _sb.Append(Aeron.Context.REJOIN_PARAM_NAME).Append('=').Append(rejoin).Append('|');
+                _sb.Append(Aeron.Context.REJOIN_PARAM_NAME).Append('=').Append(_rejoin).Append('|');
+            }
+
+            if (null != _ssc)
+            {
+                _sb.Append(Aeron.Context.SPIES_SIMULATE_CONNECTION_PARAM_NAME).Append('=').Append(_ssc).Append('|');
             }
             
-            if (null != ssc)
+            if (null != _socketSndbufLength)
             {
-                _sb.Append(Aeron.Context.SPIES_SIMULATE_CONNECTION_PARAM_NAME).Append('=').Append(ssc).Append('|');
+                _sb.Append(Aeron.Context.SOCKET_SNDBUF_PARAM_NAME).Append('=').Append(_socketSndbufLength).Append('|');
+            }
+
+            if (null != _socketRcvbufLength)
+            {
+                _sb.Append(Aeron.Context.SOCKET_RCVBUF_PARAM_NAME).Append('=').Append(_socketRcvbufLength).Append('|');
+            }
+
+            if (null != _receiverWindowLength)
+            {
+                _sb.Append(Aeron.Context.RECEIVER_WINDOW_LENGTH_PARAM_NAME).Append('=').Append(_receiverWindowLength).Append('|');
+            }
+
+            if (null != _mediaReceiveTimestampOffset)
+            {
+                _sb.Append(Aeron.Context.MEDIA_RCV_TIMESTAMP_OFFSET_PARAM_NAME).Append('=').Append(_mediaReceiveTimestampOffset).Append('|');
+            }
+
+            if (null != _channelReceiveTimestampOffset)
+            {
+                _sb.Append(Aeron.Context.CHANNEL_RECEIVE_TIMESTAMP_OFFSET_PARAM_NAME).Append('=').Append(_channelReceiveTimestampOffset).Append('|');
+            }
+
+            if (null != _channelSendTimestampOffset)
+            {
+                _sb.Append(Aeron.Context.CHANNEL_SEND_TIMESTAMP_OFFSET_PARAM_NAME).Append('=').Append(_channelSendTimestampOffset).Append('|');
             }
             
             char lastChar = _sb[_sb.Length - 1];
@@ -1491,7 +1946,7 @@ namespace Adaptive.Aeron
             return Build();
         }
 
-        private static string PrefixTag(bool isTagged, int value)
+        private static string PrefixTag(bool isTagged, long? value)
         {
             return isTagged ? TAG_PREFIX + value : value.ToString();
         }

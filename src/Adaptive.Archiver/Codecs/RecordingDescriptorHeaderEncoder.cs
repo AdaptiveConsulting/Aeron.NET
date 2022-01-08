@@ -12,7 +12,7 @@ public class RecordingDescriptorHeaderEncoder
     public const ushort BLOCK_LENGTH = 32;
     public const ushort TEMPLATE_ID = 21;
     public const ushort SCHEMA_ID = 101;
-    public const ushort SCHEMA_VERSION = 4;
+    public const ushort SCHEMA_VERSION = 6;
 
     private RecordingDescriptorHeaderEncoder _parentMessage;
     private IMutableDirectBuffer _buffer;
@@ -128,34 +128,50 @@ public class RecordingDescriptorHeaderEncoder
     }
 
 
-    public static int ValidEncodingOffset()
+    public static int StateEncodingOffset()
     {
         return 4;
     }
 
-    public static int ValidEncodingLength()
+    public static int StateEncodingLength()
     {
-        return 1;
+        return 4;
     }
 
-    public static sbyte ValidNullValue()
+    public RecordingDescriptorHeaderEncoder State(RecordingState value)
     {
-        return (sbyte)-128;
+        _buffer.PutInt(_offset + 4, (int)value, ByteOrder.LittleEndian);
+        return this;
     }
 
-    public static sbyte ValidMinValue()
+    public static int ChecksumEncodingOffset()
     {
-        return (sbyte)-127;
+        return 8;
     }
 
-    public static sbyte ValidMaxValue()
+    public static int ChecksumEncodingLength()
     {
-        return (sbyte)127;
+        return 4;
     }
 
-    public RecordingDescriptorHeaderEncoder Valid(sbyte value)
+    public static int ChecksumNullValue()
     {
-        _buffer.PutByte(_offset + 4, unchecked((byte)value));
+        return -2147483648;
+    }
+
+    public static int ChecksumMinValue()
+    {
+        return -2147483647;
+    }
+
+    public static int ChecksumMaxValue()
+    {
+        return 2147483647;
+    }
+
+    public RecordingDescriptorHeaderEncoder Checksum(int value)
+    {
+        _buffer.PutInt(_offset + 8, value, ByteOrder.LittleEndian);
         return this;
     }
 

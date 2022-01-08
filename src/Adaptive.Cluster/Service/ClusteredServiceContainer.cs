@@ -47,9 +47,9 @@ namespace Adaptive.Cluster.Service
             }
             catch (Exception)
             {
-                if (null != ctx.MarkFile())
+                if (null != ctx.ClusterMarkFile())
                 {
-                    ctx.MarkFile().SignalFailedStart();
+                    ctx.ClusterMarkFile().SignalFailedStart();
                 }
 
                 ctx.Dispose();
@@ -249,6 +249,16 @@ namespace Adaptive.Cluster.Service
             public const bool RESPONDER_SERVICE_DEFAULT = true;
 
             /// <summary>
+            /// Fragment limit to use when polling the log.
+            /// </summary>
+            public const string LOG_FRAGMENT_LIMIT_PROP_NAME = "aeron.cluster.log.fragment.limit";
+
+            /// <summary>
+            /// Default fragment limit for polling log.
+            /// </summary>
+            public const int LOG_FRAGMENT_LIMIT_DEFAULT = 50;
+
+            /// <summary>
             /// Delegating <seealso cref="ErrorHandler"/> which will be first in the chain before delegating to the
             /// <seealso cref="Context.ErrorHandler()"/>.
             /// </summary>
@@ -257,17 +267,18 @@ namespace Adaptive.Cluster.Service
             /// <summary>
             /// Counter type id for the cluster node role.
             /// </summary>
-            public const int CLUSTER_NODE_ROLE_TYPE_ID = 201;
+            public const int CLUSTER_NODE_ROLE_TYPE_ID = AeronCounters.CLUSTER_NODE_ROLE_TYPE_ID;
 
             /// <summary>
             /// Counter type id of the commit position.
             /// </summary>
-            public const int COMMIT_POSITION_TYPE_ID = 203;
+            public const int COMMIT_POSITION_TYPE_ID = AeronCounters.CLUSTER_COMMIT_POSITION_TYPE_ID;
 
             /// <summary>
             /// Counter type id for the clustered service error count.
             /// </summary>
-            public const int CLUSTERED_SERVICE_ERROR_COUNT_TYPE_ID = 215;
+            public const int CLUSTERED_SERVICE_ERROR_COUNT_TYPE_ID =
+                AeronCounters.CLUSTER_CLUSTERED_SERVICE_ERROR_COUNT_TYPE_ID;
 
             /// <summary>
             /// The value <seealso cref="CLUSTER_ID_DEFAULT"/> or system property <seealso cref="CLUSTER_ID_PROP_NAME"/> if set.
@@ -427,6 +438,17 @@ namespace Adaptive.Cluster.Service
             }
 
             /// <summary>
+            /// The value <seealso cref="LOG_FRAGMENT_LIMIT_DEFAULT"/> or system property
+            /// <seealso cref="LOG_FRAGMENT_LIMIT_PROP_NAME"/> if set.
+            /// </summary>
+            /// <returns> <seealso cref="LOG_FRAGMENT_LIMIT_DEFAULT"/> or system property
+            /// <seealso cref="LOG_FRAGMENT_LIMIT_PROP_NAME"/> if set. </returns>
+            public static int LogFragmentLimit()
+            {
+                return Config.GetInteger(LOG_FRAGMENT_LIMIT_PROP_NAME, LOG_FRAGMENT_LIMIT_DEFAULT);
+            }
+
+            /// <summary>
             /// Create a new <seealso cref="IClusteredService"/> based on the configured <seealso cref="SERVICE_CLASS_NAME_PROP_NAME"/>.
             /// </summary>
             /// <returns> a new <seealso cref="IClusteredService"/> based on the configured <seealso cref="SERVICE_CLASS_NAME_PROP_NAME"/>. </returns>
@@ -438,7 +460,7 @@ namespace Adaptive.Cluster.Service
                     throw new ClusterException("either a instance or class name for the service must be provided");
                 }
 
-                return (IClusteredService) Activator.CreateInstance(Type.GetType(className));
+                return (IClusteredService)Activator.CreateInstance(Type.GetType(className));
             }
 
             /// <summary>
@@ -451,7 +473,7 @@ namespace Adaptive.Cluster.Service
                 string className = Config.GetProperty(DELEGATING_ERROR_HANDLER_PROP_NAME);
                 if (null != className)
                 {
-                    return (DelegatingErrorHandler) Activator.CreateInstance(Type.GetType(className));
+                    return (DelegatingErrorHandler)Activator.CreateInstance(Type.GetType(className));
                 }
 
                 return null;
@@ -478,6 +500,7 @@ namespace Adaptive.Cluster.Service
             private int snapshotStreamId = Configuration.SnapshotStreamId();
             private int errorBufferLength = Configuration.ErrorBufferLength();
             private bool isRespondingService = Configuration.IsRespondingService();
+            private int logFragmentLimit = Configuration.LogFragmentLimit();
 
             private CountdownEvent abortLatch;
             private IThreadFactory threadFactory;
@@ -489,7 +512,7 @@ namespace Adaptive.Cluster.Service
             private AtomicCounter errorCounter;
             private CountedErrorHandler countedErrorHandler;
             private AeronArchive.Context archiveContext;
-            private string clusteredServiceDirectoryName = Configuration.ClusterDirName();
+            private string clusterDirectoryName = Configuration.ClusterDirName();
             private DirectoryInfo clusterDir;
             private string aeronDirectoryName = Adaptive.Aeron.Aeron.Context.GetAeronDirectoryName();
             private Aeron.Aeron aeron;
@@ -506,9 +529,12 @@ namespace Adaptive.Cluster.Service
             /// <returns> a shallow copy of the object.</returns>
             public Context Clone()
             {
-                return (Context) MemberwiseClone();
+                return (Context)MemberwiseClone();
             }
 
+            /// <summary>
+            /// Conclude configuration by setting up defaults when specifics are not provided.
+            /// </summary>
             public void Conclude()
             {
                 if (0 != Interlocked.Exchange(ref _isConcluded, 1))
@@ -538,7 +564,7 @@ namespace Adaptive.Cluster.Service
 
                 if (null == clusterDir)
                 {
-                    clusterDir = new DirectoryInfo(clusteredServiceDirectoryName);
+                    clusterDir = new DirectoryInfo(clusterDirectoryName);
                 }
 
                 if (!clusterDir.Exists)
@@ -550,7 +576,7 @@ namespace Adaptive.Cluster.Service
                 {
                     markFile = new ClusterMarkFile(
                         new FileInfo(Path.Combine(clusterDir.FullName,
-                            ClusterMarkFile.MarkFilenameForService(serviceId))),
+                            Cluster.ClusterMarkFile.MarkFilenameForService(serviceId))),
                         ClusterComponentType.CONTAINER, errorBufferLength, epochClock, 0);
                 }
 
@@ -559,10 +585,7 @@ namespace Adaptive.Cluster.Service
                     errorLog = new DistinctErrorLog(markFile.ErrorBuffer, epochClock); // US_ASCII
                 }
 
-                if (null == errorHandler)
-                {
-                    errorHandler = new LoggingErrorHandler(errorLog).OnError; // TODO Use interface
-                }
+                errorHandler = Adaptive.Aeron.Aeron.Context.SetupErrorHandler(errorHandler, errorLog);
 
                 if (null == delegatingErrorHandler)
                 {
@@ -585,10 +608,16 @@ namespace Adaptive.Cluster.Service
                         new Aeron.Aeron.Context()
                             .AeronDirectoryName(aeronDirectoryName)
                             .ErrorHandler(errorHandler)
+                            .SubscriberErrorHandler(RethrowingErrorHandler.INSTANCE)
                             .AwaitingIdleStrategy(YieldingIdleStrategy.INSTANCE)
                             .EpochClock(epochClock));
 
                     ownsAeronClient = true;
+                }
+
+                if (aeron.Ctx.SubscriberErrorHandler() != RethrowingErrorHandler.INSTANCE)
+                {
+                    throw new ClusterException("Aeron client must use a RethrowingErrorHandler");
                 }
 
                 if (null == errorCounter)
@@ -612,6 +641,16 @@ namespace Adaptive.Cluster.Service
                         .ControlRequestChannel(AeronArchive.Configuration.LocalControlChannel())
                         .ControlResponseChannel(AeronArchive.Configuration.LocalControlChannel())
                         .ControlRequestStreamId(AeronArchive.Configuration.LocalControlStreamId());
+                }
+                
+                if (!archiveContext.ControlRequestChannel().StartsWith(Adaptive.Aeron.Aeron.Context.IPC_CHANNEL))
+                {
+                    throw new ClusterException("local archive control must be IPC");
+                }
+
+                if (!archiveContext.ControlResponseChannel().StartsWith(Adaptive.Aeron.Aeron.Context.IPC_CHANNEL))
+                {
+                    throw new ClusterException("local archive control must be IPC");
                 }
 
                 archiveContext
@@ -901,6 +940,28 @@ namespace Adaptive.Cluster.Service
                 this.isRespondingService = isRespondingService;
                 return this;
             }
+            
+            /// <summary>
+            /// Set the fragment limit to be used when polling the log <seealso cref="Subscription"/>.
+            /// </summary>
+            /// <param name="logFragmentLimit"> for this clustered service. </param>
+            /// <returns> this for a fluent API </returns>
+            /// <seealso cref="Configuration.LOG_FRAGMENT_LIMIT_DEFAULT"/>
+            public Context LogFragmentLimit(int logFragmentLimit)
+            {
+                this.logFragmentLimit = logFragmentLimit;
+                return this;
+            }
+
+            /// <summary>
+            /// Get the fragment limit to be used when polling the log <seealso cref="Subscription"/>.
+            /// </summary>
+            /// <returns> the fragment limit to be used when polling the log <seealso cref="Subscription"/>. </returns>
+            /// <seealso cref="Configuration.LOG_FRAGMENT_LIMIT_DEFAULT"/>
+            public int LogFragmentLimit()
+            {
+                return logFragmentLimit;
+            }
 
             /// <summary>
             /// Is this a service that responds to client requests?
@@ -1169,7 +1230,7 @@ namespace Adaptive.Cluster.Service
             /// <seealso cref="Configuration.CLUSTER_DIR_PROP_NAME"/>
             public Context ClusterDirectoryName(string clusterDirectoryName)
             {
-                this.clusteredServiceDirectoryName = clusterDirectoryName;
+                this.clusterDirectoryName = clusterDirectoryName;
                 return this;
             }
 
@@ -1180,7 +1241,7 @@ namespace Adaptive.Cluster.Service
             /// <seealso cref="Configuration.CLUSTER_DIR_PROP_NAME"/>
             public string ClusterDirectoryName()
             {
-                return clusteredServiceDirectoryName;
+                return clusterDirectoryName;
             }
 
             /// <summary>
@@ -1196,9 +1257,9 @@ namespace Adaptive.Cluster.Service
             }
 
             /// <summary>
-            /// The directory used for for the cluster directory.
+            /// The directory used for the cluster directory.
             /// </summary>
-            /// <returns>  directory for for the cluster directory. </returns>
+            /// <returns>  directory for the cluster directory. </returns>
             /// <seealso cref="Configuration.CLUSTER_DIR_PROP_NAME"></seealso>
             public DirectoryInfo ClusterDir()
             {
@@ -1206,9 +1267,9 @@ namespace Adaptive.Cluster.Service
             }
 
             /// <summary>
-            /// Set the <seealso cref="Agrona.Concurrent.ShutdownSignalBarrier"/> that can be used to shutdown a clustered service.
+            /// Set the <seealso cref="Agrona.Concurrent.ShutdownSignalBarrier"/> that can be used to shut down a clustered service.
             /// </summary>
-            /// <param name="barrier"> that can be used to shutdown a clustered service. </param>
+            /// <param name="barrier"> that can be used to shut down a clustered service. </param>
             /// <returns> this for a fluent API. </returns>
             public Context ShutdownSignalBarrier(ShutdownSignalBarrier barrier)
             {
@@ -1217,9 +1278,9 @@ namespace Adaptive.Cluster.Service
             }
 
             /// <summary>
-            /// Get the <seealso cref="Agrona.Concurrent.ShutdownSignalBarrier"/> that can be used to shutdown a clustered service.
+            /// Get the <seealso cref="Agrona.Concurrent.ShutdownSignalBarrier"/> that can be used to shut down a clustered service.
             /// </summary>
-            /// <returns> the <seealso cref="Agrona.Concurrent.ShutdownSignalBarrier"/> that can be used to shutdown a clustered service. </returns>
+            /// <returns> the <seealso cref="Agrona.Concurrent.ShutdownSignalBarrier"/> that can be used to shut down a clustered service. </returns>
             public ShutdownSignalBarrier ShutdownSignalBarrier()
             {
                 return shutdownSignalBarrier;
@@ -1254,7 +1315,7 @@ namespace Adaptive.Cluster.Service
             /// </summary>
             /// <param name="cncFile"> to use. </param>
             /// <returns> this for a fluent API. </returns>
-            public Context MarkFile(ClusterMarkFile cncFile)
+            public Context ClusterMarkFile(ClusterMarkFile cncFile)
             {
                 this.markFile = cncFile;
                 return this;
@@ -1264,7 +1325,7 @@ namespace Adaptive.Cluster.Service
             /// The <seealso cref="Cluster.ClusterMarkFile"/> in use.
             /// </summary>
             /// <returns> CnC file in use. </returns>
-            public ClusterMarkFile MarkFile()
+            public ClusterMarkFile ClusterMarkFile()
             {
                 return markFile;
             }
@@ -1329,12 +1390,12 @@ namespace Adaptive.Cluster.Service
             public void Dispose()
             {
                 ErrorHandler errorHandler = CountedErrorHandler().OnError;
-                CloseHelper.Dispose(errorHandler, markFile);
-
                 if (ownsAeronClient)
                 {
-                    aeron?.Dispose();
+                    CloseHelper.Dispose(errorHandler, aeron);
                 }
+
+                CloseHelper.Dispose(errorHandler, markFile);
             }
 
             internal CountdownEvent AbortLatch()
@@ -1344,7 +1405,7 @@ namespace Adaptive.Cluster.Service
 
             private void ConcludeMarkFile()
             {
-                ClusterMarkFile.CheckHeaderLength(
+                Cluster.ClusterMarkFile.CheckHeaderLength(
                     aeron.Ctx.AeronDirectoryName(),
                     ControlChannel(),
                     null,
@@ -1363,13 +1424,58 @@ namespace Adaptive.Cluster.Service
                     .ClusterId(clusterId)
                     .AeronDirectory(aeron.Ctx.AeronDirectoryName())
                     .ControlChannel(controlChannel)
-                    .IngressChannel(null)
+                    .IngressChannel(string.Empty)
                     .ServiceName(serviceName)
-                    .Authenticator(null);
+                    .Authenticator(string.Empty);
 
                 markFile.UpdateActivityTimestamp(epochClock.Time());
                 markFile.SignalReady();
             }
+            
+            /// <summary>
+            /// {@inheritDoc}
+            /// </summary>
+            public override string ToString()
+            {
+                return "ClusteredServiceContainer.Context" +
+                       "\n{" +
+                       "\n    isConcluded=" + (1 == _isConcluded) +
+                       "\n    ownsAeronClient=" + ownsAeronClient +
+                       "\n    aeronDirectoryName='" + aeronDirectoryName + '\'' +
+                       "\n    aeron=" + aeron +
+                       "\n    archiveContext=" + archiveContext +
+                       "\n    clusterDirectoryName='" + clusterDirectoryName + '\'' +
+                       "\n    clusterDir=" + clusterDir +
+                       "\n    appVersion=" + appVersion +
+                       "\n    clusterId=" + clusterId +
+                       "\n    serviceId=" + serviceId +
+                       "\n    serviceName='" + serviceName + '\'' +
+                       "\n    replayChannel='" + replayChannel + '\'' +
+                       "\n    replayStreamId=" + replayStreamId +
+                       "\n    controlChannel='" + controlChannel + '\'' +
+                       "\n    consensusModuleStreamId=" + consensusModuleStreamId +
+                       "\n    serviceStreamId=" + serviceStreamId +
+                       "\n    snapshotChannel='" + snapshotChannel + '\'' +
+                       "\n    snapshotStreamId=" + snapshotStreamId +
+                       "\n    errorBufferLength=" + errorBufferLength +
+                       "\n    isRespondingService=" + isRespondingService +
+                       "\n    logFragmentLimit=" + logFragmentLimit +
+                       "\n    abortLatch=" + abortLatch +
+                       "\n    threadFactory=" + threadFactory +
+                       "\n    idleStrategySupplier=" + idleStrategySupplier +
+                       "\n    epochClock=" + epochClock +
+                       "\n    errorLog=" + errorLog +
+                       "\n    errorHandler=" + errorHandler +
+                       "\n    delegatingErrorHandler=" + delegatingErrorHandler +
+                       "\n    errorCounter=" + errorCounter +
+                       "\n    countedErrorHandler=" + countedErrorHandler +
+                       "\n    clusteredService=" + clusteredService +
+                       "\n    shutdownSignalBarrier=" + shutdownSignalBarrier +
+                       "\n    terminationHook=" + terminationHook +
+                       "\n    markFile=" + markFile +
+                       "\n}";
+            }
+
         }
     }
 }

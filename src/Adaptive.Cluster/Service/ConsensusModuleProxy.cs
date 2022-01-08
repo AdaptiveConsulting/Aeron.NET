@@ -11,7 +11,7 @@ namespace Adaptive.Cluster.Service
     /// <summary>
     /// Proxy for communicating with the Consensus Module over IPC.
     /// <para>
-    /// This class is not for public use.
+    /// Note: This class is not for public use.
     /// </para>
     /// </summary>
     public class ConsensusModuleProxy : IDisposable
@@ -28,17 +28,22 @@ namespace Adaptive.Cluster.Service
         private readonly RemoveMemberEncoder _removeMemberEncoder = new RemoveMemberEncoder();
         private readonly Publication _publication;
 
+        /// <summary>
+        /// Construct a proxy to the consensus module that will send messages over a provided <seealso cref="Publication"/>.
+        /// </summary>
+        /// <param name="publication"> for sending messages to the consensus module. </param>
         public ConsensusModuleProxy(Publication publication)
         {
             _publication = publication;
         }
 
+        /// <inheritdoc />
         public void Dispose()
         {
             _publication?.Dispose();
         }
 
-        public bool ScheduleTimer(long correlationId, long deadlineMs)
+        public bool ScheduleTimer(long correlationId, long deadline)
         {
             int length = MessageHeaderEncoder.ENCODED_LENGTH + ScheduleTimerEncoder.BLOCK_LENGTH;
 
@@ -51,7 +56,7 @@ namespace Adaptive.Cluster.Service
                     _scheduleTimerEncoder
                         .WrapAndApplyHeader(_bufferClaim.Buffer, _bufferClaim.Offset, _messageHeaderEncoder)
                         .CorrelationId(correlationId)
-                        .Deadline(deadlineMs);
+                        .Deadline(deadline);
 
                     _bufferClaim.Commit();
 
@@ -64,7 +69,7 @@ namespace Adaptive.Cluster.Service
             return false;
         }
 
-        public bool CancelTimer(long correlationId)
+        internal bool CancelTimer(long correlationId)
         {
             int length = MessageHeaderEncoder.ENCODED_LENGTH + CancelTimerEncoder.BLOCK_LENGTH;
 
@@ -89,7 +94,7 @@ namespace Adaptive.Cluster.Service
             return false;
         }
         
-        public long Offer(
+        internal long Offer(
             IDirectBuffer headerBuffer,
             int headerOffset,
             int headerLength,
@@ -100,12 +105,12 @@ namespace Adaptive.Cluster.Service
             return _publication.Offer(headerBuffer, headerOffset, headerLength, messageBuffer, messageOffset, messageLength);
         }
 
-        public long Offer(DirectBufferVector[] vectors)
+        internal long Offer(DirectBufferVector[] vectors)
         {
             return _publication.Offer(vectors, null);
         }
 
-        public long TryClaim(int length, BufferClaim bufferClaim, IDirectBuffer sessionHeader)
+        internal long TryClaim(int length, BufferClaim bufferClaim, IDirectBuffer sessionHeader)
         {
             long result = _publication.TryClaim(length, bufferClaim);
             if (result > 0)
@@ -116,7 +121,7 @@ namespace Adaptive.Cluster.Service
             return result;
         }
 
-        public bool Ack(long logPosition, long timestamp, long ackId, long relevantId, int serviceId)
+        internal bool Ack(long logPosition, long timestamp, long ackId, long relevantId, int serviceId)
         {
             int length = MessageHeaderEncoder.ENCODED_LENGTH + ServiceAckEncoder.BLOCK_LENGTH;
 
@@ -145,7 +150,7 @@ namespace Adaptive.Cluster.Service
             return false;
         }
 
-        public bool CloseSession(long clusterSessionId)
+        internal bool CloseSession(long clusterSessionId)
         {
             int length = MessageHeaderEncoder.ENCODED_LENGTH + CloseSessionEncoder.BLOCK_LENGTH;
 
@@ -170,6 +175,11 @@ namespace Adaptive.Cluster.Service
             return false;
         }
 
+        /// <summary>
+        /// Query for the current cluster members.
+        /// </summary>
+        /// <param name="correlationId"> for the request. </param>
+        /// <returns> true of the request was successfully sent, otherwise false. </returns>
         public bool ClusterMembersQuery(long correlationId)
         {
             int length = MessageHeaderEncoder.ENCODED_LENGTH + ClusterMembersQueryEncoder.BLOCK_LENGTH;
@@ -196,6 +206,12 @@ namespace Adaptive.Cluster.Service
             return false;
         }
 
+        /// <summary>
+        /// Remove a member by id from the cluster.
+        /// </summary>
+        /// <param name="memberId">  to be removed. </param>
+        /// <param name="isPassive"> to indicate if the member is passive or not. </param>
+        /// <returns> true of the request was successfully sent, otherwise false. </returns>
         public bool RemoveMember(int memberId, BooleanType isPassive)
         {
             int length = MessageHeaderEncoder.ENCODED_LENGTH + RemoveMemberEncoder.BLOCK_LENGTH;
@@ -226,7 +242,7 @@ namespace Adaptive.Cluster.Service
         {
             if (result == Publication.NOT_CONNECTED || result == Publication.CLOSED || result == Publication.MAX_POSITION_EXCEEDED)
             {
-                throw new AeronException("unexpected publication state: " + result);
+                throw new ClusterException("unexpected publication state: " + result);
             }
         }
     }

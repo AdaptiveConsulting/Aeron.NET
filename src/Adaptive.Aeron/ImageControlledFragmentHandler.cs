@@ -55,7 +55,7 @@ namespace Adaptive.Aeron
         /// <param name="buffer"> containing the data. </param>
         /// <param name="offset"> at which the data begins. </param>
         /// <param name="length"> of the data in bytes. </param>
-        /// <param name="header"> representing the meta data for the data. </param>
+        /// <param name="header"> representing the metadata for the data. </param>
         /// <returns> <see cref="ControlledFragmentHandlerAction"/> to be taken after processing fragment.</returns>
         public ControlledFragmentHandlerAction OnFragment(IDirectBuffer buffer, int offset, int length, Header header)
         {

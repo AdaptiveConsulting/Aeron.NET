@@ -198,7 +198,7 @@ namespace Adaptive.Aeron.LogBuffer
         }
         
         /// <summary>
-        /// Read the type of of the frame from header.
+        /// Read the type of the frame from header.
         /// </summary>
         /// <param name="buffer">     containing the frame. </param>
         /// <param name="termOffset"> at which a frame begins. </param>
@@ -222,7 +222,7 @@ namespace Adaptive.Aeron.LogBuffer
         }
 
         /// <summary>
-        /// Read the type of of the frame from header.
+        /// Read the type of the frame from header.
         /// </summary>
         /// <param name="buffer">     containing the frame. </param>
         /// <param name="termOffset"> at which a frame begins. </param>

@@ -36,7 +36,7 @@ namespace Adaptive.Aeron
     /// The APIs used for tryClaim and offer are non-blocking.
     /// </para>
     /// <para>
-    /// <b>Note:</b> All methods are threadsafe with the exception of offer and tryClaim for the subclass
+    /// <b>Note:</b> All methods are threadsafe except offer and tryClaim for the subclass
     /// <seealso cref="ExclusivePublication"/>. In the case of <seealso cref="ConcurrentPublication"/> all methods are threadsafe.
     /// 
     /// </para>
@@ -78,15 +78,16 @@ namespace Adaptive.Aeron
         /// </summary>
         public const long MAX_POSITION_EXCEEDED = -5;
 
-        protected readonly long _originalRegistrationId;
-        protected readonly long _maxPossiblePosition;
-        protected readonly int _channelStatusId;
-        protected volatile bool _isClosed;
+        internal readonly long _originalRegistrationId;
+        internal readonly long _maxPossiblePosition;
+        internal readonly int _channelStatusId;
+        internal volatile bool _isClosed;
 
-        protected readonly IReadablePosition _positionLimit;
-        protected readonly UnsafeBuffer _logMetaDataBuffer;
-        protected readonly HeaderWriter _headerWriter;
-        protected readonly LogBuffers _logBuffers;
+        internal readonly IReadablePosition _positionLimit;
+        internal readonly UnsafeBuffer[] _termBuffers;
+        internal readonly UnsafeBuffer _logMetaDataBuffer;
+        internal readonly HeaderWriter _headerWriter;
+        internal readonly LogBuffers _logBuffers;
         internal readonly ClientConductor _conductor;
 
         internal Publication(
@@ -100,21 +101,23 @@ namespace Adaptive.Aeron
             long originalRegistrationId,
             long registrationId)
         {
-            _logMetaDataBuffer = logBuffers.MetaDataBuffer();
+            var logMetaDataBuffer = logBuffers.MetaDataBuffer();
             TermBufferLength = logBuffers.TermLength();
             MaxMessageLength = FrameDescriptor.ComputeMaxMessageLength(TermBufferLength);
-            MaxPayloadLength = LogBufferDescriptor.MtuLength(_logMetaDataBuffer) - DataHeaderFlyweight.HEADER_LENGTH;
+            MaxPayloadLength = LogBufferDescriptor.MtuLength(logMetaDataBuffer) - DataHeaderFlyweight.HEADER_LENGTH;
             _maxPossiblePosition = TermBufferLength * (1L << 31);
             _conductor = clientConductor;
             Channel = channel;
             StreamId = streamId;
             SessionId = sessionId;
-            InitialTermId = LogBufferDescriptor.InitialTermId(_logMetaDataBuffer);
+            InitialTermId = LogBufferDescriptor.InitialTermId(logMetaDataBuffer);
+            _termBuffers = logBuffers.DuplicateTermBuffers();
+            _logMetaDataBuffer = logMetaDataBuffer;
+            _logBuffers = logBuffers;
             _originalRegistrationId = originalRegistrationId;
             RegistrationId = registrationId;
             _positionLimit = positionLimit;
             _channelStatusId = channelStatusId;
-            _logBuffers = logBuffers;
             PositionBitsToShift = LogBufferDescriptor.PositionBitsToShift(TermBufferLength);
             _headerWriter = new HeaderWriter(LogBufferDescriptor.DefaultFrameHeader(_logMetaDataBuffer));
         }
@@ -579,6 +582,7 @@ namespace Adaptive.Aeron
                    "originalRegistrationId=" + OriginalRegistrationId +
                    ", registrationId=" + RegistrationId +
                    ", isClosed=" + _isClosed +
+                   ", isConnected=" + IsConnected +
                    ", initialTermId=" + InitialTermId +
                    ", termBufferLength=" + TermBufferLength +
                    ", sessionId=" + SessionId +

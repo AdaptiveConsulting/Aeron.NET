@@ -64,12 +64,12 @@ namespace Adaptive.Aeron.Command
         public const int REMOVE_DESTINATION = 0x08;
         
         /// <summary>
-        /// Add a Counter to the counters manager.
+        /// Add a Counter to the counters-manager.
         /// </summary>
         public const int ADD_COUNTER = 0x09;
 
         /// <summary>
-        /// Remove a Counter from the counters manager.
+        /// Remove a Counter from the counters-manager.
         /// </summary>
         public const int REMOVE_COUNTER = 0x0A;
 

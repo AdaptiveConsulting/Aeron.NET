@@ -776,7 +776,7 @@ public class MarkFileHeaderEncoder
 
     public MarkFileHeaderEncoder IngressChannel(string value)
     {
-        int length = null == value ? 0 : value.Length;
+        int length = value.Length;
         if (length > 1073741824)
         {
             throw new InvalidOperationException("length > maxValue for type: " + length);
@@ -930,7 +930,7 @@ public class MarkFileHeaderEncoder
 
     public MarkFileHeaderEncoder Authenticator(string value)
     {
-        int length = null == value ? 0 : value.Length;
+        int length = value.Length;
         if (length > 1073741824)
         {
             throw new InvalidOperationException("length > maxValue for type: " + length);

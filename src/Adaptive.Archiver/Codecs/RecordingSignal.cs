@@ -9,6 +9,7 @@ namespace Adaptive.Archiver.Codecs {
         REPLICATE = 3,
         MERGE = 4,
         SYNC = 5,
+        DELETE = 6,
         NULL_VALUE = -2147483648
     }
 }

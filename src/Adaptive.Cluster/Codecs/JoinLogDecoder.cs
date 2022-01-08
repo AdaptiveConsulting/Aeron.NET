@@ -9,10 +9,10 @@ namespace Adaptive.Cluster.Codecs {
 
 public class JoinLogDecoder
 {
-    public const ushort BLOCK_LENGTH = 40;
+    public const ushort BLOCK_LENGTH = 36;
     public const ushort TEMPLATE_ID = 40;
     public const ushort SCHEMA_ID = 111;
-    public const ushort SCHEMA_VERSION = 6;
+    public const ushort SCHEMA_VERSION = 7;
 
     private JoinLogDecoder _parentMessage;
     private IDirectBuffer _buffer;
@@ -88,63 +88,9 @@ public class JoinLogDecoder
         this._limit = limit;
     }
 
-    public static int LeadershipTermIdId()
-    {
-        return 1;
-    }
-
-    public static int LeadershipTermIdSinceVersion()
-    {
-        return 0;
-    }
-
-    public static int LeadershipTermIdEncodingOffset()
-    {
-        return 0;
-    }
-
-    public static int LeadershipTermIdEncodingLength()
-    {
-        return 8;
-    }
-
-    public static string LeadershipTermIdMetaAttribute(MetaAttribute metaAttribute)
-    {
-        switch (metaAttribute)
-        {
-            case MetaAttribute.EPOCH: return "unix";
-            case MetaAttribute.TIME_UNIT: return "nanosecond";
-            case MetaAttribute.SEMANTIC_TYPE: return "";
-            case MetaAttribute.PRESENCE: return "required";
-        }
-
-        return "";
-    }
-
-    public static long LeadershipTermIdNullValue()
-    {
-        return -9223372036854775808L;
-    }
-
-    public static long LeadershipTermIdMinValue()
-    {
-        return -9223372036854775807L;
-    }
-
-    public static long LeadershipTermIdMaxValue()
-    {
-        return 9223372036854775807L;
-    }
-
-    public long LeadershipTermId()
-    {
-        return _buffer.GetLong(_offset + 0, ByteOrder.LittleEndian);
-    }
-
-
     public static int LogPositionId()
     {
-        return 2;
+        return 1;
     }
 
     public static int LogPositionSinceVersion()
@@ -154,7 +100,7 @@ public class JoinLogDecoder
 
     public static int LogPositionEncodingOffset()
     {
-        return 8;
+        return 0;
     }
 
     public static int LogPositionEncodingLength()
@@ -192,13 +138,13 @@ public class JoinLogDecoder
 
     public long LogPosition()
     {
-        return _buffer.GetLong(_offset + 8, ByteOrder.LittleEndian);
+        return _buffer.GetLong(_offset + 0, ByteOrder.LittleEndian);
     }
 
 
     public static int MaxLogPositionId()
     {
-        return 3;
+        return 2;
     }
 
     public static int MaxLogPositionSinceVersion()
@@ -208,7 +154,7 @@ public class JoinLogDecoder
 
     public static int MaxLogPositionEncodingOffset()
     {
-        return 16;
+        return 8;
     }
 
     public static int MaxLogPositionEncodingLength()
@@ -246,13 +192,13 @@ public class JoinLogDecoder
 
     public long MaxLogPosition()
     {
-        return _buffer.GetLong(_offset + 16, ByteOrder.LittleEndian);
+        return _buffer.GetLong(_offset + 8, ByteOrder.LittleEndian);
     }
 
 
     public static int MemberIdId()
     {
-        return 4;
+        return 3;
     }
 
     public static int MemberIdSinceVersion()
@@ -262,7 +208,7 @@ public class JoinLogDecoder
 
     public static int MemberIdEncodingOffset()
     {
-        return 24;
+        return 16;
     }
 
     public static int MemberIdEncodingLength()
@@ -300,13 +246,13 @@ public class JoinLogDecoder
 
     public int MemberId()
     {
-        return _buffer.GetInt(_offset + 24, ByteOrder.LittleEndian);
+        return _buffer.GetInt(_offset + 16, ByteOrder.LittleEndian);
     }
 
 
     public static int LogSessionIdId()
     {
-        return 5;
+        return 4;
     }
 
     public static int LogSessionIdSinceVersion()
@@ -316,7 +262,7 @@ public class JoinLogDecoder
 
     public static int LogSessionIdEncodingOffset()
     {
-        return 28;
+        return 20;
     }
 
     public static int LogSessionIdEncodingLength()
@@ -354,13 +300,13 @@ public class JoinLogDecoder
 
     public int LogSessionId()
     {
-        return _buffer.GetInt(_offset + 28, ByteOrder.LittleEndian);
+        return _buffer.GetInt(_offset + 20, ByteOrder.LittleEndian);
     }
 
 
     public static int LogStreamIdId()
     {
-        return 6;
+        return 5;
     }
 
     public static int LogStreamIdSinceVersion()
@@ -370,7 +316,7 @@ public class JoinLogDecoder
 
     public static int LogStreamIdEncodingOffset()
     {
-        return 32;
+        return 24;
     }
 
     public static int LogStreamIdEncodingLength()
@@ -408,13 +354,13 @@ public class JoinLogDecoder
 
     public int LogStreamId()
     {
-        return _buffer.GetInt(_offset + 32, ByteOrder.LittleEndian);
+        return _buffer.GetInt(_offset + 24, ByteOrder.LittleEndian);
     }
 
 
     public static int IsStartupId()
     {
-        return 7;
+        return 6;
     }
 
     public static int IsStartupSinceVersion()
@@ -424,7 +370,7 @@ public class JoinLogDecoder
 
     public static int IsStartupEncodingOffset()
     {
-        return 36;
+        return 28;
     }
 
     public static int IsStartupEncodingLength()
@@ -447,7 +393,61 @@ public class JoinLogDecoder
 
     public BooleanType IsStartup()
     {
-        return (BooleanType)_buffer.GetInt(_offset + 36, ByteOrder.LittleEndian);
+        return (BooleanType)_buffer.GetInt(_offset + 28, ByteOrder.LittleEndian);
+    }
+
+
+    public static int RoleId()
+    {
+        return 7;
+    }
+
+    public static int RoleSinceVersion()
+    {
+        return 0;
+    }
+
+    public static int RoleEncodingOffset()
+    {
+        return 32;
+    }
+
+    public static int RoleEncodingLength()
+    {
+        return 4;
+    }
+
+    public static string RoleMetaAttribute(MetaAttribute metaAttribute)
+    {
+        switch (metaAttribute)
+        {
+            case MetaAttribute.EPOCH: return "unix";
+            case MetaAttribute.TIME_UNIT: return "nanosecond";
+            case MetaAttribute.SEMANTIC_TYPE: return "";
+            case MetaAttribute.PRESENCE: return "required";
+        }
+
+        return "";
+    }
+
+    public static int RoleNullValue()
+    {
+        return -2147483648;
+    }
+
+    public static int RoleMinValue()
+    {
+        return -2147483647;
+    }
+
+    public static int RoleMaxValue()
+    {
+        return 2147483647;
+    }
+
+    public int Role()
+    {
+        return _buffer.GetInt(_offset + 32, ByteOrder.LittleEndian);
     }
 
 
@@ -555,42 +555,42 @@ public class JoinLogDecoder
         }
         builder.Append(BLOCK_LENGTH);
         builder.Append("):");
-        //Token{signal=BEGIN_FIELD, name='leadershipTermId', referencedName='null', description='null', id=1, version=0, deprecated=0, encodedLength=0, offset=0, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=BEGIN_FIELD, name='logPosition', referencedName='null', description='null', id=1, version=0, deprecated=0, encodedLength=0, offset=0, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
         //Token{signal=ENCODING, name='int64', referencedName='null', description='null', id=-1, version=0, deprecated=0, encodedLength=8, offset=0, componentTokenCount=1, encoding=Encoding{presence=REQUIRED, primitiveType=INT64, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
-        builder.Append("LeadershipTermId=");
-        builder.Append(LeadershipTermId());
-        builder.Append('|');
-        //Token{signal=BEGIN_FIELD, name='logPosition', referencedName='null', description='null', id=2, version=0, deprecated=0, encodedLength=0, offset=8, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
-        //Token{signal=ENCODING, name='int64', referencedName='null', description='null', id=-1, version=0, deprecated=0, encodedLength=8, offset=8, componentTokenCount=1, encoding=Encoding{presence=REQUIRED, primitiveType=INT64, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
         builder.Append("LogPosition=");
         builder.Append(LogPosition());
         builder.Append('|');
-        //Token{signal=BEGIN_FIELD, name='maxLogPosition', referencedName='null', description='null', id=3, version=0, deprecated=0, encodedLength=0, offset=16, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
-        //Token{signal=ENCODING, name='int64', referencedName='null', description='null', id=-1, version=0, deprecated=0, encodedLength=8, offset=16, componentTokenCount=1, encoding=Encoding{presence=REQUIRED, primitiveType=INT64, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=BEGIN_FIELD, name='maxLogPosition', referencedName='null', description='null', id=2, version=0, deprecated=0, encodedLength=0, offset=8, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=ENCODING, name='int64', referencedName='null', description='null', id=-1, version=0, deprecated=0, encodedLength=8, offset=8, componentTokenCount=1, encoding=Encoding{presence=REQUIRED, primitiveType=INT64, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
         builder.Append("MaxLogPosition=");
         builder.Append(MaxLogPosition());
         builder.Append('|');
-        //Token{signal=BEGIN_FIELD, name='memberId', referencedName='null', description='null', id=4, version=0, deprecated=0, encodedLength=0, offset=24, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
-        //Token{signal=ENCODING, name='int32', referencedName='null', description='null', id=-1, version=0, deprecated=0, encodedLength=4, offset=24, componentTokenCount=1, encoding=Encoding{presence=REQUIRED, primitiveType=INT32, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=BEGIN_FIELD, name='memberId', referencedName='null', description='null', id=3, version=0, deprecated=0, encodedLength=0, offset=16, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=ENCODING, name='int32', referencedName='null', description='null', id=-1, version=0, deprecated=0, encodedLength=4, offset=16, componentTokenCount=1, encoding=Encoding{presence=REQUIRED, primitiveType=INT32, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
         builder.Append("MemberId=");
         builder.Append(MemberId());
         builder.Append('|');
-        //Token{signal=BEGIN_FIELD, name='logSessionId', referencedName='null', description='null', id=5, version=0, deprecated=0, encodedLength=0, offset=28, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
-        //Token{signal=ENCODING, name='int32', referencedName='null', description='null', id=-1, version=0, deprecated=0, encodedLength=4, offset=28, componentTokenCount=1, encoding=Encoding{presence=REQUIRED, primitiveType=INT32, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=BEGIN_FIELD, name='logSessionId', referencedName='null', description='null', id=4, version=0, deprecated=0, encodedLength=0, offset=20, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=ENCODING, name='int32', referencedName='null', description='null', id=-1, version=0, deprecated=0, encodedLength=4, offset=20, componentTokenCount=1, encoding=Encoding{presence=REQUIRED, primitiveType=INT32, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
         builder.Append("LogSessionId=");
         builder.Append(LogSessionId());
         builder.Append('|');
-        //Token{signal=BEGIN_FIELD, name='logStreamId', referencedName='null', description='null', id=6, version=0, deprecated=0, encodedLength=0, offset=32, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
-        //Token{signal=ENCODING, name='int32', referencedName='null', description='null', id=-1, version=0, deprecated=0, encodedLength=4, offset=32, componentTokenCount=1, encoding=Encoding{presence=REQUIRED, primitiveType=INT32, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=BEGIN_FIELD, name='logStreamId', referencedName='null', description='null', id=5, version=0, deprecated=0, encodedLength=0, offset=24, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=ENCODING, name='int32', referencedName='null', description='null', id=-1, version=0, deprecated=0, encodedLength=4, offset=24, componentTokenCount=1, encoding=Encoding{presence=REQUIRED, primitiveType=INT32, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
         builder.Append("LogStreamId=");
         builder.Append(LogStreamId());
         builder.Append('|');
-        //Token{signal=BEGIN_FIELD, name='isStartup', referencedName='null', description='null', id=7, version=0, deprecated=0, encodedLength=0, offset=36, componentTokenCount=6, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
-        //Token{signal=BEGIN_ENUM, name='BooleanType', referencedName='null', description='Language independent boolean type.', id=-1, version=0, deprecated=0, encodedLength=4, offset=36, componentTokenCount=4, encoding=Encoding{presence=REQUIRED, primitiveType=INT32, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='null', timeUnit=null, semanticType='null'}}
+        //Token{signal=BEGIN_FIELD, name='isStartup', referencedName='null', description='null', id=6, version=0, deprecated=0, encodedLength=0, offset=28, componentTokenCount=6, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=BEGIN_ENUM, name='BooleanType', referencedName='null', description='Language independent boolean type.', id=-1, version=0, deprecated=0, encodedLength=4, offset=28, componentTokenCount=4, encoding=Encoding{presence=REQUIRED, primitiveType=INT32, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='null', timeUnit=null, semanticType='null'}}
         builder.Append("IsStartup=");
         builder.Append(IsStartup());
         builder.Append('|');
-        //Token{signal=BEGIN_VAR_DATA, name='logChannel', referencedName='null', description='null', id=8, version=0, deprecated=0, encodedLength=0, offset=40, componentTokenCount=6, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=BEGIN_FIELD, name='role', referencedName='null', description='null', id=7, version=0, deprecated=0, encodedLength=0, offset=32, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=ENCODING, name='int32', referencedName='null', description='null', id=-1, version=0, deprecated=0, encodedLength=4, offset=32, componentTokenCount=1, encoding=Encoding{presence=REQUIRED, primitiveType=INT32, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        builder.Append("Role=");
+        builder.Append(Role());
+        builder.Append('|');
+        //Token{signal=BEGIN_VAR_DATA, name='logChannel', referencedName='null', description='null', id=8, version=0, deprecated=0, encodedLength=0, offset=36, componentTokenCount=6, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
         builder.Append("LogChannel=");
         builder.Append(LogChannel());
 

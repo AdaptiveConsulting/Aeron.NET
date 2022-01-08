@@ -28,8 +28,11 @@ namespace Adaptive.Aeron
     /// 
     /// Similar in concept to <see cref="StringBuilder"/>
     /// </summary>
-    public class BufferBuilder
+    public sealed class BufferBuilder
     {
+        internal const int MAX_CAPACITY = Int32.MaxValue - 8;
+        internal  const int INIT_MIN_CAPACITY = 4096;
+        
         private readonly UnsafeBuffer _buffer;
         private int _limit;
 
@@ -46,6 +49,11 @@ namespace Adaptive.Aeron
         /// <param name="initialCapacity"> at which the capacity will start. </param>
         public BufferBuilder(int initialCapacity)
         {
+            if (initialCapacity < 0 || initialCapacity > MAX_CAPACITY)
+            {
+                throw new ArgumentException("initialCapacity outside range 0 - " + MAX_CAPACITY + ": initialCapacity=" + initialCapacity);
+            }
+            
             _buffer = new UnsafeBuffer(new byte[initialCapacity]);
         }
 
@@ -108,12 +116,12 @@ namespace Adaptive.Aeron
         /// <returns> the builder for fluent API usage. </returns>
         public BufferBuilder Compact()
         {
-            Resize(Math.Max(BufferBuilderUtil.MIN_ALLOCATED_CAPACITY, _limit));
+            Resize(Math.Max(INIT_MIN_CAPACITY, _limit));
             return this;
         }
 
         /// <summary>
-        /// Append a source buffer to the end of the internal buffer, resizing the internal buffer as required.
+        /// Append a source buffer to the end of the internal buffer, resizing the internal buffer when required.
         /// </summary>
         /// <param name="srcBuffer"> from which to copy. </param>
         /// <param name="srcOffset"> in the source buffer from which to copy. </param>
@@ -129,22 +137,21 @@ namespace Adaptive.Aeron
             return this;
         }
 
-        private void EnsureCapacity(int additionalCapacity)
+        private void EnsureCapacity(int additionalLength)
         {
-            long requiredCapacity = (long) _limit + additionalCapacity;
-
-            if (requiredCapacity > BufferBuilderUtil.MAX_CAPACITY)
-            {
-                string s = $"max capacity exceeded: limit={_limit:D} required={requiredCapacity:D}";
-                ThrowHelper.ThrowInvalidOperationException(s);
-            }
-
+            long requiredCapacity = (long)_limit + additionalLength;
             int capacity = _buffer.Capacity;
+
             if (requiredCapacity > capacity)
             {
-                int newCapacity = BufferBuilderUtil.FindSuitableCapacity(capacity, (int) requiredCapacity);
-                Resize(newCapacity);
+                if (requiredCapacity > MAX_CAPACITY)
+                {
+                    throw new InvalidOperationException("insufficient capacity: maxCapacity=" + MAX_CAPACITY + " limit=" + _limit + " additionalLength=" + additionalLength);
+                }
+
+                Resize(FindSuitableCapacity(capacity, requiredCapacity));
             }
+
         }
 
         private void Resize(int newCapacity)
@@ -157,6 +164,22 @@ namespace Adaptive.Aeron
             var dest = new T[newLength];
             Array.Copy(original, 0, dest, 0, Math.Min(original.Length, newLength));
             return dest;
+        }
+        
+        internal static int FindSuitableCapacity(int capacity, long requiredCapacity)
+        {
+            long newCapacity = Math.Max(capacity, INIT_MIN_CAPACITY);
+
+            while (newCapacity < requiredCapacity)
+            {
+                newCapacity = newCapacity + (newCapacity >> 1);
+                if (newCapacity > MAX_CAPACITY)
+                {
+                    newCapacity = MAX_CAPACITY;
+                }
+            }
+
+            return (int)newCapacity;
         }
     }
 }

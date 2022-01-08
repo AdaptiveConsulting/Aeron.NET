@@ -8,9 +8,9 @@ namespace Adaptive.Aeron
     /// </summary>
     public sealed class DirectBufferVector
     {
-        public IDirectBuffer buffer;
-        public int offset;
-        public int length;
+        private IDirectBuffer buffer;
+        private int offset;
+        private int length;
 
         /// <summary>
         /// Default constructor so the fluent API can be used.

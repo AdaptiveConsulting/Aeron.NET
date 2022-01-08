@@ -9,10 +9,10 @@ namespace Adaptive.Cluster.Codecs {
 
 public class JoinLogEncoder
 {
-    public const ushort BLOCK_LENGTH = 40;
+    public const ushort BLOCK_LENGTH = 36;
     public const ushort TEMPLATE_ID = 40;
     public const ushort SCHEMA_ID = 111;
-    public const ushort SCHEMA_VERSION = 6;
+    public const ushort SCHEMA_VERSION = 7;
 
     private JoinLogEncoder _parentMessage;
     private IMutableDirectBuffer _buffer;
@@ -96,41 +96,9 @@ public class JoinLogEncoder
         this._limit = limit;
     }
 
-    public static int LeadershipTermIdEncodingOffset()
-    {
-        return 0;
-    }
-
-    public static int LeadershipTermIdEncodingLength()
-    {
-        return 8;
-    }
-
-    public static long LeadershipTermIdNullValue()
-    {
-        return -9223372036854775808L;
-    }
-
-    public static long LeadershipTermIdMinValue()
-    {
-        return -9223372036854775807L;
-    }
-
-    public static long LeadershipTermIdMaxValue()
-    {
-        return 9223372036854775807L;
-    }
-
-    public JoinLogEncoder LeadershipTermId(long value)
-    {
-        _buffer.PutLong(_offset + 0, value, ByteOrder.LittleEndian);
-        return this;
-    }
-
-
     public static int LogPositionEncodingOffset()
     {
-        return 8;
+        return 0;
     }
 
     public static int LogPositionEncodingLength()
@@ -155,14 +123,14 @@ public class JoinLogEncoder
 
     public JoinLogEncoder LogPosition(long value)
     {
-        _buffer.PutLong(_offset + 8, value, ByteOrder.LittleEndian);
+        _buffer.PutLong(_offset + 0, value, ByteOrder.LittleEndian);
         return this;
     }
 
 
     public static int MaxLogPositionEncodingOffset()
     {
-        return 16;
+        return 8;
     }
 
     public static int MaxLogPositionEncodingLength()
@@ -187,14 +155,14 @@ public class JoinLogEncoder
 
     public JoinLogEncoder MaxLogPosition(long value)
     {
-        _buffer.PutLong(_offset + 16, value, ByteOrder.LittleEndian);
+        _buffer.PutLong(_offset + 8, value, ByteOrder.LittleEndian);
         return this;
     }
 
 
     public static int MemberIdEncodingOffset()
     {
-        return 24;
+        return 16;
     }
 
     public static int MemberIdEncodingLength()
@@ -219,14 +187,14 @@ public class JoinLogEncoder
 
     public JoinLogEncoder MemberId(int value)
     {
-        _buffer.PutInt(_offset + 24, value, ByteOrder.LittleEndian);
+        _buffer.PutInt(_offset + 16, value, ByteOrder.LittleEndian);
         return this;
     }
 
 
     public static int LogSessionIdEncodingOffset()
     {
-        return 28;
+        return 20;
     }
 
     public static int LogSessionIdEncodingLength()
@@ -251,14 +219,14 @@ public class JoinLogEncoder
 
     public JoinLogEncoder LogSessionId(int value)
     {
-        _buffer.PutInt(_offset + 28, value, ByteOrder.LittleEndian);
+        _buffer.PutInt(_offset + 20, value, ByteOrder.LittleEndian);
         return this;
     }
 
 
     public static int LogStreamIdEncodingOffset()
     {
-        return 32;
+        return 24;
     }
 
     public static int LogStreamIdEncodingLength()
@@ -283,14 +251,14 @@ public class JoinLogEncoder
 
     public JoinLogEncoder LogStreamId(int value)
     {
-        _buffer.PutInt(_offset + 32, value, ByteOrder.LittleEndian);
+        _buffer.PutInt(_offset + 24, value, ByteOrder.LittleEndian);
         return this;
     }
 
 
     public static int IsStartupEncodingOffset()
     {
-        return 36;
+        return 28;
     }
 
     public static int IsStartupEncodingLength()
@@ -300,9 +268,41 @@ public class JoinLogEncoder
 
     public JoinLogEncoder IsStartup(BooleanType value)
     {
-        _buffer.PutInt(_offset + 36, (int)value, ByteOrder.LittleEndian);
+        _buffer.PutInt(_offset + 28, (int)value, ByteOrder.LittleEndian);
         return this;
     }
+
+    public static int RoleEncodingOffset()
+    {
+        return 32;
+    }
+
+    public static int RoleEncodingLength()
+    {
+        return 4;
+    }
+
+    public static int RoleNullValue()
+    {
+        return -2147483648;
+    }
+
+    public static int RoleMinValue()
+    {
+        return -2147483647;
+    }
+
+    public static int RoleMaxValue()
+    {
+        return 2147483647;
+    }
+
+    public JoinLogEncoder Role(int value)
+    {
+        _buffer.PutInt(_offset + 32, value, ByteOrder.LittleEndian);
+        return this;
+    }
+
 
     public static int LogChannelId()
     {

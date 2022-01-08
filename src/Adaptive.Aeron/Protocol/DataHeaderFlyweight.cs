@@ -60,19 +60,52 @@ namespace Adaptive.Aeron.Protocol
         /// </summary>
         public static readonly short BEGIN_END_AND_EOS_FLAGS = BEGIN_FLAG | END_FLAG | EOS_FLAG;
 
+        /// <summary>
+        /// Default value to be placed in the reserved value field.
+        /// </summary>
         public const long DEFAULT_RESERVE_VALUE = 0L;
 
+        /// <summary>
+        /// Offset in the frame at which the term-offset field begins.
+        /// </summary>
         public const int TERM_OFFSET_FIELD_OFFSET = 8;
+        
+        /// <summary>
+        /// Offset in the frame at which the session-id field begins.
+        /// </summary>
         public const int SESSION_ID_FIELD_OFFSET = 12;
+        
+        /// <summary>
+        /// Offset in the frame at which the stream-id field begins.
+        /// </summary>
         public const int STREAM_ID_FIELD_OFFSET = 16;
+        
+        /// <summary>
+        /// Offset in the frame at which the term-id field begins.
+        /// </summary>
         public const int TERM_ID_FIELD_OFFSET = 20;
+        
+        /// <summary>
+        /// Offset in the frame at which the reserved value field begins.
+        /// </summary>
         public const int RESERVED_VALUE_OFFSET = 24;
+        
+        /// <summary>
+        /// Offset in the frame at which the data payload begins.
+        /// </summary>
         public const int DATA_OFFSET = HEADER_LENGTH;
 
+        /// <summary>
+        /// Default constructor which can later be used to wrap a frame.
+        /// </summary>
         public DataHeaderFlyweight()
         {
         }
 
+        /// <summary>
+        /// Construct the flyweight over a frame.
+        /// </summary>
+        /// <param name="buffer"> containing the frame. </param>
         public DataHeaderFlyweight(UnsafeBuffer buffer) : base(buffer)
         {
         }

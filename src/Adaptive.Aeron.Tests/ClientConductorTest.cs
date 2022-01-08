@@ -70,6 +70,7 @@ namespace Adaptive.Aeron.Tests
         private CopyBroadcastReceiver MockToClientReceiver;
 
         private UnsafeBuffer CounterValuesBuffer;
+        private UnsafeBuffer CounterMetaDataBuffer;
 
         private readonly TestEpochClock EpochClock = new TestEpochClock();
         private readonly TestNanoClock NanoClock = new TestNanoClock();
@@ -111,6 +112,8 @@ namespace Adaptive.Aeron.Tests
             ClientTimeoutBuffer = new UnsafeBuffer(new byte[SEND_BUFFER_CAPACITY]);
 
             CounterValuesBuffer = new UnsafeBuffer(new byte[COUNTER_BUFFER_LENGTH]);
+            CounterMetaDataBuffer = new UnsafeBuffer(new byte[COUNTER_BUFFER_LENGTH]);
+
             MockToClientReceiver = A.Fake<CopyBroadcastReceiver>();
 
             MockAvailableImageHandler = A.Fake<AvailableImageHandler>();
@@ -146,7 +149,9 @@ namespace Adaptive.Aeron.Tests
                 .KeepAliveIntervalNs(KEEP_ALIVE_INTERVAL)
                 .DriverTimeoutMs(AWAIT_TIMEOUT)
                 .InterServiceTimeoutNs(INTER_SERVICE_TIMEOUT_MS * 1000000)
-                .CountersValuesBuffer(CounterValuesBuffer);
+                .CountersValuesBuffer(CounterValuesBuffer)
+                .CountersMetaDataBuffer(CounterMetaDataBuffer);
+            
 
             Conductor = new ClientConductor(ctx, MockAeron);
 

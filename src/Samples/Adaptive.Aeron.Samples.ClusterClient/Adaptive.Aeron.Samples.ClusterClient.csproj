@@ -6,7 +6,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\..\Adaptive.Cluster\Adaptive.Cluster.csproj" />
+        <ProjectReference Include="..\..\Adaptive.Cluster\Adaptive.Cluster.csproj"/>
     </ItemGroup>
 
 </Project>

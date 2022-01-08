@@ -13,7 +13,7 @@ namespace Adaptive.Aeron.Status
     /// 
     /// </para>
     /// </summary>
-    public class ReadableCounter : IDisposable
+    public sealed class ReadableCounter : IDisposable
     {
         private readonly int _addressOffset;
         private readonly long _registrationId;
@@ -62,15 +62,15 @@ namespace Adaptive.Aeron.Status
         }
 
         /// <summary>
-        /// Return the registration Id for the counter.
+        /// Return the registration id for the counter.
         /// </summary>
-        /// <returns> registration Id. </returns>
+        /// <returns> registration id. </returns>
         public long RegistrationId => _registrationId;
 
         /// <summary>
-        /// Return the counter Id.
+        /// Return the counter id.
         /// </summary>
-        /// <returns> counter Id. </returns>
+        /// <returns> counter id. </returns>
         public int CounterId => _counterId;
 
         /// <summary>
@@ -124,7 +124,7 @@ namespace Adaptive.Aeron.Status
         }
 
         /// <summary>
-        /// Has this counters been closed and should no longer be used?
+        /// Has this counter been closed and should no longer be used?
         /// </summary>
         /// <returns> true if it has been closed otherwise false. </returns>
         public bool IsClosed => _isClosed;

@@ -88,24 +88,50 @@ namespace Adaptive.Aeron.Protocol
         /// </summary>
         public const byte CURRENT_VERSION = 0x0;
 
+        /// <summary>
+        /// Offset in the frame at which the frame length field begins.
+        /// </summary>
         public const int FRAME_LENGTH_FIELD_OFFSET = 0;
+        
+        /// <summary>
+        /// Offset in the frame at which the version field begins.
+        /// </summary>
         public const int VERSION_FIELD_OFFSET = 4;
+        
+        /// <summary>
+        /// Offset in the frame at which the flags field begins.
+        /// </summary>
         public const int FLAGS_FIELD_OFFSET = 5;
+        
+        /// <summary>
+        /// Offset in the frame at which the frame type field begins.
+        /// </summary>
         public const int TYPE_FIELD_OFFSET = 6;
+        
+        /// <summary>
+        /// Minimum length of any Aeron frame.
+        /// </summary>
         public static readonly int MIN_HEADER_LENGTH = TYPE_FIELD_OFFSET + BitUtil.SIZE_OF_SHORT;
 
+        /// <summary>
+        /// Default constructor which can later be used to wrap a frame.
+        /// </summary>
         public HeaderFlyweight()
         {
         }
 
+        /// <summary>
+        /// Construct a flyweight which wraps a <seealso cref="UnsafeBuffer"/> over the frame.
+        /// </summary>
+        /// <param name="buffer"> to wrap for the flyweight. </param>
         public HeaderFlyweight(UnsafeBuffer buffer) : base(buffer)
         {
         }
 
         /// <summary>
-        /// return version field value
+        /// The version field value.
         /// </summary>
-        /// <returns> ver field value </returns>
+        /// <returns> version field value. </returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public short Version()
         {
@@ -113,10 +139,10 @@ namespace Adaptive.Aeron.Protocol
         }
 
         /// <summary>
-        /// set version field value
+        /// Set the version field value.
         /// </summary>
-        /// <param name="version"> field value </param>
-        /// <returns> flyweight </returns>
+        /// <param name="version"> field value to be set. </param>
+        /// <returns> this for a fluent API. </returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public HeaderFlyweight Version(short version)
         {
@@ -126,9 +152,9 @@ namespace Adaptive.Aeron.Protocol
         }
 
         /// <summary>
-        /// return flags field value
+        /// The flags field value.
         /// </summary>
-        /// <returns> flags field value </returns>
+        /// <returns> the flags field value. </returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public short Flags()
         {
@@ -136,10 +162,10 @@ namespace Adaptive.Aeron.Protocol
         }
 
         /// <summary>
-        /// set the flags field value
+        /// Set the flags field value.
         /// </summary>
         /// <param name="flags"> field value </param>
-        /// <returns> flyweight </returns>
+        /// <returns> this for a fluent API. </returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public HeaderFlyweight Flags(short flags)
         {
@@ -149,9 +175,9 @@ namespace Adaptive.Aeron.Protocol
         }
 
         /// <summary>
-        /// return header type field
+        /// The type field value.
         /// </summary>
-        /// <returns> type field value </returns>
+        /// <returns> the type field value. </returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int HeaderType()
         {
@@ -159,10 +185,10 @@ namespace Adaptive.Aeron.Protocol
         }
 
         /// <summary>
-        /// set header type field
+        /// Set the type field value.
         /// </summary>
-        /// <param name="type"> field value </param>
-        /// <returns> flyweight </returns>
+        /// <param name="type"> field value. </param>
+        /// <returns> this for a fluent API. </returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public HeaderFlyweight HeaderType(int type)
         {
@@ -172,9 +198,9 @@ namespace Adaptive.Aeron.Protocol
         }
 
         /// <summary>
-        /// return frame length field
+        /// The length of the frame field value.
         /// </summary>
-        /// <returns> frame length field </returns>
+        /// <returns> length of the frame field value. </returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int FrameLength()
         {
@@ -182,10 +208,10 @@ namespace Adaptive.Aeron.Protocol
         }
 
         /// <summary>
-        /// set frame length field
+        /// Set the length of the frame field value.
         /// </summary>
-        /// <param name="length"> field value </param>
-        /// <returns> flyweight </returns>
+        /// <param name="length"> field value. </param>
+        /// <returns> this for a fluent API. </returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public HeaderFlyweight FrameLength(int length)
         {
@@ -195,10 +221,10 @@ namespace Adaptive.Aeron.Protocol
         }
         
         /// <summary>
-        /// Convert header flags to an array of chars to be human readable.
+        /// Convert header flags to an array of chars to be human-readable.
         /// </summary>
         /// <param name="flags"> to be converted. </param>
-        /// <returns> header flags converted to an array of chars to be human readable. </returns>
+        /// <returns> header flags converted to an array of chars to be human-readable. </returns>
         public static char[] FlagsToChars(short flags)
         {
             char[] chars = {'0', '0', '0', '0', '0', '0', '0', '0'};
@@ -219,7 +245,7 @@ namespace Adaptive.Aeron.Protocol
         }
 
         /// <summary>
-        /// Append header flags to an <seealso cref="StringBuilder"/> to be human readable.
+        /// Append header flags to an <seealso cref="StringBuilder"/> to be human-readable.
         /// </summary>
         /// <param name="flags">      to be converted. </param>
         /// <param name="stringBuilder"> to append flags to. </param>

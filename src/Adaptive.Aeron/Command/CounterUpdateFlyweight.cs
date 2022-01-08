@@ -19,10 +19,13 @@ namespace Adaptive.Aeron.Command
     /// </seealso>
     public class CounterUpdateFlyweight
     {
+        /// <summary>
+        /// Length of the header.
+        /// </summary>
+        public static readonly int LENGTH = BitUtil.SIZE_OF_LONG + BitUtil.SIZE_OF_INT;
         private const int CORRELATION_ID_OFFSET = 0;
         private static readonly int COUNTER_ID_OFFSET = CORRELATION_ID_OFFSET + BitUtil.SIZE_OF_LONG;
 
-        public static readonly int LENGTH = BitUtil.SIZE_OF_LONG + BitUtil.SIZE_OF_INT;
 
         private IMutableDirectBuffer buffer;
         private int offset;
@@ -32,7 +35,7 @@ namespace Adaptive.Aeron.Command
         /// </summary>
         /// <param name="buffer"> to wrap </param>
         /// <param name="offset"> at which the message begins. </param>
-        /// <returns> for fluent API </returns>
+        /// <returns> this for fluent API. </returns>
         public CounterUpdateFlyweight Wrap(IMutableDirectBuffer buffer, int offset)
         {
             this.buffer = buffer;
@@ -42,19 +45,19 @@ namespace Adaptive.Aeron.Command
         }
 
         /// <summary>
-        /// Get the correlation id field
+        /// Get the correlation id field.
         /// </summary>
-        /// <returns> correlation id field </returns>
+        /// <returns> correlation id field. </returns>
         public long CorrelationId()
         {
             return buffer.GetLong(offset + CORRELATION_ID_OFFSET);
         }
 
         /// <summary>
-        /// Set the correlation id field
+        /// Set the correlation id field.
         /// </summary>
-        /// <param name="correlationId"> field value </param>
-        /// <returns> flyweight </returns>
+        /// <param name="correlationId"> field value. </param>
+        /// <returns> this for a fluent API. </returns>
         public CounterUpdateFlyweight CorrelationId(long correlationId)
         {
             buffer.PutLong(offset + CORRELATION_ID_OFFSET, correlationId);
@@ -63,19 +66,19 @@ namespace Adaptive.Aeron.Command
         }
 
         /// <summary>
-        /// The counter id
+        /// The counter id.
         /// </summary>
-        /// <returns> counter id </returns>
+        /// <returns> counter id. </returns>
         public int CounterId()
         {
             return buffer.GetInt(offset + COUNTER_ID_OFFSET);
         }
 
         /// <summary>
-        /// Set counter id field
+        /// Set counter id field.
         /// </summary>
         /// <param name="counterId"> field value </param>
-        /// <returns> flyweight </returns>
+        /// <returns> this for a fluent API. </returns>
         public CounterUpdateFlyweight CounterId(int counterId)
         {
             buffer.PutInt(offset + COUNTER_ID_OFFSET, counterId);

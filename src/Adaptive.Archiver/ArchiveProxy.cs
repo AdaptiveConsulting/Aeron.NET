@@ -38,12 +38,13 @@ namespace Adaptive.Archiver
         private ExtendRecordingRequest2Encoder extendRecordingRequest2;
         private RecordingPositionRequestEncoder recordingPositionRequest;
         private TruncateRecordingRequestEncoder truncateRecordingRequest;
+        private PurgeRecordingRequestEncoder purgeRecordingRequest;
         private StopPositionRequestEncoder stopPositionRequest;
         private FindLastMatchingRecordingRequestEncoder findLastMatchingRecordingRequest;
         private ListRecordingSubscriptionsRequestEncoder listRecordingSubscriptionsRequest;
         private BoundedReplayRequestEncoder boundedReplayRequest;
         private StopAllReplaysRequestEncoder stopAllReplaysRequest;
-        private ReplicateRequestEncoder replicateRequest;
+        private ReplicateRequest2Encoder replicateRequest;
         private StopReplicationRequestEncoder stopReplicationRequest;
         private StartPositionRequestEncoder startPositionRequest;
         private DetachSegmentsRequestEncoder detachSegmentsRequest;
@@ -51,7 +52,6 @@ namespace Adaptive.Archiver
         private PurgeSegmentsRequestEncoder purgeSegmentsRequest;
         private AttachSegmentsRequestEncoder attachSegmentsRequest;
         private MigrateSegmentsRequestEncoder migrateSegmentsRequest;
-        private TaggedReplicateRequestEncoder taggedReplicateRequest;
 
         /// <summary>
         /// Create a proxy with a <seealso cref="Pub"/> for sending control message requests.
@@ -75,7 +75,7 @@ namespace Adaptive.Archiver
         /// <param name="publication">         publication for sending control messages to an archive. </param>
         /// <param name="retryIdleStrategy">   for what should happen between retry attempts at offering messages. </param>
         /// <param name="nanoClock">           to be used for calculating checking deadlines. </param>
-        /// <param name="connectTimeoutNs">    for for connection requests. </param>
+        /// <param name="connectTimeoutNs">    for connection requests. </param>
         /// <param name="retryAttempts">       for offering control messages before giving up. </param>
         /// <param name="credentialsSupplier"> for the AuthConnectRequest </param>
         public ArchiveProxy(Publication publication, IIdleStrategy retryIdleStrategy, INanoClock nanoClock,
@@ -119,7 +119,7 @@ namespace Adaptive.Archiver
         }
 
         /// <summary>
-        /// Try Connect to an archive on its control interface providing the response stream details. Only one attempt will
+        /// Try and connect to an archive on its control interface providing the response stream details. Only one attempt will
         /// be made to offer the request.
         /// </summary>
         /// <param name="responseChannel">  for the control message responses. </param>
@@ -192,7 +192,7 @@ namespace Adaptive.Archiver
         }
 
         /// <summary>
-        /// Try send a ChallengeResponse to an archive on its control interface providing the credentials. Only one
+        /// Try and send a ChallengeResponse to an archive on its control interface providing the credentials. Only one
         /// attempt will be made to offer the request.
         /// </summary>
         /// <param name="encodedCredentials"> to send. </param>
@@ -479,7 +479,7 @@ namespace Adaptive.Archiver
         }
 
         /// <summary>
-        /// Extend an existing, non-active, recorded stream for a the same channel and stream id.
+        /// Extend an existing, non-active, recorded stream for the same channel and stream id.
         /// <para>
         /// The channel must be configured for the initial position from which it will be extended. This can be done
         /// with <seealso cref="ChannelUriStringBuilder.InitialPosition(long, int, int)"/>. The details required to initialise can
@@ -564,6 +564,10 @@ namespace Adaptive.Archiver
         /// <summary>
         /// Truncate a stopped recording to a given position that is less than the stopped position. The provided position
         /// must be on a fragment boundary. Truncating a recording to the start position effectively deletes the recording.
+        ///
+        /// If the truncate operation will result in deleting segments then this will occur asynchronously. Before extending
+        /// a truncated recording which has segments being asynchronously being deleted then you should await completion
+        /// on the <seealso cref="RecordingSignal.DELETE"/>.
         /// </summary>
         /// <param name="recordingId">      of the stopped recording to be truncated. </param>
         /// <param name="position">         to which the recording will be truncated. </param>
@@ -581,6 +585,30 @@ namespace Adaptive.Archiver
                 .CorrelationId(correlationId).RecordingId(recordingId).Position(position);
 
             return Offer(truncateRecordingRequest.EncodedLength());
+        }
+
+        /// <summary>
+        /// Purge a stopped recording, i.e. mark recording as <seealso cref="RecordingState.INVALID"/>
+        /// and delete the corresponding segment files. The space in the Catalog will be reclaimed upon compaction.
+        /// </summary>
+        /// <param name="recordingId">      of the stopped recording to be purged. </param>
+        /// <param name="correlationId">    for this request. </param>
+        /// <param name="controlSessionId"> for this request. </param>
+        /// <returns> true if successfully offered otherwise false. </returns>
+        public bool PurgeRecording(long recordingId, long correlationId, long controlSessionId)
+        {
+            if (null == purgeRecordingRequest)
+            {
+                purgeRecordingRequest = new PurgeRecordingRequestEncoder();
+            }
+
+            purgeRecordingRequest
+                .WrapAndApplyHeader(buffer, 0, messageHeader)
+                .ControlSessionId(controlSessionId)
+                .CorrelationId(correlationId)
+                .RecordingId(recordingId);
+
+            return Offer(purgeRecordingRequest.EncodedLength());
         }
 
         /// <summary>
@@ -705,13 +733,74 @@ namespace Adaptive.Archiver
         {
             if (null == replicateRequest)
             {
-                replicateRequest = new ReplicateRequestEncoder();
+                replicateRequest = new ReplicateRequest2Encoder();
             }
 
-            replicateRequest.WrapAndApplyHeader(buffer, 0, messageHeader).ControlSessionId(controlSessionId)
-                .CorrelationId(correlationId).SrcRecordingId(srcRecordingId).DstRecordingId(dstRecordingId)
-                .SrcControlStreamId(srcControlStreamId).SrcControlChannel(srcControlChannel)
-                .LiveDestination(liveDestination);
+            replicateRequest.WrapAndApplyHeader(buffer, 0, messageHeader)
+                .ControlSessionId(controlSessionId)
+                .CorrelationId(correlationId)
+                .SrcRecordingId(srcRecordingId)
+                .DstRecordingId(dstRecordingId)
+                .StopPosition(AeronArchive.NULL_POSITION)
+                .ChannelTagId(Aeron.Aeron.NULL_VALUE)
+                .SubscriptionTagId(Aeron.Aeron.NULL_VALUE)
+                .SrcControlStreamId(srcControlStreamId)
+                .SrcControlChannel(srcControlChannel)
+                .LiveDestination(liveDestination)
+                .ReplicationChannel(null);
+
+            return Offer(replicateRequest.EncodedLength());
+        }
+
+        /// <summary>
+        /// Replicate a recording from a source archive to a destination which can be considered a backup for a primary
+        /// archive. The source recording will be replayed via the provided replay channel and use the original stream id.
+        /// If the destination recording id is <seealso cref="Adaptive.Aeron.Aeron.NULL_VALUE"/> then a new destination recording is created,
+        /// otherwise the provided destination recording id will be extended. The details of the source recording
+        /// descriptor will be replicated.
+        /// <para>
+        /// For a source recording that is still active the replay can merge with the live stream and then follow it
+        /// directly and no longer require the replay from the source. This would require a multicast live destination.
+        /// </para>
+        /// <para>
+        /// Errors will be reported asynchronously and can be checked for with <seealso cref="AeronArchive.PollForErrorResponse()"/>
+        /// or <seealso cref="AeronArchive.CheckForErrorResponse()"/>.
+        /// 
+        /// </para>
+        /// </summary>
+        /// <param name="srcRecordingId">     recording id which must exist in the source archive. </param>
+        /// <param name="dstRecordingId">     recording to extend in the destination, otherwise <seealso cref="Adaptive.Aeron.Aeron.NULL_VALUE"/>. </param>
+        /// <param name="stopPosition">       position to stop the replication. <seealso cref="AeronArchive.NULL_POSITION"/> to stop at end
+        ///                           of current recording. </param>
+        /// <param name="srcControlStreamId"> remote control stream id for the source archive to instruct the replay on. </param>
+        /// <param name="srcControlChannel">  remote control channel for the source archive to instruct the replay on. </param>
+        /// <param name="liveDestination">    destination for the live stream if merge is required. Empty or null for no merge. </param>
+        /// <param name="replicationChannel"> channel over which the replication will occur. Empty or null for default channel. </param>
+        /// <param name="correlationId">      for this request. </param>
+        /// <param name="controlSessionId">   for this request. </param>
+        /// <returns> true if successfully offered otherwise false. </returns>
+        public bool Replicate(long srcRecordingId, long dstRecordingId, long stopPosition, int srcControlStreamId,
+            string srcControlChannel, string liveDestination, string replicationChannel, long correlationId,
+            long controlSessionId)
+        {
+            if (null == replicateRequest)
+            {
+                replicateRequest = new ReplicateRequest2Encoder();
+            }
+
+            replicateRequest
+                .WrapAndApplyHeader(buffer, 0, messageHeader)
+                .ControlSessionId(controlSessionId)
+                .CorrelationId(correlationId)
+                .SrcRecordingId(srcRecordingId)
+                .DstRecordingId(dstRecordingId)
+                .StopPosition(stopPosition)
+                .ChannelTagId(Adaptive.Aeron.Aeron.NULL_VALUE)
+                .SubscriptionTagId(Adaptive.Aeron.Aeron.NULL_VALUE)
+                .SrcControlStreamId(srcControlStreamId)
+                .SrcControlChannel(srcControlChannel)
+                .LiveDestination(liveDestination)
+                .ReplicationChannel(replicationChannel);
 
             return Offer(replicateRequest.EncodedLength());
         }
@@ -746,18 +835,83 @@ namespace Adaptive.Archiver
             int srcControlStreamId, string srcControlChannel, string liveDestination, long correlationId,
             long controlSessionId)
         {
-            if (null == taggedReplicateRequest)
+            if (null == replicateRequest)
             {
-                taggedReplicateRequest = new TaggedReplicateRequestEncoder();
+                replicateRequest = new ReplicateRequest2Encoder();
             }
 
-            taggedReplicateRequest.WrapAndApplyHeader(buffer, 0, messageHeader).ControlSessionId(controlSessionId)
-                .CorrelationId(correlationId).SrcRecordingId(srcRecordingId).DstRecordingId(dstRecordingId)
-                .ChannelTagId(channelTagId).SubscriptionTagId(subscriptionTagId).SrcControlStreamId(srcControlStreamId)
-                .SrcControlChannel(srcControlChannel).LiveDestination(liveDestination);
+            replicateRequest
+                .WrapAndApplyHeader(buffer, 0, messageHeader)
+                .ControlSessionId(controlSessionId)
+                .CorrelationId(correlationId)
+                .SrcRecordingId(srcRecordingId)
+                .DstRecordingId(dstRecordingId)
+                .StopPosition(AeronArchive.NULL_POSITION)
+                .ChannelTagId(channelTagId)
+                .SubscriptionTagId(subscriptionTagId)
+                .SrcControlStreamId(srcControlStreamId)
+                .SrcControlChannel(srcControlChannel)
+                .LiveDestination(liveDestination)
+                .ReplicationChannel(null);
 
-            return Offer(taggedReplicateRequest.EncodedLength());
+            return Offer(replicateRequest.EncodedLength());
         }
+
+        /// <summary>
+        /// Replicate a recording from a source archive to a destination which can be considered a backup for a primary
+        /// archive. The source recording will be replayed via the provided replay channel and use the original stream id.
+        /// If the destination recording id is <seealso cref="Adaptive.Aeron.Aeron.NULL_VALUE"/> then a new destination recording is created,
+        /// otherwise the provided destination recording id will be extended. The details of the source recording
+        /// descriptor will be replicated. The subscription used in the archive will be tagged with the provided tags.
+        /// <para>
+        /// For a source recording that is still active the replay can merge with the live stream and then follow it
+        /// directly and no longer require the replay from the source. This would require a multicast live destination.
+        /// </para>
+        /// <para>
+        /// Errors will be reported asynchronously and can be checked for with <seealso cref="AeronArchive.PollForErrorResponse()"/>
+        /// or <seealso cref="AeronArchive.CheckForErrorResponse()"/>.
+        /// 
+        /// </para>
+        /// </summary>
+        /// <param name="srcRecordingId">     recording id which must exist in the source archive. </param>
+        /// <param name="dstRecordingId">     recording to extend in the destination, otherwise <seealso cref="Adaptive.Aeron.Aeron.NULL_VALUE"/>. </param>
+        /// <param name="stopPosition">       position to stop the replication. <seealso cref="AeronArchive.NULL_POSITION"/> to stop at end
+        ///                           of current recording. </param>
+        /// <param name="channelTagId">       used to tag the replication subscription. </param>
+        /// <param name="subscriptionTagId">  used to tag the replication subscription. </param>
+        /// <param name="srcControlChannel">  remote control channel for the source archive to instruct the replay on. </param>
+        /// <param name="srcControlStreamId"> remote control stream id for the source archive to instruct the replay on. </param>
+        /// <param name="liveDestination">    destination for the live stream if merge is required. Empty or null for no merge. </param>
+        /// <param name="replicationChannel"> channel over which the replication will occur. Empty or null for default channel. </param>
+        /// <param name="correlationId">      for this request. </param>
+        /// <param name="controlSessionId">   for this request. </param>
+        /// <returns> true if successfully offered otherwise false. </returns>
+        public bool TaggedReplicate(long srcRecordingId, long dstRecordingId, long stopPosition, long channelTagId,
+            long subscriptionTagId, int srcControlStreamId, string srcControlChannel, string liveDestination,
+            string replicationChannel, long correlationId, long controlSessionId)
+        {
+            if (null == replicateRequest)
+            {
+                replicateRequest = new ReplicateRequest2Encoder();
+            }
+
+            replicateRequest
+                .WrapAndApplyHeader(buffer, 0, messageHeader)
+                .ControlSessionId(controlSessionId)
+                .CorrelationId(correlationId)
+                .SrcRecordingId(srcRecordingId)
+                .DstRecordingId(dstRecordingId)
+                .StopPosition(stopPosition)
+                .ChannelTagId(channelTagId)
+                .SubscriptionTagId(subscriptionTagId)
+                .SrcControlStreamId(srcControlStreamId)
+                .SrcControlChannel(srcControlChannel)
+                .LiveDestination(liveDestination)
+                .ReplicationChannel(replicationChannel);
+
+            return Offer(replicateRequest.EncodedLength());
+        }
+
 
         /// <summary>
         /// Stop an active replication by the registration id it was registered with.

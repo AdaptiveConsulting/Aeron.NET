@@ -12,7 +12,7 @@ public class TaggedReplicateRequestEncoder
     public const ushort BLOCK_LENGTH = 52;
     public const ushort TEMPLATE_ID = 62;
     public const ushort SCHEMA_ID = 101;
-    public const ushort SCHEMA_VERSION = 4;
+    public const ushort SCHEMA_VERSION = 6;
 
     private TaggedReplicateRequestEncoder _parentMessage;
     private IMutableDirectBuffer _buffer;

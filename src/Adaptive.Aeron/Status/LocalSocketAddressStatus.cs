@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using Adaptive.Agrona;
 using Adaptive.Agrona.Concurrent.Status;
 
@@ -22,14 +24,17 @@ namespace Adaptive.Aeron.Status
         private static readonly int MAX_IPV6_LENGTH = "[ffff:ffff:ffff:ffff:ffff:ffff:255.255.255.255]:65536".Length;
 
         /// <summary>
-        /// Initial length length for a key, this will be expanded later when bound.
+        /// Initial length for a key, this will be expanded later when bound.
         /// </summary>
         public static readonly int INITIAL_LENGTH = BitUtil.SIZE_OF_INT * 2;
+
+        private static readonly List<string> EMPTY_LIST = new List<string>();
 
         /// <summary>
         /// Type of the counter used to track a local socket address and port.
         /// </summary>
-        public const int LOCAL_SOCKET_ADDRESS_STATUS_TYPE_ID = 14;
+        public const int LOCAL_SOCKET_ADDRESS_STATUS_TYPE_ID = AeronCounters.DRIVER_LOCAL_SOCKET_ADDRESS_STATUS_TYPE_ID;
+
 
         /// <summary>
         /// Find the list of currently bound local sockets.
@@ -38,11 +43,12 @@ namespace Adaptive.Aeron.Status
         /// <param name="channelStatus">   value for the channel which aggregates the transports. </param>
         /// <param name="channelStatusId"> identity of the counter for the channel which aggregates the transports. </param>
         /// <returns> the list of active bound local socket addresses. </returns>
-        public static List<string> FindAddresses(CountersReader countersReader, long channelStatus, int channelStatusId)
+        public static List<string> FindAddresses(CountersReader countersReader, long channelStatus,
+            int channelStatusId)
         {
             if (channelStatus != ChannelEndpointStatus.ACTIVE)
             {
-                return new List<string>();
+                return EMPTY_LIST;
             }
 
             List<string> bindings = new List<string>(2);
@@ -50,27 +56,84 @@ namespace Adaptive.Aeron.Status
 
             for (int i = 0, size = countersReader.MaxCounterId; i < size; i++)
             {
-                if (countersReader.GetCounterState(i) == CountersReader.RECORD_ALLOCATED &&
-                    countersReader.GetCounterTypeId(i) == LOCAL_SOCKET_ADDRESS_STATUS_TYPE_ID)
+                int counterState = countersReader.GetCounterState(i);
+                if (CountersReader.RECORD_ALLOCATED == counterState)
                 {
-                    int recordOffset = CountersReader.MetaDataOffset(i);
-                    int keyIndex = recordOffset + CountersReader.KEY_OFFSET;
-
-                    if (channelStatusId == buffer.GetInt(keyIndex + CHANNEL_STATUS_ID_OFFSET) &&
-                        ChannelEndpointStatus.ACTIVE == countersReader.GetCounterValue(i))
+                    if (countersReader.GetCounterTypeId(i) == LOCAL_SOCKET_ADDRESS_STATUS_TYPE_ID)
                     {
-                        int length = buffer.GetInt(keyIndex + LOCAL_SOCKET_ADDRESS_LENGTH_OFFSET);
-                        if (length > 0)
+                        int recordOffset = CountersReader.MetaDataOffset(i);
+                        int keyIndex = recordOffset + CountersReader.KEY_OFFSET;
+
+                        if (channelStatusId == buffer.GetInt(keyIndex + CHANNEL_STATUS_ID_OFFSET) &&
+                            ChannelEndpointStatus.ACTIVE == countersReader.GetCounterValue(i))
                         {
-                            bindings.Add(buffer.GetStringWithoutLengthAscii(
-                                keyIndex + LOCAL_SOCKET_ADDRESS_STRING_OFFSET,
-                                length));
+                            int length = buffer.GetInt(keyIndex + LOCAL_SOCKET_ADDRESS_LENGTH_OFFSET);
+                            if (length > 0)
+                            {
+                                bindings.Add(
+                                    buffer.GetStringWithoutLengthAscii(keyIndex + LOCAL_SOCKET_ADDRESS_STRING_OFFSET,
+                                        length));
+                            }
                         }
                     }
+                }
+                else if (CountersReader.RECORD_UNUSED == counterState)
+                {
+                    break;
                 }
             }
 
             return bindings;
+        }
+
+        /// <summary>
+        /// Find the currently bound socket address for the channel. There is an expectation that only one exists when
+        /// searching.
+        /// </summary>
+        /// <param name="countersReader">  for the connected driver. </param>
+        /// <param name="channelStatus">   value for the channel which aggregates the transports. </param>
+        /// <param name="channelStatusId"> identity of the counter for the channel which aggregates the transports. </param>
+        /// <returns> the endpoint representing the bound socket address or null if not found. </returns>
+        public static string FindAddress(CountersReader countersReader, long channelStatus, int channelStatusId)
+        {
+            string endpoint = null;
+
+            if (channelStatus == ChannelEndpointStatus.ACTIVE)
+            {
+                IDirectBuffer buffer = countersReader.MetaDataBuffer;
+
+                for (int i = 0, size = countersReader.MaxCounterId; i < size; i++)
+                {
+                    int counterState = countersReader.GetCounterState(i);
+                    if (CountersReader.RECORD_ALLOCATED == counterState)
+                    {
+                        if (countersReader.GetCounterTypeId(i) == LOCAL_SOCKET_ADDRESS_STATUS_TYPE_ID)
+                        {
+                            int recordOffset = CountersReader.MetaDataOffset(i);
+                            int keyIndex = recordOffset + CountersReader.KEY_OFFSET;
+
+                            if (channelStatusId == buffer.GetInt(keyIndex + CHANNEL_STATUS_ID_OFFSET) &&
+                                ChannelEndpointStatus.ACTIVE == countersReader.GetCounterValue(i))
+                            {
+                                int length = buffer.GetInt(keyIndex + LOCAL_SOCKET_ADDRESS_LENGTH_OFFSET);
+                                if (length > 0)
+                                {
+                                    endpoint = buffer.GetStringWithoutLengthAscii(
+                                        keyIndex + LOCAL_SOCKET_ADDRESS_STRING_OFFSET, length);
+                                }
+
+                                break;
+                            }
+                        }
+                    }
+                    else if (CountersReader.RECORD_UNUSED == counterState)
+                    {
+                        break;
+                    }
+                }
+            }
+
+            return endpoint;
         }
     }
 }

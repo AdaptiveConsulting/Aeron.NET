@@ -5,11 +5,15 @@ namespace Adaptive.Aeron.Security
     /// <para>
     /// The session-id refers to the authentication session and not the Aeron transport session assigned to a publication.
     /// </para>
+    ///
+    /// <seealso cref="ISessionProxy"/>
+    /// <see cref="IAuthenticatorSupplier"/>
     /// </summary>
     public interface IAuthenticator
     {
         /// <summary>
-        /// Called upon reception of a Connect Request.
+        /// Called upon reception of a Connect Request and will be followed up by multiple calls to <seealso cref="OnConnectedSession"/>
+        /// one the response channel is connected.
         /// </summary>
         /// <param name="sessionId">          to identify the client session connecting. </param>
         /// <param name="encodedCredentials"> from the Connect Request. Will not be null, but may be 0 length. </param>
@@ -26,9 +30,9 @@ namespace Adaptive.Aeron.Security
 
         /// <summary>
         /// Called when a client's response channel has been connected. This method may be called multiple times until the
-        /// session is timeouts, is challenged, authenticated, or rejected.
+        /// session timeouts, is challenged, authenticated, or rejected.
         /// </summary>
-        /// <param name="sessionProxy"> to use to inform client of status. </param>
+        /// <param name="sessionProxy"> to use to update authentication status. Proxy is only valid for the duration of the call. </param>
         /// <param name="nowMs">        current epoch time in milliseconds. </param>
         /// <seealso cref="ISessionProxy"/>
         void OnConnectedSession(ISessionProxy sessionProxy, long nowMs);
@@ -44,7 +48,7 @@ namespace Adaptive.Aeron.Security
         /// 
         /// </para>
         /// </summary>
-        /// <param name="sessionProxy"> to use to inform client of status. </param>
+        /// <param name="sessionProxy"> to use to update authentication status. Proxy is only valid for the duration of the call. </param>
         /// <param name="nowMs">        current epoch time in milliseconds. </param>
         /// <seealso cref="ISessionProxy"/>
         void OnChallengedSession(ISessionProxy sessionProxy, long nowMs);

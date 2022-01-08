@@ -116,5 +116,95 @@ namespace Adaptive.Agrona.Concurrent.RingBuffer
         /// </summary>
         /// <returns> true of an unblocking action was taken otherwise false. </returns>
         bool Unblock();
+
+        /// <summary>
+        /// Try to claim a space in the underlying ring-buffer into which a message can be written with zero copy semantics.
+        /// Once the message has been written then <seealso cref="Commit(int)"/> should be called thus making it available to be
+        /// consumed. Alternatively a claim can be aborted using <seealso cref="Abort(int)"/> method.
+        /// <para>
+        /// Claiming a space in the ring-buffer means that the consumer will not be able to consume past the claim until
+        /// the claimed space is either committed or aborted. Producers will be able to write message even when outstanding
+        /// claims exist.
+        /// </para>
+        /// <para>
+        /// An example of using {@code TryClaim}:
+        /// <pre>
+        /// <code>
+        ///     final IRingBuffer ringBuffer = ...;
+        /// 
+        ///     final int index = ringBuffer.TryClaim(msgTypeId, messageLength);
+        ///     if (index > 0)
+        ///     {
+        ///         try
+        ///         {
+        ///             final AtomicBuffer buffer = ringBuffer.Buffer();
+        ///             // Work with the buffer directly using the index
+        ///             ...
+        ///         }
+        ///         finally
+        ///         {
+        ///             ringBuffer.Commit(index); // commit message
+        ///         }
+        ///     }
+        /// </code>
+        /// </pre>
+        /// </para>
+        /// <para>
+        /// Ensure that claimed space is released even in case of an exception:
+        /// <pre>
+        /// <code>
+        ///     final IRingBuffer ringBuffer = ...;
+        /// 
+        ///     final int index = ringBuffer.TryClaim(msgTypeId, messageLength);
+        ///     if (index > 0)
+        ///     {
+        ///         try
+        ///         {
+        ///             final IAtomicBuffer buffer = ringBuffer.buffer();
+        ///             // Work with the buffer directly using the index
+        ///             ...
+        ///             ringBuffer.commit(index); // commit message
+        ///         }
+        ///         catch (final Throwable t)
+        ///         {
+        ///             ringBuffer.abort(index); // allow consumer to proceed
+        ///             ...
+        ///         }
+        ///     }
+        /// </code>
+        /// </pre>
+        /// 
+        /// </para>
+        /// </summary>
+        /// <param name="msgTypeId"> type of the message encoding. Will be written into the header upon successful claim. </param>
+        /// <param name="length">    of the claim in bytes. A claim length cannot be greater than <seealso cref="MaxMsgLength()"/>. </param>
+        /// <returns> a non-zero index into the underlying ring-buffer at which encoded message begins, otherwise returns
+        /// <seealso cref="ManyToOneRingBuffer.InsufficientCapacity"/> indicating that there is not enough free space in the buffer. </returns>
+        /// <exception cref="ArgumentException"> if the {@code msgTypeId} is less than {@code 1}. </exception>
+        /// <exception cref="InvalidOperationException"> if the {@code length} is negative or is greater than <seealso cref="MaxMsgLength()"/>. </exception>
+        /// <seealso cref="Commit(int)"/>
+        /// <seealso cref="Abort(int)"/>
+        int TryClaim(int msgTypeId, int length);
+
+        /// <summary>
+        /// Commit message that was written in the previously claimed space thus making it available to the consumer.
+        /// </summary>
+        /// <param name="index"> at which the encoded message begins, i.e. value returned from the <seealso cref="TryClaim(int, int)"/> call. </param>
+        /// <exception cref="ArgumentException"> if the {@code index} is out of bounds. </exception>
+        /// <exception cref="InvalidOperationException">    if this method is called after <seealso cref="Commit(int)"/> or <seealso cref="Abort(int)"/> was
+        ///                                  already invoked for the given {@code index}. </exception>
+        /// <seealso cref="TryClaim(int, int)"/>
+        void Commit(int index);
+
+        /// <summary>
+        /// Abort claim and allow consumer to proceed after the claimed length. Aborting turns unused space into padding,
+        /// i.e. changes type of the message to <seealso cref="ManyToOneRingBuffer.PaddingMsgTypeId"/>.
+        /// </summary>
+        /// <param name="index"> at which the encoded message begins, i.e. value returned from the <seealso cref="TryClaim(int, int)"/> call. </param>
+        /// <exception cref="ArgumentException"> if the {@code index} is out of bounds. </exception>
+        /// <exception cref="InvalidOperationException">    if this method is called after <seealso cref="Commit(int)"/> or <seealso cref="Abort(int)"/> was
+        ///                                  already invoked for the given {@code index}. </exception>
+        /// <seealso cref="TryClaim(int, int)"/>
+        void Abort(int index);
     }
 }

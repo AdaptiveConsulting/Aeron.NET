@@ -79,17 +79,6 @@ namespace Adaptive.Agrona.Concurrent.RingBuffer
         }
 
         /// <summary>
-        /// Make a 64-bit header from the length and message type id.
-        /// </summary>
-        /// <param name="length">    length of the record </param>
-        /// <param name="msgTypeId"> of the message stored in the record </param>
-        /// <returns> the fields combined into a long. </returns>
-        public static long MakeHeader(int length, int msgTypeId)
-        {
-            return ((msgTypeId & 0xFFFFFFFFL) << 32) | (length & 0xFFFFFFFFL);
-        }
-
-        /// <summary>
         /// Extract the record length field from a word representing the header.
         /// </summary>
         /// <param name="header"> containing both fields. </param>

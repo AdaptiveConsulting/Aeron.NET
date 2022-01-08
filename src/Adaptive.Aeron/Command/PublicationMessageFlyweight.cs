@@ -22,21 +22,23 @@ namespace Adaptive.Aeron.Command
 {
     /// <summary>
     /// Control message for adding or removing a publication
-    /// 
     /// <para>
-    /// 0                   1                   2                   3
-    /// 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-    /// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    /// |                         Correlation ID                        |
-    /// |                                                               |
-    /// +---------------------------------------------------------------+
-    /// |                          Stream ID                            |
-    /// +---------------------------------------------------------------+
-    /// |                        Channel Length                         |
-    /// +---------------------------------------------------------------+
-    /// |                           Channel   (ASCII)                  ...
-    /// ...                                                             |
-    /// +---------------------------------------------------------------+
+    ///   0                   1                   2                   3
+    ///   0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+    ///  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    ///  |                          Client ID                            |
+    ///  |                                                               |
+    ///  +---------------------------------------------------------------+
+    ///  |                       Correlation ID                          |
+    ///  |                                                               |
+    ///  +---------------------------------------------------------------+
+    ///  |                          Stream ID                            |
+    ///  +---------------------------------------------------------------+
+    ///  |                       Channel Length                          |
+    ///  +---------------------------------------------------------------+
+    ///  |                       Channel (ASCII)                        ...
+    /// ...                                                              |
+    ///  +---------------------------------------------------------------+
     /// </para>
     /// </summary>
     public class PublicationMessageFlyweight : CorrelatedMessageFlyweight
@@ -49,19 +51,32 @@ namespace Adaptive.Aeron.Command
         private int _lengthOfChannel;
 
         /// <summary>
-        /// Get the stream id field
+        /// Wrap the buffer at a given offset for updates.
         /// </summary>
-        /// <returns> stream id field </returns>
+        /// <param name="buffer"> to wrap. </param>
+        /// <param name="offset"> at which the message begins. </param>
+        /// <returns> this for a fluent API. </returns>
+        public new PublicationMessageFlyweight Wrap(IMutableDirectBuffer buffer, int offset)
+        {
+            base.Wrap(buffer, offset);
+
+            return this;
+        }
+        
+        /// <summary>
+        /// Get the stream id field.
+        /// </summary>
+        /// <returns> stream id field. </returns>
         public int StreamId()
         {
             return buffer.GetInt(offset + STREAM_ID_FIELD_OFFSET);
         }
 
         /// <summary>
-        /// Set the stream id field
+        /// Set the stream id field.
         /// </summary>
         /// <param name="streamId"> field value </param>
-        /// <returns> flyweight </returns>
+        /// <returns> this for a fluent API. </returns>
         public PublicationMessageFlyweight StreamId(int streamId)
         {
             buffer.PutInt(offset + STREAM_ID_FIELD_OFFSET, streamId);
@@ -70,9 +85,9 @@ namespace Adaptive.Aeron.Command
         }
 
         /// <summary>
-        /// Get the channel field in ASCII
+        /// Get the channel field in ASCII.
         /// </summary>
-        /// <returns> channel field </returns>
+        /// <returns> channel field. </returns>
         public string Channel()
         {
             return buffer.GetStringAscii(offset + CHANNEL_OFFSET);
@@ -88,10 +103,10 @@ namespace Adaptive.Aeron.Command
         }
         
         /// <summary>
-        /// Set the channel field in ASCII
+        /// Set the channel field in ASCII.
         /// </summary>
-        /// <param name="channel"> field value </param>
-        /// <returns> flyweight </returns>
+        /// <param name="channel"> field value. </param>
+        /// <returns> this for a fluent API. </returns>
         public PublicationMessageFlyweight Channel(string channel)
         {
             _lengthOfChannel = buffer.PutStringAscii(offset + CHANNEL_OFFSET, channel);
@@ -100,32 +115,24 @@ namespace Adaptive.Aeron.Command
         }
 
         /// <summary>
-        /// Get the length of the current message
+        /// Get the length of the current message.
         /// 
         /// NB: must be called after the data is written in order to be accurate.
         /// </summary>
-        /// <returns> the length of the current message </returns>
+        /// <returns> the length of the current message. </returns>
         public int Length()
         {
             return CHANNEL_OFFSET + _lengthOfChannel;
         }
-        
+      
         /// <summary>
-        /// Validate buffer length is long enough for message.
+        /// Compute the length of the command message for a given channel length.
         /// </summary>
-        /// <param name="msgTypeId"> type of message. </param>
-        /// <param name="length"> of message in bytes to validate. </param>
-        public new void ValidateLength(int msgTypeId, int length)
+        /// <param name="channelLength"> to be appended to the header. </param>
+        /// <returns> the length of the command message for a given channel length. </returns>
+        public static int ComputeLength(int channelLength)
         {
-            if (length < MINIMUM_LENGTH)
-            {
-                throw new ControlProtocolException(ErrorCode.MALFORMED_COMMAND, "command=" + msgTypeId + " too short: length=" + length);
-            }
-
-            if ((length - MINIMUM_LENGTH) < buffer.GetInt(offset + CHANNEL_OFFSET))
-            {
-                throw new ControlProtocolException(ErrorCode.MALFORMED_COMMAND, "command=" + msgTypeId + " too short for channel: length=" + length);
-            }
+            return MINIMUM_LENGTH + channelLength;
         }
     }
 }

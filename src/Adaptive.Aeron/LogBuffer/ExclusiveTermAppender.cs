@@ -62,14 +62,14 @@ namespace Adaptive.Aeron.LogBuffer
         }
 
         /// <summary>
-        /// Claim length of a the term buffer for writing in the message with zero copy semantics.
+        /// Claim length of a term buffer for writing in the message with zero copy semantics.
         /// </summary>
         /// <param name="termId">      for the current term.</param>
         /// <param name="termOffset">  in the term at which to append.</param>
         /// <param name="header">      for writing the default header. </param>
         /// <param name="length">      of the message to be written. </param>
         /// <param name="bufferClaim"> to be updated with the claimed region. </param>
-        /// <returns> the resulting offset of the term after the append on success otherwise <see cref="FAILED"/>.</returns>
+        /// <returns> the resulting offset of the term after the append operation on success otherwise <see cref="FAILED"/>.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int Claim(
             int termId,
@@ -136,7 +136,7 @@ namespace Adaptive.Aeron.LogBuffer
         }
 
         /// <summary>
-        /// Append an unfragmented message to the the term buffer.
+        /// Append an unfragmented message to the term buffer.
         /// </summary>
         /// <param name="termId">      for the current term.</param>
         /// <param name="termOffset">  in the term at which to append.</param>
@@ -145,7 +145,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// <param name="srcOffset"> at which the message begins. </param>
         /// <param name="length">    of the message in the source buffer. </param>
         /// <param name="reservedValueSupplier"><see cref="ReservedValueSupplier"/> for the frame</param>
-        /// <returns> the resulting offset of the term after the append on success otherwise <seealso cref="FAILED"/>.</returns>
+        /// <returns> the resulting offset of the term after the append operation on success otherwise <seealso cref="FAILED"/>.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int AppendUnfragmentedMessage(
             int termId,
@@ -187,7 +187,7 @@ namespace Adaptive.Aeron.LogBuffer
         }
 
         /// <summary>
-        /// Append an unfragmented message to the the term buffer.
+        /// Append an unfragmented message to the term buffer.
         /// </summary>
         /// <param name="termId">                for the current term. </param>
         /// <param name="termOffset">            in the term at which to append. </param>
@@ -199,7 +199,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// <param name="offsetTwo">             at which the second part of the message begins. </param>
         /// <param name="lengthTwo">             of the second part of the message. </param>
         /// <param name="reservedValueSupplier"> <seealso cref="ReservedValueSupplier"/> for the frame. </param>
-        /// <returns> the resulting offset of the term after the append on success otherwise <seealso cref="FAILED"/>. </returns>
+        /// <returns> the resulting offset of the term after the append operation on success otherwise <seealso cref="FAILED"/>. </returns>
         public int AppendUnfragmentedMessage(
             int termId,
             int termOffset,
@@ -244,7 +244,7 @@ namespace Adaptive.Aeron.LogBuffer
 
 
         /// <summary>
-        /// Append an unfragmented message to the the term buffer.
+        /// Append an unfragmented message to the term buffer.
         /// </summary>
         /// <param name="termId">      for the current term.</param>
         /// <param name="termOffset">  in the term at which to append.</param>
@@ -252,7 +252,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// <param name="vectors">   to the buffers. </param>
         /// <param name="length">    of the message in the source buffer. </param>
         /// <param name="reservedValueSupplier"><see cref="ReservedValueSupplier"/> for the frame</param>
-        /// <returns> the resulting offset of the term after the append on success otherwise <seealso cref="FAILED"/>.</returns>
+        /// <returns> the resulting offset of the term after the append operation on success otherwise <seealso cref="FAILED"/>.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int AppendUnfragmentedMessage(
             int termId,
@@ -282,8 +282,8 @@ namespace Adaptive.Aeron.LogBuffer
 
                 foreach (var vector in vectors)
                 {
-                    termBuffer.PutBytes(offset, vector.buffer, vector.offset, vector.length);
-                    offset += vector.length;
+                    termBuffer.PutBytes(offset, vector.Buffer(), vector.Offset(), vector.Length());
+                    offset += vector.Length();
                 }
 
                 if (null != reservedValueSupplier)
@@ -300,7 +300,7 @@ namespace Adaptive.Aeron.LogBuffer
 
 
         /// <summary>
-        /// Append a fragmented message to the the term buffer.
+        /// Append a fragmented message to the term buffer.
         /// The message will be split up into fragments of MTU length minus header.
         /// </summary>
         /// <param name="termId">      for the current term.</param>
@@ -311,7 +311,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// <param name="length">           of the message in the source buffer. </param>
         /// <param name="maxPayloadLength"> that the message will be fragmented into. </param>
         /// /// <param name="reservedValueSupplier"><see cref="ReservedValueSupplier"/> for the frame</param>
-        /// <returns> the resulting offset of the term after the append on success otherwise <seealso cref="FAILED"/>.</returns>
+        /// <returns> the resulting offset of the term after the append operation on success otherwise <seealso cref="FAILED"/>.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int AppendFragmentedMessage(
             int termId,
@@ -380,7 +380,7 @@ namespace Adaptive.Aeron.LogBuffer
         }
 
         /// <summary>
-        /// Append a fragmented message to the the term buffer.
+        /// Append a fragmented message to the term buffer.
         /// The message will be split up into fragments of MTU length minus header.
         /// </summary>
         /// <param name="termId">                for the current term. </param>
@@ -394,7 +394,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// <param name="lengthTwo">             of the second part of the message. </param>
         /// <param name="maxPayloadLength">      that the message will be fragmented into. </param>
         /// <param name="reservedValueSupplier"> <seealso cref="ReservedValueSupplier"/> for the frame. </param>
-        /// <returns> the resulting offset of the term after the append on success otherwise <seealso cref="FAILED"/>. </returns>
+        /// <returns> the resulting offset of the term after the append operation on success otherwise <seealso cref="FAILED"/>. </returns>
         public int AppendFragmentedMessage(
             int termId,
             int termOffset,
@@ -489,7 +489,7 @@ namespace Adaptive.Aeron.LogBuffer
         }
 
         /// <summary>
-        /// Append a fragmented message to the the term buffer.
+        /// Append a fragmented message to the term buffer.
         /// The message will be split up into fragments of MTU length minus header.
         /// </summary>
         /// <param name="termId">      for the current term.</param>
@@ -499,7 +499,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// <param name="length">           of the message in the source buffer. </param>
         /// <param name="maxPayloadLength"> that the message will be fragmented into. </param>
         /// /// <param name="reservedValueSupplier"><see cref="ReservedValueSupplier"/> for the frame</param>
-        /// <returns> the resulting offset of the term after the append on success otherwise <seealso cref="FAILED"/>.</returns>
+        /// <returns> the resulting offset of the term after the append operation on success otherwise <seealso cref="FAILED"/>.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int AppendFragmentedMessage(
             int termId,
@@ -549,10 +549,10 @@ namespace Adaptive.Aeron.LogBuffer
                     do
                     {
                         var vector = vectors[vectorIndex];
-                        int vectorRemaining = vector.length - vectorOffset;
+                        int vectorRemaining = vector.Length() - vectorOffset;
                         int numBytes = Math.Min(bytesToWrite - bytesWritten, vectorRemaining);
 
-                        termBuffer.PutBytes(payloadOffset, vector.buffer, vector.offset + vectorOffset, numBytes);
+                        termBuffer.PutBytes(payloadOffset, vector.Buffer(), vector.Offset() + vectorOffset, numBytes);
 
                         bytesWritten += numBytes;
                         payloadOffset += numBytes;

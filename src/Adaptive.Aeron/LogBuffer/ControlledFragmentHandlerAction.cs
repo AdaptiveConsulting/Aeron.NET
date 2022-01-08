@@ -16,6 +16,9 @@
 
 namespace Adaptive.Aeron.LogBuffer
 {
+    /// <summary>
+    /// Action to be taken on return from <see cref="ControlledFragmentHandler"/>.
+    /// </summary>
     public enum ControlledFragmentHandlerAction
     {
         /// <summary>
@@ -37,7 +40,7 @@ namespace Adaptive.Aeron.LogBuffer
 
         /// <summary>
         /// Continue processing until fragment limit or no fragments with position commit at end of poll as the in
-        /// <seealso cref="FragmentHandler"/>.
+        /// <seealso cref="ControlledFragmentHandler"/>.
         /// </summary>
         CONTINUE,
     }

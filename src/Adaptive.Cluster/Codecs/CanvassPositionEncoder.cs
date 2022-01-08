@@ -9,10 +9,10 @@ namespace Adaptive.Cluster.Codecs {
 
 public class CanvassPositionEncoder
 {
-    public const ushort BLOCK_LENGTH = 20;
+    public const ushort BLOCK_LENGTH = 28;
     public const ushort TEMPLATE_ID = 50;
     public const ushort SCHEMA_ID = 111;
-    public const ushort SCHEMA_VERSION = 6;
+    public const ushort SCHEMA_VERSION = 7;
 
     private CanvassPositionEncoder _parentMessage;
     private IMutableDirectBuffer _buffer;
@@ -160,9 +160,41 @@ public class CanvassPositionEncoder
     }
 
 
-    public static int FollowerMemberIdEncodingOffset()
+    public static int LeadershipTermIdEncodingOffset()
     {
         return 16;
+    }
+
+    public static int LeadershipTermIdEncodingLength()
+    {
+        return 8;
+    }
+
+    public static long LeadershipTermIdNullValue()
+    {
+        return -9223372036854775808L;
+    }
+
+    public static long LeadershipTermIdMinValue()
+    {
+        return -9223372036854775807L;
+    }
+
+    public static long LeadershipTermIdMaxValue()
+    {
+        return 9223372036854775807L;
+    }
+
+    public CanvassPositionEncoder LeadershipTermId(long value)
+    {
+        _buffer.PutLong(_offset + 16, value, ByteOrder.LittleEndian);
+        return this;
+    }
+
+
+    public static int FollowerMemberIdEncodingOffset()
+    {
+        return 24;
     }
 
     public static int FollowerMemberIdEncodingLength()
@@ -187,7 +219,7 @@ public class CanvassPositionEncoder
 
     public CanvassPositionEncoder FollowerMemberId(int value)
     {
-        _buffer.PutInt(_offset + 16, value, ByteOrder.LittleEndian);
+        _buffer.PutInt(_offset + 24, value, ByteOrder.LittleEndian);
         return this;
     }
 

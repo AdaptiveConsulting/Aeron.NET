@@ -12,7 +12,7 @@ public class CatchupPositionDecoder
     public const ushort BLOCK_LENGTH = 20;
     public const ushort TEMPLATE_ID = 56;
     public const ushort SCHEMA_ID = 111;
-    public const ushort SCHEMA_VERSION = 6;
+    public const ushort SCHEMA_VERSION = 7;
 
     private CatchupPositionDecoder _parentMessage;
     private IDirectBuffer _buffer;
@@ -250,6 +250,81 @@ public class CatchupPositionDecoder
     }
 
 
+    public static int CatchupEndpointId()
+    {
+        return 4;
+    }
+
+    public static int CatchupEndpointSinceVersion()
+    {
+        return 0;
+    }
+
+    public static string CatchupEndpointCharacterEncoding()
+    {
+        return "US-ASCII";
+    }
+
+    public static string CatchupEndpointMetaAttribute(MetaAttribute metaAttribute)
+    {
+        switch (metaAttribute)
+        {
+            case MetaAttribute.EPOCH: return "unix";
+            case MetaAttribute.TIME_UNIT: return "nanosecond";
+            case MetaAttribute.SEMANTIC_TYPE: return "";
+            case MetaAttribute.PRESENCE: return "required";
+        }
+
+        return "";
+    }
+
+    public static int CatchupEndpointHeaderLength()
+    {
+        return 4;
+    }
+
+    public int CatchupEndpointLength()
+    {
+        int limit = _parentMessage.Limit();
+        return (int)unchecked((uint)_buffer.GetInt(limit, ByteOrder.LittleEndian));
+    }
+
+    public int GetCatchupEndpoint(IMutableDirectBuffer dst, int dstOffset, int length)
+    {
+        int headerLength = 4;
+        int limit = _parentMessage.Limit();
+        int dataLength = (int)unchecked((uint)_buffer.GetInt(limit, ByteOrder.LittleEndian));
+        int bytesCopied = Math.Min(length, dataLength);
+        _parentMessage.Limit(limit + headerLength + dataLength);
+        _buffer.GetBytes(limit + headerLength, dst, dstOffset, bytesCopied);
+
+        return bytesCopied;
+    }
+
+    public int GetCatchupEndpoint(byte[] dst, int dstOffset, int length)
+    {
+        int headerLength = 4;
+        int limit = _parentMessage.Limit();
+        int dataLength = (int)unchecked((uint)_buffer.GetInt(limit, ByteOrder.LittleEndian));
+        int bytesCopied = Math.Min(length, dataLength);
+        _parentMessage.Limit(limit + headerLength + dataLength);
+        _buffer.GetBytes(limit + headerLength, dst, dstOffset, bytesCopied);
+
+        return bytesCopied;
+    }
+
+    public string CatchupEndpoint()
+    {
+        int headerLength = 4;
+        int limit = _parentMessage.Limit();
+        int dataLength = (int)unchecked((uint)_buffer.GetInt(limit, ByteOrder.LittleEndian));
+        _parentMessage.Limit(limit + headerLength + dataLength);
+        byte[] tmp = new byte[dataLength];
+        _buffer.GetBytes(limit + headerLength, tmp, 0, dataLength);
+
+        return Encoding.ASCII.GetString(tmp);
+    }
+
 
     public override string ToString()
     {
@@ -293,6 +368,10 @@ public class CatchupPositionDecoder
         //Token{signal=ENCODING, name='int32', referencedName='null', description='null', id=-1, version=0, deprecated=0, encodedLength=4, offset=16, componentTokenCount=1, encoding=Encoding{presence=REQUIRED, primitiveType=INT32, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
         builder.Append("FollowerMemberId=");
         builder.Append(FollowerMemberId());
+        builder.Append('|');
+        //Token{signal=BEGIN_VAR_DATA, name='catchupEndpoint', referencedName='null', description='null', id=4, version=0, deprecated=0, encodedLength=0, offset=20, componentTokenCount=6, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        builder.Append("CatchupEndpoint=");
+        builder.Append(CatchupEndpoint());
 
         Limit(originalLimit);
 

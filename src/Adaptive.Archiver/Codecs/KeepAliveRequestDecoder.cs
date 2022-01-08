@@ -12,7 +12,7 @@ public class KeepAliveRequestDecoder
     public const ushort BLOCK_LENGTH = 16;
     public const ushort TEMPLATE_ID = 61;
     public const ushort SCHEMA_ID = 101;
-    public const ushort SCHEMA_VERSION = 4;
+    public const ushort SCHEMA_VERSION = 6;
 
     private KeepAliveRequestDecoder _parentMessage;
     private IDirectBuffer _buffer;

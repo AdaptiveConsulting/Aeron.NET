@@ -16,8 +16,8 @@ namespace Adaptive.Cluster.Service
     /// and timers. Sending messages and timers should not happen from cluster lifecycle methods like
     /// <seealso cref="IClusteredService.OnStart(ICluster, Image)"/>, <seealso cref="IClusteredService.OnRoleChange(ClusterRole)"/> or
     /// <seealso cref="IClusteredService.OnTakeSnapshot(ExclusivePublication)"/>, or <seealso cref="IClusteredService.OnTerminate(ICluster)"/>,
-    /// with the exception of the session lifecycle methods <seealso cref="IClusteredService.OnSessionOpen(ClientSession, long)"/> and
-    /// <seealso cref="IClusteredService.OnSessionClose(ClientSession, long, CloseReason)"/>.
+    /// with the exception of the session lifecycle methods <seealso cref="IClusteredService.OnSessionOpen(IClientSession, long)"/> and
+    /// <seealso cref="IClusteredService.OnSessionClose(IClientSession, long, CloseReason)"/> and <seealso cref="IClusteredService.OnNewLeadershipTermEvent"/>.
     /// </para>
     /// </summary>
 
@@ -54,26 +54,26 @@ namespace Adaptive.Cluster.Service
         ClusteredServiceContainer.Context Context { get; }
 
         /// <summary>
-        /// Get the <seealso cref="ClientSession"/> for a given cluster session id.
+        /// Get the <seealso cref="IClientSession"/> for a given cluster session id.
         /// </summary>
         /// <param name="clusterSessionId"> to be looked up. </param>
-        /// <returns> the <seealso cref="ClientSession"/> that matches the clusterSessionId. </returns>
-        ClientSession GetClientSession(long clusterSessionId);
+        /// <returns> the <seealso cref="IClientSession"/> that matches the clusterSessionId. </returns>
+        IClientSession GetClientSession(long clusterSessionId);
 
         /// <summary>
-        /// Get all <seealso cref="ClientSession"/>s.
+        /// Get all <seealso cref="IClientSession"/>s.
         /// </summary>
-        /// <returns> the <seealso cref="ClientSession"/>s. </returns>
-        ICollection<ClientSession> ClientSessions { get; }
+        /// <returns> the <seealso cref="IClientSession"/>s. </returns>
+        ICollection<IClientSession> ClientSessions { get; }
         
         /// <summary>
-        /// For each iterator over <seealso cref="ClientSession"/>s using the most efficient method possible.
+        /// For each iterator over <seealso cref="IClientSession"/>s using the most efficient method possible.
         /// </summary>
-        /// <param name="action"> to be taken for each <seealso cref="ClientSession"/> in turn. </param>
-        void ForEachClientSession(Action<ClientSession> action);
+        /// <param name="action"> to be taken for each <seealso cref="IClientSession"/> in turn. </param>
+        void ForEachClientSession(Action<IClientSession> action);
 
         /// <summary>
-        /// Request the close of a <seealso cref="ClientSession"/> by sending the request to the consensus module.
+        /// Request the close of a <seealso cref="IClientSession"/> by sending the request to the consensus module.
         /// </summary>
         /// <param name="clusterSessionId"> to be closed. </param>
         /// <returns> true if the event to close a session was sent or false if back pressure was applied. </returns>
@@ -88,25 +88,25 @@ namespace Adaptive.Cluster.Service
         long Time { get; }
 
         /// <summary>
-        /// The unit of time applied to timestamps and <seealso cref="Time()"/>.
+        /// The unit of time applied when timestamping and <seealso cref="Time()"/> operations.
         /// </summary>
-        /// <returns> the unit of time applied to timestamps and <seealso cref="Time()"/>. </returns>
+        /// <returns> the unit of time applied when timestamping and <seealso cref="Time()"/> operations. </returns>
         ClusterTimeUnit TimeUnit();
 
         /// <summary>
         /// Schedule a timer for a given deadline and provide a correlation id to identify the timer when it expires or
         /// for cancellation. This action is asynchronous and will race with the timer expiring.
         /// <para>
-        /// If the correlationId is for an existing scheduled timer then it will be reschedule to the new deadline. However
+        /// If the correlationId is for an existing scheduled timer then it will be rescheduled to the new deadline. However
         /// it is best to generate correlationIds in a monotonic fashion and be aware of potential clashes with other
         /// services in the same cluster. Service isolation can be achieved by using the upper bits for service id.
         /// </para>
         /// <para>
         /// Timers should only be scheduled or cancelled in the context of processing a
-        /// <seealso cref="IClusteredService.OnSessionMessage(ClientSession, long, IDirectBuffer, int, int, Header)"/>,
+        /// <seealso cref="IClusteredService.OnSessionMessage(IClientSession, long, IDirectBuffer, int, int, Header)"/>,
         /// <seealso cref="IClusteredService.OnTimerEvent(long, long)"/>,
-        /// <seealso cref="IClusteredService.OnSessionOpen(ClientSession, long)"/>, or
-        /// <seealso cref="IClusteredService.OnSessionClose(ClientSession, long, CloseReason)"/>.
+        /// <seealso cref="IClusteredService.OnSessionOpen(IClientSession, long)"/>, or
+        /// <seealso cref="IClusteredService.OnSessionClose(IClientSession, long, CloseReason)"/>.
         /// If applied to other events then they are not guaranteed to be reliable.
         ///   
         /// </para>
@@ -121,10 +121,10 @@ namespace Adaptive.Cluster.Service
         /// Cancel a previously scheduled timer. This action is asynchronous and will race with the timer expiring.
         /// <para>
         /// Timers should only be scheduled or cancelled in the context of processing a
-        /// <seealso cref="IClusteredService.OnSessionMessage(ClientSession, long, IDirectBuffer, int, int, Header)"/>,
+        /// <seealso cref="IClusteredService.OnSessionMessage(IClientSession, long, IDirectBuffer, int, int, Header)"/>,
         /// <seealso cref="IClusteredService.OnTimerEvent(long, long)"/>,
-        /// <seealso cref="IClusteredService.OnSessionOpen(ClientSession, long)"/>, or
-        /// <seealso cref="IClusteredService.OnSessionClose(ClientSession, long, CloseReason)"/>.
+        /// <seealso cref="IClusteredService.OnSessionOpen(IClientSession, long)"/>, or
+        /// <seealso cref="IClusteredService.OnSessionClose(IClientSession, long, CloseReason)"/>.
         /// If applied to other events then they are not guaranteed to be reliable.
         ///    
         /// </para>
@@ -197,7 +197,7 @@ namespace Adaptive.Cluster.Service
 
         /// <summary>
         /// <seealso cref="IdleStrategy"/> which should be used by the service when it experiences back-pressure on egress,
-        /// closing sessions, making timer requests, or any long running actions.
+        /// closing sessions, making timer requests, or any long-running actions.
         /// </summary>
         /// <returns> the <seealso cref="IdleStrategy"/> which should be used by the service when it experiences back-pressure. </returns>
         IIdleStrategy IdleStrategy();

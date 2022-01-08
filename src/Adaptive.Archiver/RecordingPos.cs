@@ -31,7 +31,7 @@ namespace Adaptive.Archiver
         /// <summary>
         /// Type id of a recording position counter.
         /// </summary>
-        public const int RECORDING_POSITION_TYPE_ID = 100;
+        public const int RECORDING_POSITION_TYPE_ID = AeronCounters.ARCHIVE_RECORDING_POSITION_TYPE_ID;
 
         /// <summary>
         /// Represents a null recording id when not found.
@@ -39,42 +39,14 @@ namespace Adaptive.Archiver
         public const long NULL_RECORDING_ID = Aeron.Aeron.NULL_VALUE;
 
         /// <summary>
-        /// Human readable name for the counter.
+        /// Human-readable name for the counter.
         /// </summary>
         public const string NAME = "rec-pos";
 
-        public const int RECORDING_ID_OFFSET = 0;
-        public static readonly int SESSION_ID_OFFSET = RECORDING_ID_OFFSET + BitUtil.SIZE_OF_LONG;
-        public static readonly int SOURCE_IDENTITY_LENGTH_OFFSET = SESSION_ID_OFFSET + BitUtil.SIZE_OF_INT;
-        public static readonly int SOURCE_IDENTITY_OFFSET = SOURCE_IDENTITY_LENGTH_OFFSET + BitUtil.SIZE_OF_INT;
-
-
-        public static Counter Allocate(Aeron.Aeron aeron, UnsafeBuffer tempBuffer, long recordingId,
-            int sessionId, int streamId, string strippedChannel, string sourceIdentity)
-        {
-            tempBuffer.PutLong(RECORDING_ID_OFFSET, recordingId);
-            tempBuffer.PutInt(SESSION_ID_OFFSET, sessionId);
-
-            var sourceIdentityLength =
-                Math.Min(sourceIdentity.Length, MAX_KEY_LENGTH - SOURCE_IDENTITY_OFFSET);
-            tempBuffer.PutStringAscii(SOURCE_IDENTITY_LENGTH_OFFSET, sourceIdentity);
-            var keyLength = SOURCE_IDENTITY_OFFSET + sourceIdentityLength;
-
-            int labelOffset = BitUtil.Align(keyLength, BitUtil.SIZE_OF_INT);
-            int labelLength = 0;
-            labelLength += tempBuffer.PutStringWithoutLengthAscii(labelOffset, NAME + ": ");
-            labelLength += tempBuffer.PutLongAscii(labelOffset + labelLength, recordingId);
-            labelLength += tempBuffer.PutStringWithoutLengthAscii(labelOffset + labelLength, " ");
-            labelLength += tempBuffer.PutIntAscii(labelOffset + labelLength, sessionId);
-            labelLength += tempBuffer.PutStringWithoutLengthAscii(labelOffset + labelLength, " ");
-            labelLength += tempBuffer.PutIntAscii(labelOffset + labelLength, streamId);
-            labelLength += tempBuffer.PutStringWithoutLengthAscii(labelOffset + labelLength, " ");
-            labelLength += tempBuffer.PutStringWithoutLengthAscii(labelOffset + labelLength, strippedChannel, 0,
-                MAX_LABEL_LENGTH - labelLength);
-
-            return aeron.AddCounter(RECORDING_POSITION_TYPE_ID, tempBuffer, 0, keyLength, tempBuffer, labelOffset,
-                labelLength);
-        }
+        private const int RECORDING_ID_OFFSET = 0;
+        private static readonly int SESSION_ID_OFFSET = RECORDING_ID_OFFSET + BitUtil.SIZE_OF_LONG;
+        private static readonly int SOURCE_IDENTITY_LENGTH_OFFSET = SESSION_ID_OFFSET + BitUtil.SIZE_OF_INT;
+        private static readonly int SOURCE_IDENTITY_OFFSET = SOURCE_IDENTITY_LENGTH_OFFSET + BitUtil.SIZE_OF_INT;
 
         /// <summary>
         /// Find the active counter id for a stream based on the recording id.
@@ -88,7 +60,8 @@ namespace Adaptive.Archiver
 
             for (int i = 0, size = countersReader.MaxCounterId; i < size; i++)
             {
-                if (countersReader.GetCounterState(i) == RECORD_ALLOCATED &&
+                var counterState = countersReader.GetCounterState(i);
+                if (counterState == RECORD_ALLOCATED &&
                     countersReader.GetCounterTypeId(i) == RECORDING_POSITION_TYPE_ID)
                 {
                     if (buffer.GetLong(MetaDataOffset(i) + KEY_OFFSET +
@@ -96,6 +69,10 @@ namespace Adaptive.Archiver
                     {
                         return i;
                     }
+                }
+                else if (RECORD_UNUSED == counterState)
+                {
+                    break;
                 }
             }
 
@@ -114,7 +91,8 @@ namespace Adaptive.Archiver
 
             for (int i = 0, size = countersReader.MaxCounterId; i < size; i++)
             {
-                if (countersReader.GetCounterState(i) == RECORD_ALLOCATED &&
+                int counterState = countersReader.GetCounterState(i);
+                if (counterState == RECORD_ALLOCATED &&
                     countersReader.GetCounterTypeId(i) == RECORDING_POSITION_TYPE_ID)
                 {
                     if (buffer.GetInt(MetaDataOffset(i) + KEY_OFFSET +
@@ -122,6 +100,10 @@ namespace Adaptive.Archiver
                     {
                         return i;
                     }
+                }
+                else if (RECORD_UNUSED == counterState)
+                {
+                    break;
                 }
             }
 

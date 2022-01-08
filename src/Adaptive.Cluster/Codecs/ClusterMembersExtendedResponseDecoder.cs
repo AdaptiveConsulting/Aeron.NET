@@ -12,7 +12,7 @@ public class ClusterMembersExtendedResponseDecoder
     public const ushort BLOCK_LENGTH = 24;
     public const ushort TEMPLATE_ID = 43;
     public const ushort SCHEMA_ID = 111;
-    public const ushort SCHEMA_VERSION = 6;
+    public const ushort SCHEMA_VERSION = 7;
 
     private ClusterMembersExtendedResponseDecoder _parentMessage;
     private IDirectBuffer _buffer;
@@ -1801,7 +1801,7 @@ public class ClusterMembersExtendedResponseDecoder
         builder.Append("MemberId=");
         builder.Append(MemberId());
         builder.Append('|');
-        //Token{signal=BEGIN_GROUP, name='activeMembers', referencedName='null', description='null', id=5, version=0, deprecated=0, encodedLength=28, offset=24, componentTokenCount=48, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='null', timeUnit=null, semanticType='null'}}
+        //Token{signal=BEGIN_GROUP, name='activeMembers', referencedName='null', description='Members of the cluster which have voting rights.', id=5, version=0, deprecated=0, encodedLength=28, offset=24, componentTokenCount=48, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='null', timeUnit=null, semanticType='null'}}
         builder.Append("ActiveMembers=[");
         ActiveMembersDecoder ActiveMembers = this.ActiveMembers();
         if (ActiveMembers.Count() > 0)
@@ -1815,7 +1815,7 @@ public class ClusterMembersExtendedResponseDecoder
         }
         builder.Append(']');
         builder.Append('|');
-        //Token{signal=BEGIN_GROUP, name='passiveMembers', referencedName='null', description='null', id=15, version=0, deprecated=0, encodedLength=28, offset=-1, componentTokenCount=48, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='null', timeUnit=null, semanticType='null'}}
+        //Token{signal=BEGIN_GROUP, name='passiveMembers', referencedName='null', description='Members of the cluster which do not have voting rights but could become active members.', id=15, version=0, deprecated=0, encodedLength=28, offset=-1, componentTokenCount=48, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='null', timeUnit=null, semanticType='null'}}
         builder.Append("PassiveMembers=[");
         PassiveMembersDecoder PassiveMembers = this.PassiveMembers();
         if (PassiveMembers.Count() > 0)

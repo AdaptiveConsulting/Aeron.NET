@@ -21,7 +21,7 @@ namespace Adaptive.Archiver
         /// <param name="segmentFileLength"> of the recording which is a multiple of termBufferLength. </param>
         /// <param name="termBufferLength">  of the recorded stream, <seealso cref="Image.TermBufferLength"/>. </param>
         /// <param name="mtuLength">         of the recorded stream, <seealso cref="Image.MtuLength"/>. </param>
-        /// <param name="sessionId">         of the recorded stream, this will be most recent session id for extended recordings. </param>
+        /// <param name="sessionId">         of the recorded stream, this will be the most recent session id for extended recordings. </param>
         /// <param name="streamId">          of the recorded stream, <seealso cref="Subscription.StreamId"/>. </param>
         /// <param name="strippedChannel">   of the recorded stream which is used for the recording subscription in the archive. </param>
         /// <param name="originalChannel">   of the recorded stream provided to the start recording request, <seealso cref="Subscription.Channel"/>. </param>

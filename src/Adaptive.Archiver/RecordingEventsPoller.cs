@@ -9,7 +9,7 @@ namespace Adaptive.Archiver
     /// <summary>
     /// Encapsulate the polling and decoding of recording events.
     /// </summary>
-    public class RecordingEventsPoller : IFragmentHandler
+    public class RecordingEventsPoller : IControlledFragmentHandler
     {
         private readonly MessageHeaderDecoder messageHeaderDecoder = new MessageHeaderDecoder();
         private readonly RecordingStartedDecoder recordingStartedDecoder = new RecordingStartedDecoder();
@@ -18,7 +18,7 @@ namespace Adaptive.Archiver
 
         private readonly Subscription subscription;
         private int templateId;
-        private bool pollComplete;
+        private bool isPollComplete;
 
         private long recordingId;
         private long recordingStartPosition;
@@ -40,10 +40,13 @@ namespace Adaptive.Archiver
         /// <returns> the number of fragments read during the operation. Zero if no events are available. </returns>
         public int Poll()
         {
-            templateId = Aeron.Aeron.NULL_VALUE;
-            pollComplete = false;
+            if (isPollComplete)
+            {
+                isPollComplete = false;
+                templateId = Aeron.Aeron.NULL_VALUE;
+            }
 
-            return subscription.Poll(this, 1);
+            return subscription.ControlledPoll(this, 1);
         }
 
         /// <summary>
@@ -52,7 +55,7 @@ namespace Adaptive.Archiver
         /// <returns> true of the last polling action received a complete message? </returns>
         public bool IsPollComplete()
         {
-            return pollComplete;
+            return isPollComplete;
         }
 
         /// <summary>
@@ -100,8 +103,13 @@ namespace Adaptive.Archiver
             return recordingStopPosition;
         }
 
-        public void OnFragment(IDirectBuffer buffer, int offset, int length, Header header)
+        public ControlledFragmentHandlerAction OnFragment(IDirectBuffer buffer, int offset, int length, Header header)
         {
+            if (isPollComplete)
+            {
+                return ControlledFragmentHandlerAction.ABORT;
+            }
+            
             messageHeaderDecoder.Wrap(buffer, offset);
 
             int schemaId = messageHeaderDecoder.SchemaId();
@@ -120,8 +128,8 @@ namespace Adaptive.Archiver
                     recordingStartPosition = recordingStartedDecoder.StartPosition();
                     recordingPosition = recordingStartPosition;
                     recordingStopPosition = Aeron.Aeron.NULL_VALUE;
-                    pollComplete = true;
-                    break;
+                    isPollComplete = true;
+                    return ControlledFragmentHandlerAction.BREAK;
 
                 case RecordingProgressDecoder.TEMPLATE_ID:
                     recordingProgressDecoder.Wrap(buffer, offset + MessageHeaderDecoder.ENCODED_LENGTH, messageHeaderDecoder.BlockLength(), messageHeaderDecoder.Version());
@@ -130,8 +138,8 @@ namespace Adaptive.Archiver
                     recordingStartPosition = recordingProgressDecoder.StartPosition();
                     recordingPosition = recordingProgressDecoder.Position();
                     recordingStopPosition = Aeron.Aeron.NULL_VALUE;
-                    pollComplete = true;
-                    break;
+                    isPollComplete = true;
+                    return ControlledFragmentHandlerAction.BREAK;
 
                 case RecordingStoppedDecoder.TEMPLATE_ID:
                     recordingStoppedDecoder.Wrap(buffer, offset + MessageHeaderDecoder.ENCODED_LENGTH, messageHeaderDecoder.BlockLength(), messageHeaderDecoder.Version());
@@ -140,9 +148,11 @@ namespace Adaptive.Archiver
                     recordingStartPosition = recordingStoppedDecoder.StartPosition();
                     recordingStopPosition = recordingStoppedDecoder.StopPosition();
                     recordingPosition = recordingStopPosition;
-                    pollComplete = true;
-                    break;
+                    isPollComplete = true;
+                    return ControlledFragmentHandlerAction.BREAK;
             }
+            
+            return ControlledFragmentHandlerAction.CONTINUE;
         }
     }
 }

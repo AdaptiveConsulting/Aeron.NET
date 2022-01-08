@@ -52,7 +52,11 @@ namespace Adaptive.Archiver
         /// <returns> the number of fragments read during the operation. Zero if no events are available. </returns>
         public int Poll()
         {
-            isDone = false;
+            if (isDone)
+            {
+                isDone = false;
+            }
+            
             return subscription.ControlledPoll(assembler, fragmentLimit);
         }
 
@@ -81,8 +85,7 @@ namespace Adaptive.Archiver
                                            schemaId);
             }
 
-            int templateId = messageHeaderDecoder.TemplateId();
-            switch (templateId)
+            switch (messageHeaderDecoder.TemplateId())
             {
                 case ControlResponseDecoder.TEMPLATE_ID:
                     controlResponseDecoder.Wrap(buffer, offset + MessageHeaderDecoder.ENCODED_LENGTH,

@@ -51,8 +51,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Adaptive.Aeron.Samples.Clus
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Adaptive.Aeron.Samples.ClusterClient", "Samples\Adaptive.Aeron.Samples.ClusterClient\Adaptive.Aeron.Samples.ClusterClient.csproj", "{DB22F44D-0ABF-428F-BAA1-E0D89696ABD3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Adaptive.Aeron.Samples.Test", "Samples\Adaptive.Aeron.Samples.Test\Adaptive.Aeron.Samples.Test.csproj", "{9142DC1B-8A68-49D9-B17E-F1F9AA88D6CE}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -139,10 +137,6 @@ Global
 		{DB22F44D-0ABF-428F-BAA1-E0D89696ABD3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DB22F44D-0ABF-428F-BAA1-E0D89696ABD3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DB22F44D-0ABF-428F-BAA1-E0D89696ABD3}.Release|Any CPU.Build.0 = Release|Any CPU
-		{9142DC1B-8A68-49D9-B17E-F1F9AA88D6CE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{9142DC1B-8A68-49D9-B17E-F1F9AA88D6CE}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{9142DC1B-8A68-49D9-B17E-F1F9AA88D6CE}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{9142DC1B-8A68-49D9-B17E-F1F9AA88D6CE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -168,7 +162,6 @@ Global
 		{5500E5A6-B22F-4FA3-B933-8C844A3CEC1A} = {9EAD0078-CA03-486D-BF2E-2C891955CE16}
 		{61C62DB8-CB67-4E3F-A2EA-30547183C64F} = {1807629C-08BB-487B-821E-8E0B72F5C4AC}
 		{DB22F44D-0ABF-428F-BAA1-E0D89696ABD3} = {1807629C-08BB-487B-821E-8E0B72F5C4AC}
-		{9142DC1B-8A68-49D9-B17E-F1F9AA88D6CE} = {1807629C-08BB-487B-821E-8E0B72F5C4AC}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {374403EA-85FA-4ACA-8E38-FB938FFC7016}

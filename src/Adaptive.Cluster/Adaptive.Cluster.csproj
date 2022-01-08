@@ -1,24 +1,24 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <PackageId>Aeron.Cluster</PackageId>
-    <VersionPrefix>1.29.0</VersionPrefix>
-    <Authors>Adaptive Financial Consulting Ltd.</Authors>
-    <Company>Adaptive Financial Consulting Ltd.</Company>
-    <Product>Clustering libraries over the Aeron transport</Product>
-    <Copyright>Copyright 2021</Copyright>
-    <PackageLicense>https://github.com/AdaptiveConsulting/Aeron.NET/blob/master/LICENSE</PackageLicense>
-    <PackageProjectUrl>https://github.com/AdaptiveConsulting/Aeron.NET/</PackageProjectUrl>
-    <PackageIconUrl>https://raw.githubusercontent.com/AdaptiveConsulting/Aeron.NET/master/images/adaptive.png</PackageIconUrl>
-    <Description>Clustering over the Aeron transport</Description>
-    <PackageTags>aeron cluster high-performance raft</PackageTags>
-    <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <NoWarn>$(NoWarn);1591</NoWarn>
-    <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
-  </PropertyGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Adaptive.Aeron\Adaptive.Aeron.csproj" />
-    <ProjectReference Include="..\Adaptive.Archiver\Adaptive.Archiver.csproj" />
-  </ItemGroup>
+    <PropertyGroup>
+        <TargetFramework>netstandard2.0</TargetFramework>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+        <PackageId>Aeron.Cluster</PackageId>
+        <VersionPrefix>1.37.0</VersionPrefix>
+        <Authors>Adaptive Financial Consulting Ltd.</Authors>
+        <Company>Adaptive Financial Consulting Ltd.</Company>
+        <Product>Clustering libraries over the Aeron transport</Product>
+        <Copyright>Copyright 2021</Copyright>
+        <PackageLicense>https://github.com/AdaptiveConsulting/Aeron.NET/blob/master/LICENSE</PackageLicense>
+        <PackageProjectUrl>https://github.com/AdaptiveConsulting/Aeron.NET/</PackageProjectUrl>
+        <PackageIconUrl>https://raw.githubusercontent.com/AdaptiveConsulting/Aeron.NET/master/images/adaptive.png</PackageIconUrl>
+        <Description>Clustering over the Aeron transport</Description>
+        <PackageTags>aeron cluster high-performance raft</PackageTags>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+        <NoWarn>$(NoWarn);1591</NoWarn>
+        <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
+    </PropertyGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\Adaptive.Aeron\Adaptive.Aeron.csproj" />
+        <ProjectReference Include="..\Adaptive.Archiver\Adaptive.Archiver.csproj" />
+    </ItemGroup>
 </Project>

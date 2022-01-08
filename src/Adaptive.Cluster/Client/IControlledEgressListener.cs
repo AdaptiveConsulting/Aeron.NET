@@ -6,7 +6,7 @@ namespace Adaptive.Cluster.Client
 {
     /// <summary>
     /// Interface for consuming messages coming from the cluster that also include administrative events in a controlled
-    /// fashion like <seealso cref="ControlledFragmentHandler"/>. Only session messages my be controlled in
+    /// fashion like <seealso cref="ControlledFragmentHandler"/>. Only session messages may be controlled in
     /// consumption, other are consumed via <seealso cref="ControlledFragmentHandlerAction.COMMIT"/>.
     /// </summary>
     public interface IControlledEgressListener

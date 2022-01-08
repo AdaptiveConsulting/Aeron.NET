@@ -12,7 +12,7 @@ public class ClusterMembersExtendedResponseEncoder
     public const ushort BLOCK_LENGTH = 24;
     public const ushort TEMPLATE_ID = 43;
     public const ushort SCHEMA_ID = 111;
-    public const ushort SCHEMA_VERSION = 6;
+    public const ushort SCHEMA_VERSION = 7;
 
     private ClusterMembersExtendedResponseEncoder _parentMessage;
     private IMutableDirectBuffer _buffer;

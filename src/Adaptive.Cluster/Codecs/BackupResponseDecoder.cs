@@ -12,7 +12,7 @@ public class BackupResponseDecoder
     public const ushort BLOCK_LENGTH = 56;
     public const ushort TEMPLATE_ID = 78;
     public const ushort SCHEMA_ID = 111;
-    public const ushort SCHEMA_VERSION = 6;
+    public const ushort SCHEMA_VERSION = 7;
 
     private BackupResponseDecoder _parentMessage;
     private IDirectBuffer _buffer;
@@ -1111,7 +1111,7 @@ public class BackupResponseDecoder
         builder.Append("LeaderMemberId=");
         builder.Append(LeaderMemberId());
         builder.Append('|');
-        //Token{signal=BEGIN_GROUP, name='snapshots', referencedName='null', description='null', id=9, version=0, deprecated=0, encodedLength=44, offset=56, componentTokenCount=24, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='null', timeUnit=null, semanticType='null'}}
+        //Token{signal=BEGIN_GROUP, name='snapshots', referencedName='null', description='Snapshots of state for the consensus module and services.', id=9, version=0, deprecated=0, encodedLength=44, offset=56, componentTokenCount=24, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='null', timeUnit=null, semanticType='null'}}
         builder.Append("Snapshots=[");
         SnapshotsDecoder Snapshots = this.Snapshots();
         if (Snapshots.Count() > 0)

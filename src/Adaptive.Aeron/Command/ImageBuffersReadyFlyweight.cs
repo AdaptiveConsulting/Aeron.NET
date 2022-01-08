@@ -67,9 +67,9 @@ namespace Adaptive.Aeron.Command
         /// <summary>
         /// Wrap the buffer at a given offset for updates.
         /// </summary>
-        /// <param name="buffer"> to wrap </param>
+        /// <param name="buffer"> to wrap. </param>
         /// <param name="offset"> at which the message begins. </param>
-        /// <returns> for fluent API </returns>
+        /// <returns> this for a fluent API. </returns>
         public ImageBuffersReadyFlyweight Wrap(IMutableDirectBuffer buffer, int offset)
         {
             _buffer = buffer;
@@ -79,19 +79,19 @@ namespace Adaptive.Aeron.Command
         }
 
         /// <summary>
-        /// return correlation id field
+        /// The correlation id field.
         /// </summary>
-        /// <returns> correlation id field </returns>
+        /// <returns> correlation id field. </returns>
         public long CorrelationId()
         {
             return _buffer.GetLong(_offset + CORRELATION_ID_OFFSET);
         }
 
         /// <summary>
-        /// set correlation id field
+        /// Set the correlation id field.
         /// </summary>
-        /// <param name="correlationId"> field value </param>
-        /// <returns> flyweight </returns>
+        /// <param name="correlationId"> field value. </param>
+        /// <returns> this for a fluent API. </returns>
         public ImageBuffersReadyFlyweight CorrelationId(long correlationId)
         {
             _buffer.PutLong(_offset + CORRELATION_ID_OFFSET, correlationId);
@@ -100,18 +100,18 @@ namespace Adaptive.Aeron.Command
         }
 
         /// <summary>
-        /// return session id field
+        /// Get the session id field.
         /// </summary>
-        /// <returns> session id field </returns>
+        /// <returns> session id field. </returns>
         public int SessionId()
         {
             return _buffer.GetInt(_offset + SESSION_ID_OFFSET);
         }
 
         /// <summary>
-        /// set session id field </summary>
-        /// <param name="sessionId"> field value </param>
-        /// <returns> flyweight </returns>
+        /// Set the session id field. </summary>
+        /// <param name="sessionId"> field value. </param>
+        /// <returns> this for a fluent API. </returns>
         public ImageBuffersReadyFlyweight SessionId(int sessionId)
         {
             _buffer.PutInt(_offset + SESSION_ID_OFFSET, sessionId);
@@ -120,7 +120,7 @@ namespace Adaptive.Aeron.Command
         }
 
         /// <summary>
-        /// return stream id field
+        /// Get the stream id field
         /// </summary>
         /// <returns> stream id field </returns>
         public int StreamId()
@@ -129,10 +129,10 @@ namespace Adaptive.Aeron.Command
         }
 
         /// <summary>
-        /// set stream id field
+        /// Set the stream id field.
         /// </summary>
-        /// <param name="streamId"> field value </param>
-        /// <returns> flyweight </returns>
+        /// <param name="streamId"> field value. </param>
+        /// <returns> this for a fluent API. </returns>
         public ImageBuffersReadyFlyweight StreamId(int streamId)
         {
             _buffer.PutInt(_offset + STREAM_ID_FIELD_OFFSET, streamId);
@@ -141,10 +141,10 @@ namespace Adaptive.Aeron.Command
         }
         
         /// <summary>
-        /// Set the position Id for the subscriber
+        /// Set the position counter id for the subscriber.
         /// </summary>
-        /// <param name="id"> for the subscriber position </param>
-        /// <returns> flyweight </returns>
+        /// <param name="id"> for the subscriber position counter. </param>
+        /// <returns> this for a fluent API. </returns>
         public ImageBuffersReadyFlyweight SubscriberPositionId(int id)
         {
             _buffer.PutInt(_offset + SUBSCRIBER_POSITION_ID_OFFSET, id);
@@ -153,19 +153,19 @@ namespace Adaptive.Aeron.Command
         }
 
         /// <summary>
-        /// Return the position Id for the subscriber
+        /// The the position counter id for the subscriber.
         /// </summary>
-        /// <returns> position Id for the subscriber </returns>
+        /// <returns> position counter id for the subscriber. </returns>
         public int SubscriberPositionId()
         {
             return _buffer.GetInt(_offset + SUBSCRIBER_POSITION_ID_OFFSET);
         }
 
         /// <summary>
-        /// Set the registration Id for the Subscription
+        /// Set the registration id for the Subscription.
         /// </summary>
-        /// <param name="id"> for the Subscription </param>
-        /// <returns> flyweight </returns>
+        /// <param name="id"> for the Subscription. </param>
+        /// <returns> this for a fluent API. </returns>
         public ImageBuffersReadyFlyweight SubscriptionRegistrationId(long id)
         {
             _buffer.PutLong(_offset + SUBSCRIPTION_REGISTRATION_ID_OFFSET, id);
@@ -174,16 +174,16 @@ namespace Adaptive.Aeron.Command
         }
 
         /// <summary>
-        /// Return the registration Id for the Subscription
+        /// Return the registration id for the Subscription.
         /// </summary>
-        /// <returns> registration Id for the Subscription </returns>
+        /// <returns> registration id for the Subscription. </returns>
         public long SubscriptionRegistrationId()
         {
             return _buffer.GetLong(_offset + SUBSCRIPTION_REGISTRATION_ID_OFFSET);
         }
 
         /// <summary>
-        /// Return the Log Filename in ASCII
+        /// The Log Filename in ASCII.
         /// </summary>
         /// <returns> log filename </returns>
         public string LogFileName()
@@ -201,10 +201,10 @@ namespace Adaptive.Aeron.Command
         }
 
         /// <summary>
-        /// Set the log filename in ASCII
+        /// Set the log filename in ASCII.
         /// </summary>
         /// <param name="logFileName"> for the image </param>
-        /// <returns> flyweight </returns>
+        /// <returns> this for a fluent API. </returns>
         public ImageBuffersReadyFlyweight LogFileName(string logFileName)
         {
             _buffer.PutStringAscii(_offset + LOG_FILE_NAME_OFFSET, logFileName);
@@ -212,9 +212,9 @@ namespace Adaptive.Aeron.Command
         }
 
         /// <summary>
-        /// Return the source identity string in ASCII
+        /// The source identity string in ASCII.
         /// </summary>
-        /// <returns> source identity string </returns>
+        /// <returns> source identity string. </returns>
         public string SourceIdentity()
         {
             return _buffer.GetStringAscii(_offset + SourceIdentityOffset());
@@ -233,8 +233,8 @@ namespace Adaptive.Aeron.Command
         /// Set the source identity string in ASCII.
         /// Note: Can be called only after log file name was set!
         /// </summary>
-        /// <param name="value"> for the source identity </param>
-        /// <returns> flyweight </returns>
+        /// <param name="value"> for the source identity. </param>
+        /// <returns> this for a fluent API. </returns>
         /// <see cref="LogFileName(string)"/>
         public ImageBuffersReadyFlyweight SourceIdentity(string value)
         {

@@ -14,9 +14,11 @@
  * limitations under the License.
  */
 
+using System.Text;
 using Adaptive.Aeron.LogBuffer;
 using Adaptive.Aeron.Protocol;
 using Adaptive.Agrona.Concurrent;
+using Adaptive.Agrona.Concurrent.Status;
 using FakeItEasy;
 using NUnit.Framework;
 
@@ -42,23 +44,32 @@ namespace Adaptive.Aeron.Tests
         private AvailableImageHandler AvailableImageHandler;
         private UnavailableImageHandler UnavailableImageHandler;
 
+        private readonly UnsafeBuffer valuesBuffer = new UnsafeBuffer(new byte[16 * 1024]);
+        private readonly UnsafeBuffer metaDataBuffer = new UnsafeBuffer(new byte[64 * 1024]);
+        private readonly UnsafeBuffer tempBuffer = new UnsafeBuffer(new byte[1024]);
+        private CountersManager countersManager;
+
         private Subscription Subscription;
 
         [SetUp]
         public void Setup()
         {
+            countersManager  = new CountersManager(metaDataBuffer, valuesBuffer, Encoding.ASCII);
+            
             ImageOneMock = A.Fake<Image>();
             ImageTwoMock = A.Fake<Image>();
             
             A.CallTo(() => ImageOneMock.CorrelationId).Returns(1);
             A.CallTo(() => ImageTwoMock.CorrelationId).Returns(2);
-
+            
             AtomicReadBuffer = new UnsafeBuffer(new byte[READ_BUFFER_CAPACITY]);
             Conductor = A.Fake<ClientConductor>();
             FragmentHandler = A.Fake<IFragmentHandler>();
             AvailableImageHandler = A.Fake<AvailableImageHandler>();
             UnavailableImageHandler = A.Fake<UnavailableImageHandler>();
-
+            
+            A.CallTo(() => Conductor.CountersReader()).Returns(countersManager);
+            
             Subscription = new Subscription(
                 Conductor,
                 CHANNEL,
@@ -67,7 +78,7 @@ namespace Adaptive.Aeron.Tests
                 AvailableImageHandler,
                 UnavailableImageHandler);
             
-            A.CallTo(() => Conductor.ReleaseSubscription(Subscription)).Invokes(() => Subscription.InternalClose());
+            A.CallTo(() => Conductor.ReleaseSubscription(Subscription)).Invokes(() => Subscription.InternalClose(Aeron.NULL_VALUE));
         }
 
         [Test]

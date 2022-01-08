@@ -72,17 +72,16 @@ namespace Adaptive.Aeron.LogBuffer
 
                     if (!FrameDescriptor.IsPaddingFrame(termBuffer, frameOffset))
                     {
+                        ++fragmentsRead;
                         header.Offset = frameOffset;
                         handler.OnFragment(termBuffer, frameOffset + DataHeaderFlyweight.HEADER_LENGTH, frameLength - DataHeaderFlyweight.HEADER_LENGTH, header);
-
-                        ++fragmentsRead;
                     }
                 } 
             }
 
-            catch (Exception t)
+            catch (Exception ex)
             {
-                errorHandler(t);
+                errorHandler(ex);
             }
             finally
             {
@@ -136,16 +135,15 @@ namespace Adaptive.Aeron.LogBuffer
 
                     if (!FrameDescriptor.IsPaddingFrame(termBuffer, frameOffset))
                     {
+                        ++fragmentsRead;
                         header.Offset = frameOffset;
                         handler.OnFragment(termBuffer, frameOffset + DataHeaderFlyweight.HEADER_LENGTH, frameLength - DataHeaderFlyweight.HEADER_LENGTH, header);
-
-                        ++fragmentsRead;
                     }
                 }
             }
-            catch (Exception t)
+            catch (Exception ex)
             {
-                errorHandler(t);
+                errorHandler(ex);
             }
 
             return Pack(offset, fragmentsRead);

@@ -51,9 +51,9 @@ namespace Adaptive.Aeron.Command
         /// <summary>
         /// Wrap the buffer at a given offset for updates.
         /// </summary>
-        /// <param name="buffer"> to wrap </param>
+        /// <param name="buffer"> to wrap. </param>
         /// <param name="offset"> at which the message begins. </param>
-        /// <returns> for fluent API </returns>
+        /// <returns> this for fluent API. </returns>
         public ErrorResponseFlyweight Wrap(IMutableDirectBuffer buffer, int offset)
         {
             this._buffer = buffer;
@@ -75,7 +75,7 @@ namespace Adaptive.Aeron.Command
         /// Set correlation ID of the offending command.
         /// </summary>
         /// <param name="correlationId"> of the offending command. </param>
-        /// <returns> flyweight </returns>
+        /// <returns> this for a fluent API. </returns>
         public ErrorResponseFlyweight OffendingCommandCorrelationId(long correlationId)
         {
             _buffer.PutLong(_offset + OFFENDING_COMMAND_CORRELATION_ID_OFFSET, correlationId);
@@ -106,7 +106,7 @@ namespace Adaptive.Aeron.Command
         /// Set the error code for the command.
         /// </summary>
         /// <param name="code"> for the error.</param>
-        /// <returns> flyweight </returns>
+        /// <returns> this for a fluent API. </returns>
         public ErrorResponseFlyweight ErrorCode(ErrorCode code)
         {
             _buffer.PutInt(_offset + ERROR_CODE_OFFSET, (int)code);
@@ -136,7 +136,7 @@ namespace Adaptive.Aeron.Command
         /// Set the error message
         /// </summary>
         /// <param name="message"> to associate with the error </param>
-        /// <returns> flyweight </returns>
+        /// <returns> this for a fluent API. </returns>
         public ErrorResponseFlyweight ErrorMessage(string message)
         {
             _buffer.PutStringAscii(_offset + ERROR_MESSAGE_OFFSET, message);
@@ -146,10 +146,10 @@ namespace Adaptive.Aeron.Command
         /// <summary>
         /// Length of the error response in bytes.
         /// </summary>
-        /// <returns> length of the error response </returns>
+        /// <returns> length of the error response in bytes. </returns>
         public int Length()
         {
-            return _buffer.GetInt(_offset + ERROR_MESSAGE_OFFSET) + ERROR_MESSAGE_OFFSET + BitUtil.SIZE_OF_INT;
+            return ERROR_MESSAGE_OFFSET + BitUtil.SIZE_OF_INT + _buffer.GetInt(_offset + ERROR_MESSAGE_OFFSET);
         }
     }
 }

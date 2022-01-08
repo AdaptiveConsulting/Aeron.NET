@@ -20,6 +20,14 @@ namespace Adaptive.Cluster.Client
         private readonly IEgressListener _listener;
         private readonly Subscription _subscription;
 
+        /// <summary>
+        /// Construct an adapter for cluster egress which consumes from the subscription and dispatches to the
+        /// <seealso cref="IEgressListener"/>.
+        /// </summary>
+        /// <param name="listener">         to dispatch events to. </param>
+        /// <param name="clusterSessionId"> for the egress. </param>
+        /// <param name="subscription">     over the egress stream. </param>
+        /// <param name="fragmentLimit">    to poll on each <seealso cref="Poll()"/> operation. </param>
         public EgressAdapter(
             IEgressListener listener,
             long clusterSessionId,
@@ -33,11 +41,16 @@ namespace Adaptive.Cluster.Client
             _fragmentLimit = fragmentLimit;
         }
 
+        /// <summary>
+        /// Poll the egress subscription and dispatch assembled events to the <seealso cref="IEgressListener"/>.
+        /// </summary>
+        /// <returns> the number of fragments consumed. </returns>
         public int Poll()
         {
             return _subscription.Poll(_fragmentAssembler, _fragmentLimit);
         }
 
+        /// <inheritdoc />
         public void OnFragment(IDirectBuffer buffer, int offset, int length, Header header)
         {
             _messageHeaderDecoder.Wrap(buffer, offset);

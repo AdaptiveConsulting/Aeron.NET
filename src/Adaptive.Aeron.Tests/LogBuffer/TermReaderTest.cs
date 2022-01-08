@@ -136,7 +136,7 @@ namespace Adaptive.Aeron.Tests.LogBuffer
                 .Then(A.CallTo(() =>
                         handler.OnFragment(termBuffer, alignedFrameLength + HEADER_LENGTH, msgLength, A<Header>._))
                     .MustHaveHappened())
-                .Then(A.CallTo(() => subscriberPosition.SetOrdered(alignedFrameLength * 2)).MustHaveHappened());
+                .Then(A.CallTo(() => subscriberPosition.SetOrdered(alignedFrameLength * 2L)).MustHaveHappened());
         }
 
         [Test]

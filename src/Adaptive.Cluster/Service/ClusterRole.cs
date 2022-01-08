@@ -1,5 +1,8 @@
 ﻿namespace Adaptive.Cluster.Service
 {
+    /// <summary>
+    /// Role of the node in the cluster.
+    /// </summary>
     public enum ClusterRole : long
     {
         /// <summary>

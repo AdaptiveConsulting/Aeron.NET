@@ -20,7 +20,7 @@ namespace Adaptive.Aeron
     /// </summary>
     /// <seealso cref="Aeron.AddPublication(string, int)"></seealso>
     /// <seealso cref="BufferClaim"></seealso>
-    public class ConcurrentPublication : Publication
+    public sealed class ConcurrentPublication : Publication
     {
         private readonly TermAppender[] _termAppenders = new TermAppender[LogBufferDescriptor.PARTITION_COUNT];
 
@@ -46,11 +46,9 @@ namespace Adaptive.Aeron
                 registrationId
             )
         {
-            var buffers = logBuffers.DuplicateTermBuffers();
-
             for (var i = 0; i < LogBufferDescriptor.PARTITION_COUNT; i++)
             {
-                _termAppenders[i] = new TermAppender(buffers[i], _logMetaDataBuffer, i);
+                _termAppenders[i] = new TermAppender(_termBuffers[i], _logMetaDataBuffer, i);
             }
         }
         

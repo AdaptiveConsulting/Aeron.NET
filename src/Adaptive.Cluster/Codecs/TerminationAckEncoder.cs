@@ -9,10 +9,10 @@ namespace Adaptive.Cluster.Codecs {
 
 public class TerminationAckEncoder
 {
-    public const ushort BLOCK_LENGTH = 12;
+    public const ushort BLOCK_LENGTH = 20;
     public const ushort TEMPLATE_ID = 76;
     public const ushort SCHEMA_ID = 111;
-    public const ushort SCHEMA_VERSION = 6;
+    public const ushort SCHEMA_VERSION = 7;
 
     private TerminationAckEncoder _parentMessage;
     private IMutableDirectBuffer _buffer;
@@ -96,9 +96,41 @@ public class TerminationAckEncoder
         this._limit = limit;
     }
 
-    public static int LogPositionEncodingOffset()
+    public static int LeadershipTermIdEncodingOffset()
     {
         return 0;
+    }
+
+    public static int LeadershipTermIdEncodingLength()
+    {
+        return 8;
+    }
+
+    public static long LeadershipTermIdNullValue()
+    {
+        return -9223372036854775808L;
+    }
+
+    public static long LeadershipTermIdMinValue()
+    {
+        return -9223372036854775807L;
+    }
+
+    public static long LeadershipTermIdMaxValue()
+    {
+        return 9223372036854775807L;
+    }
+
+    public TerminationAckEncoder LeadershipTermId(long value)
+    {
+        _buffer.PutLong(_offset + 0, value, ByteOrder.LittleEndian);
+        return this;
+    }
+
+
+    public static int LogPositionEncodingOffset()
+    {
+        return 8;
     }
 
     public static int LogPositionEncodingLength()
@@ -123,14 +155,14 @@ public class TerminationAckEncoder
 
     public TerminationAckEncoder LogPosition(long value)
     {
-        _buffer.PutLong(_offset + 0, value, ByteOrder.LittleEndian);
+        _buffer.PutLong(_offset + 8, value, ByteOrder.LittleEndian);
         return this;
     }
 
 
     public static int MemberIdEncodingOffset()
     {
-        return 8;
+        return 16;
     }
 
     public static int MemberIdEncodingLength()
@@ -155,7 +187,7 @@ public class TerminationAckEncoder
 
     public TerminationAckEncoder MemberId(int value)
     {
-        _buffer.PutInt(_offset + 8, value, ByteOrder.LittleEndian);
+        _buffer.PutInt(_offset + 16, value, ByteOrder.LittleEndian);
         return this;
     }
 

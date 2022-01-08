@@ -1,15 +1,15 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
-    <ApplicationIcon />
-    <OutputType>Exe</OutputType>
-    <StartupObject />
-  </PropertyGroup>
+    <PropertyGroup>
+        <TargetFramework>netcoreapp3.1</TargetFramework>
+        <ApplicationIcon/>
+        <OutputType>Exe</OutputType>
+        <StartupObject/>
+    </PropertyGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\..\Adaptive.Aeron\Adaptive.Aeron.csproj" />
-    <ProjectReference Include="..\..\Adaptive.Agrona\Adaptive.Agrona.csproj" />
-  </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\..\Adaptive.Aeron\Adaptive.Aeron.csproj"/>
+        <ProjectReference Include="..\..\Adaptive.Agrona\Adaptive.Agrona.csproj"/>
+    </ItemGroup>
 
 </Project>

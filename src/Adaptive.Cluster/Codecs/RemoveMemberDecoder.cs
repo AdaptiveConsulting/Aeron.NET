@@ -12,7 +12,7 @@ public class RemoveMemberDecoder
     public const ushort BLOCK_LENGTH = 8;
     public const ushort TEMPLATE_ID = 35;
     public const ushort SCHEMA_ID = 111;
-    public const ushort SCHEMA_VERSION = 6;
+    public const ushort SCHEMA_VERSION = 7;
 
     private RemoveMemberDecoder _parentMessage;
     private IDirectBuffer _buffer;

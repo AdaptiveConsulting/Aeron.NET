@@ -371,7 +371,7 @@ namespace Adaptive.Aeron.Tests
                 .Then(A.CallTo(() => MockControlledFragmentHandler.OnFragment(A<UnsafeBuffer>._,
                         ALIGNED_FRAME_LENGTH + DataHeaderFlyweight.HEADER_LENGTH, DATA.Length, A<Header>._))
                     .MustHaveHappened())
-                .Then(A.CallTo(() => Position.SetOrdered(initialPosition + ALIGNED_FRAME_LENGTH * 2))
+                .Then(A.CallTo(() => Position.SetOrdered(initialPosition + ALIGNED_FRAME_LENGTH * 2L))
                     .MustHaveHappened());
         }
 
@@ -520,12 +520,12 @@ namespace Adaptive.Aeron.Tests
                 .Then(A.CallTo(() => MockControlledFragmentHandler.OnFragment(A<UnsafeBuffer>._,
                         ALIGNED_FRAME_LENGTH + DataHeaderFlyweight.HEADER_LENGTH, DATA.Length, A<Header>._))
                     .MustHaveHappened())
-                .Then(A.CallTo(() => Position.SetOrdered(initialPosition + ALIGNED_FRAME_LENGTH * 2))
+                .Then(A.CallTo(() => Position.SetOrdered(initialPosition + ALIGNED_FRAME_LENGTH * 2L))
                     .MustHaveHappened())
                 .Then(A.CallTo(() => MockControlledFragmentHandler.OnFragment(A<UnsafeBuffer>._,
                         2 * ALIGNED_FRAME_LENGTH + DataHeaderFlyweight.HEADER_LENGTH, DATA.Length, A<Header>._))
                     .MustHaveHappened())
-                .Then(A.CallTo(() => Position.SetOrdered(initialPosition + ALIGNED_FRAME_LENGTH * 3))
+                .Then(A.CallTo(() => Position.SetOrdered(initialPosition + ALIGNED_FRAME_LENGTH * 3L))
                     .MustHaveHappened());
         }
 
@@ -552,7 +552,7 @@ namespace Adaptive.Aeron.Tests
                 .Then(A.CallTo(() => MockControlledFragmentHandler.OnFragment(A<UnsafeBuffer>._,
                         ALIGNED_FRAME_LENGTH + DataHeaderFlyweight.HEADER_LENGTH, DATA.Length, A<Header>._))
                     .MustHaveHappened())
-                .Then(A.CallTo(() => Position.SetOrdered(initialPosition + ALIGNED_FRAME_LENGTH * 2))
+                .Then(A.CallTo(() => Position.SetOrdered(initialPosition + ALIGNED_FRAME_LENGTH * 2L))
                     .MustHaveHappened());
         }
 

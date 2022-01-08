@@ -20,7 +20,7 @@ namespace Adaptive.Aeron
     /// </para>
     /// </summary>
     /// <seealso cref="ChannelUriStringBuilder"/>
-    public class ChannelUri
+    public sealed class ChannelUri
     {
         private enum State
         {
@@ -30,7 +30,7 @@ namespace Adaptive.Aeron
         }
 
         /// <summary>
-        /// URI Scheme for Aeron channels.
+        /// URI Scheme for Aeron channels and destinations.
         /// </summary>
         public const string AERON_SCHEME = "aeron";
 
@@ -39,6 +39,9 @@ namespace Adaptive.Aeron
         /// </summary>
         public const string SPY_QUALIFIER = "aeron-spy";
 
+        /// <summary>
+        /// Invalid tag value returned when calling <seealso cref="GetTag(string)"/> and the channel is not tagged.
+        /// </summary>
         public const long INVALID_TAG = Aeron.NULL_VALUE;
 
         private const int CHANNEL_TAG_INDEX = 0;
@@ -64,16 +67,7 @@ namespace Adaptive.Aeron
             _params = @params;
             _tags = SplitTags(_params.GetOrDefault(Aeron.Context.TAGS_PARAM_NAME));
         }
-
-        /// <summary>
-        /// Construct with the components provided to avoid parsing.
-        /// </summary>
-        /// <param name="media">  for the channel which is typically "udp" or "ipc". </param>
-        /// <param name="params"> for the query string as key value pairs. </param>
-        public ChannelUri(string media, IDictionary<string, string> @params) : this("", media, @params)
-        {
-        }
-
+        
         /// <summary>
         /// The prefix for the channel.
         /// </summary>
@@ -205,7 +199,7 @@ namespace Adaptive.Aeron
         }
 
         /// <summary>
-        /// Get the channel tag, if it exists, that refers to an another channel.
+        /// Get the channel tag, if it exists, that refers to another channel.
         /// </summary>
         /// <returns> channel tag if it exists or null if not in this URI. </returns>
         public string ChannelTag()
@@ -221,7 +215,42 @@ namespace Adaptive.Aeron
         /// <see cref="Aeron.Context.TAG_PREFIX"/>
         public string EntityTag()
         {
-            return (null != _tags && _tags.Length > ENTITY_TAG_INDEX) ? _tags[ENTITY_TAG_INDEX] : null;
+            return _tags.Length > ENTITY_TAG_INDEX ? _tags[ENTITY_TAG_INDEX] : null;
+        }
+
+        private bool Equals(ChannelUri other)
+        {
+            return _prefix == other._prefix && _media == other._media && Equals(_params, other._params) && Equals(_tags, other._tags);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (this == obj)
+            {
+                return true;
+            }
+
+            if (!(obj is ChannelUri other))
+            {
+                return false;
+            }
+
+            return Equals(_prefix, other._prefix) &&
+                   Equals(_media, other._media) &&
+                   Equals(_params, other._params) &&
+                   Equals(_tags, other._tags);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                var hashCode = (_prefix != null ? _prefix.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (_media != null ? _media.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (_params != null ? _params.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (_tags != null ? _tags.GetHashCode() : 0);
+                return hashCode;
+            }
         }
 
         /// <summary>
@@ -422,7 +451,7 @@ namespace Adaptive.Aeron
         }
         
         /// <summary>
-        /// Is the param value tagged? (starts with the "tag:" prefix)
+        /// Is the param value tagged? (starts with the "tag:" prefix).
         /// </summary>
         /// <param name="paramValue"> to check if tagged. </param>
         /// <returns> true if tagged or false if not. </returns>

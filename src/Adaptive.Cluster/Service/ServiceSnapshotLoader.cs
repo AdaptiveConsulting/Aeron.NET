@@ -61,8 +61,7 @@ namespace Adaptive.Cluster.Service
                                            schemaId);
             }
 
-            int templateId = messageHeaderDecoder.TemplateId();
-            switch (templateId)
+            switch (messageHeaderDecoder.TemplateId())
             {
                 case SnapshotMarkerDecoder.TEMPLATE_ID:
                     snapshotMarkerDecoder.Wrap(

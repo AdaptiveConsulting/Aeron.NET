@@ -15,8 +15,10 @@ namespace Adaptive.Cluster.Service
 
         private readonly MessageHeaderDecoder messageHeaderDecoder = new MessageHeaderDecoder();
         private readonly JoinLogDecoder joinLogDecoder = new JoinLogDecoder();
-        private readonly ServiceTerminationPositionDecoder serviceTerminationPositionDecoder = new ServiceTerminationPositionDecoder();
-        
+
+        private readonly ServiceTerminationPositionDecoder serviceTerminationPositionDecoder =
+            new ServiceTerminationPositionDecoder();
+
         public ServiceAdapter(Subscription subscription, ClusteredServiceAgent clusteredServiceAgent)
         {
             this.subscription = subscription;
@@ -29,7 +31,7 @@ namespace Adaptive.Cluster.Service
             subscription?.Dispose();
         }
 
-        public int Poll()
+        internal int Poll()
         {
             return subscription.Poll(fragmentAssembler, 10);
         }
@@ -41,38 +43,37 @@ namespace Adaptive.Cluster.Service
             int schemaId = messageHeaderDecoder.SchemaId();
             if (schemaId != MessageHeaderDecoder.SCHEMA_ID)
             {
-                throw new ClusterException("expected schemaId=" + MessageHeaderDecoder.SCHEMA_ID + ", actual=" + schemaId);
+                throw new ClusterException("expected schemaId=" + MessageHeaderDecoder.SCHEMA_ID + ", actual=" +
+                                           schemaId);
             }
-            
-            int templateId = messageHeaderDecoder.TemplateId();
 
-            switch (templateId)
+            switch (messageHeaderDecoder.TemplateId())
             {
                 case JoinLogDecoder.TEMPLATE_ID:
                     joinLogDecoder.Wrap(
-                        buffer, 
+                        buffer,
                         offset + MessageHeaderDecoder.ENCODED_LENGTH,
-                        messageHeaderDecoder.BlockLength(), 
+                        messageHeaderDecoder.BlockLength(),
                         messageHeaderDecoder.Version());
 
                     clusteredServiceAgent.OnJoinLog(
-                        joinLogDecoder.LeadershipTermId(),
                         joinLogDecoder.LogPosition(),
                         joinLogDecoder.MaxLogPosition(),
                         joinLogDecoder.MemberId(),
                         joinLogDecoder.LogSessionId(),
                         joinLogDecoder.LogStreamId(),
                         joinLogDecoder.IsStartup() == BooleanType.TRUE,
+                        (ClusterRole)joinLogDecoder.Role(),
                         joinLogDecoder.LogChannel());
                     break;
-                
+
                 case ServiceTerminationPositionDecoder.TEMPLATE_ID:
                     serviceTerminationPositionDecoder.Wrap(
-                        buffer, 
+                        buffer,
                         offset + MessageHeaderDecoder.ENCODED_LENGTH,
-                        messageHeaderDecoder.BlockLength(), 
+                        messageHeaderDecoder.BlockLength(),
                         messageHeaderDecoder.Version());
-                
+
                     clusteredServiceAgent.OnServiceTerminationPosition(serviceTerminationPositionDecoder.LogPosition());
                     break;
             }

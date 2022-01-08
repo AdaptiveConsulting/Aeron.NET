@@ -9,12 +9,12 @@ namespace Adaptive.Aeron.Status
     public class HeartbeatTimestamp
     {
         /// <summary>
-        /// Type id of an Aeron client heartbeat.
+        /// Type id of a heartbeat counter.
         /// </summary>
-        public const int CLIENT_HEARTBEAT_TYPE_ID = 11;
+        public const int HEARTBEAT_TYPE_ID = AeronCounters.DRIVER_HEARTBEAT_TYPE_ID;
 
         /// <summary>
-        /// Offset in the key meta data for the registration id of the counter.
+        /// Offset in the key metadata for the registration id of the counter.
         /// </summary>
         public const int REGISTRATION_ID_OFFSET = 0;
 
@@ -32,21 +32,25 @@ namespace Adaptive.Aeron.Status
 
             for (int i = 0, size = countersReader.MaxCounterId; i < size; i++)
             {
-                if (countersReader.GetCounterState(i) == CountersReader.RECORD_ALLOCATED &&
-                    countersReader.GetCounterTypeId(i) == counterTypeId)
+                int counterState = countersReader.GetCounterState(i);
+                if (counterState == CountersReader.RECORD_ALLOCATED)
                 {
-                    int recordOffset = CountersReader.MetaDataOffset(i);
-
-                    if (buffer.GetLong(recordOffset + CountersReader.KEY_OFFSET + REGISTRATION_ID_OFFSET) ==
-                        registrationId)
+                    if (countersReader.GetCounterTypeId(i) == counterTypeId &&
+                        buffer.GetLong(CountersReader.MetaDataOffset(i) + CountersReader.KEY_OFFSET +
+                                       REGISTRATION_ID_OFFSET) == registrationId)
                     {
                         return i;
                     }
+                }
+                else if (CountersReader.RECORD_UNUSED == counterState)
+                {
+                    break;
                 }
             }
 
             return CountersReader.NULL_COUNTER_ID;
         }
+
 
         /// <summary>
         /// Is the counter active for usage? Checks to see if reclaimed or reused and matches registration id.

@@ -1,8 +1,10 @@
 
+using System;
+
 namespace Adaptive.Aeron.Exceptions
 {
     /// <summary>
-    /// Type of exception.
+    /// Category of <seealso cref="Exception"/>
     /// </summary>
     public enum Category
     {

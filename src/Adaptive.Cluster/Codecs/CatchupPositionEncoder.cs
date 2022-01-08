@@ -12,7 +12,7 @@ public class CatchupPositionEncoder
     public const ushort BLOCK_LENGTH = 20;
     public const ushort TEMPLATE_ID = 56;
     public const ushort SCHEMA_ID = 111;
-    public const ushort SCHEMA_VERSION = 6;
+    public const ushort SCHEMA_VERSION = 7;
 
     private CatchupPositionEncoder _parentMessage;
     private IMutableDirectBuffer _buffer;
@@ -191,6 +191,83 @@ public class CatchupPositionEncoder
         return this;
     }
 
+
+    public static int CatchupEndpointId()
+    {
+        return 4;
+    }
+
+    public static string CatchupEndpointCharacterEncoding()
+    {
+        return "US-ASCII";
+    }
+
+    public static string CatchupEndpointMetaAttribute(MetaAttribute metaAttribute)
+    {
+        switch (metaAttribute)
+        {
+            case MetaAttribute.EPOCH: return "unix";
+            case MetaAttribute.TIME_UNIT: return "nanosecond";
+            case MetaAttribute.SEMANTIC_TYPE: return "";
+            case MetaAttribute.PRESENCE: return "required";
+        }
+
+        return "";
+    }
+
+    public static int CatchupEndpointHeaderLength()
+    {
+        return 4;
+    }
+
+    public CatchupPositionEncoder PutCatchupEndpoint(IDirectBuffer src, int srcOffset, int length)
+    {
+        if (length > 1073741824)
+        {
+            throw new InvalidOperationException("length > maxValue for type: " + length);
+        }
+
+        int headerLength = 4;
+        int limit = _parentMessage.Limit();
+        _parentMessage.Limit(limit + headerLength + length);
+        _buffer.PutInt(limit, unchecked((int)length), ByteOrder.LittleEndian);
+        _buffer.PutBytes(limit + headerLength, src, srcOffset, length);
+
+        return this;
+    }
+
+    public CatchupPositionEncoder PutCatchupEndpoint(byte[] src, int srcOffset, int length)
+    {
+        if (length > 1073741824)
+        {
+            throw new InvalidOperationException("length > maxValue for type: " + length);
+        }
+
+        int headerLength = 4;
+        int limit = _parentMessage.Limit();
+        _parentMessage.Limit(limit + headerLength + length);
+        _buffer.PutInt(limit, unchecked((int)length), ByteOrder.LittleEndian);
+        _buffer.PutBytes(limit + headerLength, src, srcOffset, length);
+
+        return this;
+    }
+
+    public CatchupPositionEncoder CatchupEndpoint(string value)
+    {
+        int length = value.Length;
+        if (length > 1073741824)
+        {
+            throw new InvalidOperationException("length > maxValue for type: " + length);
+        }
+
+        int headerLength = 4;
+        int limit = _parentMessage.Limit();
+        _parentMessage.Limit(limit + headerLength + length);
+        _buffer.PutInt(limit, unchecked((int)length), ByteOrder.LittleEndian);
+        _buffer.PutStringWithoutLengthAscii(limit + headerLength, value);
+
+        return this;
+    }
 
 
     public override string ToString()

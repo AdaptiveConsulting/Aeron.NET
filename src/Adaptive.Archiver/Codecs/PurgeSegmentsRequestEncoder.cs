@@ -12,7 +12,7 @@ public class PurgeSegmentsRequestEncoder
     public const ushort BLOCK_LENGTH = 32;
     public const ushort TEMPLATE_ID = 55;
     public const ushort SCHEMA_ID = 101;
-    public const ushort SCHEMA_VERSION = 4;
+    public const ushort SCHEMA_VERSION = 6;
 
     private PurgeSegmentsRequestEncoder _parentMessage;
     private IMutableDirectBuffer _buffer;

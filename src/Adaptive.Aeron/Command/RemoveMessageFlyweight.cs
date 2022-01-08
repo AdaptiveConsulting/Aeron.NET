@@ -43,19 +43,32 @@ namespace Adaptive.Aeron.Command
         private static readonly int MINIMUM_LENGTH = REGISTRATION_ID_OFFSET + BitUtil.SIZE_OF_LONG;
 
         /// <summary>
-        /// Get the registration id field
+        /// Wrap the buffer at a given offset for updates.
         /// </summary>
-        /// <returns> registration id field </returns>
+        /// <param name="buffer"> to wrap. </param>
+        /// <param name="offset"> at which the message begins. </param>
+        /// <returns> this for a fluent API. </returns>
+        public new RemoveMessageFlyweight Wrap(IMutableDirectBuffer buffer, int offset)
+        {
+            base.Wrap(buffer, offset);
+
+            return this;
+        }
+        
+        /// <summary>
+        /// Get the registration id field.
+        /// </summary>
+        /// <returns> registration id field. </returns>
         public long RegistrationId()
         {
             return buffer.GetLong(offset + REGISTRATION_ID_OFFSET);
         }
 
         /// <summary>
-        /// Set registration  id field
+        /// Set registration  id field.
         /// </summary>
-        /// <param name="registrationId"> field value </param>
-        /// <returns> flyweight </returns>
+        /// <param name="registrationId"> field value. </param>
+        /// <returns> this for a fluent API. </returns>
         public RemoveMessageFlyweight RegistrationId(long registrationId)
         {
             buffer.PutLong(offset + REGISTRATION_ID_OFFSET, registrationId);
@@ -63,22 +76,13 @@ namespace Adaptive.Aeron.Command
             return this;
         }
 
+        /// <summary>
+        /// Length of the message in bytes.
+        /// </summary>
+        /// <returns> length of the message in bytes. </returns>
         public static int Length()
         {
             return LENGTH + BitUtil.SIZE_OF_LONG;
-        }
-        
-        /// <summary>
-        /// Validate buffer length is long enough for message.
-        /// </summary>
-        /// <param name="msgTypeId"> type of message. </param>
-        /// <param name="length"> of message in bytes to validate. </param>
-        public new void ValidateLength(int msgTypeId, int length)
-        {
-            if (length < MINIMUM_LENGTH)
-            {
-                throw new ControlProtocolException(ErrorCode.MALFORMED_COMMAND, "command=" + msgTypeId + " too short: length=" + length);
-            }
         }
     }
 }

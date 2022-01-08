@@ -8,43 +8,58 @@ namespace Adaptive.Archiver
     /// <summary>
     /// Encapsulate the polling, decoding, and dispatching of archive control protocol response messages.
     /// </summary>
-    public class ControlResponseAdapter : IFragmentHandler
+    public class ControlResponseAdapter
     {
-        private bool InstanceFieldsInitialized = false;
-
-        private void InitializeInstanceFields()
-        {
-            fragmentAssembler = new FragmentAssembler(this);
-        }
-
         private readonly MessageHeaderDecoder messageHeaderDecoder = new MessageHeaderDecoder();
         private readonly ControlResponseDecoder controlResponseDecoder = new ControlResponseDecoder();
         private readonly RecordingDescriptorDecoder recordingDescriptorDecoder = new RecordingDescriptorDecoder();
+        private readonly RecordingSignalEventDecoder recordingSignalEventDecoder = new RecordingSignalEventDecoder();
 
         private readonly int fragmentLimit;
-        private readonly IControlResponseListener listener;
+        private readonly IControlResponseListener controlResponseListener;
+        private readonly IRecordingSignalConsumer recordingSignalConsumer;
         private readonly Subscription subscription;
-        private FragmentAssembler fragmentAssembler;
+        private readonly FragmentAssembler fragmentAssembler;
 
         /// <summary>
         /// Create an adapter for a given subscription to an archive for control response messages.
         /// </summary>
-        /// <param name="listener">      to which responses are dispatched. </param>
+        /// <param name="controlResponseListener">      to which responses are dispatched. </param>
         /// <param name="subscription">  to poll for new events. </param>
         /// <param name="fragmentLimit"> to apply for each polling operation. </param>
         public ControlResponseAdapter(
-            IControlResponseListener listener, Subscription subscription, int fragmentLimit)
+            IControlResponseListener controlResponseListener, 
+            Subscription subscription, 
+            int fragmentLimit) 
+        : this(
+                controlResponseListener, 
+                AeronArchive.Configuration.NO_OP_RECORDING_SIGNAL_CONSUMER, 
+                subscription, 
+                fragmentLimit)
         {
-            if (!InstanceFieldsInitialized)
-            {
-                InitializeInstanceFields();
-                InstanceFieldsInitialized = true;
-            }
-
+        }
+        
+        /// <summary>
+        /// Create an adapter for a given subscription to an archive for control response messages.
+        /// </summary>
+        /// <param name="controlResponseListener"> for dispatching responses. </param>
+        /// <param name="recordingSignalConsumer"> for dispatching recording signals. </param>
+        /// <param name="subscription">            to poll for responses. </param>
+        /// <param name="fragmentLimit">           to apply for each polling operation. </param>
+        public ControlResponseAdapter(
+            IControlResponseListener controlResponseListener, 
+            IRecordingSignalConsumer recordingSignalConsumer, 
+            Subscription subscription, 
+            int fragmentLimit)
+        {
+            fragmentAssembler = new FragmentAssembler(OnFragment);
+            
             this.fragmentLimit = fragmentLimit;
-            this.listener = listener;
+            this.controlResponseListener = controlResponseListener;
+            this.recordingSignalConsumer = recordingSignalConsumer;
             this.subscription = subscription;
         }
+
 
         /// <summary>
         /// Poll for recording events and dispatch them to the <seealso cref="IControlResponseListener"/> for this instance.
@@ -81,7 +96,7 @@ namespace Adaptive.Archiver
                 decoder.SourceIdentity());
         }
 
-        public void OnFragment(IDirectBuffer buffer, int offset, int length, Header header)
+        private void OnFragment(IDirectBuffer buffer, int offset, int length, Header header)
         {
             messageHeaderDecoder.Wrap(buffer, offset);
 
@@ -90,16 +105,19 @@ namespace Adaptive.Archiver
             {
                 throw new ArchiveException("expected schemaId=" + MessageHeaderDecoder.SCHEMA_ID + ", actual=" + schemaId);
             }
-            
-            int templateId = messageHeaderDecoder.TemplateId();
-            switch (templateId)
+
+            switch (messageHeaderDecoder.TemplateId())
             {
                 case ControlResponseDecoder.TEMPLATE_ID:
-                    HandleControlResponse(listener, buffer, offset);
+                    HandleControlResponse(controlResponseListener, buffer, offset);
                     break;
 
                 case RecordingDescriptorDecoder.TEMPLATE_ID:
-                    HandleRecordingDescriptor(listener, buffer, offset);
+                    HandleRecordingDescriptor(controlResponseListener, buffer, offset);
+                    break;
+                
+                case RecordingSignalEventDecoder.TEMPLATE_ID:
+                    HandleRecordingSignal(recordingSignalConsumer, buffer, offset);
                     break;
             }
         }
@@ -132,5 +150,24 @@ namespace Adaptive.Archiver
 
             DispatchDescriptor(recordingDescriptorDecoder, listener);
         }
+        
+        private void HandleRecordingSignal(
+            IRecordingSignalConsumer recordingSignalConsumer, IDirectBuffer buffer, int offset)
+        {
+            recordingSignalEventDecoder.Wrap(
+                buffer, 
+                offset + MessageHeaderDecoder.ENCODED_LENGTH, 
+                messageHeaderDecoder.BlockLength(), 
+                messageHeaderDecoder.Version());
+
+            recordingSignalConsumer.OnSignal(
+                recordingSignalEventDecoder.ControlSessionId(), 
+                recordingSignalEventDecoder.CorrelationId(), 
+                recordingSignalEventDecoder.RecordingId(), 
+                recordingSignalEventDecoder.SubscriptionId(), 
+                recordingSignalEventDecoder.Position(), 
+                recordingSignalEventDecoder.Signal());
+        }
+
     }
 }

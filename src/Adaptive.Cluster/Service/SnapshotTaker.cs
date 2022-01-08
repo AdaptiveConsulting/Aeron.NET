@@ -1,8 +1,8 @@
 ﻿using System.Threading;
 using Adaptive.Aeron;
-using Adaptive.Aeron.Exceptions;
 using Adaptive.Aeron.LogBuffer;
 using Adaptive.Agrona.Concurrent;
+using Adaptive.Cluster.Client;
 using Adaptive.Cluster.Codecs;
 
 namespace Adaptive.Cluster.Service
@@ -12,14 +12,29 @@ namespace Adaptive.Cluster.Service
     /// </summary>
     public class SnapshotTaker
     {
-        protected static readonly int ENCODED_MARKER_LENGTH =
-            MessageHeaderEncoder.ENCODED_LENGTH + SnapshotMarkerEncoder.BLOCK_LENGTH;
-
+        /// <summary>
+        /// Reusable <seealso cref="MessageHeaderEncoder"/> to avoid allocation.
+        /// </summary>
         protected readonly BufferClaim bufferClaim = new BufferClaim();
+
+        /// <summary>
+        /// <seealso cref="Publication"/> to which the snapshot will be written.
+        /// </summary>
         protected readonly MessageHeaderEncoder messageHeaderEncoder = new MessageHeaderEncoder();
+
+        /// <summary>
+        /// <seealso cref="Publication"/> to which the snapshot will be written.
+        /// </summary>
         protected readonly ExclusivePublication publication;
+
+        /// <summary>
+        /// <seealso cref="IIdleStrategy"/> to be called when back pressure is propagated from the <seealso cref="publication"/>.
+        /// </summary>
         protected readonly IIdleStrategy idleStrategy;
-        protected readonly AgentInvoker aeronAgentInvoker;
+
+        private static readonly int ENCODED_MARKER_LENGTH =
+            MessageHeaderEncoder.ENCODED_LENGTH + SnapshotMarkerEncoder.BLOCK_LENGTH;
+        private readonly AgentInvoker aeronAgentInvoker;
         private readonly SnapshotMarkerEncoder snapshotMarkerEncoder = new SnapshotMarkerEncoder();
 
         /// <summary>
@@ -120,6 +135,9 @@ namespace Adaptive.Cluster.Service
             }
         }
 
+        /// <summary>
+        /// Check for thread interrupt and throw an <seealso cref="AgentTerminationException"/> if interrupted.
+        /// </summary>
         protected static void CheckInterruptStatus()
         {
             try
@@ -128,19 +146,28 @@ namespace Adaptive.Cluster.Service
             }
             catch (ThreadInterruptedException)
             {
-                throw new AgentTerminationException("unexpected interrupt during operation");
+                throw new AgentTerminationException("interrupted");
             }
         }
 
+        /// <summary>
+        /// Check the result of offering to a publication when writing a snapshot.
+        /// </summary>
+        /// <param name="result"> of an offer or try claim to a publication. </param>
         protected static void CheckResult(long result)
         {
             if (result == Publication.NOT_CONNECTED || result == Publication.CLOSED ||
                 result == Publication.MAX_POSITION_EXCEEDED)
             {
-                throw new AeronException("unexpected publication state: " + result);
+                throw new ClusterException("unexpected publication state: " + result);
             }
         }
 
+        /// <summary>
+        /// Check the result of offering to a publication when writing a snapshot and then idle after invoking the client
+        /// agent if necessary.
+        /// </summary>
+        /// <param name="result"> of an offer or try claim to a publication. </param>
         protected void CheckResultAndIdle(long result)
         {
             CheckResult(result);
@@ -149,6 +176,9 @@ namespace Adaptive.Cluster.Service
             idleStrategy.Idle();
         }
 
+        /// <summary>
+        /// Invoke the Aeron client agent if necessary.
+        /// </summary>
         protected void InvokeAgentClient()
         {
             aeronAgentInvoker?.Invoke();

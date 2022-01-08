@@ -14,279 +14,427 @@
  * limitations under the License.
  */
 
-using System;
 using Adaptive.Aeron.Command;
 using Adaptive.Aeron.Exceptions;
 using Adaptive.Agrona;
-using Adaptive.Agrona.Concurrent;
 using Adaptive.Agrona.Concurrent.RingBuffer;
 
 namespace Adaptive.Aeron
 {
-    /// <summary>
-    /// Separates the concern of communicating with the client conductor away from the rest of the client.
-    /// 
-    /// Writes commands into the client conductor buffer.
-    /// 
-    /// Note: this class is not thread safe and is expecting to be called within <see cref="Aeron.Context.ClientLock(Adaptive.Agrona.Concurrent.ILock)"/>.
-    /// </summary>
-    public class DriverProxy
-    {
-        /// <summary>
-        /// Maximum capacity of the write buffer
-        /// </summary>
-        public const int MSG_BUFFER_CAPACITY = 2048;
+	/// <summary>
+	/// Separates the concern of communicating with the client conductor away from the rest of the client.
+	/// 
+	/// Writes commands into the client conductor buffer.
+	/// 
+	/// Note: this class is not thread safe and is expecting to be called within <see cref="Aeron.Context.ClientLock(Adaptive.Agrona.Concurrent.ILock)"/>.
+	/// </summary>
+	public class DriverProxy
+	{
+		private readonly long _clientId;
+		private readonly PublicationMessageFlyweight _publicationMessage = new PublicationMessageFlyweight();
+		private readonly SubscriptionMessageFlyweight _subscriptionMessage = new SubscriptionMessageFlyweight();
+		private readonly RemoveMessageFlyweight _removeMessage = new RemoveMessageFlyweight();
+		private readonly DestinationMessageFlyweight _destinationMessage = new DestinationMessageFlyweight();
+		private readonly CounterMessageFlyweight _counterMessage = new CounterMessageFlyweight();
+		private readonly IRingBuffer _toDriverCommandBuffer;
 
-        private readonly UnsafeBuffer _buffer =
-            new UnsafeBuffer(BufferUtil.AllocateDirectAligned(MSG_BUFFER_CAPACITY,
-                BitUtil.CACHE_LINE_LENGTH * 2)); // todo expandable
+		public DriverProxy(IRingBuffer toDriverCommandBuffer, long clientId)
+		{
+			_toDriverCommandBuffer = toDriverCommandBuffer;
+			_clientId = clientId;
+		}
 
-        private readonly PublicationMessageFlyweight _publicationMessage = new PublicationMessageFlyweight();
-        private readonly SubscriptionMessageFlyweight _subscriptionMessage = new SubscriptionMessageFlyweight();
-        private readonly RemoveMessageFlyweight _removeMessage = new RemoveMessageFlyweight();
-        private readonly CorrelatedMessageFlyweight _correlatedMessage = new CorrelatedMessageFlyweight();
-        private readonly DestinationMessageFlyweight _destinationMessage = new DestinationMessageFlyweight();
-        private readonly CounterMessageFlyweight _counterMessage = new CounterMessageFlyweight();
-        private readonly TerminateDriverFlyweight _terminateDriver = new TerminateDriverFlyweight();
-        private readonly IRingBuffer _toDriverCommandBuffer;
+		/// <summary>
+		/// Time of the last heartbeat to indicate the driver is alive.
+		/// </summary>
+		/// <returns> time of the last heartbeat to indicate the driver is alive. </returns>
+		public long TimeOfLastDriverKeepaliveMs()
+		{
+			return _toDriverCommandBuffer.ConsumerHeartbeatTime();
+		}
 
-        public DriverProxy(IRingBuffer toDriverCommandBuffer, long clientId)
-        {
-            if (toDriverCommandBuffer == null) throw new ArgumentNullException(nameof(toDriverCommandBuffer));
+		/// <summary>
+		/// Instruct the driver to add a concurrent publication.
+		/// </summary>
+		/// <param name="channel">  uri in string format. </param>
+		/// <param name="streamId"> within the channel. </param>
+		/// <returns> the correlation id for the command. </returns>
+		public long AddPublication(string channel, int streamId)
+		{
+			long correlationId = _toDriverCommandBuffer.NextCorrelationId();
+			int length = PublicationMessageFlyweight.ComputeLength(channel.Length);
+			int index = _toDriverCommandBuffer.TryClaim(ControlProtocolEvents.ADD_PUBLICATION, length);
+			if (index < 0)
+			{
+				throw new AeronException("could not write add publication command");
+			}
 
-            _toDriverCommandBuffer = toDriverCommandBuffer;
+			_publicationMessage
+				.Wrap(_toDriverCommandBuffer.Buffer(), index)
+				.StreamId(streamId)
+				.Channel(channel)
+				.ClientId(_clientId)
+				.CorrelationId(correlationId);
 
-            _publicationMessage.Wrap(_buffer, 0);
-            _subscriptionMessage.Wrap(_buffer, 0);
+			_toDriverCommandBuffer.Commit(index);
 
-            _correlatedMessage.Wrap(_buffer, 0);
-            _removeMessage.Wrap(_buffer, 0);
-            _destinationMessage.Wrap(_buffer, 0);
-            _counterMessage.Wrap(_buffer, 0);
-            _terminateDriver.Wrap(_buffer, 0);
+			return correlationId;
+		}
 
-            _correlatedMessage.ClientId(clientId);
-        }
+		/// <summary>
+		/// Instruct the driver to add a non-concurrent, i.e. exclusive, publication.
+		/// </summary>
+		/// <param name="channel">  uri in string format. </param>
+		/// <param name="streamId"> within the channel. </param>
+		/// <returns> the correlation id for the command. </returns>
+		public long AddExclusivePublication(string channel, int streamId)
+		{
+			long correlationId = _toDriverCommandBuffer.NextCorrelationId();
+			int length = PublicationMessageFlyweight.ComputeLength(channel.Length);
+			int index = _toDriverCommandBuffer.TryClaim(ControlProtocolEvents.ADD_EXCLUSIVE_PUBLICATION, length);
+			if (index < 0)
+			{
+				throw new AeronException("could not write add exclusive publication command");
+			}
 
-        public long TimeOfLastDriverKeepaliveMs()
-        {
-            return _toDriverCommandBuffer.ConsumerHeartbeatTime();
-        }
+			_publicationMessage
+				.Wrap(_toDriverCommandBuffer.Buffer(), index)
+				.StreamId(streamId)
+				.Channel(channel)
+				.ClientId(_clientId)
+				.CorrelationId(correlationId);
 
-        public long AddPublication(string channel, int streamId)
-        {
-            long correlationId = _toDriverCommandBuffer.NextCorrelationId();
+			_toDriverCommandBuffer.Commit(index);
 
-            _publicationMessage.CorrelationId(correlationId);
+			return correlationId;
+		}
 
-            _publicationMessage
-                .StreamId(streamId)
-                .Channel(channel);
+		/// <summary>
+		/// Instruct the driver to remove a publication by its registration id.
+		/// </summary>
+		/// <param name="registrationId"> for the publication to be removed. </param>
+		/// <returns> the correlation id for the command. </returns>
+		public long RemovePublication(long registrationId)
+		{
+			long correlationId = _toDriverCommandBuffer.NextCorrelationId();
+			int index = _toDriverCommandBuffer.TryClaim(ControlProtocolEvents.REMOVE_PUBLICATION,
+				RemoveMessageFlyweight.Length());
+			if (index < 0)
+			{
+				throw new AeronException("could not write remove publication command");
+			}
 
-            if (!_toDriverCommandBuffer.Write(ControlProtocolEvents.ADD_PUBLICATION, _buffer, 0,
-                _publicationMessage.Length()))
-            {
-                throw new AeronException("Could not write add publication command");
-            }
+			_removeMessage
+				.Wrap(_toDriverCommandBuffer.Buffer(), index)
+				.RegistrationId(registrationId)
+				.ClientId(_clientId)
+				.CorrelationId(correlationId);
 
-            return correlationId;
-        }
+			_toDriverCommandBuffer.Commit(index);
 
-        public long AddExclusivePublication(string channel, int streamId)
-        {
-            long correlationId = _toDriverCommandBuffer.NextCorrelationId();
+			return correlationId;
+		}
 
-            _publicationMessage.CorrelationId(correlationId);
+		/// <summary>
+		/// Instruct the driver to add a subscription.
+		/// </summary>
+		/// <param name="channel">  uri in string format. </param>
+		/// <param name="streamId"> within the channel. </param>
+		/// <returns> the correlation id for the command. </returns>
+		public long AddSubscription(string channel, int streamId)
+		{
+			long registrationId = Aeron.NULL_VALUE;
+			long correlationId = _toDriverCommandBuffer.NextCorrelationId();
+			int length = SubscriptionMessageFlyweight.ComputeLength(channel.Length);
+			int index = _toDriverCommandBuffer.TryClaim(ControlProtocolEvents.ADD_SUBSCRIPTION, length);
+			if (index < 0)
+			{
+				throw new AeronException("could not write add subscription command");
+			}
 
-            _publicationMessage
-                .StreamId(streamId)
-                .Channel(channel);
+			_subscriptionMessage
+				.Wrap(_toDriverCommandBuffer.Buffer(), index)
+				.RegistrationCorrelationId(registrationId)
+				.StreamId(streamId)
+				.Channel(channel)
+				.ClientId(_clientId)
+				.CorrelationId(correlationId);
 
-            if (!_toDriverCommandBuffer.Write(ControlProtocolEvents.ADD_EXCLUSIVE_PUBLICATION, _buffer, 0,
-                _publicationMessage.Length()))
-            {
-                throw new AeronException("Could not write add exclusive publication command");
-            }
+			_toDriverCommandBuffer.Commit(index);
 
-            return correlationId;
-        }
+			return correlationId;
+		}
 
-        public long RemovePublication(long registrationId)
-        {
-            long correlationId = _toDriverCommandBuffer.NextCorrelationId();
+		/// <summary>
+		/// Instruct the driver to remove a subscription by its registration id.
+		/// </summary>
+		/// <param name="registrationId"> for the subscription to be removed. </param>
+		/// <returns> the correlation id for the command. </returns>
+		public long RemoveSubscription(long registrationId)
+		{
+			long correlationId = _toDriverCommandBuffer.NextCorrelationId();
+			int index = _toDriverCommandBuffer.TryClaim(ControlProtocolEvents.REMOVE_SUBSCRIPTION,
+				RemoveMessageFlyweight.Length());
+			if (index < 0)
+			{
+				throw new AeronException("could not write remove subscription command");
+			}
 
-            _removeMessage.RegistrationId(registrationId).CorrelationId(correlationId);
+			_removeMessage
+				.Wrap(_toDriverCommandBuffer.Buffer(), index)
+				.RegistrationId(registrationId)
+				.ClientId(_clientId)
+				.CorrelationId(correlationId);
 
-            if (!_toDriverCommandBuffer.Write(ControlProtocolEvents.REMOVE_PUBLICATION, _buffer, 0,
-                RemoveMessageFlyweight.Length()))
-            {
-                throw new AeronException("Could not write remove publication command");
-            }
+			_toDriverCommandBuffer.Commit(index);
 
-            return correlationId;
-        }
+			return correlationId;
+		}
 
-        public long AddSubscription(string channel, int streamId)
-        {
-            const long registrationId = Aeron.NULL_VALUE;
-            long correlationId = _toDriverCommandBuffer.NextCorrelationId();
+		/// <summary>
+		/// Add a destination to the send channel of an existing MDC Publication.
+		/// </summary>
+		/// <param name="registrationId">  of the Publication. </param>
+		/// <param name="endpointChannel"> for the destination. </param>
+		/// <returns> the correlation id for the command. </returns>
+		public long AddDestination(long registrationId, string endpointChannel)
+		{
+			long correlationId = _toDriverCommandBuffer.NextCorrelationId();
+			int length = DestinationMessageFlyweight.ComputeLength(endpointChannel.Length);
+			int index = _toDriverCommandBuffer.TryClaim(ControlProtocolEvents.ADD_DESTINATION, length);
+			if (index < 0)
+			{
+				throw new AeronException("could not write add destination command");
+			}
 
-            _subscriptionMessage.CorrelationId(correlationId);
+			_destinationMessage
+				.Wrap(_toDriverCommandBuffer.Buffer(), index)
+				.RegistrationCorrelationId(registrationId)
+				.Channel(endpointChannel)
+				.ClientId(_clientId)
+				.CorrelationId(correlationId);
 
-            _subscriptionMessage.RegistrationCorrelationId(registrationId).StreamId(streamId).Channel(channel);
+			_toDriverCommandBuffer.Commit(index);
 
-            if (!_toDriverCommandBuffer.Write(ControlProtocolEvents.ADD_SUBSCRIPTION, _buffer, 0,
-                _subscriptionMessage.Length()))
-            {
-                throw new AeronException("Could not write add subscription command");
-            }
+			return correlationId;
+		}
 
-            return correlationId;
-        }
+		/// <summary>
+		/// Remove a destination from the send channel of an existing MDC Publication.
+		/// </summary>
+		/// <param name="registrationId">  of the Publication. </param>
+		/// <param name="endpointChannel"> used for the <seealso cref="AddDestination(long, string)"/> command. </param>
+		/// <returns> the correlation id for the command. </returns>
+		public long RemoveDestination(long registrationId, string endpointChannel)
+		{
+			long correlationId = _toDriverCommandBuffer.NextCorrelationId();
+			int length = DestinationMessageFlyweight.ComputeLength(endpointChannel.Length);
+			int index = _toDriverCommandBuffer.TryClaim(ControlProtocolEvents.REMOVE_DESTINATION, length);
+			if (index < 0)
+			{
+				throw new AeronException("could not write remove destination command");
+			}
 
-        public long RemoveSubscription(long registrationId)
-        {
-            long correlationId = _toDriverCommandBuffer.NextCorrelationId();
+			_destinationMessage
+				.Wrap(_toDriverCommandBuffer.Buffer(), index)
+				.RegistrationCorrelationId(registrationId)
+				.Channel(endpointChannel)
+				.ClientId(_clientId)
+				.CorrelationId(correlationId);
 
-            _removeMessage.RegistrationId(registrationId).CorrelationId(correlationId);
+			_toDriverCommandBuffer.Commit(index);
 
-            if (!_toDriverCommandBuffer.Write(ControlProtocolEvents.REMOVE_SUBSCRIPTION, _buffer, 0,
-                RemoveMessageFlyweight.Length()))
-            {
-                throw new AeronException("Could not write remove subscription message");
-            }
+			return correlationId;
+		}
 
-            return correlationId;
-        }
+		/// <summary>
+		/// Add a destination to the receive channel of an existing MDS Subscription.
+		/// </summary>
+		/// <param name="registrationId">  of the Subscription. </param>
+		/// <param name="endpointChannel"> for the destination. </param>
+		/// <returns> the correlation id for the command. </returns>
+		public long AddRcvDestination(long registrationId, string endpointChannel)
+		{
+			long correlationId = _toDriverCommandBuffer.NextCorrelationId();
+			int length = DestinationMessageFlyweight.ComputeLength(endpointChannel.Length);
+			int index = _toDriverCommandBuffer.TryClaim(ControlProtocolEvents.ADD_RCV_DESTINATION, length);
+			if (index < 0)
+			{
+				throw new AeronException("could not write add rcv destination command");
+			}
 
-        public long AddDestination(long registrationId, string endpointChannel)
-        {
-            long correlationId = _toDriverCommandBuffer.NextCorrelationId();
+			_destinationMessage
+				.Wrap(_toDriverCommandBuffer.Buffer(), index)
+				.RegistrationCorrelationId(registrationId)
+				.Channel(endpointChannel)
+				.ClientId(_clientId)
+				.CorrelationId(correlationId);
 
-            _destinationMessage.RegistrationCorrelationId(registrationId).Channel(endpointChannel)
-                .CorrelationId(correlationId);
+			_toDriverCommandBuffer.Commit(index);
 
-            if (!_toDriverCommandBuffer.Write(ControlProtocolEvents.ADD_DESTINATION, _buffer, 0,
-                _destinationMessage.Length()))
-            {
-                throw new AeronException("Could not write add destination command");
-            }
+			return correlationId;
+		}
 
-            return correlationId;
-        }
+		/// <summary>
+		/// Remove a destination from the receive channel of an existing MDS Subscription.
+		/// </summary>
+		/// <param name="registrationId">  of the Subscription. </param>
+		/// <param name="endpointChannel"> used for the <seealso cref="AddRcvDestination(long, string)"/> command. </param>
+		/// <returns> the correlation id for the command. </returns>
+		public long RemoveRcvDestination(long registrationId, string endpointChannel)
+		{
+			long correlationId = _toDriverCommandBuffer.NextCorrelationId();
+			int length = DestinationMessageFlyweight.ComputeLength(endpointChannel.Length);
+			int index = _toDriverCommandBuffer.TryClaim(ControlProtocolEvents.REMOVE_RCV_DESTINATION, length);
+			if (index < 0)
+			{
+				throw new AeronException("could not write remove rcv destination command");
+			}
 
-        public long RemoveDestination(long registrationId, string endpointChannel)
-        {
-            long correlationId = _toDriverCommandBuffer.NextCorrelationId();
+			_destinationMessage
+				.Wrap(_toDriverCommandBuffer.Buffer(), index)
+				.RegistrationCorrelationId(registrationId)
+				.Channel(endpointChannel)
+				.ClientId(_clientId)
+				.CorrelationId(correlationId);
 
-            _destinationMessage.RegistrationCorrelationId(registrationId).Channel(endpointChannel)
-                .CorrelationId(correlationId);
+			_toDriverCommandBuffer.Commit(index);
 
-            if (!_toDriverCommandBuffer.Write(ControlProtocolEvents.REMOVE_DESTINATION, _buffer, 0,
-                _destinationMessage.Length()))
-            {
-                throw new AeronException("Could not write remove destination command");
-            }
+			return correlationId;
+		}
 
-            return correlationId;
-        }
+		/// <summary>
+		/// Add a new counter with a type id plus the label and key are provided in buffers.
+		/// </summary>
+		/// <param name="typeId">      for associating with the counter. </param>
+		/// <param name="keyBuffer">   containing the metadata key. </param>
+		/// <param name="keyOffset">   offset at which the key begins. </param>
+		/// <param name="keyLength">   length in bytes for the key. </param>
+		/// <param name="labelBuffer"> containing the label. </param>
+		/// <param name="labelOffset"> offset at which the label begins. </param>
+		/// <param name="labelLength"> length in bytes for the label. </param>
+		/// <returns> the correlation id for the command. </returns>
+		public long AddCounter(int typeId, IDirectBuffer keyBuffer, int keyOffset, int keyLength,
+			IDirectBuffer labelBuffer, int labelOffset, int labelLength)
+		{
+			long correlationId = _toDriverCommandBuffer.NextCorrelationId();
+			int length = CounterMessageFlyweight.ComputeLength(keyLength, labelLength);
+			int index = _toDriverCommandBuffer.TryClaim(ControlProtocolEvents.ADD_COUNTER, length);
+			if (index < 0)
+			{
+				throw new AeronException("could not write add counter command");
+			}
 
-        public long AddRcvDestination(long registrationId, string endpointChannel)
-        {
-            long correlationId = _toDriverCommandBuffer.NextCorrelationId();
+			_counterMessage
+				.Wrap(_toDriverCommandBuffer.Buffer(), index)
+				.KeyBuffer(keyBuffer, keyOffset, keyLength)
+				.LabelBuffer(labelBuffer, labelOffset, labelLength)
+				.TypeId(typeId)
+				.ClientId(_clientId)
+				.CorrelationId(correlationId);
 
-            _destinationMessage.RegistrationCorrelationId(registrationId).Channel(endpointChannel)
-                .CorrelationId(correlationId);
+			_toDriverCommandBuffer.Commit(index);
 
-            if (!_toDriverCommandBuffer.Write(ControlProtocolEvents.ADD_RCV_DESTINATION, _buffer, 0,
-                _destinationMessage.Length()))
-            {
-                throw new AeronException("Could not write add rcv destination command");
-            }
+			return correlationId;
+		}
 
-            return correlationId;
-        }
+		/// <summary>
+		/// Add a new counter with a type id and label, the key will be blank.
+		/// </summary>
+		/// <param name="typeId"> for associating with the counter. </param>
+		/// <param name="label">  that is human-readable for the counter. </param>
+		/// <returns> the correlation id for the command. </returns>
+		public long AddCounter(int typeId, string label)
+		{
+			long correlationId = _toDriverCommandBuffer.NextCorrelationId();
+			int length = CounterMessageFlyweight.ComputeLength(0, label.Length);
+			int index = _toDriverCommandBuffer.TryClaim(ControlProtocolEvents.ADD_COUNTER, length);
+			if (index < 0)
+			{
+				throw new AeronException("could not write add counter command");
+			}
 
-        public long RemoveRcvDestination(long registrationId, string endpointChannel)
-        {
-            long correlationId = _toDriverCommandBuffer.NextCorrelationId();
+			_counterMessage
+				.Wrap(_toDriverCommandBuffer.Buffer(), index)
+				.KeyBuffer(null, 0, 0)
+				.Label(label)
+				.TypeId(typeId)
+				.ClientId(_clientId)
+				.CorrelationId(correlationId);
 
-            _destinationMessage.RegistrationCorrelationId(registrationId).Channel(endpointChannel)
-                .CorrelationId(correlationId);
+			_toDriverCommandBuffer.Commit(index);
 
-            if (!_toDriverCommandBuffer.Write(ControlProtocolEvents.REMOVE_RCV_DESTINATION, _buffer, 0,
-                _destinationMessage.Length()))
-            {
-                throw new AeronException("Could not write remove rcv destination command");
-            }
+			return correlationId;
+		}
 
-            return correlationId;
-        }
+		/// <summary>
+		/// Instruct the media driver to remove an existing counter by its registration id.
+		/// </summary>
+		/// <param name="registrationId"> of counter to remove. </param>
+		/// <returns> the correlation id for the command. </returns>
+		public long RemoveCounter(long registrationId)
+		{
+			long correlationId = _toDriverCommandBuffer.NextCorrelationId();
+			int index = _toDriverCommandBuffer.TryClaim(ControlProtocolEvents.REMOVE_COUNTER,
+				RemoveMessageFlyweight.Length());
+			if (index < 0)
+			{
+				throw new AeronException("could not write remove counter command");
+			}
 
+			_removeMessage
+				.Wrap(_toDriverCommandBuffer.Buffer(), index)
+				.RegistrationId(registrationId)
+				.ClientId(_clientId)
+				.CorrelationId(correlationId);
 
-        public long AddCounter(int typeId, IDirectBuffer keyBuffer, int keyOffset, int keyLength,
-            IDirectBuffer labelBuffer, int labelOffset, int labelLength)
-        {
-            long correlationId = _toDriverCommandBuffer.NextCorrelationId();
+			_toDriverCommandBuffer.Commit(index);
 
-            _counterMessage.TypeId(typeId).KeyBuffer(keyBuffer, keyOffset, keyLength)
-                .LabelBuffer(labelBuffer, labelOffset, labelLength).CorrelationId(correlationId);
+			return correlationId;
+		}
 
-            if (!_toDriverCommandBuffer.Write(ControlProtocolEvents.ADD_COUNTER, _buffer, 0, _counterMessage.Length()))
-            {
-                throw new AeronException("Could not write add counter command");
-            }
+		/// <summary>
+		/// Notify the media driver that this client is closing.
+		/// </summary>
+		public void ClientClose()
+		{
+			int index = _toDriverCommandBuffer.TryClaim(ControlProtocolEvents.CLIENT_CLOSE,
+				CorrelatedMessageFlyweight.LENGTH);
+			if (index > 0)
+			{
+				(new CorrelatedMessageFlyweight())
+					.Wrap(_toDriverCommandBuffer.Buffer(), index)
+					.ClientId(_clientId)
+					.CorrelationId(Aeron.NULL_VALUE);
 
-            return correlationId;
-        }
+				_toDriverCommandBuffer.Commit(index);
+			}
+		}
 
-        public long AddCounter(int typeId, string label)
-        {
-            long correlationId = _toDriverCommandBuffer.NextCorrelationId();
+		/// <summary>
+		/// Instruct the media driver to terminate.
+		/// </summary>
+		/// <param name="tokenBuffer"> containing the authentication token. </param>
+		/// <param name="tokenOffset"> at which the token begins. </param>
+		/// <param name="tokenLength"> in bytes. </param>
+		/// <returns> true is successfully sent. </returns>
+		public bool TerminateDriver(IDirectBuffer tokenBuffer, int tokenOffset, int tokenLength)
+		{
+			int length = TerminateDriverFlyweight.ComputeLength(tokenLength);
+			int index = _toDriverCommandBuffer.TryClaim(ControlProtocolEvents.TERMINATE_DRIVER, length);
+			if (index > 0)
+			{
+				(new TerminateDriverFlyweight())
+					.Wrap(_toDriverCommandBuffer.Buffer(), index)
+					.TokenBuffer(tokenBuffer, tokenOffset, tokenLength)
+					.ClientId(_clientId)
+					.CorrelationId(Aeron.NULL_VALUE);
 
-            _counterMessage.TypeId(typeId).KeyBuffer(null, 0, 0).Label(label).CorrelationId(correlationId);
+				_toDriverCommandBuffer.Commit(index);
+				return true;
+			}
 
-            if (!_toDriverCommandBuffer.Write(ControlProtocolEvents.ADD_COUNTER, _buffer, 0, _counterMessage.Length()))
-            {
-                throw new AeronException("Could not write add counter command");
-            }
-
-            return correlationId;
-        }
-
-        public long RemoveCounter(long registrationId)
-        {
-            long correlationId = _toDriverCommandBuffer.NextCorrelationId();
-
-            _removeMessage.RegistrationId(registrationId).CorrelationId(correlationId);
-
-            if (!_toDriverCommandBuffer.Write(ControlProtocolEvents.REMOVE_COUNTER, _buffer, 0,
-                RemoveMessageFlyweight.Length()))
-            {
-                throw new AeronException("Could not write remove counter command");
-            }
-
-            return correlationId;
-        }
-
-        public void ClientClose()
-        {
-            _correlatedMessage.CorrelationId(Aeron.NULL_VALUE);
-            _toDriverCommandBuffer.Write(ControlProtocolEvents.CLIENT_CLOSE, _buffer, 0,
-                CorrelatedMessageFlyweight.LENGTH);
-        }
-
-        public bool TerminateDriver(IDirectBuffer tokenBuffer, int tokenOffset, int tokenLength)
-        {
-            _correlatedMessage.CorrelationId(Aeron.NULL_VALUE);
-            _terminateDriver.TokenBuffer(tokenBuffer, tokenOffset, tokenLength);
-
-            return _toDriverCommandBuffer.Write(
-                ControlProtocolEvents.TERMINATE_DRIVER,
-                _buffer,
-                0,
-                _terminateDriver.Length()
-            );
-        }
-    }
+			return false;
+		}
+	}
 }

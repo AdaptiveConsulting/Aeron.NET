@@ -29,7 +29,7 @@ namespace Adaptive.Aeron
     [StructLayout(LayoutKind.Sequential)]
     internal struct SubscriptionFields
     {
-        internal static readonly Image[] EMPTY_ARRAY = new Image[0];
+        internal static readonly Image[] EMPTY_IMAGES = Array.Empty<Image>();
 
         // padding to prevent false sharing
         private CacheLinePadding _padding1;
@@ -58,6 +58,7 @@ namespace Adaptive.Aeron
         {
             _padding1 = new CacheLinePadding();
             _padding2 = new CacheLinePadding();
+            channelStatusId = ChannelEndpointStatus.NO_ID_ALLOCATED;
 
             this.registrationId = registrationId;
             this.streamId = streamId;
@@ -67,7 +68,7 @@ namespace Adaptive.Aeron
             this.unavailableImageHandler = unavailableImageHandler;
             roundRobinIndex = 0;
             isClosed = false;
-            images = EMPTY_ARRAY;
+            images = EMPTY_IMAGES;
             channelStatusId = 0;
         }
     }
@@ -75,7 +76,7 @@ namespace Adaptive.Aeron
 
     /// <summary>
     /// Aeron Subscriber API for receiving a reconstructed <seealso cref="Image"/> for a stream of messages from publishers on
-    /// a given channel and streamId pair. <seealso cref="Image"/>s are aggregated under a <seealso cref="Subscription"/>.
+    /// a given channel and streamId pair, i.e. a <see cref="Publication"/>. <seealso cref="Image"/>s are aggregated under a <seealso cref="Subscription"/>.
     /// 
     /// <seealso cref="Subscription"/>s are created via an <seealso cref="Aeron"/> object, and received messages are delivered
     /// to the <seealso cref="FragmentHandler"/>.
@@ -199,7 +200,7 @@ namespace Adaptive.Aeron
 
         /// <summary>
         /// Poll in a controlled manner the <seealso cref="Image"/>s under the subscription for available message fragments.
-        /// Control is applied to fragments in the stream. If more fragments can be read on another stream
+        /// Control is applied to message fragments in the stream. If more fragments can be read on another stream
         /// they will even if BREAK or ABORT is returned from the fragment handler.
         /// <para>
         /// Each fragment read will be a whole message if it is under MTU length. If larger than MTU then it will come
@@ -409,6 +410,17 @@ namespace Adaptive.Aeron
             }
         }
 
+
+        /// <summary>
+        /// Get the counter used to represent the channel status for this Subscription.
+        /// </summary>
+        /// <returns> the counter used to represent the channel status for this Subscription. </returns>
+        public int ChannelStatusId
+        {
+            get => _fields.channelStatusId;
+            internal set => _fields.channelStatusId = value;
+        }
+
         /// <summary>
         /// Fetches the local socket addresses for this subscription. If the channel is not
         /// <seealso cref="ChannelEndpointStatus.ACTIVE"/>, then this will return an empty list.
@@ -416,15 +428,13 @@ namespace Adaptive.Aeron
         /// The format is as follows:
         /// IPv4: <code>ip address:port</code>
         /// IPv6: <code>[ip6 address]:port</code>
-        /// This is to match the formatting used in the Aeron URI
+        /// This is to match the formatting used in the Aeron URI.
         /// </summary>
-        /// <returns> local socket address for this subscription. </returns>
+        /// <returns> <see cref="List{T}"/> of socket addresses for this subscription. </returns>
         /// <seealso cref="ChannelStatus"/>
-        public List<string> LocalSocketAddresses()
-        {
-            return LocalSocketAddressStatus.FindAddresses(_fields.conductor.CountersReader(), ChannelStatus,
+        public List<string> LocalSocketAddresses =>
+            LocalSocketAddressStatus.FindAddresses(_fields.conductor.CountersReader(), ChannelStatus,
                 ChannelStatusId);
-        }
 
         /// <summary>
         /// Add a destination manually to a multi-destination Subscription.
@@ -494,19 +504,73 @@ namespace Adaptive.Aeron
             return _fields.conductor.AsyncRemoveRcvDestination(_fields.registrationId, endpointChannel);
         }
 
-        internal int ChannelStatusId
+        /// <summary>
+        /// Resolve channel endpoint and replace it with the port from the ephemeral range when 0 was provided. If there are
+        /// no addresses, or if there is more than one, returned from <seealso cref="LocalSocketAddresses"/> then the original
+        /// <seealso cref="Channel"/> is returned.
+        /// <para>
+        /// If the channel is not <seealso cref="ChannelEndpointStatus.ACTIVE"/>, then {@code null} will be returned.
+        /// 
+        /// </para>
+        /// </summary>
+        /// <returns> channel URI string with an endpoint being resolved to the allocated port. </returns>
+        /// <seealso cref="ChannelStatus"/>
+        /// <seealso cref="LocalSocketAddresses"/>
+        public string TryResolveChannelEndpointPort()
         {
-            get => _fields.channelStatusId;
-            set => _fields.channelStatusId = value;
+            long channelStatus = ChannelStatus;
+
+            if (ChannelEndpointStatus.ACTIVE == channelStatus)
+            {
+                IList<string> localSocketAddresses =
+                    LocalSocketAddressStatus.FindAddresses(_fields.conductor.CountersReader(), channelStatus,
+                        _fields.channelStatusId);
+
+                if (1 == localSocketAddresses.Count)
+                {
+                    ChannelUri uri = ChannelUri.Parse(_fields.channel);
+                    string endpoint = uri.Get(Aeron.Context.ENDPOINT_PARAM_NAME);
+
+                    if (null != endpoint && endpoint.EndsWith(":0", StringComparison.Ordinal))
+                    {
+                        string resolvedEndpoint = localSocketAddresses[0];
+                        int i = resolvedEndpoint.LastIndexOf(':');
+                        uri.Put(Aeron.Context.ENDPOINT_PARAM_NAME,
+                            endpoint.Substring(0, endpoint.Length - 2) + resolvedEndpoint.Substring(i));
+
+                        return uri.ToString();
+                    }
+                }
+
+                return _fields.channel;
+            }
+
+            return null;
         }
 
-        internal void InternalClose()
-        {
-            _fields.isClosed = true;
-            var images = _fields.images;
-            _fields.images = new Image[0];
+        /// <summary>
+        /// Find the resolved endpoint for the channel. This may be null if MDS is used and no destination is yet added.
+        /// The result will similar to taking the first element returned from <seealso cref="LocalSocketAddresses"/>. If more than
+        /// one destination is added then the first found is returned.
+        /// <para>
+        /// If the channel is not <seealso cref="ChannelEndpointStatus.ACTIVE"/>, then {@code null} will be returned.
+        /// 
+        /// </para>
+        /// </summary>
+        /// <returns> The resolved endpoint or null if not found. </returns>
+        /// <seealso cref="ChannelStatus"/>
+        /// <seealso cref="LocalSocketAddresses"/>
+        public string ResolvedEndpoint =>
+            LocalSocketAddressStatus.FindAddress(_fields.conductor.CountersReader(), ChannelStatus,
+                _fields.channelStatusId);
 
-            _fields.conductor.CloseImages(images, _fields.unavailableImageHandler);
+
+        internal void InternalClose(long lingerDurationNs)
+        {
+            var images = _fields.images;
+            _fields.images = SubscriptionFields.EMPTY_IMAGES;
+            _fields.isClosed = true;
+            _fields.conductor.CloseImages(images, _fields.unavailableImageHandler, lingerDurationNs);
         }
 
         internal void AddImage(Image image)
@@ -536,13 +600,14 @@ namespace Adaptive.Aeron
             if (null != removedImage)
             {
                 removedImage.Close();
-                _fields.images = ArrayUtil.Remove(oldArray, i);
-                _fields.conductor.ReleaseLogBuffers(removedImage.LogBuffers, correlationId);
+                _fields.images = oldArray.Length == 1 ? SubscriptionFields.EMPTY_IMAGES : ArrayUtil.Remove(oldArray, i);
+                _fields.conductor.ReleaseLogBuffers(removedImage.LogBuffers, correlationId, Aeron.NULL_VALUE);
             }
 
             return removedImage;
         }
 
+        /// <inheritdoc />
         public override string ToString()
         {
             return "Subscription{" +
@@ -550,6 +615,7 @@ namespace Adaptive.Aeron
                    ", isClosed=" + IsClosed +
                    ", streamId=" + StreamId +
                    ", channel='" + Channel + '\'' +
+                   ", localSocketAddresses='" + LocalSocketAddresses +
                    ", imageCount=" + ImageCount +
                    '}';
         }

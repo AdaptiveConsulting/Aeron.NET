@@ -8,13 +8,23 @@ namespace Adaptive.Aeron.Exceptions
     /// </summary>
     public class AeronException : Exception
     {
+        /// <summary>
+        /// <seealso cref="Exceptions.Category"/> of the exception to help the client decide how they should proceed.
+        /// </summary>
         public Category Category { get; }
 
+        /// <summary>
+        /// Default Aeron exception as <seealso cref="Exceptions.Category.ERROR"/>
+        /// </summary>
         public AeronException()
         {
             Category = Category.ERROR;
         }
 
+        /// <summary>
+        /// Default Aeron exception with provided <seealso cref="Exceptions.Category"/>.
+        /// </summary>
+        /// <param name="category"> of this exception. </param>
         public AeronException(Category category)
         {
             Category = category;

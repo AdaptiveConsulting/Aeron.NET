@@ -15,11 +15,9 @@ namespace Adaptive.Cluster.Service
     /// </summary>
     internal sealed class BoundedLogAdapter : IControlledFragmentHandler, IDisposable
     {
-        private const int FRAGMENT_LIMIT = 100;
-
+        private readonly int fragmentLimit;
         private long maxLogPosition;
         private Image image;
-
         private readonly ClusteredServiceAgent agent;
         private readonly BufferBuilder builder = new BufferBuilder();
         private readonly MessageHeaderDecoder messageHeaderDecoder = new MessageHeaderDecoder();
@@ -34,9 +32,10 @@ namespace Adaptive.Cluster.Service
 
         private readonly MembershipChangeEventDecoder membershipChangeEventDecoder = new MembershipChangeEventDecoder();
 
-        internal BoundedLogAdapter(ClusteredServiceAgent agent)
+        internal BoundedLogAdapter(ClusteredServiceAgent agent, int fragmentLimit)
         {
             this.agent = agent;
+            this.fragmentLimit = fragmentLimit;
         }
 
         public void Dispose()
@@ -112,7 +111,7 @@ namespace Adaptive.Cluster.Service
 
         public int Poll(long limit)
         {
-            return image.BoundedControlledPoll(this, limit, FRAGMENT_LIMIT);
+            return image.BoundedControlledPoll(this, limit, fragmentLimit);
         }
 
         private ControlledFragmentHandlerAction OnMessage(IDirectBuffer buffer, int offset, int length, Header header)

@@ -12,7 +12,7 @@ public class RecordingDescriptorHeaderDecoder
     public const ushort BLOCK_LENGTH = 32;
     public const ushort TEMPLATE_ID = 21;
     public const ushort SCHEMA_ID = 101;
-    public const ushort SCHEMA_VERSION = 4;
+    public const ushort SCHEMA_VERSION = 6;
 
     private RecordingDescriptorHeaderDecoder _parentMessage;
     private IDirectBuffer _buffer;
@@ -142,27 +142,27 @@ public class RecordingDescriptorHeaderDecoder
     }
 
 
-    public static int ValidId()
+    public static int StateId()
     {
         return 2;
     }
 
-    public static int ValidSinceVersion()
+    public static int StateSinceVersion()
     {
         return 0;
     }
 
-    public static int ValidEncodingOffset()
+    public static int StateEncodingOffset()
     {
         return 4;
     }
 
-    public static int ValidEncodingLength()
+    public static int StateEncodingLength()
     {
-        return 1;
+        return 4;
     }
 
-    public static string ValidMetaAttribute(MetaAttribute metaAttribute)
+    public static string StateMetaAttribute(MetaAttribute metaAttribute)
     {
         switch (metaAttribute)
         {
@@ -175,24 +175,63 @@ public class RecordingDescriptorHeaderDecoder
         return "";
     }
 
-    public static sbyte ValidNullValue()
+    public RecordingState State()
     {
-        return (sbyte)-128;
+        return (RecordingState)_buffer.GetInt(_offset + 4, ByteOrder.LittleEndian);
     }
 
-    public static sbyte ValidMinValue()
+
+    public static int ChecksumId()
     {
-        return (sbyte)-127;
+        return 4;
     }
 
-    public static sbyte ValidMaxValue()
+    public static int ChecksumSinceVersion()
     {
-        return (sbyte)127;
+        return 0;
     }
 
-    public sbyte Valid()
+    public static int ChecksumEncodingOffset()
     {
-        return unchecked((sbyte)_buffer.GetByte(_offset + 4));
+        return 8;
+    }
+
+    public static int ChecksumEncodingLength()
+    {
+        return 4;
+    }
+
+    public static string ChecksumMetaAttribute(MetaAttribute metaAttribute)
+    {
+        switch (metaAttribute)
+        {
+            case MetaAttribute.EPOCH: return "unix";
+            case MetaAttribute.TIME_UNIT: return "nanosecond";
+            case MetaAttribute.SEMANTIC_TYPE: return "";
+            case MetaAttribute.PRESENCE: return "required";
+        }
+
+        return "";
+    }
+
+    public static int ChecksumNullValue()
+    {
+        return -2147483648;
+    }
+
+    public static int ChecksumMinValue()
+    {
+        return -2147483647;
+    }
+
+    public static int ChecksumMaxValue()
+    {
+        return 2147483647;
+    }
+
+    public int Checksum()
+    {
+        return _buffer.GetInt(_offset + 8, ByteOrder.LittleEndian);
     }
 
 
@@ -279,15 +318,20 @@ public class RecordingDescriptorHeaderDecoder
         }
         builder.Append(BLOCK_LENGTH);
         builder.Append("):");
-        //Token{signal=BEGIN_FIELD, name='length', referencedName='null', description='null', id=1, version=0, deprecated=0, encodedLength=0, offset=0, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=BEGIN_FIELD, name='length', referencedName='null', description='Length of the RecordingDescriptor in bytes including alignment padding.', id=1, version=0, deprecated=0, encodedLength=0, offset=0, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
         //Token{signal=ENCODING, name='int32', referencedName='null', description='null', id=-1, version=0, deprecated=0, encodedLength=4, offset=0, componentTokenCount=1, encoding=Encoding{presence=REQUIRED, primitiveType=INT32, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
         builder.Append("Length=");
         builder.Append(Length());
         builder.Append('|');
-        //Token{signal=BEGIN_FIELD, name='valid', referencedName='null', description='null', id=2, version=0, deprecated=0, encodedLength=0, offset=4, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
-        //Token{signal=ENCODING, name='int8', referencedName='null', description='null', id=-1, version=0, deprecated=0, encodedLength=1, offset=4, componentTokenCount=1, encoding=Encoding{presence=REQUIRED, primitiveType=INT8, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
-        builder.Append("Valid=");
-        builder.Append(Valid());
+        //Token{signal=BEGIN_FIELD, name='state', referencedName='null', description='State of the recording.', id=2, version=0, deprecated=0, encodedLength=0, offset=4, componentTokenCount=6, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=BEGIN_ENUM, name='RecordingState', referencedName='null', description='State of a recording in the Catalog.', id=-1, version=0, deprecated=0, encodedLength=4, offset=4, componentTokenCount=4, encoding=Encoding{presence=REQUIRED, primitiveType=INT32, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='null', timeUnit=null, semanticType='null'}}
+        builder.Append("State=");
+        builder.Append(State());
+        builder.Append('|');
+        //Token{signal=BEGIN_FIELD, name='checksum', referencedName='null', description='Checksum of the entire RecordingDescriptor.', id=4, version=0, deprecated=0, encodedLength=0, offset=8, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=ENCODING, name='int32', referencedName='null', description='null', id=-1, version=0, deprecated=0, encodedLength=4, offset=8, componentTokenCount=1, encoding=Encoding{presence=REQUIRED, primitiveType=INT32, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        builder.Append("Checksum=");
+        builder.Append(Checksum());
         builder.Append('|');
         //Token{signal=BEGIN_FIELD, name='reserved', referencedName='null', description='null', id=3, version=0, deprecated=0, encodedLength=0, offset=31, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
         //Token{signal=ENCODING, name='int8', referencedName='null', description='null', id=-1, version=0, deprecated=0, encodedLength=1, offset=31, componentTokenCount=1, encoding=Encoding{presence=REQUIRED, primitiveType=INT8, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}

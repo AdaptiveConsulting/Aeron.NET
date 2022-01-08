@@ -22,23 +22,27 @@ namespace Adaptive.Aeron.Command
 {
     /// <summary>
     /// Control message for adding or removing a subscription.
-    /// 
-    /// 0                   1                   2                   3
-    /// 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-    /// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    /// |                    Command Correlation ID                     |
-    /// |                                                               |
-    /// +---------------------------------------------------------------+
-    /// |                 Registration Correlation ID                   |
-    /// |                                                               |
-    /// +---------------------------------------------------------------+
-    /// |                         Stream Id                             |
-    /// +---------------------------------------------------------------+
-    /// |                       Channel Length                          |
-    /// +---------------------------------------------------------------+
-    /// |                       Channel (ASCII)                        ...
+    /// <para>
+    ///   0                   1                   2                   3
+    ///   0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+    ///  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    ///  |                          Client ID                            |
+    ///  |                                                               |
+    ///  +---------------------------------------------------------------+
+    ///  |                    Command Correlation ID                     |
+    ///  |                                                               |
+    ///  +---------------------------------------------------------------+
+    ///  |                 Registration Correlation ID                   |
+    ///  |                                                               |
+    ///  +---------------------------------------------------------------+
+    ///  |                         Stream Id                             |
+    ///  +---------------------------------------------------------------+
+    ///  |                       Channel Length                          |
+    ///  +---------------------------------------------------------------+
+    ///  |                       Channel (ASCII)                        ...
     /// ...                                                              |
-    /// +---------------------------------------------------------------+
+    ///  +---------------------------------------------------------------+
+    /// </para>
     /// </summary>
     public class SubscriptionMessageFlyweight : CorrelatedMessageFlyweight
     {
@@ -52,19 +56,32 @@ namespace Adaptive.Aeron.Command
         private int _lengthOfChannel;
 
         /// <summary>
-        /// return correlation id used in registration field
+        /// Wrap the buffer at a given offset for updates.
         /// </summary>
-        /// <returns> correlation id field </returns>
+        /// <param name="buffer"> to wrap. </param>
+        /// <param name="offset"> at which the message begins. </param>
+        /// <returns> this for a fluent API. </returns>
+        public new SubscriptionMessageFlyweight Wrap(IMutableDirectBuffer buffer, int offset)
+        {
+            base.Wrap(buffer, offset);
+
+            return this;
+        }
+        
+        /// <summary>
+        /// return correlation id used in registration field.
+        /// </summary>
+        /// <returns> correlation id field. </returns>
         public long RegistrationCorrelationId()
         {
             return buffer.GetLong(offset + REGISTRATION_CORRELATION_ID_OFFSET);
         }
 
         /// <summary>
-        /// set registration correlation id field
+        /// Set the registration correlation id field.
         /// </summary>
-        /// <param name="correlationId"> field value </param>
-        /// <returns> flyweight </returns>
+        /// <param name="correlationId"> field value. </param>
+        /// <returns> this for a fluent API. </returns>
         public SubscriptionMessageFlyweight RegistrationCorrelationId(long correlationId)
         {
             buffer.PutLong(offset + REGISTRATION_CORRELATION_ID_OFFSET, correlationId);
@@ -73,19 +90,19 @@ namespace Adaptive.Aeron.Command
         }
 
         /// <summary>
-        /// return the stream id
+        /// Get the stream id.
         /// </summary>
-        /// <returns> the stream id </returns>
+        /// <returns> the stream id. </returns>
         public int StreamId()
         {
             return buffer.GetInt(offset + STREAM_ID_OFFSET);
         }
 
         /// <summary>
-        /// Set the stream id
+        /// Set the stream id.
         /// </summary>
-        /// <param name="streamId"> the channel id </param>
-        /// <returns> flyweight </returns>
+        /// <param name="streamId"> the channel id. </param>
+        /// <returns> this for a fluent API. </returns>
         public SubscriptionMessageFlyweight StreamId(int streamId)
         {
             buffer.PutInt(offset + STREAM_ID_OFFSET, streamId);
@@ -94,9 +111,9 @@ namespace Adaptive.Aeron.Command
         }
 
         /// <summary>
-        /// Get the channel field in ASCII
+        /// Get the channel field in ASCII.
         /// </summary>
-        /// <returns> channel field </returns>
+        /// <returns> channel field. </returns>
         public string Channel()
         {
             return buffer.GetStringAscii(offset + CHANNEL_OFFSET);
@@ -112,10 +129,10 @@ namespace Adaptive.Aeron.Command
         }
         
         /// <summary>
-        /// Set channel field in ASCII
+        /// Set channel field in ASCII.
         /// </summary>
-        /// <param name="channel"> field value </param>
-        /// <returns> flyweight </returns>
+        /// <param name="channel"> field value. </param>
+        /// <returns> this for a fluent API. </returns>
         public SubscriptionMessageFlyweight Channel(string channel)
         {
             _lengthOfChannel = buffer.PutStringAscii(offset + CHANNEL_OFFSET, channel);
@@ -123,27 +140,23 @@ namespace Adaptive.Aeron.Command
             return this;
         }
 
+        /// <summary>
+        /// Length of the message in bytes. Only valid after the channel is set.
+        /// </summary>
+        /// <returns> length of the message in bytes. </returns>
         public int Length()
         {
             return CHANNEL_OFFSET + _lengthOfChannel;
         }
         
         /// <summary>
-        /// Validate buffer length is long enough for message.
+        /// Compute the length of the command message for a given channel length.
         /// </summary>
-        /// <param name="msgTypeId"> type of message. </param>
-        /// <param name="length"> of message in bytes to validate. </param>
-        public new void ValidateLength(int msgTypeId, int length)
+        /// <param name="channelLength"> to be appended to the header. </param>
+        /// <returns> the length of the command message for a given channel length. </returns>
+        public static int ComputeLength(int channelLength)
         {
-            if (length < MINIMUM_LENGTH)
-            {
-                throw new ControlProtocolException(ErrorCode.MALFORMED_COMMAND, "command=" + msgTypeId + " too short: length=" + length);
-            }
-
-            if ((length - MINIMUM_LENGTH) < buffer.GetInt(offset + CHANNEL_OFFSET))
-            {
-                throw new ControlProtocolException(ErrorCode.MALFORMED_COMMAND, "command=" + msgTypeId + " too short for channel: length=" + length);
-            }
+            return MINIMUM_LENGTH + channelLength;
         }
     }
 }

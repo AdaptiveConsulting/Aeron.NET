@@ -12,7 +12,7 @@ public class ControlResponseEncoder
     public const ushort BLOCK_LENGTH = 32;
     public const ushort TEMPLATE_ID = 1;
     public const ushort SCHEMA_ID = 101;
-    public const ushort SCHEMA_VERSION = 4;
+    public const ushort SCHEMA_VERSION = 6;
 
     private ControlResponseEncoder _parentMessage;
     private IMutableDirectBuffer _buffer;

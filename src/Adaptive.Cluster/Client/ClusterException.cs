@@ -1,6 +1,4 @@
-﻿using System;
-using System.Runtime.Serialization;
-using Adaptive.Aeron.Exceptions;
+﻿using Adaptive.Aeron.Exceptions;
 
 namespace Adaptive.Cluster.Client
 {
@@ -9,23 +7,20 @@ namespace Adaptive.Cluster.Client
     /// </summary>
     public class ClusterException : AeronException
     {
-        public ClusterException()
-        {
-        }
-
-        public ClusterException(string message, Category category) : base(message, category)
-        {
-        }
-
-        protected ClusterException(SerializationInfo info, StreamingContext context) : base(info, context)
-        {
-        }
-
+        /// <summary>
+        /// Cluster exception with provided message and <seealso cref="Category.ERROR"/>.
+        /// </summary>
+        /// <param name="message"> to detail the exception. </param>
         public ClusterException(string message) : base(message)
         {
         }
 
-        public ClusterException(string message, Exception innerException) : base(message, innerException)
+        /// <summary>
+        /// Cluster exception with a detailed message and provided <seealso cref="Category"/>.
+        /// </summary>
+        /// <param name="message">  providing detail on the error. </param>
+        /// <param name="category"> of the exception. </param>
+        public ClusterException(string message, Category category) : base(message, category)
         {
         }
     }

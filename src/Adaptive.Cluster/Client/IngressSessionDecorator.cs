@@ -79,7 +79,7 @@ namespace Adaptive.Cluster.Client
         /// 
         /// </para>
         /// </summary>
-        /// <param name="publication">   to be offer to. </param>
+        /// <param name="publication">   to be offerec to. </param>
         /// <param name="buffer">        containing message. </param>
         /// <param name="offset">        offset in the buffer at which the encoded message begins. </param>
         /// <param name="length">        in bytes of the encoded message. </param>

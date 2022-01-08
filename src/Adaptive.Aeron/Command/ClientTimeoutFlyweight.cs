@@ -16,10 +16,12 @@ namespace Adaptive.Aeron.Command
     /// </pre>
     public class ClientTimeoutFlyweight
     {
-        private const int CLIENT_ID_FIELD_OFFSET = 0;
-
+        /// <summary>
+        /// Length of the header
+        /// </summary>
         public static readonly int LENGTH = BitUtil.SIZE_OF_LONG;
-
+        private const int CLIENT_ID_FIELD_OFFSET = 0;
+        
         private IMutableDirectBuffer _buffer;
         private int _offset;
 
@@ -28,7 +30,7 @@ namespace Adaptive.Aeron.Command
         /// </summary>
         /// <param name="buffer"> to wrap </param>
         /// <param name="offset"> at which the message begins. </param>
-        /// <returns> for fluent API </returns>
+        /// <returns> this for a fluent API </returns>
         public ClientTimeoutFlyweight Wrap(IMutableDirectBuffer buffer, int offset)
         {
             _buffer = buffer;
@@ -38,19 +40,19 @@ namespace Adaptive.Aeron.Command
         }
 
         /// <summary>
-        /// return client id field
+        /// Get client id field.
         /// </summary>
-        /// <returns> client id field </returns>
+        /// <returns> client id field. </returns>
         public long ClientId()
         {
             return _buffer.GetLong(_offset + CLIENT_ID_FIELD_OFFSET);
         }
 
         /// <summary>
-        /// set client id field
+        /// Set client id field.
         /// </summary>
-        /// <param name="clientId"> field value </param>
-        /// <returns> for fluent API </returns>
+        /// <param name="clientId"> field value. </param>
+        /// <returns> this for a fluent API. </returns>
         public ClientTimeoutFlyweight ClientId(long clientId)
         {
             _buffer.PutLong(_offset + CLIENT_ID_FIELD_OFFSET, clientId);

@@ -45,7 +45,7 @@ namespace Adaptive.Aeron
     /// </para>
     /// </summary>
     /// <seealso cref="Aeron.AddExclusivePublication(String, int)"></seealso>
-    public class ExclusivePublication : Publication
+    public sealed class ExclusivePublication : Publication
     {
         private long _termBeginPosition;
         private int _activePartitionIndex;
@@ -77,12 +77,11 @@ namespace Adaptive.Aeron
                 registrationId
             )
         {
-            var buffers = logBuffers.DuplicateTermBuffers();
             var logMetaDataBuffer = logBuffers.MetaDataBuffer();
 
             for (var i = 0; i < LogBufferDescriptor.PARTITION_COUNT; i++)
             {
-                _termAppenders[i] = new ExclusiveTermAppender(buffers[i], logMetaDataBuffer, i);
+                _termAppenders[i] = new ExclusiveTermAppender(_termBuffers[i], logMetaDataBuffer, i);
             }
 
             var termCount = LogBufferDescriptor.ActiveTermCount(logMetaDataBuffer);
@@ -96,7 +95,8 @@ namespace Adaptive.Aeron
             _termBeginPosition =
                 LogBufferDescriptor.ComputeTermBeginPosition(_termId, PositionBitsToShift, InitialTermId);
         }
-
+        
+        /// <inheritdoc />
         public override long Position
         {
             get
@@ -110,6 +110,7 @@ namespace Adaptive.Aeron
             }
         }
 
+        /// <inheritdoc />
         public override long AvailableWindow
         {
             get

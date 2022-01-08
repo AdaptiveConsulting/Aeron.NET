@@ -11,7 +11,10 @@ namespace Adaptive.Aeron.Command
     ///   0                   1                   2                   3
     ///   0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
     ///  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    ///  |                         Correlation ID                        |
+    ///  |                          Client ID                            |
+    ///  |                                                               |
+    ///  +---------------------------------------------------------------+
+    ///  |                        Correlation ID                         |
     ///  |                                                               |
     ///  +---------------------------------------------------------------+
     ///  |                         Token Length                          |
@@ -26,6 +29,18 @@ namespace Adaptive.Aeron.Command
         static readonly int TOKEN_BUFFER_OFFSET = TOKEN_LENGTH_OFFSET + BitUtil.SIZE_OF_INT;
         private static readonly int MINIMUM_LENGTH = TOKEN_LENGTH_OFFSET + BitUtil.SIZE_OF_INT;
 
+        /// <summary>
+        /// Wrap the buffer at a given offset for updates.
+        /// </summary>
+        /// <param name="buffer"> to wrap. </param>
+        /// <param name="offset"> at which the message begins. </param>
+        /// <returns> this for a fluent API. </returns>
+        public new TerminateDriverFlyweight Wrap(IMutableDirectBuffer buffer, int offset)
+        {
+            base.Wrap(buffer, offset);
+            return this;
+        }
+        
         /// <summary>
         /// Relative offset of the token buffer
         /// </summary>
@@ -50,7 +65,7 @@ namespace Adaptive.Aeron.Command
         /// <param name="tokenBuffer"> containing the optional token for the request. </param>
         /// <param name="tokenOffset"> within the tokenBuffer at which the token begins. </param>
         /// <param name="tokenLength"> of the token in the tokenBuffer. </param>
-        /// <returns> flyweight </returns>
+        /// <returns> this for a fluent API. </returns>
         public TerminateDriverFlyweight TokenBuffer(IDirectBuffer tokenBuffer, int tokenOffset, int tokenLength)
         {
             buffer.PutInt(offset + TOKEN_LENGTH_OFFSET, tokenLength);
@@ -65,7 +80,7 @@ namespace Adaptive.Aeron.Command
         /// <summary>
         /// Get the length of the current message.
         /// <para>
-        /// NB: must be called after the data is written in order to be accurate.
+        /// NB: must be called after the data is written in order to be correct.
         /// 
         /// </para>
         /// </summary>
@@ -76,23 +91,18 @@ namespace Adaptive.Aeron.Command
         }
 
         /// <summary>
-        /// Validate buffer length is long enough for message.
+        /// Compute the length of the command message for a given token length.
         /// </summary>
-        /// <param name="msgTypeId"> type of message. </param>
-        /// <param name="length">    of message in bytes to validate. </param>
-        public new void ValidateLength(int msgTypeId, int length)
+        /// <param name="tokenLength"> to be appended to the header. </param>
+        /// <returns> the length of the command message for a given token length. </returns>
+        public static int ComputeLength(int tokenLength)
         {
-            if (length < MINIMUM_LENGTH)
+            if (tokenLength < 0)
             {
-                throw new ControlProtocolException(ErrorCode.MALFORMED_COMMAND,
-                    "command=" + msgTypeId + " too short: length=" + length);
+                throw new ConfigurationException("token length must be >= 0: " + tokenLength);
             }
 
-            if ((length - MINIMUM_LENGTH) < buffer.GetInt(offset + TOKEN_LENGTH_OFFSET))
-            {
-                throw new ControlProtocolException(ErrorCode.MALFORMED_COMMAND,
-                    "command=" + msgTypeId + " too short for token buffer: length=" + length);
-            }
+            return LENGTH + BitUtil.SIZE_OF_INT + tokenLength;
         }
     }
 }

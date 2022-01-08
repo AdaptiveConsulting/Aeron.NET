@@ -16,7 +16,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Runtime.CompilerServices;
 using Adaptive.Aeron.Command;
 using Adaptive.Agrona;
 using Adaptive.Agrona.Concurrent;
@@ -38,9 +37,9 @@ namespace Adaptive.Aeron
         private readonly ImageMessageFlyweight _imageMessage = new ImageMessageFlyweight();
         private readonly CounterUpdateFlyweight _counterUpdate = new CounterUpdateFlyweight();
         private readonly ClientTimeoutFlyweight _clientTimeout = new ClientTimeoutFlyweight();
-        private readonly HashSet<long> asyncCommandIdSet;
-        private readonly CopyBroadcastReceiver receiver;
-        private readonly IDriverEventsListener _listener;
+        private readonly CopyBroadcastReceiver _receiver;
+        private readonly ClientConductor _conductor;
+        private readonly HashSet<long> _asyncCommandIdSet;
         private readonly MessageHandler _messageHandler;
 
         private long _activeCorrelationId;
@@ -49,15 +48,15 @@ namespace Adaptive.Aeron
         private bool _isInvalid;
 
         internal DriverEventsAdapter(
-            CopyBroadcastReceiver receiver, 
             long clientId,
-            IDriverEventsListener listener,
+            CopyBroadcastReceiver receiver, 
+            ClientConductor conductor,
             HashSet<long> asyncCommandIdSet)
         {
-            this.receiver = receiver;
             _clientId = clientId;
-            _listener = listener;
-            this.asyncCommandIdSet = asyncCommandIdSet;
+            _receiver = receiver;
+            _conductor = conductor;
+            _asyncCommandIdSet = asyncCommandIdSet;
             _messageHandler = OnMessage;
         }
 
@@ -68,7 +67,7 @@ namespace Adaptive.Aeron
 
             try
             {
-                return receiver.Receive(_messageHandler);
+                return _receiver.Receive(_messageHandler);
             }
             catch (InvalidOperationException)
             {
@@ -99,18 +98,18 @@ namespace Adaptive.Aeron
                     if (ErrorCode.CHANNEL_ENDPOINT_ERROR == errorCode)
                     {
                         notProcessed = false;
-                        _listener.OnChannelEndpointError((int)correlationId, _errorResponse.ErrorMessage());
+                        _conductor.OnChannelEndpointError(correlationId, _errorResponse.ErrorMessage());
                     }
                     else if (correlationId == _activeCorrelationId)
                     {
                         notProcessed = false;
                         _receivedCorrelationId = correlationId;
-                        _listener.OnError(correlationId, errorCodeValue, errorCode, _errorResponse.ErrorMessage());
+                        _conductor.OnError(correlationId, errorCodeValue, errorCode, _errorResponse.ErrorMessage());
                     }
                     
-                    if (asyncCommandIdSet.Remove(correlationId) && notProcessed)
+                    if (_asyncCommandIdSet.Remove(correlationId) && notProcessed)
                     {
-                        _listener.OnAsyncError(correlationId, errorCodeValue, errorCode, _errorResponse.ErrorMessage());
+                        _conductor.OnAsyncError(correlationId, errorCodeValue, errorCode, _errorResponse.ErrorMessage());
                     }
 
                     break;
@@ -120,7 +119,7 @@ namespace Adaptive.Aeron
                 {
                     _imageReady.Wrap(buffer, index);
 
-                    _listener.OnAvailableImage(
+                    _conductor.OnAvailableImage(
                         _imageReady.CorrelationId(),
                         _imageReady.SessionId(),
                         _imageReady.SubscriptionRegistrationId(),
@@ -136,10 +135,10 @@ namespace Adaptive.Aeron
                     _publicationReady.Wrap(buffer, index);
 
                     long correlationId = _publicationReady.CorrelationId();
-                    if (correlationId == _activeCorrelationId)
+                    if (correlationId == _activeCorrelationId || _asyncCommandIdSet.Contains(correlationId))
                     {
                         _receivedCorrelationId = correlationId;
-                        _listener.OnNewPublication(
+                        _conductor.OnNewPublication(
                             correlationId,
                             _publicationReady.RegistrationId(),
                             _publicationReady.StreamId(),
@@ -160,7 +159,7 @@ namespace Adaptive.Aeron
                     if (correlationId == _activeCorrelationId)
                     {
                         _receivedCorrelationId = correlationId;
-                        _listener.OnNewSubscription(correlationId, _subscriptionReady.ChannelStatusCounterId());
+                        _conductor.OnNewSubscription(correlationId, _subscriptionReady.ChannelStatusCounterId());
                     }
 
                     break;
@@ -171,7 +170,7 @@ namespace Adaptive.Aeron
                     _operationSucceeded.Wrap(buffer, index);
 
                     long correlationId = _operationSucceeded.CorrelationId();
-                    asyncCommandIdSet.Remove(correlationId);
+                    _asyncCommandIdSet.Remove(correlationId);
                     if (correlationId == _activeCorrelationId)
                     {
                         _receivedCorrelationId = correlationId;
@@ -184,7 +183,7 @@ namespace Adaptive.Aeron
                 {
                     _imageMessage.Wrap(buffer, index);
 
-                    _listener.OnUnavailableImage(
+                    _conductor.OnUnavailableImage(
                         _imageMessage.CorrelationId(), 
                         _imageMessage.SubscriptionRegistrationId()
                     );
@@ -196,10 +195,10 @@ namespace Adaptive.Aeron
                     _publicationReady.Wrap(buffer, index);
 
                     long correlationId = _publicationReady.CorrelationId();
-                    if (correlationId == _activeCorrelationId)
+                    if (correlationId == _activeCorrelationId  || _asyncCommandIdSet.Contains(correlationId))
                     {
                         _receivedCorrelationId = correlationId;
-                        _listener.OnNewExclusivePublication(
+                        _conductor.OnNewExclusivePublication(
                             correlationId,
                             _publicationReady.RegistrationId(),
                             _publicationReady.StreamId(),
@@ -221,11 +220,11 @@ namespace Adaptive.Aeron
                     if (correlationId == _activeCorrelationId)
                     {
                         _receivedCorrelationId = correlationId;
-                        _listener.OnNewCounter(correlationId, counterId);
+                        _conductor.OnNewCounter(correlationId, counterId);
                     }
                     else
                     {
-                        _listener.OnAvailableCounter(correlationId, counterId);
+                        _conductor.OnAvailableCounter(correlationId, counterId);
                     }
 
                     break;
@@ -235,7 +234,7 @@ namespace Adaptive.Aeron
                 {
                     _counterUpdate.Wrap(buffer, index);
 
-                    _listener.OnUnavailableCounter(_counterUpdate.CorrelationId(), _counterUpdate.CounterId());
+                    _conductor.OnUnavailableCounter(_counterUpdate.CorrelationId(), _counterUpdate.CounterId());
                     break;
                 }
 
@@ -245,7 +244,7 @@ namespace Adaptive.Aeron
 
                     if (_clientTimeout.ClientId() == _clientId)
                     {
-                        _listener.OnClientTimeout();
+                        _conductor.OnClientTimeout();
                     }
 
                     break;

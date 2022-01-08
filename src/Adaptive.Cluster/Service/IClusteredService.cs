@@ -23,8 +23,8 @@ namespace Adaptive.Cluster.Service
         /// Start event for the service where the service can perform any initialisation required and load snapshot state.
         /// The snapshot image can be null if no previous snapshot exists.
         /// <para>
-        /// <b>Note:</b> As this is a potentially long running operation the implementation should use
-        /// <seealso cref="ICluster.IdleStrategy()"/> and then occasional call <seealso cref="IIdleStrategy.Idle()"/> or
+        /// <b>Note:</b> As this is a potentially long-running operation the implementation should use
+        /// <seealso cref="ICluster.IdleStrategy()"/> and then occasionally call <seealso cref="IIdleStrategy.Idle()"/> or
         /// <seealso cref="IIdleStrategy.Idle(int)"/>, especially when polling the <seealso cref="Image"/> returns 0.
         ///    
         /// </para>
@@ -39,7 +39,7 @@ namespace Adaptive.Cluster.Service
         /// </summary>
         /// <param name="session">       for the client which have been opened. </param>
         /// <param name="timestamp">   at which the session was opened. </param>
-        void OnSessionOpen(ClientSession session, long timestamp);
+        void OnSessionOpen(IClientSession session, long timestamp);
 
         /// <summary>
         /// A session has been closed for a client to the cluster.
@@ -47,7 +47,7 @@ namespace Adaptive.Cluster.Service
         /// <param name="session">     that has been closed. </param>
         /// <param name="timestamp"> at which the session was closed. </param>
         /// <param name="closeReason"> the session was closed. </param>
-        void OnSessionClose(ClientSession session, long timestamp, CloseReason closeReason);
+        void OnSessionClose(IClientSession session, long timestamp, CloseReason closeReason);
 
         /// <summary>
         /// A message has been received to be processed by a clustered service.
@@ -59,7 +59,7 @@ namespace Adaptive.Cluster.Service
         /// <param name="length">      of the encoded message. </param>
         /// <param name="header">      aeron header for the incoming message. </param>
         void OnSessionMessage(
-            ClientSession session,
+            IClientSession session,
             long timestamp,
             IDirectBuffer buffer,
             int offset,
@@ -76,7 +76,7 @@ namespace Adaptive.Cluster.Service
         /// <summary>
         /// The service should take a snapshot and store its state to the provided archive <seealso cref="Publication"/>.
         /// <para>
-        /// <b>Note:</b> As this is a potentially long running operation the implementation should use
+        /// <b>Note:</b> As this is a potentially long-running operation the implementation should use
         /// <seealso cref="ICluster.IdleStrategy()"/> and then occasionally call <seealso cref="IIdleStrategy.Idle()"/> or
         /// <seealso cref="IIdleStrategy.Idle(int)"/>, especially when the <seealso cref="ExclusivePublication"/> returns <seealso cref="Publication.BACK_PRESSURED"/>.
         /// 
