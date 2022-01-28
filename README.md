@@ -175,3 +175,10 @@ If there are also changes in Agrona run `src\Adaptive.Agrona\Adaptive.Agrona.csp
 The best place for more information is the [Aeron Wiki](https://github.com/real-logic/Aeron/wiki)
 
 [![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/real-logic/Aeron?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) To chat with other Aeron users and the contributors.
+
+### Sponsors
+Many thanks to our **premium sponsors**!
+
+<a href="https://www.tickmill.com/" target=_blank><img
+    src="https://raw.githubusercontent.com/AdaptiveConsulting/Aeron.NET/master/.github/assets/sponsors/tickmill.png" height="65"
+  /></a>
