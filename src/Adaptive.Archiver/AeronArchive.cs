@@ -2574,7 +2574,7 @@ namespace Adaptive.Archiver
                 }
 
                 controlRequestChannel = ApplyDefaultParams(controlRequestChannel);
-                controlRequestChannel = ApplyDefaultParams(controlResponseChannel);
+                controlResponseChannel = ApplyDefaultParams(controlResponseChannel);
             }
 
             /// <summary>
