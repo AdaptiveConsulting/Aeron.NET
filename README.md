@@ -179,6 +179,11 @@ The best place for more information is the [Aeron Wiki](https://github.com/real-
 ### Sponsors
 Many thanks to our **premium sponsors**!
 
-<a href="https://www.tickmill.com/" target=_blank><img
-    src="https://raw.githubusercontent.com/AdaptiveConsulting/Aeron.NET/master/.github/assets/sponsors/tickmill.png" height="65"
-  /></a>
+<p align="left">
+<a href="https://www.tickmill.com/" target=_blank>
+    <img src="https://raw.githubusercontent.com/AdaptiveConsulting/Aeron.NET/master/.github/assets/sponsors/tickmill.png"/>
+</a>
+<a href="https://www.rwe.com/" target=_blank>
+    <img src="https://raw.githubusercontent.com/AdaptiveConsulting/Aeron.NET/master/.github/assets/sponsors/rwe.png"/>
+</a>
+</p>
