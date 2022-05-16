@@ -484,7 +484,7 @@ namespace Adaptive.Cluster.Service
 
             if (memberId == this.memberId && changeType == ChangeType.QUIT)
             {
-                Terminate();
+                Terminate(true);
             }
         }
 
@@ -924,11 +924,17 @@ namespace Adaptive.Cluster.Service
 
             if (NULL_POSITION != terminationPosition && logPosition >= terminationPosition)
             {
-                Terminate();
+                if (logPosition > terminationPosition)
+                {
+                    ctx.CountedErrorHandler().OnError(new ClusterException(
+                        "service terminate: logPosition=" + logPosition + " > terminationPosition=" + terminationPosition));
+                }
+
+                Terminate(logPosition == terminationPosition);
             }
         }
 
-        private void Terminate()
+        private void Terminate(bool isTerminationExpected)
         {
             isServiceActive = false;
             activeLifecycleCallbackName = "onTerminate";
@@ -965,7 +971,7 @@ namespace Adaptive.Cluster.Service
             }
 
             terminationPosition = NULL_VALUE;
-            throw new ClusterTerminationException();
+            throw new ClusterTerminationException(isTerminationExpected);
         }
 
 

@@ -159,8 +159,8 @@ namespace Adaptive.Aeron
         /// <summary>
         /// Compute the length of the cnc file and return it.
         /// </summary>
-        /// <param name="totalLengthOfBuffers"> in bytes </param>
-        /// <param name="alignment"> for file length to adhere to</param>
+        /// <param name="totalLengthOfBuffers"> in bytes. </param>
+        /// <param name="alignment"> for file length to adhere to. </param>
         /// <returns> cnc file length in bytes </returns>
         public static int ComputeCncFileLength(int totalLengthOfBuffers, int alignment)
         {
@@ -301,7 +301,7 @@ namespace Adaptive.Aeron
 
         /// <summary>
         /// Create the buffer which wraps the area in the CnC file for the metadata about the CnC file itself. </summary>
-        /// <param name="buffer"> for the CnC file </param>
+        /// <param name="buffer"> for the CnC file. </param>
         /// <returns> the buffer which wraps the area in the CnC file for the metadata about the CnC file itself. </returns>
         public static UnsafeBuffer CreateMetaDataBuffer(MappedByteBuffer buffer)
         {
@@ -441,6 +441,16 @@ namespace Adaptive.Aeron
                 metaDataBuffer.GetInt(ERROR_LOG_BUFFER_LENGTH_FIELD_OFFSET);
 
             return cncFileLength >= metadataRequiredLength;
+        }
+        
+        /// <summary>
+        /// Determines if this path name matches the cnc file name pattern.
+        /// </summary>
+        /// <param name="path">    to examine. </param>
+        /// <returns> true if the name matches. </returns>
+        public static bool IsCncFile(FileInfo path)
+        {
+            return path.Name.Equals(CNC_FILE);
         }
     }
 }

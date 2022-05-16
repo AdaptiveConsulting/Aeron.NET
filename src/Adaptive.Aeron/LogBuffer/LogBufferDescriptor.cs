@@ -706,7 +706,9 @@ namespace Adaptive.Aeron.LogBuffer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static long PackTail(int termId, int termOffset)
         {
-            return ((long)termId << 32) | (termOffset & 0xFFFFFFFFL);
+#pragma warning disable CS0675
+            return ((long)termId << 32) | termOffset;
+#pragma warning restore CS0675
         }
 
         /// <summary>

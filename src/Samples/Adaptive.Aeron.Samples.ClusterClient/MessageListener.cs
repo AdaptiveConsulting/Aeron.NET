@@ -24,5 +24,11 @@ namespace Adaptive.Aeron.Samples.ClusterClient
         {
             Console.WriteLine($"New Leader:  leadershipTermId={leadershipTermId}, leaderMemberId={leaderMemberId}, memberEndpoints={memberEndpoints}");
         }
+
+        public void OnAdminResponse(long clusterSessionId, long correlationId, AdminRequestType requestType,
+            AdminResponseCode responseCode, string message, IDirectBuffer payload, int payloadOffset, int payloadLength)
+        {
+            Console.WriteLine($"OnAdminResponse:  clusterSessionId={clusterSessionId}, correlationId={correlationId}, requestType={requestType}, responseCode={responseCode}");
+        }
     }
 }

@@ -451,8 +451,8 @@ public class RecordingSignalEventDecoder
         builder.Append("Position=");
         builder.Append(Position());
         builder.Append('|');
-        //Token{signal=BEGIN_FIELD, name='signal', referencedName='null', description='null', id=6, version=0, deprecated=0, encodedLength=0, offset=40, componentTokenCount=11, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
-        //Token{signal=BEGIN_ENUM, name='RecordingSignal', referencedName='null', description='Signal of operations happening to a recording.', id=-1, version=0, deprecated=0, encodedLength=4, offset=40, componentTokenCount=9, encoding=Encoding{presence=REQUIRED, primitiveType=INT32, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='null', timeUnit=null, semanticType='null'}}
+        //Token{signal=BEGIN_FIELD, name='signal', referencedName='null', description='null', id=6, version=0, deprecated=0, encodedLength=0, offset=40, componentTokenCount=12, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=BEGIN_ENUM, name='RecordingSignal', referencedName='null', description='Signal of operations happening to a recording.', id=-1, version=0, deprecated=0, encodedLength=4, offset=40, componentTokenCount=10, encoding=Encoding{presence=REQUIRED, primitiveType=INT32, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='null', timeUnit=null, semanticType='null'}}
         builder.Append("Signal=");
         builder.Append(Signal());
 

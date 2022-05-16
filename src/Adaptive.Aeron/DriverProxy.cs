@@ -24,7 +24,7 @@ namespace Adaptive.Aeron
 	/// <summary>
 	/// Separates the concern of communicating with the client conductor away from the rest of the client.
 	/// 
-	/// Writes commands into the client conductor buffer.
+	/// For writing commands into the client conductor buffer.
 	/// 
 	/// Note: this class is not thread safe and is expecting to be called within <see cref="Aeron.Context.ClientLock(Adaptive.Agrona.Concurrent.ILock)"/>.
 	/// </summary>

@@ -310,7 +310,6 @@ namespace Adaptive.Aeron
             );
 
             _resourceByRegIdMap.Put(correlationId, publication);
-            _asyncCommandIdSet.Remove(correlationId);
         }
 
         internal void OnNewExclusivePublication(
@@ -342,7 +341,6 @@ namespace Adaptive.Aeron
             );
 
             _resourceByRegIdMap.Put(correlationId, publication);
-            _asyncCommandIdSet.Remove(correlationId);
         }
 
         internal void OnNewSubscription(long correlationId, int statusIndicatorId)
@@ -575,7 +573,7 @@ namespace Adaptive.Aeron
             }
         }
 
-        internal void ReleasePublication(Publication publication)
+        internal void RemovePublication(Publication publication)
         {
             _clientLock.Lock();
             try
@@ -597,6 +595,44 @@ namespace Adaptive.Aeron
                             EXPLICIT_CLOSE_LINGER_NS);
                         _asyncCommandIdSet.Add(_driverProxy.RemovePublication(publication.RegistrationId));
                     }
+                }
+            }
+            finally
+            {
+                _clientLock.Unlock();
+            }
+        }
+        
+        internal void RemovePublication(long publicationRegistrationId)
+        {
+            _clientLock.Lock();
+            try
+            {
+                if (Aeron.NULL_VALUE == publicationRegistrationId || _isTerminating || _isClosed)
+                {
+                    return;
+                }
+
+                EnsureNotReentrant();
+
+                object resource = _resourceByRegIdMap.Get(publicationRegistrationId);
+                if (null != resource && !(resource is Publication))
+                {
+                    throw new AeronException("registration id is not a Publication");
+                }
+
+                Publication publication = (Publication)resource;
+                if (null != publication)
+                {
+                    _resourceByRegIdMap.Remove(publicationRegistrationId);
+                    publication.InternalClose();
+                    ReleaseLogBuffers(publication.LogBuffers, publication.OriginalRegistrationId, EXPLICIT_CLOSE_LINGER_NS);
+                }
+
+                if (_asyncCommandIdSet.Remove(publicationRegistrationId) || null != publication)
+                {
+                    _driverProxy.RemovePublication(publicationRegistrationId);
+                    _stashedChannelByRegistrationId.Remove(publicationRegistrationId);
                 }
             }
             finally
@@ -634,7 +670,7 @@ namespace Adaptive.Aeron
             }
         }
 
-        internal void ReleaseSubscription(Subscription subscription)
+        internal void RemoveSubscription(Subscription subscription)
         {
             _clientLock.Lock();
             try

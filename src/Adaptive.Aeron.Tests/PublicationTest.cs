@@ -86,7 +86,7 @@ namespace Adaptive.Aeron.Tests
 
             LogBufferDescriptor.InitialiseTailWithTermId(_logMetaDataBuffer, PartionIndex, TermID1);
 
-            A.CallTo(() => _conductor.ReleasePublication(_publication)).Invokes(() => _publication.InternalClose());
+            A.CallTo(() => _conductor.RemovePublication(_publication)).Invokes(() => _publication.InternalClose());
         }
 
         [Test]
@@ -95,7 +95,7 @@ namespace Adaptive.Aeron.Tests
             _publication.Dispose();
             Assert.AreEqual(Publication.CLOSED, _publication.Position);
 
-            A.CallTo(() => _conductor.ReleasePublication(_publication)).MustHaveHappened();
+            A.CallTo(() => _conductor.RemovePublication(_publication)).MustHaveHappened();
         }
 
         [Test]
@@ -147,7 +147,21 @@ namespace Adaptive.Aeron.Tests
         {
             _publication.Dispose();
 
-            A.CallTo(() => _conductor.ReleasePublication(_publication)).MustHaveHappened();
+            A.CallTo(() => _conductor.RemovePublication(_publication)).MustHaveHappened();
+        }
+        
+        [Test]
+        public void ShouldReturnErrorMessages()
+        {
+            Assert.Equals("NOT_CONNECTED", Publication.ErrorString(-1L));
+            Assert.Equals("BACK_PRESSURED", Publication.ErrorString(-2L));
+            Assert.Equals("ADMIN_ACTION", Publication.ErrorString(-3L));
+            Assert.Equals("CLOSED", Publication.ErrorString(-4L));
+            Assert.Equals("MAX_POSITION_EXCEEDED", Publication.ErrorString(-5L));
+            Assert.Equals("NONE", Publication.ErrorString(0L));
+            Assert.Equals("NONE", Publication.ErrorString(1L));
+            Assert.Equals("UNKNOWN", Publication.ErrorString(-6L));
+            Assert.Equals("UNKNOWN", Publication.ErrorString(long.MinValue));
         }
     }
 }

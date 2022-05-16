@@ -820,7 +820,7 @@ namespace Adaptive.Cluster.Service
             }
 
             /// <summary>
-            /// Set the channel parameter for sending messages to the Consensus Module.
+            /// Set the channel parameter for bidirectional communications between the consensus module and services.
             /// </summary>
             /// <param name="channel"> parameter for sending messages to the Consensus Module. </param>
             /// <returns> this for a fluent API. </returns>
@@ -832,7 +832,7 @@ namespace Adaptive.Cluster.Service
             }
 
             /// <summary>
-            /// Get the channel parameter for sending messages to the Consensus Module.
+            /// Get the channel parameter for bidirectional communications between the consensus module and services.
             /// </summary>
             /// <returns> the channel parameter for sending messages to the Consensus Module. </returns>
             /// <seealso cref="Configuration.CONTROL_CHANNEL_PROP_NAME"></seealso>

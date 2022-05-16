@@ -78,7 +78,7 @@ namespace Adaptive.Aeron.Tests
                 AvailableImageHandler,
                 UnavailableImageHandler);
             
-            A.CallTo(() => Conductor.ReleaseSubscription(Subscription)).Invokes(() => Subscription.InternalClose(Aeron.NULL_VALUE));
+            A.CallTo(() => Conductor.RemoveSubscription(Subscription)).Invokes(() => Subscription.InternalClose(Aeron.NULL_VALUE));
         }
 
         [Test]
@@ -87,7 +87,7 @@ namespace Adaptive.Aeron.Tests
             Subscription.Dispose();
             Assert.True(Subscription.IsClosed);
 
-            A.CallTo(() => Conductor.ReleaseSubscription(Subscription)).MustHaveHappened();
+            A.CallTo(() => Conductor.RemoveSubscription(Subscription)).MustHaveHappened();
         }
 
         [Test]

@@ -3,7 +3,7 @@
         <TargetFramework>netstandard2.0</TargetFramework>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <PackageId>Agrona</PackageId>
-        <VersionPrefix>1.37.0</VersionPrefix>
+        <VersionPrefix>1.38.1</VersionPrefix>
         <Authors>Adaptive Financial Consulting Ltd.</Authors>
         <Company>Adaptive Financial Consulting Ltd.</Company>
         <Product>Agrona libraries initially included in Aeron Client</Product>

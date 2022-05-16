@@ -68,7 +68,7 @@ namespace Adaptive.Cluster
                     else if (SemanticVersion.Major(version) != MAJOR_VERSION)
                     {
                         throw new ClusterException("mark file major version " + SemanticVersion.Major(version) +
-                                                   " does not match software:" + MAJOR_VERSION);
+                                                   " does not match software: " + MAJOR_VERSION);
                     }
                 },
                 null);
@@ -85,7 +85,7 @@ namespace Adaptive.Cluster
                 var existingErrorBuffer = new UnsafeBuffer(
                     buffer, headerDecoder.HeaderLength(), headerDecoder.ErrorBufferLength());
 
-                SaveExistingErrors(file, existingErrorBuffer, type, Console.Error);
+                SaveExistingErrors(file, existingErrorBuffer, type, Aeron.Aeron.Context.FallbackLogger());
 
                 existingErrorBuffer.SetMemory(0, errorBufferLength, 0);
             }
@@ -135,7 +135,7 @@ namespace Adaptive.Cluster
                     if (SemanticVersion.Major(version) != MAJOR_VERSION)
                     {
                         throw new ClusterException("mark file major version " + SemanticVersion.Major(version) + 
-                                                    " does not match software:" + AeronCluster.Configuration.PROTOCOL_MAJOR_VERSION);
+                                                    " does not match software: " + AeronCluster.Configuration.PROTOCOL_MAJOR_VERSION);
                     }
 
                 },

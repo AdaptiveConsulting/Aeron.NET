@@ -43,10 +43,10 @@ namespace Adaptive.Cluster.Client
         private readonly BufferClaim _bufferClaim = new BufferClaim();
         private readonly UnsafeBuffer _headerBuffer = new UnsafeBuffer(new byte[SESSION_HEADER_LENGTH]);
         private readonly DirectBufferVector _headerVector;
-        private readonly UnsafeBuffer _keepaliveMsgBuffer;
         private readonly MessageHeaderEncoder _messageHeaderEncoder = new MessageHeaderEncoder();
         private readonly SessionMessageHeaderEncoder _sessionMessageEncoder = new SessionMessageHeaderEncoder();
         private readonly SessionKeepAliveEncoder _sessionKeepAliveEncoder = new SessionKeepAliveEncoder();
+        private readonly AdminRequestEncoder _adminRequestEncoder = new AdminRequestEncoder();
 
         private readonly FragmentAssembler _fragmentAssembler;
         private readonly IEgressListener _egressListener;
@@ -66,6 +66,7 @@ namespace Adaptive.Cluster.Client
 
             private readonly NewLeaderEventDecoder _newLeaderEventDecoder = new NewLeaderEventDecoder();
             private readonly SessionEventDecoder _sessionEventDecoder = new SessionEventDecoder();
+            private readonly AdminResponseDecoder _adminResponseDecoder = new AdminResponseDecoder();
 
             private readonly IEgressListener _egressListener;
             private readonly long _clusterSessionId;
@@ -147,6 +148,38 @@ namespace Adaptive.Cluster.Client
                             _sessionEventDecoder.Detail());
                     }
                 }
+                else if (AdminResponseDecoder.TEMPLATE_ID == templateId)
+                {
+                    _adminResponseDecoder.Wrap(
+                        buffer,
+                        offset + MessageHeaderDecoder.ENCODED_LENGTH,
+                        _messageHeaderDecoder.BlockLength(),
+                        _messageHeaderDecoder.Version());
+
+                    long sessionId = _adminResponseDecoder.ClusterSessionId();
+                    if (sessionId == _clusterSessionId)
+                    {
+                        long correlationId = _adminResponseDecoder.CorrelationId();
+                        AdminRequestType requestType = _adminResponseDecoder.RequestType();
+                        AdminResponseCode responseCode = _adminResponseDecoder.ResponseCode();
+                        string message = _adminResponseDecoder.Message();
+                        int payloadOffset = _adminResponseDecoder.Offset() +
+                                            AdminResponseDecoder.BLOCK_LENGTH +
+                                            AdminResponseDecoder.MessageHeaderLength() +
+                                            message.Length +
+                                            AdminResponseDecoder.PayloadHeaderLength();
+                        int payloadLength = _adminResponseDecoder.PayloadLength();
+                        _egressListener.OnAdminResponse(
+                            sessionId,
+                            correlationId,
+                            requestType,
+                            responseCode,
+                            message,
+                            buffer,
+                            payloadOffset,
+                            payloadLength);
+                    }
+                }
             }
         }
 
@@ -159,6 +192,7 @@ namespace Adaptive.Cluster.Client
 
             private readonly NewLeaderEventDecoder _newLeaderEventDecoder = new NewLeaderEventDecoder();
             private readonly SessionEventDecoder _sessionEventDecoder = new SessionEventDecoder();
+            private readonly AdminResponseDecoder _adminResponseDecoder = new AdminResponseDecoder();
 
             private readonly IControlledEgressListener _egressListener;
             private readonly long _clusterSessionId;
@@ -246,6 +280,38 @@ namespace Adaptive.Cluster.Client
                         return ControlledFragmentHandlerAction.COMMIT;
                     }
                 }
+                else if (AdminResponseDecoder.TEMPLATE_ID == templateId)
+                {
+                    _adminResponseDecoder.Wrap(
+                        buffer,
+                        offset + MessageHeaderDecoder.ENCODED_LENGTH,
+                        _messageHeaderDecoder.BlockLength(),
+                        _messageHeaderDecoder.Version());
+
+                    long sessionId = _adminResponseDecoder.ClusterSessionId();
+                    if (sessionId == _clusterSessionId)
+                    {
+                        long correlationId = _adminResponseDecoder.CorrelationId();
+                        AdminRequestType requestType = _adminResponseDecoder.RequestType();
+                        AdminResponseCode responseCode = _adminResponseDecoder.ResponseCode();
+                        string message = _adminResponseDecoder.Message();
+                        int payloadOffset = _adminResponseDecoder.Offset() +
+                                            AdminResponseDecoder.BLOCK_LENGTH +
+                                            AdminResponseDecoder.MessageHeaderLength() +
+                                            message.Length +
+                                            AdminResponseDecoder.PayloadHeaderLength();
+                        int payloadLength = _adminResponseDecoder.PayloadLength();
+                        _egressListener.OnAdminResponse(
+                            sessionId,
+                            correlationId,
+                            requestType,
+                            responseCode,
+                            message,
+                            buffer,
+                            payloadOffset,
+                            payloadLength);
+                    }
+                }
 
                 return ControlledFragmentHandlerAction.CONTINUE;
             }
@@ -280,6 +346,7 @@ namespace Adaptive.Cluster.Client
                 long deadlineNs = aeron.Ctx.NanoClock().NanoTime() + ctx.MessageTimeoutNs();
                 asyncConnect = new AsyncConnect(ctx, subscription, deadlineNs);
                 AgentInvoker aeronClientInvoker = aeron.ConductorAgentInvoker;
+                AgentInvoker agentInvoker = ctx.AgentInvoker();
                 IIdleStrategy idleStrategy = ctx.IdleStrategy();
 
                 AeronCluster aeronCluster;
@@ -289,6 +356,11 @@ namespace Adaptive.Cluster.Client
                     if (null != aeronClientInvoker)
                     {
                         aeronClientInvoker.Invoke();
+                    }
+                    
+                    if (null != agentInvoker)
+                    {
+                        agentInvoker.Invoke();
                     }
 
                     if (step != asyncConnect.Step())
@@ -396,14 +468,6 @@ namespace Adaptive.Cluster.Client
                 .WrapAndApplyHeader(_headerBuffer, 0, _messageHeaderEncoder)
                 .ClusterSessionId(_clusterSessionId)
                 .LeadershipTermId(_leadershipTermId);
-
-            _keepaliveMsgBuffer = new UnsafeBuffer(new byte[
-                MessageHeaderEncoder.ENCODED_LENGTH + SessionKeepAliveEncoder.BLOCK_LENGTH]);
-
-            _sessionKeepAliveEncoder
-                .WrapAndApplyHeader(_keepaliveMsgBuffer, 0, _messageHeaderEncoder)
-                .LeadershipTermId(_leadershipTermId)
-                .ClusterSessionId(_clusterSessionId);
         }
 
         /// <summary>
@@ -571,10 +635,19 @@ namespace Adaptive.Cluster.Client
 
             while (true)
             {
-                long result = _publication.Offer(_keepaliveMsgBuffer, 0, _keepaliveMsgBuffer.Capacity);
+                int length = MessageHeaderEncoder.ENCODED_LENGTH + SessionKeepAliveEncoder.BLOCK_LENGTH;
+
+                long result = _publication.TryClaim(length, _bufferClaim);
 
                 if (result > 0)
                 {
+                    _sessionKeepAliveEncoder
+                        .WrapAndApplyHeader(_bufferClaim.Buffer, _bufferClaim.Offset, _messageHeaderEncoder)
+                        .LeadershipTermId(_leadershipTermId)
+                        .ClusterSessionId(_clusterSessionId);
+
+                    _bufferClaim.Commit();
+                    
                     return true;
                 }
 
@@ -594,10 +667,65 @@ namespace Adaptive.Cluster.Client
                 }
 
                 _idleStrategy.Idle();
+                InvokeInvokers();
             }
 
             return false;
         }
+        
+        /// <summary>
+        /// Sends an admin request to initiate a snapshot action in the cluster. This request requires elevated privileges.
+        /// </summary>
+        /// <param name="correlationId"> for the request. </param>
+        /// <returns> {@code true} if the request was sent or {@code false} otherwise. </returns>
+        /// <seealso cref="IEgressListener.OnAdminResponse(long, long, AdminRequestType, AdminResponseCode, String, IDirectBuffer, int, int)"/>
+        /// <seealso cref="IControlledEgressListener.OnAdminResponse(long, long, AdminRequestType, AdminResponseCode, String, IDirectBuffer, int, int)"/>
+        public bool SendAdminRequestToTakeASnapshot(long correlationId)
+        {
+            _idleStrategy.Reset();
+            int attempts = SEND_ATTEMPTS;
+
+            int length = MessageHeaderEncoder.ENCODED_LENGTH + AdminRequestEncoder.BLOCK_LENGTH + AdminRequestEncoder.PayloadHeaderLength();
+
+            while (true)
+            {
+                long result = _publication.TryClaim(length, _bufferClaim);
+                if (result > 0)
+                {
+                    _adminRequestEncoder.WrapAndApplyHeader(_bufferClaim.Buffer, _bufferClaim.Offset, _messageHeaderEncoder)
+                        .LeadershipTermId(_leadershipTermId)
+                        .ClusterSessionId(_clusterSessionId)
+                        .CorrelationId(correlationId)
+                        .RequestType(AdminRequestType.SNAPSHOT)
+                        .PutPayload(Array.Empty<byte>(), 0, 0);
+
+                    _bufferClaim.Commit();
+
+                    return true;
+                }
+
+                if (result == Publication.CLOSED)
+                {
+                    throw new ClusterException("ingress publication is closed");
+                }
+
+                if (result == Publication.MAX_POSITION_EXCEEDED)
+                {
+                    throw new ClusterException("max position exceeded");
+                }
+
+                if (--attempts <= 0)
+                {
+                    break;
+                }
+
+                _idleStrategy.Idle();
+                InvokeInvokers();
+            }
+
+            return false;
+        }
+
 
         /// <summary>
         /// Poll the <seealso cref="EgressSubscription()"/> for session messages which are dispatched to
@@ -663,7 +791,6 @@ namespace Adaptive.Cluster.Client
             _leadershipTermId = leadershipTermId;
             _leaderMemberId = leaderMemberId;
             _sessionMessageEncoder.LeadershipTermId(leadershipTermId);
-            _sessionKeepAliveEncoder.LeadershipTermId(leadershipTermId);
 
             if (_ctx.IngressEndpoints() != null)
             {
@@ -718,7 +845,10 @@ namespace Adaptive.Cluster.Client
             if (null == newLeader.publication)
             {
                 var channelUri = ChannelUri.Parse(_ctx.IngressChannel());
-                channelUri.Put(Aeron.Aeron.Context.ENDPOINT_PARAM_NAME, newLeader.endpoint);
+                if (channelUri.IsUdp)
+                {
+                    channelUri.Put(Aeron.Aeron.Context.ENDPOINT_PARAM_NAME, newLeader.endpoint);
+                }
                 _publication = AddIngressPublication(_ctx, channelUri.ToString(), _ctx.IngressStreamId());
                 newLeader.publication = _publication;
             }
@@ -755,6 +885,20 @@ namespace Adaptive.Cluster.Client
                 }
 
                 _idleStrategy.Idle();
+                InvokeInvokers();
+            }
+        }
+        
+        private void InvokeInvokers()
+        {
+            if (null != _ctx.Aeron().ConductorAgentInvoker)
+            {
+                _ctx.Aeron().ConductorAgentInvoker.Invoke();
+            }
+
+            if (null != _ctx.AgentInvoker())
+            {
+                _ctx.AgentInvoker().Invoke();
             }
         }
 
@@ -785,13 +929,13 @@ namespace Adaptive.Cluster.Client
             /// Minor version of the network protocol from client to consensus module. If these don't match then some
             /// features may not be available.
             /// </summary>
-            public const int PROTOCOL_MINOR_VERSION = 1;
+            public const int PROTOCOL_MINOR_VERSION = 2;
 
             /// <summary>
             /// Patch version of the network protocol from client to consensus module. If these don't match then bug fixes
             /// may not have been applied.
             /// </summary>
-            public const int PROTOCOL_PATCH_VERSION = 1;
+            public const int PROTOCOL_PATCH_VERSION = 0;
 
             /// <summary>
             /// Combined semantic version for the client to consensus module protocol.
@@ -989,6 +1133,16 @@ namespace Adaptive.Cluster.Client
                     string memberEndpoints)
                 {
                 }
+
+                void IControlledEgressListener.OnAdminResponse(long clusterSessionId, long correlationId, AdminRequestType requestType,
+                    AdminResponseCode responseCode, string message, IDirectBuffer payload, int payloadOffset, int payloadLength)
+                {
+                }
+
+                void IEgressListener.OnAdminResponse(long clusterSessionId, long correlationId, AdminRequestType requestType,
+                    AdminResponseCode responseCode, string message, IDirectBuffer payload, int payloadOffset, int payloadLength)
+                {
+                }
             }
 
             private int _isConcluded = 0;
@@ -1008,6 +1162,7 @@ namespace Adaptive.Cluster.Client
             private bool _isDirectAssemblers = false;
             private IEgressListener _egressListener;
             private IControlledEgressListener _controlledEgressListener;
+            private AgentInvoker agentInvoker;
 
             /// <summary>
             /// Perform a shallow copy of the object.
@@ -1055,6 +1210,14 @@ namespace Adaptive.Cluster.Client
                 if (null == _controlledEgressListener)
                 {
                     _controlledEgressListener = new MissingEgressMessageListener();
+                }
+                
+                if (_ingressChannel.StartsWith(Adaptive.Aeron.Aeron.Context.IPC_CHANNEL))
+                {
+                    if (null != _ingressEndpoints)
+                    {
+                        throw new ConfigurationException("AeronCluster.Context ingressEndpoints must be null when using IPC ingress");
+                    }
                 }
             }
 
@@ -1432,6 +1595,30 @@ namespace Adaptive.Cluster.Client
                 _controlledEgressListener = listener;
                 return this;
             }
+            
+            /// <summary>
+            /// Set the <seealso cref="Adaptive.Agrona.Concurrent.AgentInvoker"/> to be invoked in addition to any invoker used by the <seealso cref="Aeron()"/> instance.
+            /// <para>
+            /// Useful for when running on a low thread count scenario.
+            /// 
+            /// </para>
+            /// </summary>
+            /// <param name="agentInvoker"> to be invoked while awaiting a response in the client or when awaiting completion. </param>
+            /// <returns> this for a fluent API. </returns>
+            public Context AgentInvoker(AgentInvoker agentInvoker)
+            {
+                this.agentInvoker = agentInvoker;
+                return this;
+            }
+
+            /// <summary>
+            /// Get the <seealso cref="Adaptive.Agrona.Concurrent.AgentInvoker"/> to be invoked in addition to any invoker used by the <seealso cref="Aeron()"/> instance.
+            /// </summary>
+            /// <returns> the <seealso cref="Adaptive.Agrona.Concurrent.AgentInvoker"/> that is used. </returns>
+            public AgentInvoker AgentInvoker()
+            {
+                return agentInvoker;
+            }
 
             /// <summary>
             /// Close the context and free applicable resources.
@@ -1625,7 +1812,11 @@ namespace Adaptive.Cluster.Client
                     {
                         try
                         {
-                            channelUri.Put(Aeron.Aeron.Context.ENDPOINT_PARAM_NAME, member.endpoint);
+                            if (channelUri.IsUdp)
+                            {
+                                channelUri.Put(Aeron.Aeron.Context.ENDPOINT_PARAM_NAME, member.endpoint);
+                            }
+
                             member.publication =
                                 AddIngressPublication(ctx, channelUri.ToString(), ctx.IngressStreamId());
                             ++publicationCount;
@@ -1711,7 +1902,6 @@ namespace Adaptive.Cluster.Client
                         clusterSessionId = egressPoller.ClusterSessionId();
                         PrepareChallengeResponse(ctx.CredentialsSupplier()
                             .OnChallenge(egressPoller.EncodedChallenge()));
-                        Step(2);
                         return;
                     }
 
@@ -1768,7 +1958,10 @@ namespace Adaptive.Cluster.Client
                 {
                     MemberIngress member = memberByIdMap.Get(leaderMemberId);
                     ChannelUri channelUri = ChannelUri.Parse(ctx.IngressChannel());
-                    channelUri.Put(Aeron.Aeron.Context.ENDPOINT_PARAM_NAME, member.endpoint);
+                    if (channelUri.IsUdp)
+                    {
+                        channelUri.Put(Aeron.Aeron.Context.ENDPOINT_PARAM_NAME, member.endpoint);
+                    }
                     ingressPublication = AddIngressPublication(ctx, channelUri.ToString(), ctx.IngressStreamId());
                 }
 

@@ -257,6 +257,17 @@ namespace Adaptive.Aeron
         {
             return _conductor.AsyncAddPublication(channel, streamId);
         }
+        
+        /// <summary>
+        /// Asynchronously remove a <seealso cref="Publication"/>.
+        /// </summary>
+        /// <param name="registrationId"> to be of the publication removed. </param>
+        /// <seealso cref="AsyncAddPublication(String, int)"/>
+        /// <seealso cref="AsyncAddExclusivePublication(String, int)"/>
+        public void AsyncRemovePublication(long registrationId)
+        {
+            _conductor.RemovePublication(registrationId);
+        }
 
         /// <summary>
         /// Asynchronously add a <seealso cref="Publication"/> for publishing messages to subscribers from a single thread.
@@ -948,6 +959,30 @@ namespace Adaptive.Aeron
             /// Placeholder value to use in URIs to specify that a timestamp should be stored in the reserved value field.
             /// </summary>
             public const string RESERVED_OFFSET = "reserved";
+            
+            /// <summary>
+            /// Property name for a fallback PrintStream based logger when it is not possible to use the error logging
+            /// callback.  Supported values are stdout, stderr, no_op (stderr is the default).
+            /// </summary>
+            public const string FALLBACK_LOGGER_PROP_NAME = "aeron.fallback.logger";
+
+            /// <summary>
+            /// Get the current fallback logger based on the supplied property.
+            /// </summary>
+            /// <returns> the configured PrintStream. </returns>
+            public static TextWriter FallbackLogger()
+            {
+                string fallbackLoggerName = Config.GetProperty(FALLBACK_LOGGER_PROP_NAME, "stderr");
+                switch (fallbackLoggerName)
+                {
+                    case "stdout":
+                        return Console.Out;
+
+                    case "stderr":
+                    default:
+                        return Console.Error;
+                }
+            }
 
             /// <summary>
             /// Get the default directory name to be used if <seealso cref="AeronDirectoryName(String)"/> is not set. This will take
@@ -1999,7 +2034,7 @@ namespace Adaptive.Aeron
             {
                 FileInfo cncFile = new FileInfo(Path.Combine(_aeronDirectory.FullName, CncFileDescriptor.CNC_FILE));
 
-                if (cncFile.Exists && cncFile.Length > 0)
+                if (cncFile.Exists && cncFile.Length > CncFileDescriptor.END_OF_METADATA_OFFSET)
                 {
                     if (null != logProgress)
                     {
@@ -2023,7 +2058,7 @@ namespace Adaptive.Aeron
             {
                 FileInfo cncFile = new FileInfo(Path.Combine(directory.FullName, CncFileDescriptor.CNC_FILE));
 
-                if (cncFile.Exists && cncFile.Length > 0)
+                if (cncFile.Exists && cncFile.Length > CncFileDescriptor.END_OF_METADATA_OFFSET)
                 {
                     logger("INFO: Aeron CnC file " + cncFile + " exists");
 
@@ -2120,7 +2155,7 @@ namespace Adaptive.Aeron
             {
                 FileInfo cncFile = new FileInfo(Path.Combine(directory.FullName, CncFileDescriptor.CNC_FILE));
 
-                if (cncFile.Exists && cncFile.Length > 0)
+                if (cncFile.Exists && cncFile.Length > CncFileDescriptor.END_OF_METADATA_OFFSET)
                 {
                     var cncByteBuffer = IoUtil.MapExistingFile(cncFile, "CnC file");
                     try
@@ -2128,15 +2163,18 @@ namespace Adaptive.Aeron
                         UnsafeBuffer cncMetaDataBuffer = CncFileDescriptor.CreateMetaDataBuffer(cncByteBuffer);
                         int cncVersion = cncMetaDataBuffer.GetIntVolatile(CncFileDescriptor.CncVersionOffset(0));
 
-                        CncFileDescriptor.CheckVersion(cncVersion);
+                        if (cncVersion > 0)
+                        {
+                            CncFileDescriptor.CheckVersion(cncVersion);
 
-                        ManyToOneRingBuffer toDriverBuffer =
-                            new ManyToOneRingBuffer(
-                                CncFileDescriptor.CreateToDriverBuffer(cncByteBuffer, cncMetaDataBuffer));
-                        long clientId = toDriverBuffer.NextCorrelationId();
-                        DriverProxy driverProxy = new DriverProxy(toDriverBuffer, clientId);
+                            ManyToOneRingBuffer toDriverBuffer =
+                                new ManyToOneRingBuffer(
+                                    CncFileDescriptor.CreateToDriverBuffer(cncByteBuffer, cncMetaDataBuffer));
+                            long clientId = toDriverBuffer.NextCorrelationId();
+                            DriverProxy driverProxy = new DriverProxy(toDriverBuffer, clientId);
 
-                        return driverProxy.TerminateDriver(tokenBuffer, tokenOffset, tokenLength);
+                            return driverProxy.TerminateDriver(tokenBuffer, tokenOffset, tokenLength);
+                        }
                     }
                     finally
                     {
@@ -2191,7 +2229,7 @@ namespace Adaptive.Aeron
             public static int PrintErrorLog(IAtomicBuffer errorBuffer, TextWriter @out)
             {
                 int distinctErrorCount = 0;
-                if (ErrorLogReader.HasErrors(errorBuffer))
+                if (errorBuffer.Capacity > 0 && ErrorLogReader.HasErrors(errorBuffer))
                 {
                     void ErrorConsumer(int count, long firstTimestamp, long lastTimestamp, string ex)
                         => @out.WriteLine(

@@ -1458,9 +1458,13 @@ namespace Adaptive.Aeron
         /// <returns> this for a fluent API. </returns>
         public ChannelUriStringBuilder InitialPosition(long position, int initialTermId, int termLength)
         {
-            if (position < 0 || 0 != (position & (FRAME_ALIGNMENT - 1)))
+            if (position < 0)
             {
-                throw new ArgumentException("invalid position: " + position);
+                throw new ArgumentException("invalid position=" + position + " < 0");
+            }
+            if (0 != (position & (FRAME_ALIGNMENT - 1)))
+            {
+                throw new ArgumentException("invalid position=" + position + " does not have frame alignment=" + FRAME_ALIGNMENT);
             }
 
             int bitsToShift = LogBufferDescriptor.PositionBitsToShift(termLength);

@@ -135,7 +135,7 @@ namespace Adaptive.Aeron
                     _publicationReady.Wrap(buffer, index);
 
                     long correlationId = _publicationReady.CorrelationId();
-                    if (correlationId == _activeCorrelationId || _asyncCommandIdSet.Contains(correlationId))
+                    if (correlationId == _activeCorrelationId || _asyncCommandIdSet.Remove(correlationId))
                     {
                         _receivedCorrelationId = correlationId;
                         _conductor.OnNewPublication(
@@ -195,7 +195,7 @@ namespace Adaptive.Aeron
                     _publicationReady.Wrap(buffer, index);
 
                     long correlationId = _publicationReady.CorrelationId();
-                    if (correlationId == _activeCorrelationId  || _asyncCommandIdSet.Contains(correlationId))
+                    if (correlationId == _activeCorrelationId  || _asyncCommandIdSet.Remove(correlationId))
                     {
                         _receivedCorrelationId = correlationId;
                         _conductor.OnNewExclusivePublication(

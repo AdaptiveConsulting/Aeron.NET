@@ -12,7 +12,7 @@ public class BackupResponseDecoder
     public const ushort BLOCK_LENGTH = 56;
     public const ushort TEMPLATE_ID = 78;
     public const ushort SCHEMA_ID = 111;
-    public const ushort SCHEMA_VERSION = 7;
+    public const ushort SCHEMA_VERSION = 8;
 
     private BackupResponseDecoder _parentMessage;
     private IDirectBuffer _buffer;

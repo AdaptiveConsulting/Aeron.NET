@@ -565,9 +565,6 @@ namespace Adaptive.Archiver
         /// Truncate a stopped recording to a given position that is less than the stopped position. The provided position
         /// must be on a fragment boundary. Truncating a recording to the start position effectively deletes the recording.
         ///
-        /// If the truncate operation will result in deleting segments then this will occur asynchronously. Before extending
-        /// a truncated recording which has segments being asynchronously being deleted then you should await completion
-        /// on the <seealso cref="RecordingSignal.DELETE"/>.
         /// </summary>
         /// <param name="recordingId">      of the stopped recording to be truncated. </param>
         /// <param name="position">         to which the recording will be truncated. </param>

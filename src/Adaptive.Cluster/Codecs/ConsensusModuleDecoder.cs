@@ -12,7 +12,7 @@ public class ConsensusModuleDecoder
     public const ushort BLOCK_LENGTH = 28;
     public const ushort TEMPLATE_ID = 105;
     public const ushort SCHEMA_ID = 111;
-    public const ushort SCHEMA_VERSION = 7;
+    public const ushort SCHEMA_VERSION = 8;
 
     private ConsensusModuleDecoder _parentMessage;
     private IDirectBuffer _buffer;

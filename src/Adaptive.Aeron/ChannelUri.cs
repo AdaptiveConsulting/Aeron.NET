@@ -113,13 +113,13 @@ namespace Adaptive.Aeron
         /// Is the channel <seealso cref="Media()"/> equal to <seealso cref="Aeron.Context.UDP_MEDIA"/>.
         /// </summary>
         /// <returns> true the channel <seealso cref="Media()"/> equals <seealso cref="Aeron.Context.UDP_MEDIA"/>. </returns>
-        public bool Udp => Aeron.Context.UDP_MEDIA.Equals(_media);
+        public bool IsUdp => Aeron.Context.UDP_MEDIA.Equals(_media);
 
         /// <summary>
         /// Is the channel <seealso cref="Media()"/> equal to <seealso cref="Aeron.Context.IPC_MEDIA"/>.
         /// </summary>
         /// <returns> true the channel <seealso cref="Media()"/> equals <seealso cref="Aeron.Context.IPC_MEDIA"/>. </returns>
-        public bool Ipc => Aeron.Context.IPC_MEDIA.Equals(_media);
+        public bool IsIpc => Aeron.Context.IPC_MEDIA.Equals(_media);
 
         /// <summary>
         /// The scheme for the URI. Must be "aeron".
@@ -473,6 +473,30 @@ namespace Adaptive.Aeron
         {
             return IsTagged(paramValue) ? long.Parse(paramValue.Substring(4, paramValue.Length - 4)) : INVALID_TAG;
         }
+        
+        /// <summary>
+        /// Create a channel URI for a destination, i.e. a channel that uses {@code media} and {@code interface} parameters
+        /// of the original channel and adds specified {@code endpoint} to it. For example given the input channel is
+        /// {@code aeron:udp?mtu=1440|ttl=0|endpoint=localhost:8090|term-length=128k|interface=eth0} and the endpoint is
+        /// {@code 192.168.0.14} the output of this method will be {@code aeron:udp?endpoint=192.168.0.14|interface=eth0}.
+        /// </summary>
+        /// <param name="channel">  for which the destination is being added. </param>
+        /// <param name="endpoint"> for the target destination. </param>
+        /// <returns> new channel URI for a destination. </returns>
+        public static string CreateDestinationUri(string channel, string endpoint)
+        {
+            ChannelUri channelUri = ChannelUri.Parse(channel);
+            string uri = AERON_PREFIX + channelUri.Media() + "?" + Aeron.Context.ENDPOINT_PARAM_NAME + "=" + endpoint;
+            string networkInterface = channelUri.Get(Aeron.Context.INTERFACE_PARAM_NAME);
+
+            if (null != networkInterface)
+            {
+                return uri + "|" + Aeron.Context.INTERFACE_PARAM_NAME + "=" + networkInterface;
+            }
+
+            return uri;
+        }
+
 
         private static void ValidateMedia(string media)
         {

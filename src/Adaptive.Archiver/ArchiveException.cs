@@ -69,6 +69,11 @@ namespace Adaptive.Archiver
         /// The replication identity for this operation is not known to the archive.
         /// </summary>
         public const int UNKNOWN_REPLICATION = 12;
+        
+        /// <summary>
+        /// The principle was not authorised to take the requested action. 
+        /// </summary>
+        public const int UNAUTHORISED_ACTION = 13;
 
         /// <summary>
         /// Error code providing more detail into what went wrong.

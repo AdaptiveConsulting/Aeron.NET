@@ -13,8 +13,8 @@ namespace Adaptive.Cluster.Service
     /// The {@code cluster} object should only be used to send messages to the cluster or schedule timers in
     /// response to other messages and timers. Sending messages and timers should not happen from cluster lifecycle
     /// methods like <seealso cref="OnStart(ICluster, Image)"/>, <seealso cref="OnRoleChange(ClusterRole)"/> or
-    /// <seealso cref="OnTakeSnapshot(ExclusivePublication)"/>, or <seealso cref="OnTerminate(ICluster)"/>, with the exception of
-    /// the session lifecycle methods.
+    /// <seealso cref="OnTakeSnapshot(ExclusivePublication)"/>, or <seealso cref="OnTerminate(ICluster)"/>, except the session lifecycle
+    /// methods.
     /// </para>
     /// </summary>
     public interface IClusteredService

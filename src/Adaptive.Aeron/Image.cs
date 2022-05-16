@@ -29,7 +29,7 @@ namespace Adaptive.Aeron
     /// Represents a replicated <see cref="Publication"/> from a publisher which matches a <seealso cref="Subscription"/>.
     /// Each <seealso cref="Image"/> identifies a source <see cref="Publication"/> by <see cref="SessionId"/>.
     /// 
-    /// By default fragmented messages are not reassembled before delivery. If an application must
+    /// By default, fragmented messages are not reassembled before delivery. If an application must
     /// receive whole messages, whether or not they were fragmented, then the Subscriber
     /// should be created with a <seealso cref="FragmentAssembler"/> or a custom implementation.
     /// 

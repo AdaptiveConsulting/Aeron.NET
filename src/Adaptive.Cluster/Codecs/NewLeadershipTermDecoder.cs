@@ -12,7 +12,7 @@ public class NewLeadershipTermDecoder
     public const ushort BLOCK_LENGTH = 88;
     public const ushort TEMPLATE_ID = 53;
     public const ushort SCHEMA_ID = 111;
-    public const ushort SCHEMA_VERSION = 7;
+    public const ushort SCHEMA_VERSION = 8;
 
     private NewLeadershipTermDecoder _parentMessage;
     private IDirectBuffer _buffer;

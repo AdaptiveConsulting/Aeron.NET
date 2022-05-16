@@ -12,7 +12,7 @@ public class VoteEncoder
     public const ushort BLOCK_LENGTH = 36;
     public const ushort TEMPLATE_ID = 52;
     public const ushort SCHEMA_ID = 111;
-    public const ushort SCHEMA_VERSION = 7;
+    public const ushort SCHEMA_VERSION = 8;
 
     private VoteEncoder _parentMessage;
     private IMutableDirectBuffer _buffer;

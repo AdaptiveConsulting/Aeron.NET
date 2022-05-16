@@ -16,7 +16,7 @@ namespace Adaptive.Cluster.Service
     /// and timers. Sending messages and timers should not happen from cluster lifecycle methods like
     /// <seealso cref="IClusteredService.OnStart(ICluster, Image)"/>, <seealso cref="IClusteredService.OnRoleChange(ClusterRole)"/> or
     /// <seealso cref="IClusteredService.OnTakeSnapshot(ExclusivePublication)"/>, or <seealso cref="IClusteredService.OnTerminate(ICluster)"/>,
-    /// with the exception of the session lifecycle methods <seealso cref="IClusteredService.OnSessionOpen(IClientSession, long)"/> and
+    /// except the session lifecycle methods <seealso cref="IClusteredService.OnSessionOpen(IClientSession, long)"/> and
     /// <seealso cref="IClusteredService.OnSessionClose(IClientSession, long, CloseReason)"/> and <seealso cref="IClusteredService.OnNewLeadershipTermEvent"/>.
     /// </para>
     /// </summary>
@@ -108,6 +108,20 @@ namespace Adaptive.Cluster.Service
         /// <seealso cref="IClusteredService.OnSessionOpen(IClientSession, long)"/>, or
         /// <seealso cref="IClusteredService.OnSessionClose(IClientSession, long, CloseReason)"/>.
         /// If applied to other events then they are not guaranteed to be reliable.
+        ///
+        /// Callers of this method should loop until the method succeeds.
+        ///
+        /// <code>
+        /// private ICluster cluster;
+        /// ...
+        /// cluster.IdleStrategy().Reset();
+        /// while (!cluster.ScheduleTimer(correlationId, deadline)) {
+        ///     cluster.IdleStrategy().Idle()
+        /// }
+        /// </code>
+        ///
+        /// The cluster's idle strategy must be used in the body of the loop to allow for the clustered service to be
+        /// shutdown if required.
         ///   
         /// </para>
         /// </summary>
@@ -116,7 +130,7 @@ namespace Adaptive.Cluster.Service
         /// <returns> true if the event to schedule a timer request has been sent or false if back pressure is applied. </returns>
         /// <seealso cref="CancelTimer(long)"/>
         bool ScheduleTimer(long correlationId, long deadline);
-
+        
         /// <summary>
         /// Cancel a previously scheduled timer. This action is asynchronous and will race with the timer expiring.
         /// <para>
@@ -126,7 +140,8 @@ namespace Adaptive.Cluster.Service
         /// <seealso cref="IClusteredService.OnSessionOpen(IClientSession, long)"/>, or
         /// <seealso cref="IClusteredService.OnSessionClose(IClientSession, long, CloseReason)"/>.
         /// If applied to other events then they are not guaranteed to be reliable.
-        ///    
+        ///
+        /// Callers of this method should loop until the method succeeds, see <seealso cref="ScheduleTimer"/> for an example.
         /// </para>
         /// </summary>
         /// <param name="correlationId"> for the timer provided when it was scheduled. <seealso cref="long.MaxValue"/> not supported. </param>
@@ -138,6 +153,33 @@ namespace Adaptive.Cluster.Service
         /// Offer a message as ingress to the cluster for sequencing. This will happen efficiently over IPC to the
         /// consensus module and have the cluster session of as the negative value of the
         /// <seealso cref="ClusteredServiceContainer.Configuration.SERVICE_ID_PROP_NAME"/>.
+        ///
+        /// Callers of this method should loop until the method succeeds.
+        ///
+        /// <code>
+        /// private ICluster cluster;
+        ///
+        /// cluster.IdleStrategy().Reset();
+        /// do
+        /// {
+        ///     final long position = cluster.Offer(buffer, offset, length);
+        ///     if (position > 0)
+        ///     {
+        ///         break;
+        ///     }
+        ///     else if (Publication.ADMIN_ACTION != position || Publication.BACK_PRESSURED != position)
+        ///     {
+        ///         throw new ClusterException("Internal offer failed: " + position);
+        ///     }
+        ///
+        ///     cluster.IdleStrategy.Idle();
+        /// }
+        /// while (true);
+        /// }
+        /// </code>
+        ///
+        /// The cluster's idle strategy must be used in the body of the loop to allow for the clustered service to be
+        /// shutdown if required.
         /// </summary>
         /// <param name="buffer"> containing the message to be offered. </param>
         /// <param name="offset"> in the buffer at which the encoded message begins. </param>
@@ -151,6 +193,9 @@ namespace Adaptive.Cluster.Service
         /// <seealso cref="ClusteredServiceContainer.Configuration.SERVICE_ID_PROP_NAME"/>.
         /// <para>
         /// The first vector must be left free to be filled in for the session message header.
+        ///
+        /// Callers of this method should loop until the method succeeds, see
+        /// <seealso cref="Offer(Adaptive.Agrona.IDirectBuffer,int,int)"/> for an example.
         /// 
         /// </para>
         /// </summary>
@@ -182,7 +227,10 @@ namespace Adaptive.Cluster.Service
         ///         }
         ///     }
         /// }</pre>
-        ///    
+        ///
+        /// Callers of this method should loop until the method succeeds, see
+        /// <seealso cref="Offer(Adaptive.Agrona.IDirectBuffer,int,int)"/> for an example.
+        ///  
         /// </para>
         /// </summary>
         /// <param name="length">      of the range to claim, in bytes. </param>

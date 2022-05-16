@@ -16,6 +16,7 @@ namespace Adaptive.Cluster.Client
         private readonly SessionEventDecoder _sessionEventDecoder = new SessionEventDecoder();
         private readonly NewLeaderEventDecoder _newLeaderEventDecoder = new NewLeaderEventDecoder();
         private readonly SessionMessageHeaderDecoder _sessionMessageHeaderDecoder = new SessionMessageHeaderDecoder();
+        private readonly AdminResponseDecoder _adminResponseDecoder = new AdminResponseDecoder();
         private readonly FragmentAssembler _fragmentAssembler;
         private readonly IEgressListener _listener;
         private readonly Subscription _subscription;
@@ -128,6 +129,41 @@ namespace Adaptive.Cluster.Client
                             _sessionEventDecoder.LeadershipTermId(),
                             _newLeaderEventDecoder.LeaderMemberId(),
                             _newLeaderEventDecoder.IngressEndpoints());
+                    }
+
+                    break;
+                }
+
+                case AdminResponseDecoder.TEMPLATE_ID:
+                {
+                    _adminResponseDecoder.Wrap(
+                        buffer,
+                        offset + MessageHeaderDecoder.ENCODED_LENGTH,
+                        _messageHeaderDecoder.BlockLength(),
+                        _messageHeaderDecoder.Version());
+
+                    long sessionId = _adminResponseDecoder.ClusterSessionId();
+                    if (sessionId == _clusterSessionId)
+                    {
+                        long correlationId = _adminResponseDecoder.CorrelationId();
+                        AdminRequestType requestType = _adminResponseDecoder.RequestType();
+                        AdminResponseCode responseCode = _adminResponseDecoder.ResponseCode();
+                        string message = _adminResponseDecoder.Message();
+                        int payloadOffset = _adminResponseDecoder.Offset() +
+                                            AdminResponseDecoder.BLOCK_LENGTH +
+                                            AdminResponseDecoder.MessageHeaderLength() +
+                                            message.Length +
+                                            AdminResponseDecoder.PayloadHeaderLength();
+                        int payloadLength = _adminResponseDecoder.PayloadLength();
+                        _listener.OnAdminResponse(
+                            sessionId,
+                            correlationId,
+                            requestType,
+                            responseCode,
+                            message,
+                            buffer,
+                            payloadOffset,
+                            payloadLength);
                     }
 
                     break;

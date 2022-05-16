@@ -213,7 +213,7 @@ namespace Adaptive.Aeron
         public bool IsConnected => !_isClosed && LogBufferDescriptor.IsConnected(_logMetaDataBuffer);
 
         /// <summary>
-        /// Release resources used by this Publication when there are no more references.
+        /// Remove resources used by this Publication when there are no more references.
         /// 
         /// Publications are reference counted and are only truly closed when the ref count reaches zero.
         /// </summary>
@@ -221,7 +221,7 @@ namespace Adaptive.Aeron
         {
             if (!_isClosed)
             {
-                _conductor.ReleasePublication(this);
+                _conductor.RemovePublication(this);
             }
         }
 
@@ -574,6 +574,44 @@ namespace Adaptive.Aeron
             }
 
             return totalLength;
+        }
+        
+        /// <summary>
+        /// Returns a string representation of a position.  Generally used for errors.  If the position is a valid error then
+        /// String name of the error will be returned.  If the value is 0 or greater the text will be "NONE". If the position
+        /// is negative, but not a known error code then "UNKNOWN" will be returned.
+        /// </summary>
+        /// <param name="position"> position value returned from a call to offer. </param>
+        /// <returns> String representation of the error. </returns>
+        public static string ErrorString(long position)
+        {
+            if (MAX_POSITION_EXCEEDED <= position && position < 0)
+            {
+                int errorCode = (int)position;
+                switch (errorCode)
+                {
+                    case (int)NOT_CONNECTED:
+                        return "NOT_CONNECTED";
+                    case (int)BACK_PRESSURED:
+                        return "BACK_PRESSURED";
+                    case (int)ADMIN_ACTION:
+                        return "ADMIN_ACTION";
+                    case (int)CLOSED:
+                        return "CLOSED";
+                    case (int)MAX_POSITION_EXCEEDED:
+                        return "MAX_POSITION_EXCEEDED";
+                    default:
+                        return "UNKNOWN";
+                }
+            }
+            else if (0 <= position)
+            {
+                return "NONE";
+            }
+            else
+            {
+                return "UNKNOWN";
+            }
         }
 
         public override string ToString()

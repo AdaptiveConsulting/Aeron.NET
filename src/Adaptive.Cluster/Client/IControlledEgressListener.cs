@@ -54,5 +54,19 @@ namespace Adaptive.Cluster.Client
         /// <param name="leaderMemberId">   identity of the active leader. </param>
         /// <param name="ingressEndpoints">  for connecting to the cluster which can be updated due to dynamic membership. </param>
         void OnNewLeader(long clusterSessionId, long leadershipTermId, int leaderMemberId, string ingressEndpoints);
+
+        /// <summary>
+        /// Message returned in response to an admin request.
+        /// </summary>
+        /// <param name="clusterSessionId"> to which the response belongs. </param>
+        /// <param name="correlationId">    of the admin request. </param>
+        /// <param name="requestType">      of the admin request. </param>
+        /// <param name="responseCode">     describing the response. </param>
+        /// <param name="message">          describing the response (e.g. error message). </param>
+        /// <param name="payload">          delivered with the response, can be empty. </param>
+        /// <param name="payloadOffset">    into the payload buffer. </param>
+        /// <param name="payloadLength">    of the payload. </param>
+        void OnAdminResponse(long clusterSessionId, long correlationId, AdminRequestType requestType,
+            AdminResponseCode responseCode, string message, IDirectBuffer payload, int payloadOffset, int payloadLength);
     }
 }

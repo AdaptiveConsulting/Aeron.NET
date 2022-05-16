@@ -57,6 +57,7 @@ namespace Adaptive.Archiver
         private readonly ControlResponsePoller controlResponsePoller;
         private readonly ILock _lock;
         private readonly INanoClock nanoClock;
+        private readonly AgentInvoker agentInvoker;
         private readonly AgentInvoker aeronClientInvoker;
         private RecordingDescriptorPoller recordingDescriptorPoller;
         private RecordingSubscriptionDescriptorPoller recordingSubscriptionDescriptorPoller;
@@ -70,6 +71,7 @@ namespace Adaptive.Archiver
             this.context = context;
             aeron = context.AeronClient();
             aeronClientInvoker = aeron.ConductorAgentInvoker;
+            agentInvoker = context.AgentInvoker();
             idleStrategy = context.IdleStrategy();
             messageTimeoutNs = context.MessageTimeoutNs();
             _lock = context.Lock();
@@ -178,17 +180,32 @@ namespace Adaptive.Archiver
                 asyncConnect = new AsyncConnect(ctx, controlResponsePoller, archiveProxy);
                 var idleStrategy = ctx.IdleStrategy();
                 var aeronClientInvoker = aeron.ConductorAgentInvoker;
+                var delegatingInvoker = ctx.AgentInvoker();
+                var previousStep = asyncConnect.Step();
 
                 AeronArchive aeronArchive;
 
                 while (null == (aeronArchive = asyncConnect.Poll()))
                 {
+                    if (asyncConnect.Step() == previousStep)
+                    {
+                        idleStrategy.Idle();
+                    }
+                    else
+                    {
+                        idleStrategy.Reset();
+                        previousStep = asyncConnect.Step();
+                    }
+
                     if (null != aeronClientInvoker)
                     {
                         aeronClientInvoker.Invoke();
                     }
 
-                    idleStrategy.Idle();
+                    if (null != delegatingInvoker)
+                    {
+                        delegatingInvoker.Invoke();
+                    }
                 }
 
                 return aeronArchive;
@@ -1345,13 +1362,11 @@ namespace Adaptive.Archiver
         /// Truncate a stopped recording to a given position that is less than the stopped position. The provided position
         /// must be on a fragment boundary. Truncating a recording to the start position effectively deletes the recording.
         /// 
-        /// If the truncate operation will result in deleting segments then this will occur asynchronously. Before extending
-        /// a truncated recording which has segments being asynchronously being deleted then you should await completion
-        /// on the <seealso cref="RecordingSignal.DELETE"/>.
         /// </summary>
         /// <param name="recordingId"> of the stopped recording to be truncated. </param>
         /// <param name="position">    to which the recording will be truncated. </param>
-        public void TruncateRecording(long recordingId, long position)
+        /// <returns> count of deleted segment files. </returns>
+        public long TruncateRecording(long recordingId, long position)
         {
             _lock.Lock();
             try
@@ -1366,7 +1381,7 @@ namespace Adaptive.Archiver
                     throw new ArchiveException("failed to send truncate recording request");
                 }
 
-                PollForResponse(lastCorrelationId);
+                return PollForResponse(lastCorrelationId);
             }
             finally
             {
@@ -1379,7 +1394,8 @@ namespace Adaptive.Archiver
         /// and delete the corresponding segment files. The space in the Catalog will be reclaimed upon compaction.
         /// </summary>
         /// <param name="recordingId"> of the stopped recording to be purged. </param>
-        public void PurgeRecording(long recordingId)
+        /// <returns> count of deleted segment files.</returns>
+        public long PurgeRecording(long recordingId)
         {
             _lock.Lock();
             try
@@ -1394,7 +1410,7 @@ namespace Adaptive.Archiver
                     throw new ArchiveException("failed to send invalidate recording request");
                 }
 
-                PollForResponse(lastCorrelationId);
+                return PollForResponse(lastCorrelationId);
             }
             finally
             {
@@ -1951,7 +1967,7 @@ namespace Adaptive.Archiver
 
                 CheckDeadline(deadlineNs, "awaiting response", correlationId);
                 idleStrategy.Idle();
-                InvokeAeronClient();
+                InvokeInvokers();
             }
         }
 
@@ -1966,7 +1982,7 @@ namespace Adaptive.Archiver
 
                 if (poller.ControlSessionId() != controlSessionId)
                 {
-                    InvokeAeronClient();
+                    InvokeInvokers();
                     continue;
                 }
 
@@ -2010,7 +2026,7 @@ namespace Adaptive.Archiver
 
                 if (poller.ControlSessionId() != controlSessionId)
                 {
-                    InvokeAeronClient();
+                    InvokeInvokers();
                     continue;
                 }
 
@@ -2072,7 +2088,7 @@ namespace Adaptive.Archiver
                     deadlineNs = nanoClock.NanoTime() + messageTimeoutNs;
                 }
 
-                InvokeAeronClient();
+                InvokeInvokers();
 
                 if (fragments > 0)
                 {
@@ -2114,7 +2130,7 @@ namespace Adaptive.Archiver
                     deadlineNs = nanoClock.NanoTime() + messageTimeoutNs;
                 }
 
-                InvokeAeronClient();
+                InvokeInvokers();
 
                 if (fragments > 0)
                 {
@@ -2142,11 +2158,16 @@ namespace Adaptive.Archiver
                 controlResponsePoller.RecordingSignal());
         }
 
-        private void InvokeAeronClient()
+        private void InvokeInvokers()
         {
             if (null != aeronClientInvoker)
             {
                 aeronClientInvoker.Invoke();
+            }
+
+            if (null != agentInvoker)
+            {
+                agentInvoker.Invoke();
             }
         }
 
@@ -2181,7 +2202,7 @@ namespace Adaptive.Archiver
             /// Minor version of the network protocol from client to archive. If these don't match then some features may
             /// not be available.
             /// </summary>
-            public const int PROTOCOL_MINOR_VERSION = 7;
+            public const int PROTOCOL_MINOR_VERSION = 9;
 
             /// <summary>
             /// Patch version of the network protocol from client to archive. If these don't match then bug fixes may not
@@ -2286,7 +2307,7 @@ namespace Adaptive.Archiver
 
             /// <summary>
             /// Channel for receiving progress events of recordings from an archive.
-            /// For production it is recommended that multicast or dynamic multi-destination-cast (MDC) is used to allow
+            /// For production, it is recommended that multicast or dynamic multi-destination-cast (MDC) is used to allow
             /// for dynamic subscribers, an endpoint can be added to the subscription side for controlling port usage.
             /// </summary>
             public const string RECORDING_EVENTS_CHANNEL_DEFAULT =
@@ -2526,6 +2547,7 @@ namespace Adaptive.Archiver
             private ErrorHandler errorHandler;
             private ICredentialsSupplier credentialsSupplier;
             private IRecordingSignalConsumer recordingSignalConsumer = Configuration.NO_OP_RECORDING_SIGNAL_CONSUMER;
+            private AgentInvoker agentInvoker;
             internal bool ownsAeronClient = false;
 
             public Context Clone()
@@ -2947,7 +2969,7 @@ namespace Adaptive.Archiver
             }
 
             /// <summary>
-            /// Set the <seealso cref="IRecordingSignalConsumer"/> to will be called  when polling for responses from an Archive.
+            /// Set the <seealso cref="IRecordingSignalConsumer"/> to will be called when polling for responses from an Archive.
             /// </summary>
             /// <param name="recordingSignalConsumer"> to called with recording signal events. </param>
             /// <returns> this for a fluent API. </returns>
@@ -2958,12 +2980,34 @@ namespace Adaptive.Archiver
             }
 
             /// <summary>
-            /// Set the <seealso cref="IRecordingSignalConsumer"/> to will be called  when polling for responses from an Archive.
+            /// Set the <seealso cref="IRecordingSignalConsumer"/> to will be called when polling for responses from an Archive.
             /// </summary>
             /// <returns> a recording signal consumer. </returns>
             public IRecordingSignalConsumer RecordingSignalConsumer()
             {
                 return recordingSignalConsumer;
+            }
+
+            /// <summary>
+            /// Set the <seealso cref="Adaptive.Agrona.Concurrent.AgentInvoker"/> to be invoked in addition to any invoker used by the <seealso cref="AeronClient()"/> instance.
+            ///
+            /// Useful for when running on a low thread count scenario.
+            /// </summary>
+            /// <param name="agentInvoker"> to be invoked while awaiting a response in the client.</param>
+            /// <returns>  this for a fluent API.</returns>
+            public Context AgentInvoker(AgentInvoker agentInvoker)
+            {
+                this.agentInvoker = agentInvoker;
+                return this;
+            }
+
+            /// <summary>
+            /// Get the <seealso cref="Adaptive.Agrona.Concurrent.AgentInvoker"/> to be invoked in addition to any invoker used by the <seealso cref="AeronClient()"/> instance.
+            /// </summary>
+            /// <returns> the <seealso cref="Adaptive.Agrona.Concurrent.AgentInvoker"/> that is used. </returns>
+            public AgentInvoker AgentInvoker()
+            {
+                return agentInvoker;
             }
 
             /// <summary>
@@ -3048,8 +3092,8 @@ namespace Adaptive.Archiver
         {
             private readonly Context ctx;
             private readonly ControlResponsePoller controlResponsePoller;
-            private readonly INanoClock nanoClock;
             private readonly long deadlineNs;
+            private long publicationRegistrationId = Aeron.Aeron.NULL_VALUE;
             private ArchiveProxy archiveProxy;
             private long correlationId = Aeron.Aeron.NULL_VALUE;
             private long challengeControlSessionId = Aeron.Aeron.NULL_VALUE;
@@ -3061,14 +3105,13 @@ namespace Adaptive.Archiver
                 this.ctx = ctx;
 
                 Aeron.Aeron aeron = ctx.AeronClient();
-                nanoClock = aeron.Ctx.NanoClock();
                 controlResponsePoller =
                     new ControlResponsePoller(aeron.AddSubscription(ctx.ControlResponseChannel(),
                         ctx.ControlResponseStreamId()));
 
-                correlationId =
+                publicationRegistrationId =
                     aeron.AsyncAddExclusivePublication(ctx.ControlRequestChannel(), ctx.ControlRequestStreamId());
-                deadlineNs = nanoClock.NanoTime() + ctx.MessageTimeoutNs();
+                deadlineNs = aeron.Ctx.NanoClock().NanoTime() + ctx.MessageTimeoutNs();
             }
 
 
@@ -3080,9 +3123,8 @@ namespace Adaptive.Archiver
                 this.ctx = ctx;
                 this.controlResponsePoller = controlResponsePoller;
                 this.archiveProxy = archiveProxy;
-                this.nanoClock = ctx.AeronClient().Ctx.NanoClock();
 
-                deadlineNs = nanoClock.NanoTime() + ctx.MessageTimeoutNs();
+                deadlineNs = ctx.AeronClient().Ctx.NanoClock().NanoTime() + ctx.MessageTimeoutNs();
                 _step = 1;
             }
 
@@ -3099,6 +3141,10 @@ namespace Adaptive.Archiver
                     if (null != archiveProxy)
                     {
                         CloseHelper.Dispose(errorHandler, archiveProxy.Pub());
+                    }
+                    else if (Aeron.Aeron.NULL_VALUE != publicationRegistrationId)
+                    {
+                        ctx.AeronClient().AsyncRemovePublication(publicationRegistrationId);
                     }
 
                     ctx.Dispose();
@@ -3135,9 +3181,10 @@ namespace Adaptive.Archiver
 
                 if (0 == _step)
                 {
-                    ExclusivePublication publication = ctx.AeronClient().GetExclusivePublication(correlationId);
+                    ExclusivePublication publication = ctx.AeronClient().GetExclusivePublication(publicationRegistrationId);
                     if (null != publication)
                     {
+                        publicationRegistrationId = Aeron.Aeron.NULL_VALUE;
                         archiveProxy = new ArchiveProxy(
                             publication,
                             ctx.IdleStrategy(),
@@ -3230,7 +3277,11 @@ namespace Adaptive.Archiver
                             throw new ArchiveException("unexpected response: code=" + code);
                         }
 
-                        archiveProxy.KeepAlive(controlSessionId, Aeron.Aeron.NULL_VALUE);
+                        if (!archiveProxy.KeepAlive(controlSessionId, Aeron.Aeron.NULL_VALUE))
+                        {
+                            throw new ArchiveException("failed to send keep alive after archive connect");
+                        }
+                        
                         aeronArchive = new AeronArchive(ctx, controlResponsePoller, archiveProxy, controlSessionId);
 
                         Step(5);
@@ -3242,7 +3293,7 @@ namespace Adaptive.Archiver
 
             private void CheckDeadline()
             {
-                if (deadlineNs - nanoClock.NanoTime() < 0)
+                if (deadlineNs - ctx.AeronClient().Ctx.NanoClock().NanoTime() < 0)
                 {
                     throw new TimeoutException("Archive connect timeout: step=" + _step +
                                                (_step < 3
