@@ -153,15 +153,15 @@ namespace Adaptive.Aeron.Tests
         [Test]
         public void ShouldReturnErrorMessages()
         {
-            Assert.Equals("NOT_CONNECTED", Publication.ErrorString(-1L));
-            Assert.Equals("BACK_PRESSURED", Publication.ErrorString(-2L));
-            Assert.Equals("ADMIN_ACTION", Publication.ErrorString(-3L));
-            Assert.Equals("CLOSED", Publication.ErrorString(-4L));
-            Assert.Equals("MAX_POSITION_EXCEEDED", Publication.ErrorString(-5L));
-            Assert.Equals("NONE", Publication.ErrorString(0L));
-            Assert.Equals("NONE", Publication.ErrorString(1L));
-            Assert.Equals("UNKNOWN", Publication.ErrorString(-6L));
-            Assert.Equals("UNKNOWN", Publication.ErrorString(long.MinValue));
+            Assert.AreEqual("NOT_CONNECTED", Publication.ErrorString(-1L));
+            Assert.AreEqual("BACK_PRESSURED", Publication.ErrorString(-2L));
+            Assert.AreEqual("ADMIN_ACTION", Publication.ErrorString(-3L));
+            Assert.AreEqual("CLOSED", Publication.ErrorString(-4L));
+            Assert.AreEqual("MAX_POSITION_EXCEEDED", Publication.ErrorString(-5L));
+            Assert.AreEqual("NONE", Publication.ErrorString(0L));
+            Assert.AreEqual("NONE", Publication.ErrorString(1L));
+            Assert.AreEqual("UNKNOWN", Publication.ErrorString(-6L));
+            Assert.AreEqual("UNKNOWN", Publication.ErrorString(long.MinValue));
         }
     }
 }
