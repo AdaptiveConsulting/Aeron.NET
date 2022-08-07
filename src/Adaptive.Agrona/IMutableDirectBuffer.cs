@@ -37,12 +37,12 @@ namespace Adaptive.Agrona
         /// <param name="value">  the memory will be set to. </param>
         void SetMemory(int index, int length, byte value);
 
-        ///// <summary>
-        ///// Put a value to a given index.
-        ///// </summary>
-        ///// <param name="index">     in bytes for where to put. </param>
-        ///// <param name="value">     for at a given index </param>
-        ///// <param name="byteOrder"> of the value when written </param>
+        /// <summary>
+        /// Put a value to a given index.
+        /// </summary>
+        /// <param name="index">     in bytes for where to put. </param>
+        /// <param name="value">     for at a given index </param>
+        /// <param name="byteOrder"> of the value when written </param>
         void PutLong(int index, long value, ByteOrder byteOrder);
 
         /// <summary>
@@ -52,12 +52,12 @@ namespace Adaptive.Agrona
         /// <param name="value"> for at a given index </param>
         void PutLong(int index, long value);
 
-        ///// <summary>
-        ///// Put a value to a given index.
-        ///// </summary>
-        ///// <param name="index">     in bytes for where to put. </param>
-        ///// <param name="value">     to be written </param>
-        ///// <param name="byteOrder"> of the value when written </param>
+        /// <summary>
+        /// Put a value to a given index.
+        /// </summary>
+        /// <param name="index">     in bytes for where to put. </param>
+        /// <param name="value">     to be written </param>
+        /// <param name="byteOrder"> of the value when written </param>
         void PutInt(int index, int value, ByteOrder byteOrder);
 
         /// <summary>
@@ -66,30 +66,6 @@ namespace Adaptive.Agrona
         /// <param name="index"> in bytes for where to put. </param>
         /// <param name="value"> for at a given index </param>
         void PutInt(int index, int value);
-        
-        /// <summary>
-        /// Puts an ASCII encoded int into the buffer
-        /// </summary>
-        /// <param name="index"> the offset at which to put the int </param>
-        /// <param name="value"> the int to write </param>
-        /// <returns> the number of bytes that the int took up encoded </returns>
-        int PutIntAscii(int index, int value);
-
-        /// <summary>
-        /// Puts an ASCII encoded long integer into the buffer
-        /// </summary>
-        /// <param name="index"> the offset at which to put the int </param>
-        /// <param name="value"> the int to write </param>
-        /// <returns> the number of bytes that the int took up encoded </returns>
-        int PutLongAscii(int index, long value);
-        
-        ///// <summary>
-        ///// Put a value to a given index.
-        ///// </summary>
-        ///// <param name="index">     in bytes for where to put. </param>
-        ///// <param name="value">     to be written </param>
-        ///// <param name="byteOrder"> of the value when written. </param>
-        //void PutDouble(int index, double value, ByteOrder byteOrder);
 
         /// <summary>
         /// Put a value to a given index.
@@ -98,14 +74,6 @@ namespace Adaptive.Agrona
         /// <param name="value"> to be written </param>
         void PutDouble(int index, double value);
 
-        ///// <summary>
-        ///// Put a value to a given index.
-        ///// </summary>
-        ///// <param name="index">     in bytes for where to put. </param>
-        ///// <param name="value">     to be written </param>
-        ///// <param name="byteOrder"> of the value when written. </param>
-        //void PutFloat(int index, float value, ByteOrder byteOrder);
-
         /// <summary>
         /// Put a value to a given index.
         /// </summary>
@@ -113,12 +81,12 @@ namespace Adaptive.Agrona
         /// <param name="value"> to be written </param>
         void PutFloat(int index, float value);
 
-        ///// <summary>
-        ///// Put a value to a given index.
-        ///// </summary>
-        ///// <param name="index">     in bytes for where to put. </param>
-        ///// <param name="value">     to be written </param>
-        ///// <param name="byteOrder"> of the value when written. </param>
+        /// <summary>
+        /// Put a value to a given index.
+        /// </summary>
+        /// <param name="index">     in bytes for where to put. </param>
+        /// <param name="value">     to be written </param>
+        /// <param name="byteOrder"> of the value when written. </param>
         void PutShort(int index, short value, ByteOrder byteOrder);
 
         /// <summary>
@@ -127,14 +95,6 @@ namespace Adaptive.Agrona
         /// <param name="index"> in bytes for where to put. </param>
         /// <param name="value"> to be written </param>
         void PutShort(int index, short value);
-
-        ///// <summary>
-        ///// Put a value to a given index.
-        ///// </summary>
-        ///// <param name="index">     in bytes for where to put. </param>
-        ///// <param name="value">     to be written </param>
-        ///// <param name="byteOrder"> of the value when written. </param>
-        //void PutChar(int index, char value, ByteOrder byteOrder);
 
         /// <summary>
         /// Put a value to a given index.
@@ -209,16 +169,7 @@ namespace Adaptive.Agrona
         ///                    lesser will be used. </param>
         /// <returns> the number of bytes encoded. </returns>
         int PutStringWithoutLengthAscii(int index, string value, int valueOffset, int length);
-
-        ///// <summary>
-        ///// Encode a String as UTF-8 bytes to the buffer with a length prefix.
-        ///// </summary>
-        ///// <param name="index">     at which the String should be encoded. </param>
-        ///// <param name="value">     of the String to be encoded. </param>
-        ///// <param name="byteOrder"> for the length prefix. </param>
-        ///// <returns> the number of bytes put to the buffer. </returns>
-        //int PutStringUtf8(int index, string value, ByteOrder byteOrder);
-
+        
         /// <summary>
         /// Encode a String as UTF-8 bytes the buffer with a length prefix with a maximum encoded size check.
         /// </summary>
@@ -228,17 +179,6 @@ namespace Adaptive.Agrona
         /// <returns> the number of bytes put to the buffer. </returns>
         /// <exception cref="ArgumentException"> if the encoded bytes are greater than maxEncodedSize. </exception>
         int PutStringUtf8(int index, string value, int maxEncodedSize);
-
-        ///// <summary>
-        ///// Encode a String as UTF-8 bytes the buffer with a length prefix with a maximum encoded size check.
-        ///// </summary>
-        ///// <param name="index">          at which the String should be encoded. </param>
-        ///// <param name="value">          of the String to be encoded. </param>
-        ///// <param name="byteOrder">      for the length prefix. </param>
-        ///// <param name="maxEncodedSize"> to be checked before writing to the buffer. </param>
-        ///// <returns> the number of bytes put to the buffer. </returns>
-        ///// <exception cref="ArgumentException"> if the encoded bytes are greater than maxEncodedSize. </exception>
-        //int PutStringUtf8(int index, string value, ByteOrder byteOrder, int maxEncodedSize);
 
         /// <summary>
         /// Encode a String as UTF-8 bytes in the buffer without a length prefix.

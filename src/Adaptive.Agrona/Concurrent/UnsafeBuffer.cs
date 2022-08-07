@@ -455,16 +455,6 @@ namespace Adaptive.Agrona.Concurrent
             *(int*) (_pBuffer + index) = value;
         }
 
-        public int PutIntAscii(int index, int value)
-        {
-            throw new NotImplementedException();
-        }
-
-        public int PutLongAscii(int index, long value)
-        {
-            throw new NotImplementedException();
-        }
-
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int GetIntVolatile(int index)
         {
@@ -597,8 +587,9 @@ namespace Adaptive.Agrona.Concurrent
         public short GetShort(int index, ByteOrder byteOrder)
         {
             BoundsCheck0(index, BitUtil.SIZE_OF_SHORT);
-        
-            return *(short*) (_pBuffer + index);
+
+            var value = *(short*)(_pBuffer + index);
+            return EndianessConverter.ApplyInt16(byteOrder, value);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -614,6 +605,7 @@ namespace Adaptive.Agrona.Concurrent
         {
             BoundsCheck0(index, BitUtil.SIZE_OF_SHORT);
 
+            value = EndianessConverter.ApplyInt16(byteOrder, value);
             *(short*) (_pBuffer + index) = value;
         }
 
