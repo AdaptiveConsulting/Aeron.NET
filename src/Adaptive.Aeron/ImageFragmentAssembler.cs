@@ -15,6 +15,7 @@
  */
 
 using Adaptive.Aeron.LogBuffer;
+using Adaptive.Aeron.Protocol;
 using Adaptive.Agrona;
 
 namespace Adaptive.Aeron
@@ -100,19 +101,29 @@ namespace Adaptive.Aeron
         {
             if ((flags & FrameDescriptor.BEGIN_FRAG_FLAG) == FrameDescriptor.BEGIN_FRAG_FLAG)
             {
-                _builder.Reset().Append(buffer, offset, length);
+                _builder.Reset()
+                    .Append(buffer, offset, length)
+                    .NextTermOffset(BitUtil.Align(offset + length + DataHeaderFlyweight.HEADER_LENGTH, FrameDescriptor.FRAME_ALIGNMENT));
             }
-            else if (_builder.Limit() > 0)
+            else if (offset == _builder.NextTermOffset())
             {
                 _builder.Append(buffer, offset, length);
 
                 if ((flags & FrameDescriptor.END_FRAG_FLAG) == FrameDescriptor.END_FRAG_FLAG)
                 {
-                    int msgLength = _builder.Limit();
-                    _delegate.OnFragment(_builder.Buffer(), 0, msgLength, header);
+                    _delegate.OnFragment(_builder.Buffer(), 0, _builder.Limit(), header);
                     _builder.Reset();
                 }
+                else
+                {
+                    _builder.NextTermOffset(BitUtil.Align(offset + length + DataHeaderFlyweight.HEADER_LENGTH, FrameDescriptor.FRAME_ALIGNMENT));
+                }
             }
+            else
+            {
+                _builder.Reset();
+            }
+
         }
     }
 }

@@ -35,6 +35,7 @@ namespace Adaptive.Aeron
         
         private readonly UnsafeBuffer _buffer;
         private int _limit;
+        private int _nextTermOffset;
 
         /// <summary>
         /// Construct a buffer builder with an initial capacity of zero and isDirect false.
@@ -90,6 +91,24 @@ namespace Adaptive.Aeron
 
             _limit = limit;
         }
+        
+        /// <summary>
+        /// Get the value which the next term offset for a fragment to be assembled should begin at.
+        /// </summary>
+        /// <returns> the value which the next term offset for a fragment to be assembled should begin at. </returns>
+        public int NextTermOffset()
+        {
+            return _nextTermOffset;
+        }
+
+        /// <summary>
+        /// Set the value which the next term offset for a fragment to be assembled should begin at.
+        /// </summary>
+        /// <param name="offset"> which the next term offset for a fragment to be assembled should begin at. </param>
+        public void NextTermOffset(int offset)
+        {
+            _nextTermOffset = offset;
+        }
 
         /// <summary>
         /// The <seealso cref="IMutableDirectBuffer"/> that encapsulates the internal buffer.
@@ -107,6 +126,7 @@ namespace Adaptive.Aeron
         public BufferBuilder Reset()
         {
             _limit = 0;
+            _nextTermOffset = 0;
             return this;
         }
 

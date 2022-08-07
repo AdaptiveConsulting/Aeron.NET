@@ -16,7 +16,9 @@
 
 using System.Collections.Generic;
 using Adaptive.Aeron.LogBuffer;
+using Adaptive.Aeron.Protocol;
 using Adaptive.Agrona;
+using Adaptive.Agrona.Collections;
 using Adaptive.Agrona.Concurrent;
 
 namespace Adaptive.Aeron
@@ -41,7 +43,7 @@ namespace Adaptive.Aeron
     {
         private readonly int _initialBufferLength;
         private readonly IFragmentHandler _delegate;
-        private readonly Dictionary<int, BufferBuilder> _builderBySessionIdMap = new Dictionary<int, BufferBuilder>();
+        private readonly Map<int, BufferBuilder> _builderBySessionIdMap = new Map<int, BufferBuilder>();
 
         /// <summary>
         /// Construct an adapter to reassemble message fragments and _delegate on only whole messages.
@@ -99,25 +101,33 @@ namespace Adaptive.Aeron
         {
             if ((flags & FrameDescriptor.BEGIN_FRAG_FLAG) == FrameDescriptor.BEGIN_FRAG_FLAG)
             {
-                BufferBuilder builder;
-                if (!_builderBySessionIdMap.TryGetValue(header.SessionId, out builder))
-                {
-                    builder = GetBufferBuilder(header.SessionId);
-                    _builderBySessionIdMap[header.SessionId] = builder;
-                }
-
-                builder.Reset().Append(buffer, offset, length);
+                BufferBuilder builder = GetBufferBuilder(header.SessionId);
+                builder.Reset()
+                    .Append(buffer, offset, length)
+                    .NextTermOffset(BitUtil.Align(offset + length + DataHeaderFlyweight.HEADER_LENGTH, FrameDescriptor.FRAME_ALIGNMENT));
             }
             else
             {
-                if (_builderBySessionIdMap.TryGetValue(header.SessionId, out var builder) && builder.Limit() > 0)
+                BufferBuilder builder = _builderBySessionIdMap.Get(header.SessionId);
+                if (null != builder)
                 {
-                    builder.Append(buffer, offset, length);
-
-                    if ((flags & FrameDescriptor.END_FRAG_FLAG) == FrameDescriptor.END_FRAG_FLAG)
+                    if (offset == builder.NextTermOffset())
                     {
-                        int msgLength = builder.Limit();
-                        _delegate.OnFragment(builder.Buffer(), 0, msgLength, header);
+                        builder.Append(buffer, offset, length);
+
+                        if ((flags & FrameDescriptor.END_FRAG_FLAG) == FrameDescriptor.END_FRAG_FLAG)
+                        {
+                            _delegate.OnFragment(builder.Buffer(), 0, builder.Limit(), header);
+                            builder.Reset();
+                        }
+                        else
+                        {
+                            builder.NextTermOffset(BitUtil.Align(offset + length + DataHeaderFlyweight.HEADER_LENGTH,
+                                FrameDescriptor.FRAME_ALIGNMENT));
+                        }
+                    }
+                    else
+                    {
                         builder.Reset();
                     }
                 }
@@ -151,14 +161,12 @@ namespace Adaptive.Aeron
 
         private BufferBuilder GetBufferBuilder(int sessionId)
         {
-            BufferBuilder bufferBuilder;
-
-            _builderBySessionIdMap.TryGetValue(sessionId, out bufferBuilder);
+            BufferBuilder bufferBuilder = _builderBySessionIdMap.Get(sessionId);
 
             if (null == bufferBuilder)
             {
                 bufferBuilder = new BufferBuilder(_initialBufferLength);
-                _builderBySessionIdMap[sessionId] = bufferBuilder;
+                _builderBySessionIdMap.Put(sessionId, bufferBuilder);
             }
 
             return bufferBuilder;

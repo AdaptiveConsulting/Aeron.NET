@@ -1,4 +1,6 @@
-﻿using Adaptive.Aeron.LogBuffer;
+﻿using System;
+using Adaptive.Aeron.LogBuffer;
+using Adaptive.Aeron.Protocol;
 using Adaptive.Agrona;
 
 namespace Adaptive.Aeron
@@ -59,41 +61,46 @@ namespace Adaptive.Aeron
         /// <returns> <see cref="ControlledFragmentHandlerAction"/> to be taken after processing fragment.</returns>
         public ControlledFragmentHandlerAction OnFragment(IDirectBuffer buffer, int offset, int length, Header header)
         {
-            var action = ControlledFragmentHandlerAction.CONTINUE;
+            ControlledFragmentHandlerAction action = ControlledFragmentHandlerAction.CONTINUE;
             byte flags = header.Flags;
 
             if ((flags & FrameDescriptor.UNFRAGMENTED) == FrameDescriptor.UNFRAGMENTED)
             {
                 action = _delegate.OnFragment(buffer, offset, length, header);
             }
-            else
+            else if ((flags & FrameDescriptor.BEGIN_FRAG_FLAG) == FrameDescriptor.BEGIN_FRAG_FLAG)
             {
-                if ((flags & FrameDescriptor.BEGIN_FRAG_FLAG) == FrameDescriptor.BEGIN_FRAG_FLAG)
+                _builder.Reset()
+                    .Append(buffer, offset, length)
+                    .NextTermOffset(BitUtil.Align(offset + length + DataHeaderFlyweight.HEADER_LENGTH, FrameDescriptor.FRAME_ALIGNMENT));
+            }
+            else if (offset == _builder.NextTermOffset())
+            {
+                int limit = _builder.Limit();
+
+                _builder.Append(buffer, offset, length);
+
+                if ((flags & FrameDescriptor.END_FRAG_FLAG) == FrameDescriptor.END_FRAG_FLAG)
                 {
-                    _builder.Reset().Append(buffer, offset, length);
+                    action = _delegate.OnFragment(_builder.Buffer(), 0, _builder.Limit(), header);
+
+                    if (ControlledFragmentHandlerAction.ABORT == action)
+                    {
+                        _builder.Limit(limit);
+                    }
+                    else
+                    {
+                        _builder.Reset();
+                    }
                 }
                 else
                 {
-                    int limit = _builder.Limit();
-                    if (limit > 0)
-                    {
-                        _builder.Append(buffer, offset, length);
-
-                        if ((flags & FrameDescriptor.END_FRAG_FLAG) == FrameDescriptor.END_FRAG_FLAG)
-                        {
-                            action = _delegate.OnFragment(_builder.Buffer(), 0, _builder.Limit(), header);
-
-                            if (ControlledFragmentHandlerAction.ABORT == action)
-                            {
-                                _builder.Limit(limit);
-                            }
-                            else
-                            {
-                                _builder.Reset();
-                            }
-                        }
-                    }
+                    _builder.NextTermOffset(BitUtil.Align(offset + length + DataHeaderFlyweight.HEADER_LENGTH, FrameDescriptor.FRAME_ALIGNMENT));
                 }
+            }
+            else
+            {
+                _builder.Reset();
             }
 
             return action;

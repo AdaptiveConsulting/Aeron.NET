@@ -110,6 +110,17 @@ namespace Adaptive.Aeron
 		/// </summary>
 		public const int DRIVER_LOCAL_SOCKET_ADDRESS_STATUS_TYPE_ID = 14;
 
+		/// <summary>
+		/// Count of number of active receivers for flow control strategy.
+		/// </summary>
+		public const int FLOW_CONTROL_RECEIVERS_COUNTER_TYPE_ID = 17;
+
+		/// <summary>
+		/// Count of number of destinations for multi-destination cast channels. 
+		/// </summary>
+		public const int MDC_DESTINATIONS_COUNTER_TYPE_ID = 18;
+
+
 		// Archive counters
 		/// <summary>
 		/// The position a recording has reached when being archived.
@@ -126,6 +137,17 @@ namespace Adaptive.Aeron
 		/// </summary>
 		public const int ARCHIVE_CONTROL_SESSIONS_TYPE_ID = 102;
 
+		/// <summary>
+		/// The type id of the <seealso cref="Counter"/> used for keeping track of the max duty cycle time of an archive agent.
+		/// </summary>
+		public const int ARCHIVE_MAX_CYCLE_TIME_TYPE_ID = 103;
+
+		/// <summary>
+		/// The type id of the <seealso cref="Counter"/> used for keeping track of the count of cycle time threshold exceeded of
+		/// an archive agent.
+		/// </summary>
+		public const int ARCHIVE_CYCLE_TIME_THRESHOLD_EXCEEDED_TYPE_ID = 104;
+		
 		// Cluster counters
 
 		/// <summary>
@@ -202,5 +224,27 @@ namespace Adaptive.Aeron
 		/// Counter type id for the clustered service error count.
 		/// </summary>
 		public const int CLUSTER_CLUSTERED_SERVICE_ERROR_COUNT_TYPE_ID = 215;
+		
+		/// <summary>
+		/// The type id of the <seealso cref="Counter"/> used for keeping track of the max duty cycle time of the consensus module.
+		/// </summary>
+		public const int CLUSTER_MAX_CYCLE_TIME_TYPE_ID = 216;
+
+		/// <summary>
+		/// The type id of the <seealso cref="Counter"/> used for keeping track of the count of cycle time threshold exceeded of
+		/// the consensus module.
+		/// </summary>
+		public const int CLUSTER_CYCLE_TIME_THRESHOLD_EXCEEDED_TYPE_ID = 217;
+
+		/// <summary>
+		/// The type id of the <seealso cref="Counter"/> used for keeping track of the max duty cycle time of the service container.
+		/// </summary>
+		public const int CLUSTER_CLUSTERED_SERVICE_MAX_CYCLE_TIME_TYPE_ID = 218;
+
+		/// <summary>
+		/// The type id of the <seealso cref="Counter"/> used for keeping track of the count of cycle time threshold exceeded of
+		/// the service container.
+		/// </summary>
+		public const int CLUSTER_CLUSTERED_SERVICE_CYCLE_TIME_THRESHOLD_EXCEEDED_TYPE_ID = 219;
 	}
 }

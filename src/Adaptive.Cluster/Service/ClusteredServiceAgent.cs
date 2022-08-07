@@ -49,26 +49,27 @@ namespace Adaptive.Cluster.Service
         private readonly ConsensusModuleProxy _consensusModuleProxy;
         private readonly ServiceAdapter _serviceAdapter;
         private readonly IEpochClock epochClock;
-
-        private readonly UnsafeBuffer headerBuffer =
-            new UnsafeBuffer(new byte[MAX_UDP_PAYLOAD_LENGTH - DataHeaderFlyweight.HEADER_LENGTH]);
-
-        private readonly DirectBufferVector headerVector;
+        private readonly INanoClock nanoClock;
+        
+        private readonly UnsafeBuffer messageBuffer = new UnsafeBuffer(new byte[MAX_UDP_PAYLOAD_LENGTH]);
+        private readonly UnsafeBuffer headerBuffer; // set in constructor
+        private readonly DirectBufferVector headerVector; // set in constructor
         private readonly SessionMessageHeaderEncoder _sessionMessageHeaderEncoder = new SessionMessageHeaderEncoder();
-
         private readonly Map<long, IClientSession> sessionByIdMap =
             new Map<long, IClientSession>();
-
-        private BoundedLogAdapter logAdapter;
+        private readonly BoundedLogAdapter logAdapter;
+        private readonly DutyCycleTracker dutyCycleTracker;
+        
         private string activeLifecycleCallbackName;
         private ReadableCounter commitPosition;
         private ActiveLogEvent activeLogEvent;
         private ClusterRole role = ClusterRole.Follower;
         private ClusterTimeUnit timeUnit = ClusterTimeUnit.NULL_VALUE;
-
+        
         internal ClusteredServiceAgent(ClusteredServiceContainer.Context ctx)
         {
-            headerVector = new DirectBufferVector(headerBuffer, 0, headerBuffer.Capacity);
+            headerBuffer = new UnsafeBuffer(messageBuffer, DataHeaderFlyweight.HEADER_LENGTH, MAX_UDP_PAYLOAD_LENGTH - DataHeaderFlyweight.HEADER_LENGTH);
+            headerVector = new DirectBufferVector(headerBuffer, 0, SESSION_HEADER_LENGTH);
 
             logAdapter = new BoundedLogAdapter(this, ctx.LogFragmentLimit());
             this.ctx = ctx;
@@ -80,6 +81,8 @@ namespace Adaptive.Cluster.Service
             idleStrategy = ctx.IdleStrategy();
             serviceId = ctx.ServiceId();
             epochClock = ctx.EpochClock();
+            nanoClock = ctx.NanoClock();
+            dutyCycleTracker = ctx.DutyCycleTracker();
 
             var channel = ctx.ControlChannel();
             _consensusModuleProxy =
@@ -95,6 +98,7 @@ namespace Adaptive.Cluster.Service
             commitPosition = AwaitCommitPositionCounter(counters, ctx.ClusterId());
 
             RecoverState(counters);
+            dutyCycleTracker.Update(nanoClock.NanoTime());
         }
 
         public void OnClose()
@@ -142,6 +146,8 @@ namespace Adaptive.Cluster.Service
         public int DoWork()
         {
             int workCount = 0;
+            
+            dutyCycleTracker.MeasureAndUpdate(nanoClock.NanoTime());
 
             try
             {
@@ -458,23 +464,21 @@ namespace Adaptive.Cluster.Service
                                                         SemanticVersion.ToString(appVersion)));
                 throw new AgentTerminationException();
             }
-            else
-            {
-                _sessionMessageHeaderEncoder.LeadershipTermId(leadershipTermId);
-                this.logPosition = logPosition;
-                clusterTime = timestamp;
-                this.timeUnit = timeUnit;
 
-                service.OnNewLeadershipTermEvent(
-                    leadershipTermId,
-                    logPosition,
-                    timestamp,
-                    termBaseLogPosition,
-                    leaderMemberId,
-                    logSessionId,
-                    timeUnit,
-                    appVersion);
-            }
+            _sessionMessageHeaderEncoder.LeadershipTermId(leadershipTermId);
+            this.logPosition = logPosition;
+            clusterTime = timestamp;
+            this.timeUnit = timeUnit;
+
+            service.OnNewLeadershipTermEvent(
+                leadershipTermId,
+                logPosition,
+                timestamp,
+                termBaseLogPosition,
+                leaderMemberId,
+                logSessionId,
+                timeUnit,
+                appVersion);
         }
 
         internal void OnMembershipChange(long logPosition, long timestamp, ChangeType changeType, int memberId)
@@ -559,7 +563,9 @@ namespace Adaptive.Cluster.Service
                         "claim exceeds maxPayloadLength=" + maxPayloadLength + ", length=" + length);
                 }
 
-                bufferClaim.Wrap(headerBuffer, 0, length + SESSION_HEADER_LENGTH);
+                bufferClaim.Wrap(
+                    messageBuffer, 0, DataHeaderFlyweight.HEADER_LENGTH + SESSION_HEADER_LENGTH + length
+                    );
                 return ClientSessionConstants.MOCKED_OFFER;
             }
 
@@ -568,7 +574,7 @@ namespace Adaptive.Cluster.Service
                 return Publication.NOT_CONNECTED;
             }
 
-            long offset = publication.TryClaim(length + SESSION_HEADER_LENGTH, bufferClaim);
+            long offset = publication.TryClaim(SESSION_HEADER_LENGTH + length, bufferClaim);
             if (offset > 0)
             {
                 _sessionMessageHeaderEncoder.ClusterSessionId(clusterSessionId).Timestamp(clusterTime);

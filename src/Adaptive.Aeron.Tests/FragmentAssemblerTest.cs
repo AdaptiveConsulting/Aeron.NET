@@ -16,6 +16,7 @@
 
 using System;
 using Adaptive.Aeron.LogBuffer;
+using Adaptive.Aeron.Protocol;
 using Adaptive.Agrona;
 using Adaptive.Agrona.Concurrent;
 using FakeItEasy;
@@ -31,14 +32,14 @@ namespace Adaptive.Aeron.Tests
         private IFragmentHandler delegateFragmentHandler;
         private IDirectBuffer termBuffer;
         private Header header;
-        private FragmentAssembler adapter;
+        private FragmentAssembler assembler;
 
         [SetUp]
         public void SetUp()
         {
             delegateFragmentHandler = A.Fake<IFragmentHandler>();
             termBuffer = A.Fake<IDirectBuffer>();
-            adapter = new FragmentAssembler(delegateFragmentHandler);
+            assembler = new FragmentAssembler(delegateFragmentHandler);
             header = A.Fake<Header>(x => x.Wrapping(new Header(INITIAL_TERM_ID, LogBufferDescriptor.TERM_MIN_LENGTH)));
 
             header.SetBuffer(termBuffer, 0);
@@ -55,7 +56,7 @@ namespace Adaptive.Aeron.Tests
             const int offset = 8;
             const int length = 32;
 
-            adapter.OnFragment(srcBuffer, offset, length, header);
+            assembler.OnFragment(srcBuffer, offset, length, header);
 
             A.CallTo(() => delegateFragmentHandler.OnFragment(srcBuffer, offset, length, header))
                 .MustHaveHappened(1, Times.Exactly);
@@ -65,36 +66,21 @@ namespace Adaptive.Aeron.Tests
         public void ShouldAssembleTwoPartMessage()
         {
             A.CallTo(() => header.Flags).ReturnsNextFromSequence(FrameDescriptor.BEGIN_FRAG_FLAG, FrameDescriptor.END_FRAG_FLAG, FrameDescriptor.END_FRAG_FLAG);
-            // Need to add this twice because FakeItEasy doesn't fall back to the implementation
 
-            var srcBuffer = new UnsafeBuffer(new byte[1024]);
-            const int offset = 0;
-            var length = srcBuffer.Capacity/2;
+            var srcBuffer = new UnsafeBuffer(new byte[1024 + (2 * DataHeaderFlyweight.HEADER_LENGTH)]);
+            var length = 512;
 
-            srcBuffer.SetMemory(0, length, 65);
-            srcBuffer.SetMemory(length, length, 66);
-
-            adapter.OnFragment(srcBuffer, offset, length, header);
-            adapter.OnFragment(srcBuffer, length, length, header);
-
-            Func<UnsafeBuffer, bool> bufferAssertion = capturedBuffer =>
-            {
-                for (var i = 0; i < srcBuffer.Capacity; i++)
-                {
-                    if (capturedBuffer.GetByte(i) != srcBuffer.GetByte(i))
-                    {
-                        return false;
-                    }
-                }
-                return true;
-            };
+            int offset = DataHeaderFlyweight.HEADER_LENGTH;
+            assembler.OnFragment(srcBuffer, offset, length, header);
+            offset = BitUtil.Align(offset + length + DataHeaderFlyweight.HEADER_LENGTH, FrameDescriptor.FRAME_ALIGNMENT);
+            assembler.OnFragment(srcBuffer, offset, length, header);
 
             Func<Header, bool> headerAssertion = capturedHeader => capturedHeader.SessionId == SESSION_ID &&
                                                                    capturedHeader.Flags == FrameDescriptor.END_FRAG_FLAG;
             A.CallTo(() => delegateFragmentHandler.OnFragment(
-                A<UnsafeBuffer>.That.Matches(bufferAssertion, "buffer"),
-                offset,
-                length*2,
+                A<IDirectBuffer>._,
+                0,
+                length * 2,
                 A<Header>.That.Matches(headerAssertion, "header")))
                 .MustHaveHappened(1, Times.Exactly);
         }
@@ -104,40 +90,25 @@ namespace Adaptive.Aeron.Tests
         {
             A.CallTo(() => header.Flags).ReturnsNextFromSequence<byte>(FrameDescriptor.BEGIN_FRAG_FLAG, 0, 0, FrameDescriptor.END_FRAG_FLAG, FrameDescriptor.END_FRAG_FLAG);
 
-            var srcBuffer = new UnsafeBuffer(new byte[1024]);
-            const int offset = 0;
-            var length = srcBuffer.Capacity/4;
+            var srcBuffer = new UnsafeBuffer(new byte[1024 + + (4 * DataHeaderFlyweight.HEADER_LENGTH)]);
+            var length = 256;
 
-            for (var i = 0; i < 4; i++)
-            {
-                srcBuffer.SetMemory(i*length, length, (byte) (65 + i));
-            }
-
-            adapter.OnFragment(srcBuffer, offset, length, header);
-            adapter.OnFragment(srcBuffer, offset + length, length, header);
-            adapter.OnFragment(srcBuffer, offset + (length*2), length, header);
-            adapter.OnFragment(srcBuffer, offset + (length*3), length, header);
-
-
-            Func<UnsafeBuffer, bool> bufferAssertion = capturedBuffer =>
-            {
-                for (var i = 0; i < srcBuffer.Capacity; i++)
-                {
-                    if (capturedBuffer.GetByte(i) != srcBuffer.GetByte(i))
-                    {
-                        return false;
-                    }
-                }
-                return true;
-            };
+            int offset = DataHeaderFlyweight.HEADER_LENGTH;
+            assembler.OnFragment(srcBuffer, offset, length, header);
+            offset = BitUtil.Align(offset + length + DataHeaderFlyweight.HEADER_LENGTH, FrameDescriptor.FRAME_ALIGNMENT);
+            assembler.OnFragment(srcBuffer, offset, length, header);
+            offset = BitUtil.Align(offset + length + DataHeaderFlyweight.HEADER_LENGTH, FrameDescriptor.FRAME_ALIGNMENT);
+            assembler.OnFragment(srcBuffer, offset, length, header);
+            offset = BitUtil.Align(offset + length + DataHeaderFlyweight.HEADER_LENGTH, FrameDescriptor.FRAME_ALIGNMENT);
+            assembler.OnFragment(srcBuffer, offset, length, header);
 
             Func<Header, bool> headerAssertion = capturedHeader => capturedHeader.SessionId == SESSION_ID &&
                                                                    capturedHeader.Flags == FrameDescriptor.END_FRAG_FLAG;
 
             A.CallTo(() => delegateFragmentHandler.OnFragment(
-                A<UnsafeBuffer>.That.Matches(bufferAssertion, "buffer"),
-                offset,
-                length*4,
+                A<IDirectBuffer>._,
+                0,
+                length * 4,
                 A<Header>.That.Matches(headerAssertion, "header")))
                 .MustHaveHappened(1, Times.Exactly);
         }
@@ -154,13 +125,13 @@ namespace Adaptive.Aeron.Tests
             srcBuffer.SetMemory(0, length, 65);
             srcBuffer.SetMemory(length, length, 66);
 
-            Assert.False(adapter.FreeSessionBuffer(SESSION_ID));
+            Assert.False(assembler.FreeSessionBuffer(SESSION_ID));
 
-            adapter.OnFragment(srcBuffer, offset, length, header);
-            adapter.OnFragment(srcBuffer, length, length, header);
+            assembler.OnFragment(srcBuffer, offset, length, header);
+            assembler.OnFragment(srcBuffer, length, length, header);
 
-            Assert.True(adapter.FreeSessionBuffer(SESSION_ID));
-            Assert.False(adapter.FreeSessionBuffer(SESSION_ID));
+            Assert.True(assembler.FreeSessionBuffer(SESSION_ID));
+            Assert.False(assembler.FreeSessionBuffer(SESSION_ID));
         }
 
         [Test]
@@ -171,7 +142,7 @@ namespace Adaptive.Aeron.Tests
             const int offset = 0;
             var length = srcBuffer.Capacity/2;
 
-            adapter.OnFragment(srcBuffer, offset, length, header);
+            assembler.OnFragment(srcBuffer, offset, length, header);
 
             A.CallTo(() => delegateFragmentHandler.OnFragment(A<UnsafeBuffer>._, A<int>._, A<int>._, A<Header>._)).MustNotHaveHappened();
         }
@@ -184,10 +155,43 @@ namespace Adaptive.Aeron.Tests
             const int offset = 0;
             var length = srcBuffer.Capacity/2;
 
-            adapter.OnFragment(srcBuffer, offset, length, header);
-            adapter.OnFragment(srcBuffer, offset, length, header);
+            assembler.OnFragment(srcBuffer, offset, length, header);
+            assembler.OnFragment(srcBuffer, offset, length, header);
 
             A.CallTo(() => delegateFragmentHandler.OnFragment(A<UnsafeBuffer>._, A<int>._, A<int>._, A<Header>._)).MustNotHaveHappened();
+        }
+
+        [Test]
+        public void ShouldSkipOverMessagesWithLoss()
+        {
+            A.CallTo(() => header.Flags).ReturnsNextFromSequence<byte>(
+                FrameDescriptor.BEGIN_FRAG_FLAG,
+                FrameDescriptor.END_FRAG_FLAG,
+                FrameDescriptor.UNFRAGMENTED,
+                FrameDescriptor.UNFRAGMENTED);
+
+            var srcBuffer = new UnsafeBuffer(new byte[2048]);
+            var length = 256;
+
+            int offset = DataHeaderFlyweight.HEADER_LENGTH;
+            assembler.OnFragment(srcBuffer, offset, length, header);
+            offset = BitUtil.Align(offset + length + DataHeaderFlyweight.HEADER_LENGTH, FrameDescriptor.FRAME_ALIGNMENT);
+            offset = BitUtil.Align(offset + length + DataHeaderFlyweight.HEADER_LENGTH, FrameDescriptor.FRAME_ALIGNMENT);
+            offset = BitUtil.Align(offset + length + DataHeaderFlyweight.HEADER_LENGTH, FrameDescriptor.FRAME_ALIGNMENT);
+            assembler.OnFragment(srcBuffer, offset, length, header);
+            offset = BitUtil.Align(offset + length + DataHeaderFlyweight.HEADER_LENGTH, FrameDescriptor.FRAME_ALIGNMENT);
+            assembler.OnFragment(srcBuffer, offset, length, header);
+
+            Func<Header, bool> headerAssertion = capturedHeader => capturedHeader.SessionId == SESSION_ID &&
+                                                                   capturedHeader.Flags ==
+                                                                   FrameDescriptor.UNFRAGMENTED;
+
+            A.CallTo(() => delegateFragmentHandler.OnFragment(
+                    A<IDirectBuffer>._,
+                    offset,
+                    length,
+                    A<Header>.That.Matches(headerAssertion, "header")))
+                .MustHaveHappened(1, Times.Exactly);
         }
     }
 }

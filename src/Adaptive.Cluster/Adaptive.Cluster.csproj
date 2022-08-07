@@ -3,7 +3,7 @@
         <TargetFramework>netstandard2.0</TargetFramework>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <PackageId>Aeron.Cluster</PackageId>
-        <VersionPrefix>1.38.1</VersionPrefix>
+        <VersionPrefix>1.39.0</VersionPrefix>
         <Authors>Adaptive Financial Consulting Ltd.</Authors>
         <Company>Adaptive Financial Consulting Ltd.</Company>
         <Product>Clustering libraries over the Aeron transport</Product>

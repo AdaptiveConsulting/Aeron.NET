@@ -265,6 +265,17 @@ namespace Adaptive.Cluster.Service
             public const string DELEGATING_ERROR_HANDLER_PROP_NAME = "aeron.cluster.service.delegating.error.handler";
 
             /// <summary>
+            /// Property name for threshold value for the container work cycle threshold to track
+            /// for being exceeded.
+            /// </summary>
+            public const string CYCLE_THRESHOLD_PROP_NAME = "aeron.cluster.service.cycle.threshold";
+
+            /// <summary>
+            /// Default threshold value for the container work cycle threshold to track for being exceeded.
+            /// </summary>
+            public const long CYCLE_THRESHOLD_DEFAULT_NS = 1000000000; // 1S
+
+            /// <summary>
             /// Counter type id for the cluster node role.
             /// </summary>
             public const int CLUSTER_NODE_ROLE_TYPE_ID = AeronCounters.CLUSTER_NODE_ROLE_TYPE_ID;
@@ -449,6 +460,15 @@ namespace Adaptive.Cluster.Service
             }
 
             /// <summary>
+            /// Get threshold value for the container work cycle threshold to track for being exceeded.
+            /// </summary>
+            /// <returns> threshold value in nanoseconds. </returns>
+            public static long CycleThresholdNs()
+            {
+                return Config.GetDurationInNanos(CYCLE_THRESHOLD_PROP_NAME, CYCLE_THRESHOLD_DEFAULT_NS);
+            }
+
+            /// <summary>
             /// Create a new <seealso cref="IClusteredService"/> based on the configured <seealso cref="SERVICE_CLASS_NAME_PROP_NAME"/>.
             /// </summary>
             /// <returns> a new <seealso cref="IClusteredService"/> based on the configured <seealso cref="SERVICE_CLASS_NAME_PROP_NAME"/>. </returns>
@@ -501,11 +521,13 @@ namespace Adaptive.Cluster.Service
             private int errorBufferLength = Configuration.ErrorBufferLength();
             private bool isRespondingService = Configuration.IsRespondingService();
             private int logFragmentLimit = Configuration.LogFragmentLimit();
+            private long cycleThresholdNs = Configuration.CycleThresholdNs();
 
             private CountdownEvent abortLatch;
             private IThreadFactory threadFactory;
             private Func<IIdleStrategy> idleStrategySupplier;
             private IEpochClock epochClock;
+            private INanoClock nanoClock;
             private DistinctErrorLog errorLog;
             private ErrorHandler errorHandler;
             private DelegatingErrorHandler delegatingErrorHandler;
@@ -516,6 +538,7 @@ namespace Adaptive.Cluster.Service
             private DirectoryInfo clusterDir;
             private string aeronDirectoryName = Adaptive.Aeron.Aeron.Context.GetAeronDirectoryName();
             private Aeron.Aeron aeron;
+            private DutyCycleTracker dutyCycleTracker;
             private bool ownsAeronClient;
 
             private IClusteredService clusteredService;
@@ -560,6 +583,11 @@ namespace Adaptive.Cluster.Service
                 if (null == epochClock)
                 {
                     epochClock = SystemEpochClock.INSTANCE;
+                }
+
+                if (null == nanoClock)
+                {
+                    nanoClock = SystemNanoClock.INSTANCE;
                 }
 
                 if (null == clusterDir)
@@ -635,6 +663,18 @@ namespace Adaptive.Cluster.Service
                     }
                 }
 
+                if (null == dutyCycleTracker)
+                {
+                    dutyCycleTracker = new DutyCycleStallTracker(
+                        aeron.AddCounter(AeronCounters.CLUSTER_CLUSTERED_SERVICE_MAX_CYCLE_TIME_TYPE_ID,
+                            "Cluster container max cycle time (ns) - clusterId=" + clusterId +
+                            " serviceId=" + serviceId),
+                        aeron.AddCounter(AeronCounters.CLUSTER_CLUSTERED_SERVICE_CYCLE_TIME_THRESHOLD_EXCEEDED_TYPE_ID,
+                            "Cluster container work cycle time exceeded count: threshold=" + cycleThresholdNs +
+                            "ns - clusterId=" + clusterId + " serviceId=" + serviceId),
+                        cycleThresholdNs);
+                }
+
                 if (null == archiveContext)
                 {
                     archiveContext = new AeronArchive.Context()
@@ -642,7 +682,7 @@ namespace Adaptive.Cluster.Service
                         .ControlResponseChannel(AeronArchive.Configuration.LocalControlChannel())
                         .ControlRequestStreamId(AeronArchive.Configuration.LocalControlStreamId());
                 }
-                
+
                 if (!archiveContext.ControlRequestChannel().StartsWith(Adaptive.Aeron.Aeron.Context.IPC_CHANNEL))
                 {
                     throw new ClusterException("local archive control must be IPC");
@@ -940,7 +980,7 @@ namespace Adaptive.Cluster.Service
                 this.isRespondingService = isRespondingService;
                 return this;
             }
-            
+
             /// <summary>
             /// Set the fragment limit to be used when polling the log <seealso cref="Subscription"/>.
             /// </summary>
@@ -1371,6 +1411,70 @@ namespace Adaptive.Cluster.Service
             }
 
             /// <summary>
+            /// The <seealso cref="INanoClock"/> as a source of time in nanoseconds for measuring duration.
+            /// </summary>
+            /// <returns> the <seealso cref="INanoClock"/> as a source of time in nanoseconds for measuring duration. </returns>
+            public INanoClock NanoClock()
+            {
+                return nanoClock;
+            }
+
+            /// <summary>
+            /// The <seealso cref="INanoClock"/> as a source of time in nanoseconds for measuring duration.
+            /// </summary>
+            /// <param name="clock"> to be used. </param>
+            /// <returns> this for a fluent API. </returns>
+            public Context NanoClock(INanoClock clock)
+            {
+                nanoClock = clock;
+                return this;
+            }
+
+            /// <summary>
+            /// Set a threshold for the container work cycle time which when exceed it will increment the
+            /// counter.
+            /// </summary>
+            /// <param name="thresholdNs"> value in nanoseconds </param>
+            /// <returns> this for fluent API. </returns>
+            /// <seealso cref="Configuration.CYCLE_THRESHOLD_PROP_NAME"/>
+            /// <seealso cref="Configuration.CYCLE_THRESHOLD_DEFAULT_NS"/>
+            public Context CycleThresholdNs(long thresholdNs)
+            {
+                this.cycleThresholdNs = thresholdNs;
+                return this;
+            }
+
+            /// <summary>
+            /// Threshold for the container work cycle time which when exceed it will increment the
+            /// counter.
+            /// </summary>
+            /// <returns> threshold to track for the container work cycle time. </returns>
+            public long CycleThresholdNs()
+            {
+                return cycleThresholdNs;
+            }
+
+            /// <summary>
+            /// Set a duty cycle tracker to be used for tracking the duty cycle time of the container.
+            /// </summary>
+            /// <param name="dutyCycleTracker"> to use for tracking. </param>
+            /// <returns> this for fluent API. </returns>
+            public Context DutyCycleTracker(DutyCycleTracker dutyCycleTracker)
+            {
+                this.dutyCycleTracker = dutyCycleTracker;
+                return this;
+            }
+
+            /// <summary>
+            /// The duty cycle tracker used to track the container duty cycle.
+            /// </summary>
+            /// <returns> the duty cycle tracker. </returns>
+            public DutyCycleTracker DutyCycleTracker()
+            {
+                return dutyCycleTracker;
+            }
+
+            /// <summary>
             /// Delete the cluster container directory.
             /// </summary>
             public void DeleteDirectory()
@@ -1431,7 +1535,7 @@ namespace Adaptive.Cluster.Service
                 markFile.UpdateActivityTimestamp(epochClock.Time());
                 markFile.SignalReady();
             }
-            
+
             /// <summary>
             /// {@inheritDoc}
             /// </summary>
@@ -1472,10 +1576,11 @@ namespace Adaptive.Cluster.Service
                        "\n    clusteredService=" + clusteredService +
                        "\n    shutdownSignalBarrier=" + shutdownSignalBarrier +
                        "\n    terminationHook=" + terminationHook +
+                       "\n    cycleThresholdNs=" + cycleThresholdNs +
+                       "\n    dutyCycleTracker=" + dutyCycleTracker +
                        "\n    markFile=" + markFile +
                        "\n}";
             }
-
         }
     }
 }

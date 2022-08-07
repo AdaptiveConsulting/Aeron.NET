@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-using System.Collections.Generic;
 using Adaptive.Aeron.LogBuffer;
+using Adaptive.Aeron.Protocol;
 using Adaptive.Agrona;
-using Adaptive.Agrona.Concurrent;
+using Adaptive.Agrona.Collections;
 
 namespace Adaptive.Aeron
 {
@@ -41,7 +41,7 @@ namespace Adaptive.Aeron
     {
         private readonly int _initialBufferLength;
         private readonly IControlledFragmentHandler _delegate;
-        private readonly IDictionary<int, BufferBuilder> _builderBySessionIdMap = new Dictionary<int, BufferBuilder>();
+        private readonly Map<int, BufferBuilder> _builderBySessionIdMap = new Map<int, BufferBuilder>();
 
         /// <summary>
         /// Construct an adapter to reassembly message fragments and delegate on only whole messages.
@@ -74,50 +74,51 @@ namespace Adaptive.Aeron
         public ControlledFragmentHandlerAction OnFragment(IDirectBuffer buffer, int offset, int length, Header header)
         {
             byte flags = header.Flags;
-
             var action = ControlledFragmentHandlerAction.CONTINUE;
 
             if ((flags & FrameDescriptor.UNFRAGMENTED) == FrameDescriptor.UNFRAGMENTED)
             {
                 action = _delegate.OnFragment(buffer, offset, length, header);
             }
+            else if ((flags & FrameDescriptor.BEGIN_FRAG_FLAG) == FrameDescriptor.BEGIN_FRAG_FLAG)
+            {
+                BufferBuilder builder = GetBufferBuilder(header.SessionId);
+                builder.Reset()
+                    .Append(buffer, offset, length)
+                    .NextTermOffset(BitUtil.Align(offset + length + DataHeaderFlyweight.HEADER_LENGTH, FrameDescriptor.FRAME_ALIGNMENT));
+            }
             else
             {
-                if ((flags & FrameDescriptor.BEGIN_FRAG_FLAG) == FrameDescriptor.BEGIN_FRAG_FLAG)
+                BufferBuilder builder = _builderBySessionIdMap.Get(header.SessionId);
+                if (null != builder)
                 {
-                    BufferBuilder builder;
-                    if (!_builderBySessionIdMap.TryGetValue(header.SessionId, out builder))
-                    {
-                        builder = GetBufferBuilder(header.SessionId);
-                        _builderBySessionIdMap[header.SessionId] = builder;
-                    }
-                    builder.Reset().Append(buffer, offset, length);
-                }
-                else
-                {
-                    BufferBuilder builder;
-                    if (_builderBySessionIdMap.TryGetValue(header.SessionId, out builder))
+                    if (offset == builder.NextTermOffset())
                     {
                         int limit = builder.Limit();
-                        if (limit > 0)
+
+                        builder.Append(buffer, offset, length);
+
+                        if ((flags & FrameDescriptor.END_FRAG_FLAG) == FrameDescriptor.END_FRAG_FLAG)
                         {
-                            builder.Append(buffer, offset, length);
+                            action = _delegate.OnFragment(builder.Buffer(), 0, builder.Limit(), header);
 
-                            if ((flags & FrameDescriptor.END_FRAG_FLAG) == FrameDescriptor.END_FRAG_FLAG)
+                            if (ControlledFragmentHandlerAction.ABORT == action)
                             {
-                                int msgLength = builder.Limit();
-                                action = _delegate.OnFragment(builder.Buffer(), 0, msgLength, header);
-
-                                if (ControlledFragmentHandlerAction.ABORT == action)
-                                {
-                                    builder.Limit(limit);
-                                }
-                                else
-                                {
-                                    builder.Reset();
-                                }
+                                builder.Limit(limit);
+                            }
+                            else
+                            {
+                                builder.Reset();
                             }
                         }
+                        else
+                        {
+                            builder.NextTermOffset(BitUtil.Align(offset + length + DataHeaderFlyweight.HEADER_LENGTH, FrameDescriptor.FRAME_ALIGNMENT));
+                        }
+                    }
+                    else
+                    {
+                        builder.Reset();
                     }
                 }
             }
@@ -151,16 +152,14 @@ namespace Adaptive.Aeron
 
         private BufferBuilder GetBufferBuilder(int sessionId)
         {
-            BufferBuilder bufferBuilder;
-
-            _builderBySessionIdMap.TryGetValue(sessionId, out bufferBuilder);
+            var bufferBuilder = _builderBySessionIdMap.Get(sessionId);
 
             if (null == bufferBuilder)
             {
                 bufferBuilder = new BufferBuilder(_initialBufferLength);
-                _builderBySessionIdMap[sessionId] = bufferBuilder;
+                _builderBySessionIdMap.Put(sessionId, bufferBuilder);
             }
-            
+
             return bufferBuilder;
         }
     }
