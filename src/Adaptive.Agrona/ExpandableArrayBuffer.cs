@@ -539,7 +539,7 @@ namespace Adaptive.Agrona
                 var oldArray = _byteArray;
                 _pinnedGcHandle.Free();
                 AllocateAndPinArray(newLength);
-                Array.Copy(oldArray, _byteArray, newLength);
+                Array.Copy(oldArray, _byteArray, oldArray.Length);
             }
         }
 
