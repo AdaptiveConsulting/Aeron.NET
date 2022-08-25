@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Resources;
 using Adaptive.Aeron.LogBuffer;
 using Adaptive.Agrona;
 using Adaptive.Cluster.Codecs;
@@ -47,11 +46,6 @@ namespace Adaptive.Aeron.Samples.ClusterService
         public void OnTakeSnapshot(ExclusivePublication snapshotPublication)
         {
             Console.WriteLine("OnTakeSnapshot");
-        }
-
-        public void OnLoadSnapshot(Image snapshotImage)
-        {
-            Console.WriteLine("OnLoadSnapshot");
         }
 
         public void OnRoleChange(ClusterRole newRole)
