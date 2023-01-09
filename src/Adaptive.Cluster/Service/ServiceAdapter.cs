@@ -9,6 +9,8 @@ namespace Adaptive.Cluster.Service
 {
     sealed class ServiceAdapter : IDisposable
     {
+        private const int FRAGMENT_LIMIT = 1;
+        
         private readonly Subscription subscription;
         private readonly ClusteredServiceAgent clusteredServiceAgent;
         private readonly FragmentAssembler fragmentAssembler;
@@ -33,7 +35,7 @@ namespace Adaptive.Cluster.Service
 
         internal int Poll()
         {
-            return subscription.Poll(fragmentAssembler, 10);
+            return subscription.Poll(fragmentAssembler, FRAGMENT_LIMIT);
         }
 
         private void OnFragment(IDirectBuffer buffer, int offset, int length, Header header)

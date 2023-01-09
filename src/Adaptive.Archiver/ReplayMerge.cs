@@ -23,6 +23,9 @@ namespace Adaptive.Archiver
     /// </para>
     /// <para>
     /// NOTE: Merging is only supported with UDP streams.
+    ///</para>
+    /// <para>
+    /// NOTE: ReplayMerge is not threadsafe and should <b>not</b> be used with a shared {@link AeronArchive} client.
     /// </para>
     /// </summary>
     public class ReplayMerge : IDisposable
@@ -65,7 +68,6 @@ namespace Adaptive.Archiver
         private readonly IEpochClock epochClock;
         private readonly string replayDestination;
         private readonly string liveDestination;
-        private readonly string replayEndpoint;
         private readonly ChannelUri replayChannelUri;
 
         /// <summary>
@@ -91,7 +93,7 @@ namespace Adaptive.Archiver
                 replayDestination.StartsWith(IPC_CHANNEL, StringComparison.Ordinal) ||
                 liveDestination.StartsWith(IPC_CHANNEL, StringComparison.Ordinal))
             {
-                throw new System.ArgumentException("IPC merging is not supported");
+                throw new ArgumentException("IPC merging is not supported");
             }
 
             if (!subscription.Channel.Contains("control-mode=manual"))
@@ -113,7 +115,7 @@ namespace Adaptive.Archiver
             replayChannelUri.Put(LINGER_PARAM_NAME, "0");
             replayChannelUri.Put(EOS_PARAM_NAME, "false");
 
-            replayEndpoint = ChannelUri.Parse(replayDestination).Get(ENDPOINT_PARAM_NAME);
+            var replayEndpoint = ChannelUri.Parse(replayDestination).Get(ENDPOINT_PARAM_NAME);
             if (replayEndpoint.EndsWith(":0", StringComparison.Ordinal))
             {
                 state = State.RESOLVE_REPLAY_PORT;
@@ -287,10 +289,8 @@ namespace Adaptive.Archiver
             string resolvedEndpoint = subscription.ResolvedEndpoint;
             if (null != resolvedEndpoint)
             {
-                int i = resolvedEndpoint.LastIndexOf(':');
-                replayChannelUri.Put(ENDPOINT_PARAM_NAME,
-                    replayEndpoint.Substring(0, replayEndpoint.Length - 2) + resolvedEndpoint.Substring(i));
-
+                replayChannelUri.ReplaceEndpointWildcardPort(resolvedEndpoint);
+                
                 timeOfLastProgressMs = nowMs;
                 SetState(State.GET_RECORDING_POSITION);
                 workCount += 1;

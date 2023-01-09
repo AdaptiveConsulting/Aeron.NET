@@ -112,21 +112,51 @@ namespace Adaptive.Archiver
                 if (!isClosed)
                 {
                     isClosed = true;
-                    archiveProxy.CloseSession(controlSessionId);
                     ErrorHandler errorHandler = context.ErrorHandler();
+                    Exception resultEx = null;
 
                     if (archiveProxy.Pub().IsConnected)
                     {
-                        CloseHelper.Dispose(errorHandler, () => archiveProxy.CloseSession(controlSessionId));
+                        resultEx = QuietClose(resultEx, Disposable.Of(() => archiveProxy.CloseSession(controlSessionId)));
                     }
 
                     if (!context.OwnsAeronClient())
                     {
-                        CloseHelper.Dispose(errorHandler, archiveProxy.Pub());
-                        CloseHelper.Dispose(errorHandler, controlResponsePoller.Subscription());
+                        resultEx = QuietClose(resultEx, archiveProxy.Pub());
+                        resultEx = QuietClose(resultEx, controlResponsePoller.Subscription());
                     }
 
-                    context.Dispose();
+                    bool rethrow = false;
+                    try
+                    {
+                        context.Dispose();
+                    }
+                    catch (Exception ex)
+                    {
+                        rethrow = true;
+                        if (null != resultEx)
+                        {
+                            //resultEx.AddSuppressed(ex);
+                        }
+                        else
+                        {
+                            resultEx = ex;
+                        }
+                    }
+
+                    if (null != resultEx)
+                    {
+                        if (null != errorHandler)
+                        {
+                            errorHandler(resultEx);
+                        }
+
+                        if (rethrow)
+                        {
+                            throw resultEx;
+                        }
+                    }
+
                 }
             }
             finally
@@ -361,28 +391,30 @@ namespace Adaptive.Archiver
             {
                 EnsureOpen();
 
-                if (!controlResponsePoller.Subscription().IsConnected)
+                ControlResponsePoller poller = controlResponsePoller;
+                if (!poller.Subscription().IsConnected)
                 {
                     return NOT_CONNECTED_MSG;
                 }
 
-                if (controlResponsePoller.Poll() != 0 && controlResponsePoller.PollComplete)
+                if (poller.Poll() != 0 && poller.PollComplete)
                 {
-                    if (controlResponsePoller.ControlSessionId() == controlSessionId)
+                    if (poller.ControlSessionId() == controlSessionId)
                     {
-                        if (controlResponsePoller.Code() == ControlResponseCode.ERROR)
+                        if (poller.Code() == ControlResponseCode.ERROR)
                         {
-                            return controlResponsePoller.ErrorMessage();
+                            return poller.ErrorMessage();
                         }
-                        else if (controlResponsePoller.TemplateId() == RecordingSignalEventDecoder.TEMPLATE_ID)
+                        else if (poller.TemplateId() == RecordingSignalEventDecoder.TEMPLATE_ID)
                         {
-                            DispatchRecordingSignal();
+                            DispatchRecordingSignal(poller);
                         }
                     }
                 }
 
                 return null;
             }
+
             finally
             {
                 _lock.Unlock();
@@ -405,7 +437,8 @@ namespace Adaptive.Archiver
             {
                 EnsureOpen();
 
-                if (!controlResponsePoller.Subscription().IsConnected)
+                ControlResponsePoller poller = controlResponsePoller;
+                if (!poller.Subscription().IsConnected)
                 {
                     if (null != context.ErrorHandler())
                     {
@@ -416,14 +449,14 @@ namespace Adaptive.Archiver
                         throw new ArchiveException(NOT_CONNECTED_MSG);
                     }
                 }
-                else if (controlResponsePoller.Poll() != 0 && controlResponsePoller.PollComplete)
+                else if (poller.Poll() != 0 && poller.PollComplete)
                 {
-                    if (controlResponsePoller.ControlSessionId() == controlSessionId)
+                    if (poller.ControlSessionId() == controlSessionId)
                     {
-                        if (controlResponsePoller.Code() == ControlResponseCode.ERROR)
+                        if (poller.Code() == ControlResponseCode.ERROR)
                         {
-                            ArchiveException ex = new ArchiveException(controlResponsePoller.ErrorMessage(),
-                                (int)controlResponsePoller.RelevantId(), controlResponsePoller.CorrelationId());
+                            ArchiveException ex = new ArchiveException(poller.ErrorMessage(), (int)poller.RelevantId(),
+                                poller.CorrelationId());
 
                             if (null != context.ErrorHandler())
                             {
@@ -434,9 +467,9 @@ namespace Adaptive.Archiver
                                 throw ex;
                             }
                         }
-                        else if (controlResponsePoller.TemplateId() == RecordingSignalEventDecoder.TEMPLATE_ID)
+                        else if (poller.TemplateId() == RecordingSignalEventDecoder.TEMPLATE_ID)
                         {
-                            DispatchRecordingSignal();
+                            DispatchRecordingSignal(poller);
                         }
                     }
                 }
@@ -459,14 +492,15 @@ namespace Adaptive.Archiver
             {
                 EnsureOpen();
 
-                if (controlResponsePoller.Poll() != 0 && controlResponsePoller.PollComplete)
+                ControlResponsePoller poller = controlResponsePoller;
+                if (poller.Poll() != 0 && poller.PollComplete)
                 {
-                    if (controlResponsePoller.ControlSessionId() == controlSessionId)
+                    if (poller.ControlSessionId() == controlSessionId)
                     {
-                        if (controlResponsePoller.Code() == ControlResponseCode.ERROR)
+                        if (poller.Code() == ControlResponseCode.ERROR)
                         {
-                            ArchiveException ex = new ArchiveException(controlResponsePoller.ErrorMessage(),
-                                (int)controlResponsePoller.RelevantId(), controlResponsePoller.CorrelationId());
+                            ArchiveException ex = new ArchiveException(poller.ErrorMessage(), (int)poller.RelevantId(),
+                                poller.CorrelationId());
 
                             if (null != context.ErrorHandler())
                             {
@@ -477,9 +511,9 @@ namespace Adaptive.Archiver
                                 throw ex;
                             }
                         }
-                        else if (controlResponsePoller.TemplateId() == RecordingSignalEventDecoder.TEMPLATE_ID)
+                        else if (poller.TemplateId() == RecordingSignalEventDecoder.TEMPLATE_ID)
                         {
-                            DispatchRecordingSignal();
+                            DispatchRecordingSignal(poller);
                             return 1;
                         }
                     }
@@ -984,9 +1018,43 @@ namespace Adaptive.Archiver
                 _lock.Unlock();
             }
         }
+        
+        /// <summary>
+        /// Start a replay for a recording based upon the parameters set in ReplayParams. By default, it will replay
+        /// all the recording from the start. The ReplayParams is free to be reused when this call completes.
+        /// </summary>
+        /// <param name="recordingId">    to be replayed. </param>
+        /// <param name="replayChannel">  to which the replay should be sent. </param>
+        /// <param name="replayStreamId"> to which the replay should be sent. </param>
+        /// <param name="replayParams">   optional parameters for the replay </param>
+        /// <returns> the id of the replay session which will be the same as the <seealso cref="Image.SessionId()"/> of the received
+        /// replay for correlation with the matching channel and stream id in the lower 32 bits. </returns>
+        /// <seealso cref="ReplayParams"/>
+        public long StartReplay(long recordingId, string replayChannel, int replayStreamId, ReplayParams replayParams)
+        {
+            _lock.Lock();
+            try
+            {
+                EnsureOpen();
+                EnsureNotReentrant();
+
+                lastCorrelationId = aeron.NextCorrelationId();
+
+                if (!archiveProxy.Replay(recordingId, replayChannel, replayStreamId, replayParams, lastCorrelationId, controlSessionId))
+                {
+                    throw new ArchiveException("failed to send bounded replay request");
+                }
+
+                return PollForResponse(lastCorrelationId);
+            }
+            finally
+            {
+                _lock.Unlock();
+            }
+        }
 
         /// <summary>
-        /// Stop a replay session.
+        /// Stop an existing replay session.
         /// </summary>
         /// <param name="replaySessionId"> to stop replay for. </param>
         public void StopReplay(long replaySessionId)
@@ -1116,6 +1184,45 @@ namespace Adaptive.Archiver
 
                 return aeron.AddSubscription(replayChannelUri.ToString(), replayStreamId, availableImageHandler,
                     unavailableImageHandler);
+            }
+            finally
+            {
+                _lock.Unlock();
+            }
+        }
+        
+        /// <summary>
+        /// Replay a recording based upon the parameters set in ReplayParams. By default, it will replay all the recording
+        /// from the start. The ReplayParams is free to be reused when this call completes.
+        /// </summary>
+        /// <param name="recordingId">    to be replayed. </param>
+        /// <param name="replayChannel">  to which the replay should be sent. </param>
+        /// <param name="replayStreamId"> to which the replay should be sent. </param>
+        /// <param name="replayParams">   optional parameters for the replay </param>
+        /// <returns> the <seealso cref="Subscription"/> for consuming the replay. </returns>
+        /// <seealso cref="ReplayParams"/>
+        public Subscription Replay(long recordingId, string replayChannel, int replayStreamId,
+            ReplayParams replayParams)
+        {
+            _lock.Lock();
+            try
+            {
+                EnsureOpen();
+                EnsureNotReentrant();
+
+                ChannelUri replayChannelUri = ChannelUri.Parse(replayChannel);
+                lastCorrelationId = aeron.NextCorrelationId();
+
+                if (!archiveProxy.Replay(recordingId, replayChannel, replayStreamId, replayParams, lastCorrelationId,
+                        controlSessionId))
+                {
+                    throw new ArchiveException("failed to send replay request");
+                }
+
+                int replaySessionId = (int)PollForResponse(lastCorrelationId);
+                replayChannelUri.Put(Aeron.Aeron.Context.SESSION_ID_PARAM_NAME, Convert.ToString(replaySessionId));
+
+                return aeron.AddSubscription(replayChannelUri.ToString(), replayStreamId);
             }
             finally
             {
@@ -1475,8 +1582,7 @@ namespace Adaptive.Archiver
         /// </para>
         /// <para>
         /// Errors will be reported asynchronously and can be checked for with <seealso cref="AeronArchive.PollForErrorResponse()"/>
-        /// or <seealso cref="AeronArchive.CheckForErrorResponse()"/>. Follow progress with <seealso cref="RecordingSignalAdapter"/>.
-        ///   
+        /// or <seealso cref="AeronArchive.CheckForErrorResponse()"/>.
         /// </para>
         /// </summary>
         /// <param name="srcRecordingId">     recording id which must exist in the source archive. </param>
@@ -1522,7 +1628,7 @@ namespace Adaptive.Archiver
         /// </para>
         /// <para>
         /// Errors will be reported asynchronously and can be checked for with <seealso cref="AeronArchive.PollForErrorResponse()"/>
-        /// or <seealso cref="AeronArchive.CheckForErrorResponse()"/>. Follow progress with <seealso cref="RecordingSignalAdapter"/>.
+        /// or <seealso cref="AeronArchive.CheckForErrorResponse()"/>.
         /// </para>
         /// <para>
         /// Stop recording this stream when the position of the destination reaches the specified stop position.
@@ -1583,7 +1689,7 @@ namespace Adaptive.Archiver
         /// </para>
         /// <para>
         /// Errors will be reported asynchronously and can be checked for with <seealso cref="AeronArchive.PollForErrorResponse()"/>
-        /// or <seealso cref="AeronArchive.CheckForErrorResponse()"/>. Follow progress with <seealso cref="RecordingSignalAdapter"/>.
+        /// or <seealso cref="AeronArchive.CheckForErrorResponse()"/>.
         /// 
         /// </para>
         /// </summary>
@@ -1632,7 +1738,7 @@ namespace Adaptive.Archiver
         /// </para>
         /// <para>
         /// Errors will be reported asynchronously and can be checked for with <seealso cref="AeronArchive.PollForErrorResponse()"/>
-        /// or <seealso cref="AeronArchive.CheckForErrorResponse()"/>. Follow progress with <seealso cref="RecordingSignalAdapter"/>.
+        /// or <seealso cref="AeronArchive.CheckForErrorResponse()"/>.
         ///     
         /// </para>
         /// </summary>
@@ -1683,6 +1789,49 @@ namespace Adaptive.Archiver
             }
         }
 
+        /// <summary>
+        /// Replicate a recording from a source archive to a destination which can be considered a backup for a primary
+        /// archive. The behaviour of the replication is controlled through the <seealso cref="ReplicationParams"/>.
+        /// <para>
+        /// For a source recording that is still active the replay can merge with the live stream and then follow it
+        /// directly and no longer require the replay from the source. This would require a multicast live destination.
+        /// </para>
+        /// <para>
+        /// Errors will be reported asynchronously and can be checked for with <seealso cref="AeronArchive.PollForErrorResponse()"/>
+        /// or <seealso cref="AeronArchive.CheckForErrorResponse()"/>.
+        /// </para>
+        /// <para>
+        /// The ReplicationParams is free to be reused when this call completes.
+        ///    
+        /// </para>
+        /// </summary>
+        /// <param name="srcRecordingId">     recording id which must exist in the source archive. </param>
+        /// <param name="srcControlStreamId"> remote control stream id for the source archive to instruct the replay on. </param>
+        /// <param name="srcControlChannel">  remote control channel for the source archive to instruct the replay on. </param>
+        /// <param name="replicationParams">  Optional parameters to control the behaviour of the replication. </param>
+        /// <returns> return the replication session id which can be passed later to <seealso cref="StopReplication(long)"/>. </returns>
+        public long Replicate(long srcRecordingId, int srcControlStreamId, string srcControlChannel, ReplicationParams replicationParams)
+        {
+            _lock.Lock();
+            try
+            {
+                EnsureOpen();
+                EnsureNotReentrant();
+
+                lastCorrelationId = aeron.NextCorrelationId();
+
+                if (!archiveProxy.Replicate(srcRecordingId, srcControlStreamId, srcControlChannel, replicationParams, lastCorrelationId, controlSessionId))
+                {
+                    throw new ArchiveException("failed to send replicate request");
+                }
+
+                return PollForResponse(lastCorrelationId);
+            }
+            finally
+            {
+                _lock.Unlock();
+            }
+        }
 
         /// <summary>
         /// Stop a replication session by id returned from <seealso cref="Replicate(long, long, int, String, String)"/>.
@@ -1945,10 +2094,10 @@ namespace Adaptive.Archiver
 
                 if (poller.PollComplete)
                 {
-                    if (controlResponsePoller.TemplateId() == RecordingSignalEventDecoder.TEMPLATE_ID &&
-                        controlResponsePoller.ControlSessionId() == controlSessionId)
+                    if (poller.TemplateId() == RecordingSignalEventDecoder.TEMPLATE_ID &&
+                        poller.ControlSessionId() == controlSessionId)
                     {
-                        DispatchRecordingSignal();
+                        DispatchRecordingSignal(poller);
                         continue;
                     }
 
@@ -2147,15 +2296,15 @@ namespace Adaptive.Archiver
             }
         }
 
-        private void DispatchRecordingSignal()
+        private void DispatchRecordingSignal(ControlResponsePoller poller)
         {
             context.RecordingSignalConsumer().OnSignal(
-                controlResponsePoller.ControlSessionId(),
-                controlResponsePoller.CorrelationId(),
-                controlResponsePoller.RecordingId(),
-                controlResponsePoller.SubscriptionId(),
-                controlResponsePoller.Position(),
-                controlResponsePoller.RecordingSignal());
+                poller.ControlSessionId(),
+                poller.CorrelationId(),
+                poller.RecordingId(),
+                poller.SubscriptionId(),
+                poller.Position(),
+                poller.RecordingSignal());
         }
 
         private void InvokeInvokers()
@@ -2202,7 +2351,7 @@ namespace Adaptive.Archiver
             /// Minor version of the network protocol from client to archive. If these don't match then some features may
             /// not be available.
             /// </summary>
-            public const int PROTOCOL_MINOR_VERSION = 9;
+            public const int PROTOCOL_MINOR_VERSION = 10;
 
             /// <summary>
             /// Patch version of the network protocol from client to archive. If these don't match then bug fixes may not
@@ -2225,17 +2374,12 @@ namespace Adaptive.Archiver
             /// <summary>
             /// Timeout when waiting on a message to be sent or received.
             /// </summary>
-            public static readonly long MESSAGE_TIMEOUT_DEFAULT_NS = 5000000000;
+            public static readonly long MESSAGE_TIMEOUT_DEFAULT_NS = 10_000_000_000;
 
             /// <summary>
             /// Channel for sending control messages to an archive.
             /// </summary>
             public const string CONTROL_CHANNEL_PROP_NAME = "aeron.archive.control.channel";
-
-            /// <summary>
-            /// Channel for sending control messages to an archive.
-            /// </summary>
-            public const string CONTROL_CHANNEL_DEFAULT = "aeron:udp?endpoint=localhost:8010";
 
             /// <summary>
             /// Stream id within a channel for sending control messages to an archive.
@@ -2286,11 +2430,6 @@ namespace Adaptive.Archiver
             public const string CONTROL_RESPONSE_CHANNEL_PROP_NAME = "aeron.archive.control.response.channel";
 
             /// <summary>
-            /// Default channel for receiving control response messages from an archive.
-            /// </summary>
-            public const string CONTROL_RESPONSE_CHANNEL_DEFAULT = "aeron:udp?endpoint=localhost:0";
-
-            /// <summary>
             /// Stream id within a channel for receiving control messages from an archive.
             /// </summary>
             public const string CONTROL_RESPONSE_STREAM_ID_PROP_NAME = "aeron.archive.control.response.stream.id";
@@ -2304,14 +2443,6 @@ namespace Adaptive.Archiver
             /// Channel for receiving progress events of recordings from an archive.
             /// </summary>
             public const string RECORDING_EVENTS_CHANNEL_PROP_NAME = "aeron.archive.recording.events.channel";
-
-            /// <summary>
-            /// Channel for receiving progress events of recordings from an archive.
-            /// For production, it is recommended that multicast or dynamic multi-destination-cast (MDC) is used to allow
-            /// for dynamic subscribers, an endpoint can be added to the subscription side for controlling port usage.
-            /// </summary>
-            public const string RECORDING_EVENTS_CHANNEL_DEFAULT =
-                "aeron:udp?control-mode=dynamic|control=localhost:8030";
 
             /// <summary>
             /// Stream id within a channel for receiving progress of recordings from an archive.
@@ -2331,7 +2462,7 @@ namespace Adaptive.Archiver
             /// <summary>
             /// Channel enabled for recording progress events of recordings from an archive which defaults to true.
             /// </summary>
-            public const bool RECORDING_EVENTS_ENABLED_DEFAULT = true;
+            public const bool RECORDING_EVENTS_ENABLED_DEFAULT = false;
 
             /// <summary>
             /// Sparse term buffer indicator for control streams.
@@ -2420,14 +2551,12 @@ namespace Adaptive.Archiver
             }
 
             /// <summary>
-            /// The value <seealso cref="CONTROL_CHANNEL_DEFAULT"/> or system property
-            /// <seealso cref="CONTROL_CHANNEL_PROP_NAME"/> if set.
+            /// The value of system property <seealso cref="CONTROL_CHANNEL_PROP_NAME"/> if set, null otherwise.
             /// </summary>
-            /// <returns> <seealso cref="CONTROL_CHANNEL_DEFAULT"/> or system property
-            /// <seealso cref="CONTROL_CHANNEL_PROP_NAME"/> if set. </returns>
+            /// <returns> system property <seealso cref="CONTROL_CHANNEL_PROP_NAME"/> if set. </returns>
             public static string ControlChannel()
             {
-                return Config.GetProperty(CONTROL_CHANNEL_PROP_NAME, CONTROL_CHANNEL_DEFAULT);
+                return Config.GetProperty(CONTROL_CHANNEL_PROP_NAME);
             }
 
             /// <summary>
@@ -2464,14 +2593,12 @@ namespace Adaptive.Archiver
             }
 
             /// <summary>
-            /// The value <seealso cref="CONTROL_RESPONSE_CHANNEL_DEFAULT"/> or system property
-            /// <seealso cref="CONTROL_RESPONSE_CHANNEL_PROP_NAME"/> if set.
+            /// The value of system property <seealso cref="CONTROL_RESPONSE_CHANNEL_PROP_NAME"/> if set, null otherwise.
             /// </summary>
-            /// <returns> <seealso cref="CONTROL_RESPONSE_CHANNEL_DEFAULT"/> or system property
-            /// <seealso cref="CONTROL_RESPONSE_CHANNEL_PROP_NAME"/> if set. </returns>
+            /// <returns> of system property <seealso cref="CONTROL_RESPONSE_CHANNEL_PROP_NAME"/> if set. </returns>
             public static string ControlResponseChannel()
             {
-                return Config.GetProperty(CONTROL_RESPONSE_CHANNEL_PROP_NAME, CONTROL_RESPONSE_CHANNEL_DEFAULT);
+                return Config.GetProperty(CONTROL_RESPONSE_CHANNEL_PROP_NAME);
             }
 
             /// <summary>
@@ -2486,14 +2613,12 @@ namespace Adaptive.Archiver
             }
 
             /// <summary>
-            /// The value <seealso cref="RECORDING_EVENTS_CHANNEL_DEFAULT"/> or system property
-            /// <seealso cref="RECORDING_EVENTS_CHANNEL_PROP_NAME"/> if set.
+            /// The value of system property <seealso cref="RECORDING_EVENTS_CHANNEL_PROP_NAME"/> if set, null otherwise.
             /// </summary>
-            /// <returns> <seealso cref="RECORDING_EVENTS_CHANNEL_DEFAULT"/> or system property
-            /// <seealso cref="RECORDING_EVENTS_CHANNEL_PROP_NAME"/> if set. </returns>
+            /// <returns> system property <seealso cref="RECORDING_EVENTS_CHANNEL_PROP_NAME"/> if set. </returns>
             public static string RecordingEventsChannel()
             {
-                return Config.GetProperty(RECORDING_EVENTS_CHANNEL_PROP_NAME, RECORDING_EVENTS_CHANNEL_DEFAULT);
+                return Config.GetProperty(RECORDING_EVENTS_CHANNEL_PROP_NAME);
             }
 
             /// <summary>
@@ -2563,6 +2688,16 @@ namespace Adaptive.Archiver
                 if (0 != Interlocked.Exchange(ref _isConcluded, 1))
                 {
                     throw new ConcurrentConcludeException();
+                }
+
+                if (null == controlRequestChannel)
+                {
+                    throw new ConfigurationException("AeronArchive.Context.ControlRequestChannel must be set");
+                }
+                
+                if (null == controlResponseChannel)
+                {
+                    throw new ConfigurationException("AeronArchive.Context.ControlResponseChannel must be set");
                 }
 
                 if (null == aeron)
@@ -3315,6 +3450,54 @@ namespace Adaptive.Archiver
             {
                 _step = step;
             }
+        }
+        
+        static Exception QuietClose(Exception previousException, IDisposable closeable)
+        {
+            Exception resultException = previousException;
+            if (null != closeable)
+            {
+                try
+                {
+                    closeable.Dispose();
+                }
+                catch (Exception ex)
+                {
+                    if (null != resultException)
+                    {
+                        //resultException.AddSuppressed(ex);
+                    }
+                    else
+                    {
+                        resultException = ex;
+                    }
+                }
+            }
+
+            return resultException;
+        }
+    }
+
+    static class Disposable
+    {
+        private class DisposableHolder : IDisposable
+        {
+            private readonly Action _func;
+
+            public DisposableHolder(Action func)
+            {
+                _func = func;
+            }
+
+            public void Dispose()
+            {
+                _func();
+            }
+        }
+
+        public static IDisposable Of(Action func)
+        {
+            return new DisposableHolder(func);
         }
     }
 }

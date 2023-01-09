@@ -9,10 +9,10 @@ namespace Adaptive.Archiver.Codecs {
 
 public class ReplayRequestEncoder
 {
-    public const ushort BLOCK_LENGTH = 44;
+    public const ushort BLOCK_LENGTH = 48;
     public const ushort TEMPLATE_ID = 6;
     public const ushort SCHEMA_ID = 101;
-    public const ushort SCHEMA_VERSION = 6;
+    public const ushort SCHEMA_VERSION = 7;
 
     private ReplayRequestEncoder _parentMessage;
     private IMutableDirectBuffer _buffer;
@@ -284,6 +284,38 @@ public class ReplayRequestEncoder
     public ReplayRequestEncoder ReplayStreamId(int value)
     {
         _buffer.PutInt(_offset + 40, value, ByteOrder.LittleEndian);
+        return this;
+    }
+
+
+    public static int FileIoMaxLengthEncodingOffset()
+    {
+        return 44;
+    }
+
+    public static int FileIoMaxLengthEncodingLength()
+    {
+        return 4;
+    }
+
+    public static int FileIoMaxLengthNullValue()
+    {
+        return -2147483648;
+    }
+
+    public static int FileIoMaxLengthMinValue()
+    {
+        return -2147483647;
+    }
+
+    public static int FileIoMaxLengthMaxValue()
+    {
+        return 2147483647;
+    }
+
+    public ReplayRequestEncoder FileIoMaxLength(int value)
+    {
+        _buffer.PutInt(_offset + 44, value, ByteOrder.LittleEndian);
         return this;
     }
 

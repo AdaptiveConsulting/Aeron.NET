@@ -70,6 +70,23 @@ namespace Adaptive.Agrona
                 errorHandler(ex);
             }
         }
+        
+        /// <summary>
+        /// Dispose an <see cref="IDisposable"/> delegating exceptions to <see cref="ErrorHandler"/>.
+        /// </summary>
+        /// <param name="errorHandler"> to delegate exceptions to.</param>
+        /// <param name="disposable"> to be closed.</param>
+        public static void Dispose(IErrorHandler errorHandler, IDisposable disposable)
+        {
+            try
+            {
+                disposable?.Dispose();
+            }
+            catch (Exception ex)
+            {
+                errorHandler.OnError(ex);
+            }
+        }
 
         /// <summary>
         /// Dispose an <see cref="IDisposable"/> delegating exceptions to <see cref="ErrorHandler"/>.

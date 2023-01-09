@@ -87,6 +87,21 @@ namespace Adaptive.Agrona.Concurrent.Status
         public delegate void CounterConsumer(long value, int counterId, string label);
 
         /// <summary>
+        /// Default type id of a counter when none is supplied.
+        /// </summary>
+        public const int DEFAULT_TYPE_ID = 0;
+
+        /// <summary>
+        /// Default registration id of a counter when none is set.
+        /// </summary>
+        public const long DEFAULT_REGISTRATION_ID = 0;
+
+        /// <summary>
+        /// Default owner id of a counter when none is set.
+        /// </summary>
+        public const long DEFAULT_OWNER_ID = 0;
+        
+        /// <summary>
         /// Can be used to representing a null counter id when passed as a argument.
         /// </summary>
         public const int NULL_COUNTER_ID = -1;
@@ -110,6 +125,19 @@ namespace Adaptive.Agrona.Concurrent.Status
         /// Deadline to indicate counter is not free to be reused.
         /// </summary>
         public static readonly long NOT_FREE_TO_REUSE = long.MaxValue;
+        
+        /// <summary>
+        /// Offset in the record at which the registration id field is stored. When a counter is allocated the action
+        /// can be given a registration id to indicate a specific term of use. This can be useful to differentiate the
+        /// reuse of a counter id for another purpose even with the same type id.
+        /// </summary>
+        public static readonly int REGISTRATION_ID_OFFSET = BitUtil.SIZE_OF_LONG;
+
+        /// <summary>
+        /// Offset in the record at which the owner id field is stored. The owner is an abstract concept which can be
+        /// used to associate counters to an owner for lifecycle management.
+        /// </summary>
+        public static readonly int OWNER_ID_OFFSET = REGISTRATION_ID_OFFSET + BitUtil.SIZE_OF_LONG;
 
         /// <summary>
         /// Offset in the record at which the type id field is stored.
@@ -317,6 +345,20 @@ namespace Adaptive.Agrona.Concurrent.Status
             
             return ValuesBuffer.GetLongVolatile(CounterOffset(counterId));
         }
+        
+        /// <summary>
+        /// Get the registration id for a given counter id as a volatile read. The registration identity may be assigned
+        /// when the counter is allocated to help avoid ABA issues if the counter id is reused.
+        /// </summary>
+        /// <param name="counterId"> to be read. </param>
+        /// <returns> the current registration id of the counter. </returns>
+        /// <seealso cref="DEFAULT_REGISTRATION_ID"/>
+        public long GetCounterRegistrationId(int counterId)
+        {
+            ValidateCounterId(counterId);
+            return ValuesBuffer.GetLongVolatile(CounterOffset(counterId) + REGISTRATION_ID_OFFSET);
+        }
+
         
         /// <summary>
         /// Get the state for a given counter id as a volatile read.

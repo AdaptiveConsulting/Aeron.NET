@@ -248,7 +248,7 @@ namespace Adaptive.Aeron
 		}
 
 		/// <summary>
-		/// Add a destination to the receive channel of an existing MDS Subscription.
+		/// Add a destination to the receive channel endpoint of an existing MDS Subscription.
 		/// </summary>
 		/// <param name="registrationId">  of the Subscription. </param>
 		/// <param name="endpointChannel"> for the destination. </param>
@@ -276,7 +276,7 @@ namespace Adaptive.Aeron
 		}
 
 		/// <summary>
-		/// Remove a destination from the receive channel of an existing MDS Subscription.
+		/// Remove a destination from the receive channel endpoint of an existing MDS Subscription.
 		/// </summary>
 		/// <param name="registrationId">  of the Subscription. </param>
 		/// <param name="endpointChannel"> used for the <seealso cref="AddRcvDestination(long, string)"/> command. </param>

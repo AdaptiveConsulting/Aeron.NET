@@ -50,13 +50,14 @@ namespace Adaptive.Cluster
             long timeoutMs)
         {
             var markFileExists = file.Exists;
+            int totalFileLength = HEADER_LENGTH + errorBufferLength;
 
             markFile = new MarkFile(
                 file,
                 markFileExists,
                 MarkFileHeaderDecoder.VersionEncodingOffset(),
                 MarkFileHeaderDecoder.ActivityTimestampEncodingOffset(),
-                HEADER_LENGTH + errorBufferLength,
+                totalFileLength,
                 timeoutMs,
                 epochClock,
                 (version) =>
@@ -82,12 +83,18 @@ namespace Adaptive.Cluster
 
             if (markFileExists)
             {
+                if (buffer.Capacity != totalFileLength)
+                {
+                    throw new ClusterException(
+                        "ClusterMarkFile capacity=" + buffer.Capacity + " < expectedCapacity=" + totalFileLength);
+                }
+
+                var existingErrorBufferLength = headerDecoder.ErrorBufferLength();
                 var existingErrorBuffer = new UnsafeBuffer(
-                    buffer, headerDecoder.HeaderLength(), headerDecoder.ErrorBufferLength());
+                    buffer, headerDecoder.HeaderLength(), existingErrorBufferLength);
 
                 SaveExistingErrors(file, existingErrorBuffer, type, Aeron.Aeron.Context.FallbackLogger());
-
-                existingErrorBuffer.SetMemory(0, errorBufferLength, 0);
+                existingErrorBuffer.SetMemory(0, existingErrorBufferLength, 0);
             }
             else
             {
@@ -149,8 +156,8 @@ namespace Adaptive.Cluster
         /// <summary>
         /// Determines if this path name matches the service mark file name pattern
         /// </summary>
-        /// <param name="path">       to examine </param>
-        /// <returns> true if the name matches </returns>
+        /// <param name="path">       to examine. </param>
+        /// <returns> true if the name matches. </returns>
         public static bool IsServiceMarkFile(FileInfo path)
         {
             string fileName = path.Name;
@@ -160,8 +167,8 @@ namespace Adaptive.Cluster
         /// <summary>
         /// Determines if this path name matches the consensus module file name pattern.
         /// </summary>
-        /// <param name="path">       to examine </param>
-        /// <returns> true if the name matches </returns>
+        /// <param name="path">       to examine. </param>
+        /// <returns> true if the name matches. </returns>
         public static bool IsConsensusModuleMarkFile(FileInfo path)
         {
             return path.Name.Equals(FILENAME);
@@ -379,7 +386,7 @@ namespace Adaptive.Cluster
 
             if (length > HEADER_LENGTH)
             {
-                throw new ClusterException($"ClusterMarkFile required headerLength={length} > {HEADER_LENGTH}.");
+                throw new ClusterException($"ClusterMarkFile headerLength={length} > headerLengthCapacity={HEADER_LENGTH}.");
             }
         }
 
@@ -407,6 +414,7 @@ namespace Adaptive.Cluster
                 MarkFileHeaderDecoder.SCHEMA_VERSION);
 
             return new ClusterNodeControlProperties(
+                decoder.MemberId(),
                 decoder.ServiceStreamId(),
                 decoder.ConsensusModuleStreamId(),
                 decoder.AeronDirectory(),

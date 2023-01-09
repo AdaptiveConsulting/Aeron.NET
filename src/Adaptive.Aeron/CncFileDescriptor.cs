@@ -334,11 +334,11 @@ namespace Adaptive.Aeron
         }
 
         /// <summary>
-        /// Create the buffer which wraps the section in the CnC file for the counters metadata.
+        /// Create the buffer which wraps the section in the CnC file for the counter's metadata.
         /// </summary>
         /// <param name="buffer">         for the CnC file. </param>
         /// <param name="metaDataBuffer"> within the CnC file. </param>
-        /// <returns> a buffer which wraps the section in the CnC file for the counters metadata. </returns>
+        /// <returns> a buffer which wraps the section in the CnC file for the counter's metadata. </returns>
         public static UnsafeBuffer CreateCountersMetaDataBuffer(MappedByteBuffer buffer, IDirectBuffer metaDataBuffer)
         {
             var offset = END_OF_METADATA_OFFSET + metaDataBuffer.GetInt(ToDriverBufferLengthOffset(0)) +

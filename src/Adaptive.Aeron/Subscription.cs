@@ -82,7 +82,7 @@ namespace Adaptive.Aeron
     /// to the <seealso cref="FragmentHandler"/>.
     /// 
     /// By default, fragmented messages are not reassembled before delivery. If an application must
-    /// receive whole messages, whether or not they were fragmented, then the Subscriber
+    /// receive whole messages, even if they were fragmented, then the Subscriber
     /// should be created with a <seealso cref="FragmentAssembler"/> or a custom implementation.
     /// 
     /// It is an application's responsibility to <seealso cref="Poll(IFragmentHandler, int)"/> the <seealso cref="Subscription"/> for new messages.
@@ -533,11 +533,7 @@ namespace Adaptive.Aeron
 
                     if (null != endpoint && endpoint.EndsWith(":0", StringComparison.Ordinal))
                     {
-                        string resolvedEndpoint = localSocketAddresses[0];
-                        int i = resolvedEndpoint.LastIndexOf(':');
-                        uri.Put(Aeron.Context.ENDPOINT_PARAM_NAME,
-                            endpoint.Substring(0, endpoint.Length - 2) + resolvedEndpoint.Substring(i));
-
+                        uri.ReplaceEndpointWildcardPort(localSocketAddresses[0]);
                         return uri.ToString();
                     }
                 }

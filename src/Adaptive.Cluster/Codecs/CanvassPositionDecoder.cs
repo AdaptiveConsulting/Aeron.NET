@@ -9,10 +9,10 @@ namespace Adaptive.Cluster.Codecs {
 
 public class CanvassPositionDecoder
 {
-    public const ushort BLOCK_LENGTH = 28;
+    public const ushort BLOCK_LENGTH = 32;
     public const ushort TEMPLATE_ID = 50;
     public const ushort SCHEMA_ID = 111;
-    public const ushort SCHEMA_VERSION = 8;
+    public const ushort SCHEMA_VERSION = 9;
 
     private CanvassPositionDecoder _parentMessage;
     private IDirectBuffer _buffer;
@@ -304,6 +304,60 @@ public class CanvassPositionDecoder
     }
 
 
+    public static int ProtocolVersionId()
+    {
+        return 5;
+    }
+
+    public static int ProtocolVersionSinceVersion()
+    {
+        return 9;
+    }
+
+    public static int ProtocolVersionEncodingOffset()
+    {
+        return 28;
+    }
+
+    public static int ProtocolVersionEncodingLength()
+    {
+        return 4;
+    }
+
+    public static string ProtocolVersionMetaAttribute(MetaAttribute metaAttribute)
+    {
+        switch (metaAttribute)
+        {
+            case MetaAttribute.EPOCH: return "unix";
+            case MetaAttribute.TIME_UNIT: return "nanosecond";
+            case MetaAttribute.SEMANTIC_TYPE: return "";
+            case MetaAttribute.PRESENCE: return "optional";
+        }
+
+        return "";
+    }
+
+    public static int ProtocolVersionNullValue()
+    {
+        return 0;
+    }
+
+    public static int ProtocolVersionMinValue()
+    {
+        return 1;
+    }
+
+    public static int ProtocolVersionMaxValue()
+    {
+        return 16777215;
+    }
+
+    public int ProtocolVersion()
+    {
+        return _buffer.GetInt(_offset + 28, ByteOrder.LittleEndian);
+    }
+
+
 
     public override string ToString()
     {
@@ -352,6 +406,11 @@ public class CanvassPositionDecoder
         //Token{signal=ENCODING, name='int32', referencedName='null', description='null', id=-1, version=0, deprecated=0, encodedLength=4, offset=24, componentTokenCount=1, encoding=Encoding{presence=REQUIRED, primitiveType=INT32, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
         builder.Append("FollowerMemberId=");
         builder.Append(FollowerMemberId());
+        builder.Append('|');
+        //Token{signal=BEGIN_FIELD, name='protocolVersion', referencedName='null', description='null', id=5, version=9, deprecated=0, encodedLength=0, offset=28, componentTokenCount=3, encoding=Encoding{presence=OPTIONAL, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=ENCODING, name='version_t', referencedName='null', description='Protocol or application suite version.', id=-1, version=0, deprecated=0, encodedLength=4, offset=28, componentTokenCount=1, encoding=Encoding{presence=OPTIONAL, primitiveType=INT32, byteOrder=LITTLE_ENDIAN, minValue=1, maxValue=16777215, nullValue=0, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        builder.Append("ProtocolVersion=");
+        builder.Append(ProtocolVersion());
 
         Limit(originalLimit);
 

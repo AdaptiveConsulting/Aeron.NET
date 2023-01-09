@@ -7,10 +7,12 @@ namespace Adaptive.Agrona.Concurrent
     /// <summary>
     /// An <seealso cref="ErrorHandler"/> which calls <seealso cref="AtomicCounter.Increment()"/> before delegating the exception.
     /// </summary>
-    public class CountedErrorHandler
+    public class CountedErrorHandler : IErrorHandler
     {
         private readonly ErrorHandler _errorHandler;
         private readonly AtomicCounter _errorCounter;
+
+        public readonly ErrorHandler AsErrorHandler;
 
         /// <summary>
         /// Construct a counted error handler with a delegate and counter.
@@ -24,6 +26,8 @@ namespace Adaptive.Agrona.Concurrent
 
             _errorHandler = errorHandler;
             _errorCounter = errorCounter;
+
+            AsErrorHandler = OnError;
         }
 
         public void OnError(Exception throwable)

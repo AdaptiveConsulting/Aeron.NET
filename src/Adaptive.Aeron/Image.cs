@@ -30,7 +30,7 @@ namespace Adaptive.Aeron
     /// Each <seealso cref="Image"/> identifies a source <see cref="Publication"/> by <see cref="SessionId"/>.
     /// 
     /// By default, fragmented messages are not reassembled before delivery. If an application must
-    /// receive whole messages, whether or not they were fragmented, then the Subscriber
+    /// receive whole messages, whether they were fragmented or not, then the Subscriber
     /// should be created with a <seealso cref="FragmentAssembler"/> or a custom implementation.
     /// 
     /// It is an application's responsibility to <seealso cref="Poll(Adaptive.Aeron.LogBuffer.FragmentHandler,int)"/> the <seealso cref="Image"/> for new messages.
@@ -409,8 +409,13 @@ namespace Adaptive.Aeron
                 return 0;
             }
 
-            int fragmentsRead = 0;
             long initialPosition = _subscriberPosition.Get();
+            if (initialPosition >= limitPosition)
+            {
+                return 0;
+            }
+
+            int fragmentsRead = 0;
             int initialOffset = (int) initialPosition & _termLengthMask;
             int offset = initialOffset;
             UnsafeBuffer termBuffer = ActiveTermBuffer(initialPosition);
@@ -504,8 +509,13 @@ namespace Adaptive.Aeron
                 return 0;
             }
 
-            var fragmentsRead = 0;
             var initialPosition = _subscriberPosition.Get();
+            if (initialPosition >= limitPosition)
+            {
+                return 0;
+            }
+            
+            var fragmentsRead = 0;
             var initialOffset = (int) initialPosition & _termLengthMask;
             var offset = initialOffset;
             var termBuffer = ActiveTermBuffer(initialPosition);
@@ -550,6 +560,7 @@ namespace Adaptive.Aeron
                     {
                         break;
                     }
+                    
                     if (ControlledFragmentHandlerAction.COMMIT == action)
                     {
                         initialPosition += (offset - initialOffset);

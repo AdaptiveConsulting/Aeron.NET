@@ -81,7 +81,7 @@ namespace Adaptive.Agrona
 
             this.parentDir = markFile.Directory;
             this.markFile = markFile;
-            this.mappedBuffer = MapNewOrExistingCncFile(markFile, shouldPreExist, versionFieldOffset,
+            this.mappedBuffer = mapNewOrExistingMarkFile(markFile, shouldPreExist, versionFieldOffset,
                 timestampFieldOffset, totalFileLength, timeoutMs, epochClock, versionCheck, logger);
 
             this.buffer = new UnsafeBuffer(mappedBuffer.Pointer, totalFileLength);
@@ -109,7 +109,7 @@ namespace Adaptive.Agrona
 
             this.parentDir = directory;
             this.markFile = new FileInfo(Path.Combine(directory.FullName, filename));
-            this.mappedBuffer = MapExistingCncFile(markFile, versionFieldOffset, timestampFieldOffset, timeoutMs,
+            this.mappedBuffer = MapExistingMarkFile(markFile, versionFieldOffset, timestampFieldOffset, timeoutMs,
                 epochClock, versionCheck, logger);
             this.buffer = new UnsafeBuffer(mappedBuffer);
             this.versionFieldOffset = versionFieldOffset;
@@ -251,7 +251,7 @@ namespace Adaptive.Agrona
                         if (IsActive(cncByteBuffer, epochClock, timeoutMs, versionFieldOffset, timestampFieldOffset,
                             versionCheck, logger))
                         {
-                            throw new System.InvalidOperationException("Active CnC file detected");
+                            throw new System.InvalidOperationException("active mark file detected");
                         }
                     }
                     finally
@@ -266,7 +266,7 @@ namespace Adaptive.Agrona
             IoUtil.EnsureDirectoryExists(directory, directory.ToString());
         }
 
-        public static MappedByteBuffer MapExistingCncFile(FileInfo cncFile, int versionFieldOffset,
+        public static MappedByteBuffer MapExistingMarkFile(FileInfo markFile, int versionFieldOffset,
             int timestampFieldOffset, long timeoutMs, IEpochClock epochClock, Action<int> versionCheck,
             Action<string> logger)
         {
@@ -274,17 +274,17 @@ namespace Adaptive.Agrona
 
             while (true)
             {
-                while (!cncFile.Exists)
+                while (!markFile.Exists)
                 {
                     if (epochClock.Time() > (startTimeMs + timeoutMs))
                     {
-                        throw new InvalidOperationException("CnC file not found: " + cncFile.FullName);
+                        throw new InvalidOperationException("CnC file not found: " + markFile.FullName);
                     }
 
                     Sleep(16);
                 }
 
-                MappedByteBuffer cncByteBuffer = MapExistingFile(cncFile, logger);
+                MappedByteBuffer cncByteBuffer = MapExistingFile(markFile, logger);
                 UnsafeBuffer cncBuffer = new UnsafeBuffer(cncByteBuffer);
 
                 int cncVersion;
@@ -314,7 +314,7 @@ namespace Adaptive.Agrona
             }
         }
 
-        public static MappedByteBuffer MapNewOrExistingCncFile(FileInfo cncFile, bool shouldPreExist,
+        public static MappedByteBuffer mapNewOrExistingMarkFile(FileInfo markFile, bool shouldPreExist,
             int versionFieldOffset, int timestampFieldOffset, long totalFileLength, long timeoutMs,
             IEpochClock epochClock, Action<int> versionCheck, Action<string> logger)
         {
@@ -322,7 +322,7 @@ namespace Adaptive.Agrona
 
             try
             {
-                cncByteBuffer = IoUtil.MapNewOrExistingFile(cncFile, totalFileLength);
+                cncByteBuffer = IoUtil.MapNewOrExistingFile(markFile, totalFileLength);
 
                 UnsafeBuffer cncBuffer = new UnsafeBuffer(cncByteBuffer);
 
@@ -332,7 +332,7 @@ namespace Adaptive.Agrona
 
                     if (null != logger)
                     {
-                        logger("INFO: CnC file exists: " + cncFile);
+                        logger("INFO: Mark file exists: " + markFile);
                     }
 
                     versionCheck(cncVersion);
@@ -348,7 +348,7 @@ namespace Adaptive.Agrona
 
                     if (timestampAge < timeoutMs)
                     {
-                        throw new System.InvalidOperationException("Active CnC file detected");
+                        throw new InvalidOperationException("Active mark file detected");
                     }
                 }
             }
@@ -372,7 +372,7 @@ namespace Adaptive.Agrona
             {
                 if (null != logger)
                 {
-                    logger("INFO: CnC file exists: " + cncFile);
+                    logger("INFO: Mark file exists: " + cncFile);
                 }
 
                 return IoUtil.MapExistingFile(cncFile, offset, length);
@@ -387,7 +387,7 @@ namespace Adaptive.Agrona
             {
                 if (null != logger)
                 {
-                    logger("INFO: CnC file exists: " + cncFile);
+                    logger("INFO: Mark file exists: " + cncFile);
                 }
 
                 return IoUtil.MapExistingFile(cncFile, cncFile.ToString());
@@ -417,7 +417,7 @@ namespace Adaptive.Agrona
             {
                 if (epochClock.Time() > (startTimeMs + timeoutMs))
                 {
-                    throw new System.InvalidOperationException("CnC file is created but not initialised.");
+                    throw new System.InvalidOperationException("Mark file is created but not initialised.");
                 }
 
                 Sleep(1);

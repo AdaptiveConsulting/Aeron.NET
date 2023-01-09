@@ -38,6 +38,7 @@ namespace Adaptive.Cluster.Client
         private bool _isClosed;
         private readonly Context _ctx;
         private readonly Subscription _subscription;
+        private Image egressImage;
         private Publication _publication;
         private readonly IIdleStrategy _idleStrategy;
         private readonly BufferClaim _bufferClaim = new BufferClaim();
@@ -115,6 +116,7 @@ namespace Adaptive.Cluster.Client
                     long sessionId = _newLeaderEventDecoder.ClusterSessionId();
                     if (sessionId == _clusterSessionId)
                     {
+                        _cluster.egressImage = (Image)header.Context;
                         _cluster.OnNewLeader(
                             sessionId,
                             _newLeaderEventDecoder.LeadershipTermId(),
@@ -243,6 +245,7 @@ namespace Adaptive.Cluster.Client
                     long sessionId = _newLeaderEventDecoder.ClusterSessionId();
                     if (sessionId == _clusterSessionId)
                     {
+                        _cluster.egressImage = (Image)header.Context;
                         _cluster.OnNewLeader(
                             sessionId,
                             _newLeaderEventDecoder.LeadershipTermId(),
@@ -440,6 +443,7 @@ namespace Adaptive.Cluster.Client
             MessageHeaderEncoder messageHeaderEncoder,
             Publication publication,
             Subscription subscription,
+            Image egressImage,
             Map<int, MemberIngress> endpointByIdMap,
             long clusterSessionId,
             long leadershipTermId,
@@ -451,6 +455,7 @@ namespace Adaptive.Cluster.Client
             _ctx = ctx;
             _messageHeaderEncoder = messageHeaderEncoder;
             _subscription = subscription;
+            this.egressImage = egressImage; 
             _endpointByIdMap = endpointByIdMap;
             _clusterSessionId = clusterSessionId;
             _leadershipTermId = leadershipTermId;
@@ -651,11 +656,6 @@ namespace Adaptive.Cluster.Client
                     return true;
                 }
 
-                if (result == Publication.CLOSED)
-                {
-                    throw new ClusterException("ingress publication is closed");
-                }
-
                 if (result == Publication.MAX_POSITION_EXCEEDED)
                 {
                     throw new ClusterException("max position exceeded");
@@ -729,16 +729,23 @@ namespace Adaptive.Cluster.Client
 
         /// <summary>
         /// Poll the <seealso cref="EgressSubscription()"/> for session messages which are dispatched to
-        /// <seealso cref="Context.EgressListener()"/>.
+        /// <seealso cref="Context.EgressListener()"/>. Invoking this method, or <seealso cref="ControlledPollEgress()"/>, frequently is
+        /// important for detecting leadership changes in a cluster.
         /// <para>
         /// <b>Note:</b> if <seealso cref="Context.EgressListener()"/> is not set then a <seealso cref="ConfigurationException"/> could result.
-        ///    
+        ///     
         /// </para>
         /// </summary>
         /// <returns> the number of fragments processed. </returns>
+        /// <seealso cref="ControlledPollEgress()"/>
         public int PollEgress()
         {
             var fragments = _subscription.Poll(_fragmentAssembler, FRAGMENT_LIMIT);
+
+            if (egressImage.Closed)
+            {
+                _publication.Dispose();
+            }
 
             if (_isClosed)
             {
@@ -749,19 +756,26 @@ namespace Adaptive.Cluster.Client
         }
 
         /// <summary>
-        /// Poll the <seealso cref="EgressSubscription"/> for session messages which are dispatched to
-        /// <seealso cref="Context.ControlledEgressListener()"/>.
+        /// Poll the <seealso cref="EgressSubscription()"/> for session messages which are dispatched to
+        /// <seealso cref="Context.ControlledEgressListener()"/>. Invoking this method, or <seealso cref="PollEgress()"/>, frequently is
+        /// important for detecting leadership changes in a cluster.
         /// <para>
         /// <b>Note:</b> if <seealso cref="Context.ControlledEgressListener()"/> is not set then a <seealso cref="ConfigurationException"/>
         /// could result.
-        ///    
+        /// 
         /// </para>
         /// </summary>
         /// <returns> the number of fragments processed. </returns>
+        /// <seealso cref="PollEgress()"/>
         public int ControlledPollEgress()
         {
             var fragments = _subscription.ControlledPoll(_controlledFragmentAssembler, FRAGMENT_LIMIT);
 
+            if (egressImage.Closed)
+            {
+                _publication.Dispose();
+            }
+            
             if (_isClosed)
             {
                 Dispose();
@@ -783,7 +797,7 @@ namespace Adaptive.Cluster.Client
         {
             if (clusterSessionId != _clusterSessionId)
             {
-                throw new ClusterException("invalid clusterSessionId=" + clusterSessionId + " expected " +
+                throw new ClusterException("invalid clusterSessionId=" + clusterSessionId + " expected=" +
                                            _clusterSessionId);
             }
 
@@ -792,12 +806,16 @@ namespace Adaptive.Cluster.Client
             _leaderMemberId = leaderMemberId;
             _sessionMessageEncoder.LeadershipTermId(leadershipTermId);
 
+            _publication?.Dispose();
             if (_ctx.IngressEndpoints() != null)
             {
-                _publication?.Dispose();
                 _fragmentAssembler.Clear();
                 _ctx.IngressEndpoints(ingressEndpoints);
                 UpdateMemberEndpoints(ingressEndpoints, leaderMemberId);
+            }
+            else
+            {
+                _publication = AddIngressPublication(_ctx, _ctx.IngressChannel(), _ctx.IngressStreamId());
             }
 
             _fragmentAssembler.Clear();
@@ -828,32 +846,33 @@ namespace Adaptive.Cluster.Client
             return endpointByIdMap;
         }
 
+        private static Publication AddIngressPublication(Context ctx, string channel, int streamId)
+        {
+            if (ctx.IsIngressExclusive())
+            {
+                return ctx.Aeron().AddExclusivePublication(channel, streamId);
+            }
+            else
+            {
+                return ctx.Aeron().AddPublication(channel, streamId);
+            }
+        }
+
         private void UpdateMemberEndpoints(string ingressEndpoints, int leaderMemberId)
         {
-            var map = ParseIngressEndpoints(ingressEndpoints);
-            var existingLeader = _endpointByIdMap.Get(leaderMemberId);
-            var newLeader = map.Get(leaderMemberId);
-
-            if (null != existingLeader && null != existingLeader.publication &&
-                existingLeader.endpoint.Equals(newLeader.endpoint))
-            {
-                newLeader.publication = existingLeader.publication;
-                _publication = newLeader.publication;
-                existingLeader.publication = null;
-            }
-
-            if (null == newLeader.publication)
-            {
-                var channelUri = ChannelUri.Parse(_ctx.IngressChannel());
-                if (channelUri.IsUdp)
-                {
-                    channelUri.Put(Aeron.Aeron.Context.ENDPOINT_PARAM_NAME, newLeader.endpoint);
-                }
-                _publication = AddIngressPublication(_ctx, channelUri.ToString(), _ctx.IngressStreamId());
-                newLeader.publication = _publication;
-            }
-
             CloseHelper.CloseAll(_endpointByIdMap.Values);
+            
+            var map = ParseIngressEndpoints(ingressEndpoints);
+            var newLeader = map.Get(leaderMemberId);
+            var channelUri = ChannelUri.Parse(_ctx.IngressChannel());
+            
+            if (channelUri.IsUdp)
+            {
+                channelUri.Put(Aeron.Aeron.Context.ENDPOINT_PARAM_NAME, newLeader.endpoint);
+            }
+            
+            _publication = AddIngressPublication(_ctx, channelUri.ToString(), _ctx.IngressStreamId());
+            newLeader.publication = _publication;
             _endpointByIdMap = map;
         }
 
@@ -888,7 +907,7 @@ namespace Adaptive.Cluster.Client
                 InvokeInvokers();
             }
         }
-        
+
         private void InvokeInvokers()
         {
             if (null != _ctx.Aeron().ConductorAgentInvoker)
@@ -902,18 +921,6 @@ namespace Adaptive.Cluster.Client
             }
         }
 
-        private static Publication AddIngressPublication(Context ctx, string channel, int streamId)
-        {
-            if (ctx.IsIngressExclusive())
-            {
-                return ctx.Aeron().AddExclusivePublication(channel, streamId);
-            }
-            else
-            {
-                return ctx.Aeron().AddPublication(channel, streamId);
-            }
-        }
-
         /// <summary>
         /// Configuration options for cluster client.
         /// </summary>
@@ -921,7 +928,7 @@ namespace Adaptive.Cluster.Client
         {
             /// <summary>
             /// Major version of the network protocol from client to consensus module. If these don't match then client
-            /// and archive consensus module are not compatible.
+            /// and consensus module are not compatible.
             /// </summary>
             public const int PROTOCOL_MAJOR_VERSION = 0;
 
@@ -929,7 +936,7 @@ namespace Adaptive.Cluster.Client
             /// Minor version of the network protocol from client to consensus module. If these don't match then some
             /// features may not be available.
             /// </summary>
-            public const int PROTOCOL_MINOR_VERSION = 2;
+            public const int PROTOCOL_MINOR_VERSION = 3;
 
             /// <summary>
             /// Patch version of the network protocol from client to consensus module. If these don't match then bug fixes
@@ -994,7 +1001,6 @@ namespace Adaptive.Cluster.Client
 
             /// <summary>
             /// Channel for receiving response messages from a cluster.
-            /// 
             /// <para>
             /// Channel's <em>endpoint</em> can be specified explicitly (i.e. by providing address and port pair) or
             /// by using zero as a port number. Here is an example of valid response channels:
@@ -1667,6 +1673,7 @@ namespace Adaptive.Cluster.Client
         public class AsyncConnect : IDisposable
         {
             private readonly Subscription egressSubscription;
+            private Image egressImage;
             private readonly long deadlineNs;
             private long correlationId = Aeron.Aeron.NULL_VALUE;
             private long clusterSessionId;
@@ -1911,6 +1918,7 @@ namespace Adaptive.Cluster.Client
                             leadershipTermId = egressPoller.LeadershipTermId();
                             leaderMemberId = egressPoller.LeaderMemberId();
                             clusterSessionId = egressPoller.ClusterSessionId();
+                            egressImage = egressPoller.EgressImage();
                             Step(4);
                             break;
 
@@ -1975,6 +1983,7 @@ namespace Adaptive.Cluster.Client
                     messageHeaderEncoder,
                     ingressPublication,
                     egressSubscription,
+                    egressImage,
                     memberByIdMap,
                     clusterSessionId,
                     leadershipTermId,

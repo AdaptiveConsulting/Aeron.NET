@@ -108,9 +108,14 @@ namespace Adaptive.Cluster.Service
             public const long SNAPSHOT_TYPE_ID = 2;
 
             /// <summary>
-            /// Update interval for cluster mark file.
+            /// Update interval for cluster mark file in nanoseconds.
             /// </summary>
             public static readonly long MARK_FILE_UPDATE_INTERVAL_NS = 1_000_000_000L;
+
+            /// <summary>
+            /// Timeout in milliseconds to detect liveness.
+            /// </summary>
+            public static readonly long LIVENESS_TIMEOUT_MS = 10 * TimeUnit.NANOSECONDS.ToMillis(MARK_FILE_UPDATE_INTERVAL_NS);
 
             /// <summary>
             /// Property name for the identity of the cluster instance.
@@ -539,6 +544,7 @@ namespace Adaptive.Cluster.Service
             private string aeronDirectoryName = Adaptive.Aeron.Aeron.Context.GetAeronDirectoryName();
             private Aeron.Aeron aeron;
             private DutyCycleTracker dutyCycleTracker;
+            private AppVersionValidator appVersionValidator;
             private bool ownsAeronClient;
 
             private IClusteredService clusteredService;
@@ -579,6 +585,11 @@ namespace Adaptive.Cluster.Service
                 {
                     idleStrategySupplier = Configuration.IdleStrategySupplier(null);
                 }
+                
+                if (null == appVersionValidator)
+                {
+                    appVersionValidator = Cluster.AppVersionValidator.SEMANTIC_VERSIONING_VALIDATOR;
+                }
 
                 if (null == epochClock)
                 {
@@ -605,7 +616,7 @@ namespace Adaptive.Cluster.Service
                     markFile = new ClusterMarkFile(
                         new FileInfo(Path.Combine(clusterDir.FullName,
                             Cluster.ClusterMarkFile.MarkFilenameForService(serviceId))),
-                        ClusterComponentType.CONTAINER, errorBufferLength, epochClock, 0);
+                        ClusterComponentType.CONTAINER, errorBufferLength, epochClock, Configuration.LIVENESS_TIMEOUT_MS);
                 }
 
                 if (null == errorLog)
@@ -667,7 +678,7 @@ namespace Adaptive.Cluster.Service
                 {
                     dutyCycleTracker = new DutyCycleStallTracker(
                         aeron.AddCounter(AeronCounters.CLUSTER_CLUSTERED_SERVICE_MAX_CYCLE_TIME_TYPE_ID,
-                            "Cluster container max cycle time (ns) - clusterId=" + clusterId +
+                            "Cluster container max cycle time in ns - clusterId=" + clusterId +
                             " serviceId=" + serviceId),
                         aeron.AddCounter(AeronCounters.CLUSTER_CLUSTERED_SERVICE_CYCLE_TIME_THRESHOLD_EXCEEDED_TYPE_ID,
                             "Cluster container work cycle time exceeded count: threshold=" + cycleThresholdNs +
@@ -746,6 +757,34 @@ namespace Adaptive.Cluster.Service
             public int AppVersion()
             {
                 return appVersion;
+            }
+            
+            /// <summary>
+            /// User assigned application version validator implementation used to check version compatibility.
+            /// <para>
+            /// The default validator uses <seealso cref="SemanticVersion"/> semantics.
+            /// 
+            /// </para>
+            /// </summary>
+            /// <param name="appVersionValidator"> for user application. </param>
+            /// <returns> this for fluent API. </returns>
+            public Context AppVersionValidator(AppVersionValidator appVersionValidator)
+            {
+                this.appVersionValidator = appVersionValidator;
+                return this;
+            }
+
+            /// <summary>
+            /// User assigned application version validator implementation used to check version compatibility.
+            /// <para>
+            /// The default is to use <seealso cref="SemanticVersion"/> major version for checking compatibility.
+            /// 
+            /// </para>
+            /// </summary>
+            /// <returns> AppVersionValidator in use. </returns>
+            public AppVersionValidator AppVersionValidator()
+            {
+                return appVersionValidator;
             }
 
             /// <summary>
@@ -1493,7 +1532,7 @@ namespace Adaptive.Cluster.Service
             /// </summary>
             public void Dispose()
             {
-                ErrorHandler errorHandler = CountedErrorHandler().OnError;
+                var errorHandler = CountedErrorHandler();
                 if (ownsAeronClient)
                 {
                     CloseHelper.Dispose(errorHandler, aeron);

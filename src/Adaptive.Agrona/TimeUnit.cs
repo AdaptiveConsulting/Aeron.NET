@@ -11,13 +11,13 @@ namespace Adaptive.Agrona
         {
         }
 
-        public long Convert(long sourceValue, TimeUnit sourceTimeUnit)
+        public long Convert(long sourceValue, TimeUnit destinationTimeUnit)
         {
-            if (sourceTimeUnit == NANOSECONDS)
+            if (destinationTimeUnit == NANOSECONDS)
             {
                 if (this == MILLIS)
                 {
-                    return sourceValue / 1000000;
+                    return sourceValue * 1000000;
                 }
 
                 if (this == NANOSECONDS)
@@ -26,7 +26,7 @@ namespace Adaptive.Agrona
                 }
             }
 
-            if (sourceTimeUnit == MILLIS)
+            if (destinationTimeUnit == MILLIS)
             {
                 if (this == MILLIS)
                 {
@@ -35,16 +35,21 @@ namespace Adaptive.Agrona
 
                 if (this == NANOSECONDS)
                 {
-                    return sourceValue * 1000000;
+                    return sourceValue / 1000000;
                 }
             }
             
             throw new ArgumentException();
         }
 
-        public long toMillis(long value)
+        public long ToMillis(long value)
         {
             return Convert(value, MILLIS);
+        }
+        
+        public long ToNanos(long value)
+        {
+            return Convert(value, NANOSECONDS);
         }
     }
 }

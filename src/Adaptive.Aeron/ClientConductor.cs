@@ -84,10 +84,6 @@ namespace Adaptive.Aeron
         private readonly CountersReader _countersReader;
         private AtomicCounter _heartbeatTimestamp;
 
-        internal ClientConductor()
-        {
-        }
-
         internal ClientConductor(Aeron.Context ctx, Aeron aeron)
         {
             _ctx = ctx;
@@ -163,7 +159,7 @@ namespace Adaptive.Aeron
                             Thread.Sleep(Aeron.Configuration.IdleSleepMs);
                         }
 
-                        Thread.Sleep((int)TimeUnit.NANOSECONDS.toMillis(_ctx.CloseLingerDurationNs()));
+                        Thread.Sleep((int)TimeUnit.NANOSECONDS.ToMillis(_ctx.CloseLingerDurationNs()));
                     }
                     catch (ThreadInterruptedException)
                     {
@@ -1327,7 +1323,7 @@ namespace Adaptive.Aeron
                 }
             } while (deadlineNs - _nanoClock.NanoTime() > 0);
 
-            throw new DriverTimeoutException("no response from MediaDriver within (ms):" + _driverTimeoutMs);
+            throw new DriverTimeoutException("no response from MediaDriver within " + _driverTimeoutNs + "ns");
         }
 
         private int CheckTimeouts(long nowNs)
@@ -1353,9 +1349,9 @@ namespace Adaptive.Aeron
                 _isTerminating = true;
                 ForceCloseResources();
 
-                throw new ConductorServiceTimeoutException("service interval exceeded (ns): timeout=" +
-                                                           _interServiceTimeoutNs + ", actual=" +
-                                                           (nowNs - _timeOfLastServiceNs));
+                throw new ConductorServiceTimeoutException("service interval exceeded: timeout=" +
+                                                           _interServiceTimeoutNs + "ns, actual=" +
+                                                           (nowNs - _timeOfLastServiceNs) + "ns");
             }
         }
 
@@ -1371,8 +1367,8 @@ namespace Adaptive.Aeron
                     _isTerminating = true;
                     ForceCloseResources();
 
-                    throw new DriverTimeoutException("MediaDriver keepalive (ms): age=" +
-                                                     (nowMs - lastKeepAliveMs) + " > timeout=" + _driverTimeoutMs);
+                    throw new DriverTimeoutException("MediaDriver keepalive: age=" +
+                                                     (nowMs - lastKeepAliveMs) + "ms > timeout=" + _driverTimeoutMs + "ms");
                 }
 
                 if (null == _heartbeatTimestamp)

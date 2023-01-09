@@ -6,6 +6,11 @@ namespace Adaptive.Aeron.Security
     public class DefaultAuthenticatorSupplier : IAuthenticatorSupplier
     {
         /// <summary>
+        /// Singleton instance.
+        /// </summary>
+        public static readonly DefaultAuthenticatorSupplier INSTANCE = new DefaultAuthenticatorSupplier();
+        
+        /// <summary>
         /// The null encoded principal is an empty array of bytes.
         /// </summary>
         public static readonly byte[] NULL_ENCODED_PRINCIPAL = new byte[0];

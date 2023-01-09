@@ -642,7 +642,7 @@ namespace Adaptive.Aeron.LogBuffer
             long rawTail;
             do
             {
-                rawTail = RawTail(metaDataBuffer, nextIndex);
+                rawTail = RawTailVolatile(metaDataBuffer, nextIndex);
                 if (expectedTermId != TermId(rawTail)) break;
             } while (!CasRawTail(metaDataBuffer, nextIndex, rawTail, PackTail(nextTermId, 0)));
 

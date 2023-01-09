@@ -70,5 +70,10 @@ namespace Adaptive.Aeron.Samples.ClusterService
         {
             Console.WriteLine($"OnNewLeadershipTerm: leadershipTermId={leadershipTermId}");
         }
+
+        public int DoBackgroundWork(long nowNs)
+        {
+            return 0;
+        }
     }
 }

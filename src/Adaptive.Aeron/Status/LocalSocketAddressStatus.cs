@@ -135,5 +135,33 @@ namespace Adaptive.Aeron.Status
 
             return endpoint;
         }
+        
+        /// <summary>
+        /// Return number of local addresses for the given subscription registration id.
+        /// </summary>
+        /// <param name="countersReader"> for the connected driver </param>
+        /// <param name="registrationId"> for the subscription </param>
+        /// <returns> nunmber of local socket addresses in use </returns>
+        public static int FindNumberOfAddressesByRegistrationId(CountersReader countersReader, long registrationId)
+        {
+            int result = 0;
+
+            for (int i = 0, size = countersReader.MaxCounterId; i < size; i++)
+            {
+                int counterState = countersReader.GetCounterState(i);
+                if (counterState == CountersReader.RECORD_ALLOCATED && 
+                    countersReader.GetCounterTypeId(i) == LOCAL_SOCKET_ADDRESS_STATUS_TYPE_ID && 
+                    countersReader.GetCounterRegistrationId(i) == registrationId)
+                {
+                    result++;
+                }
+                else if (CountersReader.RECORD_UNUSED == counterState)
+                {
+                    break;
+                }
+            }
+
+            return result;
+        }
     }
 }

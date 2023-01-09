@@ -3,11 +3,11 @@
         <TargetFramework>netstandard2.0</TargetFramework>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <PackageId>Agrona</PackageId>
-        <VersionPrefix>1.39.0</VersionPrefix>
+        <VersionPrefix>1.40.0</VersionPrefix>
         <Authors>Adaptive Financial Consulting Ltd.</Authors>
         <Company>Adaptive Financial Consulting Ltd.</Company>
         <Product>Agrona libraries initially included in Aeron Client</Product>
-        <Copyright>Copyright 2021</Copyright>
+        <Copyright>Copyright 2023</Copyright>
         <PackageLicense>https://github.com/AdaptiveConsulting/Aeron.NET/blob/master/LICENSE</PackageLicense>
         <PackageProjectUrl>https://github.com/AdaptiveConsulting/Aeron.NET/</PackageProjectUrl>
         <PackageIconUrl>https://raw.githubusercontent.com/AdaptiveConsulting/Aeron.NET/master/images/adaptive.png</PackageIconUrl>

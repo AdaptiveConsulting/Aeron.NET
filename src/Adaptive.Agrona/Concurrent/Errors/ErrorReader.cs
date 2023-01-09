@@ -30,7 +30,7 @@ namespace Adaptive.Agrona.Concurrent.Errors
         /// <returns> true if there is at least one error. </returns>
         public static bool HasErrors(IAtomicBuffer buffer)
         {
-            return 0 != buffer.GetIntVolatile(DistinctErrorLog.LengthOffset);
+            return buffer.Capacity >= BitUtil.SIZE_OF_INT && 0 != buffer.GetIntVolatile(DistinctErrorLog.LengthOffset);
         }
         
         /// <summary>

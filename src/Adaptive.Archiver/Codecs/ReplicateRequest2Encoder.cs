@@ -9,10 +9,10 @@ namespace Adaptive.Archiver.Codecs {
 
 public class ReplicateRequest2Encoder
 {
-    public const ushort BLOCK_LENGTH = 60;
+    public const ushort BLOCK_LENGTH = 64;
     public const ushort TEMPLATE_ID = 66;
     public const ushort SCHEMA_ID = 101;
-    public const ushort SCHEMA_VERSION = 6;
+    public const ushort SCHEMA_VERSION = 7;
 
     private ReplicateRequest2Encoder _parentMessage;
     private IMutableDirectBuffer _buffer;
@@ -348,6 +348,38 @@ public class ReplicateRequest2Encoder
     public ReplicateRequest2Encoder SrcControlStreamId(int value)
     {
         _buffer.PutInt(_offset + 56, value, ByteOrder.LittleEndian);
+        return this;
+    }
+
+
+    public static int FileIoMaxLengthEncodingOffset()
+    {
+        return 60;
+    }
+
+    public static int FileIoMaxLengthEncodingLength()
+    {
+        return 4;
+    }
+
+    public static int FileIoMaxLengthNullValue()
+    {
+        return -2147483648;
+    }
+
+    public static int FileIoMaxLengthMinValue()
+    {
+        return -2147483647;
+    }
+
+    public static int FileIoMaxLengthMaxValue()
+    {
+        return 2147483647;
+    }
+
+    public ReplicateRequest2Encoder FileIoMaxLength(int value)
+    {
+        _buffer.PutInt(_offset + 60, value, ByteOrder.LittleEndian);
         return this;
     }
 

@@ -110,5 +110,22 @@ namespace Adaptive.Cluster.Service
         /// <param name="appVersion">          for the application configured in the consensus module. </param>
         void OnNewLeadershipTermEvent(long leadershipTermId, long logPosition, long timestamp, long termBaseLogPosition,
             int leaderMemberId, int logSessionId, ClusterTimeUnit timeUnit, int appVersion);
+
+        /// <summary>
+        /// Implement this method to perform background tasks that are not related to the deterministic state machine
+        /// model, such as keeping external connections alive to the cluster. This method must <b>not</b> be used to
+        /// directly, or indirectly, update the service state. This method cannot be used for making calls on
+        /// <seealso cref="Cluster"/> which could update the log such as <seealso cref="ICluster.ScheduleTimer(long, long)"/> or
+        /// <seealso cref="ICluster.Offer(IDirectBuffer, int, int)"/>.
+        /// <para>
+        /// This method is not for long-running operations. Time taken can impact latency and should only be used for
+        /// short constant time operations.
+        ///    
+        /// </para>
+        /// </summary>
+        /// <param name="nowNs"> which can be used for measuring elapsed time and be used in the same way as
+        ///              <seealso cref="SystemNanoClock.NanoTime()"/>. This is <b>not</b> <seealso cref="ICluster.Time()"/>. </param>
+        /// <returns> 0 if no work is done otherwise a positive number. </returns>
+        int DoBackgroundWork(long nowNs);
     }
 }

@@ -20,7 +20,7 @@ using Adaptive.Agrona;
 namespace Adaptive.Aeron.Command
 {
     /// <summary>
-    /// Message to denote that new buffers have been setup for a publication.
+    /// Message to denote that new buffers have been created for a publication.
     /// </summary>
     /// <seealso cref="ControlProtocolEvents" />
     /// 

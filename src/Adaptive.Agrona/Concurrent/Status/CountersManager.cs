@@ -70,11 +70,6 @@ namespace Adaptive.Agrona.Concurrent.Status
     /// </summary>
     public class CountersManager : CountersReader
     {
-        /// <summary>
-        /// Default type id of a counter when none is supplied.
-        /// </summary>
-        public const int DEFAULT_TYPE_ID = 0;
-
         private readonly long _freeToReuseTimeoutMs;
         private int _idHighWaterMark = -1;
         private readonly List<int> _freeList = new List<int>();
@@ -253,7 +248,7 @@ namespace Adaptive.Agrona.Concurrent.Status
 
         /// <summary>
         /// Allocate a counter record and wrap it with a new <seealso cref="AtomicCounter"/> for use with a default type
-        /// of <see cref="DEFAULT_TYPE_ID"/>
+        /// of <see cref="CountersReader.DEFAULT_TYPE_ID"/>
         /// </summary>
         /// <param name="label"> to describe the counter. </param>
         /// <returns> a newly allocated <seealso cref="AtomicCounter"/> </returns>

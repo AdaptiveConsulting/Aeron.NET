@@ -12,7 +12,7 @@ public class StopReplayRequestEncoder
     public const ushort BLOCK_LENGTH = 24;
     public const ushort TEMPLATE_ID = 7;
     public const ushort SCHEMA_ID = 101;
-    public const ushort SCHEMA_VERSION = 6;
+    public const ushort SCHEMA_VERSION = 7;
 
     private StopReplayRequestEncoder _parentMessage;
     private IMutableDirectBuffer _buffer;

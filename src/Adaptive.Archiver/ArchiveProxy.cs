@@ -320,6 +320,54 @@ namespace Adaptive.Archiver
         }
 
         /// <summary>
+        /// Replay a recording from a given position. Supports specifying <seealso cref="ReplayParams"/> to change the behaviour of the
+        /// replay. For example a bounded replay can be requested by specifying the boundingLimitCounterId. The ReplayParams
+        /// is free to be reused after this call completes.
+        /// </summary>
+        /// <param name="recordingId">      to be replayed. </param>
+        /// <param name="replayChannel">    to which the replay should be sent. </param>
+        /// <param name="replayStreamId">   to which the replay should be sent. </param>
+        /// <param name="replayParams">     optional parameters change the behaviour of the replay. </param>
+        /// <param name="correlationId">    for this request. </param>
+        /// <param name="controlSessionId"> for this request. </param>
+        /// <returns> true if successfully offered otherwise false. </returns>
+        /// <seealso cref="ReplayParams"/>
+        public bool Replay(
+            long recordingId,
+            string replayChannel,
+            int replayStreamId,
+            ReplayParams replayParams,
+            long correlationId,
+            long controlSessionId)
+        {
+            if (replayParams.IsBounded())
+            {
+                return BoundedReplay(
+                    recordingId,
+                    replayParams.Position(),
+                    replayParams.Length(),
+                    replayParams.BoundingLimitCounterId(),
+                    replayChannel,
+                    replayStreamId,
+                    correlationId,
+                    controlSessionId,
+                    replayParams.FileIoMaxLength());
+            }
+            else
+            {
+                return Replay(
+                    recordingId,
+                    replayParams.Position(),
+                    replayParams.Length(),
+                    replayChannel,
+                    replayStreamId,
+                    correlationId,
+                    controlSessionId,
+                    replayParams.FileIoMaxLength());
+            }
+        }
+
+        /// <summary>
         /// Replay a recording from a given position.
         /// </summary>
         /// <param name="recordingId">      to be replayed. </param>
@@ -330,19 +378,24 @@ namespace Adaptive.Archiver
         /// <param name="correlationId">    for this request. </param>
         /// <param name="controlSessionId"> for this request. </param>
         /// <returns> true if successfully offered otherwise false. </returns>
-        public bool Replay(long recordingId, long position, long length, string replayChannel, int replayStreamId,
-            long correlationId, long controlSessionId)
+        public bool Replay(
+            long recordingId,
+            long position,
+            long length,
+            string replayChannel,
+            int replayStreamId,
+            long correlationId,
+            long controlSessionId)
         {
-            if (null == replayRequest)
-            {
-                replayRequest = new ReplayRequestEncoder();
-            }
-
-            replayRequest.WrapAndApplyHeader(buffer, 0, messageHeader).ControlSessionId(controlSessionId)
-                .CorrelationId(correlationId).RecordingId(recordingId).Position(position).Length(length)
-                .ReplayStreamId(replayStreamId).ReplayChannel(replayChannel);
-
-            return Offer(replayRequest.EncodedLength());
+            return Replay(
+                recordingId,
+                position,
+                length,
+                replayChannel,
+                replayStreamId,
+                correlationId,
+                controlSessionId,
+                Aeron.Aeron.NULL_VALUE);
         }
 
         /// <summary>
@@ -357,19 +410,26 @@ namespace Adaptive.Archiver
         /// <param name="correlationId">    for this request. </param>
         /// <param name="controlSessionId"> for this request. </param>
         /// <returns> true if successfully offered otherwise false. </returns>
-        public bool BoundedReplay(long recordingId, long position, long length, int limitCounterId,
-            string replayChannel, int replayStreamId, long correlationId, long controlSessionId)
+        public bool BoundedReplay(
+            long recordingId,
+            long position,
+            long length,
+            int limitCounterId,
+            string replayChannel,
+            int replayStreamId,
+            long correlationId,
+            long controlSessionId)
         {
-            if (null == boundedReplayRequest)
-            {
-                boundedReplayRequest = new BoundedReplayRequestEncoder();
-            }
-
-            boundedReplayRequest.WrapAndApplyHeader(buffer, 0, messageHeader).ControlSessionId(controlSessionId)
-                .CorrelationId(correlationId).RecordingId(recordingId).Position(position).Length(length)
-                .LimitCounterId(limitCounterId).ReplayStreamId(replayStreamId).ReplayChannel(replayChannel);
-
-            return Offer(boundedReplayRequest.EncodedLength());
+            return BoundedReplay(
+                recordingId,
+                position,
+                length,
+                limitCounterId,
+                replayChannel,
+                replayStreamId,
+                correlationId,
+                controlSessionId,
+                Aeron.Aeron.NULL_VALUE);
         }
 
         /// <summary>
@@ -725,28 +785,28 @@ namespace Adaptive.Archiver
         /// <param name="correlationId">      for this request. </param>
         /// <param name="controlSessionId">   for this request. </param>
         /// <returns> true if successfully offered otherwise false. </returns>
-        public bool Replicate(long srcRecordingId, long dstRecordingId, int srcControlStreamId,
-            string srcControlChannel, string liveDestination, long correlationId, long controlSessionId)
+        public bool Replicate(
+            long srcRecordingId,
+            long dstRecordingId,
+            int srcControlStreamId,
+            string srcControlChannel,
+            string liveDestination,
+            long correlationId,
+            long controlSessionId)
         {
-            if (null == replicateRequest)
-            {
-                replicateRequest = new ReplicateRequest2Encoder();
-            }
-
-            replicateRequest.WrapAndApplyHeader(buffer, 0, messageHeader)
-                .ControlSessionId(controlSessionId)
-                .CorrelationId(correlationId)
-                .SrcRecordingId(srcRecordingId)
-                .DstRecordingId(dstRecordingId)
-                .StopPosition(AeronArchive.NULL_POSITION)
-                .ChannelTagId(Aeron.Aeron.NULL_VALUE)
-                .SubscriptionTagId(Aeron.Aeron.NULL_VALUE)
-                .SrcControlStreamId(srcControlStreamId)
-                .SrcControlChannel(srcControlChannel)
-                .LiveDestination(liveDestination)
-                .ReplicationChannel(null);
-
-            return Offer(replicateRequest.EncodedLength());
+            return Replicate(
+                srcRecordingId,
+                dstRecordingId,
+                AeronArchive.NULL_POSITION,
+                Aeron.Aeron.NULL_VALUE,
+                Aeron.Aeron.NULL_VALUE,
+                srcControlStreamId,
+                srcControlChannel,
+                liveDestination,
+                null,
+                correlationId,
+                controlSessionId,
+                Aeron.Aeron.NULL_VALUE);
         }
 
         /// <summary>
@@ -776,30 +836,30 @@ namespace Adaptive.Archiver
         /// <param name="correlationId">      for this request. </param>
         /// <param name="controlSessionId">   for this request. </param>
         /// <returns> true if successfully offered otherwise false. </returns>
-        public bool Replicate(long srcRecordingId, long dstRecordingId, long stopPosition, int srcControlStreamId,
-            string srcControlChannel, string liveDestination, string replicationChannel, long correlationId,
+        public bool Replicate(
+            long srcRecordingId,
+            long dstRecordingId,
+            long stopPosition,
+            int srcControlStreamId,
+            string srcControlChannel,
+            string liveDestination,
+            string replicationChannel,
+            long correlationId,
             long controlSessionId)
         {
-            if (null == replicateRequest)
-            {
-                replicateRequest = new ReplicateRequest2Encoder();
-            }
-
-            replicateRequest
-                .WrapAndApplyHeader(buffer, 0, messageHeader)
-                .ControlSessionId(controlSessionId)
-                .CorrelationId(correlationId)
-                .SrcRecordingId(srcRecordingId)
-                .DstRecordingId(dstRecordingId)
-                .StopPosition(stopPosition)
-                .ChannelTagId(Adaptive.Aeron.Aeron.NULL_VALUE)
-                .SubscriptionTagId(Adaptive.Aeron.Aeron.NULL_VALUE)
-                .SrcControlStreamId(srcControlStreamId)
-                .SrcControlChannel(srcControlChannel)
-                .LiveDestination(liveDestination)
-                .ReplicationChannel(replicationChannel);
-
-            return Offer(replicateRequest.EncodedLength());
+            return Replicate(
+                srcRecordingId,
+                dstRecordingId,
+                stopPosition,
+                Aeron.Aeron.NULL_VALUE,
+                Aeron.Aeron.NULL_VALUE,
+                srcControlStreamId,
+                srcControlChannel,
+                liveDestination,
+                replicationChannel,
+                correlationId,
+                controlSessionId,
+                Aeron.Aeron.NULL_VALUE);
         }
 
         /// <summary>
@@ -828,30 +888,30 @@ namespace Adaptive.Archiver
         /// <param name="correlationId">      for this request. </param>
         /// <param name="controlSessionId">   for this request. </param>
         /// <returns> true if successfully offered otherwise false. </returns>
-        public bool TaggedReplicate(long srcRecordingId, long dstRecordingId, long channelTagId, long subscriptionTagId,
-            int srcControlStreamId, string srcControlChannel, string liveDestination, long correlationId,
+        public bool TaggedReplicate(
+            long srcRecordingId,
+            long dstRecordingId,
+            long channelTagId,
+            long subscriptionTagId,
+            int srcControlStreamId,
+            string srcControlChannel,
+            string liveDestination,
+            long correlationId,
             long controlSessionId)
         {
-            if (null == replicateRequest)
-            {
-                replicateRequest = new ReplicateRequest2Encoder();
-            }
-
-            replicateRequest
-                .WrapAndApplyHeader(buffer, 0, messageHeader)
-                .ControlSessionId(controlSessionId)
-                .CorrelationId(correlationId)
-                .SrcRecordingId(srcRecordingId)
-                .DstRecordingId(dstRecordingId)
-                .StopPosition(AeronArchive.NULL_POSITION)
-                .ChannelTagId(channelTagId)
-                .SubscriptionTagId(subscriptionTagId)
-                .SrcControlStreamId(srcControlStreamId)
-                .SrcControlChannel(srcControlChannel)
-                .LiveDestination(liveDestination)
-                .ReplicationChannel(null);
-
-            return Offer(replicateRequest.EncodedLength());
+            return Replicate(
+                srcRecordingId,
+                dstRecordingId,
+                AeronArchive.NULL_POSITION,
+                channelTagId,
+                subscriptionTagId,
+                srcControlStreamId,
+                srcControlChannel,
+                liveDestination,
+                null,
+                correlationId,
+                controlSessionId,
+                Aeron.Aeron.NULL_VALUE);
         }
 
         /// <summary>
@@ -883,32 +943,80 @@ namespace Adaptive.Archiver
         /// <param name="correlationId">      for this request. </param>
         /// <param name="controlSessionId">   for this request. </param>
         /// <returns> true if successfully offered otherwise false. </returns>
-        public bool TaggedReplicate(long srcRecordingId, long dstRecordingId, long stopPosition, long channelTagId,
-            long subscriptionTagId, int srcControlStreamId, string srcControlChannel, string liveDestination,
-            string replicationChannel, long correlationId, long controlSessionId)
+        public bool TaggedReplicate(
+            long srcRecordingId,
+            long dstRecordingId,
+            long stopPosition,
+            long channelTagId,
+            long subscriptionTagId,
+            int srcControlStreamId,
+            string srcControlChannel,
+            string liveDestination,
+            string replicationChannel,
+            long correlationId,
+            long controlSessionId)
         {
-            if (null == replicateRequest)
-            {
-                replicateRequest = new ReplicateRequest2Encoder();
-            }
-
-            replicateRequest
-                .WrapAndApplyHeader(buffer, 0, messageHeader)
-                .ControlSessionId(controlSessionId)
-                .CorrelationId(correlationId)
-                .SrcRecordingId(srcRecordingId)
-                .DstRecordingId(dstRecordingId)
-                .StopPosition(stopPosition)
-                .ChannelTagId(channelTagId)
-                .SubscriptionTagId(subscriptionTagId)
-                .SrcControlStreamId(srcControlStreamId)
-                .SrcControlChannel(srcControlChannel)
-                .LiveDestination(liveDestination)
-                .ReplicationChannel(replicationChannel);
-
-            return Offer(replicateRequest.EncodedLength());
+            return Replicate(
+                srcRecordingId,
+                dstRecordingId,
+                stopPosition,
+                channelTagId,
+                subscriptionTagId,
+                srcControlStreamId,
+                srcControlChannel,
+                liveDestination,
+                replicationChannel,
+                correlationId,
+                controlSessionId,
+                Aeron.Aeron.NULL_VALUE);
         }
 
+        /// <summary>
+        /// Replicate a recording from a source archive to a destination which can be considered a backup for a primary
+        /// archive. The behaviour of the replication is controlled through the <seealso cref="ReplicationParams"/>.
+        /// <para>
+        /// For a source recording that is still active the replay can merge with the live stream and then follow it
+        /// directly and no longer require the replay from the source. This would require a multicast live destination.
+        /// </para>
+        /// <para>
+        /// Errors will be reported asynchronously and can be checked for with <seealso cref="AeronArchive.PollForErrorResponse()"/>
+        /// or <seealso cref="AeronArchive.CheckForErrorResponse()"/>.
+        /// </para>
+        /// <para>
+        /// The ReplicationParams is free to be reused when this call completes.
+        ///     
+        /// </para>
+        /// </summary>
+        /// <param name="srcRecordingId">     recording id which must exist in the source archive. </param>
+        /// <param name="srcControlChannel">  remote control channel for the source archive to instruct the replay on. </param>
+        /// <param name="srcControlStreamId"> remote control stream id for the source archive to instruct the replay on. </param>
+        /// <param name="replicationParams">  optional parameters to control the behaviour of the replication. </param>
+        /// <param name="correlationId">      for this request. </param>
+        /// <param name="controlSessionId">   for this request. </param>
+        /// <returns> true if successfully offered otherwise false. </returns>
+        /// <seealso cref="ReplicationParams"/>
+        public bool Replicate(
+            long srcRecordingId,
+            int srcControlStreamId,
+            string srcControlChannel,
+            ReplicationParams replicationParams,
+            long correlationId,
+            long controlSessionId)
+        {
+            return Replicate(
+                srcRecordingId,
+                replicationParams.DstRecordingId(),
+                replicationParams.StopPosition(),
+                replicationParams.ChannelTagId(),
+                replicationParams.SubscriptionTagId(),
+                srcControlStreamId,
+                srcControlChannel,
+                replicationParams.LiveDestination(),
+                replicationParams.ReplicationChannel(),
+                correlationId,
+                controlSessionId,
+                replicationParams.FileIoMaxLength());
+        }
 
         /// <summary>
         /// Stop an active replication by the registration id it was registered with.
@@ -1139,6 +1247,103 @@ namespace Adaptive.Archiver
 
                 retryIdleStrategy.Idle();
             }
+        }
+
+        private bool Replay(
+            long recordingId,
+            long position,
+            long length,
+            string replayChannel,
+            int replayStreamId,
+            long correlationId,
+            long controlSessionId,
+            int fileIoMaxLength)
+        {
+            if (null == replayRequest)
+            {
+                replayRequest = new ReplayRequestEncoder();
+            }
+
+            replayRequest
+                .WrapAndApplyHeader(buffer, 0, messageHeader)
+                .ControlSessionId(controlSessionId)
+                .CorrelationId(correlationId)
+                .RecordingId(recordingId)
+                .Position(position)
+                .Length(length)
+                .ReplayStreamId(replayStreamId)
+                .FileIoMaxLength(fileIoMaxLength)
+                .ReplayChannel(replayChannel);
+
+            return Offer(replayRequest.EncodedLength());
+        }
+
+        private bool BoundedReplay(
+            long recordingId,
+            long position,
+            long length,
+            int limitCounterId,
+            string replayChannel,
+            int replayStreamId,
+            long correlationId,
+            long controlSessionId,
+            int fileIoMaxLength)
+        {
+            if (null == boundedReplayRequest)
+            {
+                boundedReplayRequest = new BoundedReplayRequestEncoder();
+            }
+
+            boundedReplayRequest
+                .WrapAndApplyHeader(buffer, 0, messageHeader)
+                .ControlSessionId(controlSessionId)
+                .CorrelationId(correlationId)
+                .RecordingId(recordingId)
+                .Position(position)
+                .Length(length)
+                .LimitCounterId(limitCounterId)
+                .ReplayStreamId(replayStreamId)
+                .FileIoMaxLength(fileIoMaxLength)
+                .ReplayChannel(replayChannel);
+
+            return Offer(boundedReplayRequest.EncodedLength());
+        }
+
+        private bool Replicate(
+            long srcRecordingId,
+            long dstRecordingId,
+            long stopPosition,
+            long channelTagId,
+            long subscriptionTagId,
+            int srcControlStreamId,
+            string srcControlChannel,
+            string liveDestination,
+            string replicationChannel,
+            long correlationId,
+            long controlSessionId,
+            int fileIoMaxLength)
+        {
+            if (null == replicateRequest)
+            {
+                replicateRequest = new ReplicateRequest2Encoder();
+            }
+
+            replicateRequest
+                .WrapAndApplyHeader(buffer, 0, messageHeader)
+                .ControlSessionId(controlSessionId)
+                .CorrelationId(correlationId)
+                .SrcRecordingId(srcRecordingId)
+                .DstRecordingId(dstRecordingId)
+                .StopPosition(stopPosition)
+                .ChannelTagId(channelTagId)
+                .SubscriptionTagId(subscriptionTagId)
+                .SrcControlStreamId(srcControlStreamId)
+                .FileIoMaxLength(fileIoMaxLength)
+                .SrcControlChannel(srcControlChannel)
+                .LiveDestination(liveDestination)
+                .ReplicationChannel(replicationChannel);
+
+            return Offer(replicateRequest.EncodedLength());
         }
     }
 }

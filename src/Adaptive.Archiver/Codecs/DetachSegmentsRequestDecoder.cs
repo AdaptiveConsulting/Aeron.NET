@@ -12,7 +12,7 @@ public class DetachSegmentsRequestDecoder
     public const ushort BLOCK_LENGTH = 32;
     public const ushort TEMPLATE_ID = 53;
     public const ushort SCHEMA_ID = 101;
-    public const ushort SCHEMA_VERSION = 6;
+    public const ushort SCHEMA_VERSION = 7;
 
     private DetachSegmentsRequestDecoder _parentMessage;
     private IDirectBuffer _buffer;

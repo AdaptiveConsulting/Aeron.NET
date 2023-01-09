@@ -21,447 +21,870 @@ using Adaptive.Aeron.Protocol;
 using Adaptive.Agrona;
 using Adaptive.Agrona.Concurrent;
 using Adaptive.Agrona.Concurrent.Status;
+using static Adaptive.Aeron.LogBuffer.FrameDescriptor;
+using static Adaptive.Aeron.LogBuffer.LogBufferDescriptor;
+using static Adaptive.Aeron.Protocol.DataHeaderFlyweight;
+using static Adaptive.Agrona.BitUtil;
 
 namespace Adaptive.Aeron
 {
-    /// <summary>
-    /// Aeron publisher API for sending messages to subscribers of a given channel and streamId pair. ExclusivePublications
-    /// each get their own session id so multiple can be concurrently active on the same media driver as independent streams.
-    /// <para>
-    /// <seealso cref="ExclusivePublication"/>s are created via the <seealso cref="Aeron.AddExclusivePublication(String, int)"/> method,
-    /// and messages are sent via one of the <seealso cref="Publication.Offer(UnsafeBuffer)"/> methods, or a
-    /// <seealso cref="TryClaim(int, BufferClaim)"/> and <seealso cref="BufferClaim.Commit()"/> method combination.
-    /// </para>
-    /// <para>
-    /// <seealso cref="ExclusivePublication"/>s have the potential to provide greater throughput than the default <seealso cref="Publication"/>
-    /// which supports concurrent access.
-    /// </para>
-    /// <para>
-    /// The APIs used for tryClaim and offer are non-blocking.
-    /// </para>
-    /// <para>
-    /// <b>Note:</b> Instances are NOT threadsafe for offer and tryClaim methods but are for the others.
-    /// 
-    /// </para>
-    /// </summary>
-    /// <seealso cref="Aeron.AddExclusivePublication(String, int)"></seealso>
-    public sealed class ExclusivePublication : Publication
-    {
-        private long _termBeginPosition;
-        private int _activePartitionIndex;
-        private int _termId;
-        private int _termOffset;
+	/// <summary>
+	/// Aeron publisher API for sending messages to subscribers of a given channel and streamId pair. ExclusivePublications
+	/// each get their own session id so multiple can be concurrently active on the same media driver as independent streams.
+	/// <para>
+	/// <seealso cref="ExclusivePublication"/>s are created via the <seealso cref="Aeron.AddExclusivePublication(String, int)"/> method,
+	/// and messages are sent via one of the <seealso cref="Publication.Offer(UnsafeBuffer)"/> methods, or a
+	/// <seealso cref="TryClaim(int, BufferClaim)"/> and <seealso cref="BufferClaim.Commit()"/> method combination.
+	/// </para>
+	/// <para>
+	/// <seealso cref="ExclusivePublication"/>s have the potential to provide greater throughput than the default <seealso cref="Publication"/>
+	/// which supports concurrent access.
+	/// </para>
+	/// <para>
+	/// The APIs for tryClaim and offer are non-blocking.
+	/// </para>
+	/// <para>
+	/// <b>Note:</b> Instances are NOT threadsafe for offer and tryClaim methods but are for the others.
+	/// 
+	/// </para>
+	/// </summary>
+	/// <seealso cref="Aeron.AddExclusivePublication(String, int)"></seealso>
+	public sealed class ExclusivePublication : Publication
+	{
+		private long _termBeginPosition;
+		private int _activePartitionIndex;
+		private int _termId;
+		private int _termOffset;
 
-        private readonly ExclusiveTermAppender[] _termAppenders =
-            new ExclusiveTermAppender[LogBufferDescriptor.PARTITION_COUNT];
+		internal ExclusivePublication(
+			ClientConductor clientConductor,
+			string channel,
+			int streamId,
+			int sessionId,
+			IReadablePosition positionLimit,
+			int channelStatusId,
+			LogBuffers logBuffers,
+			long originalRegistrationId,
+			long registrationId)
+			: base(
+				clientConductor,
+				channel,
+				streamId,
+				sessionId,
+				positionLimit,
+				channelStatusId,
+				logBuffers,
+				originalRegistrationId,
+				registrationId
+			)
+		{
+			var logMetaDataBuffer = logBuffers.MetaDataBuffer();
+			var termCount = ActiveTermCount(logMetaDataBuffer);
+			var index = IndexByTermCount(termCount);
+			_activePartitionIndex = index;
 
-        internal ExclusivePublication(
-            ClientConductor clientConductor,
-            string channel,
-            int streamId,
-            int sessionId,
-            IReadablePosition positionLimit,
-            int channelStatusId,
-            LogBuffers logBuffers,
-            long originalRegistrationId,
-            long registrationId)
-            : base(
-                clientConductor,
-                channel,
-                streamId,
-                sessionId,
-                positionLimit,
-                channelStatusId,
-                logBuffers,
-                originalRegistrationId,
-                registrationId
-            )
-        {
-            var logMetaDataBuffer = logBuffers.MetaDataBuffer();
+			var rawTail = RawTail(base._logMetaDataBuffer, index);
 
-            for (var i = 0; i < LogBufferDescriptor.PARTITION_COUNT; i++)
-            {
-                _termAppenders[i] = new ExclusiveTermAppender(_termBuffers[i], logMetaDataBuffer, i);
-            }
+			_termId = LogBufferDescriptor.TermId(rawTail);
+			_termOffset = LogBufferDescriptor.TermOffset(rawTail);
+			_termBeginPosition =
+				ComputeTermBeginPosition(_termId, PositionBitsToShift, InitialTermId);
+		}
 
-            var termCount = LogBufferDescriptor.ActiveTermCount(logMetaDataBuffer);
-            var index = LogBufferDescriptor.IndexByTermCount(termCount);
-            _activePartitionIndex = index;
+		/// <inheritdoc />
+		public override long Position
+		{
+			get
+			{
+				if (_isClosed)
+				{
+					return CLOSED;
+				}
 
-            var rawTail = LogBufferDescriptor.RawTail(_logMetaDataBuffer, index);
+				return _termBeginPosition + _termOffset;
+			}
+		}
 
-            _termId = LogBufferDescriptor.TermId(rawTail);
-            _termOffset = LogBufferDescriptor.TermOffset(rawTail);
-            _termBeginPosition =
-                LogBufferDescriptor.ComputeTermBeginPosition(_termId, PositionBitsToShift, InitialTermId);
-        }
-        
-        /// <inheritdoc />
-        public override long Position
-        {
-            get
-            {
-                if (_isClosed)
-                {
-                    return CLOSED;
-                }
+		/// <inheritdoc />
+		public override long AvailableWindow
+		{
+			get
+			{
+				if (_isClosed)
+				{
+					return CLOSED;
+				}
 
-                return _termBeginPosition + _termOffset;
-            }
-        }
+				return _positionLimit.GetVolatile() - (_termBeginPosition + _termOffset);
+			}
+		}
 
-        /// <inheritdoc />
-        public override long AvailableWindow
-        {
-            get
-            {
-                if (_isClosed)
-                {
-                    return CLOSED;
-                }
+		/// <summary>
+		/// The current term-id of the publication.
+		/// </summary>
+		/// <returns> the current term-id of the publication. </returns>
+		public int TermId()
+		{
+			return _termId;
+		}
 
-                return _positionLimit.GetVolatile() - (_termBeginPosition + _termOffset);
-            }
-        }
+		/// <summary>
+		/// The current term-offset of the publication.
+		/// </summary>
+		/// <returns> the current term-offset of the publication. </returns>
+		public int TermOffset()
+		{
+			return _termOffset;
+		}
 
-        /// <summary>
-        /// The current term-id of the publication.
-        /// </summary>
-        /// <returns> the current term-id of the publication. </returns>
-        public int TermId()
-        {
-            return _termId;
-        }
+		/// <inheritdoc />
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public override long Offer(
+			IDirectBuffer buffer,
+			int offset,
+			int length,
+			ReservedValueSupplier reservedValueSupplier = null)
+		{
+			var newPosition = CLOSED;
+			if (!_isClosed)
+			{
+				var limit = _positionLimit.GetVolatile();
+				long position = _termBeginPosition + _termOffset;
 
-        /// <summary>
-        /// The current term-offset of the publication.
-        /// </summary>
-        /// <returns> the current term-offset of the publication. </returns>
-        public int TermOffset()
-        {
-            return _termOffset;
-        }
+				if (position < limit)
+				{
+					int tailCounterOffset = TERM_TAIL_COUNTERS_OFFSET + (_activePartitionIndex * SIZE_OF_LONG);
+					UnsafeBuffer termBuffer = _termBuffers[_activePartitionIndex];
+					int result;
 
-        /// <inheritdoc />
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override long Offer(
-            IDirectBuffer buffer,
-            int offset,
-            int length,
-            ReservedValueSupplier reservedValueSupplier = null)
-        {
-            var newPosition = CLOSED;
-            if (!_isClosed)
-            {
-                var limit = _positionLimit.GetVolatile();
-                ExclusiveTermAppender termAppender = _termAppenders[_activePartitionIndex];
-                long position = _termBeginPosition + _termOffset;
+					if (length <= MaxPayloadLength)
+					{
+						CheckPositiveLength(length);
+						result = AppendUnfragmentedMessage(
+							tailCounterOffset, termBuffer, buffer, offset, length, reservedValueSupplier);
+					}
+					else
+					{
+						CheckMaxMessageLength(length);
+						result = AppendFragmentedMessage(
+							termBuffer, tailCounterOffset, buffer, offset, length, reservedValueSupplier);
+					}
 
-                if (position < limit)
-                {
-                    int result;
-                    if (length <= MaxPayloadLength)
-                    {
-                        CheckPositiveLength(length);
-                        result = termAppender.AppendUnfragmentedMessage(_termId, _termOffset, _headerWriter, buffer,
-                            offset, length, reservedValueSupplier);
-                    }
-                    else
-                    {
-                        CheckMaxMessageLength(length);
-                        result = termAppender.AppendFragmentedMessage(_termId, _termOffset, _headerWriter, buffer,
-                            offset, length, MaxPayloadLength, reservedValueSupplier);
-                    }
+					newPosition = NewPosition(result);
+				}
+				else
+				{
+					newPosition = BackPressureStatus(position, length);
+				}
+			}
 
-                    newPosition = NewPosition(result);
-                }
-                else
-                {
-                    newPosition = BackPressureStatus(position, length);
-                }
-            }
-
-            return newPosition;
-        }
+			return newPosition;
+		}
 
 
-        /// <inheritdoc />
-        public override long Offer(IDirectBuffer bufferOne, int offsetOne, int lengthOne, IDirectBuffer bufferTwo,
-            int offsetTwo, int lengthTwo, ReservedValueSupplier reservedValueSupplier = null)
-        {
-            long newPosition = CLOSED;
-            if (!_isClosed)
-            {
-                long limit = _positionLimit.GetVolatile();
-                ExclusiveTermAppender termAppender = _termAppenders[_activePartitionIndex];
-                long position = _termBeginPosition + _termOffset;
-                int length = ValidateAndComputeLength(lengthOne, lengthTwo);
+		/// <inheritdoc />
+		public override long Offer(IDirectBuffer bufferOne, int offsetOne, int lengthOne, IDirectBuffer bufferTwo,
+			int offsetTwo, int lengthTwo, ReservedValueSupplier reservedValueSupplier = null)
+		{
+			long newPosition = CLOSED;
+			if (!_isClosed)
+			{
+				long limit = _positionLimit.GetVolatile();
+				long position = _termBeginPosition + _termOffset;
+				int length = ValidateAndComputeLength(lengthOne, lengthTwo);
 
-                if (position < limit)
-                {
-                    int result;
-                    if (length <= MaxPayloadLength)
-                    {
-                        CheckPositiveLength(length);
-                        result = termAppender.AppendUnfragmentedMessage(
-                            _termId,
-                            _termOffset,
-                            _headerWriter,
-                            bufferOne,
-                            offsetOne,
-                            lengthOne,
-                            bufferTwo,
-                            offsetTwo,
-                            lengthTwo,
-                            reservedValueSupplier);
-                    }
-                    else
-                    {
-                        CheckMaxMessageLength(length);
-                        result = termAppender.AppendFragmentedMessage(
-                            _termId,
-                            _termOffset,
-                            _headerWriter,
-                            bufferOne,
-                            offsetOne,
-                            lengthOne,
-                            bufferTwo,
-                            offsetTwo,
-                            lengthTwo,
-                            MaxPayloadLength,
-                            reservedValueSupplier);
-                    }
+				if (position < limit)
+				{
+					int tailCounterOffset = TERM_TAIL_COUNTERS_OFFSET + (_activePartitionIndex * SIZE_OF_LONG);
+					UnsafeBuffer termBuffer = _termBuffers[_activePartitionIndex];
+					int result;
 
-                    newPosition = NewPosition(result);
-                }
-                else
-                {
-                    newPosition = BackPressureStatus(position, length);
-                }
-            }
+					if (length <= MaxPayloadLength)
+					{
+						CheckPositiveLength(length);
+						result = AppendUnfragmentedMessage(
+							termBuffer,
+							tailCounterOffset,
+							bufferOne, offsetOne, lengthOne,
+							bufferTwo, offsetTwo, lengthTwo,
+							reservedValueSupplier);
+					}
+					else
+					{
+						CheckMaxMessageLength(length);
+						result = AppendFragmentedMessage(
+							termBuffer,
+							tailCounterOffset,
+							bufferOne, offsetOne, lengthOne,
+							bufferTwo, offsetTwo, lengthTwo,
+							MaxPayloadLength,
+							reservedValueSupplier);
+					}
 
-            return newPosition;
-        }
+					newPosition = NewPosition(result);
+				}
+				else
+				{
+					newPosition = BackPressureStatus(position, length);
+				}
+			}
+
+			return newPosition;
+		}
 
 
-        /// <inheritdoc />
-        public override long Offer(DirectBufferVector[] vectors, ReservedValueSupplier reservedValueSupplier = null)
-        {
-            int length = DirectBufferVector.ValidateAndComputeLength(vectors);
-            var newPosition = CLOSED;
-            if (!_isClosed)
-            {
-                var limit = _positionLimit.GetVolatile();
-                ExclusiveTermAppender termAppender = _termAppenders[_activePartitionIndex];
-                long position = _termBeginPosition + _termOffset;
+		/// <inheritdoc />
+		public override long Offer(DirectBufferVector[] vectors, ReservedValueSupplier reservedValueSupplier = null)
+		{
+			int length = DirectBufferVector.ValidateAndComputeLength(vectors);
+			var newPosition = CLOSED;
+			if (!_isClosed)
+			{
+				var limit = _positionLimit.GetVolatile();
+				long position = _termBeginPosition + _termOffset;
 
-                if (position < limit)
-                {
-                    int result;
-                    if (length <= MaxPayloadLength)
-                    {
-                        result = termAppender.AppendUnfragmentedMessage(
-                            _termId, _termOffset, _headerWriter, vectors, length, reservedValueSupplier);
-                    }
-                    else
-                    {
-                        CheckMaxMessageLength(length);
-                        result = termAppender.AppendFragmentedMessage(
-                            _termId,
-                            _termOffset,
-                            _headerWriter,
-                            vectors,
-                            length,
-                            MaxPayloadLength,
-                            reservedValueSupplier);
-                    }
+				if (position < limit)
+				{
+					int tailCounterOffset = TERM_TAIL_COUNTERS_OFFSET + (_activePartitionIndex * SIZE_OF_LONG);
+					UnsafeBuffer termBuffer = _termBuffers[_activePartitionIndex];
+					int result;
 
-                    newPosition = NewPosition(result);
-                }
-                else
-                {
-                    newPosition = BackPressureStatus(position, length);
-                }
-            }
+					if (length <= MaxPayloadLength)
+					{
+						result = AppendUnfragmentedMessage(
+							termBuffer, tailCounterOffset, vectors, length, reservedValueSupplier);
+					}
+					else
+					{
+						CheckMaxMessageLength(length);
+						result = AppendFragmentedMessage(
+							termBuffer, tailCounterOffset, vectors, length, reservedValueSupplier);
+					}
 
-            return newPosition;
-        }
+					newPosition = NewPosition(result);
+				}
+				else
+				{
+					newPosition = BackPressureStatus(position, length);
+				}
+			}
 
-        /// <inheritdoc />
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override long TryClaim(int length, BufferClaim bufferClaim)
-        {
-            CheckPayloadLength(length);
-            var newPosition = CLOSED;
+			return newPosition;
+		}
 
-            if (!_isClosed)
-            {
-                var limit = _positionLimit.GetVolatile();
-                ExclusiveTermAppender termAppender = _termAppenders[_activePartitionIndex];
-                long position = _termBeginPosition + _termOffset;
+		/// <inheritdoc />
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public override long TryClaim(int length, BufferClaim bufferClaim)
+		{
+			CheckPayloadLength(length);
+			var newPosition = CLOSED;
 
-                if (position < limit)
-                {
-                    int result = termAppender.Claim(_termId, _termOffset, _headerWriter, length, bufferClaim);
-                    newPosition = NewPosition(result);
-                }
-                else
-                {
-                    newPosition = BackPressureStatus(position, length);
-                }
-            }
+			if (!_isClosed)
+			{
+				var limit = _positionLimit.GetVolatile();
+				long position = _termBeginPosition + _termOffset;
 
-            return newPosition;
-        }
+				if (position < limit)
+				{
+					int tailCounterOffset = TERM_TAIL_COUNTERS_OFFSET + (_activePartitionIndex * SIZE_OF_LONG);
+					UnsafeBuffer termBuffer = _termBuffers[_activePartitionIndex];
+					int result = Claim(termBuffer, tailCounterOffset, length, bufferClaim);
 
-        /// <summary>
-        /// Append a padding record log of a given length to make up the log to a position.
-        /// </summary>
-        /// <param name="length"> of the range to claim, in bytes.. </param>
-        /// <returns> The new stream position, otherwise a negative error value of <seealso cref="Publication.NOT_CONNECTED"/>,
-        /// <seealso cref="Publication.BACK_PRESSURED"/>, <seealso cref="Publication.ADMIN_ACTION"/>, <seealso cref="Publication.CLOSED"/>, or <seealso cref="Publication.MAX_POSITION_EXCEEDED"/>. </returns>
-        /// <exception cref="ArgumentException"> if the length is greater than <seealso cref="Publication.MaxMessageLength"/>. </exception>
-        public long AppendPadding(int length)
-        {
-            CheckMaxMessageLength(length);
-            long newPosition = CLOSED;
+					newPosition = NewPosition(result);
+				}
+				else
+				{
+					newPosition = BackPressureStatus(position, length);
+				}
+			}
 
-            if (!_isClosed)
-            {
-                long limit = _positionLimit.GetVolatile();
-                ExclusiveTermAppender termAppender = _termAppenders[_activePartitionIndex];
-                long position = _termBeginPosition + _termOffset;
+			return newPosition;
+		}
 
-                if (position < limit)
-                {
-                    CheckPositiveLength(length);
-                    int result = termAppender.AppendPadding(_termId, _termOffset, _headerWriter, length);
-                    newPosition = NewPosition(result);
-                }
-                else
-                {
-                    newPosition = BackPressureStatus(position, length);
-                }
-            }
+		/// <summary>
+		/// Append a padding record log of a given length to make up the log to a position.
+		/// </summary>
+		/// <param name="length"> of the range to claim, in bytes.. </param>
+		/// <returns> The new stream position, otherwise a negative error value of <seealso cref="Publication.NOT_CONNECTED"/>,
+		/// <seealso cref="Publication.BACK_PRESSURED"/>, <seealso cref="Publication.ADMIN_ACTION"/>, <seealso cref="Publication.CLOSED"/>, or <seealso cref="Publication.MAX_POSITION_EXCEEDED"/>. </returns>
+		/// <exception cref="ArgumentException"> if the length is greater than <seealso cref="Publication.MaxMessageLength"/>. </exception>
+		public long AppendPadding(int length)
+		{
+			CheckMaxMessageLength(length);
+			long newPosition = CLOSED;
 
-            return newPosition;
-        }
+			if (!_isClosed)
+			{
+				long limit = _positionLimit.GetVolatile();
+				long position = _termBeginPosition + _termOffset;
 
-        /// <summary>
-        /// Offer a block of pre-formatted message fragments directly into the current term.
-        /// </summary>
-        /// <param name="buffer"> containing the pre-formatted block of message fragments. </param>
-        /// <param name="offset"> offset in the buffer at which the first fragment begins. </param>
-        /// <param name="length"> in bytes of the encoded block. </param>
-        /// <returns> The new stream position, otherwise a negative error value of <seealso cref="Publication.NOT_CONNECTED"/>,
-        /// <seealso cref="Publication.BACK_PRESSURED"/>, <seealso cref="Publication.ADMIN_ACTION"/>, <seealso cref="Publication.CLOSED"/>,
-        /// or <seealso cref="Publication.MAX_POSITION_EXCEEDED"/>. </returns>
-        /// <exception cref="ArgumentException"> if the length is greater than remaining size of the current term. </exception>
-        /// <exception cref="ArgumentException"> if the first frame within the block is not properly formatted, i.e. if the
-        /// <code>streamId</code> is not equal to the value returned by the <seealso cref="Publication.StreamId"/>
-        /// method or if the <code>sessionId</code> is not equal to the value returned by the
-        /// <seealso cref="Publication.SessionId"/> method or if the frame type is not equal to the
-        /// <seealso cref="HeaderFlyweight.HDR_TYPE_DATA"/>. </exception>
-        public long OfferBlock(IMutableDirectBuffer buffer, int offset, int length)
-        {
-            if (IsClosed)
-            {
-                return CLOSED;
-            }
+				if (position < limit)
+				{
+					CheckPositiveLength(length);
+					int tailCounterOffset = TERM_TAIL_COUNTERS_OFFSET + (_activePartitionIndex * SIZE_OF_LONG);
+					UnsafeBuffer termBuffer = _termBuffers[_activePartitionIndex];
+					int result = AppendPadding(termBuffer, tailCounterOffset, length);
 
-            if (_termOffset >= TermBufferLength)
-            {
-                RotateTerm();
-            }
+					newPosition = NewPosition(result);
+				}
+				else
+				{
+					newPosition = BackPressureStatus(position, length);
+				}
+			}
 
-            long limit = _positionLimit.GetVolatile();
-            long position = _termBeginPosition + _termOffset;
+			return newPosition;
+		}
 
-            if (position < limit)
-            {
-                CheckBlockLength(length);
-                CheckFirstFrame(buffer, offset);
+		/// <summary>
+		/// Offer a block of pre-formatted message fragments directly into the current term.
+		/// </summary>
+		/// <param name="buffer"> containing the pre-formatted block of message fragments. </param>
+		/// <param name="offset"> offset in the buffer at which the first fragment begins. </param>
+		/// <param name="length"> in bytes of the encoded block. </param>
+		/// <returns> The new stream position, otherwise a negative error value of <seealso cref="Publication.NOT_CONNECTED"/>,
+		/// <seealso cref="Publication.BACK_PRESSURED"/>, <seealso cref="Publication.ADMIN_ACTION"/>, <seealso cref="Publication.CLOSED"/>,
+		/// or <seealso cref="Publication.MAX_POSITION_EXCEEDED"/>. </returns>
+		/// <exception cref="ArgumentException"> if the length is greater than remaining size of the current term. </exception>
+		/// <exception cref="ArgumentException"> if the first frame within the block is not properly formatted, i.e. if the
+		/// <code>streamId</code> is not equal to the value returned by the <seealso cref="Publication.StreamId"/>
+		/// method or if the <code>sessionId</code> is not equal to the value returned by the
+		/// <seealso cref="Publication.SessionId"/> method or if the frame type is not equal to the
+		/// <seealso cref="HeaderFlyweight.HDR_TYPE_DATA"/>. </exception>
+		public long OfferBlock(IMutableDirectBuffer buffer, int offset, int length)
+		{
+			if (IsClosed)
+			{
+				return CLOSED;
+			}
 
-                ExclusiveTermAppender termAppender = _termAppenders[_activePartitionIndex];
-                int result = termAppender.AppendBlock(_termId, _termOffset, buffer, offset, length);
+			if (_termOffset >= TermBufferLength)
+			{
+				RotateTerm();
+			}
 
-                return NewPosition(result);
-            }
-            else
-            {
-                return BackPressureStatus(position, length);
-            }
-        }
+			long limit = _positionLimit.GetVolatile();
+			long position = _termBeginPosition + _termOffset;
 
-        private void CheckBlockLength(int length)
-        {
-            int remaining = TermBufferLength - _termOffset;
-            if (length > remaining)
-            {
-                throw new ArgumentException("invalid block length " + length + ", remaining space in term is " +
-                                            remaining);
-            }
-        }
+			if (position < limit)
+			{
+				CheckBlockLength(length);
+				CheckFirstFrame(buffer, offset);
 
-        private void CheckFirstFrame(IMutableDirectBuffer buffer, int offset)
-        {
-            int frameType = HeaderFlyweight.HDR_TYPE_DATA;
-            int blockTermOffset = buffer.GetInt(offset + DataHeaderFlyweight.TERM_OFFSET_FIELD_OFFSET,
-                ByteOrder.LittleEndian);
-            int blockSessionId =
-                buffer.GetInt(offset + DataHeaderFlyweight.SESSION_ID_FIELD_OFFSET, ByteOrder.LittleEndian);
-            int blockStreamId =
-                buffer.GetInt(offset + DataHeaderFlyweight.STREAM_ID_FIELD_OFFSET, ByteOrder.LittleEndian);
-            int blockTermId = buffer.GetInt(offset + DataHeaderFlyweight.TERM_ID_FIELD_OFFSET, ByteOrder.LittleEndian);
-            int blockFrameType = buffer.GetShort(offset + HeaderFlyweight.TYPE_FIELD_OFFSET, ByteOrder.LittleEndian) &
-                                 0xFFFF;
+				int tailCounterOffset = TERM_TAIL_COUNTERS_OFFSET + (_activePartitionIndex * SIZE_OF_LONG);
+				UnsafeBuffer termBuffer = _termBuffers[_activePartitionIndex];
+				int result = AppendBlock(termBuffer, tailCounterOffset, buffer, offset, length);
 
-            if (blockTermOffset != _termOffset || blockSessionId != SessionId || blockStreamId != StreamId ||
-                blockTermId != _termId || frameType != blockFrameType)
-            {
-                throw new ArgumentException("improperly formatted block:" + " termOffset=" + blockTermOffset +
-                                            " (expected=" + _termOffset + ")," + " sessionId=" + blockSessionId +
-                                            " (expected=" + SessionId + ")," + " streamId=" + blockStreamId +
-                                            " (expected=" + StreamId + ")," + " termId=" + blockTermId +
-                                            " (expected=" + _termId + ")," + " frameType=" + blockFrameType +
-                                            " (expected=" + frameType + ")");
-            }
-        }
+				return NewPosition(result);
+			}
+			else
+			{
+				return BackPressureStatus(position, length);
+			}
+		}
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private long NewPosition(int resultingOffset)
-        {
-            if (resultingOffset > 0)
-            {
-                _termOffset = resultingOffset;
+		private void CheckBlockLength(int length)
+		{
+			int remaining = TermBufferLength - _termOffset;
+			if (length > remaining)
+			{
+				throw new ArgumentException("invalid block length " + length + ", remaining space in term is " +
+				                            remaining);
+			}
+		}
 
-                return _termBeginPosition + resultingOffset;
-            }
+		private void CheckFirstFrame(IMutableDirectBuffer buffer, int offset)
+		{
+			int frameType = HeaderFlyweight.HDR_TYPE_DATA;
+			int blockTermOffset = buffer.GetInt(offset + TERM_OFFSET_FIELD_OFFSET,
+				ByteOrder.LittleEndian);
+			int blockSessionId =
+				buffer.GetInt(offset + SESSION_ID_FIELD_OFFSET, ByteOrder.LittleEndian);
+			int blockStreamId =
+				buffer.GetInt(offset + STREAM_ID_FIELD_OFFSET, ByteOrder.LittleEndian);
+			int blockTermId = buffer.GetInt(offset + TERM_ID_FIELD_OFFSET, ByteOrder.LittleEndian);
+			int blockFrameType = buffer.GetShort(offset + HeaderFlyweight.TYPE_FIELD_OFFSET, ByteOrder.LittleEndian) &
+			                     0xFFFF;
 
-            if ((_termBeginPosition + TermBufferLength) >= MaxPossiblePosition)
-            {
-                return MAX_POSITION_EXCEEDED;
-            }
+			if (blockTermOffset != _termOffset || blockSessionId != SessionId || blockStreamId != StreamId ||
+			    blockTermId != _termId || frameType != blockFrameType)
+			{
+				throw new ArgumentException("improperly formatted block:" + " termOffset=" + blockTermOffset +
+				                            " (expected=" + _termOffset + ")," + " sessionId=" + blockSessionId +
+				                            " (expected=" + SessionId + ")," + " streamId=" + blockStreamId +
+				                            " (expected=" + StreamId + ")," + " termId=" + blockTermId +
+				                            " (expected=" + _termId + ")," + " frameType=" + blockFrameType +
+				                            " (expected=" + frameType + ")");
+			}
+		}
 
-            RotateTerm();
-            
-            return ADMIN_ACTION;
-        }
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private long NewPosition(int resultingOffset)
+		{
+			if (resultingOffset > 0)
+			{
+				_termOffset = resultingOffset;
 
-        private void RotateTerm()
-        {
-            int nextIndex = LogBufferDescriptor.NextPartitionIndex(_activePartitionIndex);
-            int nextTermId = _termId + 1;
+				return _termBeginPosition + resultingOffset;
+			}
 
-            _activePartitionIndex = nextIndex;
-            _termOffset = 0;
-            _termId = nextTermId;
-            _termBeginPosition += TermBufferLength;
+			if ((_termBeginPosition + TermBufferLength) >= MaxPossiblePosition)
+			{
+				return MAX_POSITION_EXCEEDED;
+			}
 
-            var termCount = nextTermId - InitialTermId;
+			RotateTerm();
 
-            LogBufferDescriptor.InitialiseTailWithTermId(_logMetaDataBuffer, nextIndex, nextTermId);
-            LogBufferDescriptor.ActiveTermCountOrdered(_logMetaDataBuffer, termCount);
-        }
-    }
+			return ADMIN_ACTION;
+		}
+
+		private void RotateTerm()
+		{
+			int nextIndex = NextPartitionIndex(_activePartitionIndex);
+			int nextTermId = _termId + 1;
+
+			_activePartitionIndex = nextIndex;
+			_termOffset = 0;
+			_termId = nextTermId;
+			_termBeginPosition += TermBufferLength;
+
+			var termCount = nextTermId - InitialTermId;
+
+			InitialiseTailWithTermId(_logMetaDataBuffer, nextIndex, nextTermId);
+			ActiveTermCountOrdered(_logMetaDataBuffer, termCount);
+		}
+
+		private int HandleEndOfLog(UnsafeBuffer termBuffer, int termLength)
+		{
+			if (_termOffset < termLength)
+			{
+				int offset = _termOffset;
+				int paddingLength = termLength - offset;
+				_headerWriter.Write(termBuffer, offset, paddingLength, _termId);
+				FrameType(termBuffer, offset, PADDING_FRAME_TYPE);
+				FrameLengthOrdered(termBuffer, offset, paddingLength);
+			}
+
+			return -1;
+		}
+
+		private int AppendUnfragmentedMessage(
+			int tailCounterOffset,
+			UnsafeBuffer termBuffer, 
+			IDirectBuffer srcBuffer,
+			int srcOffset, 
+			int length,
+			ReservedValueSupplier reservedValueSupplier)
+		{
+			int frameLength = length + HEADER_LENGTH;
+			int alignedLength = Align(frameLength, FRAME_ALIGNMENT);
+			int termLength = termBuffer.Capacity;
+
+			int resultingOffset = _termOffset + alignedLength;
+			_logMetaDataBuffer.PutLongOrdered(tailCounterOffset, PackTail(_termId, resultingOffset));
+
+			if (resultingOffset > termLength)
+			{
+				resultingOffset = HandleEndOfLog(termBuffer, termLength);
+			}
+			else
+			{
+				_headerWriter.Write(termBuffer, _termOffset, frameLength, _termId);
+				termBuffer.PutBytes(_termOffset + HEADER_LENGTH, srcBuffer, srcOffset, length);
+
+				if (null != reservedValueSupplier)
+				{
+					long reservedValue = reservedValueSupplier(termBuffer, _termOffset, frameLength);
+					termBuffer.PutLong(_termOffset + RESERVED_VALUE_OFFSET, reservedValue, ByteOrder.LittleEndian);
+				}
+
+				FrameLengthOrdered(termBuffer, _termOffset, frameLength);
+			}
+
+			return resultingOffset;
+		}
+
+		private int AppendFragmentedMessage(
+			UnsafeBuffer termBuffer, 
+			int tailCounterOffset, 
+			IDirectBuffer srcBuffer,
+			int srcOffset, 
+			int length,
+			ReservedValueSupplier reservedValueSupplier)
+		{
+			int numMaxPayloads = length / MaxPayloadLength;
+			int remainingPayload = length % MaxPayloadLength;
+			int lastFrameLength = remainingPayload > 0 ? Align(remainingPayload + HEADER_LENGTH, FRAME_ALIGNMENT) : 0;
+			int requiredLength = (numMaxPayloads * (MaxPayloadLength + HEADER_LENGTH)) + lastFrameLength;
+			int termLength = termBuffer.Capacity;
+
+			int resultingOffset = _termOffset + requiredLength;
+			_logMetaDataBuffer.PutLongOrdered(tailCounterOffset, PackTail(_termId, resultingOffset));
+
+			if (resultingOffset > termLength)
+			{
+				resultingOffset = HandleEndOfLog(termBuffer, termLength);
+			}
+			else
+			{
+				int frameOffset = _termOffset;
+				byte flags = BEGIN_FRAG_FLAG;
+				int remaining = length;
+				do
+				{
+					int bytesToWrite = Math.Min(remaining, MaxPayloadLength);
+					int frameLength = bytesToWrite + HEADER_LENGTH;
+					int alignedLength = Align(frameLength, FRAME_ALIGNMENT);
+
+					_headerWriter.Write(termBuffer, frameOffset, frameLength, _termId);
+					termBuffer.PutBytes(frameOffset + HEADER_LENGTH, srcBuffer, srcOffset + (length - remaining),
+						bytesToWrite);
+
+					if (remaining <= MaxPayloadLength)
+					{
+						flags |= END_FRAG_FLAG;
+					}
+
+					FrameFlags(termBuffer, frameOffset, flags);
+
+					if (null != reservedValueSupplier)
+					{
+						long reservedValue = reservedValueSupplier(termBuffer, frameOffset, frameLength);
+						termBuffer.PutLong(frameOffset + RESERVED_VALUE_OFFSET, reservedValue, ByteOrder.LittleEndian);
+					}
+
+					FrameLengthOrdered(termBuffer, frameOffset, frameLength);
+
+					flags = 0;
+					frameOffset += alignedLength;
+					remaining -= bytesToWrite;
+				} while (remaining > 0);
+			}
+
+			return resultingOffset;
+		}
+
+		private int AppendUnfragmentedMessage(
+			UnsafeBuffer termBuffer,
+			int tailCounterOffset, 
+			IDirectBuffer bufferOne,
+			int offsetOne,
+			int lengthOne, 
+			IDirectBuffer bufferTwo, 
+			int offsetTwo, 
+			int lengthTwo,
+			ReservedValueSupplier reservedValueSupplier)
+		{
+			int frameLength = lengthOne + lengthTwo + HEADER_LENGTH;
+			int alignedLength = Align(frameLength, FRAME_ALIGNMENT);
+			int termLength = termBuffer.Capacity;
+
+			int resultingOffset = _termOffset + alignedLength;
+			_logMetaDataBuffer.PutLongOrdered(tailCounterOffset, PackTail(_termId, resultingOffset));
+
+			if (resultingOffset > termLength)
+			{
+				resultingOffset = HandleEndOfLog(termBuffer, termLength);
+			}
+			else
+			{
+				_headerWriter.Write(termBuffer, _termOffset, frameLength, _termId);
+				termBuffer.PutBytes(_termOffset + HEADER_LENGTH, bufferOne, offsetOne, lengthOne);
+				termBuffer.PutBytes(_termOffset + HEADER_LENGTH + lengthOne, bufferTwo, offsetTwo, lengthTwo);
+
+				if (null != reservedValueSupplier)
+				{
+					long reservedValue = reservedValueSupplier(termBuffer, _termOffset, frameLength);
+					termBuffer.PutLong(_termOffset + RESERVED_VALUE_OFFSET, reservedValue, ByteOrder.LittleEndian);
+				}
+
+				FrameLengthOrdered(termBuffer, _termOffset, frameLength);
+			}
+
+			return resultingOffset;
+		}
+
+		private int AppendFragmentedMessage(
+			UnsafeBuffer termBuffer, 
+			int tailCounterOffset, 
+			IDirectBuffer bufferOne,
+			int offsetOne, 
+			int lengthOne, 
+			IDirectBuffer bufferTwo,
+			int offsetTwo,
+			int lengthTwo, 
+			int maxPayloadLength,
+			ReservedValueSupplier reservedValueSupplier)
+		{
+			int length = lengthOne + lengthTwo;
+			int numMaxPayloads = length / maxPayloadLength;
+			int remainingPayload = length % maxPayloadLength;
+			int lastFrameLength = remainingPayload > 0 ? Align(remainingPayload + HEADER_LENGTH, FRAME_ALIGNMENT) : 0;
+			int requiredLength = (numMaxPayloads * (maxPayloadLength + HEADER_LENGTH)) + lastFrameLength;
+			int termLength = termBuffer.Capacity;
+
+			int resultingOffset = _termOffset + requiredLength;
+			_logMetaDataBuffer.PutLongOrdered(tailCounterOffset, PackTail(_termId, resultingOffset));
+
+			if (resultingOffset > termLength)
+			{
+				resultingOffset = HandleEndOfLog(termBuffer, termLength);
+			}
+			else
+			{
+				int frameOffset = _termOffset;
+				byte flags = BEGIN_FRAG_FLAG;
+				int remaining = length;
+				int positionOne = 0;
+				int positionTwo = 0;
+
+				do
+				{
+					int bytesToWrite = Math.Min(remaining, maxPayloadLength);
+					int frameLength = bytesToWrite + HEADER_LENGTH;
+					int alignedLength = Align(frameLength, FRAME_ALIGNMENT);
+
+					_headerWriter.Write(termBuffer, frameOffset, frameLength, _termId);
+
+					int bytesWritten = 0;
+					int payloadOffset = frameOffset + HEADER_LENGTH;
+					do
+					{
+						int remainingOne = lengthOne - positionOne;
+						if (remainingOne > 0)
+						{
+							int numBytes = Math.Min(bytesToWrite - bytesWritten, remainingOne);
+							termBuffer.PutBytes(payloadOffset, bufferOne, offsetOne + positionOne, numBytes);
+
+							bytesWritten += numBytes;
+							payloadOffset += numBytes;
+							positionOne += numBytes;
+						}
+						else
+						{
+							int numBytes = Math.Min(bytesToWrite - bytesWritten, lengthTwo - positionTwo);
+							termBuffer.PutBytes(payloadOffset, bufferTwo, offsetTwo + positionTwo, numBytes);
+
+							bytesWritten += numBytes;
+							payloadOffset += numBytes;
+							positionTwo += numBytes;
+						}
+					} while (bytesWritten < bytesToWrite);
+
+					if (remaining <= maxPayloadLength)
+					{
+						flags |= END_FRAG_FLAG;
+					}
+
+					FrameFlags(termBuffer, frameOffset, flags);
+
+					if (null != reservedValueSupplier)
+					{
+						long reservedValue = reservedValueSupplier(termBuffer, frameOffset, frameLength);
+						termBuffer.PutLong(frameOffset + RESERVED_VALUE_OFFSET, reservedValue, ByteOrder.LittleEndian);
+					}
+
+					FrameLengthOrdered(termBuffer, frameOffset, frameLength);
+
+					flags = 0;
+					frameOffset += alignedLength;
+					remaining -= bytesToWrite;
+				} while (remaining > 0);
+			}
+
+			return resultingOffset;
+		}
+
+		private int AppendUnfragmentedMessage(
+			UnsafeBuffer termBuffer, 
+			int tailCounterOffset,
+			DirectBufferVector[] vectors, 
+			int length, 
+			ReservedValueSupplier reservedValueSupplier)
+		{
+			int frameLength = length + HEADER_LENGTH;
+			int alignedLength = Align(frameLength, FRAME_ALIGNMENT);
+			int termLength = termBuffer.Capacity;
+
+			int resultingOffset = _termOffset + alignedLength;
+			_logMetaDataBuffer.PutLongOrdered(tailCounterOffset, PackTail(_termId, resultingOffset));
+
+			if (resultingOffset > termLength)
+			{
+				resultingOffset = HandleEndOfLog(termBuffer, termLength);
+			}
+			else
+			{
+				_headerWriter.Write(termBuffer, _termOffset, frameLength, _termId);
+
+				int offset = _termOffset + HEADER_LENGTH;
+				foreach (DirectBufferVector vector in vectors)
+				{
+					termBuffer.PutBytes(offset, vector.Buffer(), vector.Offset(), vector.Length());
+					offset += vector.Length();
+				}
+
+				if (null != reservedValueSupplier)
+				{
+					long reservedValue = reservedValueSupplier(termBuffer, _termOffset, frameLength);
+					termBuffer.PutLong(_termOffset + RESERVED_VALUE_OFFSET, reservedValue, ByteOrder.LittleEndian);
+				}
+
+				FrameLengthOrdered(termBuffer, _termOffset, frameLength);
+			}
+
+			return resultingOffset;
+		}
+
+		private int AppendFragmentedMessage(
+			UnsafeBuffer termBuffer, 
+			int tailCounterOffset,
+			DirectBufferVector[] vectors, 
+			int length, 
+			ReservedValueSupplier reservedValueSupplier)
+		{
+			int numMaxPayloads = length / MaxPayloadLength;
+			int remainingPayload = length % MaxPayloadLength;
+			int lastFrameLength = remainingPayload > 0 ? Align(remainingPayload + HEADER_LENGTH, FRAME_ALIGNMENT) : 0;
+			int requiredLength = (numMaxPayloads * (MaxPayloadLength + HEADER_LENGTH)) + lastFrameLength;
+			int termLength = termBuffer.Capacity;
+
+			int resultingOffset = _termOffset + requiredLength;
+			_logMetaDataBuffer.PutLongOrdered(tailCounterOffset, PackTail(_termId, resultingOffset));
+
+			if (resultingOffset > termLength)
+			{
+				resultingOffset = HandleEndOfLog(termBuffer, termLength);
+			}
+			else
+			{
+				int frameOffset = _termOffset;
+				byte flags = BEGIN_FRAG_FLAG;
+				int remaining = length;
+				int vectorIndex = 0;
+				int vectorOffset = 0;
+
+				do
+				{
+					int bytesToWrite = Math.Min(remaining, MaxPayloadLength);
+					int frameLength = bytesToWrite + HEADER_LENGTH;
+					int alignedLength = Align(frameLength, FRAME_ALIGNMENT);
+
+					_headerWriter.Write(termBuffer, frameOffset, frameLength, _termId);
+
+					int bytesWritten = 0;
+					int payloadOffset = frameOffset + HEADER_LENGTH;
+					do
+					{
+						DirectBufferVector vector = vectors[vectorIndex];
+						int vectorRemaining = vector.Length() - vectorOffset;
+						int numBytes = Math.Min(bytesToWrite - bytesWritten, vectorRemaining);
+
+						termBuffer.PutBytes(payloadOffset, vector.Buffer(), vector.Offset() + vectorOffset, numBytes);
+
+						bytesWritten += numBytes;
+						payloadOffset += numBytes;
+						vectorOffset += numBytes;
+
+						if (vectorRemaining <= numBytes)
+						{
+							vectorIndex++;
+							vectorOffset = 0;
+						}
+					} while (bytesWritten < bytesToWrite);
+
+					if (remaining <= MaxPayloadLength)
+					{
+						flags |= END_FRAG_FLAG;
+					}
+
+					FrameFlags(termBuffer, frameOffset, flags);
+
+					if (null != reservedValueSupplier)
+					{
+						long reservedValue = reservedValueSupplier(termBuffer, frameOffset, frameLength);
+						termBuffer.PutLong(frameOffset + RESERVED_VALUE_OFFSET, reservedValue, ByteOrder.LittleEndian);
+					}
+
+					FrameLengthOrdered(termBuffer, frameOffset, frameLength);
+
+					flags = 0;
+					frameOffset += alignedLength;
+					remaining -= bytesToWrite;
+				} while (remaining > 0);
+			}
+
+			return resultingOffset;
+		}
+
+		private int Claim(
+			UnsafeBuffer termBuffer, 
+			int tailCounterOffset, 
+			int length, 
+			BufferClaim bufferClaim)
+		{
+			int frameLength = length + HEADER_LENGTH;
+			int alignedLength = Align(frameLength, FRAME_ALIGNMENT);
+			int termLength = termBuffer.Capacity;
+
+			int resultingOffset = _termOffset + alignedLength;
+			_logMetaDataBuffer.PutLongOrdered(tailCounterOffset, PackTail(_termId, resultingOffset));
+
+			if (resultingOffset > termLength)
+			{
+				resultingOffset = HandleEndOfLog(termBuffer, termLength);
+			}
+			else
+			{
+				_headerWriter.Write(termBuffer, _termOffset, frameLength, _termId);
+				bufferClaim.Wrap(termBuffer, _termOffset, frameLength);
+			}
+
+			return resultingOffset;
+		}
+
+		private int AppendPadding(
+			UnsafeBuffer termBuffer, 
+			int tailCounterOffset, 
+			int length)
+		{
+			int frameLength = length + HEADER_LENGTH;
+			int alignedLength = Align(frameLength, FRAME_ALIGNMENT);
+			int termLength = termBuffer.Capacity;
+
+			int resultingOffset = _termOffset + alignedLength;
+			_logMetaDataBuffer.PutLongOrdered(tailCounterOffset, PackTail(_termId, resultingOffset));
+
+			if (resultingOffset > termLength)
+			{
+				resultingOffset = HandleEndOfLog(termBuffer, termLength);
+			}
+			else
+			{
+				_headerWriter.Write(termBuffer, _termOffset, frameLength, _termId);
+				FrameType(termBuffer, _termOffset, PADDING_FRAME_TYPE);
+				FrameLengthOrdered(termBuffer, _termOffset, frameLength);
+			}
+
+			return resultingOffset;
+		}
+
+		private int AppendBlock(
+			UnsafeBuffer termBuffer, 
+			int tailCounterOffset,
+			IMutableDirectBuffer buffer, 
+			int offset,
+			int length)
+		{
+			int resultingOffset = _termOffset + length;
+			int lengthOfFirstFrame = buffer.GetInt(offset, ByteOrder.LittleEndian);
+
+			_logMetaDataBuffer.PutLongOrdered(tailCounterOffset, PackTail(_termId, resultingOffset));
+			buffer.PutInt(offset, 0, ByteOrder.LittleEndian);
+			termBuffer.PutBytes(_termOffset, buffer, offset, length);
+			FrameLengthOrdered(termBuffer, _termOffset, lengthOfFirstFrame);
+
+			return resultingOffset;
+		}
+	}
 }

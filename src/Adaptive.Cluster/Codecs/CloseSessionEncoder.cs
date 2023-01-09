@@ -12,7 +12,7 @@ public class CloseSessionEncoder
     public const ushort BLOCK_LENGTH = 8;
     public const ushort TEMPLATE_ID = 30;
     public const ushort SCHEMA_ID = 111;
-    public const ushort SCHEMA_VERSION = 8;
+    public const ushort SCHEMA_VERSION = 9;
 
     private CloseSessionEncoder _parentMessage;
     private IMutableDirectBuffer _buffer;

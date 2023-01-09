@@ -51,7 +51,7 @@ namespace Adaptive.Aeron
 
         private string _prefix;
         private string _media;
-        private readonly IDictionary<string, string> _params;
+        private readonly Map<string, string> _params;
         private readonly string[] _tags;
 
         /// <summary>
@@ -60,14 +60,14 @@ namespace Adaptive.Aeron
         /// <param name="prefix"> empty if no prefix is required otherwise expected to be 'aeron-spy' </param>
         /// <param name="media">  for the channel which is typically "udp" or "ipc". </param>
         /// <param name="params"> for the query string as key value pairs. </param>
-        public ChannelUri(string prefix, string media, IDictionary<string, string> @params)
+        public ChannelUri(string prefix, string media, Map<string, string> @params)
         {
             _prefix = prefix;
             _media = media;
             _params = @params;
-            _tags = SplitTags(_params.GetOrDefault(Aeron.Context.TAGS_PARAM_NAME));
+            _tags = SplitTags(_params.Get(Aeron.Context.TAGS_PARAM_NAME));
         }
-        
+
         /// <summary>
         /// The prefix for the channel.
         /// </summary>
@@ -108,7 +108,7 @@ namespace Adaptive.Aeron
             _media = media;
             return this;
         }
-        
+
         /// <summary>
         /// Is the channel <seealso cref="Media()"/> equal to <seealso cref="Aeron.Context.UDP_MEDIA"/>.
         /// </summary>
@@ -137,7 +137,7 @@ namespace Adaptive.Aeron
         /// <returns> the value if set for the key otherwise null. </returns>
         public string Get(string key)
         {
-            return _params[key];
+            return _params.Get(key);
         }
 
         /// <summary>
@@ -148,7 +148,7 @@ namespace Adaptive.Aeron
         /// <returns> the value if set for the key otherwise the default value provided. </returns>
         public string Get(string key, string defaultValue)
         {
-            string value = _params[key];
+            string value = _params.Get(key);
             if (null != value)
             {
                 return value;
@@ -165,9 +165,9 @@ namespace Adaptive.Aeron
         /// <returns> the existing value otherwise null. </returns>
         public string Put(string key, string value)
         {
-            return _params[key] = value;
+            return _params.Put(key, value);
         }
-        
+
         /// <summary>
         /// Remove a key pair in the map of params.
         /// </summary>
@@ -175,15 +175,7 @@ namespace Adaptive.Aeron
         /// <returns> the previous value of the param or null. </returns>
         public string Remove(string key)
         {
-            String ret = null;
-            
-            if (_params.ContainsKey(key))
-            {
-                ret = _params[key];
-            }
-            
-            _params.Remove(key);
-            return ret;
+            return _params.Remove(key);
         }
 
         /// <summary>
@@ -204,7 +196,7 @@ namespace Adaptive.Aeron
         /// <returns> channel tag if it exists or null if not in this URI. </returns>
         public string ChannelTag()
         {
-            return  (null != _tags && _tags.Length > CHANNEL_TAG_INDEX) ? _tags[CHANNEL_TAG_INDEX] : null;
+            return (null != _tags && _tags.Length > CHANNEL_TAG_INDEX) ? _tags[CHANNEL_TAG_INDEX] : null;
         }
 
         /// <summary>
@@ -220,7 +212,8 @@ namespace Adaptive.Aeron
 
         private bool Equals(ChannelUri other)
         {
-            return _prefix == other._prefix && _media == other._media && Equals(_params, other._params) && Equals(_tags, other._tags);
+            return _prefix == other._prefix && _media == other._media && Equals(_params, other._params) &&
+                   Equals(_tags, other._tags);
         }
 
         public override bool Equals(object obj)
@@ -304,7 +297,7 @@ namespace Adaptive.Aeron
             {
                 throw new ArgumentException("invalid position: " + position);
             }
-            
+
             int bitsToShift = LogBufferDescriptor.PositionBitsToShift(termLength);
             int termId = LogBufferDescriptor.ComputeTermIdFromPosition(position, bitsToShift, initialTermId);
             int termOffset = (int)(position & (termLength - 1));
@@ -315,7 +308,7 @@ namespace Adaptive.Aeron
             Put(Aeron.Context.TERM_LENGTH_PARAM_NAME, Convert.ToString(termLength));
         }
 
-        
+
         /// <summary>
         /// Parse a <seealso cref="string"/> which contains an Aeron URI.
         /// </summary>
@@ -345,7 +338,7 @@ namespace Adaptive.Aeron
             }
 
             var builder = new StringBuilder();
-            var @params = new Dictionary<string, string>();
+            var @params = new Map<string, string>();
             string media = null;
             string key = null;
 
@@ -367,7 +360,8 @@ namespace Adaptive.Aeron
                             case ':':
                             case '|':
                             case '=':
-                                throw new ArgumentException("encountered '" + c + "' within media definition at index " + i + " in " + cs);
+                                throw new ArgumentException("encountered '" + c +
+                                                            "' within media definition at index " + i + " in " + cs);
 
                             default:
                                 builder.Append(c);
@@ -383,7 +377,7 @@ namespace Adaptive.Aeron
                             {
                                 throw new ArgumentException("empty key not allowed at index " + i + " in " + cs);
                             }
-                            
+
                             key = builder.ToString();
                             builder.Length = 0;
                             state = State.PARAMS_VALUE;
@@ -394,15 +388,16 @@ namespace Adaptive.Aeron
                             {
                                 throw new ArgumentException("invalid end of key at index " + i + " in " + cs);
                             }
-                            
+
                             builder.Append(c);
                         }
+
                         break;
 
                     case State.PARAMS_VALUE:
                         if (c == '|')
                         {
-                            @params[key] = builder.ToString();
+                            @params.Put(key, builder.ToString());
                             builder.Length = 0;
                             state = State.PARAMS_KEY;
                         }
@@ -426,7 +421,7 @@ namespace Adaptive.Aeron
                     break;
 
                 case State.PARAMS_VALUE:
-                    @params[key] = builder.ToString();
+                    @params.Put(key, builder.ToString());
                     break;
 
                 default:
@@ -449,7 +444,7 @@ namespace Adaptive.Aeron
 
             return channelUri.ToString();
         }
-        
+
         /// <summary>
         /// Is the param value tagged? (starts with the "tag:" prefix).
         /// </summary>
@@ -473,7 +468,7 @@ namespace Adaptive.Aeron
         {
             return IsTagged(paramValue) ? long.Parse(paramValue.Substring(4, paramValue.Length - 4)) : INVALID_TAG;
         }
-        
+
         /// <summary>
         /// Create a channel URI for a destination, i.e. a channel that uses {@code media} and {@code interface} parameters
         /// of the original channel and adds specified {@code endpoint} to it. For example given the input channel is
@@ -497,6 +492,45 @@ namespace Adaptive.Aeron
             return uri;
         }
 
+        /// <summary>
+        /// Uses the supplied endpoint to resolve any wildcard ports. If the existing endpoint has a value of "0" for then
+        /// the port of this endpoint will be used instead. If the endpoint is not specified in this uri, then the whole
+        /// supplied endpoint is used. If the endpoint exists and has a non-wildcard port, then the existing endpoint is
+        /// retained.
+        /// </summary>
+        /// <param name="resolvedEndpoint"> The endpoint to supply a resolved endpoint port. </param>
+        /// <exception cref="ArgumentException"> if the supplied resolvedEndpoint does not have a port or the port is zero. </exception>
+        /// <exception cref="ArgumentNullException"> if the supplied resolvedEndpoint is null </exception>
+        public void ReplaceEndpointWildcardPort(string resolvedEndpoint)
+        {
+            if (null == resolvedEndpoint)
+            {
+                throw new ArgumentNullException(nameof(resolvedEndpoint), "resolvedEndpoint is null");
+            }
+
+            int portSeparatorIndex = resolvedEndpoint.LastIndexOf(':');
+            if (-1 == portSeparatorIndex)
+            {
+                throw new ArgumentException("No port specified on resolvedEndpoint=" + resolvedEndpoint);
+            }
+
+            if (resolvedEndpoint.EndsWith(":0", StringComparison.Ordinal))
+            {
+                throw new ArgumentException("Wildcard port specified on resolvedEndpoint=" + resolvedEndpoint);
+            }
+
+            string existingEndpoint = Get(Aeron.Context.ENDPOINT_PARAM_NAME);
+            if (null == existingEndpoint)
+            {
+                Put(Aeron.Context.ENDPOINT_PARAM_NAME, resolvedEndpoint);
+            }
+            else if (existingEndpoint.EndsWith(":0", StringComparison.Ordinal))
+            {
+                string endpoint = existingEndpoint.Substring(0, existingEndpoint.Length - 2) +
+                                  resolvedEndpoint.Substring(resolvedEndpoint.LastIndexOf(':'));
+                Put(Aeron.Context.ENDPOINT_PARAM_NAME, endpoint);
+            }
+        }
 
         private static void ValidateMedia(string media)
         {
@@ -508,7 +542,7 @@ namespace Adaptive.Aeron
             throw new ArgumentException("unknown media: " + media);
         }
 
-        
+
         private static bool StartsWith(string input, int position, string prefix)
         {
             if (input.Length - position < prefix.Length)
@@ -526,7 +560,7 @@ namespace Adaptive.Aeron
 
             return true;
         }
-        
+
         private static string[] SplitTags(string tagsValue)
         {
             string[] tags = ArrayUtil.EMPTY_STRING_ARRAY;
@@ -536,7 +570,7 @@ namespace Adaptive.Aeron
                 int tagCount = CountTags(tagsValue);
                 if (tagCount == 1)
                 {
-                    tags = new[]{tagsValue};
+                    tags = new[] { tagsValue };
                 }
                 else
                 {

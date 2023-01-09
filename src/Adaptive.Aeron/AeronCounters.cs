@@ -1,4 +1,7 @@
+using System;
+using Adaptive.Aeron.Exceptions;
 using Adaptive.Aeron.Status;
+using Adaptive.Agrona.Concurrent.Status;
 
 namespace Adaptive.Aeron
 {
@@ -147,7 +150,7 @@ namespace Adaptive.Aeron
 		/// an archive agent.
 		/// </summary>
 		public const int ARCHIVE_CYCLE_TIME_THRESHOLD_EXCEEDED_TYPE_ID = 104;
-		
+
 		// Cluster counters
 
 		/// <summary>
@@ -224,7 +227,7 @@ namespace Adaptive.Aeron
 		/// Counter type id for the clustered service error count.
 		/// </summary>
 		public const int CLUSTER_CLUSTERED_SERVICE_ERROR_COUNT_TYPE_ID = 215;
-		
+
 		/// <summary>
 		/// The type id of the <seealso cref="Counter"/> used for keeping track of the max duty cycle time of the consensus module.
 		/// </summary>
@@ -246,5 +249,54 @@ namespace Adaptive.Aeron
 		/// the service container.
 		/// </summary>
 		public const int CLUSTER_CLUSTERED_SERVICE_CYCLE_TIME_THRESHOLD_EXCEEDED_TYPE_ID = 219;
+
+		/// <summary>
+		/// The type id of the <seealso cref="Counter"/> used for the warm standby state.
+		/// </summary>
+		public const int CLUSTER_STANDBY_STATE_TYPE_ID = 220;
+
+		/// <summary>
+		/// Counter type id for the clustered service error count.
+		/// </summary>
+		public const int CLUSTER_STANDBY_ERROR_COUNT_TYPE_ID = 221;
+
+		/// <summary>
+		/// Counter type for responses to heartbeat request from the cluster.
+		/// </summary>
+		public const int CLUSTER_STANDBY_HEARTBEAT_RESPONSE_COUNT_TYPE_ID = 222;
+
+		/// <summary>
+		/// Checks that the counter specified by {@code counterId} has the counterTypeId that matches the specified value.
+		/// If not it will throw a <seealso cref="ConfigurationException"/>.
+		/// </summary>
+		/// <param name="countersReader"> to look up the counter type id. </param>
+		/// <param name="counterId"> counter to reference. </param>
+		/// <param name="expectedCounterTypeId"> the expected type id for the counter. </param>
+		/// <exception cref="ConfigurationException"> if the type id does not match. </exception>
+		/// <exception cref="ArgumentException"> if the counterId is not valid. </exception>
+		public static void ValidateCounterTypeId(CountersReader countersReader, int counterId,
+			int expectedCounterTypeId)
+		{
+			int counterTypeId = countersReader.GetCounterTypeId(counterId);
+			if (expectedCounterTypeId != counterTypeId)
+			{
+				throw new ConfigurationException("The type for counterId=" + counterId + ", typeId=" + counterTypeId +
+				                                 " does not match the expected=" + expectedCounterTypeId);
+			}
+		}
+
+		/// <summary>
+		/// Convenience overload for <seealso cref="AeronCounters.ValidateCounterTypeId(CountersReader, int, int)"/>
+		/// </summary>
+		/// <param name="aeron"> to resolve a counters' reader. </param>
+		/// <param name="counter"> to be checked for the appropriate counterTypeId. </param>
+		/// <param name="expectedCounterTypeId"> the expected type id for the counter. </param>
+		/// <exception cref="ConfigurationException"> if the type id does not match. </exception>
+		/// <exception cref="ArgumentException"> if the counterId is not valid. </exception>
+		/// <seealso cref="AeronCounters.ValidateCounterTypeId(CountersReader, int, int)"/>
+		public static void ValidateCounterTypeId(Aeron aeron, Counter counter, int expectedCounterTypeId)
+		{
+			ValidateCounterTypeId(aeron.CountersReader, counter.Id, expectedCounterTypeId);
+		}
 	}
 }

@@ -216,7 +216,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// <param name="termOffset"> at which a frame begins. </param>
         /// <returns> the value of the frame type header. </returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int FrameFlags(IAtomicBuffer buffer, int termOffset)
+        public static byte FrameFlags(IAtomicBuffer buffer, int termOffset)
         {
             return buffer.GetByte(FlagsOffset(termOffset));
         }

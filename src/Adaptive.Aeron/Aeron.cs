@@ -1043,6 +1043,12 @@ namespace Adaptive.Aeron
                 if (null == _clientLock)
                 {
                     _clientLock = new ReentrantLock();
+                } 
+                else if (_clientLock is NoOpLock && !_useConductorAgentInvoker)
+                {
+                    throw new AeronException(
+                        "Must use Aeron.Context.UseConductorAgentInvoker(true) when Aeron.Context.ClientLock(...) " +
+                        "is using a NoOpLock");
                 }
 
                 if (_epochClock == null)
@@ -1458,7 +1464,7 @@ namespace Adaptive.Aeron
             }
 
             /// <summary>
-            /// Setup a default callback for when an <seealso cref="Image"/> is available.
+            /// Set up a default callback for when an <seealso cref="Image"/> is available.
             /// </summary>
             /// <param name="handler"> Callback method for handling available image notifications. </param>
             /// <returns> this for a fluent API. </returns>
@@ -1478,7 +1484,7 @@ namespace Adaptive.Aeron
             }
 
             /// <summary>
-            /// Setup a default callback for when an <seealso cref="Image"/> is unavailable.
+            /// Set up a default callback for when an <seealso cref="Image"/> is unavailable.
             /// </summary>
             /// <param name="handler"> Callback method for handling unavailable image notifications. </param>
             /// <returns> this for a fluent API. </returns>
@@ -1498,7 +1504,7 @@ namespace Adaptive.Aeron
             }
 
             /// <summary>
-            /// Setup a callback for when a counter is available. This will be added to the list first before
+            /// Set up a callback for when a counter is available. This will be added to the list first before
             /// additional handler are added with <seealso cref="Aeron.AddAvailableCounterHandler"/>.
             /// </summary>
             /// <param name="handler"> to be called for handling available counter notifications. </param>
@@ -1519,7 +1525,7 @@ namespace Adaptive.Aeron
             }
 
             /// <summary>
-            /// Setup a callback for when a counter is unavailable. This will be added to the list first before
+            /// Set up a callback for when a counter is unavailable. This will be added to the list first before
             /// additional handler are added with <seealso cref="Aeron.AddUnavailableCounterHandler"/>.
             /// </summary>
             /// <param name="handler"> to be called for handling unavailable counter notifications. </param>
@@ -2229,19 +2235,23 @@ namespace Adaptive.Aeron
             public static int PrintErrorLog(IAtomicBuffer errorBuffer, TextWriter @out)
             {
                 int distinctErrorCount = 0;
-                if (errorBuffer.Capacity > 0 && ErrorLogReader.HasErrors(errorBuffer))
+                if (ErrorLogReader.HasErrors(errorBuffer))
                 {
-                    void ErrorConsumer(int count, long firstTimestamp, long lastTimestamp, string ex)
-                        => @out.WriteLine(
-                            $"***{Environment.NewLine}{count} observations from {new DateTime(firstTimestamp)} " +
-                            $"to {new DateTime(lastTimestamp)} " +
-                            $"for:{Environment.NewLine} {ex}");
+                    void ErrorConsumer(int count, long firstTimestamp, long lastTimestamp, string encodedException)
+                    {
+                        var fromDate = new DateTime(firstTimestamp);
+                        var toDate = new DateTime(lastTimestamp);
+
+                        @out.WriteLine();
+                        @out.WriteLine($"{count} observations from {fromDate} to {toDate} for:");
+                        @out.WriteLine(encodedException);
+                    }
 
                     distinctErrorCount = ErrorLogReader.Read(errorBuffer, ErrorConsumer);
-                }
 
-                @out.WriteLine();
-                @out.WriteLine("{0} distinct errors observed.", distinctErrorCount);
+                    @out.WriteLine();
+                    @out.WriteLine("{0} distinct errors observed.", distinctErrorCount);
+                }
 
                 return distinctErrorCount;
             }

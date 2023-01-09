@@ -20,6 +20,8 @@ namespace Adaptive.Cluster.Client
         private readonly SessionMessageHeaderDecoder sessionMessageHeaderDecoder = new SessionMessageHeaderDecoder();
         private readonly ControlledFragmentAssembler fragmentAssembler;
         private readonly Subscription subscription;
+
+        private Image egressImage;
         private long clusterSessionId = Aeron.Aeron.NULL_VALUE;
         private long correlationId = Aeron.Aeron.NULL_VALUE;
         private long leadershipTermId = Aeron.Aeron.NULL_VALUE;
@@ -51,6 +53,15 @@ namespace Adaptive.Cluster.Client
         public Subscription Subscription()
         {
             return subscription;
+        }
+
+        /// <summary>
+        /// <seealso cref="Image"/> for the egress response from the cluster which can be used for connection tracking.
+        /// </summary>
+        /// <returns> <seealso cref="Image"/> for the egress response from the cluster which can be used for connection tracking. </returns>
+        public Image EgressImage()
+        {
+            return egressImage;
         }
 
         /// <summary>
@@ -106,7 +117,7 @@ namespace Adaptive.Cluster.Client
         {
             return eventCode;
         }
-        
+
         /// <summary>
         /// Version response from the server in semantic version form.
         /// </summary>
@@ -216,6 +227,7 @@ namespace Adaptive.Cluster.Client
                     version = sessionEventDecoder.Version();
                     detail = sessionEventDecoder.Detail();
                     isPollComplete = true;
+                    egressImage = (Image)header.Context;
                     return BREAK;
 
                 case NewLeaderEventDecoder.TEMPLATE_ID:
@@ -227,6 +239,7 @@ namespace Adaptive.Cluster.Client
                     leaderMemberId = newLeaderEventDecoder.LeaderMemberId();
                     detail = newLeaderEventDecoder.IngressEndpoints();
                     isPollComplete = true;
+                    egressImage = (Image)header.Context;
                     return BREAK;
 
                 case ChallengeDecoder.TEMPLATE_ID:

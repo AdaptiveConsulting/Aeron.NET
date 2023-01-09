@@ -19,12 +19,14 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using Adaptive.Aeron.Exceptions;
 using Adaptive.Aeron.LogBuffer;
-using Adaptive.Aeron.Protocol;
 using Adaptive.Aeron.Status;
 using Adaptive.Agrona;
 using Adaptive.Agrona.Concurrent;
 using Adaptive.Agrona.Concurrent.Status;
 using Adaptive.Agrona.Util;
+using static Adaptive.Aeron.LogBuffer.FrameDescriptor;
+using static Adaptive.Aeron.Protocol.DataHeaderFlyweight;
+using static Adaptive.Agrona.BitUtil;
 
 namespace Adaptive.Aeron
 {
@@ -103,8 +105,8 @@ namespace Adaptive.Aeron
         {
             var logMetaDataBuffer = logBuffers.MetaDataBuffer();
             TermBufferLength = logBuffers.TermLength();
-            MaxMessageLength = FrameDescriptor.ComputeMaxMessageLength(TermBufferLength);
-            MaxPayloadLength = LogBufferDescriptor.MtuLength(logMetaDataBuffer) - DataHeaderFlyweight.HEADER_LENGTH;
+            MaxMessageLength = ComputeMaxMessageLength(TermBufferLength);
+            MaxPayloadLength = LogBufferDescriptor.MtuLength(logMetaDataBuffer) - HEADER_LENGTH;
             _maxPossiblePosition = TermBufferLength * (1L << 31);
             _conductor = clientConductor;
             Channel = channel;
@@ -112,14 +114,20 @@ namespace Adaptive.Aeron
             SessionId = sessionId;
             InitialTermId = LogBufferDescriptor.InitialTermId(logMetaDataBuffer);
             _termBuffers = logBuffers.DuplicateTermBuffers();
-            _logMetaDataBuffer = logMetaDataBuffer;
+            this._logMetaDataBuffer = logMetaDataBuffer;
             _logBuffers = logBuffers;
             _originalRegistrationId = originalRegistrationId;
             RegistrationId = registrationId;
             _positionLimit = positionLimit;
             _channelStatusId = channelStatusId;
             PositionBitsToShift = LogBufferDescriptor.PositionBitsToShift(TermBufferLength);
-            _headerWriter = new HeaderWriter(LogBufferDescriptor.DefaultFrameHeader(_logMetaDataBuffer));
+            _headerWriter = new HeaderWriter(LogBufferDescriptor.DefaultFrameHeader(this._logMetaDataBuffer));
+
+            for (int i = 0; i < LogBufferDescriptor.PARTITION_COUNT; i++)
+            {
+                int tailCounterOffset = LogBufferDescriptor.TERM_TAIL_COUNTERS_OFFSET + (i * SIZE_OF_LONG);
+                logMetaDataBuffer.BoundsCheck(tailCounterOffset, SIZE_OF_LONG);
+            }
         }
 
         /// <summary>
@@ -327,7 +335,7 @@ namespace Adaptive.Aeron
         /// <summary>
         /// Available window for offering into a publication before the <seealso cref="PositionLimit"/> is reached.
         /// </summary>
-        /// <returns>  window for offering into a publication before the <seealso cref="PositionLimit"/> is reached. If
+        /// <returns> window for offering into a publication before the <seealso cref="PositionLimit"/> is reached. If
         /// the publication is closed then <seealso cref="CLOSED"/> will be returned. </returns>
         public abstract long AvailableWindow { get; }
 
@@ -508,7 +516,7 @@ namespace Adaptive.Aeron
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected long BackPressureStatus(long currentPosition, int messageLength)
         {
-            if ((currentPosition + messageLength) >= _maxPossiblePosition)
+            if ((currentPosition + Align(messageLength + HEADER_LENGTH, FRAME_ALIGNMENT)) >= _maxPossiblePosition)
             {
                 return MAX_POSITION_EXCEEDED;
             }

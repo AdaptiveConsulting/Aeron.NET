@@ -9,10 +9,10 @@ namespace Adaptive.Archiver.Codecs {
 
 public class ReplicateRequest2Decoder
 {
-    public const ushort BLOCK_LENGTH = 60;
+    public const ushort BLOCK_LENGTH = 64;
     public const ushort TEMPLATE_ID = 66;
     public const ushort SCHEMA_ID = 101;
-    public const ushort SCHEMA_VERSION = 6;
+    public const ushort SCHEMA_VERSION = 7;
 
     private ReplicateRequest2Decoder _parentMessage;
     private IDirectBuffer _buffer;
@@ -520,6 +520,60 @@ public class ReplicateRequest2Decoder
     }
 
 
+    public static int FileIoMaxLengthId()
+    {
+        return 12;
+    }
+
+    public static int FileIoMaxLengthSinceVersion()
+    {
+        return 7;
+    }
+
+    public static int FileIoMaxLengthEncodingOffset()
+    {
+        return 60;
+    }
+
+    public static int FileIoMaxLengthEncodingLength()
+    {
+        return 4;
+    }
+
+    public static string FileIoMaxLengthMetaAttribute(MetaAttribute metaAttribute)
+    {
+        switch (metaAttribute)
+        {
+            case MetaAttribute.EPOCH: return "unix";
+            case MetaAttribute.TIME_UNIT: return "nanosecond";
+            case MetaAttribute.SEMANTIC_TYPE: return "";
+            case MetaAttribute.PRESENCE: return "required";
+        }
+
+        return "";
+    }
+
+    public static int FileIoMaxLengthNullValue()
+    {
+        return -2147483648;
+    }
+
+    public static int FileIoMaxLengthMinValue()
+    {
+        return -2147483647;
+    }
+
+    public static int FileIoMaxLengthMaxValue()
+    {
+        return 2147483647;
+    }
+
+    public int FileIoMaxLength()
+    {
+        return _buffer.GetInt(_offset + 60, ByteOrder.LittleEndian);
+    }
+
+
     public static int SrcControlChannelId()
     {
         return 9;
@@ -814,7 +868,12 @@ public class ReplicateRequest2Decoder
         builder.Append("SrcControlStreamId=");
         builder.Append(SrcControlStreamId());
         builder.Append('|');
-        //Token{signal=BEGIN_VAR_DATA, name='srcControlChannel', referencedName='null', description='null', id=9, version=0, deprecated=0, encodedLength=0, offset=60, componentTokenCount=6, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=BEGIN_FIELD, name='fileIoMaxLength', referencedName='null', description='null', id=12, version=7, deprecated=0, encodedLength=0, offset=60, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=ENCODING, name='int32', referencedName='null', description='null', id=-1, version=0, deprecated=0, encodedLength=4, offset=60, componentTokenCount=1, encoding=Encoding{presence=REQUIRED, primitiveType=INT32, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        builder.Append("FileIoMaxLength=");
+        builder.Append(FileIoMaxLength());
+        builder.Append('|');
+        //Token{signal=BEGIN_VAR_DATA, name='srcControlChannel', referencedName='null', description='null', id=9, version=0, deprecated=0, encodedLength=0, offset=64, componentTokenCount=6, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
         builder.Append("SrcControlChannel=");
         builder.Append(SrcControlChannel());
         builder.Append('|');

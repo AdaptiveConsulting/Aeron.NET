@@ -9,10 +9,10 @@ namespace Adaptive.Cluster.Codecs {
 
 public class RequestVoteEncoder
 {
-    public const ushort BLOCK_LENGTH = 28;
+    public const ushort BLOCK_LENGTH = 32;
     public const ushort TEMPLATE_ID = 51;
     public const ushort SCHEMA_ID = 111;
-    public const ushort SCHEMA_VERSION = 8;
+    public const ushort SCHEMA_VERSION = 9;
 
     private RequestVoteEncoder _parentMessage;
     private IMutableDirectBuffer _buffer;
@@ -220,6 +220,38 @@ public class RequestVoteEncoder
     public RequestVoteEncoder CandidateMemberId(int value)
     {
         _buffer.PutInt(_offset + 24, value, ByteOrder.LittleEndian);
+        return this;
+    }
+
+
+    public static int ProtocolVersionEncodingOffset()
+    {
+        return 28;
+    }
+
+    public static int ProtocolVersionEncodingLength()
+    {
+        return 4;
+    }
+
+    public static int ProtocolVersionNullValue()
+    {
+        return 0;
+    }
+
+    public static int ProtocolVersionMinValue()
+    {
+        return 1;
+    }
+
+    public static int ProtocolVersionMaxValue()
+    {
+        return 16777215;
+    }
+
+    public RequestVoteEncoder ProtocolVersion(int value)
+    {
+        _buffer.PutInt(_offset + 28, value, ByteOrder.LittleEndian);
         return this;
     }
 

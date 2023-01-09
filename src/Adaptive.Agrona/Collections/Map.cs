@@ -9,7 +9,7 @@ namespace Adaptive.Agrona.Collections
     /// </summary>
     /// <typeparam name="TKey">The type of the keys in the map.</typeparam>
     /// <typeparam name="TValue">The type of the values in the map.</typeparam>
-    public class Map<TKey, TValue>
+    public class Map<TKey, TValue> : IEnumerable<KeyValuePair<TKey, TValue>>
     {
         private readonly IDictionary<TKey, TValue> _dictionaryImplementation = new Dictionary<TKey, TValue>();
         private readonly TValue _defaultValue;
@@ -24,9 +24,12 @@ namespace Adaptive.Agrona.Collections
             _dictionaryImplementation.Clear();
         }
 
-        public void Put(TKey key, TValue value)
+        public TValue Put(TKey key, TValue value)
         {
-            _dictionaryImplementation.Add(key, value);
+            var oldValue = Get(key);
+            
+            _dictionaryImplementation[key] = value;
+            return oldValue;
         }
 
         public TValue Remove(TKey key)
@@ -50,6 +53,16 @@ namespace Adaptive.Agrona.Collections
         public bool ContainsKey(TKey key)
         {
             return _dictionaryImplementation.ContainsKey(key);
+        }
+
+        public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator()
+        {
+            return _dictionaryImplementation.GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
         }
     }
 }
