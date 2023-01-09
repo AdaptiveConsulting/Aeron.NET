@@ -344,7 +344,7 @@ namespace Adaptive.Aeron
         /// <returns> next correlation id that is unique for the Media Driver. </returns>
         public long NextCorrelationId()
         {
-            if (_conductor.IsClosed())
+            if (_isClosed.Get())
             {
                 throw new AeronException("client is closed");
             }
@@ -360,7 +360,7 @@ namespace Adaptive.Aeron
         {
             get
             {
-                if (_conductor.IsClosed())
+                if (_isClosed.Get())
                 {
                     throw new AeronException("client is closed");
                 }
