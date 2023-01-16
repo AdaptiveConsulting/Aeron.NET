@@ -13,13 +13,32 @@
     <description>Aeron Media Driver for use with Aeron.Client.</description>
     <copyright>Copyright 2023</copyright>
     <tags>aeron driver messaging networking transport udp ipc</tags>
+
+    <contentFiles>
+      <files include="any\any\driver\media-driver.jar" buildAction="None"/>
+      <files include="any\any\driver\start-media-driver.bat" buildAction="None"/>
+      <files include="any\any\driver\start-clustered-media-driver.bat" buildAction="None"/>
+      <files include="any\any\driver\aeron-stat.bat" buildAction="None"/>
+      <files include="any\any\driver\errors.bat" buildAction="None"/>
+      <files include="any\any\readme.txt" buildAction="None"/>
+    </contentFiles>
+
   </metadata>
   <files>
+    <!-- old format -->
     <file src="media-driver.jar" target="content\driver\media-driver.jar"/>
     <file src="start-media-driver.bat" target="content\driver\start-media-driver.bat"/>
     <file src="start-clustered-media-driver.bat" target="content\driver\start-clustered-media-driver.bat"/>
     <file src="aeron-stat.bat" target="content\driver\aeron-stat.bat"/>
     <file src="errors.bat" target="content\driver\errors.bat"/>
-    <file src="readme.txt" target=""/>
+    <file src="readme.txt" target="content"/>
+
+    <!-- new format -->
+    <file src="media-driver.jar" target="contentFiles\any\any\driver\media-driver.jar"/>
+    <file src="start-media-driver.bat" target="contentFiles\any\any\driver\start-media-driver.bat"/>
+    <file src="start-clustered-media-driver.bat" target="contentFiles\any\any\driver\start-clustered-media-driver.bat"/>
+    <file src="aeron-stat.bat" target="contentFiles\any\any\driver\aeron-stat.bat"/>
+    <file src="errors.bat" target="contentFiles\any\any\driver\errors.bat"/>
+    <file src="readme.txt" target="contentFiles\any\any\readme.txt"/>
   </files>
 </package>
