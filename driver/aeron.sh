@@ -1,3 +1,8 @@
+
+# to start aeron driver frist I had to start with -Daeron.sample.embeddedMediaDriver=true
+# then it created media drive in /dev/shm in form aeron-USERNAME
+# java -cp media-driver.jar -Daeron.sample.embeddedMediaDriver=true  io.aeron.samples.AeronStat
+
 #!/bin/bash
 
 # ---------------------------------------------------------------------
@@ -6,7 +11,7 @@
 
 message()
 {
-  TITLE="Cannot start AeronStat"
+  TITLE="Cannot start" "$1"
   if [ -n "$(command -v zenity)" ]; then
     zenity --error --title="$TITLE" --text="$1" --no-wrap
   elif [ -n "$(command -v kdialog)" ]; then
@@ -71,9 +76,32 @@ fi
 CLASS_PATH="$DRIVER_HOME/media-driver.jar"
 
 # ---------------------------------------------------------------------
-# Run the AeronStat.
+# Run the Aeron program.
 # ---------------------------------------------------------------------
 IFS="$(printf '\n\t')"
-# shellcheck disable=SC2086
-exec "$JAVA_BIN" \
-    -classpath "$CLASS_PATH" -Daeron.dir=/dev/shm/aeron-"$USER" io.aeron.samples.AeronStat
+
+if [ $1 = "AeronStat" ]; then 
+    # shellcheck disable=SC2086
+    exec "$JAVA_BIN" \
+        -classpath "$CLASS_PATH" -Daeron.dir=/dev/shm/aeron-"$USER" io.aeron.samples.AeronStat
+elif [ $1 = "ErrorStat" ]; then 
+    # shellcheck disable=SC2086
+    exec "$JAVA_BIN" \
+        -classpath "$CLASS_PATH" io.aeron.samples.ErrorStat
+elif [ $1 = "MediaDriver" ]; then 
+    # shellcheck disable=SC2086
+    exec "$JAVA_BIN" \
+        -classpath "$CLASS_PATH" io.aeron.driver.MediaDriver        
+elif [ $1 = "MediaDriver" ]; then 
+    # shellcheck disable=SC2086
+    exec "$JAVA_BIN" \
+        -classpath "$CLASS_PATH" \
+        -Daeron.cluster.ingress.channel=aeron:udp?endpoint=localhost:9010 \
+        -Daeron.archive.control.channel=aeron:udp?endpoint=localhost:8010 \
+        -Daeron.archive.replication.channel=aeron:udp?endpoint=localhost:0 \
+        -Daeron.cluster.replication.channel=aeron:udp?endpoint=localhost:9011 \
+        -Daeron.cluster.members="0,localhost:20000,localhost:20001,localhost:20002,localhost:0,localhost:8010" \
+        io.aeron.cluster.ClusteredMediaDriver
+else
+    message "Valid parameters are: AeronStat, ErrorStat, MediaDriver or ClusteredMediaDriver"        
+fi
