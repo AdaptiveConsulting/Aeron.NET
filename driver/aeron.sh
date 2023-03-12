@@ -1,8 +1,3 @@
-
-# to start aeron driver frist I had to start with -Daeron.sample.embeddedMediaDriver=true
-# then it created media drive in /dev/shm in form aeron-USERNAME
-# java -cp media-driver.jar -Daeron.sample.embeddedMediaDriver=true  io.aeron.samples.AeronStat
-
 #!/bin/bash
 
 # ---------------------------------------------------------------------
@@ -80,10 +75,20 @@ CLASS_PATH="$DRIVER_HOME/media-driver.jar"
 # ---------------------------------------------------------------------
 IFS="$(printf '\n\t')"
 
+
+# to start aeron driver frist I had to start with -Daeron.sample.embeddedMediaDriver=true
+# then it created media drive in /dev/shm in form aeron-USERNAME
+# java -cp media-driver.jar -Daeron.sample.embeddedMediaDriver=true  io.aeron.samples.AeronStat
+
 if [ $1 = "AeronStat" ]; then 
     # shellcheck disable=SC2086
     exec "$JAVA_BIN" \
         -classpath "$CLASS_PATH" -Daeron.dir=/dev/shm/aeron-"$USER" io.aeron.samples.AeronStat
+elif [ $1 = "AeronStatInit" ]; then 
+    # run this first time if the AeronStat failes to start
+    # shellcheck disable=SC2086
+    exec "$JAVA_BIN" \
+        -classpath "$CLASS_PATH" -Daeron.sample.embeddedMediaDriver=true io.aeron.samples.AeronStat
 elif [ $1 = "ErrorStat" ]; then 
     # shellcheck disable=SC2086
     exec "$JAVA_BIN" \
