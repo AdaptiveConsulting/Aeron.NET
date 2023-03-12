@@ -44,7 +44,7 @@ CONFIG_HOME="${XDG_CONFIG_HOME:-${HOME}/.config}"
 
 # ---------------------------------------------------------------------
 # Locate a JRE installation directory command -v will be used to run the IDE.
-# Try (in order): $RIDER_JDK, .../rider.jdk, .../jbr, $JDK_HOME, $JAVA_HOME, "java" in $PATH.
+# Try (in order): $JDK_HOME, $JAVA_HOME, "java" in $PATH.
 # ---------------------------------------------------------------------
 JRE=""
 
@@ -64,7 +64,7 @@ else
 fi
 
 if [ -z "$JAVA_BIN" ] || [ ! -x "$JAVA_BIN" ]; then
-  message "No JRE found. Please make sure \$RIDER_JDK, \$JDK_HOME, or \$JAVA_HOME point to valid JRE installation."
+  message "No JRE found. Please make sure \$JDK_HOME, or \$JAVA_HOME point to valid JRE installation."
   exit 1
 fi
 
@@ -74,11 +74,6 @@ CLASS_PATH="$DRIVER_HOME/media-driver.jar"
 # Run the Aeron program.
 # ---------------------------------------------------------------------
 IFS="$(printf '\n\t')"
-
-
-# to start aeron driver frist I had to start with -Daeron.sample.embeddedMediaDriver=true
-# then it created media drive in /dev/shm in form aeron-USERNAME
-# java -cp media-driver.jar -Daeron.sample.embeddedMediaDriver=true  io.aeron.samples.AeronStat
 
 if [ $1 = "AeronStat" ]; then 
     # shellcheck disable=SC2086
