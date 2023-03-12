@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # ---------------------------------------------------------------------
-# startup script.
+# startup script to run Aeron Tools.
 # ---------------------------------------------------------------------
 
 message()
@@ -79,8 +79,8 @@ if [ $1 = "AeronStat" ]; then
     # shellcheck disable=SC2086
     exec "$JAVA_BIN" \
         -classpath "$CLASS_PATH" -Daeron.dir=/dev/shm/aeron-"$USER" io.aeron.samples.AeronStat
-elif [ $1 = "AeronStatInit" ]; then 
-    # run this first time if the AeronStat failes to start
+elif [ $1 = "AeronStatEmbeddedMediaDriver" ]; then 
+    # run this if you do not have MediaDriver running
     # shellcheck disable=SC2086
     exec "$JAVA_BIN" \
         -classpath "$CLASS_PATH" -Daeron.sample.embeddedMediaDriver=true io.aeron.samples.AeronStat
@@ -88,10 +88,27 @@ elif [ $1 = "ErrorStat" ]; then
     # shellcheck disable=SC2086
     exec "$JAVA_BIN" \
         -classpath "$CLASS_PATH" io.aeron.samples.ErrorStat
-elif [ $1 = "MediaDriver" ]; then 
+elif [ $1 = "StreamStat" ]; then 
     # shellcheck disable=SC2086
     exec "$JAVA_BIN" \
-        -classpath "$CLASS_PATH" io.aeron.driver.MediaDriver        
+        -classpath "$CLASS_PATH" io.aeron.samples.StreamStat   
+elif [ $1 = "BacklogStat" ]; then 
+    # shellcheck disable=SC2086
+    exec "$JAVA_BIN" \
+        -classpath "$CLASS_PATH" io.aeron.samples.BacklogStat   
+elif [ $1 = "LossStat" ]; then 
+    # shellcheck disable=SC2086
+    exec "$JAVA_BIN" \
+        -classpath "$CLASS_PATH" io.aeron.samples.LossStat   
+elif [ $1 = "LogInspector" ]; then 
+    # shellcheck disable=SC2086
+    exec "$JAVA_BIN" \
+        -classpath "$CLASS_PATH" io.aeron.samples.LogInspector $2                            
+elif [ $1 = "MediaDriver" ]; then 
+    echo Media Driver Started...
+    # shellcheck disable=SC2086
+    exec "$JAVA_BIN" \
+        -classpath "$CLASS_PATH" --illegal-access=warn io.aeron.driver.MediaDriver        
 elif [ $1 = "MediaDriver" ]; then 
     # shellcheck disable=SC2086
     exec "$JAVA_BIN" \
@@ -101,7 +118,7 @@ elif [ $1 = "MediaDriver" ]; then
         -Daeron.archive.replication.channel=aeron:udp?endpoint=localhost:0 \
         -Daeron.cluster.replication.channel=aeron:udp?endpoint=localhost:9011 \
         -Daeron.cluster.members="0,localhost:20000,localhost:20001,localhost:20002,localhost:0,localhost:8010" \
-        io.aeron.cluster.ClusteredMediaDriver
+        io.aeron.cluster.ClusteredMediaDriver  
 else
-    message "Valid parameters are: AeronStat, ErrorStat, MediaDriver or ClusteredMediaDriver"        
+    message "Valid parameters are: AeronStat, AeronStatEmbeddedMediaDriver, ErrorStat, StreamStat, BacklogStat, LossStat, LogInspector, MediaDriver or ClusteredMediaDriver"        
 fi
