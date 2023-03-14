@@ -109,7 +109,8 @@ elif [ $1 = "MediaDriver" ]; then
     # shellcheck disable=SC2086
     exec "$JAVA_BIN" \
         -classpath "$CLASS_PATH" --illegal-access=warn io.aeron.driver.MediaDriver        
-elif [ $1 = "MediaDriver" ]; then 
+elif [ $1 = "MediaDriverCluster" ]; then 
+    echo Media Driver Cluster Started...
     # shellcheck disable=SC2086
     exec "$JAVA_BIN" \
         -classpath "$CLASS_PATH" \
