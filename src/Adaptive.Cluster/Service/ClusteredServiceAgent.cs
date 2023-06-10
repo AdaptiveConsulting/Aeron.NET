@@ -950,7 +950,7 @@ namespace Adaptive.Cluster.Service
                 lastSlowTickNs = nowNs;
                 long nowMs = epochClock.Time();
 
-                if (commitPosition.IsClosed)
+                if (null != commitPosition && commitPosition.IsClosed)
                 { 
                     ctx.ErrorLog().Record(new AeronException(
                         "commit-pos counter unexpectedly closed, terminating", Category.WARN));
