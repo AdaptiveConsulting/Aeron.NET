@@ -479,7 +479,7 @@ namespace Adaptive.Cluster.Service
         {
             if (!ctx.AppVersionValidator().IsVersionCompatible(ctx.AppVersion(), appVersion))
             {
-                ctx.ErrorHandler()(new ClusterException("incompatible version: " +
+                ctx.ErrorHandler().OnError(new ClusterException("incompatible version: " +
                                                         SemanticVersion.ToString(ctx.AppVersion()) + " log=" +
                                                         SemanticVersion.ToString(appVersion)));
                 throw new AgentTerminationException();

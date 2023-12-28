@@ -436,5 +436,12 @@ namespace Adaptive.Aeron
 
 			return false;
 		}
+
+		public override string ToString()
+		{
+			return "DriverProxy{" +
+			       "clientId=" + _clientId +
+			       '}';
+		}
 	}
 }

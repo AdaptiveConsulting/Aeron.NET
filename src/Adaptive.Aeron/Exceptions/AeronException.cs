@@ -59,5 +59,16 @@ namespace Adaptive.Aeron.Exceptions
         {
             Category = category;
         }
+
+        /// <summary>
+        /// Determines if a <seealso cref="System.Exception"/> is a <seealso cref="Category.FATAL"/> if an <seealso cref="AeronException"/>.
+        /// </summary>
+        /// <param name="t"> throwable to check if fatal. </param>
+        /// <returns> true if this is an AeronException with a category set to <seealso cref="Category.FATAL"/>,
+        /// false otherwise. </returns>
+        public static bool IsFatal(in Exception t)
+        {
+            return t is AeronException exception && Category.FATAL == exception.Category;
+        }
     }
 }

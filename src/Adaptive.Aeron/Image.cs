@@ -45,13 +45,14 @@ namespace Adaptive.Aeron
 
         private readonly int _termLengthMask;
 
+        private long _eosPosition = long.MaxValue;
         private bool _isEos;
         private volatile bool _isClosed;
 
         private readonly IPosition _subscriberPosition;
         private readonly UnsafeBuffer[] _termBuffers;
         private readonly Header _header;
-        private readonly ErrorHandler _errorHandler;
+        private readonly IErrorHandler _errorHandler;
         private readonly LogBuffers _logBuffers;
 
         internal Image()
@@ -69,7 +70,7 @@ namespace Adaptive.Aeron
         /// <param name="sourceIdentity">     of the source sending the stream of messages. </param>
         /// <param name="correlationId">      of the request to the media driver. </param>
         public Image(Subscription subscription, int sessionId, IPosition subscriberPosition, LogBuffers logBuffers,
-            ErrorHandler errorHandler, string sourceIdentity, long correlationId)
+            IErrorHandler errorHandler, string sourceIdentity, long correlationId)
         {
             Subscription = subscription;
             SessionId = sessionId;
@@ -200,6 +201,24 @@ namespace Adaptive.Aeron
 
                 return _subscriberPosition.Get() >=
                        LogBufferDescriptor.EndOfStreamPosition(_logBuffers.MetaDataBuffer());
+            }
+        }
+        
+        /// <summary>
+        /// The position the stream reached when EOS was received from the publisher. The position will be
+        /// <seealso cref="Long.MAX_VALUE"/> until the stream ends and EOS is set.
+        /// </summary>
+        /// <returns> position the stream reached when EOS was received from the publisher. </returns>
+        public long EndOfStreamPosition
+        {
+            get
+            {
+                if (_isClosed)
+                {
+                    return _eosPosition;
+                }
+
+                return LogBufferDescriptor.EndOfStreamPosition(_logBuffers.MetaDataBuffer());
             }
         }
 
@@ -355,7 +374,7 @@ namespace Adaptive.Aeron
             }
             catch (Exception ex)
             {
-                _errorHandler(ex);
+                _errorHandler.OnError(ex);
             }
             finally
             {
@@ -449,7 +468,7 @@ namespace Adaptive.Aeron
             }
             catch (Exception ex)
             {
-                _errorHandler(ex);
+                _errorHandler.OnError(ex);
             }
             finally
             {
@@ -571,7 +590,7 @@ namespace Adaptive.Aeron
             }
             catch (Exception ex)
             {
-                _errorHandler(ex);
+                _errorHandler.OnError(ex);
             }
             finally
             {
@@ -695,7 +714,7 @@ namespace Adaptive.Aeron
             }
             catch (Exception ex)
             {
-                _errorHandler(ex);
+                _errorHandler.OnError(ex);
             }
 
             return resultingPosition;
@@ -745,7 +764,7 @@ namespace Adaptive.Aeron
                 }
                 catch (Exception ex)
                 {
-                    _errorHandler(ex);
+                    _errorHandler.OnError(ex);
                 }
                 finally
                 {
@@ -783,7 +802,8 @@ namespace Adaptive.Aeron
         internal void Close()
         {
             _finalPosition = _subscriberPosition.GetVolatile();
-            _isEos = _finalPosition >= LogBufferDescriptor.EndOfStreamPosition(_logBuffers.MetaDataBuffer());
+            _eosPosition = LogBufferDescriptor.EndOfStreamPosition(_logBuffers.MetaDataBuffer());
+            _isEos = _finalPosition >= _eosPosition;
             _isClosed = true;
         }
 
@@ -798,6 +818,7 @@ namespace Adaptive.Aeron
                    $"termLength={TermBufferLength}, " +
                    $"joinPosition={JoinPosition}, " +
                    $"position={Position}, " +
+                   $"endOfStreamPosition={EndOfStreamPosition}, " +
                    $"activeTransportCount={ActiveTransportCount()}, " +
                    $"sourceIdentity='{SourceIdentity}', " +
                    $"subscription={Subscription}" +

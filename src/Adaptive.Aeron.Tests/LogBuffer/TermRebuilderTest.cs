@@ -40,7 +40,7 @@ namespace Adaptive.Aeron.Tests.LogBuffer
         [Test]
         public void ShouldInsertIntoEmptyBuffer()
         {
-            UnsafeBuffer packet = new UnsafeBuffer(new byte[256]);
+            UnsafeBuffer packet = new UnsafeBuffer(BufferUtil.Allocate(256));
             const int termOffset = 0;
             const int srcOffset = 0;
             const int length = 256;
@@ -63,7 +63,7 @@ namespace Adaptive.Aeron.Tests.LogBuffer
             const int srcOffset = 0;
             int tail = TERM_BUFFER_CAPACITY - frameLength;
             int termOffset = tail;
-            UnsafeBuffer packet = new UnsafeBuffer(new byte[frameLength]);
+            UnsafeBuffer packet = new UnsafeBuffer(BufferUtil.Allocate(frameLength));
             packet.PutShort(FrameDescriptor.TypeOffset(srcOffset), (short)FrameDescriptor.PADDING_FRAME_TYPE);
             packet.PutInt(srcOffset, frameLength);
 
@@ -80,7 +80,7 @@ namespace Adaptive.Aeron.Tests.LogBuffer
             const int srcOffset = 0;
             int tail = alignedFrameLength;
             int termOffset = tail;
-            UnsafeBuffer packet = new UnsafeBuffer(new byte[alignedFrameLength]);
+            UnsafeBuffer packet = new UnsafeBuffer(BufferUtil.Allocate(alignedFrameLength));
 
             TermRebuilder.Insert(_termBuffer, termOffset, packet, alignedFrameLength);
 
@@ -93,7 +93,7 @@ namespace Adaptive.Aeron.Tests.LogBuffer
             const int frameLength = 50;
             int alignedFrameLength = BitUtil.Align(frameLength, FrameDescriptor.FRAME_ALIGNMENT);
             const int srcOffset = 0;
-            UnsafeBuffer packet = new UnsafeBuffer(new byte[alignedFrameLength]);
+            UnsafeBuffer packet = new UnsafeBuffer(BufferUtil.Allocate(alignedFrameLength));
             int termOffset = alignedFrameLength * 2;
 
             TermRebuilder.Insert(_termBuffer, termOffset, packet, alignedFrameLength);
@@ -107,7 +107,7 @@ namespace Adaptive.Aeron.Tests.LogBuffer
             const int frameLength = 50;
             int alignedFrameLength = BitUtil.Align(frameLength, FrameDescriptor.FRAME_ALIGNMENT);
             const int srcOffset = 0;
-            UnsafeBuffer packet = new UnsafeBuffer(new byte[alignedFrameLength]);
+            UnsafeBuffer packet = new UnsafeBuffer(BufferUtil.Allocate(alignedFrameLength));
             int termOffset = alignedFrameLength * 2;
             
             TermRebuilder.Insert(_termBuffer, termOffset, packet, alignedFrameLength);

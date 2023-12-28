@@ -44,18 +44,14 @@ namespace Adaptive.Aeron.Tests
         private AvailableImageHandler AvailableImageHandler;
         private UnavailableImageHandler UnavailableImageHandler;
 
-        private readonly UnsafeBuffer valuesBuffer = new UnsafeBuffer(new byte[16 * 1024]);
-        private readonly UnsafeBuffer metaDataBuffer = new UnsafeBuffer(new byte[64 * 1024]);
         private readonly UnsafeBuffer tempBuffer = new UnsafeBuffer(new byte[1024]);
-        private CountersManager countersManager;
+        private CountersManager countersManager = Tests.NewCountersManager(16 * 1024);
 
         private Subscription Subscription;
 
         [SetUp]
         public void Setup()
         {
-            countersManager  = new CountersManager(metaDataBuffer, valuesBuffer, Encoding.ASCII);
-            
             ImageOneMock = A.Fake<Image>();
             ImageTwoMock = A.Fake<Image>();
             

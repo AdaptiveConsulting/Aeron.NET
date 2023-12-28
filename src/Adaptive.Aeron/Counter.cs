@@ -41,7 +41,7 @@ namespace Adaptive.Aeron
         /// <summary>
         /// Return the registration id used to register this counter with the media driver.
         /// </summary>
-        /// <value> registration id </value>
+        /// <value> the registration id used to register this counter with the media driver. </value>
         public long RegistrationId { get; }
 
         /// <summary>

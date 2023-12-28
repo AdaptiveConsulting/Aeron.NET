@@ -43,7 +43,7 @@ namespace Adaptive.Agrona.Concurrent
         public bool IsClosed { get; private set; }
 
         private readonly AtomicCounter _errorCounter;
-        private readonly ErrorHandler _errorHandler;
+        private readonly IErrorHandler _errorHandler;
         private readonly IIdleStrategy _idleStrategy;
         private readonly IAgent _agent;
         private readonly AtomicReference<Thread> _thread = new AtomicReference<Thread>();
@@ -55,7 +55,7 @@ namespace Adaptive.Agrona.Concurrent
         /// <param name="errorHandler"> to be called if an <seealso cref="Exception"/> is encountered </param>
         /// <param name="errorCounter"> to be incremented each time an exception is encountered. This may be null.</param>
         /// <param name="agent">        to be run in this thread. </param>
-        public AgentRunner(IIdleStrategy idleStrategy, ErrorHandler errorHandler, AtomicCounter errorCounter, IAgent agent)
+        public AgentRunner(IIdleStrategy idleStrategy, IErrorHandler errorHandler, AtomicCounter errorCounter, IAgent agent)
         {
             if (idleStrategy == null) throw new ArgumentNullException(nameof(idleStrategy));
             if (errorHandler == null) throw new ArgumentNullException(nameof(errorHandler));
@@ -188,7 +188,7 @@ namespace Adaptive.Agrona.Concurrent
                 }
                 catch (Exception ex)
                 {
-                    _errorHandler(ex);
+                    _errorHandler.OnError(ex);
                 }
             }
             if (TOMBSTONE != thread)
@@ -246,7 +246,7 @@ namespace Adaptive.Agrona.Concurrent
             if (_isRunning)
             {
                 _errorCounter?.Increment();
-                _errorHandler(exception);
+                _errorHandler.OnError(exception);
             }
         }
     }

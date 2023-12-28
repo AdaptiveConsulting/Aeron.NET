@@ -74,7 +74,7 @@ namespace Adaptive.Aeron.Tests
 
         private readonly TestEpochClock EpochClock = new TestEpochClock();
         private readonly TestNanoClock NanoClock = new TestNanoClock();
-        private ErrorHandler MockClientErrorHandler;
+        private IErrorHandler MockClientErrorHandler;
 
         private ClientConductor Conductor;
         private DriverProxy DriverProxy;
@@ -84,20 +84,32 @@ namespace Adaptive.Aeron.Tests
         private ILogBuffersFactory LogBuffersFactory;
         private ILock mockClientLock = A.Fake<ILock>();
         private Aeron MockAeron;
+        
         private bool SuppressPrintError = false;
-
-
-        [SetUp]
-        public void SetUp()
+        
+        private class PrintingErrorHandler : IErrorHandler
         {
-            MockClientErrorHandler = A.Fake<ErrorHandler>(options => options.Wrapping(throwable =>
+            private readonly ClientConductorTest _test;
+
+            public PrintingErrorHandler(ClientConductorTest test)
             {
-                if (!SuppressPrintError)
+                _test = test;
+            }
+
+            public void OnError(Exception throwable)
+            {
+                if (!_test.SuppressPrintError)
                 {
                     Console.WriteLine(throwable.ToString());
                     Console.Write(throwable.StackTrace);
                 }
-            }));
+            }
+        }
+
+        [SetUp]
+        public void SetUp()
+        {
+            MockClientErrorHandler = A.Fake<IErrorHandler>(options => options.Wrapping(new PrintingErrorHandler(this)));
 
             PublicationReady = new PublicationBuffersReadyFlyweight();
             SubscriptionReady = new SubscriptionReadyFlyweight();
@@ -492,7 +504,7 @@ namespace Adaptive.Aeron.Tests
             NanoClock.AdvancedNanos(1);
             Conductor.DoWork();
 
-            A.CallTo(() => MockClientErrorHandler(A<ConductorServiceTimeoutException>._)).MustHaveHappened();
+            A.CallTo(() => MockClientErrorHandler.OnError(A<ConductorServiceTimeoutException>._)).MustHaveHappened();
 
             Assert.True(Conductor.IsTerminating());
         }
@@ -504,7 +516,7 @@ namespace Adaptive.Aeron.Tests
 
             Conductor.OnClientTimeout();
 
-            A.CallTo(() => MockClientErrorHandler.Invoke(A<Exception>._)).MustHaveHappened();
+            A.CallTo(() => MockClientErrorHandler.OnError(A<Exception>._)).MustHaveHappened();
 
             bool threwException = false;
             try
@@ -537,7 +549,7 @@ namespace Adaptive.Aeron.Tests
 
             Conductor.DoWork();
 
-            A.CallTo(() => MockClientErrorHandler.Invoke(A<Exception>._)).MustNotHaveHappened();
+            A.CallTo(() => MockClientErrorHandler.OnError(A<Exception>._)).MustNotHaveHappened();
 
             Assert.False(Conductor.IsClosed());
         }

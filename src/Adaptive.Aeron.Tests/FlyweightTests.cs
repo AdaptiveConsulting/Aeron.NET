@@ -15,6 +15,7 @@
  */
 
 using Adaptive.Aeron.Protocol;
+using Adaptive.Agrona;
 using Adaptive.Agrona.Concurrent;
 using NUnit.Framework;
 
@@ -38,7 +39,7 @@ namespace Adaptive.Aeron.Tests
             aBuff = new UnsafeBuffer(buffer);
         }
 
-        private readonly byte[] buffer = new byte[512];
+        private readonly ByteBuffer buffer = BufferUtil.Allocate(512);
 
         private UnsafeBuffer aBuff;
         private readonly HeaderFlyweight encodeHeader = new HeaderFlyweight();
@@ -57,14 +58,14 @@ namespace Adaptive.Aeron.Tests
             encodeHeader.FrameLength(8);
 
             // little endian
-            Assert.AreEqual((byte)0x08, buffer[0]);
-            Assert.AreEqual((byte)0x00, buffer[1]);
-            Assert.AreEqual((byte)0x00, buffer[2]);
-            Assert.AreEqual((byte)0x00, buffer[3]);
-            Assert.AreEqual((byte)0x01, buffer[4]);
-            Assert.AreEqual((byte)0xC0, buffer[5]);
-            Assert.AreEqual((byte)HeaderFlyweight.HDR_TYPE_DATA, buffer[6]);
-            Assert.AreEqual((byte)0x00, buffer[7]);
+            Assert.AreEqual((byte)0x08, buffer.Get(0));
+            Assert.AreEqual((byte)0x00, buffer.Get(1));
+            Assert.AreEqual((byte)0x00, buffer.Get(2));
+            Assert.AreEqual((byte)0x00, buffer.Get(3));
+            Assert.AreEqual((byte)0x01, buffer.Get(4));
+            Assert.AreEqual((byte)0xC0, buffer.Get(5));
+            Assert.AreEqual((byte)HeaderFlyweight.HDR_TYPE_DATA, buffer.Get(6));
+            Assert.AreEqual((byte)0x00, buffer.Get(7));
         }
 
         [Test]

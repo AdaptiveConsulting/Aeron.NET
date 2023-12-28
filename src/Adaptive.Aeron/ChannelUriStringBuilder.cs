@@ -175,17 +175,15 @@ namespace Adaptive.Aeron
                 throw new InvalidOperationException("either 'endpoint' or 'control' must be specified for UDP.");
             }
 
-            int count = 0;
-            count += null == _initialTermId ? 0 : 1;
-            count += null == _termId ? 0 : 1;
-            count += null == _termOffset ? 0 : 1;
-
-            if (count > 0)
+            
+            bool anyNonNull = null != _initialTermId || null != _termId || null != _termOffset;
+            bool anyNull = null == _initialTermId || null == _termId || null == _termOffset;
+            if (anyNonNull)
             {
-                if (count < 3)
+                if (anyNull)
                 {
                     throw new ArgumentException(
-                        "if any of then a complete set of 'initialTermId', 'termId', and 'termOffset' must be provided");
+                        "either all or none of the parameters ['initialTermId', 'termId', 'termOffset'] must be provided");
                 }
 
                 if (_termId - _initialTermId < 0)
@@ -204,14 +202,14 @@ namespace Adaptive.Aeron
         }
 
         /// <summary>
-        /// Set the prefix for taking an addition action such as spying on an outgoing publication with "aeron-spy".
+        /// Set the prefix for taking an additional action such as spying on an outgoing publication with "aeron-spy".
         /// </summary>
         /// <param name="prefix"> to be applied to the URI before the scheme. </param>
         /// <returns> this for a fluent API. </returns>
         /// <seealso cref="ChannelUri.SPY_QUALIFIER"/>
         public ChannelUriStringBuilder Prefix(string prefix)
         {
-            if (null != prefix && !prefix.Equals("") && !prefix.Equals(ChannelUri.SPY_QUALIFIER))
+            if (null != prefix && !string.IsNullOrEmpty(prefix) && !prefix.Equals(ChannelUri.SPY_QUALIFIER))
             {
                 throw new ArgumentException("invalid prefix: " + prefix);
             }
@@ -350,7 +348,7 @@ namespace Adaptive.Aeron
         /// <summary>
         /// Set the control address:port pair for dynamically joining a multi-destination-cast publication.
         /// </summary>
-        /// <param name="controlEndpoint"> for joining a MDC control socket. </param>
+        /// <param name="controlEndpoint"> for joining MDC control socket. </param>
         /// <returns> this for a fluent API. </returns>
         /// <seealso cref="Aeron.Context.MDC_CONTROL_MODE_PARAM_NAME"/>
         public ChannelUriStringBuilder ControlEndpoint(string controlEndpoint)
@@ -503,7 +501,14 @@ namespace Adaptive.Aeron
             }
             else
             {
-                return Ttl(Convert.ToInt32(ttlValue));
+                try
+                {
+                    return Ttl(Convert.ToInt32(ttlValue));
+                }
+                catch (FormatException ex)
+                {
+                    throw new ArgumentException("'ttl' must be a value integer", ex);
+                }
             }
         }
 
@@ -664,7 +669,14 @@ namespace Adaptive.Aeron
             }
             else
             {
-                return InitialTermId(Convert.ToInt32(initialTermIdValue));
+                try
+                {
+                    return InitialTermId(Convert.ToInt32(initialTermIdValue));
+                }
+                catch (FormatException ex)
+                {
+                    throw new ArgumentException("'initial-term-id' must be a valid integer", ex);
+                }
             }
         }
 
@@ -707,7 +719,14 @@ namespace Adaptive.Aeron
             }
             else
             {
-                return TermId(Convert.ToInt32(termIdValue));
+                try
+                {
+                    return TermId(Convert.ToInt32(termIdValue));
+                }
+                catch (FormatException ex)
+                {
+                    throw new ArgumentException("'term-id' must be a valid integer", ex);
+                }
             }
         }
 
@@ -763,7 +782,14 @@ namespace Adaptive.Aeron
             }
             else
             {
-                return TermOffset(Convert.ToInt32(termOffsetValue));
+                try
+                {
+                    return TermOffset(Convert.ToInt32(termOffsetValue));
+                }
+                catch (FormatException ex)
+                {
+                    throw new ArgumentException("'term-offset' must be a valid integer", ex);
+                }
             }
         }
 
@@ -808,7 +834,14 @@ namespace Adaptive.Aeron
                 else
                 {
                     IsSessionIdTagged(false);
-                    SessionId(Convert.ToInt32(sessionIdStr));
+                    try
+                    {
+                        SessionId(Convert.ToInt32(sessionIdStr));
+                    }
+                    catch (FormatException ex)
+                    {
+                        throw new ArgumentException("'session-id' must be a valid integer", ex);
+                    }
                 }
             }
             else
@@ -1350,7 +1383,14 @@ namespace Adaptive.Aeron
             }
             else
             {
-                return GroupTag(Convert.ToInt64(groupTagValue));
+                try
+                {
+                    return GroupTag(Convert.ToInt64(groupTagValue));
+                }
+                catch (FormatException ex)
+                {
+                    throw new ArgumentException("'gtag# must be a valid long value", ex);
+                }
             }
         }
 
@@ -1776,166 +1816,51 @@ namespace Adaptive.Aeron
         {
             _sb.Length = 0;
 
-            if (null != _prefix && !"".Equals(_prefix))
+
+            if (!string.IsNullOrEmpty(_prefix))
             {
                 _sb.Append(_prefix).Append(':');
             }
 
             _sb.Append(ChannelUri.AERON_SCHEME).Append(':').Append(_media).Append('?');
 
-            if (null != _tags)
-            {
-                _sb.Append(Aeron.Context.TAGS_PARAM_NAME).Append('=').Append(_tags).Append('|');
-            }
-
-            if (null != _endpoint)
-            {
-                _sb.Append(Aeron.Context.ENDPOINT_PARAM_NAME).Append('=').Append(_endpoint).Append('|');
-            }
-
-            if (null != _networkInterface)
-            {
-                _sb.Append(Aeron.Context.INTERFACE_PARAM_NAME).Append('=').Append(_networkInterface).Append('|');
-            }
-
-            if (null != _controlEndpoint)
-            {
-                _sb.Append(Aeron.Context.MDC_CONTROL_PARAM_NAME).Append('=')
-                    .Append(_controlEndpoint).Append('|');
-            }
-
-            if (null != _controlMode)
-            {
-                _sb.Append(Aeron.Context.MDC_CONTROL_MODE_PARAM_NAME).Append('=').Append(_controlMode).Append('|');
-            }
-
-            if (null != _mtu)
-            {
-                _sb.Append(Aeron.Context.MTU_LENGTH_PARAM_NAME).Append('=').Append(_mtu.Value).Append('|');
-            }
-
-            if (null != _termLength)
-            {
-                _sb.Append(Aeron.Context.TERM_LENGTH_PARAM_NAME).Append('=').Append(_termLength.Value).Append('|');
-            }
-
-            if (null != _initialTermId)
-            {
-                _sb.Append(Aeron.Context.INITIAL_TERM_ID_PARAM_NAME).Append('=').Append(_initialTermId.Value)
-                    .Append('|');
-            }
-
-            if (null != _termId)
-            {
-                _sb.Append(Aeron.Context.TERM_ID_PARAM_NAME).Append('=').Append(_termId.Value).Append('|');
-            }
-
-            if (null != _termOffset)
-            {
-                _sb.Append(Aeron.Context.TERM_OFFSET_PARAM_NAME).Append('=').Append(_termOffset.Value).Append('|');
-            }
+            AppendParameter(_sb, Aeron.Context.TAGS_PARAM_NAME, _tags);
+            AppendParameter(_sb, Aeron.Context.ENDPOINT_PARAM_NAME, _endpoint);
+            AppendParameter(_sb, Aeron.Context.INTERFACE_PARAM_NAME, _networkInterface);
+            AppendParameter(_sb, Aeron.Context.MDC_CONTROL_PARAM_NAME, _controlEndpoint);
+            AppendParameter(_sb, Aeron.Context.MDC_CONTROL_MODE_PARAM_NAME, _controlMode);
+            AppendParameter(_sb, Aeron.Context.MTU_LENGTH_PARAM_NAME, _mtu);
+            AppendParameter(_sb, Aeron.Context.TERM_LENGTH_PARAM_NAME, _termLength);
+            AppendParameter(_sb, Aeron.Context.INITIAL_TERM_ID_PARAM_NAME, _initialTermId);
+            AppendParameter(_sb, Aeron.Context.TERM_ID_PARAM_NAME, _termId);
+            AppendParameter(_sb, Aeron.Context.TERM_OFFSET_PARAM_NAME, _termOffset);
 
             if (null != _sessionId)
             {
-                _sb.Append(Aeron.Context.SESSION_ID_PARAM_NAME).Append('=')
-                    .Append(PrefixTag(_isSessionIdTagged, _sessionId.Value)).Append('|');
+                AppendParameter(_sb, Aeron.Context.SESSION_ID_PARAM_NAME, PrefixTag(_isSessionIdTagged, _sessionId));
             }
 
-            if (null != _ttl)
-            {
-                _sb.Append(Aeron.Context.TTL_PARAM_NAME).Append('=').Append(_ttl.Value).Append('|');
-            }
+            AppendParameter(_sb, Aeron.Context.TTL_PARAM_NAME, _ttl);
+            AppendParameter(_sb, Aeron.Context.RELIABLE_STREAM_PARAM_NAME, _reliable);
+            AppendParameter(_sb, Aeron.Context.LINGER_PARAM_NAME, _linger);
+            AppendParameter(_sb, Aeron.Context.ALIAS_PARAM_NAME, _alias);
+            AppendParameter(_sb, Aeron.Context.CONGESTION_CONTROL_PARAM_NAME, _cc);
+            AppendParameter(_sb, Aeron.Context.FLOW_CONTROL_PARAM_NAME, _fc);
+            AppendParameter(_sb, Aeron.Context.GROUP_TAG_PARAM_NAME, _groupTag);
+            AppendParameter(_sb, Aeron.Context.SPARSE_PARAM_NAME, _sparse);
+            AppendParameter(_sb, Aeron.Context.EOS_PARAM_NAME, _eos);
+            AppendParameter(_sb, Aeron.Context.TETHER_PARAM_NAME, _tether);
+            AppendParameter(_sb, Aeron.Context.GROUP_PARAM_NAME, _group);
+            AppendParameter(_sb, Aeron.Context.REJOIN_PARAM_NAME, _rejoin);
+            AppendParameter(_sb, Aeron.Context.SPIES_SIMULATE_CONNECTION_PARAM_NAME, _ssc);
+            AppendParameter(_sb, Aeron.Context.SOCKET_SNDBUF_PARAM_NAME, _socketSndbufLength);
+            AppendParameter(_sb, Aeron.Context.SOCKET_RCVBUF_PARAM_NAME, _socketRcvbufLength);
+            AppendParameter(_sb, Aeron.Context.RECEIVER_WINDOW_LENGTH_PARAM_NAME, _receiverWindowLength);
+            AppendParameter(_sb, Aeron.Context.MEDIA_RCV_TIMESTAMP_OFFSET_PARAM_NAME, _mediaReceiveTimestampOffset);
+            AppendParameter(_sb, Aeron.Context.CHANNEL_RECEIVE_TIMESTAMP_OFFSET_PARAM_NAME, _channelReceiveTimestampOffset);
+            AppendParameter(_sb, Aeron.Context.CHANNEL_SEND_TIMESTAMP_OFFSET_PARAM_NAME, _channelSendTimestampOffset);
 
-            if (null != _reliable)
-            {
-                _sb.Append(Aeron.Context.RELIABLE_STREAM_PARAM_NAME).Append('=').Append(_reliable).Append('|');
-            }
 
-            if (null != _linger)
-            {
-                _sb.Append(Aeron.Context.LINGER_PARAM_NAME).Append('=').Append(_linger.Value).Append('|');
-            }
-
-            if (null != _alias)
-            {
-                _sb.Append(Aeron.Context.ALIAS_PARAM_NAME).Append('=').Append(_alias).Append('|');
-            }
-
-            if (null != _cc)
-            {
-                _sb.Append(Aeron.Context.CONGESTION_CONTROL_PARAM_NAME).Append('=').Append(_cc).Append('|');
-            }
-
-            if (null != _fc)
-            {
-                _sb.Append(Aeron.Context.FLOW_CONTROL_PARAM_NAME).Append('=').Append(_fc).Append('|');
-            }
-
-            if (null != _groupTag)
-            {
-                _sb.Append(Aeron.Context.GROUP_TAG_PARAM_NAME).Append('=').Append(_groupTag).Append('|');
-            }
-
-            if (null != _sparse)
-            {
-                _sb.Append(Aeron.Context.SPARSE_PARAM_NAME).Append('=').Append(_sparse).Append('|');
-            }
-
-            if (null != _eos)
-            {
-                _sb.Append(Aeron.Context.EOS_PARAM_NAME).Append('=').Append(_eos).Append('|');
-            }
-
-            if (null != _tether)
-            {
-                _sb.Append(Aeron.Context.TETHER_PARAM_NAME).Append('=').Append(_tether).Append('|');
-            }
-
-            if (null != _group)
-            {
-                _sb.Append(Aeron.Context.GROUP_PARAM_NAME).Append('=').Append(_group).Append('|');
-            }
-
-            if (null != _rejoin)
-            {
-                _sb.Append(Aeron.Context.REJOIN_PARAM_NAME).Append('=').Append(_rejoin).Append('|');
-            }
-
-            if (null != _ssc)
-            {
-                _sb.Append(Aeron.Context.SPIES_SIMULATE_CONNECTION_PARAM_NAME).Append('=').Append(_ssc).Append('|');
-            }
-            
-            if (null != _socketSndbufLength)
-            {
-                _sb.Append(Aeron.Context.SOCKET_SNDBUF_PARAM_NAME).Append('=').Append(_socketSndbufLength).Append('|');
-            }
-
-            if (null != _socketRcvbufLength)
-            {
-                _sb.Append(Aeron.Context.SOCKET_RCVBUF_PARAM_NAME).Append('=').Append(_socketRcvbufLength).Append('|');
-            }
-
-            if (null != _receiverWindowLength)
-            {
-                _sb.Append(Aeron.Context.RECEIVER_WINDOW_LENGTH_PARAM_NAME).Append('=').Append(_receiverWindowLength).Append('|');
-            }
-
-            if (null != _mediaReceiveTimestampOffset)
-            {
-                _sb.Append(Aeron.Context.MEDIA_RCV_TIMESTAMP_OFFSET_PARAM_NAME).Append('=').Append(_mediaReceiveTimestampOffset).Append('|');
-            }
-
-            if (null != _channelReceiveTimestampOffset)
-            {
-                _sb.Append(Aeron.Context.CHANNEL_RECEIVE_TIMESTAMP_OFFSET_PARAM_NAME).Append('=').Append(_channelReceiveTimestampOffset).Append('|');
-            }
-
-            if (null != _channelSendTimestampOffset)
-            {
-                _sb.Append(Aeron.Context.CHANNEL_SEND_TIMESTAMP_OFFSET_PARAM_NAME).Append('=').Append(_channelSendTimestampOffset).Append('|');
-            }
-            
             char lastChar = _sb[_sb.Length - 1];
             if (lastChar == '|' || lastChar == '?')
             {
@@ -1945,6 +1870,14 @@ namespace Adaptive.Aeron
             return _sb.ToString();
         }
 
+        private static void AppendParameter(StringBuilder sb, String paramName, object paramValue)
+        {
+            if (null != paramValue)
+            {
+                sb.Append(paramName).Append('=').Append(paramValue).Append('|');
+            }
+        }
+        
         public override string ToString()
         {
             return Build();

@@ -92,7 +92,7 @@ namespace Adaptive.Aeron.Tests
 
             for (var i = 0; i < PARTITION_COUNT; i++)
             {
-                _termBuffers[i] = new UnsafeBuffer(BufferUtil.AllocateDirectAligned(TERM_LENGTH, FRAME_ALIGNMENT));
+                _termBuffers[i] = new UnsafeBuffer(BufferUtil.AllocateDirect(TERM_LENGTH));
             }
 
             _publication = new ConcurrentPublication(

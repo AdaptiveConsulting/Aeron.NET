@@ -7,7 +7,7 @@ namespace Adaptive.Agrona.Concurrent.Errors
     /// A logging <seealso cref="ErrorHandler"/> that records to a <seealso cref="DistinctErrorLog"/> and if the log is full then overflows
     /// to a <seealso cref="TextWriter"/>.
     /// </summary>
-    public class LoggingErrorHandler : IErrorHandler
+    public class LoggingErrorHandler : IErrorHandler, IDisposable
     {
         private readonly DistinctErrorLog _log;
         private readonly TextWriter _errorOverflow;
@@ -55,11 +55,23 @@ namespace Adaptive.Agrona.Concurrent.Errors
 
         public void OnError(Exception exception)
         {
-            if (!_log.Record(exception))
+            if (IsDiposed)
             {
-                _errorOverflow.WriteLine("Error Log is full, consider increasing length of error buffer");
+                _errorOverflow.WriteLine("error log is closed");
+                _errorOverflow.WriteLine(exception.ToString());
+            }
+            else if (!_log.Record(exception))
+            {
+                _errorOverflow.WriteLine("error log is full, consider increasing length of error buffer");
                 _errorOverflow.WriteLine(exception.ToString());
             }
         }
+
+        public void Dispose()
+        {
+            IsDiposed = true;
+        }
+
+        public bool IsDiposed { get; private set; }
     }
 }
