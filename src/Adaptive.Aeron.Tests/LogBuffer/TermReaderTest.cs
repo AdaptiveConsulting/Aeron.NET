@@ -35,7 +35,7 @@ namespace Adaptive.Aeron.Tests.LogBuffer
 
         private Header header;
         private UnsafeBuffer termBuffer;
-        private ErrorHandler errorHandler;
+        private IErrorHandler errorHandler;
         private IFragmentHandler handler;
         private IPosition subscriberPosition;
 
@@ -44,7 +44,7 @@ namespace Adaptive.Aeron.Tests.LogBuffer
         {
             header = new Header(INITIAL_TERM_ID, TERM_BUFFER_CAPACITY);
             termBuffer = A.Fake<UnsafeBuffer>();
-            errorHandler = A.Fake<ErrorHandler>();
+            errorHandler = A.Fake<IErrorHandler>();
             handler = A.Fake<IFragmentHandler>();
             subscriberPosition = A.Fake<IPosition>();
 

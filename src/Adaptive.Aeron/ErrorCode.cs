@@ -75,11 +75,16 @@ namespace Adaptive.Aeron
         /// Attempted to send a command that referred to a resource that was unavailable.
         /// </summary>
         RESOURCE_TEMPORARILY_UNAVAILABLE = 10,
-        
+
         /// <summary>
         /// Aeron encountered an error condition.
         /// </summary>
         GENERIC_ERROR = 11,
+
+        /// <summary>
+        /// Aeron encountered insufficient storage space while adding a resource.
+        /// </summary>
+        STORAGE_SPACE = 12,
 
         /// <summary>
         /// A code value returned was not known.

@@ -156,7 +156,7 @@ namespace Adaptive.Aeron
                     _subscriptionReady.Wrap(buffer, index);
 
                     long correlationId = _subscriptionReady.CorrelationId();
-                    if (correlationId == _activeCorrelationId)
+                    if (correlationId == _activeCorrelationId || _asyncCommandIdSet.Remove(correlationId))
                     {
                         _receivedCorrelationId = correlationId;
                         _conductor.OnNewSubscription(correlationId, _subscriptionReady.ChannelStatusCounterId());

@@ -34,6 +34,18 @@ namespace Adaptive.Aeron.Exceptions
             _errorCodeValue = errorCodeValue;
             _code = code;
         }
+        
+        /// <summary>
+        /// Construct a from another to be nested, useful when exceptions are reported asynchronously and need to be
+        /// rethrown from other places in the code.
+        /// </summary>
+        /// <param name="cause"> original RegistrationException to be stored as the exception cause. </param>
+        public RegistrationException(RegistrationException cause) : base(StripCategoryName(cause.Message), cause, cause.Category)
+        {
+            _correlationId = cause.CorrelationId();
+            _code = cause.ErrorCode();
+            _errorCodeValue = cause.ErrorCodeValue();
+        }
 
         /// <summary>
         /// Get the correlation id of the command to register the resource action.
@@ -63,6 +75,24 @@ namespace Adaptive.Aeron.Exceptions
             return _errorCodeValue;
         }
 
+        private static string StripCategoryName(string msg)
+        {
+            if (null != msg && msg.Length > 7)
+            {
+                if (msg.StartsWith("ERROR - ") || msg.StartsWith("FATAL - "))
+                {
+                    return msg.Substring(8);
+                }
+
+                if (msg.StartsWith("WARN - "))
+                {
+                    return msg.Substring(7);
+                }
+            }
+
+            return msg;
+        }
+        
         public override string Message =>
             "correlationId=" + _correlationId + ", errorCodeValue=" + _errorCodeValue + ", " + base.Message;
     }

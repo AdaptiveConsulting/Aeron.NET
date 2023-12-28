@@ -31,7 +31,7 @@ namespace Adaptive.Agrona.Concurrent
         public bool IsRunning { get; private set; } = false;
 
         private readonly AtomicCounter _errorCounter;
-        private readonly ErrorHandler _errorHandler;
+        private readonly IErrorHandler _errorHandler;
         private readonly IAgent _agent;
 
         /// <summary>
@@ -41,7 +41,7 @@ namespace Adaptive.Agrona.Concurrent
         /// <param name="errorCounter"> to be incremented each time an exception is encountered. This may be null. </param>
         /// <param name="agent">        to be run in this thread. </param>
         public AgentInvoker(
-            ErrorHandler errorHandler,
+            IErrorHandler errorHandler,
             AtomicCounter errorCounter,
             IAgent agent
         )
@@ -125,7 +125,7 @@ namespace Adaptive.Agrona.Concurrent
                         _errorCounter.Increment();
                     }
 
-                    _errorHandler(exception);
+                    _errorHandler.OnError(exception);
                 }
             }
 
@@ -157,7 +157,7 @@ namespace Adaptive.Agrona.Concurrent
                 _errorCounter.Increment();
             }
 
-            _errorHandler(exception);
+            _errorHandler.OnError(exception);
         }
     }
 }

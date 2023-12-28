@@ -253,7 +253,7 @@ namespace Adaptive.Aeron
         public override string ToString()
         {
             StringBuilder sb;
-            if (ReferenceEquals(_prefix, null) || "".Equals(_prefix))
+            if (ReferenceEquals(_prefix, null) || string.IsNullOrEmpty(_prefix))
             {
                 sb = new StringBuilder((_params.Count * 20) + 10);
             }

@@ -36,7 +36,7 @@ namespace Adaptive.Agrona
             ptr = (ptr + byteAlignment - 1) & ~(byteAlignment - 1);
             BufferPointer = new IntPtr(ptr);
         }
-
+        
         ~ByteBuffer()
         {
             Dispose(false);
@@ -55,6 +55,14 @@ namespace Adaptive.Agrona
             _bufferHandle.Free();
 
             _disposed = true;
+        }
+
+        public byte Get(int index)
+        {
+            unsafe
+            {
+                return *((byte*)BufferPointer.ToPointer() + index);
+            }
         }
     }
 }

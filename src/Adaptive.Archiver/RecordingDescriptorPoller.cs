@@ -19,7 +19,7 @@ namespace Adaptive.Archiver
         private readonly int fragmentLimit;
         private readonly Subscription subscription;
         private readonly ControlledFragmentAssembler fragmentAssembler;
-        private readonly ErrorHandler errorHandler;
+        private readonly IErrorHandler errorHandler;
         private readonly IRecordingSignalConsumer recordingSignalConsumer;
 
         private long correlationId;
@@ -36,7 +36,7 @@ namespace Adaptive.Archiver
         /// <param name="fragmentLimit">    to apply for each polling operation. </param>
         public RecordingDescriptorPoller(
             Subscription subscription,
-            ErrorHandler errorHandler, 
+            IErrorHandler errorHandler, 
             long controlSessionId, 
             int fragmentLimit) : 
             this(
@@ -58,7 +58,7 @@ namespace Adaptive.Archiver
         /// <param name="fragmentLimit">    to apply for each polling operation. </param>
         public RecordingDescriptorPoller(
             Subscription subscription,
-            ErrorHandler errorHandler,
+            IErrorHandler errorHandler,
             IRecordingSignalConsumer recordingSignalConsumer,
             long controlSessionId,
             int fragmentLimit)
@@ -188,7 +188,7 @@ namespace Adaptive.Archiver
                             }
                             else
                             {
-                                errorHandler?.Invoke(ex);
+                                errorHandler?.OnError(ex);
                             }
                         }
                     }

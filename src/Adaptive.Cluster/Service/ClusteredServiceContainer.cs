@@ -534,7 +534,7 @@ namespace Adaptive.Cluster.Service
             private IEpochClock epochClock;
             private INanoClock nanoClock;
             private DistinctErrorLog errorLog;
-            private ErrorHandler errorHandler;
+            private IErrorHandler errorHandler;
             private DelegatingErrorHandler delegatingErrorHandler;
             private AtomicCounter errorCounter;
             private CountedErrorHandler countedErrorHandler;
@@ -632,13 +632,13 @@ namespace Adaptive.Cluster.Service
                     if (null != delegatingErrorHandler)
                     {
                         delegatingErrorHandler.Next(errorHandler);
-                        errorHandler = delegatingErrorHandler.OnError;
+                        errorHandler = delegatingErrorHandler;
                     }
                 }
                 else
                 {
                     delegatingErrorHandler.Next(errorHandler);
-                    errorHandler = delegatingErrorHandler.OnError;
+                    errorHandler = delegatingErrorHandler;
                 }
 
                 if (null == aeron)
@@ -670,7 +670,7 @@ namespace Adaptive.Cluster.Service
                     countedErrorHandler = new CountedErrorHandler(errorHandler, errorCounter);
                     if (ownsAeronClient)
                     {
-                        aeron.Ctx.ErrorHandler(countedErrorHandler.OnError);
+                        aeron.Ctx.ErrorHandler(countedErrorHandler);
                     }
                 }
 
@@ -708,7 +708,7 @@ namespace Adaptive.Cluster.Service
                     .AeronClient(aeron)
                     .OwnsAeronClient(false)
                     .Lock(NoOpLock.Instance)
-                    .ErrorHandler(countedErrorHandler.OnError);
+                    .ErrorHandler(countedErrorHandler);
 
                 if (null == shutdownSignalBarrier)
                 {
@@ -1116,7 +1116,7 @@ namespace Adaptive.Cluster.Service
             /// Get the <seealso cref="Agrona.ErrorHandler"/> to be used by the <seealso cref="ClusteredServiceContainer"/>.
             /// </summary>
             /// <returns> the <seealso cref="Agrona.ErrorHandler"/> to be used by the <seealso cref="ClusteredServiceContainer"/>. </returns>
-            public ErrorHandler ErrorHandler()
+            public IErrorHandler ErrorHandler()
             {
                 return errorHandler;
             }
@@ -1126,7 +1126,7 @@ namespace Adaptive.Cluster.Service
             /// </summary>
             /// <param name="errorHandler"> the error handler to be used by the <seealso cref="ClusteredServiceContainer"/>. </param>
             /// <returns> this for a fluent API </returns>
-            public Context ErrorHandler(ErrorHandler errorHandler)
+            public Context ErrorHandler(IErrorHandler errorHandler)
             {
                 this.errorHandler = errorHandler;
                 return this;

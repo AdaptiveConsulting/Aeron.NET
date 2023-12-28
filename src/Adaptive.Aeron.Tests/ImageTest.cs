@@ -58,7 +58,7 @@ namespace Adaptive.Aeron.Tests
         private IControlledFragmentHandler MockControlledFragmentHandler;
         private IPosition Position;
         private LogBuffers LogBuffers;
-        private ErrorHandler ErrorHandler;
+        private IErrorHandler ErrorHandler;
         private Subscription Subscription;
 
         private UnsafeBuffer[] TermBuffers;
@@ -72,7 +72,7 @@ namespace Adaptive.Aeron.Tests
             MockControlledFragmentHandler = A.Fake<IControlledFragmentHandler>();
             Position = A.Fake<IPosition>(options => options.Wrapping(new AtomicLongPosition()));
             LogBuffers = A.Fake<LogBuffers>();
-            ErrorHandler = A.Fake<ErrorHandler>();
+            ErrorHandler = A.Fake<IErrorHandler>();
             Subscription = A.Fake<Subscription>();
 
             TermBuffers = new UnsafeBuffer[LogBufferDescriptor.PARTITION_COUNT];

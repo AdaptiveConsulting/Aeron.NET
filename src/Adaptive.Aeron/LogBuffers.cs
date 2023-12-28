@@ -63,6 +63,12 @@ namespace Adaptive.Aeron
                 var fileInfo = new FileInfo(logFileName);
 
                 var logLength = fileInfo.Length;
+                
+                if (logLength < LogBufferDescriptor.LOG_META_DATA_LENGTH)
+                {
+                    throw new InvalidOperationException(
+                        "Log file length less than min length of " + LogBufferDescriptor.LOG_META_DATA_LENGTH + ": length=" + logLength);
+                }
 
                 // if log length exceeds MAX_INT we need multiple mapped buffers, (see FileChannel.map doc).
                 if (logLength < int.MaxValue)
@@ -131,7 +137,7 @@ namespace Adaptive.Aeron
             }
             catch (InvalidOperationException)
             {
-                Dispose();
+                Dispose(logMetaDataBuffer, mappedByteBuffers);
                 throw;
             }
             
@@ -176,15 +182,7 @@ namespace Adaptive.Aeron
 
         public void Dispose()
         {
-            var length = _mappedByteBuffers.Length;
-            for (var i = 0; i < length; i++)
-            {
-                var buffer = _mappedByteBuffers[i];
-                IoUtil.Unmap(buffer);
-                _mappedByteBuffers[i] = null;
-            }
-            
-            _logMetaDataBuffer.Wrap(0, 0);
+           Dispose(_logMetaDataBuffer, _mappedByteBuffers);
         }
 
         /// <summary>
@@ -230,6 +228,25 @@ namespace Adaptive.Aeron
         public long LingerDeadlineNs()
         {
             return lingerDeadlineNs;
+        }
+
+        private static void Dispose(UnsafeBuffer logMetaDataBuffer, MappedByteBuffer[] mappedByteBuffers)
+        {
+            if (null != logMetaDataBuffer)
+            {
+                logMetaDataBuffer.Wrap(0, 0);
+            }
+
+            if (null != mappedByteBuffers)
+            {
+                for (int i = 0, length = mappedByteBuffers.Length; i < length; i++)
+                {
+                    MappedByteBuffer mappedByteBuffer = mappedByteBuffers[i];
+                    mappedByteBuffers[i] = null;
+                    IoUtil.Unmap(mappedByteBuffer);
+                }
+            }
+
         }
     }
 }

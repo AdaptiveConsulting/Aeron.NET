@@ -487,7 +487,7 @@ namespace Adaptive.Cluster.Client
 
             if (!_ctx.OwnsAeronClient())
             {
-                ErrorHandler errorHandler = _ctx.ErrorHandler();
+                IErrorHandler errorHandler = _ctx.ErrorHandler();
                 CloseHelper.Dispose(errorHandler, _subscription);
                 CloseHelper.Dispose(errorHandler, _publication);
             }
@@ -1164,7 +1164,7 @@ namespace Adaptive.Cluster.Client
             private ICredentialsSupplier _credentialsSupplier;
             private bool _ownsAeronClient = false;
             private bool _isIngressExclusive = true;
-            private ErrorHandler _errorHandler = Adaptive.Aeron.Aeron.Configuration.DEFAULT_ERROR_HANDLER;
+            private IErrorHandler _errorHandler = Adaptive.Aeron.Aeron.Configuration.DEFAULT_ERROR_HANDLER;
             private bool _isDirectAssemblers = false;
             private IEgressListener _egressListener;
             private IControlledEgressListener _controlledEgressListener;
@@ -1512,7 +1512,7 @@ namespace Adaptive.Cluster.Client
             /// Get the <seealso cref="Agrona.ErrorHandler"/> to be used for handling any exceptions.
             /// </summary>
             /// <returns> The <seealso cref="Agrona.ErrorHandler"/> to be used for handling any exceptions. </returns>
-            public ErrorHandler ErrorHandler()
+            public IErrorHandler ErrorHandler()
             {
                 return _errorHandler;
             }
@@ -1522,7 +1522,7 @@ namespace Adaptive.Cluster.Client
             /// </summary>
             /// <param name="errorHandler"> Method to handle objects of type Throwable. </param>
             /// <returns> this for fluent API. </returns>
-            public Context ErrorHandler(ErrorHandler errorHandler)
+            public Context ErrorHandler(IErrorHandler errorHandler)
             {
                 _errorHandler = errorHandler;
                 return this;
@@ -1709,7 +1709,7 @@ namespace Adaptive.Cluster.Client
             {
                 if (5 != step)
                 {
-                    ErrorHandler errorHandler = ctx.ErrorHandler();
+                    IErrorHandler errorHandler = ctx.ErrorHandler();
                     CloseHelper.Dispose(errorHandler, ingressPublication);
 
                     foreach (var memberEndpoint in memberByIdMap.Values)

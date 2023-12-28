@@ -2,7 +2,7 @@
 <package >
   <metadata>
     <id>Aeron.Driver</id>
-    <version>1.40.0</version>
+    <version>1.43.0</version>
     <title>Aeron Driver</title>
     <authors>Adaptive Financial Consulting Ltd.</authors>
     <owners>Adaptive Financial Consulting Ltd.</owners>
@@ -11,7 +11,7 @@
     <iconUrl>https://raw.githubusercontent.com/AdaptiveConsulting/Aeron.NET/master/images/adaptive.png</iconUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>Aeron Media Driver for use with Aeron.Client.</description>
-    <copyright>Copyright 2023</copyright>
+    <copyright>Copyright 2024</copyright>
     <tags>aeron driver messaging networking transport udp ipc</tags>
 
     <contentFiles>

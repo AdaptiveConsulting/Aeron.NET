@@ -112,7 +112,7 @@ namespace Adaptive.Archiver
                 if (!isClosed)
                 {
                     isClosed = true;
-                    ErrorHandler errorHandler = context.ErrorHandler();
+                    IErrorHandler errorHandler = context.ErrorHandler();
                     Exception resultEx = null;
 
                     if (archiveProxy.Pub().IsConnected)
@@ -148,7 +148,7 @@ namespace Adaptive.Archiver
                     {
                         if (null != errorHandler)
                         {
-                            errorHandler(resultEx);
+                            errorHandler.OnError(resultEx);
                         }
 
                         if (rethrow)
@@ -442,7 +442,7 @@ namespace Adaptive.Archiver
                 {
                     if (null != context.ErrorHandler())
                     {
-                        context.ErrorHandler()(new ArchiveException(NOT_CONNECTED_MSG));
+                        context.ErrorHandler().OnError(new ArchiveException(NOT_CONNECTED_MSG));
                     }
                     else
                     {
@@ -460,7 +460,7 @@ namespace Adaptive.Archiver
 
                             if (null != context.ErrorHandler())
                             {
-                                context.ErrorHandler()(ex);
+                                context.ErrorHandler().OnError(ex);
                             }
                             else
                             {
@@ -504,7 +504,7 @@ namespace Adaptive.Archiver
 
                             if (null != context.ErrorHandler())
                             {
-                                context.ErrorHandler()(ex);
+                                context.ErrorHandler().OnError(ex);
                             }
                             else
                             {
@@ -2149,7 +2149,7 @@ namespace Adaptive.Archiver
 
                     if (context.ErrorHandler() != null)
                     {
-                        context.ErrorHandler().Invoke(ex);
+                        context.ErrorHandler().OnError(ex);
                     }
                 }
                 else if (poller.CorrelationId() == correlationId)
@@ -2196,7 +2196,7 @@ namespace Adaptive.Archiver
                     }
                     else if (context.ErrorHandler() != null)
                     {
-                        context.ErrorHandler()(new ArchiveException(
+                        context.ErrorHandler().OnError(new ArchiveException(
                             "response for correlationId=" + correlationId + ", error: " + poller.ErrorMessage(),
                             (int)relevantId, poller.CorrelationId()));
                     }
@@ -2669,7 +2669,7 @@ namespace Adaptive.Archiver
             internal ILock _lock;
             internal string aeronDirectoryName = Aeron.Aeron.Context.GetAeronDirectoryName();
             internal Aeron.Aeron aeron;
-            private ErrorHandler errorHandler;
+            private IErrorHandler errorHandler;
             private ICredentialsSupplier credentialsSupplier;
             private IRecordingSignalConsumer recordingSignalConsumer = Configuration.NO_OP_RECORDING_SIGNAL_CONSUMER;
             private AgentInvoker agentInvoker;
@@ -3077,7 +3077,7 @@ namespace Adaptive.Archiver
             /// </summary>
             /// <param name="errorHandler"> method to handle objects of type Throwable. </param>
             /// <returns> this for a fluent API. </returns>
-            public Context ErrorHandler(ErrorHandler errorHandler)
+            public Context ErrorHandler(IErrorHandler errorHandler)
             {
                 this.errorHandler = errorHandler;
                 return this;
@@ -3087,7 +3087,7 @@ namespace Adaptive.Archiver
             /// Get the error handler that will be called for asynchronous errors.
             /// </summary>
             /// <returns> the error handler that will be called for asynchronous errors. </returns>
-            public ErrorHandler ErrorHandler()
+            public IErrorHandler ErrorHandler()
             {
                 return errorHandler;
             }
@@ -3270,7 +3270,7 @@ namespace Adaptive.Archiver
             {
                 if (5 != _step)
                 {
-                    ErrorHandler errorHandler = ctx.ErrorHandler();
+                    IErrorHandler errorHandler = ctx.ErrorHandler();
                     CloseHelper.Dispose(errorHandler, controlResponsePoller.Subscription());
 
                     if (null != archiveProxy)

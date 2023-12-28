@@ -211,7 +211,7 @@ namespace Adaptive.Aeron
         {
             if (_isClosed.CompareAndSet(false, true))
             {
-                ErrorHandler errorHandler = _ctx.ErrorHandler();
+                IErrorHandler errorHandler = _ctx.ErrorHandler();
                 if (null != _conductorRunner)
                 {
                     CloseHelper.Dispose(errorHandler, _conductorRunner);
@@ -257,7 +257,7 @@ namespace Adaptive.Aeron
         {
             return _conductor.AsyncAddPublication(channel, streamId);
         }
-        
+
         /// <summary>
         /// Asynchronously remove a <seealso cref="Publication"/>.
         /// </summary>
@@ -331,6 +331,52 @@ namespace Adaptive.Aeron
             UnavailableImageHandler unavailableImageHandler)
         {
             return _conductor.AddSubscription(channel, streamId, availableImageHandler, unavailableImageHandler);
+        }
+
+
+        /// <summary>
+        /// Add a new <seealso cref="Subscription"/> for subscribing to messages from publishers.
+        /// </summary>
+        /// <param name="channel">                 for receiving the messages known to the media layer. </param>
+        /// <param name="streamId">                within the channel scope. </param>
+        /// <param name="availableImageHandler">   called when <seealso cref="Image"/>s become available for consumption. Null is valid if no
+        ///                                action is to be taken. </param>
+        /// <param name="unavailableImageHandler"> called when <seealso cref="Image"/>s go unavailable for consumption. Null is valid if no
+        ///                                action is to be taken. </param>
+        /// <returns> the registration id of the subscription which can be used to get the added subscription. </returns>
+        /// <seealso cref="Aeron.AddSubscription(String, int, AvailableImageHandler, UnavailableImageHandler)"/>
+        /// <seealso cref="Aeron.GetSubscription(long)"/>
+        public long AsyncAddSubscription(string channel, int streamId, AvailableImageHandler availableImageHandler,
+            UnavailableImageHandler unavailableImageHandler)
+        {
+            return _conductor.AsyncAddSubscription(channel, streamId, availableImageHandler, unavailableImageHandler);
+        }
+
+        /// <summary>
+        /// Add a new <seealso cref="Subscription"/> for subscribing to messages from publishers.
+        /// </summary>
+        /// <param name="channel">  for receiving the messages known to the media layer. </param>
+        /// <param name="streamId"> within the channel scope. </param>
+        /// <returns> the registration id of the subscription which can be used to get the added subscription. </returns>
+        /// <seealso cref="Aeron.AddSubscription(String, int)"/>
+        /// <seealso cref="Aeron.GetSubscription(long)"/>
+        public long AsyncAddSubscription(string channel, int streamId)
+        {
+            return _conductor.AsyncAddSubscription(channel, streamId);
+        }
+
+        /// <summary>
+        /// Get a <seealso cref="Subscription"/> for subscribing to messages from publishers.
+        /// </summary>
+        /// <param name="registrationId"> returned from
+        ///                       <seealso cref="AsyncAddSubscription(String, int, AvailableImageHandler, UnavailableImageHandler)"/>
+        ///                       or <seealso cref="AsyncAddSubscription(String, int)"/> </param>
+        /// <returns> a new <seealso cref="Subscription"/> when available otherwise null. </returns>
+        /// <seealso cref=".asyncAddSubscription(String, int)"/>
+        /// <seealso cref=".asyncAddSubscription(String, int, AvailableImageHandler, UnavailableImageHandler)"/>
+        public Subscription GetSubscription(long registrationId)
+        {
+            return _conductor.GetSubscription(registrationId);
         }
 
         /// <summary>
@@ -501,6 +547,14 @@ namespace Adaptive.Aeron
         }
 
         /// <summary>
+        /// {@inheritDoc}
+        /// </summary>
+        public override string ToString()
+        {
+            return "Aeron{" + "isClosed=" + _isClosed.Get() + ", clientId=" + _clientId + '}';
+        }
+
+        /// <summary>
         /// Called by the <seealso cref="ClientConductor"/> if the client should be terminated due to timeout.
         /// </summary>
         internal void InternalClose()
@@ -521,8 +575,8 @@ namespace Adaptive.Aeron
             public static readonly int AWAITING_IDLE_SLEEP_MS = 1;
 
             /*
-            * Duration in nanoseconds for which the client conductor will sleep between duty cycles.
-            */
+             * Duration in nanoseconds for which the client conductor will sleep between duty cycles.
+             */
             public static readonly long IdleSleepNs = NanoUtil.FromMilliseconds(IdleSleepMs);
 
             /*
@@ -576,23 +630,28 @@ namespace Adaptive.Aeron
             /// </para>
             /// </summary>
             /// <seealso cref="Context.ErrorHandler(ErrorHandler)" />
-            public static readonly ErrorHandler DEFAULT_ERROR_HANDLER = (throwable) =>
+            public static readonly IErrorHandler DEFAULT_ERROR_HANDLER = new DefaultErrorHandler();
+
+            private class DefaultErrorHandler : IErrorHandler
             {
-                lock (Console.Error)
+                public void OnError(Exception throwable)
                 {
-                    Console.Error.WriteLine(throwable);
-                }
+                    lock (Console.Error)
+                    {
+                        Console.Error.WriteLine(throwable);
+                    }
 
-                if (throwable is DriverTimeoutException)
-                {
-                    Console.Error.WriteLine();
-                    Console.Error.WriteLine("***");
-                    Console.Error.WriteLine("*** Timeout for the Media Driver - is it currently running? exiting");
-                    Console.Error.WriteLine("***");
-                    Environment.Exit(-1);
+                    if (throwable is DriverTimeoutException)
+                    {
+                        Console.Error.WriteLine();
+                        Console.Error.WriteLine("***");
+                        Console.Error.WriteLine("*** Media Driver timeout - is it running? exiting client...");
+                        Console.Error.WriteLine("***");
+                        Environment.Exit(-1);
+                    }
                 }
-            };
-
+            }
+            
             /// <summary>
             /// Duration to wait while lingering an entity such as an <seealso cref="Image"/> before deleting underlying resources
             /// such as memory mapped files.
@@ -660,8 +719,8 @@ namespace Adaptive.Aeron
             private IRingBuffer _toDriverBuffer;
             private DriverProxy _driverProxy;
             private ILogBuffersFactory _logBuffersFactory;
-            private ErrorHandler _errorHandler;
-            private ErrorHandler _subscriberErrorHandler;
+            private IErrorHandler _errorHandler;
+            private IErrorHandler _subscriberErrorHandler;
             private AvailableImageHandler _availableImageHandler;
             private UnavailableImageHandler _unavailableImageHandler;
             private AvailableCounterHandler _availableCounterHandler;
@@ -959,10 +1018,10 @@ namespace Adaptive.Aeron
             /// Placeholder value to use in URIs to specify that a timestamp should be stored in the reserved value field.
             /// </summary>
             public const string RESERVED_OFFSET = "reserved";
-            
+
             /// <summary>
-            /// Property name for a fallback PrintStream based logger when it is not possible to use the error logging
-            /// callback.  Supported values are stdout, stderr, no_op (stderr is the default).
+            /// Property name for a fallback <see cref="TextWriter"/> based logger when it is not possible to use the error logging
+            /// callback. Supported values are stdout, stderr, no_op (stderr is the default).
             /// </summary>
             public const string FALLBACK_LOGGER_PROP_NAME = "aeron.fallback.logger";
 
@@ -977,6 +1036,9 @@ namespace Adaptive.Aeron
                 {
                     case "stdout":
                         return Console.Out;
+
+                    case "noop":
+                        return new StreamWriter(Stream.Null);
 
                     case "stderr":
                     default:
@@ -1043,7 +1105,7 @@ namespace Adaptive.Aeron
                 if (null == _clientLock)
                 {
                     _clientLock = new ReentrantLock();
-                } 
+                }
                 else if (_clientLock is NoOpLock && !_useConductorAgentInvoker)
                 {
                     throw new AeronException(
@@ -1327,8 +1389,8 @@ namespace Adaptive.Aeron
             /// <summary>
             /// The <seealso cref="IIdleStrategy"/> to be used when awaiting a response from the Media Driver.
             /// <para>
-            /// This can be change to a <seealso cref="BusySpinIdleStrategy"/> or <seealso cref="YieldingIdleStrategy"/> for lower response time,
-            /// especially for adding counters or releasing resources, at the expense of CPU usage.
+            /// This can be changed to a <seealso cref="BusySpinIdleStrategy"/> or <seealso cref="YieldingIdleStrategy"/> for lower response
+            /// time, especially for adding counters or releasing resources, at the expense of CPU usage.
             /// 
             /// </para>
             /// </summary>
@@ -1403,7 +1465,7 @@ namespace Adaptive.Aeron
             /// Get the factory for making log buffers.
             /// </summary>
             /// <returns> the factory for making log buffers. </returns>
-            public ILogBuffersFactory LogBuffersFactory()
+            internal ILogBuffersFactory LogBuffersFactory()
             {
                 return _logBuffersFactory;
             }
@@ -1415,14 +1477,14 @@ namespace Adaptive.Aeron
             /// during the callback for poll operations such as <seealso cref="Subscription.Poll(FragmentHandler, int)"/>.
             /// 
             /// The error handler can be reset after <seealso cref="Aeron.Connect()"/> and the latest version will always be used
-            /// so that the boot-strapping process can be performed such as replacing the default one with a
+            /// so that the bootstrapping process can be performed such as replacing the default one with a
             /// <seealso cref="CountedErrorHandler"/>.
             /// </summary>
             /// <param name="errorHandler"> Method to handle objects of type Throwable. </param>
             /// <returns> this for a fluent API. </returns>
             /// <seealso cref="DriverTimeoutException" />
             /// <seealso cref="RegistrationException" />
-            public Context ErrorHandler(ErrorHandler errorHandler)
+            public Context ErrorHandler(IErrorHandler errorHandler)
             {
                 _errorHandler = errorHandler;
                 return this;
@@ -1432,7 +1494,7 @@ namespace Adaptive.Aeron
             /// Get the error handler that will be called for errors reported back from the media driver or during poll operations.
             /// </summary>
             /// <returns> the error handler that will be called for errors reported back from the media driver or during poll operations. </returns>
-            public ErrorHandler ErrorHandler()
+            public IErrorHandler ErrorHandler()
             {
                 return _errorHandler;
             }
@@ -1445,7 +1507,7 @@ namespace Adaptive.Aeron
             /// <returns> this for a fluent API. </returns>
             /// <seealso cref="DriverTimeoutException"/>
             /// <seealso cref="RegistrationException"/>
-            public Context SubscriberErrorHandler(ErrorHandler errorHandler)
+            public Context SubscriberErrorHandler(IErrorHandler errorHandler)
             {
                 _subscriberErrorHandler = errorHandler;
                 return this;
@@ -1458,7 +1520,7 @@ namespace Adaptive.Aeron
             /// <seealso cref="RethrowingErrorHandler"/>.
             /// </summary>
             /// <returns> the error handler that will be called for errors reported back from the media driver. </returns>
-            public ErrorHandler SubscriberErrorHandler()
+            public IErrorHandler SubscriberErrorHandler()
             {
                 return _subscriberErrorHandler;
             }
@@ -1669,6 +1731,23 @@ namespace Adaptive.Aeron
             /// timeUnit units. </returns>
             public static long CheckDebugTimeout(long timeout, TimeUnit timeUnit, string debugFieldName)
             {
+                return CheckDebugTimeout(timeout, timeUnit, 1.0, debugFieldName);
+            }
+
+
+            /// <summary>
+            /// Override the supplied timeout with the debug value if it has been set, and we are in debug mode.
+            /// </summary>
+            /// <param name="timeout">  The timeout value currently in use. </param>
+            /// <param name="timeUnit"> The units of the timeout value. Debug timeout is specified in ns, so will be converted to this
+            ///                 unit. </param>
+            /// <param name="factor" >  to multiply the debug timeout by. Required when some timeouts need to be larger than others in
+            ///                 order to pass validation. E.g. clientLiveness and publicationUnblock.</param>
+            /// <param name="debugFieldName"> The field name to be added to the map.</param>
+            /// <returns> The debug timeout if specified, and we are being debugged or the supplied value if not. Will be in
+            /// timeUnit units. </returns>
+            public static long CheckDebugTimeout(long timeout, TimeUnit timeUnit, double factor, string debugFieldName)
+            {
                 string debugTimeoutString = Config.GetProperty(DEBUG_TIMEOUT_PROP_NAME);
                 if (null == debugTimeoutString || !Debugger.IsAttached)
                 {
@@ -1677,7 +1756,8 @@ namespace Adaptive.Aeron
 
                 try
                 {
-                    long debugTimeoutNs = SystemUtil.ParseDuration(DEBUG_TIMEOUT_PROP_NAME, debugTimeoutString);
+                    long debugTimeoutNs =
+                        (long)(factor * SystemUtil.ParseDuration(DEBUG_TIMEOUT_PROP_NAME, debugTimeoutString));
                     long debugTimeout = timeUnit.Convert(debugTimeoutNs, TimeUnit.NANOSECONDS);
                     if (DebugFieldsSeen.TryAdd(debugFieldName, true))
                     {
@@ -1900,22 +1980,24 @@ namespace Adaptive.Aeron
 
             private void ConnectToDriver()
             {
-                long deadLineMs = _epochClock.Time() + DriverTimeoutMs();
+                var clock = _epochClock;
+                long deadLineMs = clock.Time() + DriverTimeoutMs();
                 FileInfo cncFile = CncFile();
 
                 while (null == _toDriverBuffer)
                 {
                     cncFile.Refresh();
 
-                    _cncByteBuffer = WaitForFileMapping(cncFile, _epochClock, deadLineMs);
+                    _cncByteBuffer = WaitForFileMapping(cncFile, clock, deadLineMs);
                     _cncMetaDataBuffer = CncFileDescriptor.CreateMetaDataBuffer(_cncByteBuffer);
 
                     int cncVersion;
                     while (0 == (cncVersion = _cncMetaDataBuffer.GetIntVolatile(CncFileDescriptor.CncVersionOffset(0))))
                     {
-                        if (_epochClock.Time() > deadLineMs)
+                        if (clock.Time() > deadLineMs)
                         {
-                            throw new DriverTimeoutException("CnC file is created but not initialised");
+                            throw new DriverTimeoutException("CnC file is created but not initialised: " +
+                                                             cncFile.FullName);
                         }
 
                         Sleep(Configuration.AWAITING_IDLE_SLEEP_MS);
@@ -1946,7 +2028,7 @@ namespace Adaptive.Aeron
 
                     while (0 == ringBuffer.ConsumerHeartbeatTime())
                     {
-                        if (_epochClock.Time() > deadLineMs)
+                        if (clock.Time() > deadLineMs)
                         {
                             throw new DriverTimeoutException("no driver heartbeat detected.");
                         }
@@ -1954,7 +2036,7 @@ namespace Adaptive.Aeron
                         Sleep(Configuration.AWAITING_IDLE_SLEEP_MS);
                     }
 
-                    long timeMs = _epochClock.Time();
+                    long timeMs = clock.Time();
                     if (ringBuffer.ConsumerHeartbeatTime() < (timeMs - DriverTimeoutMs()))
                     {
                         if (timeMs > deadLineMs)
@@ -2003,7 +2085,8 @@ namespace Adaptive.Aeron
                         {
                             if (clock.Time() > deadLineMs)
                             {
-                                throw new DriverTimeoutException("CnC file is created but not populated.");
+                                throw new DriverTimeoutException("CnC file is created but not populated: " +
+                                                                 cncFile.FullName);
                             }
 
                             fileStream.Dispose();
@@ -2140,7 +2223,7 @@ namespace Adaptive.Aeron
                 long nowMs = DateTime.Now.ToFileTimeUtc();
                 long timestampAgeMs = nowMs - timestampMs;
 
-                logger("INFO: Aeron toDriver consumer heartbeat is (ms):" + timestampAgeMs);
+                logger("INFO: Aeron toDriver consumer heartbeat age is (ms):" + timestampAgeMs);
 
                 return timestampAgeMs <= driverTimeoutMs;
             }
@@ -2252,6 +2335,11 @@ namespace Adaptive.Aeron
                     @out.WriteLine();
                     @out.WriteLine("{0} distinct errors observed.", distinctErrorCount);
                 }
+                else
+                {
+                    Console.Out.WriteLine();
+                    Console.Out.WriteLine("0 distinct errors observed");
+                }
 
                 return distinctErrorCount;
             }
@@ -2272,34 +2360,58 @@ namespace Adaptive.Aeron
             /// <param name="userErrorHandler"> the user specified ErrorHandler, can be null. </param>
             /// <param name="errorLog">         the configured errorLog, either the default or user supplied. </param>
             /// <returns> an error handler that will delegate to both the userErrorHandler and the errorLog. </returns>
-            public static ErrorHandler SetupErrorHandler(ErrorHandler userErrorHandler, DistinctErrorLog errorLog)
+            public static IErrorHandler SetupErrorHandler(IErrorHandler userErrorHandler, DistinctErrorLog errorLog)
             {
                 LoggingErrorHandler loggingErrorHandler = new LoggingErrorHandler(errorLog);
                 if (null == userErrorHandler)
                 {
-                    return loggingErrorHandler.OnError;
+                    return loggingErrorHandler;
                 }
                 else
                 {
-                    return (throwable) =>
-                    {
-                        loggingErrorHandler.OnError(throwable);
-                        userErrorHandler(throwable);
-                    };
+                    return new ErrorHandlerWrapper(loggingErrorHandler, userErrorHandler);
                 }
             }
-        }
 
-        private static void Sleep(int durationMs)
-        {
-            try
+            private static void Sleep(int durationMs)
             {
-                Thread.Sleep(durationMs);
+                try
+                {
+                    Thread.Sleep(durationMs);
+                }
+                catch (ThreadInterruptedException ex)
+                {
+                    Thread.CurrentThread.Interrupt();
+                    throw new AeronException("unexpected interrupt", ex);
+                }
             }
-            catch (ThreadInterruptedException ex)
+
+            private class ErrorHandlerWrapper : IErrorHandler, IDisposable
             {
-                Thread.CurrentThread.Interrupt();
-                throw new AeronException("unexpected interrupt", ex);
+                private readonly LoggingErrorHandler _loggingErrorHandler;
+                private readonly IErrorHandler _userErrorHandler;
+
+                public ErrorHandlerWrapper(LoggingErrorHandler loggingErrorHandler, IErrorHandler userErrorHandler)
+                {
+                    _loggingErrorHandler = loggingErrorHandler;
+                    _userErrorHandler = userErrorHandler;
+                    throw new NotImplementedException();
+                }
+
+                public void OnError(Exception exception)
+                {
+                    _loggingErrorHandler.OnError(exception);
+                    _userErrorHandler.OnError(exception);
+                }
+
+                public void Dispose()
+                {
+                    _loggingErrorHandler.Dispose();
+                    if (_userErrorHandler is IDisposable d)
+                    {
+                        CloseHelper.QuietDispose(d);
+                    }
+                }
             }
         }
     }

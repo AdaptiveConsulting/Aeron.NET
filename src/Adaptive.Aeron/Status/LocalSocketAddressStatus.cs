@@ -139,9 +139,9 @@ namespace Adaptive.Aeron.Status
         /// <summary>
         /// Return number of local addresses for the given subscription registration id.
         /// </summary>
-        /// <param name="countersReader"> for the connected driver </param>
-        /// <param name="registrationId"> for the subscription </param>
-        /// <returns> nunmber of local socket addresses in use </returns>
+        /// <param name="countersReader"> for the connected driver. </param>
+        /// <param name="registrationId"> for the subscription. </param>
+        /// <returns> number of local socket addresses in use. </returns>
         public static int FindNumberOfAddressesByRegistrationId(CountersReader countersReader, long registrationId)
         {
             int result = 0;
@@ -163,5 +163,42 @@ namespace Adaptive.Aeron.Status
 
             return result;
         }
+        
+        /// <summary>
+        /// Is a socket currently active for a channel.
+        /// </summary>
+        /// <param name="countersReader">  for the connected driver. </param>
+        /// <param name="channelStatusId"> identity of the counter for the channel. </param>
+        /// <returns> true if the counter is active otherwise false. </returns>
+        public static bool IsActive(in CountersReader countersReader, in int channelStatusId)
+        {
+            IDirectBuffer buffer = countersReader.MetaDataBuffer;
+
+            for (int i = 0, size = countersReader.MaxCounterId; i < size; i++)
+            {
+                int counterState = countersReader.GetCounterState(i);
+                if (CountersReader.RECORD_ALLOCATED == counterState)
+                {
+                    if (countersReader.GetCounterTypeId(i) == LOCAL_SOCKET_ADDRESS_STATUS_TYPE_ID)
+                    {
+                        int recordOffset = CountersReader.MetaDataOffset(i);
+                        int keyIndex = recordOffset + CountersReader.KEY_OFFSET;
+
+                        if (channelStatusId == buffer.GetInt(keyIndex + CHANNEL_STATUS_ID_OFFSET) && 
+                            ChannelEndpointStatus.ACTIVE == countersReader.GetCounterValue(i))
+                        {
+                            return true;
+                        }
+                    }
+                }
+                else if (CountersReader.RECORD_UNUSED == counterState)
+                {
+                    break;
+                }
+            }
+
+            return false;
+        }
+
     }
 }

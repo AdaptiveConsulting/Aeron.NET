@@ -9,7 +9,7 @@ namespace Adaptive.Agrona.Concurrent
     /// </summary>
     public class CountedErrorHandler : IErrorHandler
     {
-        private readonly ErrorHandler _errorHandler;
+        private readonly IErrorHandler _errorHandler;
         private readonly AtomicCounter _errorCounter;
 
         public readonly ErrorHandler AsErrorHandler;
@@ -19,7 +19,7 @@ namespace Adaptive.Agrona.Concurrent
         /// </summary>
         /// <param name="errorHandler"> to delegate to. </param>
         /// <param name="errorCounter"> to increment before delegation. </param>
-        public CountedErrorHandler(ErrorHandler errorHandler, AtomicCounter errorCounter)
+        public CountedErrorHandler(IErrorHandler errorHandler, AtomicCounter errorCounter)
         {
             Objects.RequireNonNull(errorHandler, "errorHandler");
             Objects.RequireNonNull(errorCounter, "errorCounter");
@@ -33,7 +33,7 @@ namespace Adaptive.Agrona.Concurrent
         public void OnError(Exception throwable)
         {
             _errorCounter.Increment();
-            _errorHandler(throwable);
+            _errorHandler.OnError(throwable);
         }
     }
 }

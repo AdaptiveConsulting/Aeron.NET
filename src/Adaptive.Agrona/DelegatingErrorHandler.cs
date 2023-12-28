@@ -9,21 +9,12 @@ namespace Adaptive.Agrona
     /// Implementations are responsible for calling the next in the chain.
     /// </para>
     /// </summary>
-    public interface DelegatingErrorHandler
+    public interface DelegatingErrorHandler : IErrorHandler
     {
         /// <summary>
         /// Set the next <seealso cref="ErrorHandler"/> to be called in a chain.
         /// </summary>
         /// <param name="errorHandler"> the next <seealso cref="ErrorHandler"/> to be called in a chain. </param>
-        void Next(ErrorHandler errorHandler);
-
-        /// <summary>
-        /// Callback to notify of an error that has occurred when processing an operation or event.
-        /// 
-        /// This method is assumed non-throwing, so rethrowing the exception or triggering further exceptions would be a bug.
-        /// 
-        /// <param name="exception"> exception that occurred while processing an operation or event.</param>
-        /// </summary>
-        void OnError(Exception exception);
+        void Next(IErrorHandler errorHandler);
     }
 }

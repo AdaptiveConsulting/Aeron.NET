@@ -48,7 +48,7 @@ namespace Adaptive.Aeron.LogBuffer
             IFragmentHandler handler,
             int fragmentsLimit,
             Header header,
-            ErrorHandler errorHandler,
+            IErrorHandler errorHandler,
             long currentPosition,
             IPosition subscriberPosition)
         {
@@ -81,7 +81,7 @@ namespace Adaptive.Aeron.LogBuffer
 
             catch (Exception ex)
             {
-                errorHandler(ex);
+                errorHandler.OnError(ex);
             }
             finally
             {

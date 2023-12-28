@@ -298,17 +298,14 @@ namespace Adaptive.Aeron
 		private long AppendFragmentedMessage(UnsafeBuffer termBuffer, int tailCounterOffset, IDirectBuffer buffer,
 			int offset, int length, ReservedValueSupplier reservedValueSupplier)
 		{
-			int numMaxPayloads = length / MaxPayloadLength;
-			int remainingPayload = length % MaxPayloadLength;
-			int lastFrameLength = remainingPayload > 0 ? Align(remainingPayload + HEADER_LENGTH, FRAME_ALIGNMENT) : 0;
-			int requiredLength = (numMaxPayloads * (MaxPayloadLength + HEADER_LENGTH)) + lastFrameLength;
+			int framedLength = ComputeFramedLength(length, MaxPayloadLength);
 			int termLength = termBuffer.Capacity;
 
-			long rawTail = _logMetaDataBuffer.GetAndAddLong(tailCounterOffset, requiredLength);
+			long rawTail = _logMetaDataBuffer.GetAndAddLong(tailCounterOffset, framedLength);
 			int termId = TermId(rawTail);
 			int termOffset = TermOffset(rawTail, termLength);
 
-			int resultingOffset = termOffset + requiredLength;
+			int resultingOffset = termOffset + framedLength;
 			long position = ComputePosition(termId, resultingOffset, PositionBitsToShift, InitialTermId);
 			if (resultingOffset > termLength)
 			{
@@ -395,17 +392,14 @@ namespace Adaptive.Aeron
 			ReservedValueSupplier reservedValueSupplier)
 		{
 			int length = lengthOne + lengthTwo;
-			int numMaxPayloads = length / MaxPayloadLength;
-			int remainingPayload = length % MaxPayloadLength;
-			int lastFrameLength = remainingPayload > 0 ? Align(remainingPayload + HEADER_LENGTH, FRAME_ALIGNMENT) : 0;
-			int requiredLength = (numMaxPayloads * (MaxPayloadLength + HEADER_LENGTH)) + lastFrameLength;
+			int framedLength = ComputeFramedLength(length, MaxPayloadLength);
 			int termLength = termBuffer.Capacity;
 
-			long rawTail = _logMetaDataBuffer.GetAndAddLong(tailCounterOffset, requiredLength);
+			long rawTail = _logMetaDataBuffer.GetAndAddLong(tailCounterOffset, framedLength);
 			int termId = TermId(rawTail);
 			int termOffset = TermOffset(rawTail, termLength);
 
-			int resultingOffset = termOffset + requiredLength;
+			int resultingOffset = termOffset + framedLength;
 			long position = ComputePosition(termId, resultingOffset, PositionBitsToShift, InitialTermId);
 			if (resultingOffset > termLength)
 			{
@@ -519,17 +513,14 @@ namespace Adaptive.Aeron
 		private long AppendFragmentedMessage(UnsafeBuffer termBuffer, int tailCounterOffset,
 			DirectBufferVector[] vectors, int length, ReservedValueSupplier reservedValueSupplier)
 		{
-			int numMaxPayloads = length / MaxPayloadLength;
-			int remainingPayload = length % MaxPayloadLength;
-			int lastFrameLength = remainingPayload > 0 ? Align(remainingPayload + HEADER_LENGTH, FRAME_ALIGNMENT) : 0;
-			int requiredLength = (numMaxPayloads * (MaxPayloadLength + HEADER_LENGTH)) + lastFrameLength;
+			int framedLength = ComputeFramedLength(length, MaxPayloadLength);
 			int termLength = termBuffer.Capacity;
 
-			long rawTail = _logMetaDataBuffer.GetAndAddLong(tailCounterOffset, requiredLength);
+			long rawTail = _logMetaDataBuffer.GetAndAddLong(tailCounterOffset, framedLength);
 			int termId = TermId(rawTail);
 			int termOffset = TermOffset(rawTail, termLength);
 
-			int resultingOffset = termOffset + requiredLength;
+			int resultingOffset = termOffset + framedLength;
 			long position = ComputePosition(termId, resultingOffset, PositionBitsToShift, InitialTermId);
 			if (resultingOffset > termLength)
 			{

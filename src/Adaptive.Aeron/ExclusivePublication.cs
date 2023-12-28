@@ -21,6 +21,7 @@ using Adaptive.Aeron.Protocol;
 using Adaptive.Agrona;
 using Adaptive.Agrona.Concurrent;
 using Adaptive.Agrona.Concurrent.Status;
+using Adaptive.Agrona.Util;
 using static Adaptive.Aeron.LogBuffer.FrameDescriptor;
 using static Adaptive.Aeron.LogBuffer.LogBufferDescriptor;
 using static Adaptive.Aeron.Protocol.DataHeaderFlyweight;
@@ -302,17 +303,21 @@ namespace Adaptive.Aeron
 		}
 
 		/// <summary>
-		/// Append a padding record log of a given length to make up the log to a position.
+		/// Append a padding record to log of a given length to make up the log to a position.
 		/// </summary>
 		/// <param name="length"> of the range to claim, in bytes.. </param>
 		/// <returns> The new stream position, otherwise a negative error value of <seealso cref="Publication.NOT_CONNECTED"/>,
 		/// <seealso cref="Publication.BACK_PRESSURED"/>, <seealso cref="Publication.ADMIN_ACTION"/>, <seealso cref="Publication.CLOSED"/>, or <seealso cref="Publication.MAX_POSITION_EXCEEDED"/>. </returns>
-		/// <exception cref="ArgumentException"> if the length is greater than <seealso cref="Publication.MaxMessageLength"/>. </exception>
+		/// <exception cref="ArgumentException"> if the length is greater than <seealso cref="Publication.MaxMessageLength"/> framed. </exception>
 		public long AppendPadding(int length)
 		{
-			CheckMaxMessageLength(length);
-			long newPosition = CLOSED;
+			if (length > _maxFramedLength)
+			{
+				ThrowHelper.ThrowArgumentException(
+					$"message exceeds maxFramedLength of {_maxFramedLength:D}, length={length:D}");
+			}
 
+			long newPosition = CLOSED;
 			if (!_isClosed)
 			{
 				long limit = _positionLimit.GetVolatile();
@@ -512,13 +517,10 @@ namespace Adaptive.Aeron
 			int length,
 			ReservedValueSupplier reservedValueSupplier)
 		{
-			int numMaxPayloads = length / MaxPayloadLength;
-			int remainingPayload = length % MaxPayloadLength;
-			int lastFrameLength = remainingPayload > 0 ? Align(remainingPayload + HEADER_LENGTH, FRAME_ALIGNMENT) : 0;
-			int requiredLength = (numMaxPayloads * (MaxPayloadLength + HEADER_LENGTH)) + lastFrameLength;
+			int framedLength = ComputeFramedLength(length, MaxPayloadLength);
 			int termLength = termBuffer.Capacity;
 
-			int resultingOffset = _termOffset + requiredLength;
+			int resultingOffset = _termOffset + framedLength;
 			_logMetaDataBuffer.PutLongOrdered(tailCounterOffset, PackTail(_termId, resultingOffset));
 
 			if (resultingOffset > termLength)
@@ -617,13 +619,10 @@ namespace Adaptive.Aeron
 			ReservedValueSupplier reservedValueSupplier)
 		{
 			int length = lengthOne + lengthTwo;
-			int numMaxPayloads = length / maxPayloadLength;
-			int remainingPayload = length % maxPayloadLength;
-			int lastFrameLength = remainingPayload > 0 ? Align(remainingPayload + HEADER_LENGTH, FRAME_ALIGNMENT) : 0;
-			int requiredLength = (numMaxPayloads * (maxPayloadLength + HEADER_LENGTH)) + lastFrameLength;
+			int framedLength = ComputeFramedLength(length, MaxPayloadLength);
 			int termLength = termBuffer.Capacity;
 
-			int resultingOffset = _termOffset + requiredLength;
+			int resultingOffset = _termOffset + framedLength;
 			_logMetaDataBuffer.PutLongOrdered(tailCounterOffset, PackTail(_termId, resultingOffset));
 
 			if (resultingOffset > termLength)
@@ -743,13 +742,10 @@ namespace Adaptive.Aeron
 			int length, 
 			ReservedValueSupplier reservedValueSupplier)
 		{
-			int numMaxPayloads = length / MaxPayloadLength;
-			int remainingPayload = length % MaxPayloadLength;
-			int lastFrameLength = remainingPayload > 0 ? Align(remainingPayload + HEADER_LENGTH, FRAME_ALIGNMENT) : 0;
-			int requiredLength = (numMaxPayloads * (MaxPayloadLength + HEADER_LENGTH)) + lastFrameLength;
+			int framedLength = ComputeFramedLength(length, MaxPayloadLength);
 			int termLength = termBuffer.Capacity;
 
-			int resultingOffset = _termOffset + requiredLength;
+			int resultingOffset = _termOffset + framedLength;
 			_logMetaDataBuffer.PutLongOrdered(tailCounterOffset, PackTail(_termId, resultingOffset));
 
 			if (resultingOffset > termLength)

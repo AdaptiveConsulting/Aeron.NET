@@ -83,6 +83,8 @@ namespace Adaptive.Aeron
         internal readonly long _originalRegistrationId;
         internal readonly long _maxPossiblePosition;
         internal readonly int _channelStatusId;
+        
+        internal readonly int _maxFramedLength;
         internal volatile bool _isClosed;
 
         internal readonly IReadablePosition _positionLimit;
@@ -107,6 +109,7 @@ namespace Adaptive.Aeron
             TermBufferLength = logBuffers.TermLength();
             MaxMessageLength = ComputeMaxMessageLength(TermBufferLength);
             MaxPayloadLength = LogBufferDescriptor.MtuLength(logMetaDataBuffer) - HEADER_LENGTH;
+            _maxFramedLength = ComputeFramedLength(MaxMessageLength, MaxPayloadLength);
             _maxPossiblePosition = TermBufferLength * (1L << 31);
             _conductor = clientConductor;
             Channel = channel;
@@ -187,12 +190,12 @@ namespace Adaptive.Aeron
         /// <summary>
         /// Maximum length of a message payload that fits within a message fragment.
         /// 
-        /// This is he MTU length minus the message fragment header length.
+        /// This is the MTU length minus the message fragment header length.
         /// 
         /// <returns>maximum message fragment payload length.</returns>
         /// </summary>
         public int MaxPayloadLength { get; }
-
+        
         /// <summary>
         /// Get the registration used to register this Publication with the media driver by the first publisher.
         /// </summary>
@@ -561,6 +564,15 @@ namespace Adaptive.Aeron
                 ThrowHelper.ThrowArgumentException(
                     $"message exceeds maxMessageLength of {MaxMessageLength:D}, length={length:D}");
             }
+        }
+        
+        internal static int ComputeFramedLength(int length, int maxPayloadLength)
+        {
+            int numMaxPayloads = length / maxPayloadLength;
+            int remainingPayload = length % maxPayloadLength;
+            int lastFrameLength = remainingPayload > 0 ? Align(remainingPayload + HEADER_LENGTH, FRAME_ALIGNMENT) : 0;
+
+            return (numMaxPayloads * (maxPayloadLength + HEADER_LENGTH)) + lastFrameLength;
         }
 
         internal static int ValidateAndComputeLength(int lengthOne, int lengthTwo)
