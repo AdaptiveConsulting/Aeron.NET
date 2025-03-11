@@ -29,10 +29,12 @@ namespace Adaptive.Agrona.Concurrent
         {
             if (workCount > 0)
             {
-                return;
+                Reset();
             }
-
-            _spinWait.SpinOnce();
+            else
+            {
+                _spinWait.SpinOnce();
+            }
         }
 
         public void Idle()
