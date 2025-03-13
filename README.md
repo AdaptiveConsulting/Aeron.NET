@@ -1,5 +1,5 @@
 # Aeron.NET
-[![GitHub Actions](https://github.com/AdaptiveConsulting/Aeron.NET/workflows/build/badge.svg)](https://github.com/AdaptiveConsulting/Aeron.NET/actions?query=workflow%3Abuild)
+[![GitHub Actions](https://github.com/AdaptiveConsulting/Aeron.NET/workflows/ci.yml/badge.svg?branch=master)](https://github.com/AdaptiveConsulting/Aeron.NET/actions)
 [![NuGet](https://img.shields.io/nuget/v/Aeron.Client.svg)](https://www.nuget.org/packages/Aeron.Client/)
 
 A .NET port of the [Aeron Client](https://github.com/real-logic/Aeron).
