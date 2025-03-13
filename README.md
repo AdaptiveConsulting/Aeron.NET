@@ -2,7 +2,7 @@
 [![GitHub Actions](https://github.com/AdaptiveConsulting/Aeron.NET/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/AdaptiveConsulting/Aeron.NET/actions/workflows/ci.yml)
 [![NuGet](https://img.shields.io/nuget/v/Aeron.Client.svg)](https://www.nuget.org/packages/Aeron.Client/)
 
-A .NET port of the [Aeron Client](https://github.com/real-logic/Aeron).
+A .NET port of the [Aeron Client](https://github.com/aeron-io/aeron).
 
 Aeron is an efficient reliable UDP unicast, UDP multicast, and IPC message transport.
 
@@ -170,9 +170,7 @@ Run `dotnet pack src\Adaptive.Aeron\Adaptive.Aeron.csproj /p:Configuration=Relea
 If there are also changes in Agrona run `src\Adaptive.Agrona\Adaptive.Agrona.csproj /p:Configuration=Release` Aeron depends on it so both should be published at the same time
 
 ### More Information
-The best place for more information is the [Aeron Wiki](https://github.com/real-logic/Aeron/wiki)
-
-[![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/real-logic/Aeron?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) To chat with other Aeron users and the contributors.
+The best place for more information is the [Aeron Website](https://aeron.io)
 
 ### Sponsors
 Many thanks to our **premium sponsors**!
