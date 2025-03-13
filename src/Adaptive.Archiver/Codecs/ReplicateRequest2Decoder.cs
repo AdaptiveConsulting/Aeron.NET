@@ -9,10 +9,10 @@ namespace Adaptive.Archiver.Codecs {
 
 public class ReplicateRequest2Decoder
 {
-    public const ushort BLOCK_LENGTH = 64;
+    public const ushort BLOCK_LENGTH = 68;
     public const ushort TEMPLATE_ID = 66;
     public const ushort SCHEMA_ID = 101;
-    public const ushort SCHEMA_VERSION = 7;
+    public const ushort SCHEMA_VERSION = 8;
 
     private ReplicateRequest2Decoder _parentMessage;
     private IDirectBuffer _buffer;
@@ -574,6 +574,60 @@ public class ReplicateRequest2Decoder
     }
 
 
+    public static int ReplicationSessionIdId()
+    {
+        return 13;
+    }
+
+    public static int ReplicationSessionIdSinceVersion()
+    {
+        return 8;
+    }
+
+    public static int ReplicationSessionIdEncodingOffset()
+    {
+        return 64;
+    }
+
+    public static int ReplicationSessionIdEncodingLength()
+    {
+        return 4;
+    }
+
+    public static string ReplicationSessionIdMetaAttribute(MetaAttribute metaAttribute)
+    {
+        switch (metaAttribute)
+        {
+            case MetaAttribute.EPOCH: return "unix";
+            case MetaAttribute.TIME_UNIT: return "nanosecond";
+            case MetaAttribute.SEMANTIC_TYPE: return "";
+            case MetaAttribute.PRESENCE: return "required";
+        }
+
+        return "";
+    }
+
+    public static int ReplicationSessionIdNullValue()
+    {
+        return -2147483648;
+    }
+
+    public static int ReplicationSessionIdMinValue()
+    {
+        return -2147483647;
+    }
+
+    public static int ReplicationSessionIdMaxValue()
+    {
+        return 2147483647;
+    }
+
+    public int ReplicationSessionId()
+    {
+        return _buffer.GetInt(_offset + 64, ByteOrder.LittleEndian);
+    }
+
+
     public static int SrcControlChannelId()
     {
         return 9;
@@ -799,6 +853,79 @@ public class ReplicateRequest2Decoder
         return Encoding.ASCII.GetString(tmp);
     }
 
+    public static int EncodedCredentialsId()
+    {
+        return 14;
+    }
+
+    public static int EncodedCredentialsSinceVersion()
+    {
+        return 8;
+    }
+
+    public static string EncodedCredentialsMetaAttribute(MetaAttribute metaAttribute)
+    {
+        switch (metaAttribute)
+        {
+            case MetaAttribute.EPOCH: return "unix";
+            case MetaAttribute.TIME_UNIT: return "nanosecond";
+            case MetaAttribute.SEMANTIC_TYPE: return "";
+            case MetaAttribute.PRESENCE: return "required";
+        }
+
+        return "";
+    }
+
+    public static int EncodedCredentialsHeaderLength()
+    {
+        return 4;
+    }
+
+    public int EncodedCredentialsLength()
+    {
+        if (_parentMessage._actingVersion < 8)
+        {
+            return 0;
+        }
+
+        int limit = _parentMessage.Limit();
+        return (int)unchecked((uint)_buffer.GetInt(limit, ByteOrder.LittleEndian));
+    }
+
+    public int GetEncodedCredentials(IMutableDirectBuffer dst, int dstOffset, int length)
+    {
+        if (_parentMessage._actingVersion < 8)
+        {
+            return 0;
+        }
+
+        int headerLength = 4;
+        int limit = _parentMessage.Limit();
+        int dataLength = (int)unchecked((uint)_buffer.GetInt(limit, ByteOrder.LittleEndian));
+        int bytesCopied = Math.Min(length, dataLength);
+        _parentMessage.Limit(limit + headerLength + dataLength);
+        _buffer.GetBytes(limit + headerLength, dst, dstOffset, bytesCopied);
+
+        return bytesCopied;
+    }
+
+    public int GetEncodedCredentials(byte[] dst, int dstOffset, int length)
+    {
+        if (_parentMessage._actingVersion < 8)
+        {
+            return 0;
+        }
+
+        int headerLength = 4;
+        int limit = _parentMessage.Limit();
+        int dataLength = (int)unchecked((uint)_buffer.GetInt(limit, ByteOrder.LittleEndian));
+        int bytesCopied = Math.Min(length, dataLength);
+        _parentMessage.Limit(limit + headerLength + dataLength);
+        _buffer.GetBytes(limit + headerLength, dst, dstOffset, bytesCopied);
+
+        return bytesCopied;
+    }
+
 
     public override string ToString()
     {
@@ -873,7 +1000,12 @@ public class ReplicateRequest2Decoder
         builder.Append("FileIoMaxLength=");
         builder.Append(FileIoMaxLength());
         builder.Append('|');
-        //Token{signal=BEGIN_VAR_DATA, name='srcControlChannel', referencedName='null', description='null', id=9, version=0, deprecated=0, encodedLength=0, offset=64, componentTokenCount=6, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=BEGIN_FIELD, name='replicationSessionId', referencedName='null', description='null', id=13, version=8, deprecated=0, encodedLength=0, offset=64, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=ENCODING, name='int32', referencedName='null', description='null', id=-1, version=0, deprecated=0, encodedLength=4, offset=64, componentTokenCount=1, encoding=Encoding{presence=REQUIRED, primitiveType=INT32, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        builder.Append("ReplicationSessionId=");
+        builder.Append(ReplicationSessionId());
+        builder.Append('|');
+        //Token{signal=BEGIN_VAR_DATA, name='srcControlChannel', referencedName='null', description='null', id=9, version=0, deprecated=0, encodedLength=0, offset=68, componentTokenCount=6, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
         builder.Append("SrcControlChannel=");
         builder.Append(SrcControlChannel());
         builder.Append('|');
@@ -884,6 +1016,10 @@ public class ReplicateRequest2Decoder
         //Token{signal=BEGIN_VAR_DATA, name='replicationChannel', referencedName='null', description='null', id=11, version=0, deprecated=0, encodedLength=0, offset=-1, componentTokenCount=6, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
         builder.Append("ReplicationChannel=");
         builder.Append(ReplicationChannel());
+        builder.Append('|');
+        //Token{signal=BEGIN_VAR_DATA, name='encodedCredentials', referencedName='null', description='null', id=14, version=8, deprecated=0, encodedLength=0, offset=-1, componentTokenCount=6, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        builder.Append("EncodedCredentials=");
+        builder.Append(EncodedCredentialsLength() + " raw bytes");
 
         Limit(originalLimit);
 

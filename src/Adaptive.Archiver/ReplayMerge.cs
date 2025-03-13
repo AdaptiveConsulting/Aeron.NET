@@ -222,6 +222,12 @@ namespace Adaptive.Archiver
                         workCount += AttemptLiveJoin(nowMs);
                         CheckProgress(nowMs);
                         break;
+                    
+                    
+                    case State.MERGED:
+                    case State.CLOSED:
+                    case State.FAILED:
+                        break;
                 }
             }
             catch (Exception)
@@ -377,8 +383,17 @@ namespace Adaptive.Archiver
             if (null == image && subscription.IsConnected)
             {
                 timeOfLastProgressMs = nowMs;
-                image = subscription.ImageBySessionId((int)replaySessionId);
-                positionOfLastProgress = null == image ? Aeron.Aeron.NULL_VALUE : image.Position;
+                Image image = subscription.ImageBySessionId((int)replaySessionId);
+
+                if (null == this.image && null != image)
+                {
+                    this.image = image;
+                    positionOfLastProgress = image.Position;
+                }
+                else
+                {
+                    positionOfLastProgress = Aeron.Aeron.NULL_VALUE;
+                }
             }
 
             if (null != image)

@@ -12,7 +12,7 @@ public class ListRecordingRequestDecoder
     public const ushort BLOCK_LENGTH = 24;
     public const ushort TEMPLATE_ID = 10;
     public const ushort SCHEMA_ID = 101;
-    public const ushort SCHEMA_VERSION = 7;
+    public const ushort SCHEMA_VERSION = 8;
 
     private ListRecordingRequestDecoder _parentMessage;
     private IDirectBuffer _buffer;

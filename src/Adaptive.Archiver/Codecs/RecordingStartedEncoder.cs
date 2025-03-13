@@ -12,7 +12,7 @@ public class RecordingStartedEncoder
     public const ushort BLOCK_LENGTH = 24;
     public const ushort TEMPLATE_ID = 101;
     public const ushort SCHEMA_ID = 101;
-    public const ushort SCHEMA_VERSION = 7;
+    public const ushort SCHEMA_VERSION = 8;
 
     private RecordingStartedEncoder _parentMessage;
     private IMutableDirectBuffer _buffer;

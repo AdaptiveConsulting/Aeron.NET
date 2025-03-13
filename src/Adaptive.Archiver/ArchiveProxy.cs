@@ -1,4 +1,5 @@
-﻿using Adaptive.Aeron;
+﻿using System;
+using Adaptive.Aeron;
 using Adaptive.Aeron.Security;
 using Adaptive.Agrona;
 using Adaptive.Agrona.Concurrent;
@@ -453,7 +454,7 @@ namespace Adaptive.Archiver
         }
 
         /// <summary>
-        /// Stop any existing replay sessions for recording Id or all replay sessions regardless of recording Id.
+        /// Stop any existing replay sessions for recording id or all replay sessions regardless of recording id.
         /// </summary>
         /// <param name="recordingId">      that should be stopped. </param>
         /// <param name="correlationId">    for this request. </param>
@@ -806,7 +807,9 @@ namespace Adaptive.Archiver
                 null,
                 correlationId,
                 controlSessionId,
-                Aeron.Aeron.NULL_VALUE);
+                Aeron.Aeron.NULL_VALUE,
+                Aeron.Aeron.NULL_VALUE,
+                NullCredentialsSupplier.NULL_CREDENTIAL);
         }
 
         /// <summary>
@@ -859,7 +862,9 @@ namespace Adaptive.Archiver
                 replicationChannel,
                 correlationId,
                 controlSessionId,
-                Aeron.Aeron.NULL_VALUE);
+                Aeron.Aeron.NULL_VALUE,
+                Aeron.Aeron.NULL_VALUE,
+                NullCredentialsSupplier.NULL_CREDENTIAL);
         }
 
         /// <summary>
@@ -911,7 +916,9 @@ namespace Adaptive.Archiver
                 null,
                 correlationId,
                 controlSessionId,
-                Aeron.Aeron.NULL_VALUE);
+                Aeron.Aeron.NULL_VALUE,
+                Aeron.Aeron.NULL_VALUE,
+                NullCredentialsSupplier.NULL_CREDENTIAL);
         }
 
         /// <summary>
@@ -968,7 +975,9 @@ namespace Adaptive.Archiver
                 replicationChannel,
                 correlationId,
                 controlSessionId,
-                Aeron.Aeron.NULL_VALUE);
+                Aeron.Aeron.NULL_VALUE,
+                Aeron.Aeron.NULL_VALUE,
+                NullCredentialsSupplier.NULL_CREDENTIAL);
         }
 
         /// <summary>
@@ -1003,6 +1012,13 @@ namespace Adaptive.Archiver
             long correlationId,
             long controlSessionId)
         {
+            if (null != replicationParams.LiveDestination() &&
+                Aeron.Aeron.NULL_VALUE != replicationParams.ReplicationSessionId())
+            {
+                throw new ArgumentException(
+                    "ReplicationParams.LiveDestination and ReplicationParams.ReplicationSessionId can not be specified together");
+            }
+            
             return Replicate(
                 srcRecordingId,
                 replicationParams.DstRecordingId(),
@@ -1015,7 +1031,9 @@ namespace Adaptive.Archiver
                 replicationParams.ReplicationChannel(),
                 correlationId,
                 controlSessionId,
-                replicationParams.FileIoMaxLength());
+                replicationParams.FileIoMaxLength(),
+                replicationParams.ReplicationSessionId(),
+                replicationParams.EncodedCredentials());
         }
 
         /// <summary>
@@ -1146,15 +1164,19 @@ namespace Adaptive.Archiver
         }
 
         /// <summary>
-        /// Migrate segments from a source recording and attach them to the beginning of a destination recording.
+        /// Migrate segments from a source recording and attach them to the beginning or end of a destination recording.
         /// <para>
-        /// The source recording must match the destination recording for segment length, term length, mtu length,
-        /// stream id, plus the stop position and term id of the source must join with the start position of the destination
-        /// and be on a segment boundary.
+        /// The source recording must match the destination recording for segment length, term length, mtu length, and
+        /// stream id. The source recording must join to the destination recording on a segment boundary and without gaps,
+        /// i.e., the stop position and term id of one must match the start position and term id of the other.
+        /// </para>
+        /// <para>
+        /// The source recording must be stopped. The destination recording must be stopped if migrating segments
+        /// to the end of the destination recording.
         /// </para>
         /// <para>
         /// The source recording will be effectively truncated back to its start position after the migration.
-        /// 
+        ///    
         /// </para>
         /// </summary>
         /// <param name="srcRecordingId">   source recording from which the segments will be migrated. </param>
@@ -1321,7 +1343,9 @@ namespace Adaptive.Archiver
             string replicationChannel,
             long correlationId,
             long controlSessionId,
-            int fileIoMaxLength)
+            int fileIoMaxLength,
+            int replicationSessionId,
+            byte[] encodedCredentials)
         {
             if (null == replicateRequest)
             {
@@ -1341,7 +1365,9 @@ namespace Adaptive.Archiver
                 .FileIoMaxLength(fileIoMaxLength)
                 .SrcControlChannel(srcControlChannel)
                 .LiveDestination(liveDestination)
-                .ReplicationChannel(replicationChannel);
+                .ReplicationChannel(replicationChannel)
+                .ReplicationSessionId(replicationSessionId)
+                .PutEncodedCredentials(encodedCredentials, 0, encodedCredentials.Length);
 
             return Offer(replicateRequest.EncodedLength());
         }

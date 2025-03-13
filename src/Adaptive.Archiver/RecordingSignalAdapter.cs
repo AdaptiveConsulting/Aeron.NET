@@ -9,8 +9,13 @@ namespace Adaptive.Archiver
     /// <summary>
     /// Encapsulate the polling, decoding, and dispatching of recording transition events for a session plus the
     /// asynchronous events to check for errors.
+    /// <para>
+    /// Important: set the underlying <seealso cref="IRecordingSignalConsumer"/> instance on the <seealso cref="AeronArchive"/> using the
+    /// <seealso cref="AeronArchive.Context.RecordingSignalConsumer(IRecordingSignalConsumer)"/> method to avoid missing signals.
+    /// 
+    /// </para>
     /// </summary>
-    /// <seealso cref="RecordingSignal"></seealso>
+    /// <seealso cref="RecordingSignal"/>
     public class RecordingSignalAdapter : IControlledFragmentHandler
     {
         private readonly MessageHeaderDecoder messageHeaderDecoder = new MessageHeaderDecoder();

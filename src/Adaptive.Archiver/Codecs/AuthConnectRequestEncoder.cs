@@ -12,7 +12,7 @@ public class AuthConnectRequestEncoder
     public const ushort BLOCK_LENGTH = 16;
     public const ushort TEMPLATE_ID = 58;
     public const ushort SCHEMA_ID = 101;
-    public const ushort SCHEMA_VERSION = 7;
+    public const ushort SCHEMA_VERSION = 8;
 
     private AuthConnectRequestEncoder _parentMessage;
     private IMutableDirectBuffer _buffer;

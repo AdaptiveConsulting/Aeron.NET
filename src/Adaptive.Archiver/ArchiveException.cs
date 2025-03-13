@@ -74,6 +74,11 @@ namespace Adaptive.Archiver
         /// The principle was not authorised to take the requested action. 
         /// </summary>
         public const int UNAUTHORISED_ACTION = 13;
+        
+        /// <summary>
+        /// The replication session failed to connect to the source archive
+        /// </summary>
+        public const int REPLICATION_CONNECTION_FAILURE = 14;
 
         /// <summary>
         /// Error code providing more detail into what went wrong.

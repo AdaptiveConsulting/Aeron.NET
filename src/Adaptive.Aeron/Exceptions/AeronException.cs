@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Runtime.Serialization;
 
 namespace Adaptive.Aeron.Exceptions
@@ -69,6 +70,25 @@ namespace Adaptive.Aeron.Exceptions
         public static bool IsFatal(in Exception t)
         {
             return t is AeronException exception && Category.FATAL == exception.Category;
+        }
+
+        public List<Exception> SuppressedExceptions { get; } = new List<Exception>();
+
+        public void AddSuppressed(Exception exception)
+        {
+            SuppressedExceptions.Add(exception);
+        }
+
+        public override string ToString()
+        {
+            var baseString = base.ToString();
+            if (SuppressedExceptions.Count == 0)
+            {
+                return baseString;
+            }
+
+            var suppressedString = string.Join(Environment.NewLine, SuppressedExceptions);
+            return $"{baseString}{Environment.NewLine}Suppressed Exceptions:{Environment.NewLine}{suppressedString}";
         }
     }
 }

@@ -166,9 +166,9 @@ namespace Adaptive.Archiver
                     if (controlResponseDecoder.ControlSessionId() == controlSessionId)
                     {
                         ControlResponseCode code = controlResponseDecoder.Code();
-                        long correlationId = controlResponseDecoder.CorrelationId();
+                        long responseCorrelationId = controlResponseDecoder.CorrelationId();
 
-                        if (ControlResponseCode.RECORDING_UNKNOWN == code && correlationId == this.correlationId)
+                        if (ControlResponseCode.RECORDING_UNKNOWN == code && responseCorrelationId == this.correlationId)
                         {
                             isDispatchComplete = true;
                             return ControlledFragmentHandlerAction.BREAK;
@@ -180,9 +180,9 @@ namespace Adaptive.Archiver
                                 "response for correlationId=" + this.correlationId + ", error: " +
                                 controlResponseDecoder.ErrorMessage(),
                                 (int) controlResponseDecoder.RelevantId(),
-                                correlationId);
+                                responseCorrelationId);
 
-                            if (correlationId == this.correlationId)
+                            if (responseCorrelationId == this.correlationId)
                             {
                                 throw ex;
                             }

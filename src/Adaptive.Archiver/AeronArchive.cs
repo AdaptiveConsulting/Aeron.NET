@@ -812,7 +812,7 @@ namespace Adaptive.Archiver
         /// </summary>
         /// <param name="channel">  to stop recording for. </param>
         /// <param name="streamId"> to stop recording for. </param>
-        /// <returns> true if the recording was stopped or false if the subscription is not currently active. </returns>
+        /// <returns> <code>true</code> if the recording was stopped or false if the subscription is not currently active. </returns>
         public bool TryStopRecording(string channel, int streamId)
         {
             _lock.Lock();
@@ -871,7 +871,7 @@ namespace Adaptive.Archiver
         /// <seealso cref="ExtendRecording(long, String, int, SourceLocation)"/>.
         /// </summary>
         /// <param name="subscriptionId"> is the <seealso cref="Subscription.RegistrationId()"/> for the recording in the archive. </param>
-        /// <returns> true if the recording was stopped or false if the subscription is not currently active. </returns>
+        /// <returns> <code>true</code> if the recording was stopped or false if the subscription is not currently active. </returns>
         public bool TryStopRecording(long subscriptionId)
         {
             _lock.Lock();
@@ -899,7 +899,7 @@ namespace Adaptive.Archiver
         /// Try stop an active recording by its recording id.
         /// </summary>
         /// <param name="recordingId"> for which active recording should be stopped. </param>
-        /// <returns> true if the recording was stopped or false if the recording is not currently active. </returns>
+        /// <returns> <code>true</code> if the recording was stopped or false if the recording is not currently active. </returns>
         public bool TryStopRecordingByIdentity(long recordingId)
         {
             _lock.Lock();
@@ -1081,7 +1081,7 @@ namespace Adaptive.Archiver
         }
 
         /// <summary>
-        /// Stop all replay sessions for a given recording Id or all replays in general.
+        /// Stop all replay sessions for a given recording id or all replays in general.
         /// </summary>
         /// <param name="recordingId"> to stop replay for or <seealso cref="Adaptive.Aeron.Aeron.NULL_VALUE"/> for all replays. </param>
         public void StopAllReplays(long recordingId)
@@ -1865,7 +1865,7 @@ namespace Adaptive.Archiver
         /// Attempt to stop a replication session by id returned from <seealso cref="Replicate(long, long, int, string, string)"/>.
         /// </summary>
         /// <param name="replicationId"> to stop replication for. </param>
-        /// <returns> true if the replication was stopped, false if the replication is not active. </returns>
+        /// <returns> <code>true</code> if the replication was stopped, false if the replication is not active. </returns>
         /// <seealso cref="Replicate(long,long,int,string,string)"/>
         public bool TryStopReplication(long replicationId)
         {
@@ -2029,15 +2029,19 @@ namespace Adaptive.Archiver
         }
 
         /// <summary>
-        /// Migrate segments from a source recording and attach them to the beginning of a destination recording.
+        /// Migrate segments from a source recording and attach them to the beginning or end of a destination recording.
         /// <para>
         /// The source recording must match the destination recording for segment length, term length, mtu length,
-        /// stream id, plus the stop position and term id of the source must join with the start position of the
-        /// destination and be on a segment boundary.
+        /// stream id. The source recording must join to the destination recording on a segment boundary and without gaps,
+        /// i.e., the stop position and term id of one must match the start position and term id of the other.
+        /// </para>
+        /// <para>
+        /// The source recording must be stopped. The destination recording must be stopped if migrating segments
+        /// to the end of the destination recording.
         /// </para>
         /// <para>
         /// The source recording will be effectively truncated back to its start position after the migration.
-        /// 
+        ///    
         /// </para>
         /// </summary>
         /// <param name="srcRecordingId"> source recording from which the segments will be migrated. </param>
@@ -2071,7 +2075,8 @@ namespace Adaptive.Archiver
         {
             if (deadlineNs - nanoClock.NanoTime() < 0)
             {
-                throw new AeronTimeoutException(errorMessage + " - correlationId=" + correlationId, Category.ERROR);
+                throw new AeronTimeoutException(
+                    errorMessage + " - correlationId=" + correlationId + " messageTimeout=" + messageTimeoutNs + "ns", Category.ERROR);
             }
 
             try
@@ -2460,7 +2465,7 @@ namespace Adaptive.Archiver
             public const string RECORDING_EVENTS_ENABLED_PROP_NAME = "aeron.archive.recording.events.enabled";
 
             /// <summary>
-            /// Channel enabled for recording progress events of recordings from an archive which defaults to true.
+            /// Channel enabled for recording progress events of recordings from an archive which defaults to false.
             /// </summary>
             public const bool RECORDING_EVENTS_ENABLED_DEFAULT = false;
 
@@ -2522,12 +2527,12 @@ namespace Adaptive.Archiver
             /// <summary>
             /// Should term buffer files be sparse for control request and response streams.
             /// </summary>
-            /// <returns> true if term buffer files should be sparse for control request and response streams. </returns>
+            /// <returns> <code>true</code> if term buffer files should be sparse for control request and response streams. </returns>
             /// <seealso cref="CONTROL_TERM_BUFFER_SPARSE_PROP_NAME"/>
             public static bool ControlTermBufferSparse()
             {
-                string propValue = Config.GetProperty(CONTROL_TERM_BUFFER_SPARSE_PROP_NAME);
-                return null != propValue ? "true".Equals(propValue) : CONTROL_TERM_BUFFER_SPARSE_DEFAULT;
+                string propValue = Config.GetProperty(CONTROL_TERM_BUFFER_SPARSE_PROP_NAME, System.Convert.ToString(CONTROL_TERM_BUFFER_SPARSE_DEFAULT));
+                return "true".Equals(propValue);
             }
 
             /// <summary>
@@ -2635,12 +2640,12 @@ namespace Adaptive.Archiver
             /// <summary>
             /// Should the recording events stream be enabled.
             /// </summary>
-            /// <returns> true if the recording events stream be enabled. </returns>
+            /// <returns> <code>true</code> if the recording events stream be enabled. </returns>
             /// <seealso cref="RECORDING_EVENTS_ENABLED_PROP_NAME"></seealso>
             public static bool RecordingEventsEnabled()
             {
-                string propValue = Config.GetProperty(RECORDING_EVENTS_ENABLED_PROP_NAME);
-                return null != propValue ? "true".Equals(propValue) : RECORDING_EVENTS_ENABLED_DEFAULT;
+                string propValue = Config.GetProperty(RECORDING_EVENTS_ENABLED_PROP_NAME, System.Convert.ToString(RECORDING_EVENTS_ENABLED_DEFAULT));
+                return "true".Equals(propValue);
             }
         }
 
@@ -2905,7 +2910,7 @@ namespace Adaptive.Archiver
             /// <summary>
             /// Should the control streams use sparse file term buffers.
             /// </summary>
-            /// <returns> true if the control stream should use sparse file term buffers. </returns>
+            /// <returns> <code>true</code> if the control stream should use sparse file term buffers. </returns>
             /// <seealso cref="Configuration.CONTROL_TERM_BUFFER_SPARSE_PROP_NAME"></seealso>
             public bool ControlTermBufferSparse()
             {

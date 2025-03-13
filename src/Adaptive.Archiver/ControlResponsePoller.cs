@@ -23,14 +23,15 @@ namespace Adaptive.Archiver
 
         private readonly Subscription subscription;
         private ControlledFragmentAssembler fragmentAssembler;
+        private readonly int fragmentLimit;
+        
         private long controlSessionId = Aeron.Aeron.NULL_VALUE;
         private long correlationId = Aeron.Aeron.NULL_VALUE;
         private long relevantId = Aeron.Aeron.NULL_VALUE;
         private int templateId = Aeron.Aeron.NULL_VALUE;
         private int version = 0;
-        private readonly int fragmentLimit;
-        private ControlResponseCode code;
-        private string errorMessage;
+        private ControlResponseCode code = ControlResponseCode.NULL_VALUE;
+        private string errorMessage = null;
         private long recordingId = Aeron.Aeron.NULL_VALUE;
         private long subscriptionId = Aeron.Aeron.NULL_VALUE;
         private long position = Aeron.Aeron.NULL_VALUE;
@@ -77,18 +78,19 @@ namespace Adaptive.Archiver
         {
             if (isPollComplete)
             {
-                isPollComplete = false;
-                templateId = Aeron.Aeron.NULL_VALUE;
                 controlSessionId = Aeron.Aeron.NULL_VALUE;
                 correlationId = Aeron.Aeron.NULL_VALUE;
                 relevantId = Aeron.Aeron.NULL_VALUE;
+                templateId = Aeron.Aeron.NULL_VALUE;
+                version = 0;
+                code = ControlResponseCode.NULL_VALUE;
+                errorMessage = null;
                 recordingId = Aeron.Aeron.NULL_VALUE;
                 subscriptionId = Aeron.Aeron.NULL_VALUE;
                 position = Aeron.Aeron.NULL_VALUE;
-                recordingSignal = Codecs.RecordingSignal.NULL_VALUE;
-                version = 0;
-                errorMessage = null;
                 encodedChallenge = null;
+                recordingSignal = Codecs.RecordingSignal.NULL_VALUE;
+                isPollComplete = false;
             }
 
             return subscription.ControlledPoll(fragmentAssembler, fragmentLimit);

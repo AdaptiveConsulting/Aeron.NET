@@ -9,10 +9,10 @@ namespace Adaptive.Archiver.Codecs {
 
 public class ReplicateRequest2Encoder
 {
-    public const ushort BLOCK_LENGTH = 64;
+    public const ushort BLOCK_LENGTH = 68;
     public const ushort TEMPLATE_ID = 66;
     public const ushort SCHEMA_ID = 101;
-    public const ushort SCHEMA_VERSION = 7;
+    public const ushort SCHEMA_VERSION = 8;
 
     private ReplicateRequest2Encoder _parentMessage;
     private IMutableDirectBuffer _buffer;
@@ -384,6 +384,38 @@ public class ReplicateRequest2Encoder
     }
 
 
+    public static int ReplicationSessionIdEncodingOffset()
+    {
+        return 64;
+    }
+
+    public static int ReplicationSessionIdEncodingLength()
+    {
+        return 4;
+    }
+
+    public static int ReplicationSessionIdNullValue()
+    {
+        return -2147483648;
+    }
+
+    public static int ReplicationSessionIdMinValue()
+    {
+        return -2147483647;
+    }
+
+    public static int ReplicationSessionIdMaxValue()
+    {
+        return 2147483647;
+    }
+
+    public ReplicateRequest2Encoder ReplicationSessionId(int value)
+    {
+        _buffer.PutInt(_offset + 64, value, ByteOrder.LittleEndian);
+        return this;
+    }
+
+
     public static int SrcControlChannelId()
     {
         return 9;
@@ -611,6 +643,61 @@ public class ReplicateRequest2Encoder
         _parentMessage.Limit(limit + headerLength + length);
         _buffer.PutInt(limit, unchecked((int)length), ByteOrder.LittleEndian);
         _buffer.PutStringWithoutLengthAscii(limit + headerLength, value);
+
+        return this;
+    }
+
+    public static int EncodedCredentialsId()
+    {
+        return 14;
+    }
+
+    public static string EncodedCredentialsMetaAttribute(MetaAttribute metaAttribute)
+    {
+        switch (metaAttribute)
+        {
+            case MetaAttribute.EPOCH: return "unix";
+            case MetaAttribute.TIME_UNIT: return "nanosecond";
+            case MetaAttribute.SEMANTIC_TYPE: return "";
+            case MetaAttribute.PRESENCE: return "required";
+        }
+
+        return "";
+    }
+
+    public static int EncodedCredentialsHeaderLength()
+    {
+        return 4;
+    }
+
+    public ReplicateRequest2Encoder PutEncodedCredentials(IDirectBuffer src, int srcOffset, int length)
+    {
+        if (length > 1073741824)
+        {
+            throw new InvalidOperationException("length > maxValue for type: " + length);
+        }
+
+        int headerLength = 4;
+        int limit = _parentMessage.Limit();
+        _parentMessage.Limit(limit + headerLength + length);
+        _buffer.PutInt(limit, unchecked((int)length), ByteOrder.LittleEndian);
+        _buffer.PutBytes(limit + headerLength, src, srcOffset, length);
+
+        return this;
+    }
+
+    public ReplicateRequest2Encoder PutEncodedCredentials(byte[] src, int srcOffset, int length)
+    {
+        if (length > 1073741824)
+        {
+            throw new InvalidOperationException("length > maxValue for type: " + length);
+        }
+
+        int headerLength = 4;
+        int limit = _parentMessage.Limit();
+        _parentMessage.Limit(limit + headerLength + length);
+        _buffer.PutInt(limit, unchecked((int)length), ByteOrder.LittleEndian);
+        _buffer.PutBytes(limit + headerLength, src, srcOffset, length);
 
         return this;
     }

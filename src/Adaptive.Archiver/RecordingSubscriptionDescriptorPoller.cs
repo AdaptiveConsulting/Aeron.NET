@@ -173,9 +173,9 @@ namespace Adaptive.Archiver
                     if (controlResponseDecoder.ControlSessionId() == controlSessionId)
                     {
                         ControlResponseCode code = controlResponseDecoder.Code();
-                        long correlationId = controlResponseDecoder.CorrelationId();
+                        long responseCorrelationId = controlResponseDecoder.CorrelationId();
 
-                        if (ControlResponseCode.SUBSCRIPTION_UNKNOWN == code && correlationId == this.correlationId)
+                        if (ControlResponseCode.SUBSCRIPTION_UNKNOWN == code && responseCorrelationId == this.correlationId)
                         {
                             isDispatchComplete = true;
                             return BREAK;
@@ -186,9 +186,9 @@ namespace Adaptive.Archiver
                             ArchiveException ex = new ArchiveException(
                                 "response for correlationId=" + this.correlationId + ", error: " +
                                 controlResponseDecoder.ErrorMessage(), (int)controlResponseDecoder.RelevantId(),
-                                correlationId);
+                                responseCorrelationId);
 
-                            if (correlationId == this.correlationId)
+                            if (responseCorrelationId == this.correlationId)
                             {
                                 throw ex;
                             }

@@ -12,7 +12,7 @@ public class MigrateSegmentsRequestDecoder
     public const ushort BLOCK_LENGTH = 32;
     public const ushort TEMPLATE_ID = 57;
     public const ushort SCHEMA_ID = 101;
-    public const ushort SCHEMA_VERSION = 7;
+    public const ushort SCHEMA_VERSION = 8;
 
     private MigrateSegmentsRequestDecoder _parentMessage;
     private IDirectBuffer _buffer;
