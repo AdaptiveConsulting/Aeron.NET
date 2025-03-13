@@ -423,7 +423,7 @@ namespace Adaptive.Archiver
 
         /// <summary>
         /// Check if an error has been returned for the control session, or if it is no longer connected, and then throw
-        /// a <seealso cref="ArchiveException"/> if <seealso cref="Context.ErrorHandler(ErrorHandler)"/> is not set.
+        /// a <seealso cref="ArchiveException"/> if <seealso cref="Context.ErrorHandler(IErrorHandler)"/> is not set.
         /// <para>
         /// To check for an error response without raising an exception then try <seealso cref="PollForErrorResponse()"/>.
         ///    

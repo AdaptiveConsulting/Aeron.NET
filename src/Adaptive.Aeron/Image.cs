@@ -206,7 +206,7 @@ namespace Adaptive.Aeron
         
         /// <summary>
         /// The position the stream reached when EOS was received from the publisher. The position will be
-        /// <seealso cref="Long.MAX_VALUE"/> until the stream ends and EOS is set.
+        /// <seealso cref="long.MaxValue"/> until the stream ends and EOS is set.
         /// </summary>
         /// <returns> position the stream reached when EOS was received from the publisher. </returns>
         public long EndOfStreamPosition

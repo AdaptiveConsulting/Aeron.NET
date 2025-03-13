@@ -37,7 +37,7 @@ namespace Adaptive.Aeron
     /// 
     /// A client application requires only one Aeron object per Media Driver.
     /// 
-    /// <b>Note:</b> If <seealso cref="Context.ErrorHandler(ErrorHandler)"/> is not set and a <seealso cref="DriverTimeoutException"/>
+    /// <b>Note:</b> If <seealso cref="Context.ErrorHandler(IErrorHandler)"/> is not set and a <seealso cref="DriverTimeoutException"/>
     /// occurs then the process will face the wrath of <seealso cref="Environment.Exit"/>. See <seealso cref="Configuration.DEFAULT_ERROR_HANDLER"/>.
     /// 
     /// </summary>
@@ -372,8 +372,8 @@ namespace Adaptive.Aeron
         ///                       <seealso cref="AsyncAddSubscription(String, int, AvailableImageHandler, UnavailableImageHandler)"/>
         ///                       or <seealso cref="AsyncAddSubscription(String, int)"/> </param>
         /// <returns> a new <seealso cref="Subscription"/> when available otherwise null. </returns>
-        /// <seealso cref=".asyncAddSubscription(String, int)"/>
-        /// <seealso cref=".asyncAddSubscription(String, int, AvailableImageHandler, UnavailableImageHandler)"/>
+        /// <seealso cref="AsyncAddSubscription(String, int)"/>
+        /// <seealso cref="AsyncAddSubscription(String, int, AvailableImageHandler, UnavailableImageHandler)"/>
         public Subscription GetSubscription(long registrationId)
         {
             return _conductor.GetSubscription(registrationId);
@@ -629,7 +629,7 @@ namespace Adaptive.Aeron
             /// 
             /// </para>
             /// </summary>
-            /// <seealso cref="Context.ErrorHandler(ErrorHandler)" />
+            /// <seealso cref="Context.ErrorHandler(IErrorHandler)" />
             public static readonly IErrorHandler DEFAULT_ERROR_HANDLER = new DefaultErrorHandler();
 
             private class DefaultErrorHandler : IErrorHandler

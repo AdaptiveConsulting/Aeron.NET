@@ -422,7 +422,6 @@ namespace Adaptive.Aeron
         /// <param name="tempBuffer">     to append label to. </param>
         /// <param name="offset">         at which current label data ends. </param>
         /// <param name="fullVersion">    of the component. </param>
-        /// <param name="commitHashCode"> Git commit SHA. </param>
         /// <returns> length of the suffix appended. </returns>
         public static int AppendVersionInfo(IMutableDirectBuffer tempBuffer, int offset, string fullVersion)
         {
@@ -440,7 +439,7 @@ namespace Adaptive.Aeron
         /// <param name="counterId">      to append version info to. </param>
         /// <param name="value">          to be appended to the label. </param>
         /// <returns> number of bytes that got appended. </returns>
-        /// <exception cref="IllegalArgumentException"> if {@code counterId} is invalid or points to non-allocated counter. </exception>
+        /// <exception cref="ArgumentException"> if {@code counterId} is invalid or points to non-allocated counter. </exception>
         public static int AppendToLabel(IAtomicBuffer metaDataBuffer, int counterId, string value)
         {
             if (counterId < 0)
