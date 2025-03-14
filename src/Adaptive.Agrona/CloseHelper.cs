@@ -70,7 +70,7 @@ namespace Adaptive.Agrona
                 errorHandler(ex);
             }
         }
-        
+
         /// <summary>
         /// Dispose an <see cref="IDisposable"/> delegating exceptions to <see cref="ErrorHandler"/>.
         /// </summary>
@@ -105,6 +105,15 @@ namespace Adaptive.Agrona
             }
         }
 
+        /// <summary>
+        /// Close an IDisposable, dealing with nulls and rethrowing exceptions as runtime exceptions.
+        /// </summary>
+        /// <param name="disposable">The IDisposable to close.</param>
+        public static void Dispose(IDisposable disposable)
+        {
+            disposable?.Dispose();
+        }
+
         public static void CloseAll(IEnumerable<IDisposable> disposables)
         {
             if (disposables == null || !disposables.Any())
@@ -137,6 +146,62 @@ namespace Adaptive.Agrona
 
             if (error != null)
             {
+                throw error;
+            }
+        }
+
+        /// <summary>
+        /// Dispose all disposables and delegate exceptions to the <see cref="IErrorHandler"/>.
+        /// If <paramref name="errorHandler"/> is null, exceptions are aggregated and thrown at the end.
+        /// </summary>
+        public static void CloseAll<T>(IErrorHandler errorHandler, ICollection<T> disposables) where T : IDisposable
+        {
+            if (disposables == null) return;
+
+            NullReferenceException error = null;
+            List<Exception> suppressed = null;
+
+            foreach (var disposable in disposables)
+            {
+                if (disposable == null) continue;
+
+                try
+                {
+                    disposable.Dispose();
+                }
+                catch (Exception ex)
+                {
+                    if (errorHandler == null)
+                    {
+                        if (error == null)
+                        {
+                            error = new NullReferenceException("errorHandler is null");
+                        }
+
+                        if (suppressed == null)
+                        {
+                            suppressed = new List<Exception>();
+                        }
+
+                        suppressed.Add(ex);
+                    }
+                    else
+                    {
+                        errorHandler.OnError(ex);
+                    }
+                }
+            }
+
+            if (error != null)
+            {
+                if (suppressed.Count > 0)
+                {
+                    var all = new List<Exception>(1 + suppressed.Count);
+                    all.Add(error);
+                    all.AddRange(suppressed);
+                    throw new AggregateException("One or more errors occurred while disposing.", all);
+                }
+
                 throw error;
             }
         }

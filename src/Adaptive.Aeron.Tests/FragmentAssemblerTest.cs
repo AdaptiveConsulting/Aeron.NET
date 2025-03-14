@@ -30,7 +30,6 @@ namespace Adaptive.Aeron.Tests
         private const int INITIAL_TERM_ID = 3;
 
         private IFragmentHandler delegateFragmentHandler;
-        private IDirectBuffer termBuffer;
         private Header header;
         private FragmentAssembler assembler;
         private DataHeaderFlyweight headerFlyweight;
@@ -39,7 +38,6 @@ namespace Adaptive.Aeron.Tests
         public void SetUp()
         {
             delegateFragmentHandler = A.Fake<IFragmentHandler>();
-            termBuffer = A.Fake<IDirectBuffer>();
             assembler = new FragmentAssembler(delegateFragmentHandler);
             header = A.Fake<Header>(x => x.Wrapping(new Header(INITIAL_TERM_ID, LogBufferDescriptor.TERM_MIN_LENGTH)));
 
@@ -172,21 +170,19 @@ namespace Adaptive.Aeron.Tests
         [Test]
         public void ShouldSkipOverMessagesWithLoss()
         {
-            A.CallTo(() => header.Flags).ReturnsNextFromSequence(
-                FrameDescriptor.BEGIN_FRAG_FLAG,
-                FrameDescriptor.END_FRAG_FLAG,
-                FrameDescriptor.UNFRAGMENTED);
-
             var srcBuffer = new UnsafeBuffer(new byte[2048]);
             var length = 256;
 
             int offset = DataHeaderFlyweight.HEADER_LENGTH;
+            headerFlyweight.Flags(FrameDescriptor.BEGIN_FRAG_FLAG);
             assembler.OnFragment(srcBuffer, offset, length, header);
             offset = BitUtil.Align(offset + length + DataHeaderFlyweight.HEADER_LENGTH, FrameDescriptor.FRAME_ALIGNMENT);
             offset = BitUtil.Align(offset + length + DataHeaderFlyweight.HEADER_LENGTH, FrameDescriptor.FRAME_ALIGNMENT);
             offset = BitUtil.Align(offset + length + DataHeaderFlyweight.HEADER_LENGTH, FrameDescriptor.FRAME_ALIGNMENT);
+            headerFlyweight.Flags(FrameDescriptor.END_FRAG_FLAG);
             assembler.OnFragment(srcBuffer, offset, length, header);
             offset = BitUtil.Align(offset + length + DataHeaderFlyweight.HEADER_LENGTH, FrameDescriptor.FRAME_ALIGNMENT);
+            headerFlyweight.Flags(FrameDescriptor.UNFRAGMENTED);
             assembler.OnFragment(srcBuffer, offset, length, header);
 
             Func<Header, bool> headerAssertion = capturedHeader => capturedHeader.SessionId == SESSION_ID &&

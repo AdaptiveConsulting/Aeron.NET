@@ -9,6 +9,7 @@ namespace Adaptive.Aeron.Samples.ClusterClient
         {
             var ctx = new AeronCluster.Context()
                 .IngressChannel("aeron:udp?endpoint=localhost:9010")
+                .EgressChannel("aeron:udp?endpoint=localhost:0")
                 .EgressListener(new MessageListener());
             
             using (var c = AeronCluster.Connect(ctx))

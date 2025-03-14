@@ -57,7 +57,7 @@ namespace Adaptive.Archiver
         {
             this.fragmentAssembler = new ControlledFragmentAssembler(this);
 
-            this.subscription = subscription;
+            this.subscription = Objects.RequireNonNull(subscription);
             this.fragmentLimit = fragmentLimit;
         }
 

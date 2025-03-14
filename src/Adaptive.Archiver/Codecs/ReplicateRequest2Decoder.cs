@@ -12,7 +12,7 @@ public class ReplicateRequest2Decoder
     public const ushort BLOCK_LENGTH = 68;
     public const ushort TEMPLATE_ID = 66;
     public const ushort SCHEMA_ID = 101;
-    public const ushort SCHEMA_VERSION = 8;
+    public const ushort SCHEMA_VERSION = 10;
 
     private ReplicateRequest2Decoder _parentMessage;
     private IDirectBuffer _buffer;
@@ -926,6 +926,101 @@ public class ReplicateRequest2Decoder
         return bytesCopied;
     }
 
+    public static int SrcResponseChannelId()
+    {
+        return 15;
+    }
+
+    public static int SrcResponseChannelSinceVersion()
+    {
+        return 10;
+    }
+
+    public static string SrcResponseChannelCharacterEncoding()
+    {
+        return "US-ASCII";
+    }
+
+    public static string SrcResponseChannelMetaAttribute(MetaAttribute metaAttribute)
+    {
+        switch (metaAttribute)
+        {
+            case MetaAttribute.EPOCH: return "unix";
+            case MetaAttribute.TIME_UNIT: return "nanosecond";
+            case MetaAttribute.SEMANTIC_TYPE: return "";
+            case MetaAttribute.PRESENCE: return "required";
+        }
+
+        return "";
+    }
+
+    public static int SrcResponseChannelHeaderLength()
+    {
+        return 4;
+    }
+
+    public int SrcResponseChannelLength()
+    {
+        if (_parentMessage._actingVersion < 10)
+        {
+            return 0;
+        }
+
+        int limit = _parentMessage.Limit();
+        return (int)unchecked((uint)_buffer.GetInt(limit, ByteOrder.LittleEndian));
+    }
+
+    public int GetSrcResponseChannel(IMutableDirectBuffer dst, int dstOffset, int length)
+    {
+        if (_parentMessage._actingVersion < 10)
+        {
+            return 0;
+        }
+
+        int headerLength = 4;
+        int limit = _parentMessage.Limit();
+        int dataLength = (int)unchecked((uint)_buffer.GetInt(limit, ByteOrder.LittleEndian));
+        int bytesCopied = Math.Min(length, dataLength);
+        _parentMessage.Limit(limit + headerLength + dataLength);
+        _buffer.GetBytes(limit + headerLength, dst, dstOffset, bytesCopied);
+
+        return bytesCopied;
+    }
+
+    public int GetSrcResponseChannel(byte[] dst, int dstOffset, int length)
+    {
+        if (_parentMessage._actingVersion < 10)
+        {
+            return 0;
+        }
+
+        int headerLength = 4;
+        int limit = _parentMessage.Limit();
+        int dataLength = (int)unchecked((uint)_buffer.GetInt(limit, ByteOrder.LittleEndian));
+        int bytesCopied = Math.Min(length, dataLength);
+        _parentMessage.Limit(limit + headerLength + dataLength);
+        _buffer.GetBytes(limit + headerLength, dst, dstOffset, bytesCopied);
+
+        return bytesCopied;
+    }
+
+    public string SrcResponseChannel()
+    {
+        if (_parentMessage._actingVersion < 10)
+        {
+            return "";
+        }
+
+        int headerLength = 4;
+        int limit = _parentMessage.Limit();
+        int dataLength = (int)unchecked((uint)_buffer.GetInt(limit, ByteOrder.LittleEndian));
+        _parentMessage.Limit(limit + headerLength + dataLength);
+        byte[] tmp = new byte[dataLength];
+        _buffer.GetBytes(limit + headerLength, tmp, 0, dataLength);
+
+        return Encoding.ASCII.GetString(tmp);
+    }
+
 
     public override string ToString()
     {
@@ -1020,6 +1115,10 @@ public class ReplicateRequest2Decoder
         //Token{signal=BEGIN_VAR_DATA, name='encodedCredentials', referencedName='null', description='null', id=14, version=8, deprecated=0, encodedLength=0, offset=-1, componentTokenCount=6, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
         builder.Append("EncodedCredentials=");
         builder.Append(EncodedCredentialsLength() + " raw bytes");
+        builder.Append('|');
+        //Token{signal=BEGIN_VAR_DATA, name='srcResponseChannel', referencedName='null', description='null', id=15, version=10, deprecated=0, encodedLength=0, offset=-1, componentTokenCount=6, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        builder.Append("SrcResponseChannel=");
+        builder.Append(SrcResponseChannel());
 
         Limit(originalLimit);
 

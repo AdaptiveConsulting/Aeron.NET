@@ -19,6 +19,7 @@ namespace Adaptive.Cluster.Client
         private readonly AdminResponseDecoder _adminResponseDecoder = new AdminResponseDecoder();
         private readonly FragmentAssembler _fragmentAssembler;
         private readonly IEgressListener _listener;
+        private readonly IEgressListenerExtension _listenerExtension;
         private readonly Subscription _subscription;
 
         /// <summary>
@@ -33,13 +34,34 @@ namespace Adaptive.Cluster.Client
             IEgressListener listener,
             long clusterSessionId,
             Subscription subscription,
+            int fragmentLimit) : this(listener, null, clusterSessionId, subscription, fragmentLimit)
+        {
+           
+        }
+        
+        /// <summary>
+        /// Construct an adapter for cluster egress which consumes from the subscription and dispatches to the
+        /// <seealso cref="IEgressListener"/> or extension messages to <seealso cref="IEgressListenerExtension"/>.
+        /// </summary>
+        /// <param name="listener">          to dispatch events to. </param>
+        /// <param name="listenerExtension"> to dispatch extension messages to </param>
+        /// <param name="clusterSessionId">  for the egress. </param>
+        /// <param name="subscription">      over the egress stream. </param>
+        /// <param name="fragmentLimit">     to poll on each <seealso cref="Poll()"/> operation. </param>
+        public EgressAdapter(
+            IEgressListener listener,
+            IEgressListenerExtension listenerExtension,
+            long clusterSessionId,
+            Subscription subscription,
             int fragmentLimit)
         {
-            _clusterSessionId = clusterSessionId;
             _fragmentAssembler = new FragmentAssembler(this);
-            _listener = listener;
-            _subscription = subscription;
+            
+            _clusterSessionId = clusterSessionId;
             _fragmentLimit = fragmentLimit;
+            _listener = listener;
+            _listenerExtension = listenerExtension;
+            _subscription = subscription;
         }
 
         /// <summary>
@@ -56,40 +78,50 @@ namespace Adaptive.Cluster.Client
         {
             _messageHeaderDecoder.Wrap(buffer, offset);
 
+            int templateId = _messageHeaderDecoder.TemplateId();
             int schemaId = _messageHeaderDecoder.SchemaId();
             if (schemaId != MessageHeaderDecoder.SCHEMA_ID)
             {
-                throw new ClusterException("expected schemaId=" + MessageHeaderDecoder.SCHEMA_ID + ", actual=" +
-                                           schemaId);
-            }
-
-            int templateId = _messageHeaderDecoder.TemplateId();
-
-            if (SessionMessageHeaderDecoder.TEMPLATE_ID == templateId)
-            {
-                _sessionMessageHeaderDecoder.Wrap(
-                    buffer,
-                    offset + MessageHeaderDecoder.ENCODED_LENGTH,
-                    _messageHeaderDecoder.BlockLength(),
-                    _messageHeaderDecoder.Version());
-
-                var sessionId = _sessionMessageHeaderDecoder.ClusterSessionId();
-                if (sessionId == _clusterSessionId)
+                if (_listenerExtension != null)
                 {
-                    _listener.OnMessage(
-                        sessionId,
-                        _sessionMessageHeaderDecoder.Timestamp(),
+                    _listenerExtension.OnExtensionMessage(
+                        _messageHeaderDecoder.BlockLength(),
+                        templateId,
+                        schemaId,
+                        _messageHeaderDecoder.Version(),
                         buffer,
-                        offset + AeronCluster.SESSION_HEADER_LENGTH,
-                        length - AeronCluster.SESSION_HEADER_LENGTH,
-                        header);
+                        offset + MessageHeaderDecoder.ENCODED_LENGTH,
+                        length - MessageHeaderDecoder.ENCODED_LENGTH);
+                    return;
                 }
-
-                return;
+                throw new ClusterException("expected schemaId=" + MessageHeaderDecoder.SCHEMA_ID + ", actual=" + schemaId);
             }
 
             switch (templateId)
             {
+                case SessionMessageHeaderDecoder.TEMPLATE_ID:
+                {
+                    _sessionMessageHeaderDecoder.Wrap(
+                        buffer,
+                        offset + MessageHeaderDecoder.ENCODED_LENGTH,
+                        _messageHeaderDecoder.BlockLength(),
+                        _messageHeaderDecoder.Version());
+
+                    var sessionId = _sessionMessageHeaderDecoder.ClusterSessionId();
+                    if (sessionId == _clusterSessionId)
+                    {
+                        _listener.OnMessage(
+                            sessionId,
+                            _sessionMessageHeaderDecoder.Timestamp(),
+                            buffer,
+                            offset + AeronCluster.SESSION_HEADER_LENGTH,
+                            length - AeronCluster.SESSION_HEADER_LENGTH,
+                            header);
+                    }
+
+                    break;
+                }
+                
                 case SessionEventDecoder.TEMPLATE_ID:
                 {
                     _sessionEventDecoder.Wrap(

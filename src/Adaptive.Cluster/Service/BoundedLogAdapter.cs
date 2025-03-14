@@ -59,6 +59,7 @@ namespace Adaptive.Cluster.Service
             else if ((flags & BEGIN_FRAG_FLAG) == BEGIN_FRAG_FLAG)
             {
                 builder.Reset()
+                    .CaptureHeader(header)
                     .Append(buffer, offset, length)
                     .NextTermOffset(BitUtil.Align(offset + length + HEADER_LENGTH, FRAME_ALIGNMENT));
             }
@@ -70,7 +71,7 @@ namespace Adaptive.Cluster.Service
 
                 if ((flags & END_FRAG_FLAG) == END_FRAG_FLAG)
                 {
-                    action = OnMessage(builder.Buffer(), 0, builder.Limit(), header);
+                    action = OnMessage(builder.Buffer(), 0, builder.Limit(), builder.CompleteHeader(header));
 
                     if (ControlledFragmentHandlerAction.ABORT == action)
                     {

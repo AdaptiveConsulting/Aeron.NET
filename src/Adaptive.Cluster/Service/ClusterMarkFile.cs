@@ -4,6 +4,7 @@ using System.IO;
 using Adaptive.Agrona;
 using Adaptive.Agrona.Concurrent;
 using Adaptive.Agrona.Concurrent.Errors;
+using Adaptive.Agrona.Util;
 using Adaptive.Cluster.Client;
 using Adaptive.Cluster.Codecs.Mark;
 using Adaptive.Cluster.Service;
@@ -16,28 +17,68 @@ namespace Adaptive.Cluster
     /// </summary>
     public class ClusterMarkFile : IDisposable
     {
+        /// <summary>
+        /// Major version.
+        /// </summary>
         public const int MAJOR_VERSION = 0;
+        /// <summary>
+        /// Minor version.
+        /// </summary>
         public const int MINOR_VERSION = 3;
+        /// <summary>
+        /// Patch version.
+        /// </summary>
         public const int PATCH_VERSION = 0;
-        public static readonly int SEMANTIC_VERSION = SemanticVersion.Compose(MAJOR_VERSION, MINOR_VERSION, PATCH_VERSION);
-
+        /// <summary>
+        /// Full semantic version.
+        /// </summary>
+        public static readonly int SEMANTIC_VERSION =
+            SemanticVersion.Compose(MAJOR_VERSION, MINOR_VERSION, PATCH_VERSION);
+        /// <summary>
+        /// Length of the <code>header</code> section.
+        /// </summary>
         public const int HEADER_LENGTH = 8 * 1024;
+        /// <summary>
+        /// Special version to indicate that component failed to start.
+        /// </summary>
         public const int VERSION_FAILED = -1;
+        /// <summary>
+        /// Min length for the error log buffer.
+        /// </summary>
         public const int ERROR_BUFFER_MIN_LENGTH = 1024 * 1024;
+        /// <summary>
+        /// File extension used by the mark file.
+        /// </summary>
         public const int ERROR_BUFFER_MAX_LENGTH = int.MaxValue - HEADER_LENGTH;
-
-        
+        /// <summary>
+        /// Special version to indicate that component failed to start.
+        /// </summary>
         public const string FILE_EXTENSION = ".dat";
+        /// <summary>
+        /// File extension used by the link file.
+        /// </summary>
         public const string LINK_FILE_EXTENSION = ".lnk";
+        /// <summary>
+        /// Mark file name.
+        /// </summary>
         public const string FILENAME = "cluster-mark" + FILE_EXTENSION;
+        /// <summary>
+        /// Link file name.
+        /// </summary>
         public const string LINK_FILENAME = "cluster-mark" + LINK_FILE_EXTENSION;
+        /// <summary>
+        /// Service mark file name.
+        /// </summary>
         public const string SERVICE_FILENAME_PREFIX = "cluster-mark-service-";
+
+        private static readonly int HEADER_OFFSET = MessageHeaderDecoder.ENCODED_LENGTH;
 
         private readonly MarkFileHeaderDecoder headerDecoder = new MarkFileHeaderDecoder();
         private readonly MarkFileHeaderEncoder headerEncoder = new MarkFileHeaderEncoder();
         private readonly MarkFile markFile;
         private readonly UnsafeBuffer buffer;
         private readonly UnsafeBuffer errorBuffer;
+        private readonly int headerOffset;
 
         /// <summary>
         /// Create new <seealso cref="MarkFile"/> for a cluster service but check if an existing service is active.
@@ -47,87 +88,120 @@ namespace Adaptive.Cluster
         /// <param name="errorBufferLength"> for storing the error log. </param>
         /// <param name="epochClock">        for checking liveness against. </param>
         /// <param name="timeoutMs">         for the activity check on an existing <seealso cref="MarkFile"/>. </param>
-        public ClusterMarkFile(
-            FileInfo file,
-            ClusterComponentType type,
-            int errorBufferLength,
-            IEpochClock epochClock,
+        public ClusterMarkFile(FileInfo file, ClusterComponentType type, int errorBufferLength, IEpochClock epochClock,
             long timeoutMs)
         {
             if (errorBufferLength < ERROR_BUFFER_MIN_LENGTH || errorBufferLength > ERROR_BUFFER_MAX_LENGTH)
             {
                 throw new ArgumentException("Invalid errorBufferLength: " + errorBufferLength);
             }
-            
-            var markFileExists = file.Exists;
+
+            bool markFileExists = file.Exists;
             int totalFileLength = HEADER_LENGTH + errorBufferLength;
 
-            markFile = new MarkFile(
-                file,
-                markFileExists,
-                MarkFileHeaderDecoder.VersionEncodingOffset(),
-                MarkFileHeaderDecoder.ActivityTimestampEncodingOffset(),
-                totalFileLength,
-                timeoutMs,
-                epochClock,
-                (version) =>
-                {
-                    if (VERSION_FAILED == version && markFileExists)
-                    {
-                        Console.WriteLine("mark file version -1 indicates error on previous startup.");
-                    }
-                    else if (SemanticVersion.Major(version) != MAJOR_VERSION)
-                    {
-                        throw new ClusterException("mark file major version " + SemanticVersion.Major(version) +
-                                                   " does not match software: " + MAJOR_VERSION);
-                    }
-                },
-                null);
+            MessageHeaderDecoder messageHeaderDecoder = new MessageHeaderDecoder();
 
-            buffer = markFile.Buffer();
-            errorBuffer = new UnsafeBuffer(buffer, HEADER_LENGTH, errorBufferLength);
-
-
-            headerEncoder.Wrap(buffer, 0);
-            headerDecoder.Wrap(buffer, 0, MarkFileHeaderDecoder.BLOCK_LENGTH, MarkFileHeaderDecoder.SCHEMA_VERSION);
-
+            long candidateTermId;
             if (markFileExists)
             {
+                int headerOffset = HeaderOffset(file);
+                MarkFile markFile = new MarkFile(file, true,
+                    headerOffset + MarkFileHeaderDecoder.VersionEncodingOffset(),
+                    headerOffset + MarkFileHeaderDecoder.ActivityTimestampEncodingOffset(), 
+                    totalFileLength, 
+                    timeoutMs,
+                    epochClock,
+                    (version) =>
+                    {
+                        if (VERSION_FAILED == version)
+                        {
+                            Console.Error.WriteLine("mark file version -1 indicates error on previous startup.");
+                        }
+                        else if (SemanticVersion.Major(version) != MAJOR_VERSION)
+                        {
+                            throw new ClusterException("mark file major version " + SemanticVersion.Major(version) +
+                                                       " does not match software: " + MAJOR_VERSION);
+                        }
+                    }, null);
+                UnsafeBuffer buffer = markFile.Buffer();
+
                 if (buffer.Capacity != totalFileLength)
                 {
-                    throw new ClusterException(
-                        "ClusterMarkFile capacity=" + buffer.Capacity + " < expectedCapacity=" + totalFileLength);
+                    throw new ClusterException("ClusterMarkFile capacity=" + buffer.Capacity +
+                                               " < expectedCapacity=" + totalFileLength);
                 }
 
-                var existingErrorBufferLength = headerDecoder.ErrorBufferLength();
-                var existingErrorBuffer = new UnsafeBuffer(
-                    buffer, headerDecoder.HeaderLength(), existingErrorBufferLength);
+                if (0 != headerOffset)
+                {
+                    headerDecoder.WrapAndApplyHeader(buffer, 0, messageHeaderDecoder);
+                }
+                else
+                {
+                    headerDecoder.Wrap(buffer, 0, MarkFileHeaderDecoder.BLOCK_LENGTH,
+                        MarkFileHeaderDecoder.SCHEMA_VERSION);
+                }
+
+                ClusterComponentType existingType = headerDecoder.ComponentType();
+
+                if (existingType != ClusterComponentType.UNKNOWN && existingType != type)
+                {
+                    if (existingType != ClusterComponentType.BACKUP || ClusterComponentType.CONSENSUS_MODULE != type)
+                    {
+                        throw new ClusterException("existing Mark file type " + existingType +
+                                                   " not same as required type " + type);
+                    }
+                }
+
+                int existingErrorBufferLength = headerDecoder.ErrorBufferLength();
+                UnsafeBuffer existingErrorBuffer =
+                    new UnsafeBuffer(buffer, headerDecoder.HeaderLength(), existingErrorBufferLength);
 
                 SaveExistingErrors(file, existingErrorBuffer, type, Aeron.Aeron.Context.FallbackLogger());
                 existingErrorBuffer.SetMemory(0, existingErrorBufferLength, 0);
+
+                candidateTermId = headerDecoder.CandidateTermId();
+
+                if (0 != headerOffset)
+                {
+                    this.markFile = markFile;
+                    this.buffer = buffer;
+                }
+                else
+                {
+                    CloseHelper.Dispose(markFile);
+                    this.markFile = new MarkFile(file, false,
+                        HEADER_OFFSET + MarkFileHeaderDecoder.VersionEncodingOffset(),
+                        HEADER_OFFSET + MarkFileHeaderDecoder.ActivityTimestampEncodingOffset(), totalFileLength,
+                        timeoutMs, epochClock, null, null);
+                    this.buffer = markFile.Buffer();
+                    this.buffer.SetMemory(0, headerDecoder.HeaderLength(), 0);
+                }
             }
             else
             {
-                headerEncoder.CandidateTermId(Aeron.Aeron.NULL_VALUE);
+                markFile = new MarkFile(file, false, HEADER_OFFSET + MarkFileHeaderDecoder.VersionEncodingOffset(),
+                    HEADER_OFFSET + MarkFileHeaderDecoder.ActivityTimestampEncodingOffset(), totalFileLength, timeoutMs,
+                    epochClock, null, null);
+                buffer = markFile.Buffer();
+                candidateTermId = Aeron.Aeron.NULL_VALUE;
             }
 
-            var existingType = headerDecoder.ComponentType();
+            headerOffset = HEADER_OFFSET;
 
-            if (existingType != ClusterComponentType.NULL && existingType != type)
-            {
-                if (existingType != ClusterComponentType.BACKUP || ClusterComponentType.CONSENSUS_MODULE != type)
-                {
-                    throw new ClusterException(
-                        "existing Mark file type " + existingType + " not same as required type " + type);
-                }
-            }
+            errorBuffer = new UnsafeBuffer(buffer, HEADER_LENGTH, errorBufferLength);
 
-            headerEncoder.ComponentType(type);
-            headerEncoder.HeaderLength(HEADER_LENGTH);
-            headerEncoder.ErrorBufferLength(errorBufferLength);
-            headerEncoder.Pid(Process.GetCurrentProcess().Id);
-            headerEncoder.StartTimestamp(epochClock.Time());
+            headerEncoder
+                .WrapAndApplyHeader(buffer, 0, new MessageHeaderEncoder())
+                .ComponentType(type)
+                .StartTimestamp(epochClock.Time())
+                .Pid(Process.GetCurrentProcess().Id)
+                .CandidateTermId(candidateTermId)
+                .HeaderLength(HEADER_LENGTH
+                ).ErrorBufferLength(errorBufferLength);
+
+            headerDecoder.WrapAndApplyHeader(buffer, 0, messageHeaderDecoder);
         }
+
 
         /// <summary>
         /// Construct to read the status of an existing <seealso cref="MarkFile"/> for a cluster component.
@@ -137,33 +211,39 @@ namespace Adaptive.Cluster
         /// <param name="epochClock"> to be used for checking liveness. </param>
         /// <param name="timeoutMs">  to wait for file to exist. </param>
         /// <param name="logger">     to which debug information will be written if an issue occurs. </param>
-        public ClusterMarkFile(DirectoryInfo directory, string filename, IEpochClock epochClock, long timeoutMs,
-            Action<string> logger)
+        public ClusterMarkFile(
+            DirectoryInfo directory,
+            string filename,
+            IEpochClock epochClock,
+            long timeoutMs,
+            Action<string> logger) : this(OpenExistingMarkFile(directory,
+            filename,
+            epochClock,
+            timeoutMs,
+            logger))
         {
-            markFile = new MarkFile(
-                directory,
-                filename,
-                MarkFileHeaderDecoder.VersionEncodingOffset(),
-                MarkFileHeaderDecoder.ActivityTimestampEncodingOffset(),
-                timeoutMs,
-                epochClock,
-                (version) =>
-                {
-                    if (SemanticVersion.Major(version) != MAJOR_VERSION)
-                    {
-                        throw new ClusterException(
-                            "mark file major version " + SemanticVersion.Major(version) + 
-                            " does not match software: " + AeronCluster.Configuration.PROTOCOL_MAJOR_VERSION);
-                    }
+        }
 
-                },
-                logger);
-
+        internal ClusterMarkFile(MarkFile markFile)
+        {
+            this.markFile = markFile;
             buffer = markFile.Buffer();
-            headerDecoder.Wrap(buffer, 0, MarkFileHeaderDecoder.BLOCK_LENGTH, MarkFileHeaderDecoder.SCHEMA_VERSION);
+
+            headerOffset = HeaderOffset(buffer);
+            if (0 != headerOffset)
+            {
+                headerEncoder.Wrap(buffer, headerOffset);
+                headerDecoder.WrapAndApplyHeader(buffer, 0, new MessageHeaderDecoder());
+            }
+            else
+            {
+                headerEncoder.Wrap(buffer, 0);
+                headerDecoder.Wrap(buffer, 0, MarkFileHeaderDecoder.BLOCK_LENGTH, MarkFileHeaderDecoder.SCHEMA_VERSION);
+            }
+
             errorBuffer = new UnsafeBuffer(buffer, headerDecoder.HeaderLength(), headerDecoder.ErrorBufferLength());
         }
-        
+
         /// <summary>
         /// Get the parent directory containing the mark file.
         /// </summary>
@@ -183,7 +263,8 @@ namespace Adaptive.Cluster
         public static bool IsServiceMarkFile(FileInfo path)
         {
             string fileName = path.Name;
-            return fileName.StartsWith(SERVICE_FILENAME_PREFIX, StringComparison.Ordinal) && fileName.EndsWith(FILE_EXTENSION, StringComparison.Ordinal);
+            return fileName.StartsWith(SERVICE_FILENAME_PREFIX, StringComparison.Ordinal) &&
+                   fileName.EndsWith(FILE_EXTENSION, StringComparison.Ordinal);
         }
 
         /// <summary>
@@ -195,32 +276,50 @@ namespace Adaptive.Cluster
         {
             return path.Name.Equals(FILENAME);
         }
-        
+
         /// <inheritdoc />
         public void Dispose()
         {
+            if (!markFile.IsClosed())
+            {
+                CloseHelper.Dispose(markFile);
+                UnsafeBuffer emptyBuffer = new UnsafeBuffer();
+                headerEncoder.Wrap(emptyBuffer, 0);
+                headerDecoder.Wrap(emptyBuffer, 0, 0, 0);
+                errorBuffer.Wrap(emptyBuffer, 0, 0);
+            }
+
             markFile?.Dispose();
         }
-        
+
         /// <summary>
         /// Check if the <seealso cref="MarkFile"/> is closed.
         /// </summary>
         /// <returns> true if the <seealso cref="MarkFile"/> is closed. </returns>
         public bool IsClosed
         {
-            get
-            {
-                return markFile.IsClosed();
-            }
+            get { return markFile.IsClosed(); }
         }
-        
+
+        /// <summary>
+        /// Get the current value of a candidate term id if a vote is placed in an election with volatile semantics.
+        /// </summary>
+        /// <returns> the current candidate term id within an election after voting or <seealso cref="Aeron.Aeron.NULL_VALUE"/> if
+        /// no voting phase of an election is currently active. </returns>
+        public long CandidateTermId()
+        {
+            return markFile.IsClosed()
+                ? Aeron.Aeron.NULL_VALUE
+                : buffer.GetLongVolatile(headerOffset + MarkFileHeaderDecoder.CandidateTermIdEncodingOffset());
+        }
+
         /// <summary>
         /// Cluster member id either assigned statically or as the result of dynamic membership join.
         /// </summary>
         /// <returns> cluster member id either assigned statically or as the result of dynamic membership join. </returns>
         public int MemberId()
         {
-            return buffer.GetInt(MarkFileHeaderDecoder.MemberIdEncodingOffset());
+            return markFile.IsClosed() ? Aeron.Aeron.NULL_VALUE : headerDecoder.MemberId();
         }
 
         /// <summary>
@@ -229,16 +328,19 @@ namespace Adaptive.Cluster
         /// <param name="memberId"> assigned as part of dynamic join of a cluster. </param>
         public void MemberId(int memberId)
         {
-            buffer.PutInt(MarkFileHeaderEncoder.MemberIdEncodingOffset(), memberId);
+            if (!markFile.IsClosed())
+            {
+                buffer.PutInt(MarkFileHeaderEncoder.MemberIdEncodingOffset(), memberId);
+            }
         }
-        
+
         /// <summary>
         /// Identity of the cluster instance so multiple clusters can run on the same driver.
         /// </summary>
         /// <returns> id of the cluster instance so multiple clusters can run on the same driver. </returns>
         public int ClusterId()
         {
-            return buffer.GetInt(MarkFileHeaderDecoder.ClusterIdEncodingOffset());
+            return markFile.IsClosed() ? Aeron.Aeron.NULL_VALUE : headerDecoder.ClusterId();
         }
 
         /// <summary>
@@ -247,7 +349,10 @@ namespace Adaptive.Cluster
         /// <param name="clusterId"> of the cluster instance so multiple clusters can run on the same driver. </param>
         public void ClusterId(int clusterId)
         {
-            buffer.PutInt(MarkFileHeaderEncoder.ClusterIdEncodingOffset(), clusterId);
+            if (!markFile.IsClosed())
+            {
+                buffer.PutInt(MarkFileHeaderEncoder.ClusterIdEncodingOffset(), clusterId);
+            }
         }
 
         /// <summary>
@@ -255,7 +360,10 @@ namespace Adaptive.Cluster
         /// </summary>
         public void SignalReady()
         {
-            markFile.SignalReady(SEMANTIC_VERSION);
+            if (!markFile.IsClosed())
+            {
+                markFile.SignalReady(SEMANTIC_VERSION);
+            }
         }
 
         /// <summary>
@@ -263,7 +371,10 @@ namespace Adaptive.Cluster
         /// </summary>
         public void SignalFailedStart()
         {
-            markFile.SignalReady(VERSION_FAILED);
+            if (!markFile.IsClosed())
+            {
+                markFile.SignalReady(VERSION_FAILED);
+            }
         }
 
         /// <summary>
@@ -284,7 +395,7 @@ namespace Adaptive.Cluster
         /// <returns> the activity timestamp of the cluster component with volatile semantics. </returns>
         public long ActivityTimestampVolatile()
         {
-            return markFile.TimestampVolatile();
+            return markFile.IsClosed() ? Aeron.Aeron.NULL_VALUE : markFile.TimestampVolatile();
         }
 
         /// <summary>
@@ -305,7 +416,7 @@ namespace Adaptive.Cluster
             return headerDecoder;
         }
 
-       
+
         public UnsafeBuffer Buffer => buffer;
 
         /// <summary>
@@ -314,7 +425,8 @@ namespace Adaptive.Cluster
         /// <returns> the direct buffer which wraps the region of the <seealso cref="MarkFile"/> which contains the error log. </returns>
         public UnsafeBuffer ErrorBuffer => errorBuffer;
 
-        private static void SaveExistingErrors(FileInfo markFile, IAtomicBuffer errorBuffer, ClusterComponentType type, TextWriter logger)
+        private static void SaveExistingErrors(FileInfo markFile, IAtomicBuffer errorBuffer, ClusterComponentType type,
+            TextWriter logger)
         {
             var str = new MemoryStream();
             var writer = new StreamWriter(str);
@@ -354,6 +466,7 @@ namespace Adaptive.Cluster
             string authenticator)
         {
             var length =
+                HEADER_OFFSET +
                 MarkFileHeaderEncoder.BLOCK_LENGTH +
                 5 * VarAsciiEncodingEncoder.LengthEncodingLength() +
                 (aeronDirectory?.Length ?? 0) +
@@ -364,7 +477,8 @@ namespace Adaptive.Cluster
 
             if (length > HEADER_LENGTH)
             {
-                throw new ClusterException($"ClusterMarkFile headerLength={length} > headerLengthCapacity={HEADER_LENGTH}.");
+                throw new ClusterException(
+                    $"ClusterMarkFile headerLength={length} > headerLengthCapacity={HEADER_LENGTH}.");
             }
         }
 
@@ -377,7 +491,7 @@ namespace Adaptive.Cluster
         {
             return SERVICE_FILENAME_PREFIX + serviceId + FILE_EXTENSION;
         }
-        
+
         /// <summary>
         /// The filename to be used for the link file given a service id.
         /// </summary>
@@ -387,28 +501,22 @@ namespace Adaptive.Cluster
         {
             return SERVICE_FILENAME_PREFIX + serviceId + LINK_FILE_EXTENSION;
         }
-        
+
         /// <summary>
         /// The control properties for communicating between the consensus module and the services.
         /// </summary>
         /// <returns> the control properties for communicating between the consensus module and the services. </returns>
         public ClusterNodeControlProperties LoadControlProperties()
         {
-            MarkFileHeaderDecoder decoder = new MarkFileHeaderDecoder();
-            decoder.Wrap(
-                headerDecoder.Buffer(),
-                headerDecoder.InitialOffset(),
-                MarkFileHeaderDecoder.BLOCK_LENGTH,
-                MarkFileHeaderDecoder.SCHEMA_VERSION);
-
+            headerDecoder.SbeRewind();
             return new ClusterNodeControlProperties(
-                decoder.MemberId(),
-                decoder.ServiceStreamId(),
-                decoder.ConsensusModuleStreamId(),
-                decoder.AeronDirectory(),
-                decoder.ControlChannel());
+                headerDecoder.MemberId(),
+                headerDecoder.ServiceStreamId(),
+                headerDecoder.ConsensusModuleStreamId(),
+                headerDecoder.AeronDirectory(),
+                headerDecoder.ControlChannel());
         }
-        
+
         /// <summary>
         /// {@inheritDoc}
         /// </summary>
@@ -418,6 +526,66 @@ namespace Adaptive.Cluster
                    "semanticVersion=" + SemanticVersion.ToString(SEMANTIC_VERSION) +
                    ", markFile=" + markFile.FileName() +
                    '}';
+        }
+
+        /// <summary>
+        /// Forces any changes made to the mark file's content to be written to the storage device containing the mapped
+        /// file.
+        /// </summary>
+        /// <remarks>Since 1.44.0</remarks>
+        public void Force()
+        {
+            if (!markFile.IsClosed())
+            {
+                MappedByteBuffer mappedByteBuffer = markFile.MappedByteBuffer();
+                mappedByteBuffer.Force();
+            }
+        }
+
+        private static int HeaderOffset(FileInfo file)
+        {
+            MappedByteBuffer mappedByteBuffer = IoUtil.MapExistingFile(file, FILENAME);
+            try
+            {
+                UnsafeBuffer unsafeBuffer = new UnsafeBuffer(mappedByteBuffer, 0, HEADER_OFFSET);
+                return HeaderOffset(unsafeBuffer);
+            }
+            finally
+            {
+                IoUtil.Unmap(mappedByteBuffer);
+            }
+        }
+
+        private static int HeaderOffset(UnsafeBuffer headerBuffer)
+        {
+            MessageHeaderDecoder decoder = new MessageHeaderDecoder();
+            decoder.Wrap(headerBuffer, 0);
+            return MarkFileHeaderDecoder.TEMPLATE_ID == decoder.TemplateId() &&
+                   MarkFileHeaderDecoder.SCHEMA_ID == decoder.SchemaId()
+                ? HEADER_OFFSET
+                : 0;
+        }
+
+        private static MarkFile OpenExistingMarkFile(DirectoryInfo directory, string filename, IEpochClock epochClock,
+            long timeoutMs, Action<string> logger)
+        {
+            int headerOffset = HeaderOffset(new FileInfo(Path.Combine(directory.FullName, filename)));
+            return new MarkFile(
+                directory,
+                filename,
+                headerOffset + MarkFileHeaderDecoder.VersionEncodingOffset(),
+                headerOffset + MarkFileHeaderDecoder.ActivityTimestampEncodingOffset(),
+                timeoutMs,
+                epochClock,
+                (version) =>
+                {
+                    if (SemanticVersion.Major(version) != MAJOR_VERSION)
+                    {
+                        throw new ClusterException("mark file major version " + SemanticVersion.Major(version) +
+                                                   " does not match software: " + MAJOR_VERSION);
+                    }
+                },
+                logger);
         }
     }
 }

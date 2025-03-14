@@ -4,6 +4,7 @@ using Adaptive.Aeron.LogBuffer;
 using Adaptive.Agrona;
 using Adaptive.Cluster.Client;
 using Adaptive.Cluster.Codecs;
+using static Adaptive.Cluster.Service.ClusteredServiceContainer.Configuration;
 
 namespace Adaptive.Cluster.Service
 {
@@ -55,7 +56,7 @@ namespace Adaptive.Cluster.Service
             messageHeaderDecoder.Wrap(buffer, offset);
 
             int schemaId = messageHeaderDecoder.SchemaId();
-            if (schemaId != MessageHeaderDecoder.SCHEMA_ID)
+            if (MessageHeaderDecoder.SCHEMA_ID != schemaId)
             {
                 throw new ClusterException("expected schemaId=" + MessageHeaderDecoder.SCHEMA_ID + ", actual=" +
                                            schemaId);
@@ -71,7 +72,7 @@ namespace Adaptive.Cluster.Service
                         messageHeaderDecoder.Version());
 
                     long typeId = snapshotMarkerDecoder.TypeId();
-                    if (typeId != ClusteredServiceContainer.Configuration.SNAPSHOT_TYPE_ID)
+                    if (SNAPSHOT_TYPE_ID != typeId)
                     {
                         throw new ClusterException("unexpected snapshot type: " + typeId);
                     }

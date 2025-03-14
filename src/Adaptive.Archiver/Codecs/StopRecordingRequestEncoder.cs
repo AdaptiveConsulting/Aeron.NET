@@ -12,7 +12,7 @@ public class StopRecordingRequestEncoder
     public const ushort BLOCK_LENGTH = 20;
     public const ushort TEMPLATE_ID = 5;
     public const ushort SCHEMA_ID = 101;
-    public const ushort SCHEMA_VERSION = 8;
+    public const ushort SCHEMA_VERSION = 10;
 
     private StopRecordingRequestEncoder _parentMessage;
     private IMutableDirectBuffer _buffer;

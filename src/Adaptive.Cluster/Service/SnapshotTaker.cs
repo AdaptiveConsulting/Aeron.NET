@@ -154,13 +154,23 @@ namespace Adaptive.Cluster.Service
         /// <summary>
         /// Check the result of offering to a publication when writing a snapshot.
         /// </summary>
-        /// <param name="result"> of an offer or try claim to a publication. </param>
-        protected static void CheckResult(long result)
+        /// <param name="position">    of an offer or try claim to a publication. </param>
+        /// <param name="publication"> on which the offer or try claim was attempted. </param>
+        protected internal static void CheckResult(long position, Publication publication)
         {
-            if (result == Publication.NOT_CONNECTED || result == Publication.CLOSED ||
-                result == Publication.MAX_POSITION_EXCEEDED)
+            if (Publication.NOT_CONNECTED == position)
             {
-                throw new ClusterException("unexpected publication state: " + result);
+                throw new ClusterException("publication is not connected");
+            }
+
+            if (Publication.CLOSED == position)
+            {
+                throw new ClusterException("publication is closed");
+            }
+
+            if (Publication.MAX_POSITION_EXCEEDED == position)
+            {
+                throw new ClusterException("publication at max position: term-length=" + publication.TermBufferLength);
             }
         }
 
@@ -168,10 +178,10 @@ namespace Adaptive.Cluster.Service
         /// Check the result of offering to a publication when writing a snapshot and then idle after invoking the client
         /// agent if necessary.
         /// </summary>
-        /// <param name="result"> of an offer or try claim to a publication. </param>
-        protected void CheckResultAndIdle(long result)
+        /// <param name="position"> of an offer or try claim to a publication. </param>
+        protected internal void CheckResultAndIdle(long position)
         {
-            CheckResult(result);
+            CheckResult(position, publication);
             CheckInterruptStatus();
             InvokeAgentClient();
             idleStrategy.Idle();

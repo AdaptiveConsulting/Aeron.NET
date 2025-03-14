@@ -37,6 +37,8 @@ namespace Adaptive.Archiver
 
         private const int REPLAY_REMOVE_THRESHOLD = 0;
         private static readonly long MERGE_PROGRESS_TIMEOUT_DEFAULT_MS = 5_000;
+        private static readonly long INITIAL_GET_MAX_RECORDED_POSITION_BACKOFF_MS = 8;
+        private static readonly long GET_MAX_RECORDED_POSITION_BACKOFF_MAX_MS = 500;
 
         internal enum State
         {
@@ -58,6 +60,8 @@ namespace Adaptive.Archiver
         private long nextTargetPosition = Aeron.Aeron.NULL_VALUE;
         private long positionOfLastProgress = Aeron.Aeron.NULL_VALUE;
         private long timeOfLastProgressMs;
+        private long timeOfNextGetMaxRecordedPositionMs;
+        private long getMaxRecordedPositionBackoffMs = INITIAL_GET_MAX_RECORDED_POSITION_BACKOFF_MS;
         private bool isLiveAdded = false;
         private bool isReplayActive = false;
         private State state;
@@ -127,7 +131,7 @@ namespace Adaptive.Archiver
             }
 
             subscription.AsyncAddDestination(replayDestination);
-            timeOfLastProgressMs = epochClock.Time();
+            timeOfLastProgressMs = timeOfNextGetMaxRecordedPositionMs = epochClock.Time();
         }
 
         /// <summary>
@@ -311,11 +315,8 @@ namespace Adaptive.Archiver
 
             if (Aeron.Aeron.NULL_VALUE == activeCorrelationId)
             {
-                long correlationId = archive.Ctx().AeronClient().NextCorrelationId();
-
-                if (archive.Proxy().GetRecordingPosition(recordingId, correlationId, archive.ControlSessionId()))
+                if (CallGetMaxRecordedPosition(nowMs))
                 {
-                    activeCorrelationId = correlationId;
                     timeOfLastProgressMs = nowMs;
                     workCount += 1;
                 }
@@ -325,18 +326,7 @@ namespace Adaptive.Archiver
                 nextTargetPosition = PolledRelevantId(archive);
                 activeCorrelationId = Aeron.Aeron.NULL_VALUE;
 
-                if (AeronArchive.NULL_POSITION == nextTargetPosition)
-                {
-                    long correlationId = archive.Ctx().AeronClient().NextCorrelationId();
-
-                    if (archive.Proxy().GetStopPosition(recordingId, correlationId, archive.ControlSessionId()))
-                    {
-                        activeCorrelationId = correlationId;
-                        timeOfLastProgressMs = nowMs;
-                        workCount += 1;
-                    }
-                }
-                else
+                if (AeronArchive.NULL_POSITION != nextTargetPosition)
                 {
                     timeOfLastProgressMs = nowMs;
                     SetState(State.REPLAY);
@@ -369,6 +359,11 @@ namespace Adaptive.Archiver
                 isReplayActive = true;
                 replaySessionId = PolledRelevantId(archive);
                 timeOfLastProgressMs = nowMs;
+                
+                // reset getRecordingPosition backoff when moving to CATCHUP state
+                getMaxRecordedPositionBackoffMs = INITIAL_GET_MAX_RECORDED_POSITION_BACKOFF_MS;
+                timeOfNextGetMaxRecordedPositionMs = nowMs;
+                
                 SetState(State.CATCHUP);
                 workCount += 1;
             }
@@ -426,10 +421,9 @@ namespace Adaptive.Archiver
 
             if (Aeron.Aeron.NULL_VALUE == activeCorrelationId)
             {
-                long correlationId = archive.Ctx().AeronClient().NextCorrelationId();
-                if (archive.Proxy().GetRecordingPosition(recordingId, correlationId, archive.ControlSessionId()))
+                if (CallGetMaxRecordedPosition(nowMs))
                 {
-                    activeCorrelationId = correlationId;
+                    timeOfLastProgressMs = nowMs;
                     workCount += 1;
                 }
             }
@@ -438,15 +432,7 @@ namespace Adaptive.Archiver
                 nextTargetPosition = PolledRelevantId(archive);
                 activeCorrelationId = Aeron.Aeron.NULL_VALUE;
 
-                if (AeronArchive.NULL_POSITION == nextTargetPosition)
-                {
-                    long correlationId = archive.Ctx().AeronClient().NextCorrelationId();
-                    if (archive.Proxy().GetRecordingPosition(recordingId, correlationId, archive.ControlSessionId()))
-                    {
-                        activeCorrelationId = correlationId;
-                    }
-                }
-                else
+                if (AeronArchive.NULL_POSITION != nextTargetPosition)
                 {
                     State nextState = State.CATCHUP;
 
@@ -478,6 +464,30 @@ namespace Adaptive.Archiver
 
             return workCount;
         }
+        
+        private bool CallGetMaxRecordedPosition(long nowMs)
+        {
+            if (nowMs < timeOfNextGetMaxRecordedPositionMs)
+            {
+                return false;
+            }
+
+            long correlationId = archive.Ctx().AeronClient().NextCorrelationId();
+
+            bool result = archive.Proxy().GetMaxRecordedPosition(recordingId, correlationId, archive.ControlSessionId());
+
+            if (result)
+            {
+                activeCorrelationId = correlationId;
+            }
+
+            // increase backoff regardless of result
+            getMaxRecordedPositionBackoffMs = Math.Min(getMaxRecordedPositionBackoffMs * 2, GET_MAX_RECORDED_POSITION_BACKOFF_MAX_MS);
+            timeOfNextGetMaxRecordedPositionMs = nowMs + getMaxRecordedPositionBackoffMs;
+
+            return result;
+        }
+
 
         private void StopReplay()
         {
@@ -511,7 +521,9 @@ namespace Adaptive.Archiver
         {
             if (nowMs > (timeOfLastProgressMs + mergeProgressTimeoutMs))
             {
-                throw new TimeoutException("ReplayMerge no progress: state=" + state);
+                int transportCount = null != image ? image.ActiveTransportCount() : 0;
+                throw new TimeoutException(
+                    "ReplayMerge no progress: state=" + state + ", activeTransportCount=" + transportCount);
             }
         }
 

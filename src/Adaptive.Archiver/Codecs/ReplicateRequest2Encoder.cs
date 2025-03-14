@@ -12,7 +12,7 @@ public class ReplicateRequest2Encoder
     public const ushort BLOCK_LENGTH = 68;
     public const ushort TEMPLATE_ID = 66;
     public const ushort SCHEMA_ID = 101;
-    public const ushort SCHEMA_VERSION = 8;
+    public const ushort SCHEMA_VERSION = 10;
 
     private ReplicateRequest2Encoder _parentMessage;
     private IMutableDirectBuffer _buffer;
@@ -698,6 +698,83 @@ public class ReplicateRequest2Encoder
         _parentMessage.Limit(limit + headerLength + length);
         _buffer.PutInt(limit, unchecked((int)length), ByteOrder.LittleEndian);
         _buffer.PutBytes(limit + headerLength, src, srcOffset, length);
+
+        return this;
+    }
+
+    public static int SrcResponseChannelId()
+    {
+        return 15;
+    }
+
+    public static string SrcResponseChannelCharacterEncoding()
+    {
+        return "US-ASCII";
+    }
+
+    public static string SrcResponseChannelMetaAttribute(MetaAttribute metaAttribute)
+    {
+        switch (metaAttribute)
+        {
+            case MetaAttribute.EPOCH: return "unix";
+            case MetaAttribute.TIME_UNIT: return "nanosecond";
+            case MetaAttribute.SEMANTIC_TYPE: return "";
+            case MetaAttribute.PRESENCE: return "required";
+        }
+
+        return "";
+    }
+
+    public static int SrcResponseChannelHeaderLength()
+    {
+        return 4;
+    }
+
+    public ReplicateRequest2Encoder PutSrcResponseChannel(IDirectBuffer src, int srcOffset, int length)
+    {
+        if (length > 1073741824)
+        {
+            throw new InvalidOperationException("length > maxValue for type: " + length);
+        }
+
+        int headerLength = 4;
+        int limit = _parentMessage.Limit();
+        _parentMessage.Limit(limit + headerLength + length);
+        _buffer.PutInt(limit, unchecked((int)length), ByteOrder.LittleEndian);
+        _buffer.PutBytes(limit + headerLength, src, srcOffset, length);
+
+        return this;
+    }
+
+    public ReplicateRequest2Encoder PutSrcResponseChannel(byte[] src, int srcOffset, int length)
+    {
+        if (length > 1073741824)
+        {
+            throw new InvalidOperationException("length > maxValue for type: " + length);
+        }
+
+        int headerLength = 4;
+        int limit = _parentMessage.Limit();
+        _parentMessage.Limit(limit + headerLength + length);
+        _buffer.PutInt(limit, unchecked((int)length), ByteOrder.LittleEndian);
+        _buffer.PutBytes(limit + headerLength, src, srcOffset, length);
+
+        return this;
+    }
+
+    public ReplicateRequest2Encoder SrcResponseChannel(string value)
+    {
+        int length = value.Length;
+        if (length > 1073741824)
+        {
+            throw new InvalidOperationException("length > maxValue for type: " + length);
+        }
+
+        int headerLength = 4;
+        int limit = _parentMessage.Limit();
+        _parentMessage.Limit(limit + headerLength + length);
+        _buffer.PutInt(limit, unchecked((int)length), ByteOrder.LittleEndian);
+        _buffer.PutStringWithoutLengthAscii(limit + headerLength, value);
 
         return this;
     }

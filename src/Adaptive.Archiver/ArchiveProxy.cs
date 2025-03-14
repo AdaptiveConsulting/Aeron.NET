@@ -20,10 +20,8 @@ namespace Adaptive.Archiver
         private readonly INanoClock nanoClock;
         private readonly ICredentialsSupplier credentialsSupplier;
 
-        private readonly UnsafeBuffer
-            buffer = new UnsafeBuffer(BufferUtil.AllocateDirect(1024)); // Should be ExpandableArrayBuffer
-
-        private readonly Publication publication;
+        private readonly ExpandableArrayBuffer buffer = new ExpandableArrayBuffer(256);
+        private readonly ExclusivePublication publication;
         private readonly MessageHeaderEncoder messageHeader = new MessageHeaderEncoder();
         private StartRecordingRequestEncoder startRecordingRequest;
         private StartRecordingRequest2Encoder startRecordingRequest2;
@@ -41,6 +39,7 @@ namespace Adaptive.Archiver
         private TruncateRecordingRequestEncoder truncateRecordingRequest;
         private PurgeRecordingRequestEncoder purgeRecordingRequest;
         private StopPositionRequestEncoder stopPositionRequest;
+        private MaxRecordedPositionRequestEncoder maxRecordedPositionRequestEncoder;
         private FindLastMatchingRecordingRequestEncoder findLastMatchingRecordingRequest;
         private ListRecordingSubscriptionsRequestEncoder listRecordingSubscriptionsRequest;
         private BoundedReplayRequestEncoder boundedReplayRequest;
@@ -53,9 +52,11 @@ namespace Adaptive.Archiver
         private PurgeSegmentsRequestEncoder purgeSegmentsRequest;
         private AttachSegmentsRequestEncoder attachSegmentsRequest;
         private MigrateSegmentsRequestEncoder migrateSegmentsRequest;
+        private ArchiveIdRequestEncoder archiveIdRequestEncoder;
+        private ReplayTokenRequestEncoder replayTokenRequestEncoder;
 
         /// <summary>
-        /// Create a proxy with a <seealso cref="Pub"/> for sending control message requests.
+        /// Create a proxy with a <seealso cref="ExclusivePublication"/> for sending control message requests.
         /// <para>
         /// This provides a default <seealso cref="IIdleStrategy"/> of a <seealso cref="YieldingIdleStrategy"/> when offers are back pressured
         /// with a defaults of <seealso cref="AeronArchive.Configuration.MESSAGE_TIMEOUT_DEFAULT_NS"/> and
@@ -64,11 +65,27 @@ namespace Adaptive.Archiver
         /// </para>
         /// </summary>
         /// <param name="publication"> publication for sending control messages to an archive. </param>
-        public ArchiveProxy(Publication publication) : this(publication, YieldingIdleStrategy.INSTANCE,
+        /// <exception cref="InvalidCastException"> if {@code publication} is not an instance of <seealso cref="ExclusivePublication"/>. </exception>
+        public ArchiveProxy(Publication publication) : this((ExclusivePublication)publication)
+        {
+        }
+
+        /// <summary>
+        /// Create a proxy with a <seealso cref="ExclusivePublication"/> for sending control message requests.
+        /// <para>
+        /// This provides a default <seealso cref="IIdleStrategy"/> of a <seealso cref="YieldingIdleStrategy"/> when offers are back pressured
+        /// with a defaults of <seealso cref="AeronArchive.Configuration.MESSAGE_TIMEOUT_DEFAULT_NS"/> and
+        /// <seealso cref="DEFAULT_RETRY_ATTEMPTS"/>.
+        ///    
+        /// </para>
+        /// </summary>
+        /// <param name="publication"> publication for sending control messages to an archive. </param>
+        public ArchiveProxy(ExclusivePublication publication) : this(publication, YieldingIdleStrategy.INSTANCE,
             SystemNanoClock.INSTANCE, AeronArchive.Configuration.MESSAGE_TIMEOUT_DEFAULT_NS, DEFAULT_RETRY_ATTEMPTS,
             new NullCredentialsSupplier())
         {
         }
+
 
         /// <summary>
         /// Create a proxy with a <seealso cref="Pub"/> for sending control message requests.
@@ -79,7 +96,7 @@ namespace Adaptive.Archiver
         /// <param name="connectTimeoutNs">    for connection requests. </param>
         /// <param name="retryAttempts">       for offering control messages before giving up. </param>
         /// <param name="credentialsSupplier"> for the AuthConnectRequest </param>
-        public ArchiveProxy(Publication publication, IIdleStrategy retryIdleStrategy, INanoClock nanoClock,
+        public ArchiveProxy(ExclusivePublication publication, IIdleStrategy retryIdleStrategy, INanoClock nanoClock,
             long connectTimeoutNs, int retryAttempts, ICredentialsSupplier credentialsSupplier)
         {
             this.publication = publication;
@@ -132,8 +149,10 @@ namespace Adaptive.Archiver
             byte[] encodedCredentials = credentialsSupplier.EncodedCredentials();
 
             AuthConnectRequestEncoder connectRequestEncoder = new AuthConnectRequestEncoder();
-            connectRequestEncoder.WrapAndApplyHeader(buffer, 0, messageHeader).CorrelationId(correlationId)
-                .ResponseStreamId(responseStreamId).Version(AeronArchive.Configuration.PROTOCOL_SEMANTIC_VERSION)
+            connectRequestEncoder.WrapAndApplyHeader(buffer, 0, messageHeader)
+                .CorrelationId(correlationId)
+                .ResponseStreamId(responseStreamId)
+                .Version(AeronArchive.Configuration.PROTOCOL_SEMANTIC_VERSION)
                 .ResponseChannel(responseChannel)
                 .PutEncodedCredentials(encodedCredentials, 0, encodedCredentials.Length);
 
@@ -352,7 +371,8 @@ namespace Adaptive.Archiver
                     replayStreamId,
                     correlationId,
                     controlSessionId,
-                    replayParams.FileIoMaxLength());
+                    replayParams.FileIoMaxLength(),
+                    replayParams.ReplayToken());
             }
             else
             {
@@ -364,7 +384,8 @@ namespace Adaptive.Archiver
                     replayStreamId,
                     correlationId,
                     controlSessionId,
-                    replayParams.FileIoMaxLength());
+                    replayParams.FileIoMaxLength(),
+                    replayParams.ReplayToken());
             }
         }
 
@@ -396,6 +417,7 @@ namespace Adaptive.Archiver
                 replayStreamId,
                 correlationId,
                 controlSessionId,
+                Aeron.Aeron.NULL_VALUE,
                 Aeron.Aeron.NULL_VALUE);
         }
 
@@ -430,6 +452,7 @@ namespace Adaptive.Archiver
                 replayStreamId,
                 correlationId,
                 controlSessionId,
+                Aeron.Aeron.NULL_VALUE,
                 Aeron.Aeron.NULL_VALUE);
         }
 
@@ -708,6 +731,43 @@ namespace Adaptive.Archiver
 
             return Offer(stopPositionRequest.EncodedLength());
         }
+        
+        /// <summary>
+        /// Get the stop or active recorded position of a recording.
+        /// </summary>
+        /// <param name="recordingId">      of the recording that the stop of active recording position is being requested for. </param>
+        /// <param name="correlationId">    for this request. </param>
+        /// <param name="controlSessionId"> for this request. </param>
+        /// <returns> true if successfully offered otherwise false. </returns>
+        public bool GetMaxRecordedPosition(long recordingId, long correlationId, long controlSessionId)
+        {
+            if (null == maxRecordedPositionRequestEncoder)
+            {
+                maxRecordedPositionRequestEncoder = new MaxRecordedPositionRequestEncoder();
+            }
+
+            maxRecordedPositionRequestEncoder.WrapAndApplyHeader(buffer, 0, messageHeader).ControlSessionId(controlSessionId).CorrelationId(correlationId).RecordingId(recordingId);
+
+            return Offer(maxRecordedPositionRequestEncoder.EncodedLength());
+        }
+
+        /// <summary>
+        /// Get the id of the Archive.
+        /// </summary>
+        /// <param name="correlationId">    for this request. </param>
+        /// <param name="controlSessionId"> for this request. </param>
+        /// <returns> true if successfully offered otherwise false. </returns>
+        public bool ArchiveId(long correlationId, long controlSessionId)
+        {
+            if (null == archiveIdRequestEncoder)
+            {
+                archiveIdRequestEncoder = new ArchiveIdRequestEncoder();
+            }
+
+            archiveIdRequestEncoder.WrapAndApplyHeader(buffer, 0, messageHeader).ControlSessionId(controlSessionId).CorrelationId(correlationId);
+
+            return Offer(archiveIdRequestEncoder.EncodedLength());
+        }
 
         /// <summary>
         /// Find the last recording that matches the given criteria.
@@ -809,7 +869,8 @@ namespace Adaptive.Archiver
                 controlSessionId,
                 Aeron.Aeron.NULL_VALUE,
                 Aeron.Aeron.NULL_VALUE,
-                NullCredentialsSupplier.NULL_CREDENTIAL);
+                NullCredentialsSupplier.NULL_CREDENTIAL,
+                null);
         }
 
         /// <summary>
@@ -864,7 +925,8 @@ namespace Adaptive.Archiver
                 controlSessionId,
                 Aeron.Aeron.NULL_VALUE,
                 Aeron.Aeron.NULL_VALUE,
-                NullCredentialsSupplier.NULL_CREDENTIAL);
+                NullCredentialsSupplier.NULL_CREDENTIAL,
+                null);
         }
 
         /// <summary>
@@ -918,7 +980,8 @@ namespace Adaptive.Archiver
                 controlSessionId,
                 Aeron.Aeron.NULL_VALUE,
                 Aeron.Aeron.NULL_VALUE,
-                NullCredentialsSupplier.NULL_CREDENTIAL);
+                NullCredentialsSupplier.NULL_CREDENTIAL,
+                null);
         }
 
         /// <summary>
@@ -977,7 +1040,8 @@ namespace Adaptive.Archiver
                 controlSessionId,
                 Aeron.Aeron.NULL_VALUE,
                 Aeron.Aeron.NULL_VALUE,
-                NullCredentialsSupplier.NULL_CREDENTIAL);
+                NullCredentialsSupplier.NULL_CREDENTIAL,
+                null);
         }
 
         /// <summary>
@@ -1018,7 +1082,7 @@ namespace Adaptive.Archiver
                 throw new ArgumentException(
                     "ReplicationParams.LiveDestination and ReplicationParams.ReplicationSessionId can not be specified together");
             }
-            
+
             return Replicate(
                 srcRecordingId,
                 replicationParams.DstRecordingId(),
@@ -1033,7 +1097,8 @@ namespace Adaptive.Archiver
                 controlSessionId,
                 replicationParams.FileIoMaxLength(),
                 replicationParams.ReplicationSessionId(),
-                replicationParams.EncodedCredentials());
+                replicationParams.EncodedCredentials(),
+                replicationParams.SrcResponseChannel());
         }
 
         /// <summary>
@@ -1196,6 +1261,26 @@ namespace Adaptive.Archiver
 
             return Offer(migrateSegmentsRequest.EncodedLength());
         }
+        
+        /// <summary>
+        /// Request a token for this session that will allow a replay to be initiated from another image without
+        /// re-authentication.
+        /// </summary>
+        /// <param name="lastCorrelationId"> for the request </param>
+        /// <param name="controlSessionId">  for the request </param>
+        /// <param name="recordingId">       that will be replayed. </param>
+        /// <returns> true if successfully offered </returns>
+        public bool RequestReplayToken(long lastCorrelationId, long controlSessionId, long recordingId)
+        {
+            if (null == replayTokenRequestEncoder)
+            {
+                replayTokenRequestEncoder = new ReplayTokenRequestEncoder();
+            }
+
+            replayTokenRequestEncoder.WrapAndApplyHeader(buffer, 0, messageHeader).ControlSessionId(controlSessionId).CorrelationId(lastCorrelationId).RecordingId(recordingId);
+
+            return Offer(replayTokenRequestEncoder.EncodedLength());
+        }
 
         private bool Offer(int length)
         {
@@ -1204,25 +1289,26 @@ namespace Adaptive.Archiver
             int attempts = retryAttempts;
             while (true)
             {
-                long result = publication.Offer(buffer, 0, MessageHeaderEncoder.ENCODED_LENGTH + length);
-                if (result > 0)
+                long position = publication.Offer(buffer, 0, MessageHeaderEncoder.ENCODED_LENGTH + length);
+                if (position > 0)
                 {
                     return true;
                 }
 
-                if (result == Aeron.Publication.CLOSED)
+                if (position == Aeron.Publication.CLOSED)
                 {
                     throw new ArchiveException("connection to the archive has been closed");
                 }
 
-                if (result == Aeron.Publication.NOT_CONNECTED)
+                if (position == Aeron.Publication.NOT_CONNECTED)
                 {
                     throw new ArchiveException("connection to the archive is no longer available");
                 }
 
-                if (result == Aeron.Publication.MAX_POSITION_EXCEEDED)
+                if (position == Aeron.Publication.MAX_POSITION_EXCEEDED)
                 {
-                    throw new ArchiveException("offer failed due to max position being reached");
+                    throw new ArchiveException(
+                        "offer failed due to max position being reached: term-length=" + publication.TermBufferLength);
                 }
 
                 if (--attempts <= 0)
@@ -1279,7 +1365,8 @@ namespace Adaptive.Archiver
             int replayStreamId,
             long correlationId,
             long controlSessionId,
-            int fileIoMaxLength)
+            int fileIoMaxLength,
+            long replayToken)
         {
             if (null == replayRequest)
             {
@@ -1295,6 +1382,7 @@ namespace Adaptive.Archiver
                 .Length(length)
                 .ReplayStreamId(replayStreamId)
                 .FileIoMaxLength(fileIoMaxLength)
+                .ReplayToken(replayToken)
                 .ReplayChannel(replayChannel);
 
             return Offer(replayRequest.EncodedLength());
@@ -1309,7 +1397,8 @@ namespace Adaptive.Archiver
             int replayStreamId,
             long correlationId,
             long controlSessionId,
-            int fileIoMaxLength)
+            int fileIoMaxLength,
+            long replayToken)
         {
             if (null == boundedReplayRequest)
             {
@@ -1326,6 +1415,7 @@ namespace Adaptive.Archiver
                 .LimitCounterId(limitCounterId)
                 .ReplayStreamId(replayStreamId)
                 .FileIoMaxLength(fileIoMaxLength)
+                .ReplayToken(replayToken)
                 .ReplayChannel(replayChannel);
 
             return Offer(boundedReplayRequest.EncodedLength());
@@ -1345,7 +1435,8 @@ namespace Adaptive.Archiver
             long controlSessionId,
             int fileIoMaxLength,
             int replicationSessionId,
-            byte[] encodedCredentials)
+            byte[] encodedCredentials,
+            string srcResponseChannel)
         {
             if (null == replicateRequest)
             {
@@ -1367,7 +1458,8 @@ namespace Adaptive.Archiver
                 .LiveDestination(liveDestination)
                 .ReplicationChannel(replicationChannel)
                 .ReplicationSessionId(replicationSessionId)
-                .PutEncodedCredentials(encodedCredentials, 0, encodedCredentials.Length);
+                .PutEncodedCredentials(encodedCredentials, 0, encodedCredentials.Length)
+                .SrcResponseChannel(srcResponseChannel);
 
             return Offer(replicateRequest.EncodedLength());
         }

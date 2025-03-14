@@ -12,7 +12,7 @@ public class RecordingDescriptorHeaderDecoder
     public const ushort BLOCK_LENGTH = 32;
     public const ushort TEMPLATE_ID = 21;
     public const ushort SCHEMA_ID = 101;
-    public const ushort SCHEMA_VERSION = 8;
+    public const ushort SCHEMA_VERSION = 10;
 
     private RecordingDescriptorHeaderDecoder _parentMessage;
     private IDirectBuffer _buffer;
@@ -323,8 +323,8 @@ public class RecordingDescriptorHeaderDecoder
         builder.Append("Length=");
         builder.Append(Length());
         builder.Append('|');
-        //Token{signal=BEGIN_FIELD, name='state', referencedName='null', description='State of the recording.', id=2, version=0, deprecated=0, encodedLength=0, offset=4, componentTokenCount=6, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
-        //Token{signal=BEGIN_ENUM, name='RecordingState', referencedName='null', description='State of a recording in the Catalog.', id=-1, version=0, deprecated=0, encodedLength=4, offset=4, componentTokenCount=4, encoding=Encoding{presence=REQUIRED, primitiveType=INT32, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='null', timeUnit=null, semanticType='null'}}
+        //Token{signal=BEGIN_FIELD, name='state', referencedName='null', description='State of the recording.', id=2, version=0, deprecated=0, encodedLength=0, offset=4, componentTokenCount=7, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=BEGIN_ENUM, name='RecordingState', referencedName='null', description='State of a recording in the Catalog.', id=-1, version=0, deprecated=0, encodedLength=4, offset=4, componentTokenCount=5, encoding=Encoding{presence=REQUIRED, primitiveType=INT32, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='null', timeUnit=null, semanticType='null'}}
         builder.Append("State=");
         builder.Append(State());
         builder.Append('|');

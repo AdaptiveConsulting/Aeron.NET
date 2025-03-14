@@ -130,6 +130,11 @@ namespace Adaptive.Agrona.Concurrent
         {
             Wrap(buffer.Pointer, 0, (int) buffer.Capacity);
         }
+        
+        public UnsafeBuffer(MappedByteBuffer buffer, int offset, int length)
+        {
+            Wrap(buffer.Pointer, offset, length);
+        }
 
         public void Wrap(byte[] buffer)
         {

@@ -20,7 +20,7 @@ namespace Adaptive.Cluster.Service
     public interface IClusteredService
     {
         /// <summary>
-        /// Start event for the service where the service can perform any initialisation required and load snapshot state.
+        /// Start event where the service can perform any initialisation required and load snapshot state.
         /// The snapshot image can be null if no previous snapshot exists.
         /// <para>
         /// <b>Note:</b> As this is a potentially long-running operation the implementation should use
@@ -74,7 +74,7 @@ namespace Adaptive.Cluster.Service
         void OnTimerEvent(long correlationId, long timestamp);
 
         /// <summary>
-        /// The service should take a snapshot and store its state to the provided archive <seealso cref="Publication"/>.
+        /// The service should take a snapshot and store its state to the provided archive <seealso cref="ExclusivePublication"/>.
         /// <para>
         /// <b>Note:</b> As this is a potentially long-running operation the implementation should use
         /// <seealso cref="ICluster.IdleStrategy()"/> and then occasionally call <seealso cref="IIdleStrategy.Idle()"/> or

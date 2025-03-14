@@ -167,6 +167,24 @@ namespace Adaptive.Agrona.Concurrent.Status
         }
 
         /// <summary>
+        /// Set the value to a new proposedValue if greater than the current value with memory ordering semantics.
+        /// </summary>
+        /// <param name="proposedValue"> for the new max. </param>
+        /// <returns> true if a new max as been set otherwise false. </returns>
+        public bool ProposeMax(long proposedValue)
+        {
+            bool updated = false;
+
+            if (_buffer.GetLong(_offset) < proposedValue)
+            {
+                _buffer.PutLong(_offset, proposedValue);
+                updated = true;
+            }
+
+            return updated;
+        }
+
+        /// <summary>
         /// Free the counter slot for reuse.
         /// </summary>
         public virtual void Dispose()

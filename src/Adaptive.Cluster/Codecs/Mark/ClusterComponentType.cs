@@ -3,7 +3,7 @@ namespace Adaptive.Cluster.Codecs.Mark {
 
     public enum ClusterComponentType : int
     {
-        NULL = 0,
+        UNKNOWN = 0,
         CONSENSUS_MODULE = 1,
         CONTAINER = 2,
         BACKUP = 3,

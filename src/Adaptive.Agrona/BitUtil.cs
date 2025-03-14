@@ -17,6 +17,7 @@
 using System;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Threading;
 using Adaptive.Agrona.Util;
 
 namespace Adaptive.Agrona
@@ -322,6 +323,13 @@ namespace Adaptive.Agrona
             }
 
             return (address & (alignment - 1)) == 0;
+        }
+
+        private static readonly ThreadLocal<Random> threadLocalRandom = new ThreadLocal<Random>(() => new Random());
+        
+        public static int GenerateRandomisedId()
+        {
+            return threadLocalRandom.Value.Next();
         }
     }
 }

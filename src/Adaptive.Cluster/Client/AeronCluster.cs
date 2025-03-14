@@ -10,6 +10,8 @@ using Adaptive.Agrona.Concurrent;
 using Adaptive.Cluster.Codecs;
 using Adaptive.Aeron.Security;
 using Adaptive.Agrona.Collections;
+using static Adaptive.Aeron.Aeron.Context;
+using static Adaptive.Cluster.Client.AeronCluster.AsyncConnect.AsyncConnectState;
 
 namespace Adaptive.Cluster.Client
 {
@@ -54,6 +56,8 @@ namespace Adaptive.Cluster.Client
         private readonly IEgressListener _egressListener;
         private readonly ControlledFragmentAssembler _controlledFragmentAssembler;
         private readonly IControlledEgressListener _controlledEgressListener;
+        private IEgressListenerExtension egressListenerExtension;
+        private IControlledEgressListenerExtension controlledEgressListenerExtension;
         private Map<int, MemberIngress> _endpointByIdMap = new Map<int, MemberIngress>();
 
         private readonly Poller _poller;
@@ -351,7 +355,7 @@ namespace Adaptive.Cluster.Client
                 IIdleStrategy idleStrategy = ctx.IdleStrategy();
 
                 AeronCluster aeronCluster;
-                int step = asyncConnect.Step();
+                AsyncConnect.AsyncConnectState state = asyncConnect.State();
                 while (null == (aeronCluster = asyncConnect.Poll()))
                 {
                     if (null != aeronClientInvoker)
@@ -364,9 +368,9 @@ namespace Adaptive.Cluster.Client
                         agentInvoker.Invoke();
                     }
 
-                    if (step != asyncConnect.Step())
+                    if (state != asyncConnect.State())
                     {
-                        step = asyncConnect.Step();
+                        state = asyncConnect.State();
                         idleStrategy.Reset();
                     }
                     else
@@ -462,6 +466,24 @@ namespace Adaptive.Cluster.Client
                 .WrapAndApplyHeader(_headerBuffer, 0, _messageHeaderEncoder)
                 .ClusterSessionId(_clusterSessionId)
                 .LeadershipTermId(_leadershipTermId);
+        }
+        
+        /// <summary>
+        /// An EgressListener for extension schemas.
+        /// </summary>
+        /// <param name="listenerExtension"> listener extension. </param>
+        public void EgressListenerExtension(IEgressListenerExtension listenerExtension)
+        {
+            egressListenerExtension = listenerExtension;
+        }
+
+        /// <summary>
+        /// A ControlledEgressListener for extension schemas.
+        /// </summary>
+        /// <param name="listenerExtension"> listener extension. </param>
+        public void ControlledEgressListenerExtension(IControlledEgressListenerExtension listenerExtension)
+        {
+            controlledEgressListenerExtension = listenerExtension;
         }
 
         /// <summary>
@@ -631,9 +653,9 @@ namespace Adaptive.Cluster.Client
             {
                 int length = MessageHeaderEncoder.ENCODED_LENGTH + SessionKeepAliveEncoder.BLOCK_LENGTH;
 
-                long result = _publication.TryClaim(length, _bufferClaim);
+                long position = _publication.TryClaim(length, _bufferClaim);
 
-                if (result > 0)
+                if (position > 0)
                 {
                     _sessionKeepAliveEncoder
                         .WrapAndApplyHeader(_bufferClaim.Buffer, _bufferClaim.Offset, _messageHeaderEncoder)
@@ -645,9 +667,9 @@ namespace Adaptive.Cluster.Client
                     return true;
                 }
 
-                if (result == Publication.MAX_POSITION_EXCEEDED)
+                if (position == Publication.MAX_POSITION_EXCEEDED)
                 {
-                    throw new ClusterException("max position exceeded");
+                    throw new ClusterException("max position exceeded: term-length=" + _publication.TermBufferLength);
                 }
 
                 if (--attempts <= 0)
@@ -679,8 +701,8 @@ namespace Adaptive.Cluster.Client
 
             while (true)
             {
-                long result = _publication.TryClaim(length, _bufferClaim);
-                if (result > 0)
+                long position = _publication.TryClaim(length, _bufferClaim);
+                if (position > 0)
                 {
                     _adminRequestEncoder
                         .WrapAndApplyHeader(_bufferClaim.Buffer, _bufferClaim.Offset, _messageHeaderEncoder)
@@ -695,12 +717,12 @@ namespace Adaptive.Cluster.Client
                     return true;
                 }
 
-                if (result == Publication.CLOSED)
+                if (position == Publication.CLOSED)
                 {
                     throw new ClusterException("ingress publication is closed");
                 }
 
-                if (result == Publication.MAX_POSITION_EXCEEDED)
+                if (position == Publication.MAX_POSITION_EXCEEDED)
                 {
                     throw new ClusterException("max position exceeded");
                 }
@@ -815,7 +837,7 @@ namespace Adaptive.Cluster.Client
             _controlledEgressListener.OnNewLeader(clusterSessionId, leadershipTermId, leaderMemberId, ingressEndpoints);
         }
 
-        private static Map<int, MemberIngress> ParseIngressEndpoints(string endpoints)
+        private static Map<int, MemberIngress> ParseIngressEndpoints(Context ctx, string endpoints)
         {
             var endpointByIdMap = new Map<int, MemberIngress>();
 
@@ -830,7 +852,7 @@ namespace Adaptive.Cluster.Client
                     }
 
                     int memberId = int.Parse(endpoint.Substring(0, separatorIndex));
-                    endpointByIdMap.Put(memberId, new MemberIngress(memberId, endpoint.Substring(separatorIndex + 1)));
+                    endpointByIdMap.Put(memberId, new MemberIngress(ctx, memberId, endpoint.Substring(separatorIndex + 1)));
                 }
             }
 
@@ -877,13 +899,13 @@ namespace Adaptive.Cluster.Client
         {
             CloseHelper.CloseAll(_endpointByIdMap.Values);
 
-            var map = ParseIngressEndpoints(ingressEndpoints);
+            var map = ParseIngressEndpoints(_ctx, ingressEndpoints);
             var newLeader = map.Get(leaderMemberId);
             var channelUri = ChannelUri.Parse(_ctx.IngressChannel());
 
             if (channelUri.IsUdp)
             {
-                channelUri.Put(Aeron.Aeron.Context.ENDPOINT_PARAM_NAME, newLeader.endpoint);
+                channelUri.Put(ENDPOINT_PARAM_NAME, newLeader.endpoint);
             }
 
             _publication = AddIngressPublication(_ctx, channelUri.ToString(), _ctx.IngressStreamId());
@@ -900,9 +922,9 @@ namespace Adaptive.Cluster.Client
 
             while (true)
             {
-                long result = _publication.TryClaim(length, _bufferClaim);
+                long position = _publication.TryClaim(length, _bufferClaim);
 
-                if (result > 0)
+                if (position > 0)
                 {
                     sessionCloseRequestEncoder
                         .WrapAndApplyHeader(_bufferClaim.Buffer, _bufferClaim.Offset, _messageHeaderEncoder)
@@ -1036,7 +1058,7 @@ namespace Adaptive.Cluster.Client
             /// <summary>
             /// Channel for receiving response messages from a cluster.
             /// </summary>
-            public const string EGRESS_CHANNEL_DEFAULT = "aeron:udp?endpoint=localhost:0";
+            public const string EGRESS_CHANNEL_DEFAULT = null;
 
             /// <summary>
             /// Stream id within a channel for receiving messages from a cluster.
@@ -1180,7 +1202,7 @@ namespace Adaptive.Cluster.Client
             private string _egressChannel = Configuration.EgressChannel();
             private int _egressStreamId = Configuration.EgressStreamId();
             private IIdleStrategy _idleStrategy;
-            private string _aeronDirectoryName = Adaptive.Aeron.Aeron.Context.GetAeronDirectoryName();
+            private string _aeronDirectoryName = GetAeronDirectoryName();
             private Aeron.Aeron _aeron;
             private ICredentialsSupplier _credentialsSupplier;
             private bool _ownsAeronClient = false;
@@ -1244,7 +1266,7 @@ namespace Adaptive.Cluster.Client
                     throw new ConfigurationException("ingressChannel must be specified");
                 }
 
-                if (_ingressChannel.StartsWith(Adaptive.Aeron.Aeron.Context.IPC_CHANNEL))
+                if (_ingressChannel.StartsWith(IPC_CHANNEL))
                 {
                     if (null != _ingressEndpoints)
                     {
@@ -1252,7 +1274,18 @@ namespace Adaptive.Cluster.Client
                             "AeronCluster.Context ingressEndpoints must be null when using IPC ingress");
                     }
                 }
+                
+                if (String.IsNullOrEmpty(_egressChannel))
+                {
+                    throw new ConfigurationException("egressChannel must be specified");
+                }
             }
+
+            /// <summary>
+            /// Has the context had the <seealso cref="Conclude()"/> method called.
+            /// </summary>
+            /// <returns> true of the <seealso cref="Conclude()"/> method has been called. </returns>
+            public bool Concluded => Volatile.Read(ref _isConcluded) == 1;
 
             /// <summary>
             /// Set the message timeout in nanoseconds to wait for sending or receiving a message.
@@ -1273,7 +1306,7 @@ namespace Adaptive.Cluster.Client
             /// <seealso cref="Configuration.MESSAGE_TIMEOUT_PROP_NAME"></seealso>
             public long MessageTimeoutNs()
             {
-                return Adaptive.Aeron.Aeron.Context.CheckDebugTimeout(_messageTimeoutNs, TimeUnit.NANOSECONDS,
+                return CheckDebugTimeout(_messageTimeoutNs, TimeUnit.NANOSECONDS,
                     nameof(MessageTimeoutNs));
             }
 
@@ -1671,7 +1704,7 @@ namespace Adaptive.Cluster.Client
             {
                 return "AeronCluster.Context" +
                        "\n{" +
-                       "\n    isConcluded=" + (1 == _isConcluded) +
+                       "\n    isConcluded=" + Concluded +
                        "\n    ownsAeronClient=" + _ownsAeronClient +
                        "\n    aeronDirectoryName='" + _aeronDirectoryName + '\'' +
                        "\n    aeron=" + _aeron +
@@ -1699,13 +1732,54 @@ namespace Adaptive.Cluster.Client
         /// </summary>
         public class AsyncConnect : IDisposable
         {
+            /// <summary>
+            /// Represents the client connection state in the cluster.
+            /// </summary>
+            public enum AsyncConnectState
+            {
+                /// <summary>
+                /// Create egress subscription.
+                /// </summary>
+                CREATE_EGRESS_SUBSCRIPTION = -1,
+
+                /// <summary>
+                /// Create ingress publication.
+                /// </summary>
+                CREATE_INGRESS_PUBLICATIONS = 0,
+
+                /// <summary>
+                /// Await ingress publication connected.
+                /// </summary>
+                AWAIT_PUBLICATION_CONNECTED = 1,
+
+                /// <summary>
+                /// Send message to Cluster.
+                /// </summary>
+                SEND_MESSAGE = 2,
+
+                /// <summary>
+                /// Poll for Cluster response.
+                /// </summary>
+                POLL_RESPONSE = 3,
+
+                /// <summary>
+                /// Initialize internal state.
+                /// </summary>
+                CONCLUDE_CONNECT = 4,
+
+                /// <summary>
+                /// Connection established.
+                /// </summary>
+                DONE = 5
+            }
+            
             private Image egressImage;
             private readonly long deadlineNs;
             private long correlationId = Aeron.Aeron.NULL_VALUE;
             private long clusterSessionId;
             private long leadershipTermId;
             private int leaderMemberId;
-            private int step = -1;
+            private AsyncConnectState state = CREATE_EGRESS_SUBSCRIPTION;
             private int messageLength = 0;
 
             private readonly Context ctx;
@@ -1724,7 +1798,7 @@ namespace Adaptive.Cluster.Client
             {
                 this.ctx = ctx;
 
-                memberByIdMap = ParseIngressEndpoints(ctx.IngressEndpoints());
+                memberByIdMap = ParseIngressEndpoints(ctx, ctx.IngressEndpoints());
                 nanoClock = ctx.Aeron().Ctx.NanoClock();
                 this.deadlineNs = deadlineNs;
             }
@@ -1734,16 +1808,29 @@ namespace Adaptive.Cluster.Client
             /// </summary>
             public void Dispose()
             {
-                if (5 != step)
+                if (DONE != state)
                 {
+                    
                     IErrorHandler errorHandler = ctx.ErrorHandler();
-                    CloseHelper.Dispose(errorHandler, ingressPublication);
-
-                    foreach (var memberEndpoint in memberByIdMap.Values)
+                    if (null != ingressPublication)
                     {
-                        CloseHelper.Dispose(errorHandler, memberEndpoint);
+                        CloseHelper.Dispose(errorHandler, ingressPublication);
+                    }
+                    else if (Aeron.Aeron.NULL_VALUE != ingressRegistrationId)
+                    {
+                        ctx.Aeron().AsyncRemovePublication(ingressRegistrationId);
                     }
 
+                    if (null != egressSubscription)
+                    {
+                        CloseHelper.Dispose(errorHandler, egressSubscription);
+                    }
+                    else if (Aeron.Aeron.NULL_VALUE != egressRegistrationId)
+                    {
+                        ctx.Aeron().AsyncRemoveSubscription(egressRegistrationId);
+                    }
+
+                    CloseHelper.CloseAll(errorHandler, memberByIdMap.Values);
                     ctx.Dispose();
                 }
             }
@@ -1754,13 +1841,23 @@ namespace Adaptive.Cluster.Client
             /// <returns> which step in the connect process has been reached. </returns>
             public int Step()
             {
-                return step;
+                return (int)state;
             }
-
-            private void Step(int newStep)
+            
+            /// <summary>
+            /// Get the current connection state.
+            /// </summary>
+            /// <returns> current state. </returns>
+            public AsyncConnectState State()
             {
-                //Console.WriteLine(this.step + " -> " + step);
-                this.step = newStep;
+                return state;
+            }
+            
+            private void State(AsyncConnectState newState)
+            {
+                
+                // Console.WriteLine("AeronCluster.AsyncConnect " + state + " -> " + stepName(newState));
+                state = newState;
             }
 
             /// <summary>
@@ -1771,26 +1868,14 @@ namespace Adaptive.Cluster.Client
             /// <seealso cref="Step()"/>
             public static string StepName(int step)
             {
-                switch (step)
+                // Check if the int corresponds to a defined enum value
+                if (Enum.IsDefined(typeof(AsyncConnectState), step))
                 {
-                    case -1:
-                        return "CREATE_EGRESS_SUBSCRIPTION";
-                    case 0:
-                        return "CREATE_INGRESS_PUBLICATIONS";
-                    case 1:
-                        return "AWAIT_PUBLICATION_CONNECTED";
-                    case 2:
-                        return "SEND_MESSAGE";
-                    case 3:
-                        return "POLL_RESPONSE";
-                    case 4:
-                        return "CONCLUDE_CONNECT";
-                    case 5:
-                        return "DONE";
-
-                    default:
-                        return "<unknown>";
+                    var enumValue = (AsyncConnectState)Enum.ToObject(typeof(AsyncConnectState), step);
+                    return enumValue.ToString();
                 }
+
+                return "<unknown>";
             }
 
             /// <summary>
@@ -1799,38 +1884,35 @@ namespace Adaptive.Cluster.Client
             /// <returns> null if not yet complete then <seealso cref="AeronCluster"/> when complete. </returns>
             public AeronCluster Poll()
             {
-                AeronCluster aeronCluster = null;
                 CheckDeadline();
 
-                switch (step)
+                switch (state)
                 {
-                    case -1:
+                    case CREATE_EGRESS_SUBSCRIPTION:
                         CreateEgressSubscription();
                         break;
 
-                    case 0:
+                    case CREATE_INGRESS_PUBLICATIONS:
                         CreateIngressPublications();
                         break;
 
-                    case 1:
+                    case AWAIT_PUBLICATION_CONNECTED:
                         AwaitPublicationConnected();
                         break;
 
-                    case 2:
+                    case SEND_MESSAGE:
                         SendMessage();
                         break;
 
-                    case 3:
+                    case POLL_RESPONSE:
                         PollResponse();
                         break;
+
+                    case CONCLUDE_CONNECT:
+                        return ConcludeConnect();
                 }
 
-                if (4 == step)
-                {
-                    aeronCluster = ConcludeConnect();
-                }
-
-                return aeronCluster;
+                return null;
             }
 
             private void CheckDeadline()
@@ -1840,11 +1922,10 @@ namespace Adaptive.Cluster.Client
                 {
                     bool isConnected = null != egressSubscription && egressSubscription.IsConnected;
                     string endpointPort = null != egressSubscription
-                        ? egressSubscription.TryResolveChannelEndpointPort()
-                        : "<unknown>";
+                        ? egressSubscription.TryResolveChannelEndpointPort() : "<unknown>";
                     
                     AeronTimeoutException ex = new AeronTimeoutException(
-                        "cluster connect timeout: step=" + StepName(step) +
+                        "cluster connect timeout: state=" + state +
                         " messageTimeout=" + ctx.MessageTimeoutNs() + "ns" +
                         " ingressChannel=" + ctx.IngressChannel() +
                         " ingressEndpoints=" + ctx.IngressEndpoints() +
@@ -1884,7 +1965,8 @@ namespace Adaptive.Cluster.Client
                 if (null != egressSubscription)
                 {
                     egressPoller = new EgressPoller(egressSubscription, FRAGMENT_LIMIT);
-                    Step(0);
+                    egressRegistrationId = Aeron.Aeron.NULL_VALUE;
+                    State(CREATE_INGRESS_PUBLICATIONS);
                 }
             }
 
@@ -1906,7 +1988,7 @@ namespace Adaptive.Cluster.Client
                     if (null != ingressPublication)
                     {
                         ingressRegistrationId = Aeron.Aeron.NULL_VALUE;
-                        Step(1);
+                        State(AWAIT_PUBLICATION_CONNECTED);
                     }
                 }
                 else
@@ -1919,30 +2001,29 @@ namespace Adaptive.Cluster.Client
                     {
                         try
                         {
-                            if (channelUri.IsUdp)
-                            {
-                                channelUri.Put(Aeron.Aeron.Context.ENDPOINT_PARAM_NAME, member.endpoint);
-                            }
-
-                            if (null != member.publicationException)
+                           if (null != member.publicationException)
                             {
                                 failureCount++;
                                 continue;
                             }
 
-                            if (Aeron.Aeron.NULL_VALUE == member.registrationId)
-                            {
-                                member.registrationId = AsyncAddIngressPublication(ctx, channelUri.ToString(),
-                                    ctx.IngressStreamId());
-                            }
-
                             if (null == member.publication)
                             {
+                                if (Aeron.Aeron.NULL_VALUE == member.registrationId)
+                                {
+                                    if (channelUri.IsUdp)
+                                    {
+                                        channelUri.Put(ENDPOINT_PARAM_NAME, member.endpoint);
+                                    }
+                                    member.registrationId = AsyncAddIngressPublication(ctx, channelUri.ToString(), ctx.IngressStreamId());
+                                }
                                 member.publication = GetIngressPublication(ctx, member.registrationId);
                             }
 
+
                             if (null != member.publication)
                             {
+                                member.registrationId = Aeron.Aeron.NULL_VALUE;
                                 publicationCount++;
                             }
                         }
@@ -1959,7 +2040,7 @@ namespace Adaptive.Cluster.Client
                             throw memberByIdMap.Values.First().publicationException;
                         }
 
-                        Step(1);
+                        State(AWAIT_PUBLICATION_CONNECTED);
                     }
                 }
             }
@@ -2003,17 +2084,17 @@ namespace Adaptive.Cluster.Client
                     .PutEncodedCredentials(encodedCredentials, 0, encodedCredentials.Length);
 
                 messageLength = MessageHeaderEncoder.ENCODED_LENGTH + encoder.EncodedLength();
-                Step(2);
+                State(SEND_MESSAGE);
             }
 
             private void SendMessage()
             {
-                long result = ingressPublication.Offer(buffer, 0, messageLength);
-                if (result > 0)
+                long position = ingressPublication.Offer(buffer, 0, messageLength);
+                if (position > 0)
                 {
-                    Step(3);
+                    State(POLL_RESPONSE);
                 }
-                else if (Publication.CLOSED == result || Publication.NOT_CONNECTED == result)
+                else if (Publication.CLOSED == position || Publication.NOT_CONNECTED == position)
                 {
                     throw new ClusterException("unexpected loss of connection to cluster");
                 }
@@ -2040,7 +2121,7 @@ namespace Adaptive.Cluster.Client
                             leaderMemberId = egressPoller.LeaderMemberId();
                             clusterSessionId = egressPoller.ClusterSessionId();
                             egressImage = egressPoller.EgressImage();
-                            Step(4);
+                            State(CONCLUDE_CONNECT);
                             break;
 
                         case EventCode.ERROR:
@@ -2071,7 +2152,7 @@ namespace Adaptive.Cluster.Client
 
                 messageLength = MessageHeaderEncoder.ENCODED_LENGTH + encoder.EncodedLength();
 
-                Step(2);
+                State(SEND_MESSAGE);
             }
 
             private void UpdateMembers()
@@ -2085,7 +2166,7 @@ namespace Adaptive.Cluster.Client
                 }
 
                 CloseHelper.CloseAll(memberByIdMap.Values);
-                memberByIdMap = ParseIngressEndpoints(egressPoller.Detail());
+                memberByIdMap = ParseIngressEndpoints(ctx, egressPoller.Detail());
 
                 if (null == ingressPublication)
                 {
@@ -2093,13 +2174,13 @@ namespace Adaptive.Cluster.Client
                     ChannelUri channelUri = ChannelUri.Parse(ctx.IngressChannel());
                     if (channelUri.IsUdp)
                     {
-                        channelUri.Put(Aeron.Aeron.Context.ENDPOINT_PARAM_NAME, member.endpoint);
+                        channelUri.Put(ENDPOINT_PARAM_NAME, member.endpoint);
                     }
 
                     ingressPublication = AddIngressPublication(ctx, channelUri.ToString(), ctx.IngressStreamId());
                 }
 
-                Step(1);
+                State(AWAIT_PUBLICATION_CONNECTED);
             }
 
             private AeronCluster ConcludeConnect()
@@ -2111,7 +2192,7 @@ namespace Adaptive.Cluster.Client
                 memberByIdMap.Remove(leaderMemberId);
                 CloseHelper.CloseAll(memberByIdMap.Values);
 
-                Step(5);
+                State(DONE);
 
                 return aeronCluster;
             }
@@ -2121,21 +2202,31 @@ namespace Adaptive.Cluster.Client
 
     internal class MemberIngress : IDisposable
     {
+        private readonly AeronCluster.Context ctx;
         readonly int memberId;
         internal readonly string endpoint;
         internal long registrationId = Aeron.Aeron.NULL_VALUE;
         internal Publication publication;
         internal RegistrationException publicationException;
 
-        internal MemberIngress(int memberId, string endpoint)
+        internal MemberIngress(AeronCluster.Context ctx, int memberId, string endpoint)
         {
+            this.ctx = ctx;
             this.memberId = memberId;
             this.endpoint = endpoint;
         }
 
         public void Dispose()
         {
-            publication?.Dispose();
+            if (null != publication)
+            {
+                CloseHelper.Dispose(publication);
+            }
+            else if (Aeron.Aeron.NULL_VALUE != registrationId)
+            {
+                ctx.Aeron().AsyncRemovePublication(registrationId);
+            }
+            registrationId = Aeron.Aeron.NULL_VALUE;
             publication = null;
         }
 

@@ -12,7 +12,7 @@ public class ListRecordingsForUriRequestDecoder
     public const ushort BLOCK_LENGTH = 32;
     public const ushort TEMPLATE_ID = 9;
     public const ushort SCHEMA_ID = 101;
-    public const ushort SCHEMA_VERSION = 8;
+    public const ushort SCHEMA_VERSION = 10;
 
     private ListRecordingsForUriRequestDecoder _parentMessage;
     private IDirectBuffer _buffer;

@@ -1,8 +1,10 @@
 namespace Adaptive.Archiver
 {
     /// <summary>
-    /// Fluent API for setting optional replay parameters. Not threadsafe. Allows the user to configure starting position,
+    /// Fluent API for setting optional replay parameters. Allows the user to configure starting position,
     /// replay length, bounding counter (for a bounded replay) and the max length for file I/O operations.
+    ///
+    /// Not threadsafe. 
     /// </summary>
     public class ReplayParams
     {
@@ -10,9 +12,11 @@ namespace Adaptive.Archiver
         private int fileIoMaxLength;
         private long position;
         private long length;
+        private long replayToken;
+        private long subscriptionRegistrationId;
 
         /// <summary>
-        /// Default, initialise all values to "null"
+        /// Default, initialise all values to "null".
         /// </summary>
         public ReplayParams()
         {
@@ -29,6 +33,8 @@ namespace Adaptive.Archiver
             fileIoMaxLength = Aeron.Aeron.NULL_VALUE;
             position = AeronArchive.NULL_POSITION;
             length = AeronArchive.NULL_LENGTH;
+            replayToken = Aeron.Aeron.NULL_VALUE;
+            subscriptionRegistrationId = Aeron.Aeron.NULL_VALUE;
             return this;
         }
 
@@ -127,6 +133,48 @@ namespace Adaptive.Archiver
         public bool IsBounded()
         {
             return Aeron.Aeron.NULL_VALUE != boundingLimitCounterId;
+        }
+        
+        /// <summary>
+        /// Set a token used for replays when the initiating image is not the one used to create the archive
+        /// connection/session.
+        /// </summary>
+        /// <param name="replayToken"> token to identify the replay </param>
+        /// <returns> this for a fluent API. </returns>
+        public ReplayParams ReplayToken(long replayToken)
+        {
+            this.replayToken = replayToken;
+            return this;
+        }
+
+        /// <summary>
+        /// Get a token used for replays when the initiating image is not the one used to create the archive
+        /// connection/session.
+        /// </summary>
+        /// <returns> the replay token </returns>
+        public long ReplayToken()
+        {
+            return replayToken;
+        }
+
+        /// <summary>
+        /// Set the subscription registration id to be used when doing a start replay using response channels and the
+        /// response subscription is already created.
+        /// </summary>
+        /// <param name="registrationId"> of the subscription to receive the replay (should be set up with control-mode=response). </param>
+        public void SubscriptionRegistrationId(long registrationId)
+        {
+            this.subscriptionRegistrationId = registrationId;
+        }
+
+        /// <summary>
+        /// Get the subscription registration id to be used when doing a start replay using response channels and the
+        /// response subscription is already created.
+        /// </summary>
+        /// <returns> registrationId of the subscription to receive the replay (should be set up with control-mode=response). </returns>
+        public long SubscriptionRegistrationId()
+        {
+            return subscriptionRegistrationId;
         }
     }
 }

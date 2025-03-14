@@ -335,6 +335,39 @@ namespace Adaptive.Agrona.Concurrent.Status
         }
 
         /// <summary>
+        /// Iterate over allocated counters and find the first matching a given type id and registration id.
+        /// </summary>
+        /// <param name="typeId">         to find. </param>
+        /// <param name="registrationId"> to find. </param>
+        /// <returns> the counter if found otherwise <seealso cref="NULL_COUNTER_ID"/>. </returns>
+        public int FindByTypeIdAndRegistrationId(int typeId, long registrationId)
+        {
+            int counterId = -1;
+            IAtomicBuffer metaDataBuffer = MetaDataBuffer;
+            int capacity = metaDataBuffer.Capacity;
+
+            for (int offset = 0, i = 0; offset < capacity; offset += METADATA_LENGTH, i++)
+            {
+                int recordStatus = metaDataBuffer.GetIntVolatile(offset);
+                if (RECORD_ALLOCATED == recordStatus)
+                {
+                    if (typeId == metaDataBuffer.GetInt(offset + TYPE_ID_OFFSET) && registrationId ==
+                        ValuesBuffer.GetLongVolatile(CounterOffset(i) + REGISTRATION_ID_OFFSET))
+                    {
+                        counterId = i;
+                        break;
+                    }
+                }
+                else if (RECORD_UNUSED == recordStatus)
+                {
+                    break;
+                }
+            }
+
+            return counterId;
+        }
+
+        /// <summary>
         /// Get the value for a given counter id as a volatile read.
         /// </summary>
         /// <param name="counterId"> to be read. </param>

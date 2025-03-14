@@ -2,6 +2,7 @@
 using Adaptive.Agrona;
 using Adaptive.Agrona.Concurrent.Status;
 using Adaptive.Cluster.Client;
+using static Adaptive.Agrona.BitUtil;
 
 namespace Adaptive.Cluster.Service
 {
@@ -46,12 +47,35 @@ namespace Adaptive.Cluster.Service
         /// </summary>
         public const string NAME = "Cluster recovery: leadershipTermId=";
 
+        /// <summary>
+        /// Offset of the <c>term-id</c> field.
+        /// </summary>
         public const int LEADERSHIP_TERM_ID_OFFSET = 0;
-        public static readonly int LOG_POSITION_OFFSET = LEADERSHIP_TERM_ID_OFFSET + BitUtil.SIZE_OF_LONG;
-        public static readonly int TIMESTAMP_OFFSET = LOG_POSITION_OFFSET + BitUtil.SIZE_OF_LONG;
-        public static readonly int CLUSTER_ID_OFFSET = TIMESTAMP_OFFSET + BitUtil.SIZE_OF_LONG;
-        public static readonly int SERVICE_COUNT_OFFSET = CLUSTER_ID_OFFSET + BitUtil.SIZE_OF_INT;
-        public static readonly int SNAPSHOT_RECORDING_IDS_OFFSET = SERVICE_COUNT_OFFSET + BitUtil.SIZE_OF_INT;
+
+        /// <summary>
+        /// Offset of the <c>log-position</c> field.
+        /// </summary>
+        public const int LOG_POSITION_OFFSET = LEADERSHIP_TERM_ID_OFFSET + SIZE_OF_LONG;
+
+        /// <summary>
+        /// Offset of the <c>timestamp</c> field.
+        /// </summary>
+        public const int TIMESTAMP_OFFSET = LOG_POSITION_OFFSET + SIZE_OF_LONG;
+
+        /// <summary>
+        /// Offset of the <c>cluster-id</c> field.
+        /// </summary>
+        public const int CLUSTER_ID_OFFSET = TIMESTAMP_OFFSET + SIZE_OF_LONG;
+
+        /// <summary>
+        /// Offset of the <c>service-count</c> field.
+        /// </summary>
+        public const int SERVICE_COUNT_OFFSET = CLUSTER_ID_OFFSET + SIZE_OF_INT;
+
+        /// <summary>
+        /// Offset of the <c>snapshot-recording-ids</c> field.
+        /// </summary>
+        public const int SNAPSHOT_RECORDING_IDS_OFFSET = SERVICE_COUNT_OFFSET + SIZE_OF_INT;
 
         /// <summary>
         /// Find the active counter id for recovery state.
@@ -168,7 +192,7 @@ namespace Adaptive.Cluster.Service
                 }
 
                 return buffer.GetLong(recordOffset + CountersReader.KEY_OFFSET + SNAPSHOT_RECORDING_IDS_OFFSET +
-                                      (serviceId * BitUtil.SIZE_OF_LONG));
+                                      (serviceId * SIZE_OF_LONG));
             }
 
             throw new ClusterException("active counter not found " + counterId);

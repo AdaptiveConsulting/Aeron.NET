@@ -928,6 +928,11 @@ namespace Adaptive.Aeron
             public const string DEBUG_TIMEOUT_PROP_NAME = "aeron.debug.timeout";
 
             /// <summary>
+            /// Should a component print its configuration on start to <seealso cref="Console.WriteLine(string)"/>.
+            /// </summary>
+            public const string PRINT_CONFIGURATION_ON_START_PROP_NAME = "aeron.print.configuration";
+            
+            /// <summary>
             /// Timeout in which the driver is expected to respond.
             /// </summary>
             public const long DRIVER_TIMEOUT_MS = 10000;
@@ -1187,6 +1192,17 @@ namespace Adaptive.Aeron
             /// <remarks>Since 1.47.0</remarks>
             public const string PUBLICATION_WINDOW_LENGTH_PARAM_NAME = "pub-wnd";
 
+            /// <summary>
+            /// Should a component's configuration be printed on start.
+            /// </summary>
+            /// <returns> {@code true} if the configuration should be printed on start. </returns>
+            /// <seealso cref="PRINT_CONFIGURATION_ON_START_PROP_NAME"/>
+            public static bool ShouldPrintConfigurationOnStart()
+            {
+                return "true".Equals(Config.GetProperty(PRINT_CONFIGURATION_ON_START_PROP_NAME));
+            }
+
+            
             /// <summary>
             /// Get the current fallback logger based on the supplied property.
             /// </summary>

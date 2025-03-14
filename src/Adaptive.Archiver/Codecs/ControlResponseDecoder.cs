@@ -12,7 +12,7 @@ public class ControlResponseDecoder
     public const ushort BLOCK_LENGTH = 32;
     public const ushort TEMPLATE_ID = 1;
     public const ushort SCHEMA_ID = 101;
-    public const ushort SCHEMA_VERSION = 8;
+    public const ushort SCHEMA_VERSION = 10;
 
     private ControlResponseDecoder _parentMessage;
     private IDirectBuffer _buffer;
@@ -452,7 +452,7 @@ public class ControlResponseDecoder
         builder.Append("ControlSessionId=");
         builder.Append(ControlSessionId());
         builder.Append('|');
-        //Token{signal=BEGIN_FIELD, name='correlationId', referencedName='null', description='Request correlation id with which this response is associated', id=2, version=0, deprecated=0, encodedLength=0, offset=8, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=BEGIN_FIELD, name='correlationId', referencedName='null', description='Request correlation id with which this response is associated.', id=2, version=0, deprecated=0, encodedLength=0, offset=8, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
         //Token{signal=ENCODING, name='int64', referencedName='null', description='null', id=-1, version=0, deprecated=0, encodedLength=8, offset=8, componentTokenCount=1, encoding=Encoding{presence=REQUIRED, primitiveType=INT64, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
         builder.Append("CorrelationId=");
         builder.Append(CorrelationId());

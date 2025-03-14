@@ -95,7 +95,7 @@ namespace Adaptive.Cluster.Service
 
         /// <summary>
         /// Schedule a timer for a given deadline and provide a correlation id to identify the timer when it expires or
-        /// for cancellation. This action is asynchronous and will race with the timer expiring.
+        /// for cancellation. This action is asynchronous, when rescheduling it will race with the timer expiring.
         /// <para>
         /// If the correlationId is for an existing scheduled timer then it will be rescheduled to the new deadline. However
         /// it is best to generate correlationIds in a monotonic fashion and be aware of potential clashes with other
@@ -109,7 +109,7 @@ namespace Adaptive.Cluster.Service
         /// <seealso cref="IClusteredService.OnSessionClose(IClientSession, long, CloseReason)"/>.
         /// If applied to other events then they are not guaranteed to be reliable.
         ///
-        /// Callers of this method should loop until the method succeeds.
+        /// Callers of this method must loop until the method succeeds.
         ///
         /// <code>
         /// private ICluster cluster;
@@ -127,8 +127,11 @@ namespace Adaptive.Cluster.Service
         /// </summary>
         /// <param name="correlationId"> to identify the timer when it expires. <seealso cref="long.MaxValue"/> not supported. </param>
         /// <param name="deadline">      time after which the timer will fire. <seealso cref="long.MaxValue"/> not supported. </param>
-        /// <returns> true if the event to schedule a timer request has been sent or false if back pressure is applied. </returns>
+        /// <returns> <code>true</code> if the request to schedule a timer has been sent or <code>false</code> in case of
+        /// <seealso cref="Publication.ADMIN_ACTION"/> or <seealso cref="Publication.BACK_PRESSURED"/>.
+        /// </returns>
         /// <seealso cref="CancelTimer(long)"/>
+        /// <remarks>throws <seealso cref="ClusterException"/> if request fails with an error.</remarks>
         bool ScheduleTimer(long correlationId, long deadline);
         
         /// <summary>
@@ -140,27 +143,42 @@ namespace Adaptive.Cluster.Service
         /// <seealso cref="IClusteredService.OnSessionOpen(IClientSession, long)"/>, or
         /// <seealso cref="IClusteredService.OnSessionClose(IClientSession, long, CloseReason)"/>.
         /// If applied to other events then they are not guaranteed to be reliable.
-        ///
-        /// Callers of this method should loop until the method succeeds, see <seealso cref="ScheduleTimer"/> for an example.
+        /// </para>
+        /// <para>
+        /// Callers of this method must loop until the method succeeds.
+        ///     
+        /// <pre>{@code
+        /// private Cluster cluster;
+        /// // Lines omitted...
+        ///     
+        /// cluster.idleStrategy().reset();
+        /// while (!cluster.cancelTimer(correlationId))
+        /// {
+        ///     cluster.idleStrategy().idle();
+        /// }
+        /// }</pre>
+        ///     
         /// </para>
         /// </summary>
         /// <param name="correlationId"> for the timer provided when it was scheduled. <seealso cref="long.MaxValue"/> not supported. </param>
-        /// <returns> true if the event to cancel request has been sent or false if back-pressure is applied. </returns>
-        /// <seealso cref="ScheduleTimer"/>
+        /// <returns> {@code true} if the request to cancel a timer has been sent or {@code false} in case of
+        /// <seealso cref="Publication.ADMIN_ACTION"/> or <seealso cref="Publication.BACK_PRESSURED"/>. </returns>
+        /// <exception cref="ClusterException"> if request fails with an error. </exception>
+        /// <seealso cref="ScheduleTimer(long, long)"/>
         bool CancelTimer(long correlationId);
 
         /// <summary>
         /// Offer a message as ingress to the cluster for sequencing. This will happen efficiently over IPC to the
-        /// consensus module and have the cluster session of as the negative value of the
+        /// consensus module and have the cluster session of as
         /// <seealso cref="ClusteredServiceContainer.Configuration.SERVICE_ID_PROP_NAME"/>.
         ///
-        /// Callers of this method should loop until the method succeeds.
+        /// Callers of this method must loop until the method succeeds.
         ///
         /// <code>
         /// private ICluster cluster;
         ///
         /// cluster.IdleStrategy().Reset();
-        /// do
+        /// while(true)
         /// {
         ///     final long position = cluster.Offer(buffer, offset, length);
         ///     if (position > 0)
@@ -189,7 +207,7 @@ namespace Adaptive.Cluster.Service
 
         /// <summary>
         /// Offer a message as ingress to the cluster for sequencing. This will happen efficiently over IPC to the
-        /// consensus module and have the cluster session of as the negative value of the
+        /// consensus module and have the cluster session of as the
         /// <seealso cref="ClusteredServiceContainer.Configuration.SERVICE_ID_PROP_NAME"/>.
         /// <para>
         /// The first vector must be left free to be filled in for the session message header.
@@ -209,28 +227,37 @@ namespace Adaptive.Cluster.Service
         /// <para>
         /// On successful claim, the Cluster egress header will be written to the start of the claimed buffer section.
         /// Clients <b>MUST</b> write into the claimed buffer region at offset + <seealso cref="AeronCluster.SESSION_HEADER_LENGTH"/>.
-        /// <pre>{@code
-        ///     final IDirectBuffer srcBuffer = AcquireMessage();
-        ///    
-        ///     if (cluster.TryClaim(length, bufferClaim) > 0L)
-        ///     {
-        ///         try
-        ///         {
-        ///              final IMutableDirectBuffer buffer = bufferClaim.Buffer;
-        ///              final int offset = bufferClaim.Offset;
-        ///              // ensure that data is written at the correct offset
-        ///              buffer.PutBytes(offset + AeronCluster.SESSION_HEADER_LENGTH, srcBuffer, 0, length);
-        ///         }
-        ///         finally
-        ///         {
-        ///             bufferClaim.Commit();
-        ///         }
-        ///     }
-        /// }</pre>
         ///
-        /// Callers of this method should loop until the method succeeds, see
-        /// <seealso cref="Offer(Adaptive.Agrona.IDirectBuffer,int,int)"/> for an example.
-        ///  
+        /// Callers of this method must loop until the method succeeds.
+        /// 
+        /// <pre>{@code
+        ///     private readonly BufferClaim bufferClaim = new BufferClaim();
+        ///     private ICluster cluster;
+        ///     Lines omitted...
+        ///
+        ///    IDirectBuffer srcBuffer = acquireMessage()
+        ///    cluster.IdleStrategy().Reset()
+        ///
+        ///     while(true)
+        ///     {
+        ///         long position = cluster.TryClaim(length, bufferClaim);
+        ///         if (position > 0)
+        ///         {
+        ///              IMutableDirectBuffer buffer = bufferClaim.Buffer;
+        ///              int offset = bufferClaim.Offset;
+        ///
+        ///              buffer.putBytes(offset + AeronCluster.SESSION_HEADER_LENGTH, srcBuffer, 0, length);
+        ///              bufferClaim.Commit();
+        ///              break;
+        ///          }
+        ///          else if (Publication.ADMIN_ACTION != position &amp;&amp; Publication.BACK_PRESSURED != position)
+        ///          {
+        ///              throw new ClusterException("Internal tryClaim failed: " + position);
+        ///          }
+        ///
+        ///          cluster.idleStrategy.idle();
+        ///     }
+        ///     </pre>
         /// </para>
         /// </summary>
         /// <param name="length">      of the range to claim, in bytes. </param>

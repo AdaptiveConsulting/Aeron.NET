@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using Adaptive.Aeron.LogBuffer;
 using Adaptive.Aeron.Protocol;
@@ -86,7 +87,7 @@ namespace Adaptive.Aeron
         public void OnFragment(IDirectBuffer buffer, int offset, int length, Header header)
         {
             byte flags = header.Flags;
-
+            
             if ((flags & FrameDescriptor.UNFRAGMENTED) == FrameDescriptor.UNFRAGMENTED)
             {
                 _delegate.OnFragment(buffer, offset, length, header);

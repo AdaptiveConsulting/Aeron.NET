@@ -66,9 +66,11 @@ namespace Adaptive.Aeron.Tests
         public void SetUp()
         {
             _logMetaDataBuffer =
-                A.Fake<UnsafeBuffer>(x => x.Wrapping(new UnsafeBuffer(new byte[LOG_META_DATA_LENGTH])));
+                A.Fake<UnsafeBuffer>(x => x.Wrapping(new UnsafeBuffer()));
+            _logMetaDataBuffer.Wrap(new byte[LOG_META_DATA_LENGTH]);
+            
             _termBuffers = new UnsafeBuffer[PARTITION_COUNT];
-
+            
             _conductor = A.Fake<ClientConductor>();
             _logBuffers = A.Fake<LogBuffers>();
             _publicationLimit = A.Fake<IReadablePosition>();
@@ -77,7 +79,6 @@ namespace Adaptive.Aeron.Tests
             A.CallTo(() => _logBuffers.DuplicateTermBuffers()).Returns(_termBuffers);
             A.CallTo(() => _logBuffers.TermLength()).Returns(TERM_LENGTH);
             A.CallTo(() => _logBuffers.MetaDataBuffer()).Returns(_logMetaDataBuffer);
-
 
             var defaultHeader = CreateDefaultHeader(SESSION_ID, STREAM_ID, TERM_ID_1);
             defaultHeader.PutShort(DataHeaderFlyweight.TYPE_FIELD_OFFSET, (short)DEFAULT_FRAME_TYPE,

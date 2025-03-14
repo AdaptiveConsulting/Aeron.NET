@@ -12,7 +12,7 @@ public class MarkFileHeaderEncoder
     public const ushort BLOCK_LENGTH = 128;
     public const ushort TEMPLATE_ID = 200;
     public const ushort SCHEMA_ID = 110;
-    public const ushort SCHEMA_VERSION = 1;
+    public const ushort SCHEMA_VERSION = 2;
 
     private MarkFileHeaderEncoder _parentMessage;
     private IMutableDirectBuffer _buffer;

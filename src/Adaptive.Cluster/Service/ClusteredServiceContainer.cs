@@ -10,6 +10,7 @@ using Adaptive.Agrona.Concurrent.Status;
 using Adaptive.Archiver;
 using Adaptive.Cluster.Client;
 using Adaptive.Cluster.Codecs.Mark;
+using static Adaptive.Aeron.ChannelUri;
 
 namespace Adaptive.Cluster.Service
 {
@@ -29,7 +30,7 @@ namespace Adaptive.Cluster.Service
         /// Flag for a snapshot taken on a standby node.
         /// </summary>
         public const int CLUSTER_ACTION_FLAGS_STANDBY_SNAPSHOT = 1;
-        
+
         /// <summary>
         /// Launch the clustered service container and await a shutdown signal.
         /// </summary>
@@ -60,6 +61,7 @@ namespace Adaptive.Cluster.Service
                 if (null != ctx.ClusterMarkFile())
                 {
                     ctx.ClusterMarkFile().SignalFailedStart();
+                    ctx.ClusterMarkFile().Force();
                 }
 
                 ctx.Dispose();
@@ -125,7 +127,8 @@ namespace Adaptive.Cluster.Service
             /// <summary>
             /// Timeout in milliseconds to detect liveness.
             /// </summary>
-            public static readonly long LIVENESS_TIMEOUT_MS = 10 * TimeUnit.NANOSECONDS.ToMillis(MARK_FILE_UPDATE_INTERVAL_NS);
+            public static readonly long LIVENESS_TIMEOUT_MS =
+                10 * TimeUnit.NANOSECONDS.ToMillis(MARK_FILE_UPDATE_INTERVAL_NS);
 
             /// <summary>
             /// Property name for the identity of the cluster instance.
@@ -237,7 +240,12 @@ namespace Adaptive.Cluster.Service
             /// Directory to use for the aeron cluster.
             /// </summary>
             public const string CLUSTER_DIR_PROP_NAME = "aeron.cluster.dir";
-            
+
+            /// <summary>
+            /// Default directory to use for the aeron cluster.
+            /// </summary>
+            public const string CLUSTER_DIR_DEFAULT = "aeron-cluster";
+
             /// <summary>
             /// Directory to use for the aeron cluster services, will default to <seealso cref="CLUSTER_DIR_PROP_NAME"/> if not
             /// specified.
@@ -248,11 +256,6 @@ namespace Adaptive.Cluster.Service
             /// Directory to use for the Cluster component's mark file.
             /// </summary>
             public const string MARK_FILE_DIR_PROP_NAME = "aeron.cluster.mark.file.dir";
-
-            /// <summary>
-            /// Default directory to use for the aeron cluster.
-            /// </summary>
-            public const string CLUSTER_DIR_DEFAULT = "aeron-cluster";
 
             /// <summary>
             /// Length in bytes of the error buffer for the cluster container.
@@ -300,6 +303,21 @@ namespace Adaptive.Cluster.Service
             /// Default threshold value for the container work cycle threshold to track for being exceeded.
             /// </summary>
             public const long CYCLE_THRESHOLD_DEFAULT_NS = 1000000000; // 1S
+
+            /// <summary>
+            /// Property name for threshold value, which is used for tracking snapshot duration breaches.
+            ///
+            /// <remarks>Since 1.44.0</remarks>
+            /// </summary>
+            public const string SNAPSHOT_DURATION_THRESHOLD_PROP_NAME = "aeron.cluster.service.snapshot.threshold";
+
+            /// <summary>
+            /// Default threshold value, which is used for tracking snapshot duration breaches.
+            /// 
+            /// <remarks>Since 1.44.0</remarks>
+            /// </summary>
+            public static readonly long SNAPSHOT_DURATION_THRESHOLD_DEFAULT_NS = TimeUnit.MILLIS.ToNanos(1000);
+
 
             /// <summary>
             /// Counter type id for the cluster node role.
@@ -431,7 +449,7 @@ namespace Adaptive.Cluster.Service
             /// <code>false</code>.
             /// </summary>
             public const string STANDBY_SNAPSHOT_ENABLED_PROP_NAME = "aeron.cluster.standby.snapshot.enabled";
-            
+
             /// <summary>
             /// Create a supplier of <seealso cref="IIdleStrategy"/>s that will use the system property.
             /// </summary>
@@ -454,14 +472,14 @@ namespace Adaptive.Cluster.Service
             {
                 return Config.GetProperty(CLUSTER_DIR_PROP_NAME, CLUSTER_DIR_DEFAULT);
             }
-            
+
             /// <summary>
             /// The value of system property <seealso cref="CLUSTER_DIR_PROP_NAME"/> if set or null.
             /// </summary>
             /// <returns> <seealso cref="CLUSTER_DIR_PROP_NAME"/> if set or null. </returns>
             public static string ClusterServicesDirName()
             {
-                return Config.GetProperty(CLUSTER_DIR_PROP_NAME);
+                return Config.GetProperty(CLUSTER_SERVICES_DIR_PROP_NAME);
             }
 
             /// <summary>
@@ -508,7 +526,19 @@ namespace Adaptive.Cluster.Service
             {
                 return Config.GetDurationInNanos(CYCLE_THRESHOLD_PROP_NAME, CYCLE_THRESHOLD_DEFAULT_NS);
             }
-            
+
+            /// <summary>
+            /// Get threshold value, which is used for monitoring snapshot duration breaches of its predefined
+            /// threshold.
+            /// </summary>
+            /// <returns> threshold value in nanoseconds. </returns>
+            public static long SnapshotDurationThresholdNs()
+            {
+                return Config.GetDurationInNanos(SNAPSHOT_DURATION_THRESHOLD_PROP_NAME,
+                    SNAPSHOT_DURATION_THRESHOLD_DEFAULT_NS);
+            }
+
+
             /// <summary>
             /// Get the configuration value to determine if this node should take standby snapshots be enabled.
             /// </summary>
@@ -548,7 +578,7 @@ namespace Adaptive.Cluster.Service
 
                 return null;
             }
-            
+
             /// <summary>
             /// Get the alternative directory to be used for storing the Cluster component's mark file.
             /// </summary>
@@ -569,7 +599,7 @@ namespace Adaptive.Cluster.Service
             private int appVersion = SemanticVersion.Compose(0, 0, 1);
             private int clusterId = Configuration.ClusterId();
             private int serviceId = Configuration.ServiceId();
-            private string serviceName = Configuration.ServiceName();
+            private string serviceName = Config.GetProperty(Configuration.SERVICE_NAME_PROP_NAME);
             private string replayChannel = Configuration.ReplayChannel();
             private int replayStreamId = Configuration.ReplayStreamId();
             private string controlChannel = Configuration.ControlChannel();
@@ -581,6 +611,7 @@ namespace Adaptive.Cluster.Service
             private bool isRespondingService = Configuration.IsRespondingService();
             private int logFragmentLimit = Configuration.LogFragmentLimit();
             private long cycleThresholdNs = Configuration.CycleThresholdNs();
+            private long snapshotDurationThresholdNs = Configuration.SnapshotDurationThresholdNs();
             private bool standbySnapshotEnabled = Configuration.StandbySnapshotEnabled();
 
             private CountdownEvent abortLatch;
@@ -600,6 +631,7 @@ namespace Adaptive.Cluster.Service
             private string aeronDirectoryName = Adaptive.Aeron.Aeron.Context.GetAeronDirectoryName();
             private Aeron.Aeron aeron;
             private DutyCycleTracker dutyCycleTracker;
+            private SnapshotDurationTracker snapshotDurationTracker;
             private AppVersionValidator appVersionValidator;
             private bool ownsAeronClient;
 
@@ -641,7 +673,7 @@ namespace Adaptive.Cluster.Service
                 {
                     idleStrategySupplier = Configuration.IdleStrategySupplier(null);
                 }
-                
+
                 if (null == appVersionValidator)
                 {
                     appVersionValidator = Cluster.AppVersionValidator.SEMANTIC_VERSIONING_VALIDATOR;
@@ -662,32 +694,32 @@ namespace Adaptive.Cluster.Service
                     clusterDir = new DirectoryInfo(clusterDirectoryName);
                 }
 
-                if (!clusterDir.Exists)
-                {
-                    Directory.CreateDirectory(clusterDir.FullName);
-                }
-                
                 if (null == markFileDir)
                 {
                     String dir = Configuration.MarkFileDir();
                     markFileDir = string.IsNullOrEmpty(dir) ? clusterDir : new DirectoryInfo(dir);
                 }
-                
-                if (!markFileDir.Exists)
-                {
-                    Directory.CreateDirectory(markFileDir.FullName);
-                }
+
+                clusterDir = new DirectoryInfo(Path.GetFullPath(clusterDir.FullName));
+                clusterDirectoryName = Path.GetFullPath(clusterDir.FullName);
+                markFileDir = new DirectoryInfo(Path.GetFullPath(markFileDir.FullName));
+
+                IoUtil.EnsureDirectoryExists(clusterDir, "cluster");
+                IoUtil.EnsureDirectoryExists(markFileDir, "mark file");
 
                 if (null == markFile)
                 {
                     markFile = new ClusterMarkFile(
-                        new FileInfo(Path.Combine(markFileDir.FullName, Cluster.ClusterMarkFile.MarkFilenameForService(serviceId))),
-                        ClusterComponentType.CONTAINER, errorBufferLength, epochClock, Configuration.LIVENESS_TIMEOUT_MS);
+                        new FileInfo(Path.Combine(markFileDir.FullName,
+                            Cluster.ClusterMarkFile.MarkFilenameForService(serviceId))),
+                        ClusterComponentType.CONTAINER, errorBufferLength, epochClock,
+                        Configuration.LIVENESS_TIMEOUT_MS);
                 }
-                
+
                 MarkFile.EnsureMarkFileLink(
                     clusterDir,
-                    new FileInfo(Path.Combine(markFileDir.FullName, Cluster.ClusterMarkFile.MarkFilenameForService(serviceId))),
+                    new FileInfo(Path.Combine(markFileDir.FullName,
+                        Cluster.ClusterMarkFile.MarkFilenameForService(serviceId))),
                     Cluster.ClusterMarkFile.LinkFilenameForService(serviceId));
 
                 if (null == errorLog)
@@ -712,6 +744,11 @@ namespace Adaptive.Cluster.Service
                     errorHandler = delegatingErrorHandler;
                 }
 
+                if (string.IsNullOrEmpty(serviceName))
+                {
+                    serviceName = "clustered-service-" + clusterId + "-" + serviceId;
+                }
+                
                 if (null == aeron)
                 {
                     aeron = Adaptive.Aeron.Aeron.Connect(
@@ -720,7 +757,8 @@ namespace Adaptive.Cluster.Service
                             .ErrorHandler(errorHandler)
                             .SubscriberErrorHandler(RethrowingErrorHandler.INSTANCE)
                             .AwaitingIdleStrategy(YieldingIdleStrategy.INSTANCE)
-                            .EpochClock(epochClock));
+                            .EpochClock(epochClock)
+                            .ClientName(serviceName));
 
                     ownsAeronClient = true;
                 }
@@ -729,7 +767,7 @@ namespace Adaptive.Cluster.Service
                 {
                     throw new ClusterException("Aeron client must use a RethrowingErrorHandler");
                 }
-                
+
                 ExpandableArrayBuffer tempBuffer = new ExpandableArrayBuffer();
                 if (null == errorCounter)
                 {
@@ -749,20 +787,40 @@ namespace Adaptive.Cluster.Service
                 {
                     dutyCycleTracker = new DutyCycleStallTracker(
                         ClusterCounters.AllocateServiceCounter(
-                            aeron, 
-                            tempBuffer, 
-                            "Cluster container max cycle time in ns", 
-                            AeronCounters.CLUSTER_CLUSTERED_SERVICE_MAX_CYCLE_TIME_TYPE_ID, 
-                            clusterId, 
-                            serviceId), 
-                        ClusterCounters.AllocateServiceCounter(
-                            aeron, 
+                            aeron,
                             tempBuffer,
-                            "Cluster container work cycle time exceeded count: threshold=" + cycleThresholdNs, 
-                            AeronCounters.CLUSTER_CLUSTERED_SERVICE_CYCLE_TIME_THRESHOLD_EXCEEDED_TYPE_ID, 
-                            clusterId, 
-                            serviceId), 
+                            "Cluster container max cycle time in ns",
+                            AeronCounters.CLUSTER_CLUSTERED_SERVICE_MAX_CYCLE_TIME_TYPE_ID,
+                            clusterId,
+                            serviceId),
+                        ClusterCounters.AllocateServiceCounter(
+                            aeron,
+                            tempBuffer,
+                            "Cluster container work cycle time exceeded count: threshold=" + cycleThresholdNs + "ns",
+                            AeronCounters.CLUSTER_CLUSTERED_SERVICE_CYCLE_TIME_THRESHOLD_EXCEEDED_TYPE_ID,
+                            clusterId,
+                            serviceId),
                         cycleThresholdNs);
+                }
+                
+                if (null == snapshotDurationTracker)
+                {
+                    snapshotDurationTracker = new SnapshotDurationTracker(
+                        ClusterCounters.AllocateServiceCounter(
+                            aeron,
+                            tempBuffer,
+                            "Clustered service max snapshot duration in ns",
+                            AeronCounters.CLUSTERED_SERVICE_MAX_SNAPSHOT_DURATION_TYPE_ID,
+                            clusterId,
+                            serviceId),
+                        ClusterCounters.AllocateServiceCounter(aeron,
+                            tempBuffer,
+                            "Clustered service max snapshot duration exceeded count: threshold=" +
+                            snapshotDurationThresholdNs,
+                            AeronCounters.CLUSTERED_SERVICE_SNAPSHOT_DURATION_THRESHOLD_EXCEEDED_TYPE_ID,
+                            clusterId,
+                            serviceId),
+                        snapshotDurationThresholdNs);
                 }
 
                 if (null == archiveContext)
@@ -770,7 +828,9 @@ namespace Adaptive.Cluster.Service
                     archiveContext = new AeronArchive.Context()
                         .ControlRequestChannel(AeronArchive.Configuration.LocalControlChannel())
                         .ControlResponseChannel(AeronArchive.Configuration.LocalControlChannel())
-                        .ControlRequestStreamId(AeronArchive.Configuration.LocalControlStreamId());
+                        .ControlRequestStreamId(AeronArchive.Configuration.LocalControlStreamId())
+                        .ControlResponseStreamId(
+                            clusterId * 100 + 100 + AeronArchive.Configuration.ControlResponseStreamId() + (serviceId + 1));;
                 }
 
                 if (!archiveContext.ControlRequestChannel().StartsWith(Adaptive.Aeron.Aeron.Context.IPC_CHANNEL))
@@ -787,7 +847,13 @@ namespace Adaptive.Cluster.Service
                     .AeronClient(aeron)
                     .OwnsAeronClient(false)
                     .Lock(NoOpLock.Instance)
-                    .ErrorHandler(countedErrorHandler);
+                    .ErrorHandler(countedErrorHandler)
+                    .ControlRequestChannel(AddAliasIfAbsent(
+                        archiveContext.ControlRequestChannel(),
+                        "sc-" + serviceId + "-archive-ctrl-req-cluster-" + clusterId))
+                    .ControlResponseChannel(AddAliasIfAbsent(
+                        archiveContext.ControlResponseChannel(),
+                        "sc-" + serviceId + "-archive-ctrl-resp-cluster-" + clusterId));
 
                 if (null == shutdownSignalBarrier)
                 {
@@ -806,7 +872,18 @@ namespace Adaptive.Cluster.Service
 
                 abortLatch = new CountdownEvent(aeron.ConductorAgentInvoker == null ? 1 : 0);
                 ConcludeMarkFile();
+                
+                if (Aeron.Aeron.Context.ShouldPrintConfigurationOnStart())
+                {
+                    Console.WriteLine(this);
+                }
             }
+            
+            /// <summary>
+            /// Has the context had the <seealso cref="Conclude()"/> method called.
+            /// </summary>
+            /// <returns> true of the <seealso cref="Conclude()"/> method has been called. </returns>
+            public bool Concluded => Volatile.Read(ref _isConcluded) == 1;
 
             /// <summary>
             /// User assigned application version which appended to the log as the appVersion in new leadership events.
@@ -837,7 +914,7 @@ namespace Adaptive.Cluster.Service
             {
                 return appVersion;
             }
-            
+
             /// <summary>
             /// User assigned application version validator implementation used to check version compatibility.
             /// <para>
@@ -1300,7 +1377,7 @@ namespace Adaptive.Cluster.Service
             /// An <seealso cref="Adaptive.Aeron.Aeron"/> client for the container.
             /// </summary>
             /// <returns> <seealso cref="Adaptive.Aeron.Aeron"/> client for the container </returns>
-            public Aeron.Aeron Aeron()
+            public Aeron.Aeron AeronClient()
             {
                 return aeron;
             }
@@ -1314,16 +1391,16 @@ namespace Adaptive.Cluster.Service
             /// </summary>
             /// <param name="aeron"> client for the container </param>
             /// <returns> this for a fluent API. </returns>
-            public Context Aeron(Aeron.Aeron aeron)
+            public Context AeronClient(Aeron.Aeron aeron)
             {
                 this.aeron = aeron;
                 return this;
             }
 
             /// <summary>
-            /// Does this context own the <seealso cref="Aeron()"/> client and this takes responsibility for closing it?
+            /// Does this context own the <seealso cref="AeronClient()"/> client and this takes responsibility for closing it?
             /// </summary>
-            /// <param name="ownsAeronClient"> does this context own the <seealso cref="Aeron()"/> client. </param>
+            /// <param name="ownsAeronClient"> does this context own the <seealso cref="AeronClient()"/> client. </param>
             /// <returns> this for a fluent API. </returns>
             public Context OwnsAeronClient(bool ownsAeronClient)
             {
@@ -1332,9 +1409,9 @@ namespace Adaptive.Cluster.Service
             }
 
             /// <summary>
-            /// Does this context own the <seealso cref="Aeron()"/> client and this takes responsibility for closing it?
+            /// Does this context own the <seealso cref="AeronClient()"/> client and this takes responsibility for closing it?
             /// </summary>
-            /// <returns> does this context own the <seealso cref="Aeron()"/> client and this takes responsibility for closing it? </returns>
+            /// <returns> does this context own the <seealso cref="AeronClient()"/> client and this takes responsibility for closing it? </returns>
             public bool OwnsAeronClient()
             {
                 return ownsAeronClient;
@@ -1423,14 +1500,14 @@ namespace Adaptive.Cluster.Service
             {
                 return clusterDir;
             }
-            
+
             /// <summary>
             /// Get the directory in which the ClusteredServiceContainer will store mark file (i.e. {@code
             /// cluster-mark-service-0.dat}). It defaults to <seealso cref="ClusterDir()"/> if it is not set explicitly via the {@link
             /// ClusteredServiceContainer.Configuration#MARK_FILE_DIR_PROP_NAME}.
             /// </summary>
-            /// <returns> the directory in which the ClusteredServiceContainer will store mark file (i.e. {@code
-            ///         cluster-mark-service-0.dat}). </returns>
+            /// <returns> the directory in which the ClusteredServiceContainer will store mark file (i.e.
+            ///         <code>cluster-mark-service-0.dat</code>). </returns>
             /// <seealso cref="ClusteredServiceContainer.Configuration.MARK_FILE_DIR_PROP_NAME"/>
             /// <seealso cref="ClusterDir()"/>
             public DirectoryInfo MarkFileDir()
@@ -1618,6 +1695,52 @@ namespace Adaptive.Cluster.Service
             {
                 return dutyCycleTracker;
             }
+            
+            /// <summary>
+            /// Set a threshold for snapshot duration which when exceeded will result in a counter increment.
+            /// </summary>
+            /// <param name="thresholdNs"> value in nanoseconds. </param>
+            /// <returns> this for fluent API. </returns>
+            /// <seealso cref="Configuration.SNAPSHOT_DURATION_THRESHOLD_PROP_NAME"/>
+            /// <seealso cref="Configuration.SNAPSHOT_DURATION_THRESHOLD_DEFAULT_NS"/>
+            /// <remarks>since 1.44.0</remarks>
+            public Context SnapshotDurationThresholdNs(long thresholdNs)
+            {
+                this.snapshotDurationThresholdNs = thresholdNs;
+                return this;
+            }
+
+            /// <summary>
+            /// Threshold for snapshot duration which when exceeded will result in a counter increment.
+            /// </summary>
+            /// <returns> threshold value in nanoseconds.</returns>
+            /// <remarks>since 1.44.0</remarks>
+            public long SnapshotDurationThresholdNs()
+            {
+                return snapshotDurationThresholdNs;
+            }
+
+            /// <summary>
+            /// Set snapshot duration tracker used for monitoring snapshot duration.
+            /// </summary>
+            /// <param name="snapshotDurationTracker"> snapshot duration tracker. </param>
+            /// <returns> this for fluent API.</returns>
+            /// <remarks>since 1.44.0</remarks>
+            public Context SnapshotDurationTracker(SnapshotDurationTracker snapshotDurationTracker)
+            {
+                this.snapshotDurationTracker = snapshotDurationTracker;
+                return this;
+            }
+
+            /// <summary>
+            /// Get snapshot duration tracker used for monitoring snapshot duration.
+            /// </summary>
+            /// <returns> snapshot duration tracker.
+            /// @since 1.44.0 </returns>
+            public SnapshotDurationTracker SnapshotDurationTracker()
+            {
+                return snapshotDurationTracker;
+            }
 
             /// <summary>
             /// Delete the cluster container directory.
@@ -1629,9 +1752,9 @@ namespace Adaptive.Cluster.Service
                     IoUtil.Delete(clusterDir, false);
                 }
             }
-            
+
             /// <summary>
-            /// Indicates if this node should take standby snapshots
+            /// Indicates if this node should take standby snapshots.
             /// </summary>
             /// <returns> <code>true</code> if this should take standby snapshots, <code>false</code> otherwise. </returns>
             /// <seealso cref="ClusteredServiceContainer.Configuration.STANDBY_SNAPSHOT_ENABLED_PROP_NAME"/>
@@ -1642,7 +1765,7 @@ namespace Adaptive.Cluster.Service
             }
 
             /// <summary>
-            /// Indicates if this node should take standby snapshots
+            /// Indicates if this node should take standby snapshots.
             /// </summary>
             /// <param name="standbySnapshotEnabled"> if this node should take standby snapshots. </param>
             /// <returns> this for a fluent API. </returns>
@@ -1657,7 +1780,7 @@ namespace Adaptive.Cluster.Service
             /// <summary>
             /// Close the context and free applicable resources.
             /// <para>
-            /// If <seealso cref="OwnsAeronClient()"/> is true then the <seealso cref="Aeron()"/> client will be closed.
+            /// If <seealso cref="OwnsAeronClient()"/> is true then the <seealso cref="AeronClient()"/> client will be closed.
             /// </para>
             /// </summary>
             public void Dispose()
@@ -1679,11 +1802,7 @@ namespace Adaptive.Cluster.Service
             private void ConcludeMarkFile()
             {
                 Cluster.ClusterMarkFile.CheckHeaderLength(
-                    aeron.Ctx.AeronDirectoryName(),
-                    ControlChannel(),
-                    null,
-                    serviceName,
-                    null);
+                    aeron.Ctx.AeronDirectoryName(), ControlChannel(), null, serviceName, null);
 
                 var encoder = markFile.Encoder();
 
@@ -1703,6 +1822,7 @@ namespace Adaptive.Cluster.Service
 
                 markFile.UpdateActivityTimestamp(epochClock.Time());
                 markFile.SignalReady();
+                markFile.Force();
             }
 
             /// <summary>
@@ -1712,7 +1832,7 @@ namespace Adaptive.Cluster.Service
             {
                 return "ClusteredServiceContainer.Context" +
                        "\n{" +
-                       "\n    isConcluded=" + (1 == _isConcluded) +
+                       "\n    isConcluded=" + Concluded +
                        "\n    ownsAeronClient=" + ownsAeronClient +
                        "\n    aeronDirectoryName='" + aeronDirectoryName + '\'' +
                        "\n    aeron=" + aeron +
@@ -1747,6 +1867,8 @@ namespace Adaptive.Cluster.Service
                        "\n    terminationHook=" + terminationHook +
                        "\n    cycleThresholdNs=" + cycleThresholdNs +
                        "\n    dutyCycleTracker=" + dutyCycleTracker +
+                       "\n    snapshotDurationThresholdNs=" + snapshotDurationThresholdNs +
+                       "\n    snapshotDurationTracker=" + snapshotDurationTracker +
                        "\n    markFile=" + markFile +
                        "\n}";
             }

@@ -30,7 +30,32 @@ namespace Adaptive.Cluster.Service
 
         private static readonly int MAX_UDP_PAYLOAD_LENGTH = 65504;
 
-        private bool isBackgroundInvocation;
+        const int LIFECYCLE_CALLBACK_NONE = 0;
+        const int LIFECYCLE_CALLBACK_ON_START = 1;
+        const int LIFECYCLE_CALLBACK_ON_TERMINATE = 2;
+        const int LIFECYCLE_CALLBACK_ON_ROLE_CHANGE = 3;
+        const int LIFECYCLE_CALLBACK_DO_BACKGROUND_WORK = 4;
+        
+        static String LifecycleName(int activeLifecycleCallback)
+        {
+            switch (activeLifecycleCallback)
+            {
+                case LIFECYCLE_CALLBACK_NONE:
+                    return "none";
+                case LIFECYCLE_CALLBACK_ON_START:
+                    return "onStart";
+                case LIFECYCLE_CALLBACK_ON_TERMINATE:
+                    return "onTerminate";
+                case LIFECYCLE_CALLBACK_ON_ROLE_CHANGE:
+                    return "onRoleChange";
+                case LIFECYCLE_CALLBACK_DO_BACKGROUND_WORK:
+                    return "doBackgroundWork";
+                default:
+                    return "unknown";
+            }
+        }
+        
+        private int activeLifecycleCallback;
         
         private volatile bool isAbort;
         private bool isServiceActive;
@@ -62,10 +87,10 @@ namespace Adaptive.Cluster.Service
         private readonly Map<long, IClientSession> sessionByIdMap = new Map<long, IClientSession>();
         private readonly BoundedLogAdapter logAdapter;
         private readonly DutyCycleTracker dutyCycleTracker;
+        private readonly SnapshotDurationTracker snapshotDurationTracker;
         private readonly String subscriptionAlias;
         private readonly int standbySnapshotFlags;
         
-        private string activeLifecycleCallbackName;
         private ReadableCounter commitPosition;
         private ActiveLogEvent activeLogEvent;
         private ClusterRole role = ClusterRole.Follower;
@@ -81,14 +106,15 @@ namespace Adaptive.Cluster.Service
             this.ctx = ctx;
 
             markFile = ctx.ClusterMarkFile();
-            aeron = ctx.Aeron();
-            aeronAgentInvoker = ctx.Aeron().ConductorAgentInvoker;
+            aeron = ctx.AeronClient();
+            aeronAgentInvoker = ctx.AeronClient().ConductorAgentInvoker;
             service = ctx.ClusteredService();
             idleStrategy = ctx.IdleStrategy();
             serviceId = ctx.ServiceId();
             epochClock = ctx.EpochClock();
             nanoClock = ctx.NanoClock();
             dutyCycleTracker = ctx.DutyCycleTracker();
+            snapshotDurationTracker = ctx.SnapshotDurationTracker();
             subscriptionAlias = "log-sc-" + ctx.ServiceId();
 
             var channel = ctx.ControlChannel();
@@ -148,6 +174,7 @@ namespace Adaptive.Cluster.Service
             }
 
             markFile.UpdateActivityTimestamp(NULL_VALUE);
+            markFile.Force();
             ctx.Dispose();
         }
 
@@ -197,14 +224,14 @@ namespace Adaptive.Cluster.Service
                 if (value != role)
                 {
                     role = value;
-                    activeLifecycleCallbackName = "onRoleChange";
+                    activeLifecycleCallback = LIFECYCLE_CALLBACK_ON_ROLE_CHANGE;
                     try
                     {
                         service.OnRoleChange(value);
                     }
                     finally
                     {
-                        activeLifecycleCallbackName = null;
+                        activeLifecycleCallback = LIFECYCLE_CALLBACK_NONE;
                     }
                 }
             }
@@ -247,12 +274,18 @@ namespace Adaptive.Cluster.Service
                 return true;
             }
 
-            if (_consensusModuleProxy.CloseSession(clusterSessionId))
+            int attempts = 3;
+            do
             {
-                clientSession.MarkClosing();
-                return true;
+                if (_consensusModuleProxy.CloseSession(clusterSessionId))
+                {
+                    clientSession.MarkClosing();
+                    return true;
+                }
+                Idle();
             }
-
+            while (--attempts > 0);
+           
             return false;
         }
 
@@ -641,7 +674,7 @@ namespace Adaptive.Cluster.Service
             long leadershipTermId = RecoveryState.GetLeadershipTermId(counters, recoveryCounterId);
             _sessionMessageHeaderEncoder.LeadershipTermId(leadershipTermId);
 
-            activeLifecycleCallbackName = "onStart";
+            activeLifecycleCallback = LIFECYCLE_CALLBACK_ON_START;
             try
             {
                 if (NULL_VALUE != leadershipTermId)
@@ -655,7 +688,7 @@ namespace Adaptive.Cluster.Service
             }
             finally
             {
-                activeLifecycleCallbackName = null;
+                activeLifecycleCallback = LIFECYCLE_CALLBACK_NONE;
             }
 
             long id = ackId++;
@@ -730,7 +763,6 @@ namespace Adaptive.Cluster.Service
                 logSubscription = null;
 
                 long id = ackId++;
-                idleStrategy.Reset();
                 while (!_consensusModuleProxy.Ack(activeLog.logPosition, clusterTime, id, NULL_VALUE, serviceId))
                 {
                     Idle();
@@ -818,7 +850,7 @@ namespace Adaptive.Cluster.Service
                     break;
                 }
 
-                if (fragments == 0)
+                if (0 == fragments)
                 {
                     archive.CheckForErrorResponse();
                     if (image.Closed)
@@ -858,7 +890,11 @@ namespace Adaptive.Cluster.Service
                     SnapshotState(publication, logPosition, leadershipTermId);
                     CheckForClockTick(nanoClock.NanoTime());
                     archive.CheckForErrorResponse();
+                    
+                    snapshotDurationTracker.OnSnapshotBegin(nanoClock.NanoTime());
                     service.OnTakeSnapshot(publication);
+                    snapshotDurationTracker.OnSnapshotEnd(nanoClock.NanoTime());
+                    
                     AwaitRecordingComplete(recordingId, publication.Position, counters, counterId, archive);
 
                     return recordingId;
@@ -895,7 +931,6 @@ namespace Adaptive.Cluster.Service
             }
         }
 
-
         private void SnapshotState(ExclusivePublication publication, long logPosition, long leadershipTermId)
         {
             var snapshotTaker = new ServiceSnapshotTaker(publication, idleStrategy, aeronAgentInvoker);
@@ -918,12 +953,26 @@ namespace Adaptive.Cluster.Service
         {
             if (ClusterAction.SNAPSHOT == action && ShouldSnapshot(flags))
             {
-                long recordingId = OnTakeSnapshot(logPosition, leadershipTermId);
+                long recordingId = NULL_VALUE;
+                Exception exception = null;
+                try
+                {
+                    recordingId = OnTakeSnapshot(logPosition, leadershipTermId);
+                }
+                catch (Exception ex)
+                {
+                    exception = ex;
+                }
+
                 long id = ackId++;
-                idleStrategy.Reset();
                 while (!_consensusModuleProxy.Ack(logPosition, clusterTime, id, recordingId, serviceId))
                 {
                     Idle();
+                }
+
+                if (null != exception)
+                {
+                    throw exception;
                 }
             }
         }
@@ -936,12 +985,13 @@ namespace Adaptive.Cluster.Service
         private int AwaitRecordingCounter(int sessionId, CountersReader counters, AeronArchive archive)
         {
             idleStrategy.Reset();
-            int counterId = RecordingPos.FindCounterIdBySession(counters, sessionId);
+            long archiveId = archive.ArchiveId();
+            int counterId = RecordingPos.FindCounterIdBySession(counters, sessionId, archiveId);
             while (CountersReader.NULL_COUNTER_ID == counterId)
             {
                 Idle();
                 archive.CheckForErrorResponse();
-                counterId = RecordingPos.FindCounterIdBySession(counters, sessionId);
+                counterId = RecordingPos.FindCounterIdBySession(counters, sessionId, archiveId);
             }
 
             return counterId;
@@ -1018,14 +1068,16 @@ namespace Adaptive.Cluster.Service
                 if (logPosition > requestedAckPosition)
                 {
                     ctx.CountedErrorHandler().OnError(new ClusterEvent(
-                        "service terminate: logPosition=" + logPosition + 
-                        " > requestedAckPosition=" + terminationPosition));
+                        "invalid ack request: logPosition=" + logPosition + 
+                        " > requestedAckPosition=" + requestedAckPosition));
                 }
 
-                if (_consensusModuleProxy.Ack(logPosition, clusterTime, ackId++, NULL_VALUE, serviceId))
+                long id = ackId++;
+                while (!_consensusModuleProxy.Ack(logPosition, clusterTime, id, NULL_VALUE, serviceId))
                 {
-                    requestedAckPosition = NULL_POSITION;
+                    Idle();
                 }
+                requestedAckPosition = NULL_POSITION;
             }
 
             return workCount;
@@ -1034,7 +1086,7 @@ namespace Adaptive.Cluster.Service
         private void Terminate(bool isTerminationExpected)
         {
             isServiceActive = false;
-            activeLifecycleCallbackName = "onTerminate";
+            activeLifecycleCallback = LIFECYCLE_CALLBACK_ON_TERMINATE;
             try
             {
                 service.OnTerminate(this);
@@ -1045,7 +1097,7 @@ namespace Adaptive.Cluster.Service
             }
             finally
             {
-                activeLifecycleCallbackName = null;
+                activeLifecycleCallback = LIFECYCLE_CALLBACK_NONE;
             }
 
             try
@@ -1074,16 +1126,10 @@ namespace Adaptive.Cluster.Service
 
         private void CheckForValidInvocation()
         {
-            if (null != activeLifecycleCallbackName)
+            if (LIFECYCLE_CALLBACK_NONE != activeLifecycleCallback)
             {
                 throw new ClusterException(
-                    "sending messages or scheduling timers is not allowed from " + activeLifecycleCallbackName);
-            }
-            
-            if (isBackgroundInvocation)
-            {
-                throw new ClusterException(
-                    "sending messages or scheduling timers is not allowed from ClusteredService.DoBackgroundWork");
+                    "sending messages or scheduling timers is not allowed from " + LifecycleName(activeLifecycleCallback));
             }
         }
 
@@ -1119,12 +1165,12 @@ namespace Adaptive.Cluster.Service
         {
             try
             {
-                isBackgroundInvocation = true;
+                activeLifecycleCallback = LIFECYCLE_CALLBACK_DO_BACKGROUND_WORK;
                 return service.DoBackgroundWork(nowNs);
             }
             finally
             {
-                isBackgroundInvocation = false;
+                activeLifecycleCallback = LIFECYCLE_CALLBACK_NONE;
             }
         }
 

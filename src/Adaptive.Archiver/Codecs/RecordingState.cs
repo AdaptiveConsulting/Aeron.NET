@@ -5,6 +5,7 @@ namespace Adaptive.Archiver.Codecs {
     {
         INVALID = 0,
         VALID = 1,
+        DELETED = 2,
         NULL_VALUE = -2147483648
     }
 }

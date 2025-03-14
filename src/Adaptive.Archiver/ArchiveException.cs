@@ -138,5 +138,32 @@ namespace Adaptive.Archiver
             ErrorCode = errorCode;
             CorrelationId = correlationId;
         }
+
+        /// <summary>
+        /// ArchiveException exception <seealso cref="ErrorCode()"/> = <seealso cref="GENERIC"/>, plus detail, correlation id of control
+        /// request, and <seealso cref="Category"/>.
+        /// </summary>
+        /// <param name="message">       providing detail. </param>
+        /// <param name="correlationId"> of the control request. </param>
+        /// <param name="category">      for type. </param>
+        public ArchiveException(string message, long correlationId, Category category) : base(message, category)
+        {
+            ErrorCode = GENERIC;
+            CorrelationId = correlationId;
+        }
+
+        /// <summary>
+        /// ArchiveException exception, plus detail, error code, correlation id of control request,
+        /// and <seealso cref="Category"/>.
+        /// </summary>
+        /// <param name="message">       providing detail. </param>
+        /// <param name="errorCode">     for type. </param>
+        /// <param name="correlationId"> of the control request. </param>
+        /// <param name="category">      for type. </param>
+        public ArchiveException(string message, int errorCode, long correlationId, Category category) : base(message, category)
+        {
+            ErrorCode = errorCode;
+            CorrelationId = correlationId;
+        }
     }
 }

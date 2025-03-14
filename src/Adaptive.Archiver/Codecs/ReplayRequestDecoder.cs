@@ -9,10 +9,10 @@ namespace Adaptive.Archiver.Codecs {
 
 public class ReplayRequestDecoder
 {
-    public const ushort BLOCK_LENGTH = 48;
+    public const ushort BLOCK_LENGTH = 56;
     public const ushort TEMPLATE_ID = 6;
     public const ushort SCHEMA_ID = 101;
-    public const ushort SCHEMA_VERSION = 8;
+    public const ushort SCHEMA_VERSION = 10;
 
     private ReplayRequestDecoder _parentMessage;
     private IDirectBuffer _buffer;
@@ -466,6 +466,60 @@ public class ReplayRequestDecoder
     }
 
 
+    public static int ReplayTokenId()
+    {
+        return 9;
+    }
+
+    public static int ReplayTokenSinceVersion()
+    {
+        return 10;
+    }
+
+    public static int ReplayTokenEncodingOffset()
+    {
+        return 48;
+    }
+
+    public static int ReplayTokenEncodingLength()
+    {
+        return 8;
+    }
+
+    public static string ReplayTokenMetaAttribute(MetaAttribute metaAttribute)
+    {
+        switch (metaAttribute)
+        {
+            case MetaAttribute.EPOCH: return "unix";
+            case MetaAttribute.TIME_UNIT: return "nanosecond";
+            case MetaAttribute.SEMANTIC_TYPE: return "";
+            case MetaAttribute.PRESENCE: return "required";
+        }
+
+        return "";
+    }
+
+    public static long ReplayTokenNullValue()
+    {
+        return -9223372036854775808L;
+    }
+
+    public static long ReplayTokenMinValue()
+    {
+        return -9223372036854775807L;
+    }
+
+    public static long ReplayTokenMaxValue()
+    {
+        return 9223372036854775807L;
+    }
+
+    public long ReplayToken()
+    {
+        return _buffer.GetLong(_offset + 48, ByteOrder.LittleEndian);
+    }
+
+
     public static int ReplayChannelId()
     {
         return 7;
@@ -605,7 +659,12 @@ public class ReplayRequestDecoder
         builder.Append("FileIoMaxLength=");
         builder.Append(FileIoMaxLength());
         builder.Append('|');
-        //Token{signal=BEGIN_VAR_DATA, name='replayChannel', referencedName='null', description='null', id=7, version=0, deprecated=0, encodedLength=0, offset=48, componentTokenCount=6, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=BEGIN_FIELD, name='replayToken', referencedName='null', description='null', id=9, version=10, deprecated=0, encodedLength=0, offset=48, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=ENCODING, name='int64', referencedName='null', description='null', id=-1, version=0, deprecated=0, encodedLength=8, offset=48, componentTokenCount=1, encoding=Encoding{presence=REQUIRED, primitiveType=INT64, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        builder.Append("ReplayToken=");
+        builder.Append(ReplayToken());
+        builder.Append('|');
+        //Token{signal=BEGIN_VAR_DATA, name='replayChannel', referencedName='null', description='null', id=7, version=0, deprecated=0, encodedLength=0, offset=56, componentTokenCount=6, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
         builder.Append("ReplayChannel=");
         builder.Append(ReplayChannel());
 

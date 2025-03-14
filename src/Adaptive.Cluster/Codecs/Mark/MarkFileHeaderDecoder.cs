@@ -12,7 +12,7 @@ public class MarkFileHeaderDecoder
     public const ushort BLOCK_LENGTH = 128;
     public const ushort TEMPLATE_ID = 200;
     public const ushort SCHEMA_ID = 110;
-    public const ushort SCHEMA_VERSION = 1;
+    public const ushort SCHEMA_VERSION = 2;
 
     private MarkFileHeaderDecoder _parentMessage;
     private IDirectBuffer _buffer;
@@ -20,6 +20,7 @@ public class MarkFileHeaderDecoder
     protected int _offset;
     protected int _limit;
     protected int _actingBlockLength;
+
     protected int _actingVersion;
 
     public MarkFileHeaderDecoder()
@@ -61,7 +62,7 @@ public class MarkFileHeaderDecoder
     {
         return _offset;
     }
-    
+
     public int InitialOffset()
     {
         return _initialOffset;
@@ -82,6 +83,30 @@ public class MarkFileHeaderDecoder
     public int EncodedLength()
     {
         return _limit - _offset;
+    }
+
+    public MarkFileHeaderDecoder WrapAndApplyHeader(IDirectBuffer buffer, int offset,
+        MessageHeaderDecoder headerDecoder)
+    {
+        headerDecoder.Wrap(buffer, offset);
+
+        int templateId = headerDecoder.TemplateId();
+        if (TEMPLATE_ID != templateId)
+        {
+            throw new InvalidOperationException("Invalid TEMPLATE_ID: " + templateId);
+        }
+
+        return Wrap(
+            buffer,
+            offset + MessageHeaderDecoder.ENCODED_LENGTH,
+            headerDecoder.BlockLength(),
+            headerDecoder.Version()
+        );
+    }
+
+    public MarkFileHeaderDecoder SbeRewind()
+    {
+        return Wrap(_buffer, _offset, _actingBlockLength, _actingVersion);
     }
 
     public int Limit()

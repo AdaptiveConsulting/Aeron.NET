@@ -47,10 +47,10 @@ namespace Adaptive.Archiver
         /// </summary>
         public const string NAME = "rec-pos";
 
-        private const int RECORDING_ID_OFFSET = 0;
-        private static readonly int SESSION_ID_OFFSET = RECORDING_ID_OFFSET + BitUtil.SIZE_OF_LONG;
-        private static readonly int SOURCE_IDENTITY_LENGTH_OFFSET = SESSION_ID_OFFSET + BitUtil.SIZE_OF_INT;
-        private static readonly int SOURCE_IDENTITY_OFFSET = SOURCE_IDENTITY_LENGTH_OFFSET + BitUtil.SIZE_OF_INT;
+        internal const int RECORDING_ID_OFFSET = 0;
+        internal static readonly int SESSION_ID_OFFSET = RECORDING_ID_OFFSET + BitUtil.SIZE_OF_LONG;
+        internal static readonly int SOURCE_IDENTITY_LENGTH_OFFSET = SESSION_ID_OFFSET + BitUtil.SIZE_OF_INT;
+        internal static readonly int SOURCE_IDENTITY_OFFSET = SOURCE_IDENTITY_LENGTH_OFFSET + BitUtil.SIZE_OF_INT;
 
         /// <summary>
         /// Find the active counter id for a stream based on the recording id.
@@ -58,19 +58,43 @@ namespace Adaptive.Archiver
         /// <param name="countersReader"> to search within. </param>
         /// <param name="recordingId">    for the active recording. </param>
         /// <returns> the counter id if found otherwise <seealso cref="CountersReader.NULL_COUNTER_ID"/>. </returns>
+        [Obsolete("Use FindCounterIdByRecording(CountersReader, long, long).")]
         public static int FindCounterIdByRecording(CountersReader countersReader, long recordingId)
+        {
+            return FindCounterIdByRecording(countersReader, recordingId, Aeron.Aeron.NULL_VALUE);
+        }
+
+        /// <summary>
+        /// Find the active counter id for a stream based on the recording id.
+        /// </summary>
+        /// <param name="countersReader"> to search within. </param>
+        /// <param name="recordingId">    for the active recording. </param>
+        /// <param name="archiveId">      to target specific Archive. Use <see cref="Aeron.Aeron.NULL_VALUE"/> to emulate old behaviour.</param>
+        /// <returns> the counter id if found otherwise <seealso cref="CountersReader.NULL_COUNTER_ID"/>. </returns>
+        public static int FindCounterIdByRecording(CountersReader countersReader, long recordingId, long archiveId)
         {
             IDirectBuffer buffer = countersReader.MetaDataBuffer;
 
-            for (int i = 0, size = countersReader.MaxCounterId; i < size; i++)
+            for (int counterId = 0, maxId = countersReader.MaxCounterId; counterId < maxId; counterId++)
             {
-                var counterState = countersReader.GetCounterState(i);
+                var counterState = countersReader.GetCounterState(counterId);
                 if (RECORD_ALLOCATED == counterState)
                 {
-                    if (countersReader.GetCounterTypeId(i) == RECORDING_POSITION_TYPE_ID &&
-                        buffer.GetLong(MetaDataOffset(i) + KEY_OFFSET + RECORDING_ID_OFFSET) == recordingId)
+                    if (countersReader.GetCounterTypeId(counterId) == RECORDING_POSITION_TYPE_ID)
                     {
-                        return i;
+                        int keyOffset = MetaDataOffset(counterId) + KEY_OFFSET;
+                        if (buffer.GetLong(keyOffset + RECORDING_ID_OFFSET) == recordingId)
+                        {
+                            int sourceIdentityLength = buffer.GetInt(keyOffset + SOURCE_IDENTITY_LENGTH_OFFSET);
+                            int archiveIdOffset = keyOffset + SOURCE_IDENTITY_OFFSET + sourceIdentityLength;
+
+                            if (Aeron.Aeron.NULL_VALUE == archiveId || buffer.GetLong(archiveIdOffset) == archiveId)
+                            {
+                                return counterId;
+                            }
+                        }
+
+                        return counterId;
                     }
                 }
                 else if (RECORD_UNUSED == counterState)
@@ -82,25 +106,54 @@ namespace Adaptive.Archiver
             return NULL_COUNTER_ID;
         }
 
+        
         /// <summary>
         /// Find the active counter id for a stream based on the session id.
         /// </summary>
         /// <param name="countersReader"> to search within. </param>
         /// <param name="sessionId">      for the active recording. </param>
         /// <returns> the counter id if found otherwise <seealso cref="CountersReader.NULL_COUNTER_ID"/>. </returns>
+        [Obsolete("Use FindCounterIdBySession(CountersReader, int, long) instead.")]
         public static int FindCounterIdBySession(CountersReader countersReader, int sessionId)
+        {
+            return FindCounterIdBySession(countersReader, sessionId, Aeron.Aeron.NULL_VALUE);
+        }
+
+        /// <summary>
+        /// Finds the active counter ID for a stream based on the session ID and archive ID.
+        /// </summary>
+        /// <param name="countersReader">The reader to search within.</param>
+        /// <param name="sessionId">The session ID for the active recording.</param>
+        /// <param name="archiveId">
+        /// The archive ID to target a specific archive. 
+        /// Use <see cref="Aeron.Aeron.NULL_VALUE"/> to emulate the old behavior.
+        /// </param>
+        /// <returns>
+        /// The counter ID if found; otherwise <see cref="CountersReader.NULL_COUNTER_ID"/>.
+        /// </returns>
+        /// <remarks>Since 1.44.0</remarks>
+        public static int FindCounterIdBySession(CountersReader countersReader, int sessionId, long archiveId)
         {
             IDirectBuffer buffer = countersReader.MetaDataBuffer;
 
-            for (int i = 0, size = countersReader.MaxCounterId; i < size; i++)
+            for (int counterId = 0, maxId = countersReader.MaxCounterId; counterId < maxId; counterId++)
             {
-                int counterState = countersReader.GetCounterState(i);
-                if (counterState == RECORD_ALLOCATED)
+                var counterState = countersReader.GetCounterState(counterId);
+                if (RECORD_ALLOCATED == counterState)
                 {
-                    if (countersReader.GetCounterTypeId(i) == RECORDING_POSITION_TYPE_ID &&
-                        buffer.GetInt(MetaDataOffset(i) + KEY_OFFSET + SESSION_ID_OFFSET) == sessionId)
+                    if (countersReader.GetCounterTypeId(counterId) == RECORDING_POSITION_TYPE_ID)
                     {
-                        return i;
+                        int keyOffset = MetaDataOffset(counterId) + KEY_OFFSET;
+                        if (buffer.GetInt(keyOffset + SESSION_ID_OFFSET) == sessionId)
+                        {
+                            int sourceIdentityLength = buffer.GetInt(keyOffset + SOURCE_IDENTITY_LENGTH_OFFSET);
+                            int archiveIdOffset = keyOffset + SOURCE_IDENTITY_OFFSET + sourceIdentityLength;
+
+                            if (Aeron.Aeron.NULL_VALUE == archiveId || buffer.GetLong(archiveIdOffset) == archiveId)
+                            {
+                                return counterId;
+                            }
+                        }
                     }
                 }
                 else if (RECORD_UNUSED == counterState)
@@ -142,7 +195,8 @@ namespace Adaptive.Archiver
                 counters.GetCounterTypeId(counterId) == RECORDING_POSITION_TYPE_ID)
             {
                 int recordOffset = MetaDataOffset(counterId);
-                return counters.MetaDataBuffer.GetStringAscii(recordOffset + KEY_OFFSET + SOURCE_IDENTITY_LENGTH_OFFSET);
+                return counters.MetaDataBuffer.GetStringAscii(recordOffset + KEY_OFFSET +
+                                                              SOURCE_IDENTITY_LENGTH_OFFSET);
             }
 
             return null;

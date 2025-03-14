@@ -12,7 +12,7 @@ public class StartPositionRequestDecoder
     public const ushort BLOCK_LENGTH = 24;
     public const ushort TEMPLATE_ID = 52;
     public const ushort SCHEMA_ID = 101;
-    public const ushort SCHEMA_VERSION = 8;
+    public const ushort SCHEMA_VERSION = 10;
 
     private StartPositionRequestDecoder _parentMessage;
     private IDirectBuffer _buffer;
