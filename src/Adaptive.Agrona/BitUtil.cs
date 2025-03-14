@@ -139,7 +139,25 @@ namespace Adaptive.Agrona
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int Align(int value, int alignment)
         {
-            return (value + (alignment - 1)) & ~(alignment - 1);
+            return value + (alignment - 1) & -alignment;
+        }
+
+        /// <summary>
+        /// Align a value to the next multiple up of alignment.
+        /// If the value equals an alignment multiple then it is returned unchanged.
+        /// <para>
+        /// This method executes without branching. This code is designed to be use in the fast path and should not
+        /// be used with negative numbers. Negative numbers will result in undefined behaviour.
+        /// 
+        /// </para>
+        /// </summary>
+        /// <param name="value">     to be aligned up. </param>
+        /// <param name="alignment"> to be used. </param>
+        /// <returns> the value aligned to the next boundary. </returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static long Align(long value, long alignment)
+        {
+            return value + (alignment - 1L) & -alignment;
         }
 
         /// <summary>

@@ -26,16 +26,27 @@ namespace Adaptive.Agrona.Concurrent.Broadcast
         /// <summary>
         /// Default length for the scratch buffer for copying messages into.
         /// </summary>
-        private const int ScratchBufferSize = 4096;
+        public const int ScratchBufferSize = 4096;
 
         private readonly BroadcastReceiver _receiver;
-        private readonly UnsafeBuffer _scratchBuffer;
+        private readonly IMutableDirectBuffer _scratchBuffer;
 
         public CopyBroadcastReceiver()
         {
             
         }
 
+        /// <summary>
+        /// Wrap a <seealso cref="BroadcastReceiver"/> to simplify the API for receiving messages.
+        /// </summary>
+        /// <param name="receiver">      to be wrapped. </param>
+        /// <param name="scratchBuffer"> to be used for copying receive buffers. </param>
+        public CopyBroadcastReceiver(BroadcastReceiver receiver, IMutableDirectBuffer scratchBuffer)
+        {
+            _receiver = receiver;
+            _scratchBuffer = scratchBuffer;
+        }
+        
         /// <summary>
         /// Wrap a <seealso cref="BroadcastReceiver"/> to simplify the API for receiving messages.
         /// </summary>

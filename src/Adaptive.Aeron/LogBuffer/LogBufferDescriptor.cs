@@ -16,10 +16,12 @@
 
 using System;
 using System.Runtime.CompilerServices;
-using Adaptive.Aeron.Protocol;
 using Adaptive.Agrona;
 using Adaptive.Agrona.Concurrent;
 using Adaptive.Agrona.Util;
+using static Adaptive.Aeron.LogBuffer.FrameDescriptor;
+using static Adaptive.Aeron.Protocol.DataHeaderFlyweight;
+using static Adaptive.Agrona.BitUtil;
 
 namespace Adaptive.Aeron.LogBuffer
 {
@@ -40,6 +42,8 @@ namespace Adaptive.Aeron.LogBuffer
     /// </summary>
     public class LogBufferDescriptor
     {
+        private const int PADDING_SIZE = 64;
+
         /// <summary>
         ///     The number of partitions the log is divided into terms and a metadata buffer.
         /// </summary>
@@ -137,87 +141,260 @@ namespace Adaptive.Aeron.LogBuffer
         /// <summary>
         ///     Maximum length of a frame header
         /// </summary>
-        public static readonly int LOG_DEFAULT_FRAME_HEADER_MAX_LENGTH = BitUtil.CACHE_LINE_LENGTH * 2;
+        public static readonly int LOG_DEFAULT_FRAME_HEADER_MAX_LENGTH = PADDING_SIZE * 2;
 
+        /**
+         * Offset within the log metadata where the sparse property is stored.
+         */
+        public static readonly int LOG_SPARSE_OFFSET;
+
+        /**
+         * Offset within the log metadata where the tether property is stored.
+         */
+        public static readonly int LOG_TETHER_OFFSET;
+
+        /**
+         * Offset within the log metadata where the rejoin property is stored.
+         */
+        public static readonly int LOG_REJOIN_OFFSET;
+
+        /**
+         * Offset within the log metadata where the reliable property is stored.
+         */
+        public static readonly int LOG_RELIABLE_OFFSET;
+
+        /**
+         * Offset within the log metadata where the socket receive buffer length is stored.
+         */
+        public static readonly int LOG_SOCKET_RCVBUF_LENGTH_OFFSET;
+
+        /**
+         * Offset within the log metadata where the OS default length for the socket receive buffer is stored.
+         */
+        public static readonly int LOG_OS_DEFAULT_SOCKET_RCVBUF_LENGTH_OFFSET;
+
+        /**
+         * Offset within the log metadata where the OS maximum length for the socket receive buffer is stored.
+         */
+        public static readonly int LOG_OS_MAX_SOCKET_RCVBUF_LENGTH_OFFSET;
+
+        /**
+         * Offset within the log metadata where the socket send buffer length is stored.
+         */
+        public static readonly int LOG_SOCKET_SNDBUF_LENGTH_OFFSET;
+
+        /**
+         * Offset within the log metadata where the OS default length for the socket send buffer is stored.
+         */
+        public static readonly int LOG_OS_DEFAULT_SOCKET_SNDBUF_LENGTH_OFFSET;
+
+        /**
+         * Offset within the log metadata where the OS maximum length for the socket send buffer is stored.
+         */
+        public static readonly int LOG_OS_MAX_SOCKET_SNDBUF_LENGTH_OFFSET;
+
+        /**
+         * Offset within the log metadata where the receiver window length is stored.
+         */
+        public static readonly int LOG_RECEIVER_WINDOW_LENGTH_OFFSET;
+
+        /**
+         * Offset within the log metadata where the publication window length is stored.
+         */
+        public static readonly int LOG_PUBLICATION_WINDOW_LENGTH_OFFSET;
+
+        /**
+         * Offset within the log metadata where the window limit timeout ns is stored.
+         */
+        public static readonly int LOG_UNTETHERED_WINDOW_LIMIT_TIMEOUT_NS_OFFSET;
+
+        /**
+         * Offset within the log metadata where the untether resting timeout ns is stored.
+         */
+        public static readonly int LOG_UNTETHERED_RESTING_TIMEOUT_NS_OFFSET;
+
+        /**
+         * Offset within the log metadata where the max resend is stored.
+         */
+        public static readonly int LOG_MAX_RESEND_OFFSET;
+
+        /**
+         * Offset within the log metadata where the linger timeout ns is stored.
+         */
+        public static readonly int LOG_LINGER_TIMEOUT_NS_OFFSET;
+
+        /**
+         * Offset within the log metadata where the signal-eos is stored.
+         */
+        public static readonly int LOG_SIGNAL_EOS_OFFSET;
+
+        /**
+         * Offset within the log metadata where the spies-simulate-connection is stored.
+         */
+        public static readonly int LOG_SPIES_SIMULATE_CONNECTION_OFFSET;
+
+        /**
+         * Offset within the log metadata where the group is stored.
+         */
+        public static readonly int LOG_GROUP_OFFSET;
+
+        /**
+         * Offset within the log metadata where the entity tag is stored.
+         */
+        public static readonly int LOG_ENTITY_TAG_OFFSET;
+
+        /**
+         * Offset within the log metadata where the response correlation id is stored.
+         */
+        public static readonly int LOG_RESPONSE_CORRELATION_ID_OFFSET;
+
+        /**
+         * Offset within the log metadata where is-response is stored.
+         */
+        public static readonly int LOG_IS_RESPONSE_OFFSET;
 
         /// <summary>
-        ///     Total length of the log metadata buffer in bytes.
-        ///     <pre>
-        ///         0                   1                   2                   3
-        ///         0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-        ///         +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-        ///         |                       Tail Counter 0                          |
-        ///         |                                                               |
-        ///         +---------------------------------------------------------------+
-        ///         |                       Tail Counter 1                          |
-        ///         |                                                               |
-        ///         +---------------------------------------------------------------+
-        ///         |                       Tail Counter 2                          |
-        ///         |                                                               |
-        ///         +---------------------------------------------------------------+
-        ///         |                      Active Term Count                        |
-        ///         +---------------------------------------------------------------+
-        ///         |                     Cache Line Padding                       ...
-        ///         ...                                                              |
-        ///         +---------------------------------------------------------------+
-        ///         |                    End of Stream Position                     |
-        ///         |                                                               |
-        ///         +---------------------------------------------------------------+
-        ///         |                        Is Connected                           |
-        ///         +---------------------------------------------------------------+
-        ///         |                   Active Transport Count                      |
-        ///         +---------------------------------------------------------------+
-        ///         |                      Cache Line Padding                      ...
-        ///         ...                                                              |
-        ///         +---------------------------------------------------------------+
-        ///         |                 Registration / Correlation ID                 |
-        ///         |                                                               |
-        ///         +---------------------------------------------------------------+
-        ///         |                        Initial Term Id                        |
-        ///         +---------------------------------------------------------------+
-        ///         |                  Default Frame Header Length                  |
-        ///         +---------------------------------------------------------------+
-        ///         |                          MTU Length                           |
-        ///         +---------------------------------------------------------------+
-        ///         |                         Term Length                           |
-        ///         +---------------------------------------------------------------+
-        ///         |                          Page Size                            |
-        ///         +---------------------------------------------------------------+
-        ///         |                      Cache Line Padding                      ...
-        ///         ...                                                              |
-        ///         +---------------------------------------------------------------+
-        ///         |                     Default Frame Header                     ...
-        ///         ...                                                              |
-        ///         +---------------------------------------------------------------+
-        ///     </pre>
+        /// Total length of the log metadata buffer in bytes.
+        /// <pre>
+        ///   0                   1                   2                   3
+        ///   0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+        ///  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+        ///  |                       Tail Counter 0                          |
+        ///  |                                                               |
+        ///  +---------------------------------------------------------------+
+        ///  |                       Tail Counter 1                          |
+        ///  |                                                               |
+        ///  +---------------------------------------------------------------+
+        ///  |                       Tail Counter 2                          |
+        ///  |                                                               |
+        ///  +---------------------------------------------------------------+
+        ///  |                      Active Term Count                        |
+        ///  +---------------------------------------------------------------+
+        ///  |                     Cache Line Padding                       ...
+        /// ...                                                              |
+        ///  +---------------------------------------------------------------+
+        ///  |                    End of Stream Position                     |
+        ///  |                                                               |
+        ///  +---------------------------------------------------------------+
+        ///  |                        Is Connected                           |
+        ///  +---------------------------------------------------------------+
+        ///  |                    Active Transport Count                     |
+        ///  +---------------------------------------------------------------+
+        ///  |                      Cache Line Padding                      ...
+        /// ...                                                              |
+        ///  +---------------------------------------------------------------+
+        ///  |                 Registration / Correlation ID                 |
+        ///  |                                                               |
+        ///  +---------------------------------------------------------------+
+        ///  |                        Initial Term Id                        |
+        ///  +---------------------------------------------------------------+
+        ///  |                  Default Frame Header Length                  |
+        ///  +---------------------------------------------------------------+
+        ///  |                          MTU Length                           |
+        ///  +---------------------------------------------------------------+
+        ///  |                         Term Length                           |
+        ///  +---------------------------------------------------------------+
+        ///  |                          Page Size                            |
+        ///  +---------------------------------------------------------------+
+        ///  |                    Publication Window Length                  |
+        ///  +---------------------------------------------------------------+
+        ///  |                      Receiver Window Length                   |
+        ///  +---------------------------------------------------------------+
+        ///  |                    Socket Send Buffer Length                  |
+        ///  +---------------------------------------------------------------+
+        ///  |               OS Default Socket Send Buffer Length            |
+        ///  +---------------------------------------------------------------+
+        ///  |                OS Max Socket Send Buffer Length               |
+        ///  +---------------------------------------------------------------+
+        ///  |                  Socket Receive Buffer Length                 |
+        ///  +---------------------------------------------------------------+
+        ///  |              OS Default Socket Receive Buffer Length          |
+        ///  +---------------------------------------------------------------+
+        ///  |               OS Max Socket Receive Buffer Length             |
+        ///  +---------------------------------------------------------------+
+        ///  |                        Maximum Resend                         |
+        ///  +---------------------------------------------------------------+
+        ///  |                           Entity tag                          |
+        ///  |                                                               |
+        ///  +---------------------------------------------------------------+
+        ///  |                    Response correlation id                    |
+        ///  |                                                               |
+        ///  +---------------------------------------------------------------+
+        ///  |                     Default Frame Header                     ...
+        /// ...                                                              |
+        ///  +---------------------------------------------------------------+
+        ///  |                        Linger Timeout (ns)                    |
+        ///  |                                                               |
+        ///  +---------------------------------------------------------------+
+        ///  |               Untethered Window Limit Timeout (ns)            |
+        ///  |                                                               |
+        ///  +---------------------------------------------------------------+
+        ///  |                 Untethered Resting Timeout (ns)               |
+        ///  |                                                               |
+        ///  +---------------------------------------------------------------+
+        ///  |                            Group                              |
+        ///  +---------------------------------------------------------------+
+        ///  |                          Is response                          |
+        ///  +---------------------------------------------------------------+
+        ///  |                            Rejoin                             |
+        ///  +---------------------------------------------------------------+
+        ///  |                           Reliable                            |
+        ///  +---------------------------------------------------------------+
+        ///  |                            Sparse                             |
+        ///  +---------------------------------------------------------------+
+        ///  |                         Signal EOS                            |
+        ///  +---------------------------------------------------------------+
+        ///  |                 Spies Simulate Connection                     |
+        ///  +---------------------------------------------------------------+
+        ///  |                          Tether                               |
+        ///  +---------------------------------------------------------------+
+        /// </pre>
         /// </summary>
         public static readonly int LOG_META_DATA_LENGTH;
 
         static LogBufferDescriptor()
         {
-            var offset = 0;
-            TERM_TAIL_COUNTERS_OFFSET = offset;
+            TERM_TAIL_COUNTERS_OFFSET = 0;
+            LOG_ACTIVE_TERM_COUNT_OFFSET = TERM_TAIL_COUNTERS_OFFSET + (SIZE_OF_LONG * PARTITION_COUNT);
 
-            offset += BitUtil.SIZE_OF_LONG * PARTITION_COUNT;
-            LOG_ACTIVE_TERM_COUNT_OFFSET = offset;
+            LOG_END_OF_STREAM_POSITION_OFFSET = PADDING_SIZE * 2;
+            LOG_IS_CONNECTED_OFFSET = LOG_END_OF_STREAM_POSITION_OFFSET + SIZE_OF_LONG;
+            LOG_ACTIVE_TRANSPORT_COUNT = LOG_IS_CONNECTED_OFFSET + SIZE_OF_INT;
 
-            offset = BitUtil.CACHE_LINE_LENGTH * 2;
-            LOG_END_OF_STREAM_POSITION_OFFSET = offset;
-            LOG_IS_CONNECTED_OFFSET = LOG_END_OF_STREAM_POSITION_OFFSET + BitUtil.SIZE_OF_LONG;
-            LOG_ACTIVE_TRANSPORT_COUNT = LOG_IS_CONNECTED_OFFSET + BitUtil.SIZE_OF_INT;
+            LOG_CORRELATION_ID_OFFSET = PADDING_SIZE * 4;
+            LOG_INITIAL_TERM_ID_OFFSET = LOG_CORRELATION_ID_OFFSET + SIZE_OF_LONG;
+            LOG_DEFAULT_FRAME_HEADER_LENGTH_OFFSET = LOG_INITIAL_TERM_ID_OFFSET + SIZE_OF_INT;
+            LOG_MTU_LENGTH_OFFSET = LOG_DEFAULT_FRAME_HEADER_LENGTH_OFFSET + SIZE_OF_INT;
+            LOG_TERM_LENGTH_OFFSET = LOG_MTU_LENGTH_OFFSET + SIZE_OF_INT;
+            LOG_PAGE_SIZE_OFFSET = LOG_TERM_LENGTH_OFFSET + SIZE_OF_INT;
 
-            offset += BitUtil.CACHE_LINE_LENGTH * 2;
-            LOG_CORRELATION_ID_OFFSET = offset;
-            LOG_INITIAL_TERM_ID_OFFSET = LOG_CORRELATION_ID_OFFSET + BitUtil.SIZE_OF_LONG;
-            LOG_DEFAULT_FRAME_HEADER_LENGTH_OFFSET = LOG_INITIAL_TERM_ID_OFFSET + BitUtil.SIZE_OF_INT;
-            LOG_MTU_LENGTH_OFFSET = LOG_DEFAULT_FRAME_HEADER_LENGTH_OFFSET + BitUtil.SIZE_OF_INT;
-            LOG_TERM_LENGTH_OFFSET = LOG_MTU_LENGTH_OFFSET + BitUtil.SIZE_OF_INT;
-            LOG_PAGE_SIZE_OFFSET = LOG_TERM_LENGTH_OFFSET + BitUtil.SIZE_OF_INT;
+            LOG_PUBLICATION_WINDOW_LENGTH_OFFSET = LOG_PAGE_SIZE_OFFSET + SIZE_OF_INT;
+            LOG_RECEIVER_WINDOW_LENGTH_OFFSET = LOG_PUBLICATION_WINDOW_LENGTH_OFFSET + SIZE_OF_INT;
+            LOG_SOCKET_SNDBUF_LENGTH_OFFSET = LOG_RECEIVER_WINDOW_LENGTH_OFFSET + SIZE_OF_INT;
+            LOG_OS_DEFAULT_SOCKET_SNDBUF_LENGTH_OFFSET = LOG_SOCKET_SNDBUF_LENGTH_OFFSET + SIZE_OF_INT;
+            LOG_OS_MAX_SOCKET_SNDBUF_LENGTH_OFFSET = LOG_OS_DEFAULT_SOCKET_SNDBUF_LENGTH_OFFSET + SIZE_OF_INT;
+            LOG_SOCKET_RCVBUF_LENGTH_OFFSET = LOG_OS_MAX_SOCKET_SNDBUF_LENGTH_OFFSET + SIZE_OF_INT;
+            LOG_OS_DEFAULT_SOCKET_RCVBUF_LENGTH_OFFSET = LOG_SOCKET_RCVBUF_LENGTH_OFFSET + SIZE_OF_INT;
+            LOG_OS_MAX_SOCKET_RCVBUF_LENGTH_OFFSET = LOG_OS_DEFAULT_SOCKET_RCVBUF_LENGTH_OFFSET + SIZE_OF_INT;
+            LOG_MAX_RESEND_OFFSET = LOG_OS_MAX_SOCKET_RCVBUF_LENGTH_OFFSET + SIZE_OF_INT;
 
-            offset += BitUtil.CACHE_LINE_LENGTH;
-            LOG_DEFAULT_FRAME_HEADER_OFFSET = offset;
+            LOG_DEFAULT_FRAME_HEADER_OFFSET = PADDING_SIZE * 5;
+            LOG_ENTITY_TAG_OFFSET = LOG_DEFAULT_FRAME_HEADER_OFFSET + LOG_DEFAULT_FRAME_HEADER_MAX_LENGTH;
+            LOG_RESPONSE_CORRELATION_ID_OFFSET = LOG_ENTITY_TAG_OFFSET + SIZE_OF_LONG;
+            LOG_LINGER_TIMEOUT_NS_OFFSET = LOG_RESPONSE_CORRELATION_ID_OFFSET + SIZE_OF_LONG;
+            LOG_UNTETHERED_WINDOW_LIMIT_TIMEOUT_NS_OFFSET = LOG_LINGER_TIMEOUT_NS_OFFSET + SIZE_OF_LONG;
+            LOG_UNTETHERED_RESTING_TIMEOUT_NS_OFFSET =
+                LOG_UNTETHERED_WINDOW_LIMIT_TIMEOUT_NS_OFFSET + SIZE_OF_LONG;
+            LOG_GROUP_OFFSET = LOG_UNTETHERED_RESTING_TIMEOUT_NS_OFFSET + SIZE_OF_LONG;
+            LOG_IS_RESPONSE_OFFSET = LOG_GROUP_OFFSET + SIZE_OF_BYTE;
+            LOG_REJOIN_OFFSET = LOG_IS_RESPONSE_OFFSET + SIZE_OF_BYTE;
+            LOG_RELIABLE_OFFSET = LOG_REJOIN_OFFSET + SIZE_OF_BYTE;
+            LOG_SPARSE_OFFSET = LOG_RELIABLE_OFFSET + SIZE_OF_BYTE;
+            LOG_SIGNAL_EOS_OFFSET = LOG_SPARSE_OFFSET + SIZE_OF_BYTE;
+            LOG_SPIES_SIMULATE_CONNECTION_OFFSET = LOG_SIGNAL_EOS_OFFSET + SIZE_OF_BYTE;
+            LOG_TETHER_OFFSET = LOG_SPIES_SIMULATE_CONNECTION_OFFSET + SIZE_OF_BYTE;
 
-            LOG_META_DATA_LENGTH = BitUtil.Align(offset + LOG_DEFAULT_FRAME_HEADER_MAX_LENGTH, PAGE_MIN_SIZE);
+            LOG_META_DATA_LENGTH = PAGE_MIN_SIZE;
         }
 
         /// <summary>
@@ -236,7 +413,7 @@ namespace Adaptive.Aeron.LogBuffer
                 ThrowHelper.ThrowInvalidOperationException(
                     $"Term length more than max length of {TERM_MAX_LENGTH:D}: length = {termLength:D}");
 
-            if (!BitUtil.IsPowerOfTwo(termLength))
+            if (!IsPowerOfTwo(termLength))
                 ThrowHelper.ThrowInvalidOperationException("Term length not a power of 2: length=" + termLength);
         }
 
@@ -255,7 +432,7 @@ namespace Adaptive.Aeron.LogBuffer
                 ThrowHelper.ThrowInvalidOperationException(
                     $"Page size more than max size of {PAGE_MAX_SIZE}: page size={pageSize}");
 
-            if (!BitUtil.IsPowerOfTwo(pageSize))
+            if (!IsPowerOfTwo(pageSize))
                 ThrowHelper.ThrowInvalidOperationException($"Page size not a power of 2: page size={pageSize}");
         }
 
@@ -568,10 +745,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// <returns> the total length of the log file. </returns>
         public static long ComputeLogLength(int termLength, int filePageSize)
         {
-            if (termLength < 1024 * 1024 * 1024)
-                return BitUtil.Align(termLength * PARTITION_COUNT + LOG_META_DATA_LENGTH, filePageSize);
-
-            return PARTITION_COUNT * (long)termLength + BitUtil.Align(LOG_META_DATA_LENGTH, filePageSize);
+            return Align((PARTITION_COUNT * (long)termLength) + LOG_META_DATA_LENGTH, filePageSize);
         }
 
 
@@ -587,16 +761,16 @@ namespace Adaptive.Aeron.LogBuffer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void StoreDefaultFrameHeader(UnsafeBuffer metaDataBuffer, IDirectBuffer defaultHeader)
         {
-            if (defaultHeader.Capacity != DataHeaderFlyweight.HEADER_LENGTH)
+            if (defaultHeader.Capacity != HEADER_LENGTH)
             {
                 ThrowHelper.ThrowArgumentException(
                     $"Default header length not equal to HEADER_LENGTH: length={defaultHeader.Capacity:D}");
                 return;
             }
 
-            metaDataBuffer.PutInt(LOG_DEFAULT_FRAME_HEADER_LENGTH_OFFSET, DataHeaderFlyweight.HEADER_LENGTH);
+            metaDataBuffer.PutInt(LOG_DEFAULT_FRAME_HEADER_LENGTH_OFFSET, HEADER_LENGTH);
             metaDataBuffer.PutBytes(LOG_DEFAULT_FRAME_HEADER_OFFSET, defaultHeader, 0,
-                DataHeaderFlyweight.HEADER_LENGTH);
+                HEADER_LENGTH);
         }
 
         /// <summary>
@@ -608,7 +782,7 @@ namespace Adaptive.Aeron.LogBuffer
         public static UnsafeBuffer DefaultFrameHeader(UnsafeBuffer metaDataBuffer)
         {
             return new UnsafeBuffer(metaDataBuffer, LOG_DEFAULT_FRAME_HEADER_OFFSET,
-                DataHeaderFlyweight.HEADER_LENGTH);
+                HEADER_LENGTH);
         }
 
         /// <summary>
@@ -621,7 +795,7 @@ namespace Adaptive.Aeron.LogBuffer
         public static void ApplyDefaultHeader(UnsafeBuffer metaDataBuffer, UnsafeBuffer termBuffer, int termOffset)
         {
             termBuffer.PutBytes(termOffset, metaDataBuffer, LOG_DEFAULT_FRAME_HEADER_OFFSET,
-                DataHeaderFlyweight.HEADER_LENGTH);
+                HEADER_LENGTH);
         }
 
         /// <summary>
@@ -658,7 +832,7 @@ namespace Adaptive.Aeron.LogBuffer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void InitialiseTailWithTermId(UnsafeBuffer logMetaData, int partitionIndex, int termId)
         {
-            logMetaData.PutLong(TERM_TAIL_COUNTERS_OFFSET + partitionIndex * BitUtil.SIZE_OF_LONG, PackTail(termId, 0));
+            logMetaData.PutLong(TERM_TAIL_COUNTERS_OFFSET + partitionIndex * SIZE_OF_LONG, PackTail(termId, 0));
         }
 
         /// <summary>
@@ -719,7 +893,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// <param name="rawTail">           to be stored. </param>
         public static void RawTail(UnsafeBuffer metaDataBuffer, int partitionIndex, long rawTail)
         {
-            metaDataBuffer.PutLong(TERM_TAIL_COUNTERS_OFFSET + BitUtil.SIZE_OF_LONG * partitionIndex, rawTail);
+            metaDataBuffer.PutLong(TERM_TAIL_COUNTERS_OFFSET + SIZE_OF_LONG * partitionIndex, rawTail);
         }
 
         /// <summary>
@@ -730,7 +904,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// <returns> the raw value of the tail for the current active partition. </returns>
         public static long RawTail(UnsafeBuffer metaDataBuffer, int partitionIndex)
         {
-            return metaDataBuffer.GetLong(TERM_TAIL_COUNTERS_OFFSET + BitUtil.SIZE_OF_LONG * partitionIndex);
+            return metaDataBuffer.GetLong(TERM_TAIL_COUNTERS_OFFSET + SIZE_OF_LONG * partitionIndex);
         }
 
 
@@ -742,7 +916,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// <param name="rawTail">           to be stored. </param>
         public static void RawTailVolatile(UnsafeBuffer metaDataBuffer, int partitionIndex, long rawTail)
         {
-            metaDataBuffer.PutLongVolatile(TERM_TAIL_COUNTERS_OFFSET + BitUtil.SIZE_OF_LONG * partitionIndex,
+            metaDataBuffer.PutLongVolatile(TERM_TAIL_COUNTERS_OFFSET + SIZE_OF_LONG * partitionIndex,
                 rawTail);
         }
 
@@ -755,7 +929,7 @@ namespace Adaptive.Aeron.LogBuffer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static long RawTailVolatile(UnsafeBuffer metaDataBuffer, int partitionIndex)
         {
-            return metaDataBuffer.GetLongVolatile(TERM_TAIL_COUNTERS_OFFSET + BitUtil.SIZE_OF_LONG * partitionIndex);
+            return metaDataBuffer.GetLongVolatile(TERM_TAIL_COUNTERS_OFFSET + SIZE_OF_LONG * partitionIndex);
         }
 
         /// <summary>
@@ -767,7 +941,7 @@ namespace Adaptive.Aeron.LogBuffer
         public static long RawTailVolatile(UnsafeBuffer metaDataBuffer)
         {
             var partitionIndex = IndexByTermCount(ActiveTermCount(metaDataBuffer));
-            return metaDataBuffer.GetLongVolatile(TERM_TAIL_COUNTERS_OFFSET + BitUtil.SIZE_OF_LONG * partitionIndex);
+            return metaDataBuffer.GetLongVolatile(TERM_TAIL_COUNTERS_OFFSET + SIZE_OF_LONG * partitionIndex);
         }
 
         /// <summary>
@@ -781,7 +955,7 @@ namespace Adaptive.Aeron.LogBuffer
         public static bool CasRawTail(UnsafeBuffer metaDataBuffer, int partitionIndex, long expectedRawTail,
             long updateRawTail)
         {
-            var index = TERM_TAIL_COUNTERS_OFFSET + BitUtil.SIZE_OF_LONG * partitionIndex;
+            var index = TERM_TAIL_COUNTERS_OFFSET + SIZE_OF_LONG * partitionIndex;
             return metaDataBuffer.CompareAndSetLong(index, expectedRawTail, updateRawTail);
         }
 
@@ -841,6 +1015,477 @@ namespace Adaptive.Aeron.LogBuffer
             }
 
             throw new ArgumentException("invalid term buffer length: " + termBufferLength);
+        }
+
+        /// <summary>
+        /// Compute frame length for a message that is fragmented into chunks of {@code maxPayloadSize}.
+        /// </summary>
+        /// <param name="length">         of the message. </param>
+        /// <param name="maxPayloadSize"> fragment size without the header. </param>
+        /// <returns> message length after fragmentation. </returns>
+        public static int ComputeFragmentedFrameLength(int length, int maxPayloadSize)
+        {
+            int numMaxPayloads = length / maxPayloadSize;
+            int remainingPayload = length % maxPayloadSize;
+            int lastFrameLength = remainingPayload > 0 ? Align(remainingPayload + HEADER_LENGTH, FRAME_ALIGNMENT) : 0;
+
+            return (numMaxPayloads * (maxPayloadSize + HEADER_LENGTH)) + lastFrameLength;
+        }
+
+        
+        /// <summary>
+        /// Compute frame length for a message that has been reassembled from chunks of {@code maxPayloadSize}.
+        /// </summary>
+        /// <param name="length">         of the message. </param>
+        /// <param name="maxPayloadSize"> fragment size without the header. </param>
+        /// <returns> message length after fragmentation. </returns>
+        public static int ComputeAssembledFrameLength(int length, int maxPayloadSize)
+        {
+            int numMaxPayloads = length / maxPayloadSize;
+            int remainingPayload = length % maxPayloadSize;
+
+            return HEADER_LENGTH + (numMaxPayloads * maxPayloadSize) + remainingPayload;
+        }
+
+        /// <summary>
+        /// Get whether the log is sparse from the metadata.
+        /// </summary>
+        /// <param name="metadataBuffer"> containing the meta data. </param>
+        /// <returns> true if the log is sparse, otherwise false. </returns>
+        public static bool Sparse(UnsafeBuffer metadataBuffer)
+        {
+            return metadataBuffer.GetByte(LOG_SPARSE_OFFSET) == 1;
+        }
+
+        /// <summary>
+        /// Set whether the log is sparse in the metadata.
+        /// </summary>
+        /// <param name="metadataBuffer"> containing the meta data. </param>
+        /// <param name="value">          true if the log is sparse, otherwise false. </param>
+        public static void Sparse(UnsafeBuffer metadataBuffer, bool value)
+        {
+            metadataBuffer.PutByte(LOG_SPARSE_OFFSET, (byte)(value ? 1 : 0));
+        }
+
+        /// <summary>
+        /// Get whether the log is tethered from the metadata.
+        /// </summary>
+        /// <param name="metadataBuffer"> containing the meta data. </param>
+        /// <returns> true if the log is tethered, otherwise false. </returns>
+        public static bool Tether(UnsafeBuffer metadataBuffer)
+        {
+            return metadataBuffer.GetByte(LOG_TETHER_OFFSET) == 1;
+        }
+
+        /// <summary>
+        /// Set whether the log is tethered in the metadata.
+        /// </summary>
+        /// <param name="metadataBuffer"> containing the meta data. </param>
+        /// <param name="value">          true if the log is tethered, otherwise false. </param>
+        public static void Tether(UnsafeBuffer metadataBuffer, bool value)
+        {
+            metadataBuffer.PutByte(LOG_TETHER_OFFSET, (byte)(value ? 1 : 0));
+        }
+
+        /// <summary>
+        /// Get whether the log is group from the metadata.
+        /// </summary>
+        /// <param name="metadataBuffer"> containing the meta data. </param>
+        /// <returns> true if the log is group, otherwise false. </returns>
+        public static bool Group(UnsafeBuffer metadataBuffer)
+        {
+            return metadataBuffer.GetByte(LOG_GROUP_OFFSET) == 1;
+        }
+
+        /// <summary>
+        /// Set whether the log is group in the metadata.
+        /// </summary>
+        /// <param name="metadataBuffer"> containing the meta data. </param>
+        /// <param name="value">          true if the log is group, otherwise false. </param>
+        public static void Group(UnsafeBuffer metadataBuffer, bool value)
+        {
+            metadataBuffer.PutByte(LOG_GROUP_OFFSET, (byte)(value ? 1 : 0));
+        }
+
+        /// <summary>
+        /// Get whether the log is response from the metadata.
+        /// </summary>
+        /// <param name="metadataBuffer"> containing the meta data. </param>
+        /// <returns> true if the log is group, otherwise false. </returns>
+        public static bool IsResponse(UnsafeBuffer metadataBuffer)
+        {
+            return metadataBuffer.GetByte(LOG_IS_RESPONSE_OFFSET) == 1;
+        }
+
+        /// <summary>
+        /// Set whether the log is response in the metadata.
+        /// </summary>
+        /// <param name="metadataBuffer"> containing the meta data. </param>
+        /// <param name="value">          true if the log is group, otherwise false. </param>
+        public static void IsResponse(UnsafeBuffer metadataBuffer, bool value)
+        {
+            metadataBuffer.PutByte(LOG_IS_RESPONSE_OFFSET, (byte)(value ? 1 : 0));
+        }
+
+
+        /// <summary>
+        /// Get whether the log is rejoining from the metadata.
+        /// </summary>
+        /// <param name="metadataBuffer"> containing the meta data. </param>
+        /// <returns> true if the log is rejoining, otherwise false. </returns>
+        public static bool Rejoin(UnsafeBuffer metadataBuffer)
+        {
+            return metadataBuffer.GetByte(LOG_REJOIN_OFFSET) == 1;
+        }
+
+        /// <summary>
+        /// Set whether the log is rejoining in the metadata.
+        /// </summary>
+        /// <param name="metadataBuffer"> containing the meta data. </param>
+        /// <param name="value">          true if the log is rejoining, otherwise false. </param>
+        public static void Rejoin(UnsafeBuffer metadataBuffer, bool value)
+        {
+            metadataBuffer.PutByte(LOG_REJOIN_OFFSET, (byte)(value ? 1 : 0));
+        }
+
+        /// <summary>
+        /// Get whether the log is reliable from the metadata.
+        /// </summary>
+        /// <param name="metadataBuffer"> containing the meta data. </param>
+        /// <returns> true if the log is reliable, otherwise false. </returns>
+        public static bool Reliable(UnsafeBuffer metadataBuffer)
+        {
+            return metadataBuffer.GetByte(LOG_RELIABLE_OFFSET) == 1;
+        }
+
+        /// <summary>
+        /// Set whether the log is reliable in the metadata.
+        /// </summary>
+        /// <param name="metadataBuffer"> containing the meta data. </param>
+        /// <param name="value">          true if the log is reliable, otherwise false. </param>
+        public static void Reliable(UnsafeBuffer metadataBuffer, bool value)
+        {
+            metadataBuffer.PutByte(LOG_RELIABLE_OFFSET, (byte)(value ? 1 : 0));
+        }
+
+        /// <summary>
+        /// Get the socket receive buffer length from the metadata.
+        /// </summary>
+        /// <param name="metadataBuffer"> containing the meta data. </param>
+        /// <returns> the socket receive buffer length. </returns>
+        public static int SocketRcvbufLength(UnsafeBuffer metadataBuffer)
+        {
+            return metadataBuffer.GetInt(LOG_SOCKET_RCVBUF_LENGTH_OFFSET);
+        }
+
+        /// <summary>
+        /// Set the socket receive buffer length in the metadata.
+        /// </summary>
+        /// <param name="metadataBuffer"> containing the meta data. </param>
+        /// <param name="value">          the socket receive buffer length to set. </param>
+        public static void SocketRcvbufLength(UnsafeBuffer metadataBuffer, int value)
+        {
+            metadataBuffer.PutInt(LOG_SOCKET_RCVBUF_LENGTH_OFFSET, value);
+        }
+
+        /// <summary>
+        /// Get the default length in bytes for the socket receive buffer as per OS configuration from the metadata.
+        /// </summary>
+        /// <param name="metadataBuffer"> containing the meta data. </param>
+        /// <returns> the default length in bytes for the socket receive buffer. </returns>
+        public static int OsDefaultSocketRcvbufLength(UnsafeBuffer metadataBuffer)
+        {
+            return metadataBuffer.GetInt(LOG_OS_DEFAULT_SOCKET_RCVBUF_LENGTH_OFFSET);
+        }
+
+        /// <summary>
+        /// Set the default length for the socket receive buffer as per OS configuration in the metadata.
+        /// </summary>
+        /// <param name="metadataBuffer"> containing the meta data. </param>
+        /// <param name="value">          the default length in bytes for the socket receive buffer. </param>
+        public static void OsDefaultSocketRcvbufLength(UnsafeBuffer metadataBuffer, int value)
+        {
+            metadataBuffer.PutInt(LOG_OS_DEFAULT_SOCKET_RCVBUF_LENGTH_OFFSET, value);
+        }
+
+        /// <summary>
+        /// Get the maximum length in bytes for the socket receive buffer as per OS configuration from the metadata.
+        /// </summary>
+        /// <param name="metadataBuffer"> containing the meta data. </param>
+        /// <returns> the maximum allowed length in bytes for the socket receive buffer. </returns>
+        public static int OsMaxSocketRcvbufLength(UnsafeBuffer metadataBuffer)
+        {
+            return metadataBuffer.GetInt(LOG_OS_MAX_SOCKET_RCVBUF_LENGTH_OFFSET);
+        }
+
+        /// <summary>
+        /// Set the maximum allowed length in bytes for the socket receive buffer as per OS configuration in the metadata.
+        /// </summary>
+        /// <param name="metadataBuffer"> containing the meta data. </param>
+        /// <param name="value">          the maximum allowed length in bytes for the socket receive buffer. </param>
+        public static void OsMaxSocketRcvbufLength(UnsafeBuffer metadataBuffer, int value)
+        {
+            metadataBuffer.PutInt(LOG_OS_MAX_SOCKET_RCVBUF_LENGTH_OFFSET, value);
+        }
+
+        /// <summary>
+        /// Get the socket send buffer length from the metadata.
+        /// </summary>
+        /// <param name="metadataBuffer"> containing the meta data. </param>
+        /// <returns> the socket send buffer length. </returns>
+        public static int SocketSndbufLength(UnsafeBuffer metadataBuffer)
+        {
+            return metadataBuffer.GetInt(LOG_SOCKET_SNDBUF_LENGTH_OFFSET);
+        }
+
+        /// <summary>
+        /// Set the socket send buffer length in the metadata.
+        /// </summary>
+        /// <param name="metadataBuffer"> containing the meta data. </param>
+        /// <param name="value">          the socket send buffer length to set. </param>
+        public static void SocketSndbufLength(UnsafeBuffer metadataBuffer, int value)
+        {
+            metadataBuffer.PutInt(LOG_SOCKET_SNDBUF_LENGTH_OFFSET, value);
+        }
+
+        /// <summary>
+        /// Get the default length in bytes for the socket send buffer as per OS configuration from the metadata.
+        /// </summary>
+        /// <param name="metadataBuffer"> containing the meta data. </param>
+        /// <returns> the default length in bytes for the socket send buffer. </returns>
+        public static int OsDefaultSocketSndbufLength(UnsafeBuffer metadataBuffer)
+        {
+            return metadataBuffer.GetInt(LOG_OS_DEFAULT_SOCKET_SNDBUF_LENGTH_OFFSET);
+        }
+
+        /// <summary>
+        /// Set the default length for the socket send buffer as per OS configuration in the metadata.
+        /// </summary>
+        /// <param name="metadataBuffer"> containing the meta data. </param>
+        /// <param name="value">          the default length in bytes for the socket send buffer. </param>
+        public static void OsDefaultSocketSndbufLength(UnsafeBuffer metadataBuffer, int value)
+        {
+            metadataBuffer.PutInt(LOG_OS_DEFAULT_SOCKET_SNDBUF_LENGTH_OFFSET, value);
+        }
+
+        /// <summary>
+        /// Get the maximum length in bytes for the socket send buffer as per OS configuration from the metadata.
+        /// </summary>
+        /// <param name="metadataBuffer"> containing the meta data. </param>
+        /// <returns> the maximum allowed length in bytes for the socket send buffer. </returns>
+        public static int OsMaxSocketSndbufLength(UnsafeBuffer metadataBuffer)
+        {
+            return metadataBuffer.GetInt(LOG_OS_MAX_SOCKET_SNDBUF_LENGTH_OFFSET);
+        }
+
+        /// <summary>
+        /// Set the maximum allowed length in bytes for the socket send buffer as per OS configuration in the metadata.
+        /// </summary>
+        /// <param name="metadataBuffer"> containing the meta data. </param>
+        /// <param name="value">          the maximum allowed length in bytes for the socket send buffer. </param>
+        public static void OsMaxSocketSndbufLength(UnsafeBuffer metadataBuffer, int value)
+        {
+            metadataBuffer.PutInt(LOG_OS_MAX_SOCKET_SNDBUF_LENGTH_OFFSET, value);
+        }
+
+        /// <summary>
+        /// Get the receiver window length from the metadata.
+        /// </summary>
+        /// <param name="metadataBuffer"> containing the meta data. </param>
+        /// <returns> the receiver window length. </returns>
+        public static int ReceiverWindowLength(UnsafeBuffer metadataBuffer)
+        {
+            return metadataBuffer.GetInt(LOG_RECEIVER_WINDOW_LENGTH_OFFSET);
+        }
+
+        /// <summary>
+        /// Set the receiver window length in the metadata.
+        /// </summary>
+        /// <param name="metadataBuffer"> containing the meta data. </param>
+        /// <param name="value">          the receiver window length to set. </param>
+        public static void ReceiverWindowLength(UnsafeBuffer metadataBuffer, int value)
+        {
+            metadataBuffer.PutInt(LOG_RECEIVER_WINDOW_LENGTH_OFFSET, value);
+        }
+
+        /// <summary>
+        /// Get the publication window length from the metadata.
+        /// </summary>
+        /// <param name="metadataBuffer"> containing the meta data. </param>
+        /// <returns> the publication window length. </returns>
+        public static int PublicationWindowLength(UnsafeBuffer metadataBuffer)
+        {
+            return metadataBuffer.GetInt(LOG_PUBLICATION_WINDOW_LENGTH_OFFSET);
+        }
+
+        /// <summary>
+        /// Set the publication window length in the metadata.
+        /// </summary>
+        /// <param name="metadataBuffer"> containing the meta data. </param>
+        /// <param name="value">          the publication window length to set. </param>
+        public static void PublicationWindowLength(UnsafeBuffer metadataBuffer, int value)
+        {
+            metadataBuffer.PutInt(LOG_PUBLICATION_WINDOW_LENGTH_OFFSET, value);
+        }
+
+        /// <summary>
+        /// Get the untethered window limit timeout in nanoseconds from the metadata.
+        /// </summary>
+        /// <param name="metadataBuffer"> containing the meta data. </param>
+        /// <returns> the untethered window limit timeout in nanoseconds. </returns>
+        public static long UntetheredWindowLimitTimeoutNs(UnsafeBuffer metadataBuffer)
+        {
+            return metadataBuffer.GetLong(LOG_UNTETHERED_WINDOW_LIMIT_TIMEOUT_NS_OFFSET);
+        }
+
+        /// <summary>
+        /// Set the untethered window limit timeout in nanoseconds in the metadata.
+        /// </summary>
+        /// <param name="metadataBuffer"> containing the meta data. </param>
+        /// <param name="value">          the untethered window limit timeout to set. </param>
+        public static void UntetheredWindowLimitTimeoutNs(UnsafeBuffer metadataBuffer, long value)
+        {
+            metadataBuffer.PutLong(LOG_UNTETHERED_WINDOW_LIMIT_TIMEOUT_NS_OFFSET, value);
+        }
+
+        /// <summary>
+        /// Get the untethered resting timeout in nanoseconds from the metadata.
+        /// </summary>
+        /// <param name="metadataBuffer"> containing the meta data. </param>
+        /// <returns> the untethered resting timeout in nanoseconds. </returns>
+        public static long UntetheredRestingTimeoutNs(UnsafeBuffer metadataBuffer)
+        {
+            return metadataBuffer.GetLong(LOG_UNTETHERED_RESTING_TIMEOUT_NS_OFFSET);
+        }
+
+        /// <summary>
+        /// Set the untethered resting timeout in nanoseconds in the metadata.
+        /// </summary>
+        /// <param name="metadataBuffer"> containing the meta data. </param>
+        /// <param name="value">          the untethered resting timeout to set. </param>
+        public static void UntetheredRestingTimeoutNs(UnsafeBuffer metadataBuffer, long value)
+        {
+            metadataBuffer.PutLong(LOG_UNTETHERED_RESTING_TIMEOUT_NS_OFFSET, value);
+        }
+
+        /// <summary>
+        /// Get the maximum resend count from the metadata.
+        /// </summary>
+        /// <param name="metadataBuffer"> containing the meta data. </param>
+        /// <returns> the maximum resend count. </returns>
+        public static int MaxResend(UnsafeBuffer metadataBuffer)
+        {
+            return metadataBuffer.GetInt(LOG_MAX_RESEND_OFFSET);
+        }
+
+        /// <summary>
+        /// Set the maximum resend count in the metadata.
+        /// </summary>
+        /// <param name="metadataBuffer"> containing the meta data. </param>
+        /// <param name="value">          the maximum resend count to set. </param>
+        public static void MaxResend(UnsafeBuffer metadataBuffer, int value)
+        {
+            metadataBuffer.PutInt(LOG_MAX_RESEND_OFFSET, value);
+        }
+
+        /// <summary>
+        /// Get the linger timeout in nanoseconds from the metadata.
+        /// </summary>
+        /// <param name="metadataBuffer"> containing the meta data. </param>
+        /// <returns> the linger timeout in nanoseconds. </returns>
+        public static long LingerTimeoutNs(UnsafeBuffer metadataBuffer)
+        {
+            return metadataBuffer.GetLong(LOG_LINGER_TIMEOUT_NS_OFFSET);
+        }
+
+        /// <summary>
+        /// Set the linger timeout in nanoseconds in the metadata.
+        /// </summary>
+        /// <param name="metadataBuffer"> containing the meta data. </param>
+        /// <param name="value">          the linger timeout to set. </param>
+        public static void LingerTimeoutNs(UnsafeBuffer metadataBuffer, long value)
+        {
+            metadataBuffer.PutLong(LOG_LINGER_TIMEOUT_NS_OFFSET, value);
+        }
+
+        /// <summary>
+        /// Get the entity tag  from the metadata.
+        /// </summary>
+        /// <param name="metadataBuffer"> containing the meta data. </param>
+        /// <returns> the entity tag in nanoseconds. </returns>
+        public static long EntityTag(UnsafeBuffer metadataBuffer)
+        {
+            return metadataBuffer.GetLong(LOG_ENTITY_TAG_OFFSET);
+        }
+
+        /// <summary>
+        /// Set the entity tag in the metadata.
+        /// </summary>
+        /// <param name="metadataBuffer"> containing the meta data. </param>
+        /// <param name="value">          the entity tag to set. </param>
+        public static void EntityTag(UnsafeBuffer metadataBuffer, long value)
+        {
+            metadataBuffer.PutLong(LOG_ENTITY_TAG_OFFSET, value);
+        }
+
+        /// <summary>
+        /// Get the response correlation id  from the metadata.
+        /// </summary>
+        /// <param name="metadataBuffer"> containing the meta data. </param>
+        /// <returns> the entity tag in nanoseconds. </returns>
+        public static long ResponseCorrelationId(UnsafeBuffer metadataBuffer)
+        {
+            return metadataBuffer.GetLong(LOG_RESPONSE_CORRELATION_ID_OFFSET);
+        }
+
+        /// <summary>
+        /// Set the response correlation id in the metadata.
+        /// </summary>
+        /// <param name="metadataBuffer"> containing the meta data. </param>
+        /// <param name="value">          the resonse correlation id to set. </param>
+        public static void ResponseCorrelationId(UnsafeBuffer metadataBuffer, long value)
+        {
+            metadataBuffer.PutLong(LOG_RESPONSE_CORRELATION_ID_OFFSET, value);
+        }
+
+        /// <summary>
+        /// Get whether the signal EOS is enabled from the metadata.
+        /// </summary>
+        /// <param name="metadataBuffer"> containing the meta data. </param>
+        /// <returns> true if signal EOS is enabled, otherwise false. </returns>
+        public static bool SignalEos(UnsafeBuffer metadataBuffer)
+        {
+            return metadataBuffer.GetByte(LOG_SIGNAL_EOS_OFFSET) == 1;
+        }
+
+        /// <summary>
+        /// Set whether the signal EOS is enabled in the metadata.
+        /// </summary>
+        /// <param name="metadataBuffer"> containing the meta data. </param>
+        /// <param name="value">          true if signal EOS is enabled, otherwise false. </param>
+        public static void SignalEos(UnsafeBuffer metadataBuffer, bool value)
+        {
+            metadataBuffer.PutByte(LOG_SIGNAL_EOS_OFFSET, (byte)(value ? 1 : 0));
+        }
+
+        /// <summary>
+        /// Get whether spies simulate connection from the metadata.
+        /// </summary>
+        /// <param name="metadataBuffer"> containing the meta data. </param>
+        /// <returns> true if spies simulate connection, otherwise false. </returns>
+        public static bool SpiesSimulateConnection(UnsafeBuffer metadataBuffer)
+        {
+            return metadataBuffer.GetByte(LOG_SPIES_SIMULATE_CONNECTION_OFFSET) == 1;
+        }
+
+        /// <summary>
+        /// Set whether spies simulate connection in the metadata.
+        /// </summary>
+        /// <param name="metadataBuffer"> containing the meta data. </param>
+        /// <param name="value">          true if spies simulate connection, otherwise false. </param>
+        public static void SpiesSimulateConnection(UnsafeBuffer metadataBuffer, bool value)
+        {
+            metadataBuffer.PutByte(LOG_SPIES_SIMULATE_CONNECTION_OFFSET, (byte)(value ? 1 : 0));
         }
     }
 }

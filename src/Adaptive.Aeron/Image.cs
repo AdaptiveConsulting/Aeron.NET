@@ -22,6 +22,8 @@ using Adaptive.Agrona;
 using Adaptive.Agrona.Concurrent;
 using Adaptive.Agrona.Concurrent.Status;
 using Adaptive.Agrona.Util;
+using static Adaptive.Aeron.LogBuffer.FrameDescriptor;
+using static Adaptive.Aeron.Protocol.DataHeaderFlyweight;
 
 namespace Adaptive.Aeron
 {
@@ -283,17 +285,51 @@ namespace Adaptive.Aeron
                 return 0;
             }
 
-            var position = _subscriberPosition.Get();
+            int fragmentsRead = 0;
+            long initialPosition = _subscriberPosition.Get();
+            int initialOffset = (int)initialPosition & _termLengthMask;
+            int offset = initialOffset;
+            UnsafeBuffer termBuffer = ActiveTermBuffer(initialPosition);
+            int capacity = termBuffer.Capacity;
+            Header header = _header;
+            header.Buffer = termBuffer;
 
-            return TermReader.Read(
-                ActiveTermBuffer(position),
-                (int) position & _termLengthMask,
-                fragmentHandler,
-                fragmentLimit,
-                _header,
-                _errorHandler,
-                position,
-                _subscriberPosition);
+            try
+            {
+                while (fragmentsRead < fragmentLimit && offset < capacity && !_isClosed)
+                {
+                    int frameLength = FrameLengthVolatile(termBuffer, offset);
+                    if (frameLength <= 0)
+                    {
+                        break;
+                    }
+
+                    int frameOffset = offset;
+                    offset += BitUtil.Align(frameLength, FRAME_ALIGNMENT);
+
+                    if (!IsPaddingFrame(termBuffer, frameOffset))
+                    {
+                        ++fragmentsRead;
+                        header.Offset = frameOffset;
+                        fragmentHandler.OnFragment(termBuffer, frameOffset + HEADER_LENGTH, frameLength - HEADER_LENGTH,
+                            header);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _errorHandler.OnError(ex);
+            }
+            finally
+            {
+                long newPosition = initialPosition + (offset - initialOffset);
+                if (newPosition > initialPosition)
+                {
+                    _subscriberPosition.SetOrdered(newPosition);
+                }
+            }
+
+            return fragmentsRead;
         }
 
         /// <summary>
@@ -326,19 +362,19 @@ namespace Adaptive.Aeron
 
             try
             {
-                while (fragmentsRead < fragmentLimit && offset < capacity)
+                while (fragmentsRead < fragmentLimit && offset < capacity && !_isClosed)
                 {
-                    var length = FrameDescriptor.FrameLengthVolatile(termBuffer, offset);
+                    var length = FrameLengthVolatile(termBuffer, offset);
                     if (length <= 0)
                     {
                         break;
                     }
 
                     var frameOffset = offset;
-                    var alignedLength = BitUtil.Align(length, FrameDescriptor.FRAME_ALIGNMENT);
+                    var alignedLength = BitUtil.Align(length, FRAME_ALIGNMENT);
                     offset += alignedLength;
 
-                    if (FrameDescriptor.IsPaddingFrame(termBuffer, frameOffset))
+                    if (IsPaddingFrame(termBuffer, frameOffset))
                     {
                         continue;
                     }
@@ -348,8 +384,8 @@ namespace Adaptive.Aeron
 
                     var action = handler.OnFragment(
                         termBuffer,
-                        frameOffset + DataHeaderFlyweight.HEADER_LENGTH,
-                        length - DataHeaderFlyweight.HEADER_LENGTH,
+                        frameOffset + HEADER_LENGTH,
+                        length - HEADER_LENGTH,
                         header);
 
                     if (ControlledFragmentHandlerAction.ABORT == action)
@@ -444,26 +480,26 @@ namespace Adaptive.Aeron
 
             try
             {
-                while (fragmentsRead < fragmentLimit && offset < limitOffset)
+                while (fragmentsRead < fragmentLimit && offset < limitOffset && !_isClosed)
                 {
-                    int length = FrameDescriptor.FrameLengthVolatile(termBuffer, offset);
+                    int length = FrameLengthVolatile(termBuffer, offset);
                     if (length <= 0)
                     {
                         break;
                     }
 
                     int frameOffset = offset;
-                    int alignedLength = BitUtil.Align(length, FrameDescriptor.FRAME_ALIGNMENT);
+                    int alignedLength = BitUtil.Align(length, FRAME_ALIGNMENT);
                     offset += alignedLength;
 
-                    if (FrameDescriptor.IsPaddingFrame(termBuffer, frameOffset))
+                    if (IsPaddingFrame(termBuffer, frameOffset))
                     {
                         continue;
                     }
 
                     ++fragmentsRead;
                     header.Offset = frameOffset;
-                    handler.OnFragment(termBuffer, frameOffset + DataHeaderFlyweight.HEADER_LENGTH, length - DataHeaderFlyweight.HEADER_LENGTH, header);
+                    handler.OnFragment(termBuffer, frameOffset + HEADER_LENGTH, length - HEADER_LENGTH, header);
                 }
             }
             catch (Exception ex)
@@ -528,7 +564,8 @@ namespace Adaptive.Aeron
                 return 0;
             }
 
-            var initialPosition = _subscriberPosition.Get();
+            IPosition subscriberPosition = this._subscriberPosition;
+            var initialPosition = subscriberPosition.Get();
             if (initialPosition >= limitPosition)
             {
                 return 0;
@@ -544,19 +581,19 @@ namespace Adaptive.Aeron
 
             try
             {
-                while (fragmentsRead < fragmentLimit && offset < limitOffset)
+                while (fragmentsRead < fragmentLimit && offset < limitOffset && !_isClosed)
                 {
-                    int length = FrameDescriptor.FrameLengthVolatile(termBuffer, offset);
+                    int length = FrameLengthVolatile(termBuffer, offset);
                     if (length <= 0)
                     {
                         break;
                     }
 
                     int frameOffset = offset;
-                    int alignedLength = BitUtil.Align(length, FrameDescriptor.FRAME_ALIGNMENT);
+                    int alignedLength = BitUtil.Align(length, FRAME_ALIGNMENT);
                     offset += alignedLength;
 
-                    if (FrameDescriptor.IsPaddingFrame(termBuffer, frameOffset))
+                    if (IsPaddingFrame(termBuffer, frameOffset))
                     {
                         continue;
                     }
@@ -565,8 +602,8 @@ namespace Adaptive.Aeron
                     header.Offset = frameOffset;
 
                     var action = handler.OnFragment(termBuffer,
-                        frameOffset + DataHeaderFlyweight.HEADER_LENGTH,
-                        length - DataHeaderFlyweight.HEADER_LENGTH, header);
+                        frameOffset + HEADER_LENGTH,
+                        length - HEADER_LENGTH, header);
 
                     if (ControlledFragmentHandlerAction.ABORT == action)
                     {
@@ -664,18 +701,18 @@ namespace Adaptive.Aeron
 
             try
             {
-                while (offset < limitOffset)
+                while (offset < limitOffset && !_isClosed)
                 {
-                    int length = FrameDescriptor.FrameLengthVolatile(termBuffer, offset);
+                    int length = FrameLengthVolatile(termBuffer, offset);
                     if (length <= 0)
                     {
                         break;
                     }
 
                     int frameOffset = offset;
-                    offset += BitUtil.Align(length, FrameDescriptor.FRAME_ALIGNMENT);
+                    offset += BitUtil.Align(length, FRAME_ALIGNMENT);
 
-                    if (FrameDescriptor.IsPaddingFrame(termBuffer, frameOffset))
+                    if (IsPaddingFrame(termBuffer, frameOffset))
                     {
                         position += (offset - initialOffset);
                         initialOffset = offset;
@@ -689,8 +726,8 @@ namespace Adaptive.Aeron
 
                     var action = handler.OnFragment(
                         termBuffer,
-                        frameOffset + DataHeaderFlyweight.HEADER_LENGTH,
-                        length - DataHeaderFlyweight.HEADER_LENGTH,
+                        frameOffset + HEADER_LENGTH,
+                        length - HEADER_LENGTH,
                         _header);
 
                     if (ControlledFragmentHandlerAction.ABORT == action)
@@ -701,7 +738,7 @@ namespace Adaptive.Aeron
                     position += (offset - initialOffset);
                     initialOffset = offset;
 
-                    if ((_header.Flags & FrameDescriptor.END_FRAG_FLAG) == FrameDescriptor.END_FRAG_FLAG)
+                    if ((_header.Flags & END_FRAG_FLAG) == END_FRAG_FLAG)
                     {
                         resultingPosition = position;
                     }
@@ -758,7 +795,7 @@ namespace Adaptive.Aeron
             {
                 try
                 {
-                    var termId = termBuffer.GetInt(offset + DataHeaderFlyweight.TERM_ID_FIELD_OFFSET);
+                    var termId = termBuffer.GetInt(offset + TERM_ID_FIELD_OFFSET);
 
                     handler(termBuffer, offset, length, SessionId, termId);
                 }
@@ -775,6 +812,11 @@ namespace Adaptive.Aeron
             return length;
         }
 
+        void Reject(string reason)
+        {
+            Subscription.RejectImage(CorrelationId, Position, reason);
+        }
+        
         private UnsafeBuffer ActiveTermBuffer(long position)
         {
             return _termBuffers[LogBufferDescriptor.IndexByPosition(position, PositionBitsToShift)];
@@ -791,7 +833,7 @@ namespace Adaptive.Aeron
                     $"{position} position out of range {currentPosition}-{limitPosition}");
             }
 
-            if (0 != (position & (FrameDescriptor.FRAME_ALIGNMENT - 1)))
+            if (0 != (position & (FRAME_ALIGNMENT - 1)))
             {
                 ThrowHelper.ThrowArgumentException($"{position} position not aligned to FRAME_ALIGNMENT");
             }

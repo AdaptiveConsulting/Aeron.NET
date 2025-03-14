@@ -17,9 +17,14 @@
 using System;
 using System.Runtime.CompilerServices;
 using System.Text;
+using Adaptive.Aeron.LogBuffer;
 using Adaptive.Agrona;
 using Adaptive.Agrona.Concurrent;
 using Adaptive.Agrona.Util;
+using static Adaptive.Aeron.LogBuffer.FrameDescriptor;
+using static Adaptive.Aeron.LogBuffer.LogBufferDescriptor;
+using static Adaptive.Aeron.Protocol.DataHeaderFlyweight;
+using static Adaptive.Aeron.Protocol.HeaderFlyweight;
 
 namespace Adaptive.Aeron
 {
@@ -31,11 +36,14 @@ namespace Adaptive.Aeron
     public sealed class BufferBuilder
     {
         internal const int MAX_CAPACITY = Int32.MaxValue - 8;
-        internal  const int INIT_MIN_CAPACITY = 4096;
-        
-        private readonly UnsafeBuffer _buffer;
+        internal const int INIT_MIN_CAPACITY = 4096;
+
         private int _limit;
-        private int _nextTermOffset;
+        private int _nextTermOffset = Aeron.NULL_VALUE;
+        private readonly UnsafeBuffer _buffer = new UnsafeBuffer();
+        readonly UnsafeBuffer headerBuffer = new UnsafeBuffer();
+        readonly Header completeHeader = new Header(0, 0);
+
 
         /// <summary>
         /// Construct a buffer builder with an initial capacity of zero and isDirect false.
@@ -52,10 +60,16 @@ namespace Adaptive.Aeron
         {
             if (initialCapacity < 0 || initialCapacity > MAX_CAPACITY)
             {
-                throw new ArgumentException("initialCapacity outside range 0 - " + MAX_CAPACITY + ": initialCapacity=" + initialCapacity);
+                throw new ArgumentException("initialCapacity outside range 0 - " + MAX_CAPACITY +
+                                            ": initialCapacity=" + initialCapacity);
             }
-            
-            _buffer = new UnsafeBuffer(new byte[initialCapacity]);
+
+            if (initialCapacity > 0)
+            {
+                _buffer.Wrap(new byte[initialCapacity]);
+            }
+
+            headerBuffer.Wrap(new byte[HEADER_LENGTH]);
         }
 
         /// <summary>
@@ -91,7 +105,7 @@ namespace Adaptive.Aeron
 
             _limit = limit;
         }
-        
+
         /// <summary>
         /// Get the value which the next term offset for a fragment to be assembled should begin at.
         /// </summary>
@@ -126,7 +140,9 @@ namespace Adaptive.Aeron
         public BufferBuilder Reset()
         {
             _limit = 0;
-            _nextTermOffset = 0;
+            _nextTermOffset = Aeron.NULL_VALUE;
+            completeHeader.Context = null;
+            completeHeader.FragmentedFrameLength = Aeron.NULL_VALUE;
             return this;
         }
 
@@ -136,7 +152,12 @@ namespace Adaptive.Aeron
         /// <returns> the builder for fluent API usage. </returns>
         public BufferBuilder Compact()
         {
-            Resize(Math.Max(INIT_MIN_CAPACITY, _limit));
+            int newCapacity = Math.Max(INIT_MIN_CAPACITY, _limit);
+            if (newCapacity < _buffer.Capacity)
+            {
+                Resize(newCapacity);
+            }
+
             return this;
         }
 
@@ -157,6 +178,43 @@ namespace Adaptive.Aeron
             return this;
         }
 
+        /// <summary>
+        /// Capture information available in the header of the very first frame.
+        /// </summary>
+        /// <param name="header"> of the first frame. </param>
+        /// <returns> the builder for fluent API usage. </returns>
+        public BufferBuilder CaptureHeader(Header header)
+        {
+            completeHeader.InitialTermId = header.InitialTermId;
+            completeHeader.PositionBitsToShift = header.PositionBitsToShift;
+            completeHeader.Offset = 0;
+            completeHeader.Buffer = headerBuffer;
+
+            headerBuffer.PutBytes(0, header.Buffer, header.Offset, HEADER_LENGTH);
+            return this;
+        }
+
+        /// <summary>
+        /// Use the information from the header of the last frame to create a header for the assembled message, i.e. fixups
+        /// the flags and the frame length.
+        /// </summary>
+        /// <param name="header"> of the last frame. </param>
+        /// <returns> complete message header. </returns>
+        public Header CompleteHeader(Header header)
+        {
+            int firstFrameLength = headerBuffer.GetInt(FRAME_LENGTH_FIELD_OFFSET, ByteOrder.LittleEndian);
+            int fragmentedFrameLength = ComputeFragmentedFrameLength(_limit, firstFrameLength - HEADER_LENGTH);
+            completeHeader.Context = header.Context;
+            completeHeader.FragmentedFrameLength = fragmentedFrameLength;
+
+            headerBuffer.PutInt(FRAME_LENGTH_FIELD_OFFSET, HEADER_LENGTH + _limit, ByteOrder.LittleEndian);
+            // compute complete flags
+            headerBuffer.PutByte(FLAGS_OFFSET, (byte)(headerBuffer.GetByte(FLAGS_OFFSET) | header.Flags));
+            // compute the `fragmented frame length` of the complete message
+
+            return completeHeader;
+        }
+
         private void EnsureCapacity(int additionalLength)
         {
             long requiredCapacity = (long)_limit + additionalLength;
@@ -166,12 +224,12 @@ namespace Adaptive.Aeron
             {
                 if (requiredCapacity > MAX_CAPACITY)
                 {
-                    throw new InvalidOperationException("insufficient capacity: maxCapacity=" + MAX_CAPACITY + " limit=" + _limit + " additionalLength=" + additionalLength);
+                    throw new InvalidOperationException("insufficient capacity: maxCapacity=" + MAX_CAPACITY +
+                                                        " limit=" + _limit + " additionalLength=" + additionalLength);
                 }
 
                 Resize(FindSuitableCapacity(capacity, requiredCapacity));
             }
-
         }
 
         private void Resize(int newCapacity)
@@ -185,7 +243,7 @@ namespace Adaptive.Aeron
             Array.Copy(original, 0, dest, 0, Math.Min(original.Length, newLength));
             return dest;
         }
-        
+
         internal static int FindSuitableCapacity(int capacity, long requiredCapacity)
         {
             long newCapacity = Math.Max(capacity, INIT_MIN_CAPACITY);
@@ -196,6 +254,7 @@ namespace Adaptive.Aeron
                 if (newCapacity > MAX_CAPACITY)
                 {
                     newCapacity = MAX_CAPACITY;
+                    break;
                 }
             }
 

@@ -26,10 +26,8 @@ namespace Adaptive.Aeron.LogBuffer
     /// </summary>
     public class Header
     {
-        private readonly int _positionBitsToShift;
-        private readonly int _initialTermId;
         private IDirectBuffer _buffer;
-        private readonly object _context;
+        private int _fragmentedFrameLength = Aeron.NULL_VALUE;
 
         /// <summary>
         /// Construct a header that references a buffer for the log.
@@ -50,16 +48,16 @@ namespace Adaptive.Aeron.LogBuffer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Header(int initialTermId, int positionBitsToShift, Object context)
         {
-            _initialTermId = initialTermId;
-            _positionBitsToShift = positionBitsToShift;
-            _context = context;
+            InitialTermId = initialTermId;
+            PositionBitsToShift = positionBitsToShift;
+            Context = context;
         }
 
         /// <summary>
         /// Context for storing state related to the context of the callback where the header is used.
         /// </summary>
         /// <returns>  context for storing state related to the context of the callback where the header is used.</returns>
-        public object Context => _context;
+        public object Context { get; set; }
 
         /// <summary>
         /// Get the current position to which the image has advanced on reading this message.
@@ -69,11 +67,8 @@ namespace Adaptive.Aeron.LogBuffer
         {
             get
             {
-                int frameLength = _buffer.GetInt(Offset, ByteOrder.LittleEndian);
-                int resultingOffset = BitUtil.Align(Offset + frameLength, FrameDescriptor.FRAME_ALIGNMENT);
-                int termId = _buffer.GetInt(Offset + DataHeaderFlyweight.TERM_ID_FIELD_OFFSET, ByteOrder.LittleEndian);
-                return LogBufferDescriptor.ComputePosition(termId, resultingOffset, _positionBitsToShift,
-                    _initialTermId);
+                return LogBufferDescriptor.ComputePosition(TermId, NextTermOffset, PositionBitsToShift,
+                    InitialTermId);
             }
         }
 
@@ -81,13 +76,13 @@ namespace Adaptive.Aeron.LogBuffer
         /// The number of times to left shift the term count to multiply by term length.
         /// </summary>
         /// <returns> number of times to left shift the term count to multiply by term length. </returns>
-        public int PositionBitsToShift => _positionBitsToShift;
+        public int PositionBitsToShift { get; set; }
 
         /// <summary>
         /// Get the initial term id this stream started at.
         /// </summary>
         /// <value> the initial term id this stream started at. </value>
-        public int InitialTermId => _initialTermId;
+        public int InitialTermId { get; set; }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void SetBuffer(IDirectBuffer buffer, int offset)
@@ -97,7 +92,7 @@ namespace Adaptive.Aeron.LogBuffer
         }
 
         /// <summary>
-        /// The offset at which the frame begins.
+        /// The offset at which the frame begins in the buffer.
         /// </summary>
         public int Offset { get; set; }
 
@@ -141,15 +136,21 @@ namespace Adaptive.Aeron.LogBuffer
         public int TermId => Buffer.GetInt(Offset + DataHeaderFlyweight.TERM_ID_FIELD_OFFSET);
 
         /// <summary>
-        /// The offset in the term at which the frame begins. This will be the same as <seealso cref="Offset()"/>
+        /// The offset in the term at which the frame begins.
         /// </summary>
         /// <returns> the offset in the term at which the frame begins. </returns>
-        public int TermOffset => Offset;
+        public int TermOffset => Buffer.GetInt(Offset + DataHeaderFlyweight.TERM_OFFSET_FIELD_OFFSET, ByteOrder.LittleEndian);
 
         /// <summary>
-        /// The type of the frame which should always be <seealso cref="HeaderFlyweight.HDR_TYPE_DATA"/>
+        /// Calculates the offset of the frame immediately after this one.
         /// </summary>
-        /// <returns> type of the frame which should always be <seealso cref="HeaderFlyweight.HDR_TYPE_DATA"/> </returns>
+        /// <returns> the offset of the next frame. </returns>
+        public int NextTermOffset => BitUtil.Align(TermOffset + TermOccupancyLength, FrameDescriptor.FRAME_ALIGNMENT);
+
+        /// <summary>
+        /// The type of the frame which should always be <seealso cref="HeaderFlyweight.HDR_TYPE_DATA"/>.
+        /// </summary>
+        /// <returns> type of the frame which should always be <seealso cref="HeaderFlyweight.HDR_TYPE_DATA"/>. </returns>
         public int Type => Buffer.GetShort(Offset + HeaderFlyweight.TYPE_FIELD_OFFSET) & 0xFFFF;
 
         /// <summary>
@@ -170,5 +171,18 @@ namespace Adaptive.Aeron.LogBuffer
         /// <returns> the value stored in the reserve space at the end of a data frame header. </returns>
         /// <seealso cref="DataHeaderFlyweight" />
         public long ReservedValue => Buffer.GetLong(Offset + DataHeaderFlyweight.RESERVED_VALUE_OFFSET);
+
+        /// <summary>
+        /// Total amount of space occupied by this message when it is within the term buffer. When fragmented this will
+        /// include the length of the header for each fragment. Used when doing reassembly of fragmented packets.
+        /// </summary>
+        /// <param name="value"> total fragmented length of the message. </param>
+        public int FragmentedFrameLength
+        {
+            set => _fragmentedFrameLength = value;
+        }
+
+        private int TermOccupancyLength =>
+            Aeron.NULL_VALUE == _fragmentedFrameLength ? FrameLength : _fragmentedFrameLength;
     }
 }

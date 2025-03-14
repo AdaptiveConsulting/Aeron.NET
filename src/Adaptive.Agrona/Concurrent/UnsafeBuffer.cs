@@ -62,7 +62,7 @@ namespace Adaptive.Agrona.Concurrent
 
         public UnsafeBuffer()
         {
-            Capacity = -1; // this is only used in the test, by the mock infrastructure
+            Wrap(Array.Empty<byte>());
         }
 
         /// <summary>

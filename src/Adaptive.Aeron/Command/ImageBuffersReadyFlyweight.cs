@@ -185,7 +185,7 @@ namespace Adaptive.Aeron.Command
         /// <summary>
         /// The Log Filename in ASCII.
         /// </summary>
-        /// <returns> log filename </returns>
+        /// <returns> log filename. </returns>
         public string LogFileName()
         {
             return _buffer.GetStringAscii(_offset + LOG_FILE_NAME_OFFSET);
@@ -203,7 +203,7 @@ namespace Adaptive.Aeron.Command
         /// <summary>
         /// Set the log filename in ASCII.
         /// </summary>
-        /// <param name="logFileName"> for the image </param>
+        /// <param name="logFileName"> for the image. </param>
         /// <returns> this for a fluent API. </returns>
         public ImageBuffersReadyFlyweight LogFileName(string logFileName)
         {
@@ -243,11 +243,11 @@ namespace Adaptive.Aeron.Command
         }
 
         /// <summary>
-        /// Get the length of the current message
+        /// Get the length of the current message.
         /// 
         /// NB: must be called after the data is written in order to be accurate.
         /// </summary>
-        /// <returns> the length of the current message </returns>
+        /// <returns> the length of the current message. </returns>
         public int Length()
         {
             int sourceIdentityOffset = SourceIdentityOffset();

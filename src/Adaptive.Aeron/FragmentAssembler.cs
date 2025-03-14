@@ -103,27 +103,28 @@ namespace Adaptive.Aeron
             {
                 BufferBuilder builder = GetBufferBuilder(header.SessionId);
                 builder.Reset()
+                    .CaptureHeader(header)
                     .Append(buffer, offset, length)
-                    .NextTermOffset(BitUtil.Align(offset + length + DataHeaderFlyweight.HEADER_LENGTH, FrameDescriptor.FRAME_ALIGNMENT));
+                    .NextTermOffset(header.NextTermOffset);
             }
             else
             {
                 BufferBuilder builder = _builderBySessionIdMap.Get(header.SessionId);
                 if (null != builder)
                 {
-                    if (offset == builder.NextTermOffset())
+                    if (header.TermOffset == builder.NextTermOffset())
                     {
                         builder.Append(buffer, offset, length);
 
                         if ((flags & FrameDescriptor.END_FRAG_FLAG) == FrameDescriptor.END_FRAG_FLAG)
                         {
-                            _delegate.OnFragment(builder.Buffer(), 0, builder.Limit(), header);
+                            _delegate.OnFragment(
+                                builder.Buffer(), 0, builder.Limit(), builder.CompleteHeader(header));
                             builder.Reset();
                         }
                         else
                         {
-                            builder.NextTermOffset(BitUtil.Align(offset + length + DataHeaderFlyweight.HEADER_LENGTH,
-                                FrameDescriptor.FRAME_ALIGNMENT));
+                            builder.NextTermOffset(header.NextTermOffset);
                         }
                     }
                     else

@@ -74,7 +74,7 @@ namespace Adaptive.Aeron.Command
         }
 
         /// <summary>
-        /// Set channel status counter id field
+        /// Set channel status counter id field.
         /// </summary>
         /// <param name="counterId"> field value </param>
         /// <returns> this for a fluent API. </returns>

@@ -93,6 +93,23 @@ namespace Adaptive.Aeron.Command
         /// </summary>
         public const int TERMINATE_DRIVER = 0x0E;
         
+        /// <summary>
+        /// Add or return a static Counter, i.e. the Counter that cannot be deleted and whose lifecycle is decoupled from
+        /// the Aeron instance that created it.
+        /// </summary>
+        /// <remarks>Since 1.45.0</remarks>
+        public const int ADD_STATIC_COUNTER = 0x0F;
+
+        /// <summary>
+        /// Invalidate an image.
+        /// </summary>
+        public const int REJECT_IMAGE = 0x10;
+
+        /// <summary>
+        /// Remove a destination by registration id.
+        /// </summary>
+        public const int REMOVE_DESTINATION_BY_ID = 0x11;
+        
         // Media Driver to Clients
 
         /// <summary>
@@ -144,6 +161,19 @@ namespace Adaptive.Aeron.Command
         /// Inform clients of client timeout.
         /// </summary>
         public const int ON_CLIENT_TIMEOUT = 0x0F0A;
+        
+        /// <summary>
+        /// A response to <seealso cref="ADD_STATIC_COUNTER"/> command.
+        /// </summary>
+        /// /// <remarks>Since 1.45.0</remarks>
+        public const int ON_STATIC_COUNTER = 0x0F0B;
+
+        /// <summary>
+        /// Inform clients of error frame received by publication.
+        /// </summary>
+        /// /// <remarks>Since 1.47.0</remarks>
+        public const int ON_PUBLICATION_ERROR = 0x0F0C;
+
     }
 
 }

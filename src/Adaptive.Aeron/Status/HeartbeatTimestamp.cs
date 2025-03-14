@@ -30,16 +30,16 @@ namespace Adaptive.Aeron.Status
         {
             IDirectBuffer buffer = countersReader.MetaDataBuffer;
 
-            for (int i = 0, size = countersReader.MaxCounterId; i < size; i++)
+            for (int counterId = 0, maxId = countersReader.MaxCounterId; counterId < maxId; counterId++)
             {
-                int counterState = countersReader.GetCounterState(i);
+                int counterState = countersReader.GetCounterState(counterId);
                 if (counterState == CountersReader.RECORD_ALLOCATED)
                 {
-                    if (countersReader.GetCounterTypeId(i) == counterTypeId &&
-                        buffer.GetLong(CountersReader.MetaDataOffset(i) + CountersReader.KEY_OFFSET +
+                    if (countersReader.GetCounterTypeId(counterId) == counterTypeId &&
+                        buffer.GetLong(CountersReader.MetaDataOffset(counterId) + CountersReader.KEY_OFFSET +
                                        REGISTRATION_ID_OFFSET) == registrationId)
                     {
-                        return i;
+                        return counterId;
                     }
                 }
                 else if (CountersReader.RECORD_UNUSED == counterState)

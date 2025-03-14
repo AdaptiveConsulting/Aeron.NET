@@ -1,9 +1,9 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 
 namespace Adaptive.Agrona.Collections
 {
-    
     /// <summary>
     /// A map implementation that replicates the behaviour of the Java equivalent.
     /// </summary>
@@ -27,7 +27,7 @@ namespace Adaptive.Agrona.Collections
         public TValue Put(TKey key, TValue value)
         {
             var oldValue = Get(key);
-            
+
             _dictionaryImplementation[key] = value;
             return oldValue;
         }
@@ -45,7 +45,7 @@ namespace Adaptive.Agrona.Collections
         }
 
         public ICollection<TValue> Values => _dictionaryImplementation.Values;
-        
+
         public ICollection<KeyValuePair<TKey, TValue>> KeyValuePairs => _dictionaryImplementation;
 
         public int Count => _dictionaryImplementation.Count;
@@ -63,6 +63,14 @@ namespace Adaptive.Agrona.Collections
         IEnumerator IEnumerable.GetEnumerator()
         {
             return GetEnumerator();
+        }
+
+        public void ForEach(Action<TKey, TValue> consumer)
+        {
+            foreach (var keyValuePair in _dictionaryImplementation)
+            {
+                consumer(keyValuePair.Key, keyValuePair.Value);
+            }
         }
     }
 }

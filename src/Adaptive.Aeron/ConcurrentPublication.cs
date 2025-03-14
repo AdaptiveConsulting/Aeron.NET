@@ -298,7 +298,7 @@ namespace Adaptive.Aeron
 		private long AppendFragmentedMessage(UnsafeBuffer termBuffer, int tailCounterOffset, IDirectBuffer buffer,
 			int offset, int length, ReservedValueSupplier reservedValueSupplier)
 		{
-			int framedLength = ComputeFramedLength(length, MaxPayloadLength);
+			int framedLength = ComputeFragmentedFrameLength(length, MaxPayloadLength);
 			int termLength = termBuffer.Capacity;
 
 			long rawTail = _logMetaDataBuffer.GetAndAddLong(tailCounterOffset, framedLength);
@@ -392,7 +392,7 @@ namespace Adaptive.Aeron
 			ReservedValueSupplier reservedValueSupplier)
 		{
 			int length = lengthOne + lengthTwo;
-			int framedLength = ComputeFramedLength(length, MaxPayloadLength);
+			int framedLength = ComputeFragmentedFrameLength(length, MaxPayloadLength);
 			int termLength = termBuffer.Capacity;
 
 			long rawTail = _logMetaDataBuffer.GetAndAddLong(tailCounterOffset, framedLength);
@@ -513,7 +513,7 @@ namespace Adaptive.Aeron
 		private long AppendFragmentedMessage(UnsafeBuffer termBuffer, int tailCounterOffset,
 			DirectBufferVector[] vectors, int length, ReservedValueSupplier reservedValueSupplier)
 		{
-			int framedLength = ComputeFramedLength(length, MaxPayloadLength);
+			int framedLength = ComputeFragmentedFrameLength(length, MaxPayloadLength);
 			int termLength = termBuffer.Capacity;
 
 			long rawTail = _logMetaDataBuffer.GetAndAddLong(tailCounterOffset, framedLength);

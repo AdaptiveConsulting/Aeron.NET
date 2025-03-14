@@ -85,11 +85,9 @@ namespace Adaptive.Aeron
 			_activePartitionIndex = index;
 
 			var rawTail = RawTail(base._logMetaDataBuffer, index);
-
 			_termId = LogBufferDescriptor.TermId(rawTail);
 			_termOffset = LogBufferDescriptor.TermOffset(rawTail);
-			_termBeginPosition =
-				ComputeTermBeginPosition(_termId, PositionBitsToShift, InitialTermId);
+			_termBeginPosition = ComputeTermBeginPosition(_termId, PositionBitsToShift, InitialTermId);
 		}
 
 		/// <inheritdoc />
@@ -517,7 +515,7 @@ namespace Adaptive.Aeron
 			int length,
 			ReservedValueSupplier reservedValueSupplier)
 		{
-			int framedLength = ComputeFramedLength(length, MaxPayloadLength);
+			int framedLength = ComputeFragmentedFrameLength(length, MaxPayloadLength);
 			int termLength = termBuffer.Capacity;
 
 			int resultingOffset = _termOffset + framedLength;
@@ -619,7 +617,7 @@ namespace Adaptive.Aeron
 			ReservedValueSupplier reservedValueSupplier)
 		{
 			int length = lengthOne + lengthTwo;
-			int framedLength = ComputeFramedLength(length, MaxPayloadLength);
+			int framedLength = ComputeFragmentedFrameLength(length, MaxPayloadLength);
 			int termLength = termBuffer.Capacity;
 
 			int resultingOffset = _termOffset + framedLength;
@@ -742,7 +740,7 @@ namespace Adaptive.Aeron
 			int length, 
 			ReservedValueSupplier reservedValueSupplier)
 		{
-			int framedLength = ComputeFramedLength(length, MaxPayloadLength);
+			int framedLength = ComputeFragmentedFrameLength(length, MaxPayloadLength);
 			int termLength = termBuffer.Capacity;
 
 			int resultingOffset = _termOffset + framedLength;

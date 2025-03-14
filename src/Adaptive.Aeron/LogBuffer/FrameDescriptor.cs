@@ -76,32 +76,32 @@ namespace Adaptive.Aeron.LogBuffer
         public const byte UNFRAGMENTED = 192; // BEGIN_FRAG_FLAG | END_FRAG_FLAG;
 
         /// <summary>
-        /// Offset within a frame at which the version field begins
+        /// Offset within a frame at which the version field begins.
         /// </summary>
         public const int VERSION_OFFSET = HeaderFlyweight.VERSION_FIELD_OFFSET;
 
         /// <summary>
-        /// Offset within a frame at which the flags field begins
+        /// Offset within a frame at which the flags field begins.
         /// </summary>
         public const int FLAGS_OFFSET = HeaderFlyweight.FLAGS_FIELD_OFFSET;
 
         /// <summary>
-        /// Offset within a frame at which the type field begins
+        /// Offset within a frame at which the type field begins.
         /// </summary>
         public const int TYPE_OFFSET = HeaderFlyweight.TYPE_FIELD_OFFSET;
 
         /// <summary>
-        /// Offset within a frame at which the term offset field begins
+        /// Offset within a frame at which the term offset field begins.
         /// </summary>
         public const int TERM_OFFSET = DataHeaderFlyweight.TERM_OFFSET_FIELD_OFFSET;
 
         /// <summary>
-        /// Offset within a frame at which the term id field begins
+        /// Offset within a frame at which the term id field begins.
         /// </summary>
         public const int TERM_ID_OFFSET = DataHeaderFlyweight.TERM_ID_FIELD_OFFSET;
 
         /// <summary>
-        /// Offset within a frame at which the session id field begins
+        /// Offset within a frame at which the session id field begins.
         /// </summary>
         public const int SESSION_ID_OFFSET = DataHeaderFlyweight.SESSION_ID_FIELD_OFFSET;
         

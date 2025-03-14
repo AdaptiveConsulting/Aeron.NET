@@ -84,15 +84,16 @@ namespace Adaptive.Aeron
             {
                 BufferBuilder builder = GetBufferBuilder(header.SessionId);
                 builder.Reset()
+                    .CaptureHeader(header)
                     .Append(buffer, offset, length)
-                    .NextTermOffset(BitUtil.Align(offset + length + DataHeaderFlyweight.HEADER_LENGTH, FrameDescriptor.FRAME_ALIGNMENT));
+                    .NextTermOffset(header.NextTermOffset);
             }
             else
             {
                 BufferBuilder builder = _builderBySessionIdMap.Get(header.SessionId);
                 if (null != builder)
                 {
-                    if (offset == builder.NextTermOffset())
+                    if (header.TermOffset == builder.NextTermOffset())
                     {
                         int limit = builder.Limit();
 
@@ -100,7 +101,7 @@ namespace Adaptive.Aeron
 
                         if ((flags & FrameDescriptor.END_FRAG_FLAG) == FrameDescriptor.END_FRAG_FLAG)
                         {
-                            action = _delegate.OnFragment(builder.Buffer(), 0, builder.Limit(), header);
+                            action = _delegate.OnFragment(builder.Buffer(), 0, builder.Limit(), builder.CompleteHeader(header));
 
                             if (ControlledFragmentHandlerAction.ABORT == action)
                             {
@@ -113,7 +114,7 @@ namespace Adaptive.Aeron
                         }
                         else
                         {
-                            builder.NextTermOffset(BitUtil.Align(offset + length + DataHeaderFlyweight.HEADER_LENGTH, FrameDescriptor.FRAME_ALIGNMENT));
+                            builder.NextTermOffset(header.NextTermOffset);
                         }
                     }
                     else

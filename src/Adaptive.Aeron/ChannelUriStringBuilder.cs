@@ -2,6 +2,7 @@
 using System.Text;
 using Adaptive.Aeron.LogBuffer;
 using Adaptive.Agrona;
+using static Adaptive.Aeron.Aeron.Context;
 using static Adaptive.Aeron.LogBuffer.FrameDescriptor;
 
 namespace Adaptive.Aeron
@@ -34,32 +35,40 @@ namespace Adaptive.Aeron
         private string _alias;
         private string _cc;
         private string _fc;
+        private string _mediaReceiveTimestampOffset;
+        private string _channelReceiveTimestampOffset;
+        private string _channelSendTimestampOffset;
+        private string _responseEndpoint;
         private bool? _reliable;
-        private int? _ttl;
-        private int? _mtu;
-        private int? _termLength;
-        private int? _initialTermId;
-        private int? _termId;
-        private int? _termOffset;
-        private long? _sessionId;
-        private long? _groupTag;
-        private long? _linger;
         private bool? _sparse;
         private bool? _eos;
         private bool? _tether;
         private bool? _group;
         private bool? _rejoin;
         private bool? _ssc;
-        private bool _isSessionIdTagged;
+        private int? _ttl;
+        private int? _mtu;
+        private int? _termLength;
+        private int? _initialTermId;
+        private int? _termId;
+        private int? _termOffset;
         private int? _socketSndbufLength;
         private int? _socketRcvbufLength;
         private int? _receiverWindowLength;
-        private string _mediaReceiveTimestampOffset;
-        private string _channelReceiveTimestampOffset;
-        private string _channelSendTimestampOffset;
+        private int? _maxResend;
+        private int? _streamId;
+        private int? _publicationWindowLength;
+        private long? _sessionId;
+        private long? _groupTag;
+        private long? _linger;
+        private long? responseCorrelationId;
+        private long? nakDelay;
+        private long? _untetheredWindowLimitTimeoutNs;
+        private long? untetheredRestingTimeoutNs;
+        private bool _isSessionIdTagged;
 
         /// <summary>
-        /// Default constructor
+        /// Default constructor.
         /// </summary>
         public ChannelUriStringBuilder()
         {
@@ -114,6 +123,14 @@ namespace Adaptive.Aeron
             MediaReceiveTimestampOffset(channelUri);
             ChannelReceiveTimestampOffset(channelUri);
             ChannelSendTimestampOffset(channelUri);
+            ResponseEndpoint(channelUri);
+            ResponseCorrelationId(channelUri);
+            NakDelay(channelUri);
+            UntetheredWindowLimitTimeout(channelUri);
+            UntetheredRestingTimeout(channelUri);
+            MaxResend(channelUri);
+            StreamId(channelUri);
+            PublicationWindowLength(channelUri);
         }
 
         /// <summary>
@@ -154,6 +171,11 @@ namespace Adaptive.Aeron
             _mediaReceiveTimestampOffset = null;
             _channelReceiveTimestampOffset = null;
             _channelSendTimestampOffset = null;
+            _responseEndpoint = null;
+            responseCorrelationId = null;
+            _maxResend = null;
+            _streamId = null;
+            _publicationWindowLength = null;
 
             return this;
         }
@@ -162,20 +184,20 @@ namespace Adaptive.Aeron
         /// Validates that the collection of set parameters are valid together.
         /// </summary>
         /// <returns> this for a fluent API. </returns>
-        /// <exception cref="InvalidOperationException"> if the combination of params is invalid. </exception>
+        /// <exception cref="ArgumentException"> if the combination of params is invalid. </exception>
         public ChannelUriStringBuilder Validate()
         {
             if (null == _media)
             {
-                throw new InvalidOperationException("media type is mandatory");
+                throw new ArgumentException("media type is mandatory");
             }
 
-            if (Aeron.Context.UDP_MEDIA.Equals(_media) && (null == _endpoint && null == _controlEndpoint))
+            if (UDP_MEDIA.Equals(_media) && (null == _endpoint && null == _controlEndpoint))
             {
-                throw new InvalidOperationException("either 'endpoint' or 'control' must be specified for UDP.");
+                throw new ArgumentException("either 'endpoint' or 'control' must be specified for UDP.");
             }
 
-            
+
             bool anyNonNull = null != _initialTermId || null != _termId || null != _termOffset;
             bool anyNull = null == _initialTermId || null == _termId || null == _termOffset;
             if (anyNonNull)
@@ -247,8 +269,8 @@ namespace Adaptive.Aeron
         {
             switch (media)
             {
-                case Aeron.Context.UDP_MEDIA:
-                case Aeron.Context.IPC_MEDIA:
+                case UDP_MEDIA:
+                case IPC_MEDIA:
                     break;
 
                 default:
@@ -299,7 +321,7 @@ namespace Adaptive.Aeron
         /// <seealso cref="Aeron.Context.ENDPOINT_PARAM_NAME"/>
         public ChannelUriStringBuilder Endpoint(ChannelUri channelUri)
         {
-            return Endpoint(channelUri.Get(Aeron.Context.ENDPOINT_PARAM_NAME));
+            return Endpoint(channelUri.Get(ENDPOINT_PARAM_NAME));
         }
 
         /// <summary>
@@ -332,7 +354,7 @@ namespace Adaptive.Aeron
         /// <seealso cref="Aeron.Context.INTERFACE_PARAM_NAME"/>
         public ChannelUriStringBuilder NetworkInterface(ChannelUri channelUri)
         {
-            return NetworkInterface(channelUri.Get(Aeron.Context.INTERFACE_PARAM_NAME));
+            return NetworkInterface(channelUri.Get(INTERFACE_PARAM_NAME));
         }
 
         /// <summary>
@@ -365,7 +387,7 @@ namespace Adaptive.Aeron
         /// <seealso cref="Aeron.Context.MDC_CONTROL_PARAM_NAME"/>
         public ChannelUriStringBuilder ControlEndpoint(ChannelUri channelUri)
         {
-            return ControlEndpoint(channelUri.Get(Aeron.Context.MDC_CONTROL_PARAM_NAME));
+            return ControlEndpoint(channelUri.Get(MDC_CONTROL_PARAM_NAME));
         }
 
         /// <summary>
@@ -391,8 +413,9 @@ namespace Adaptive.Aeron
         public ChannelUriStringBuilder ControlMode(string controlMode)
         {
             if (null != controlMode &&
-                !controlMode.Equals(Aeron.Context.MDC_CONTROL_MODE_MANUAL) &&
-                !controlMode.Equals(Aeron.Context.MDC_CONTROL_MODE_DYNAMIC)
+                !controlMode.Equals(MDC_CONTROL_MODE_MANUAL) &&
+                !controlMode.Equals(MDC_CONTROL_MODE_DYNAMIC) &&
+                !controlMode.Equals(CONTROL_MODE_RESPONSE)
                )
             {
                 throw new ArgumentException("invalid control mode: " + controlMode);
@@ -410,7 +433,7 @@ namespace Adaptive.Aeron
         /// <seealso cref="Aeron.Context.MDC_CONTROL_MODE_PARAM_NAME"/>
         public ChannelUriStringBuilder ControlMode(ChannelUri channelUri)
         {
-            return ControlMode(channelUri.Get(Aeron.Context.MDC_CONTROL_MODE_PARAM_NAME));
+            return ControlMode(channelUri.Get(MDC_CONTROL_MODE_PARAM_NAME));
         }
 
         /// <summary>
@@ -420,6 +443,7 @@ namespace Adaptive.Aeron
         /// <seealso cref="Aeron.Context.MDC_CONTROL_MODE_PARAM_NAME"/>
         /// <seealso cref="Aeron.Context.MDC_CONTROL_MODE_MANUAL"/>
         /// <seealso cref="Aeron.Context.MDC_CONTROL_MODE_DYNAMIC"/>
+        /// <seealso cref="Aeron.Context.CONTROL_MODE_RESPONSE"/>
         public string ControlMode()
         {
             return _controlMode;
@@ -445,7 +469,7 @@ namespace Adaptive.Aeron
         /// <seealso cref="Aeron.Context.RELIABLE_STREAM_PARAM_NAME"/>
         public ChannelUriStringBuilder Reliable(ChannelUri channelUri)
         {
-            string reliableValue = channelUri.Get(Aeron.Context.RELIABLE_STREAM_PARAM_NAME);
+            string reliableValue = channelUri.Get(RELIABLE_STREAM_PARAM_NAME);
             if (null == reliableValue)
             {
                 _reliable = null;
@@ -493,7 +517,7 @@ namespace Adaptive.Aeron
         /// <seealso cref="Aeron.Context.TTL_PARAM_NAME"/>
         public ChannelUriStringBuilder Ttl(ChannelUri channelUri)
         {
-            string ttlValue = channelUri.Get(Aeron.Context.TTL_PARAM_NAME);
+            string ttlValue = channelUri.Get(TTL_PARAM_NAME);
             if (null == ttlValue)
             {
                 _ttl = null;
@@ -556,7 +580,7 @@ namespace Adaptive.Aeron
         /// <seealso cref="Aeron.Context.MTU_LENGTH_PARAM_NAME"/>
         public ChannelUriStringBuilder Mtu(ChannelUri channelUri)
         {
-            string mtuValue = channelUri.Get(Aeron.Context.MTU_LENGTH_PARAM_NAME);
+            string mtuValue = channelUri.Get(MTU_LENGTH_PARAM_NAME);
             if (null == mtuValue)
             {
                 _mtu = null;
@@ -564,10 +588,10 @@ namespace Adaptive.Aeron
             }
             else
             {
-                long value = SystemUtil.ParseSize(Aeron.Context.MTU_LENGTH_PARAM_NAME, mtuValue);
+                long value = SystemUtil.ParseSize(MTU_LENGTH_PARAM_NAME, mtuValue);
                 if (value > int.MaxValue)
                 {
-                    throw new InvalidOperationException(Aeron.Context.MTU_LENGTH_PARAM_NAME + " " + value + " > " +
+                    throw new InvalidOperationException(MTU_LENGTH_PARAM_NAME + " " + value + " > " +
                                                         int.MaxValue);
                 }
 
@@ -611,7 +635,7 @@ namespace Adaptive.Aeron
         /// <seealso cref="Aeron.Context.TERM_LENGTH_PARAM_NAME"/>
         public ChannelUriStringBuilder TermLength(ChannelUri channelUri)
         {
-            string termLengthValue = channelUri.Get(Aeron.Context.TERM_LENGTH_PARAM_NAME);
+            string termLengthValue = channelUri.Get(TERM_LENGTH_PARAM_NAME);
             if (null == termLengthValue)
             {
                 _termLength = null;
@@ -619,12 +643,12 @@ namespace Adaptive.Aeron
             }
             else
             {
-                long value = SystemUtil.ParseSize(Aeron.Context.TERM_LENGTH_PARAM_NAME, termLengthValue);
+                long value = SystemUtil.ParseSize(TERM_LENGTH_PARAM_NAME, termLengthValue);
                 if (value > int.MaxValue)
                 {
-                    throw new InvalidOperationException("term length more than max length of " +
-                                                        LogBufferDescriptor.TERM_MAX_LENGTH + ": length=" +
-                                                        _termLength);
+                    throw new ArgumentException("term length more than max length of " +
+                                                LogBufferDescriptor.TERM_MAX_LENGTH + ": length=" +
+                                                _termLength);
                 }
 
                 return TermLength((int)value);
@@ -661,7 +685,7 @@ namespace Adaptive.Aeron
         /// <seealso cref="Aeron.Context.INITIAL_TERM_ID_PARAM_NAME"/>
         public ChannelUriStringBuilder InitialTermId(ChannelUri channelUri)
         {
-            string initialTermIdValue = channelUri.Get(Aeron.Context.INITIAL_TERM_ID_PARAM_NAME);
+            string initialTermIdValue = channelUri.Get(INITIAL_TERM_ID_PARAM_NAME);
             if (null == initialTermIdValue)
             {
                 _initialTermId = null;
@@ -711,7 +735,7 @@ namespace Adaptive.Aeron
         /// <seealso cref="Aeron.Context.TERM_ID_PARAM_NAME"/>
         public ChannelUriStringBuilder TermId(ChannelUri channelUri)
         {
-            string termIdValue = channelUri.Get(Aeron.Context.TERM_ID_PARAM_NAME);
+            string termIdValue = channelUri.Get(TERM_ID_PARAM_NAME);
             if (null == termIdValue)
             {
                 _termId = null;
@@ -774,7 +798,7 @@ namespace Adaptive.Aeron
         /// <seealso cref="Aeron.Context.TERM_OFFSET_PARAM_NAME"/>
         public ChannelUriStringBuilder TermOffset(ChannelUri channelUri)
         {
-            string termOffsetValue = channelUri.Get(Aeron.Context.TERM_OFFSET_PARAM_NAME);
+            string termOffsetValue = channelUri.Get(TERM_OFFSET_PARAM_NAME);
             if (null == termOffsetValue)
             {
                 _termOffset = null;
@@ -873,7 +897,7 @@ namespace Adaptive.Aeron
         /// <seealso cref="Aeron.Context.SESSION_ID_PARAM_NAME"/>
         public ChannelUriStringBuilder SessionId(ChannelUri channelUri)
         {
-            return SessionId(channelUri.Get(Aeron.Context.SESSION_ID_PARAM_NAME));
+            return SessionId(channelUri.Get(SESSION_ID_PARAM_NAME));
         }
 
         /// <summary>
@@ -916,7 +940,7 @@ namespace Adaptive.Aeron
         /// <seealso cref="Aeron.Context.LINGER_PARAM_NAME"/>
         public ChannelUriStringBuilder Linger(ChannelUri channelUri)
         {
-            string lingerValue = channelUri.Get(Aeron.Context.LINGER_PARAM_NAME);
+            string lingerValue = channelUri.Get(LINGER_PARAM_NAME);
             if (null == lingerValue)
             {
                 _linger = null;
@@ -924,7 +948,7 @@ namespace Adaptive.Aeron
             }
             else
             {
-                return Linger(SystemUtil.ParseDuration(Aeron.Context.LINGER_PARAM_NAME, lingerValue));
+                return Linger(SystemUtil.ParseDuration(LINGER_PARAM_NAME, lingerValue));
             }
         }
 
@@ -960,7 +984,7 @@ namespace Adaptive.Aeron
         /// <seealso cref="Aeron.Context.SPARSE_PARAM_NAME"/>
         public ChannelUriStringBuilder Sparse(ChannelUri channelUri)
         {
-            string sparseValue = channelUri.Get(Aeron.Context.SPARSE_PARAM_NAME);
+            string sparseValue = channelUri.Get(SPARSE_PARAM_NAME);
             if (null == sparseValue)
             {
                 _sparse = null;
@@ -1002,7 +1026,7 @@ namespace Adaptive.Aeron
         /// <seealso cref="Aeron.Context.EOS_PARAM_NAME"/>
         public ChannelUriStringBuilder Eos(ChannelUri channelUri)
         {
-            string eosValue = channelUri.Get(Aeron.Context.EOS_PARAM_NAME);
+            string eosValue = channelUri.Get(EOS_PARAM_NAME);
             if (null == eosValue)
             {
                 _eos = null;
@@ -1044,7 +1068,7 @@ namespace Adaptive.Aeron
         /// <seealso cref="Aeron.Context.TETHER_PARAM_NAME"/>
         public ChannelUriStringBuilder Tether(ChannelUri channelUri)
         {
-            string tetherValue = channelUri.Get(Aeron.Context.TETHER_PARAM_NAME);
+            string tetherValue = channelUri.Get(TETHER_PARAM_NAME);
             if (null == tetherValue)
             {
                 _tether = null;
@@ -1088,7 +1112,7 @@ namespace Adaptive.Aeron
         /// <seealso cref="Aeron.Context.GROUP_PARAM_NAME"/>
         public ChannelUriStringBuilder Group(ChannelUri channelUri)
         {
-            string groupValue = channelUri.Get(Aeron.Context.GROUP_PARAM_NAME);
+            string groupValue = channelUri.Get(GROUP_PARAM_NAME);
             if (null == groupValue)
             {
                 _group = null;
@@ -1134,7 +1158,7 @@ namespace Adaptive.Aeron
         /// <seealso cref="Aeron.Context.TAGS_PARAM_NAME"/>
         public ChannelUriStringBuilder Tags(ChannelUri channelUri)
         {
-            return Tags(channelUri.Get(Aeron.Context.TAGS_PARAM_NAME));
+            return Tags(channelUri.Get(TAGS_PARAM_NAME));
         }
 
         /// <summary>
@@ -1217,7 +1241,7 @@ namespace Adaptive.Aeron
         /// <seealso cref="Aeron.Context.ALIAS_PARAM_NAME"/>
         public ChannelUriStringBuilder Alias(ChannelUri channelUri)
         {
-            return Alias(channelUri.Get(Aeron.Context.ALIAS_PARAM_NAME));
+            return Alias(channelUri.Get(ALIAS_PARAM_NAME));
         }
 
         /// <summary>
@@ -1250,7 +1274,7 @@ namespace Adaptive.Aeron
         /// <seealso cref="Aeron.Context.CONGESTION_CONTROL_PARAM_NAME"/>
         public ChannelUriStringBuilder CongestionControl(ChannelUri channelUri)
         {
-            return CongestionControl(channelUri.Get(Aeron.Context.CONGESTION_CONTROL_PARAM_NAME));
+            return CongestionControl(channelUri.Get(CONGESTION_CONTROL_PARAM_NAME));
         }
 
         /// <summary>
@@ -1342,7 +1366,7 @@ namespace Adaptive.Aeron
         /// <seealso cref="Aeron.Context.FLOW_CONTROL_PARAM_NAME"/>
         public ChannelUriStringBuilder FlowControl(ChannelUri channelUri)
         {
-            return FlowControl(channelUri.Get(Aeron.Context.FLOW_CONTROL_PARAM_NAME));
+            return FlowControl(channelUri.Get(FLOW_CONTROL_PARAM_NAME));
         }
 
         /// <summary>
@@ -1375,7 +1399,7 @@ namespace Adaptive.Aeron
         /// <seealso cref="Aeron.Context.GROUP_TAG_PARAM_NAME"/>
         public ChannelUriStringBuilder GroupTag(ChannelUri channelUri)
         {
-            string groupTagValue = channelUri.Get(Aeron.Context.GROUP_TAG_PARAM_NAME);
+            string groupTagValue = channelUri.Get(GROUP_TAG_PARAM_NAME);
             if (null == groupTagValue)
             {
                 _groupTag = null;
@@ -1424,7 +1448,7 @@ namespace Adaptive.Aeron
         /// <seealso cref="Aeron.Context.REJOIN_PARAM_NAME"/>
         public ChannelUriStringBuilder Rejoin(ChannelUri channelUri)
         {
-            string rejoinValue = channelUri.Get(Aeron.Context.REJOIN_PARAM_NAME);
+            string rejoinValue = channelUri.Get(REJOIN_PARAM_NAME);
             if (null == rejoinValue)
             {
                 _rejoin = null;
@@ -1467,7 +1491,7 @@ namespace Adaptive.Aeron
         /// <seealso cref="Aeron.Context.SPIES_SIMULATE_CONNECTION_PARAM_NAME"></seealso>
         public ChannelUriStringBuilder SpiesSimulateConnection(ChannelUri channelUri)
         {
-            string sscValue = channelUri.Get(Aeron.Context.SPIES_SIMULATE_CONNECTION_PARAM_NAME);
+            string sscValue = channelUri.Get(SPIES_SIMULATE_CONNECTION_PARAM_NAME);
             if (null == sscValue)
             {
                 _ssc = null;
@@ -1502,9 +1526,11 @@ namespace Adaptive.Aeron
             {
                 throw new ArgumentException("invalid position=" + position + " < 0");
             }
+
             if (0 != (position & (FRAME_ALIGNMENT - 1)))
             {
-                throw new ArgumentException("invalid position=" + position + " does not have frame alignment=" + FRAME_ALIGNMENT);
+                throw new ArgumentException("invalid position=" + position + " does not have frame alignment=" +
+                                            FRAME_ALIGNMENT);
             }
 
             int bitsToShift = LogBufferDescriptor.PositionBitsToShift(termLength);
@@ -1537,7 +1563,7 @@ namespace Adaptive.Aeron
         /// <seealso cref="Aeron.Context.SOCKET_SNDBUF_PARAM_NAME"/>
         public ChannelUriStringBuilder SocketSndbufLength(ChannelUri channelUri)
         {
-            string valueStr = channelUri.Get(Aeron.Context.SOCKET_SNDBUF_PARAM_NAME);
+            string valueStr = channelUri.Get(SOCKET_SNDBUF_PARAM_NAME);
             if (null == valueStr)
             {
                 _socketSndbufLength = null;
@@ -1545,10 +1571,10 @@ namespace Adaptive.Aeron
             }
             else
             {
-                long value = SystemUtil.ParseSize(Aeron.Context.SOCKET_SNDBUF_PARAM_NAME, valueStr);
+                long value = SystemUtil.ParseSize(SOCKET_SNDBUF_PARAM_NAME, valueStr);
                 if (value > int.MaxValue)
                 {
-                    throw new InvalidOperationException("value exceeds maximum permitted: value=" + value);
+                    throw new ArgumentException("value exceeds maximum permitted: value=" + value);
                 }
 
                 return SocketSndbufLength((int)value);
@@ -1556,7 +1582,7 @@ namespace Adaptive.Aeron
         }
 
         /// <summary>
-        /// Get the underling OS send buffer length setting
+        /// Get the underlying OS send buffer length setting.
         /// </summary>
         /// <returns> underlying OS send buffer length setting or null if not specified. </returns>
         /// <seealso cref="Aeron.Context.SOCKET_SNDBUF_PARAM_NAME"/>
@@ -1568,7 +1594,7 @@ namespace Adaptive.Aeron
         /// <summary>
         /// Set the underlying OS receive buffer length.
         /// </summary>
-        /// <param name="socketRcvbufLength"> parameter to be passed as SO_SNDBUF value. </param>
+        /// <param name="socketRcvbufLength"> parameter to be passed as SO_RCVBUF value. </param>
         /// <returns> this for a fluent API. </returns>
         /// <seealso cref="Aeron.Context.SOCKET_SNDBUF_PARAM_NAME"/>
         public ChannelUriStringBuilder SocketRcvbufLength(int? socketRcvbufLength)
@@ -1586,7 +1612,7 @@ namespace Adaptive.Aeron
         /// <seealso cref="Aeron.Context.SOCKET_RCVBUF_PARAM_NAME"/>
         public ChannelUriStringBuilder SocketRcvbufLength(ChannelUri channelUri)
         {
-            string valueStr = channelUri.Get(Aeron.Context.SOCKET_RCVBUF_PARAM_NAME);
+            string valueStr = channelUri.Get(SOCKET_RCVBUF_PARAM_NAME);
             if (null == valueStr)
             {
                 this._socketRcvbufLength = null;
@@ -1594,10 +1620,10 @@ namespace Adaptive.Aeron
             }
             else
             {
-                long value = SystemUtil.ParseSize(Aeron.Context.SOCKET_RCVBUF_PARAM_NAME, valueStr);
+                long value = SystemUtil.ParseSize(SOCKET_RCVBUF_PARAM_NAME, valueStr);
                 if (value > int.MaxValue)
                 {
-                    throw new InvalidOperationException("value exceeds maximum permitted: value=" + value);
+                    throw new ArgumentException("value exceeds maximum permitted: value=" + value);
                 }
 
                 return SocketRcvbufLength((int)value);
@@ -1605,7 +1631,7 @@ namespace Adaptive.Aeron
         }
 
         /// <summary>
-        /// Get the underling OS receive buffer length setting.
+        /// Get the underlying OS receive buffer length setting.
         /// </summary>
         /// <returns> underlying OS receive buffer length setting or null if not specified. </returns>
         /// <seealso cref="Aeron.Context.SOCKET_RCVBUF_PARAM_NAME"/>
@@ -1622,7 +1648,7 @@ namespace Adaptive.Aeron
         /// <seealso cref="Aeron.Context.RECEIVER_WINDOW_LENGTH_PARAM_NAME"/>
         public ChannelUriStringBuilder ReceiverWindowLength(int? receiverWindowLength)
         {
-            _receiverWindowLength = receiverWindowLength;
+            this._receiverWindowLength = receiverWindowLength;
             return this;
         }
 
@@ -1635,7 +1661,7 @@ namespace Adaptive.Aeron
         /// <seealso cref="Aeron.Context.RECEIVER_WINDOW_LENGTH_PARAM_NAME"/>
         public ChannelUriStringBuilder ReceiverWindowLength(ChannelUri channelUri)
         {
-            string valueStr = channelUri.Get(Aeron.Context.RECEIVER_WINDOW_LENGTH_PARAM_NAME);
+            string valueStr = channelUri.Get(RECEIVER_WINDOW_LENGTH_PARAM_NAME);
             if (null == valueStr)
             {
                 this._receiverWindowLength = null;
@@ -1643,10 +1669,10 @@ namespace Adaptive.Aeron
             }
             else
             {
-                long value = SystemUtil.ParseSize(Aeron.Context.RECEIVER_WINDOW_LENGTH_PARAM_NAME, valueStr);
+                long value = SystemUtil.ParseSize(RECEIVER_WINDOW_LENGTH_PARAM_NAME, valueStr);
                 if (value > int.MaxValue)
                 {
-                    throw new InvalidOperationException("value exceeds maximum permitted: value=" + value);
+                    throw new ArgumentException("value exceeds maximum permitted: value=" + value);
                 }
 
                 return ReceiverWindowLength((int)value);
@@ -1657,7 +1683,7 @@ namespace Adaptive.Aeron
         /// Get the receiver window length to be used as the initial receiver window for flow control.
         /// </summary>
         /// <returns> receiver window length. </returns>
-        /// <seealso cref="Aeron.Context.SOCKET_RCVBUF_PARAM_NAME"/>
+        /// <seealso cref="Aeron.Context.RECEIVER_WINDOW_LENGTH_PARAM_NAME"/>
         public int? ReceiverWindowLength()
         {
             return _receiverWindowLength;
@@ -1669,6 +1695,7 @@ namespace Adaptive.Aeron
         /// </summary>
         /// <returns> current mediaReceiveTimestampOffset value either as string representation of an integer index or the
         /// special value 'reserved' </returns>
+        /// <seealso cref="Aeron.Context.MEDIA_RCV_TIMESTAMP_OFFSET_PARAM_NAME"/>
         public string MediaReceiveTimestampOffset()
         {
             return _mediaReceiveTimestampOffset;
@@ -1681,9 +1708,10 @@ namespace Adaptive.Aeron
         /// <param name="timestampOffset"> to use as the offset. </param>
         /// <returns> this for a fluent API. </returns>
         /// <exception cref="ArgumentException"> if the string is not null and doesn't represent an int or the 'reserved' value. </exception>
+        /// <seealso cref="Aeron.Context.MEDIA_RCV_TIMESTAMP_OFFSET_PARAM_NAME"/>
         public ChannelUriStringBuilder MediaReceiveTimestampOffset(string timestampOffset)
         {
-            if (null != timestampOffset && !Aeron.Context.RESERVED_OFFSET.Equals(timestampOffset))
+            if (null != timestampOffset && !RESERVED_OFFSET.Equals(timestampOffset))
             {
                 try
                 {
@@ -1692,9 +1720,10 @@ namespace Adaptive.Aeron
                 catch (FormatException)
                 {
                     throw new ArgumentException("mediaReceiveTimestampOffset must be a number or the value '" +
-                                                       Aeron.Context.RESERVED_OFFSET + "'");
+                                                RESERVED_OFFSET + "' found: " + timestampOffset);
                 }
             }
+
 
             this._mediaReceiveTimestampOffset = timestampOffset;
             return this;
@@ -1706,9 +1735,10 @@ namespace Adaptive.Aeron
         /// </summary>
         /// <param name="channelUri"> the existing URI to extract the mediaReceiveTimestampOffset from </param>
         /// <returns> this for a fluent API. </returns>
+        /// <seealso cref="Aeron.Context.MEDIA_RCV_TIMESTAMP_OFFSET_PARAM_NAME"/>
         public ChannelUriStringBuilder MediaReceiveTimestampOffset(ChannelUri channelUri)
         {
-            return MediaReceiveTimestampOffset(channelUri.Get(Aeron.Context.MEDIA_RCV_TIMESTAMP_OFFSET_PARAM_NAME));
+            return MediaReceiveTimestampOffset(channelUri.Get(MEDIA_RCV_TIMESTAMP_OFFSET_PARAM_NAME));
         }
 
         /// <summary>
@@ -1717,6 +1747,7 @@ namespace Adaptive.Aeron
         /// </summary>
         /// <returns> current channelReceiveTimestampOffset value either as string representation of an integer index or
         /// the special value 'reserved' </returns>
+        /// <seealso cref="Aeron.Context.CHANNEL_RECEIVE_TIMESTAMP_OFFSET_PARAM_NAME"/>
         public string ChannelReceiveTimestampOffset()
         {
             return _channelReceiveTimestampOffset;
@@ -1729,9 +1760,10 @@ namespace Adaptive.Aeron
         /// <param name="timestampOffset"> to use as the offset. </param>
         /// <returns> this for a fluent API. </returns>
         /// <exception cref="ArgumentException"> if the string doesn't represent an int or the 'reserved' value. </exception>
+        /// <seealso cref="Aeron.Context.MEDIA_RCV_TIMESTAMP_OFFSET_PARAM_NAME"/>
         public ChannelUriStringBuilder ChannelReceiveTimestampOffset(string timestampOffset)
         {
-            if (null != timestampOffset && !Aeron.Context.RESERVED_OFFSET.Equals(timestampOffset))
+            if (null != timestampOffset && !RESERVED_OFFSET.Equals(timestampOffset))
             {
                 try
                 {
@@ -1740,7 +1772,7 @@ namespace Adaptive.Aeron
                 catch (FormatException)
                 {
                     throw new ArgumentException("channelReceiveTimestampOffset must be a number or the value '" +
-                                                       Aeron.Context.RESERVED_OFFSET + "'");
+                                                RESERVED_OFFSET + "' found: " + timestampOffset);
                 }
             }
 
@@ -1754,20 +1786,11 @@ namespace Adaptive.Aeron
         /// </summary>
         /// <param name="channelUri"> the existing URI to extract the receiveTimestampOffset from. </param>
         /// <returns> this for a fluent API. </returns>
+        /// <seealso cref="Aeron.Context.MEDIA_RCV_TIMESTAMP_OFFSET_PARAM_NAME"/>
         public ChannelUriStringBuilder ChannelReceiveTimestampOffset(ChannelUri channelUri)
         {
-            return ChannelReceiveTimestampOffset(channelUri.Get(Aeron.Context.CHANNEL_RECEIVE_TIMESTAMP_OFFSET_PARAM_NAME));
-        }
-
-        /// <summary>
-        /// Offset into a message to store the channel send timestamp. May also be the special value 'reserved' which means
-        /// to store the timestamp in the reserved value field.
-        /// </summary>
-        /// <returns> current sendTimestampOffset value either as string representation of an integer index or the special
-        /// value 'reserved'. </returns>
-        public string ChannelSendTimestampOffset()
-        {
-            return _channelSendTimestampOffset;
+            return ChannelReceiveTimestampOffset(
+                channelUri.Get(CHANNEL_RECEIVE_TIMESTAMP_OFFSET_PARAM_NAME));
         }
 
         /// <summary>
@@ -1778,9 +1801,10 @@ namespace Adaptive.Aeron
         /// <exception cref="ArgumentException"></exception>
         /// <returns> this for a fluent API. </returns>
         /// <exception cref="ArgumentException"> if the string is not null doesn't represent an int or the 'reserved' value. </exception>
+        /// <seealso cref="Aeron.Context.CHANNEL_SEND_TIMESTAMP_OFFSET_PARAM_NAME"/>
         public ChannelUriStringBuilder ChannelSendTimestampOffset(string timestampOffset)
         {
-            if (null != timestampOffset && !Aeron.Context.RESERVED_OFFSET.Equals(timestampOffset))
+            if (null != timestampOffset && !RESERVED_OFFSET.Equals(timestampOffset))
             {
                 try
                 {
@@ -1789,7 +1813,7 @@ namespace Adaptive.Aeron
                 catch (FormatException)
                 {
                     throw new ArgumentException("channelSendTimestampOffset must be a number or the value '" +
-                                                Aeron.Context.RESERVED_OFFSET + "' found: " + timestampOffset);
+                                                RESERVED_OFFSET + "' found: " + timestampOffset);
                 }
             }
 
@@ -1803,9 +1827,397 @@ namespace Adaptive.Aeron
         /// </summary>
         /// <param name="channelUri"> the existing URI to extract the channelSendTimestampOffset from. </param>
         /// <returns> this for a fluent API. </returns>
+        /// <seealso cref="Aeron.Context.CHANNEL_SEND_TIMESTAMP_OFFSET_PARAM_NAME"/>
         public ChannelUriStringBuilder ChannelSendTimestampOffset(ChannelUri channelUri)
         {
-            return ChannelSendTimestampOffset(channelUri.Get(Aeron.Context.CHANNEL_SEND_TIMESTAMP_OFFSET_PARAM_NAME));
+            return ChannelSendTimestampOffset(channelUri.Get(CHANNEL_SEND_TIMESTAMP_OFFSET_PARAM_NAME));
+        }
+
+        /// <summary>
+        /// Offset into a message to store the channel send timestamp. May also be the special value 'reserved' which means
+        /// to store the timestamp in the reserved value field.
+        /// </summary>
+        /// <returns> current sendTimestampOffset value either as string representation of an integer index or the special
+        /// value 'reserved'. </returns>
+        /// <seealso cref="Aeron.Context.CHANNEL_SEND_TIMESTAMP_OFFSET_PARAM_NAME"/>
+        public string ChannelSendTimestampOffset()
+        {
+            return _channelSendTimestampOffset;
+        }
+
+        /// <summary>
+        /// Set the response endpoint to be used for a response channel subscription or publication.
+        /// </summary>
+        /// <param name="responseEndpoint">  response endpoint to be used in this channel URI. </param>
+        /// <returns> this for a fluent API. </returns>
+        /// <seealso cref="Aeron.Context.RESPONSE_ENDPOINT_PARAM_NAME"/>
+        public ChannelUriStringBuilder ResponseEndpoint(string responseEndpoint)
+        {
+            this._responseEndpoint = responseEndpoint;
+            return this;
+        }
+
+        /// <summary>
+        /// Set the response endpoint to be used for a response channel subscription or publication by extracting it from the
+        /// ChannelUri.
+        /// </summary>
+        /// <param name="channelUri"> the existing URI to extract the responseEndpoint from. </param>
+        /// <returns> this for a fluent API. </returns>
+        /// <seealso cref="Aeron.Context.RESPONSE_ENDPOINT_PARAM_NAME"/>
+        public ChannelUriStringBuilder ResponseEndpoint(ChannelUri channelUri)
+        {
+            return ResponseEndpoint(channelUri.Get(RESPONSE_ENDPOINT_PARAM_NAME));
+        }
+
+        /// <summary>
+        /// The response endpoint to be used for a response channel subscription or publication.
+        /// </summary>
+        /// <returns> response endpoint. </returns>
+        /// <seealso cref="Aeron.Context.RESPONSE_ENDPOINT_PARAM_NAME"/>
+        public string ResponseEndpoint()
+        {
+            return this._responseEndpoint;
+        }
+
+        /// <summary>
+        /// Set the correlation id from the image received on the response "server's" subscription to be used by a response
+        /// publication.
+        /// </summary>
+        /// <param name="responseCorrelationId"> correlation id of an image from the response "server's" subscription. </param>
+        /// <returns> this for a fluent API. </returns>
+        /// <seealso cref="Aeron.Context.RESPONSE_CORRELATION_ID_PARAM_NAME"/>
+        public ChannelUriStringBuilder ResponseCorrelationId(long? responseCorrelationId)
+        {
+            this.responseCorrelationId = responseCorrelationId;
+            return this;
+        }
+
+        /// <summary>
+        /// Set the correlation id from the image received on the response "server's" subscription to be used by a response
+        /// publication extracted from the channelUri.
+        /// </summary>
+        /// <param name="channelUri"> the existing URI to extract the responseCorrelationId from. </param>
+        /// <returns> this for a fluent API. </returns>
+        /// <seealso cref="Aeron.Context.RESPONSE_CORRELATION_ID_PARAM_NAME"/>
+        public ChannelUriStringBuilder ResponseCorrelationId(ChannelUri channelUri)
+        {
+            string responseCorrelationIdString = channelUri.Get(RESPONSE_CORRELATION_ID_PARAM_NAME);
+
+            if (null != responseCorrelationIdString)
+            {
+                try
+                {
+                    ResponseCorrelationId(Convert.ToInt64(responseCorrelationIdString));
+                }
+                catch (System.FormatException ex)
+                {
+                    throw new System.ArgumentException("'response-correlation-id' must be a valid long value", ex);
+                }
+            }
+
+            return this;
+        }
+
+        /// <summary>
+        /// The delay to apply before sending a NAK in response to a gap being detected by the receiver.
+        /// </summary>
+        /// <param name="nakDelay"> express as a numeric value with a suffix, e.g. 10ms, 100us. </param>
+        /// <returns> this for a fluent API. </returns>
+        /// <seealso cref="Aeron.Context.NAK_DELAY_PARAM_NAME"/>
+        public ChannelUriStringBuilder NakDelay(string nakDelay)
+        {
+            if (null != this.nakDelay)
+            {
+                this.nakDelay = SystemUtil.ParseDuration(NAK_DELAY_PARAM_NAME, nakDelay);
+            }
+            else
+            {
+                this.nakDelay = null;
+            }
+
+            return this;
+        }
+
+        /// <summary>
+        /// The delay to apply before sending a NAK in response to a gap being detected by the receiver.
+        /// </summary>
+        /// <param name="channelUri"> the existing URI to extract the nakDelay from. </param>
+        /// <returns> this for a fluent API. </returns>
+        /// <seealso cref="Aeron.Context.NAK_DELAY_PARAM_NAME"/>
+        public ChannelUriStringBuilder NakDelay(ChannelUri channelUri)
+        {
+            return NakDelay(channelUri.Get(NAK_DELAY_PARAM_NAME));
+        }
+
+        /// <summary>
+        /// The delay to apply before sending a NAK in response to a gap being detected by the receiver.
+        /// </summary>
+        /// <returns> the delay in nanoseconds, null if not set. </returns>
+        /// <seealso cref="Aeron.Context.NAK_DELAY_PARAM_NAME"/>
+        public long? NakDelay()
+        {
+            return nakDelay;
+        }
+
+        /// <summary>
+        /// The timeout for when an untethered subscription that is outside the window limit will participate in local
+        /// flow control.
+        /// </summary>
+        /// <param name="timeout"> specified either in nanoseconds or using a units suffix, e.g. 1ms, 1us. </param>
+        /// <returns> this for a fluent API. </returns>
+        /// <seealso cref="Aeron.Context.UNTETHERED_WINDOW_LIMIT_TIMEOUT_PARAM_NAME"/>
+        public ChannelUriStringBuilder UntetheredWindowLimitTimeout(string timeout)
+        {
+            if (null != timeout)
+            {
+                _untetheredWindowLimitTimeoutNs =
+                    SystemUtil.ParseDuration(UNTETHERED_WINDOW_LIMIT_TIMEOUT_PARAM_NAME, timeout);
+            }
+            else
+            {
+                _untetheredWindowLimitTimeoutNs = null;
+            }
+
+            return this;
+        }
+
+        /// <summary>
+        /// The timeout for when an untethered subscription that is outside the window limit will participate in local
+        /// flow control.
+        /// </summary>
+        /// <param name="timeout"> specified either in nanoseconds. </param>
+        /// <returns> this for a fluent API. </returns>
+        /// <seealso cref="Aeron.Context.UNTETHERED_WINDOW_LIMIT_TIMEOUT_PARAM_NAME"/>
+        public ChannelUriStringBuilder UntetheredWindowLimitTimeoutNs(long? timeout)
+        {
+            _untetheredWindowLimitTimeoutNs = timeout;
+            return this;
+        }
+
+        /// <summary>
+        /// The timeout for when an untethered subscription that is outside the window limit will participate in local
+        /// flow control.
+        /// </summary>
+        /// <param name="channelUri"> the existing URI to extract the untetheredWindowLimitTimeout from. </param>
+        /// <returns> this for a fluent API. </returns>
+        /// <seealso cref="Aeron.Context.UNTETHERED_WINDOW_LIMIT_TIMEOUT_PARAM_NAME"/>
+        public ChannelUriStringBuilder UntetheredWindowLimitTimeout(ChannelUri channelUri)
+        {
+            UntetheredWindowLimitTimeout(channelUri.Get(UNTETHERED_WINDOW_LIMIT_TIMEOUT_PARAM_NAME));
+            return this;
+        }
+
+        /// <summary>
+        /// The timeout for when an untethered subscription that is outside the window limit will participate in local
+        /// flow control.
+        /// </summary>
+        /// <returns> the timeout in ns. </returns>
+        /// <seealso cref="Aeron.Context.UNTETHERED_WINDOW_LIMIT_TIMEOUT_PARAM_NAME"/>
+        public long? UntetheredWindowLimitTimeoutNs()
+        {
+            return _untetheredWindowLimitTimeoutNs;
+        }
+
+        /// <summary>
+        /// The timeout for when an untethered subscription is resting after not being able to keep up before it is allowed
+        /// to rejoin a stream.
+        /// </summary>
+        /// <param name="timeout"> specified either in nanoseconds or using a units suffix, e.g. 1ms, 1us. </param>
+        /// <returns> this for a fluent API. </returns>
+        /// <seealso cref="Aeron.Context.UNTETHERED_RESTING_TIMEOUT_PARAM_NAME"/>
+        public ChannelUriStringBuilder UntetheredRestingTimeout(string timeout)
+        {
+            if (null != timeout)
+            {
+                untetheredRestingTimeoutNs = SystemUtil.ParseDuration(UNTETHERED_RESTING_TIMEOUT_PARAM_NAME, timeout);
+            }
+            else
+            {
+                untetheredRestingTimeoutNs = null;
+            }
+
+            return this;
+        }
+
+        /// <summary>
+        /// The timeout for when an untethered subscription is resting after not being able to keep up before it is allowed
+        /// to rejoin a stream.
+        /// </summary>
+        /// <param name="timeout"> specified either in nanoseconds. </param>
+        /// <returns> this for a fluent API. </returns>
+        /// <seealso cref="Aeron.Context.UNTETHERED_RESTING_TIMEOUT_PARAM_NAME"/>
+        public ChannelUriStringBuilder UntetheredRestingTimeoutNs(long? timeout)
+        {
+            this.untetheredRestingTimeoutNs = timeout;
+            return this;
+        }
+
+        /// <summary>
+        /// The timeout for when an untethered subscription is resting after not being able to keep up before it is allowed
+        /// to rejoin a stream.
+        /// </summary>
+        /// <param name="channelUri"> the existing URI to extract the untetheredRestingTimeout from. </param>
+        /// <returns> this for a fluent API. </returns>
+        /// <seealso cref="Aeron.Context.UNTETHERED_RESTING_TIMEOUT_PARAM_NAME"/>
+        public ChannelUriStringBuilder UntetheredRestingTimeout(ChannelUri channelUri)
+        {
+            this.UntetheredRestingTimeout(channelUri.Get(UNTETHERED_RESTING_TIMEOUT_PARAM_NAME));
+            return this;
+        }
+
+        /// <summary>
+        /// The timeout for when an untethered subscription is resting after not being able to keep up before it is allowed
+        /// to rejoin a stream.
+        /// </summary>
+        /// <returns> the timeout in ns. </returns>
+        /// <seealso cref="Aeron.Context.UNTETHERED_RESTING_TIMEOUT_PARAM_NAME"/>
+        public long? UntetheredRestingTimeoutNs()
+        {
+            return untetheredRestingTimeoutNs;
+        }
+
+        /// <summary>
+        /// The max number of retransmit actions.
+        /// </summary>
+        /// <param name="maxResend"> the max number of retransmit actions. </param>
+        /// <returns> this for a fluent API. </returns>
+        /// <seealso cref="Aeron.Context.MAX_RESEND_PARAM_NAME"/>
+        public ChannelUriStringBuilder MaxResend(int? maxResend)
+        {
+            this._maxResend = maxResend;
+            return this;
+        }
+
+        /// <summary>
+        /// The max number of retransmit actions.
+        /// </summary>
+        /// <param name="channelUri"> the existing URI to extract the maxResend from. </param>
+        /// <returns> this for a fluent API. </returns>
+        /// <seealso cref="Aeron.Context.MAX_RESEND_PARAM_NAME"/>
+        public ChannelUriStringBuilder MaxResend(ChannelUri channelUri)
+        {
+            string valueStr = channelUri.Get(MAX_RESEND_PARAM_NAME);
+            if (null == valueStr)
+            {
+                this._maxResend = null;
+                return this;
+            }
+            else
+            {
+                try
+                {
+                    return MaxResend(int.Parse(valueStr));
+                }
+                catch (System.FormatException ex)
+                {
+                    throw new System.ArgumentException(MAX_RESEND_PARAM_NAME + " must be a number", ex);
+                }
+            }
+        }
+
+        /// <summary>
+        /// The max number of retransmit actions.
+        /// </summary>
+        /// <returns> the max number of outstanding retransmit actions </returns>
+        /// <seealso cref="Aeron.Context.MAX_RESEND_PARAM_NAME"/>
+        public int? MaxResend()
+        {
+            return _maxResend;
+        }
+
+        /// <summary>
+        /// The stream id of the channel.
+        /// </summary>
+        /// <returns> the stream or null of no streamId is set. </returns>
+        public int? StreamId()
+        {
+            return _streamId;
+        }
+
+        /// <summary>
+        /// The stream id of the channel.
+        /// </summary>
+        /// <param name="streamId"> of the channel. </param>
+        /// <returns> this for a fluent API. </returns>
+        public ChannelUriStringBuilder StreamId(int? streamId)
+        {
+            this._streamId = streamId;
+            return this;
+        }
+
+        /// <summary>
+        /// The stream id of the channel.
+        /// </summary>
+        /// <param name="channelUri"> the existing URI to extract the streamId from. </param>
+        /// <returns> this for a fluent API. </returns>
+        public ChannelUriStringBuilder StreamId(ChannelUri channelUri)
+        {
+            string valueStr = channelUri.Get(STREAM_ID_PARAM_NAME);
+            if (null == valueStr)
+            {
+                this._streamId = null;
+                return this;
+            }
+            else
+            {
+                try
+                {
+                    return StreamId(int.Parse(valueStr));
+                }
+                catch (System.FormatException ex)
+                {
+                    throw new System.ArgumentException(STREAM_ID_PARAM_NAME + " must be a number", ex);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Set the publication window length which defines how far ahead can publication accept offers.
+        /// </summary>
+        /// <param name="publicationWindowLength"> of the channel. </param>
+        /// <returns> this for a fluent API. </returns>
+        /// <seealso cref="Aeron.Context.PUBLICATION_WINDOW_LENGTH_PARAM_NAME"/>
+        public ChannelUriStringBuilder PublicationWindowLength(int? publicationWindowLength)
+        {
+            this._publicationWindowLength = publicationWindowLength;
+            return this;
+        }
+
+        /// <summary>
+        /// Set the publication window length for this channel from an existing <seealso cref="ChannelUri"/>,
+        /// which may have a null value for this field.
+        /// </summary>
+        /// <param name="channelUri"> to read the value from. </param>
+        /// <returns> this for a fluent API. </returns>
+        /// <seealso cref="Aeron.Context.PUBLICATION_WINDOW_LENGTH_PARAM_NAME"/>
+        public ChannelUriStringBuilder PublicationWindowLength(ChannelUri channelUri)
+        {
+            string valueStr = channelUri.Get(PUBLICATION_WINDOW_LENGTH_PARAM_NAME);
+            if (null == valueStr)
+            {
+                this._publicationWindowLength = null;
+                return this;
+            }
+            else
+            {
+                long value = SystemUtil.ParseSize(PUBLICATION_WINDOW_LENGTH_PARAM_NAME, valueStr);
+                if (value > int.MaxValue)
+                {
+                    throw new ArgumentException("value exceeds maximum permitted: value=" + value);
+                }
+
+                return PublicationWindowLength((int)value);
+            }
+        }
+
+        /// <summary>
+        /// Get the publication window length.
+        /// </summary>
+        /// <returns> publication window length or {@code null} if was not set. </returns>
+        /// <seealso cref="Aeron.Context.PUBLICATION_WINDOW_LENGTH_PARAM_NAME"/>
+        public int? PublicationWindowLength()
+        {
+            return _publicationWindowLength;
         }
 
         /// <summary>
@@ -1824,41 +2236,51 @@ namespace Adaptive.Aeron
 
             _sb.Append(ChannelUri.AERON_SCHEME).Append(':').Append(_media).Append('?');
 
-            AppendParameter(_sb, Aeron.Context.TAGS_PARAM_NAME, _tags);
-            AppendParameter(_sb, Aeron.Context.ENDPOINT_PARAM_NAME, _endpoint);
-            AppendParameter(_sb, Aeron.Context.INTERFACE_PARAM_NAME, _networkInterface);
-            AppendParameter(_sb, Aeron.Context.MDC_CONTROL_PARAM_NAME, _controlEndpoint);
-            AppendParameter(_sb, Aeron.Context.MDC_CONTROL_MODE_PARAM_NAME, _controlMode);
-            AppendParameter(_sb, Aeron.Context.MTU_LENGTH_PARAM_NAME, _mtu);
-            AppendParameter(_sb, Aeron.Context.TERM_LENGTH_PARAM_NAME, _termLength);
-            AppendParameter(_sb, Aeron.Context.INITIAL_TERM_ID_PARAM_NAME, _initialTermId);
-            AppendParameter(_sb, Aeron.Context.TERM_ID_PARAM_NAME, _termId);
-            AppendParameter(_sb, Aeron.Context.TERM_OFFSET_PARAM_NAME, _termOffset);
+            AppendParameter(_sb, TAGS_PARAM_NAME, _tags);
+            AppendParameter(_sb, ENDPOINT_PARAM_NAME, _endpoint);
+            AppendParameter(_sb, INTERFACE_PARAM_NAME, _networkInterface);
+            AppendParameter(_sb, MDC_CONTROL_PARAM_NAME, _controlEndpoint);
+            AppendParameter(_sb, MDC_CONTROL_MODE_PARAM_NAME, _controlMode);
+            AppendParameter(_sb, MTU_LENGTH_PARAM_NAME, _mtu);
+            AppendParameter(_sb, TERM_LENGTH_PARAM_NAME, _termLength);
+            AppendParameter(_sb, INITIAL_TERM_ID_PARAM_NAME, _initialTermId);
+            AppendParameter(_sb, TERM_ID_PARAM_NAME, _termId);
+            AppendParameter(_sb, TERM_OFFSET_PARAM_NAME, _termOffset);
 
             if (null != _sessionId)
             {
-                AppendParameter(_sb, Aeron.Context.SESSION_ID_PARAM_NAME, PrefixTag(_isSessionIdTagged, _sessionId));
+                AppendParameter(_sb, SESSION_ID_PARAM_NAME, PrefixTag(_isSessionIdTagged, _sessionId));
             }
 
-            AppendParameter(_sb, Aeron.Context.TTL_PARAM_NAME, _ttl);
-            AppendParameter(_sb, Aeron.Context.RELIABLE_STREAM_PARAM_NAME, _reliable);
-            AppendParameter(_sb, Aeron.Context.LINGER_PARAM_NAME, _linger);
-            AppendParameter(_sb, Aeron.Context.ALIAS_PARAM_NAME, _alias);
-            AppendParameter(_sb, Aeron.Context.CONGESTION_CONTROL_PARAM_NAME, _cc);
-            AppendParameter(_sb, Aeron.Context.FLOW_CONTROL_PARAM_NAME, _fc);
-            AppendParameter(_sb, Aeron.Context.GROUP_TAG_PARAM_NAME, _groupTag);
-            AppendParameter(_sb, Aeron.Context.SPARSE_PARAM_NAME, _sparse);
-            AppendParameter(_sb, Aeron.Context.EOS_PARAM_NAME, _eos);
-            AppendParameter(_sb, Aeron.Context.TETHER_PARAM_NAME, _tether);
-            AppendParameter(_sb, Aeron.Context.GROUP_PARAM_NAME, _group);
-            AppendParameter(_sb, Aeron.Context.REJOIN_PARAM_NAME, _rejoin);
-            AppendParameter(_sb, Aeron.Context.SPIES_SIMULATE_CONNECTION_PARAM_NAME, _ssc);
-            AppendParameter(_sb, Aeron.Context.SOCKET_SNDBUF_PARAM_NAME, _socketSndbufLength);
-            AppendParameter(_sb, Aeron.Context.SOCKET_RCVBUF_PARAM_NAME, _socketRcvbufLength);
-            AppendParameter(_sb, Aeron.Context.RECEIVER_WINDOW_LENGTH_PARAM_NAME, _receiverWindowLength);
-            AppendParameter(_sb, Aeron.Context.MEDIA_RCV_TIMESTAMP_OFFSET_PARAM_NAME, _mediaReceiveTimestampOffset);
-            AppendParameter(_sb, Aeron.Context.CHANNEL_RECEIVE_TIMESTAMP_OFFSET_PARAM_NAME, _channelReceiveTimestampOffset);
-            AppendParameter(_sb, Aeron.Context.CHANNEL_SEND_TIMESTAMP_OFFSET_PARAM_NAME, _channelSendTimestampOffset);
+            AppendParameter(_sb, TTL_PARAM_NAME, _ttl);
+            AppendParameter(_sb, RELIABLE_STREAM_PARAM_NAME, _reliable);
+            AppendParameter(_sb, LINGER_PARAM_NAME, _linger);
+            AppendParameter(_sb, ALIAS_PARAM_NAME, _alias);
+            AppendParameter(_sb, CONGESTION_CONTROL_PARAM_NAME, _cc);
+            AppendParameter(_sb, FLOW_CONTROL_PARAM_NAME, _fc);
+            AppendParameter(_sb, GROUP_TAG_PARAM_NAME, _groupTag);
+            AppendParameter(_sb, SPARSE_PARAM_NAME, _sparse);
+            AppendParameter(_sb, EOS_PARAM_NAME, _eos);
+            AppendParameter(_sb, TETHER_PARAM_NAME, _tether);
+            AppendParameter(_sb, GROUP_PARAM_NAME, _group);
+            AppendParameter(_sb, REJOIN_PARAM_NAME, _rejoin);
+            AppendParameter(_sb, SPIES_SIMULATE_CONNECTION_PARAM_NAME, _ssc);
+            AppendParameter(_sb, SOCKET_SNDBUF_PARAM_NAME, _socketSndbufLength);
+            AppendParameter(_sb, SOCKET_RCVBUF_PARAM_NAME, _socketRcvbufLength);
+            AppendParameter(_sb, RECEIVER_WINDOW_LENGTH_PARAM_NAME, _receiverWindowLength);
+            AppendParameter(_sb, MEDIA_RCV_TIMESTAMP_OFFSET_PARAM_NAME, _mediaReceiveTimestampOffset);
+            AppendParameter(_sb, CHANNEL_RECEIVE_TIMESTAMP_OFFSET_PARAM_NAME,
+               _channelReceiveTimestampOffset);
+            AppendParameter(_sb, CHANNEL_SEND_TIMESTAMP_OFFSET_PARAM_NAME, _channelSendTimestampOffset);
+            AppendParameter(_sb, RESPONSE_ENDPOINT_PARAM_NAME, _responseEndpoint);
+            AppendParameter(_sb, RESPONSE_CORRELATION_ID_PARAM_NAME, responseCorrelationId);
+            AppendParameter(_sb, NAK_DELAY_PARAM_NAME, nakDelay);
+            AppendParameter(_sb, UNTETHERED_WINDOW_LIMIT_TIMEOUT_PARAM_NAME, _untetheredWindowLimitTimeoutNs);
+            AppendParameter(_sb, UNTETHERED_RESTING_TIMEOUT_PARAM_NAME, untetheredRestingTimeoutNs);
+            AppendParameter(_sb, MAX_RESEND_PARAM_NAME, _maxResend);
+            AppendParameter(_sb, STREAM_ID_PARAM_NAME, _streamId);
+            AppendParameter(_sb, PUBLICATION_WINDOW_LENGTH_PARAM_NAME, _publicationWindowLength);
+
 
 
             char lastChar = _sb[_sb.Length - 1];
@@ -1877,7 +2299,7 @@ namespace Adaptive.Aeron
                 sb.Append(paramName).Append('=').Append(paramValue).Append('|');
             }
         }
-        
+
         public override string ToString()
         {
             return Build();

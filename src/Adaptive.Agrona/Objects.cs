@@ -13,5 +13,15 @@ namespace Adaptive.Agrona
 
             return obj;
         }
+        
+        public static T RequireNonNull<T>(T obj)
+        {
+            if (obj == null)
+            {
+                throw new NullReferenceException();
+            }
+
+            return obj;
+        }
     }
 }

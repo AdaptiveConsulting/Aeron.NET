@@ -30,6 +30,7 @@ namespace Adaptive.Aeron
     internal class DriverEventsAdapter
     {
         private readonly ErrorResponseFlyweight _errorResponse = new ErrorResponseFlyweight();
+        private readonly PublicationErrorFrameFlyweight _publicationErrorFrame = new PublicationErrorFrameFlyweight();
         private readonly PublicationBuffersReadyFlyweight _publicationReady = new PublicationBuffersReadyFlyweight();
         private readonly SubscriptionReadyFlyweight _subscriptionReady = new SubscriptionReadyFlyweight();
         private readonly ImageBuffersReadyFlyweight _imageReady = new ImageBuffersReadyFlyweight();
@@ -37,6 +38,7 @@ namespace Adaptive.Aeron
         private readonly ImageMessageFlyweight _imageMessage = new ImageMessageFlyweight();
         private readonly CounterUpdateFlyweight _counterUpdate = new CounterUpdateFlyweight();
         private readonly ClientTimeoutFlyweight _clientTimeout = new ClientTimeoutFlyweight();
+        private readonly StaticCounterFlyweight _staticCounter = new StaticCounterFlyweight();
         private readonly CopyBroadcastReceiver _receiver;
         private readonly ClientConductor _conductor;
         private readonly HashSet<long> _asyncCommandIdSet;
@@ -247,6 +249,28 @@ namespace Adaptive.Aeron
                         _conductor.OnClientTimeout();
                     }
 
+                    break;
+                }
+                
+                case ON_STATIC_COUNTER:
+                {
+                    _staticCounter.Wrap(buffer, index);
+
+                    long correlationId = _staticCounter.CorrelationId();
+                    if (correlationId == _activeCorrelationId)
+                    {
+                        int counterId = _staticCounter.CounterId();
+                        _receivedCorrelationId = correlationId;
+                        _conductor.OnStaticCounter(correlationId, counterId);
+                    }
+                    break;
+                }
+
+                case ON_PUBLICATION_ERROR:
+                {
+                    _publicationErrorFrame.Wrap(buffer, index);
+
+                    _conductor.OnPublicationError(_publicationErrorFrame);
                     break;
                 }
             }

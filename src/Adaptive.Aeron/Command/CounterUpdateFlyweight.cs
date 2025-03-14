@@ -77,7 +77,7 @@ namespace Adaptive.Aeron.Command
         /// <summary>
         /// Set counter id field.
         /// </summary>
-        /// <param name="counterId"> field value </param>
+        /// <param name="counterId"> field value. </param>
         /// <returns> this for a fluent API. </returns>
         public CounterUpdateFlyweight CounterId(int counterId)
         {

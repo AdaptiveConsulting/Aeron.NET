@@ -20,7 +20,7 @@ using Adaptive.Agrona;
 namespace Adaptive.Aeron.Command
 {
     /// <summary>
-    /// Control message flyweight for any message that needs to represent a connection
+    /// Control message flyweight for any message that needs to represent a connection.
     /// <para>
     ///   0                   1                   2                   3
     ///   0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
@@ -75,7 +75,7 @@ namespace Adaptive.Aeron.Command
 
         /// <summary>
         /// Set the correlation id field. </summary>
-        /// <param name="correlationId"> field value </param>
+        /// <param name="correlationId"> field value. </param>
         /// <returns> this for a fluent API. </returns>
         public ImageMessageFlyweight CorrelationId(long correlationId)
         {
@@ -96,7 +96,7 @@ namespace Adaptive.Aeron.Command
         /// <summary>
         /// Set the registration ID for the subscription.
         /// </summary>
-        /// <param name="registrationId"> for the subscription </param>
+        /// <param name="registrationId"> for the subscription. </param>
         /// <returns> this for a fluent API. </returns>
         public ImageMessageFlyweight SubscriptionRegistrationId(long registrationId)
         {
@@ -163,11 +163,11 @@ namespace Adaptive.Aeron.Command
         }
 
         /// <summary>
-        /// Get the length of the current message
+        /// Get the length of the current message.
         /// 
         /// NB: must be called after the data is written in order to be accurate.
         /// </summary>
-        /// <returns> the length of the current message </returns>
+        /// <returns> the length of the current message. </returns>
         public int Length()
         {
             return CHANNEL_OFFSET + lengthOfChannel;

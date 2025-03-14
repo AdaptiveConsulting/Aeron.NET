@@ -85,6 +85,16 @@ namespace Adaptive.Aeron
         /// Aeron encountered insufficient storage space while adding a resource.
         /// </summary>
         STORAGE_SPACE = 12,
+        
+        /// <summary>
+        /// An image was rejected.
+        /// </summary>
+        IMAGE_REJECTED = 13,
+        
+        /// <summary>
+        /// A publication was revoked.
+        /// </summary>
+        PUBLICATION_REVOKED = 14,
 
         /// <summary>
         /// A code value returned was not known.

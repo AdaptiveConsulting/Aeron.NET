@@ -15,13 +15,11 @@ namespace Adaptive.Aeron.Status
     /// </summary>
     public sealed class ReadableCounter : IDisposable
     {
-        private readonly int _addressOffset;
+        private readonly CountersReader _countersReader;
+        private readonly IAtomicBuffer _valueBuffer;
         private readonly long _registrationId;
         private readonly int _counterId;
         private volatile bool _isClosed = false;
-        private readonly byte[] _buffer;
-        private readonly CountersReader _countersReader;
-        private readonly IAtomicBuffer _valuesBuffer;
 
         /// <summary>
         /// Construct a view of an existing counter.
@@ -42,12 +40,11 @@ namespace Adaptive.Aeron.Status
             _counterId = counterId;
             _registrationId = registrationId;
 
-            _valuesBuffer = countersReader.ValuesBuffer;
+            var valuesBuffer = countersReader.ValuesBuffer;
             var counterOffset = CountersReader.CounterOffset(counterId);
-            _valuesBuffer.BoundsCheck(counterOffset, BitUtil.SIZE_OF_LONG);
+            valuesBuffer.BoundsCheck(counterOffset, BitUtil.SIZE_OF_LONG);
 
-            _buffer = _valuesBuffer.ByteArray;
-            _addressOffset = counterOffset;
+            _valueBuffer = new UnsafeBuffer(valuesBuffer, counterOffset, BitUtil.SIZE_OF_LONG);
         }
 
         /// <summary>
@@ -76,10 +73,10 @@ namespace Adaptive.Aeron.Status
         /// <summary>
         /// Return the state of the counter.
         /// </summary>
+        /// <returns> state for the counter. </returns>
         /// <seealso cref="CountersReader.RECORD_ALLOCATED"/>
         /// <seealso cref="CountersReader.RECORD_RECLAIMED"/>
         /// <seealso cref="CountersReader.RECORD_UNUSED"/>
-        /// <returns> state for the counter. </returns>
         public int State => _countersReader.GetCounterState(_counterId);
 
         /// <summary>
@@ -101,7 +98,7 @@ namespace Adaptive.Aeron.Status
         {
             // return UnsafeAccess.UNSAFE.getLongVolatile(buffer, addressOffset);
 
-            return _valuesBuffer.GetLongVolatile(_addressOffset);
+            return _valueBuffer.GetLongVolatile(0);
         }
 
         /// <summary>
@@ -112,7 +109,7 @@ namespace Adaptive.Aeron.Status
         {
             // UnsafeAccess.UNSAFE.getLong(buffer, addressOffset);
 
-            return _valuesBuffer.GetLong(_addressOffset);
+            return _valueBuffer.GetLong(0);
         }
 
         /// <summary>

@@ -25,7 +25,7 @@ namespace Adaptive.Aeron.Protocol
     /// <summary>
     /// Flyweight for Data Frame header of a message fragment.
     /// 
-    /// <a target="_blank" href="https://github.com/real-logic/aeron/wiki/Protocol-Specification#data-frame">Data Frame</a>
+    /// <a target="_blank" href="https://github.com/aeron-io/aeron/wiki/Protocol-Specification#data-frame">Data Frame</a>
     /// wiki page.
     /// </summary>
     public class DataHeaderFlyweight : HeaderFlyweight
@@ -302,9 +302,9 @@ namespace Adaptive.Aeron.Protocol
         }
 
         /// <summary>
-        /// Return offset in buffer for data
+        /// Return offset in buffer for data.
         /// </summary>
-        /// <returns> offset of data in the buffer </returns>
+        /// <returns> offset of data in the buffer. </returns>
         public int DataOffset()
         {
             return DATA_OFFSET;

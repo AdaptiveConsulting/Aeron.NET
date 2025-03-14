@@ -52,8 +52,7 @@ namespace Adaptive.Aeron
 
         /// <summary>
         /// The highest position the Receiver has rebuilt up to on a session-channel-stream tuple while rebuilding the
-        /// stream.
-        /// The stream is complete up to this point.
+        /// stream. The stream is complete up to this point.
         /// </summary>
         public const int DRIVER_RECEIVER_POS_TYPE_ID = 5;
 
@@ -154,7 +153,7 @@ namespace Adaptive.Aeron
         public const int ARCHIVE_CYCLE_TIME_THRESHOLD_EXCEEDED_TYPE_ID = 104;
 
         /// <summary>
-        /// The type id of the <seealso cref="Counter"/> used for keeping track of the max time it took recoder to write a block of
+        /// The type id of the <seealso cref="Counter"/> used for keeping track of the max time it took recorder to write a block of
         /// data to the storage.
         /// </summary>
         public const int ARCHIVE_RECORDER_MAX_WRITE_TIME_TYPE_ID = 105;
@@ -262,6 +261,11 @@ namespace Adaptive.Aeron
         public const int CLUSTER_BACKUP_ERROR_COUNT_TYPE_ID = 211;
 
         /// <summary>
+        /// The type id of the <seealso cref="Counter"/> used for tracking the number of snapshots downloaded.
+        /// </summary>
+        public const int CLUSTER_BACKUP_SNAPSHOT_RETRIEVE_COUNT_TYPE_ID = 240;
+        
+        /// <summary>
         /// Counter type id for the consensus module error count.
         /// </summary>
         public const int CLUSTER_CONSENSUS_MODULE_ERROR_COUNT_TYPE_ID = 212;
@@ -319,7 +323,7 @@ namespace Adaptive.Aeron
         public const int CLUSTER_STANDBY_HEARTBEAT_RESPONSE_COUNT_TYPE_ID = 222;
 
         /// <summary>
-        /// Standby control toggle type id
+        /// Standby control toggle type id.
         /// </summary>
         public const int CLUSTER_STANDBY_CONTROL_TOGGLE_TYPE_ID = 223;
 
@@ -346,12 +350,12 @@ namespace Adaptive.Aeron
         public const int TRANSITION_MODULE_ERROR_COUNT_TYPE_ID = 226;
 
         /// <summary>
-        /// The type if of the <seealso cref="Counter"/> used for transition module state
+        /// The type if of the <seealso cref="Counter"/> used for transition module state.
         /// </summary>
         public const int TRANSITION_MODULE_STATE_TYPE_ID = 224;
 
         /// <summary>
-        /// Transition module control toggle type id
+        /// Transition module control toggle type id.
         /// </summary>
         public const int TRANSITION_MODULE_CONTROL_TOGGLE_TYPE_ID = 225;
 
@@ -383,6 +387,28 @@ namespace Adaptive.Aeron
         public const int CLUSTER_TOTAL_SNAPSHOT_DURATION_THRESHOLD_EXCEEDED_TYPE_ID = 235;
 
         /// <summary>
+        /// The type id of the <seealso cref="Counter"/> used for keeping track of the maximum snapshot duration
+        /// for a given clustered service.
+        /// </summary>
+        public const int CLUSTERED_SERVICE_MAX_SNAPSHOT_DURATION_TYPE_ID = 236;
+
+        /// <summary>
+        /// The type id of the <seealso cref="Counter"/> used for keeping track of the count snapshot duration
+        /// has exceeded the threshold for a given clustered service.
+        /// </summary>
+        public const int CLUSTERED_SERVICE_SNAPSHOT_DURATION_THRESHOLD_EXCEEDED_TYPE_ID = 237;
+
+        /// <summary>
+        /// The type id of the <seealso cref="Counter"/> used for keeping track of the number of elections that have occurred.
+        /// </summary>
+        public const int CLUSTER_ELECTION_COUNT_TYPE_ID = 238;
+
+        /// <summary>
+        /// The type id of the <seealso cref="Counter"/> used for keeping track of the Cluster leadership term id.
+        /// </summary>
+        public const int CLUSTER_LEADERSHIP_TERM_ID_TYPE_ID = 239;
+        
+        /// <summary>
         /// Checks that the counter specified by {@code counterId} has the counterTypeId that matches the specified value.
         /// If not it will throw a <seealso cref="ConfigurationException"/>.
         /// </summary>
@@ -403,7 +429,7 @@ namespace Adaptive.Aeron
         }
 
         /// <summary>
-        /// Convenience overload for <seealso cref="AeronCounters.ValidateCounterTypeId(CountersReader, int, int)"/>
+        /// Convenience overload for <seealso cref="AeronCounters.ValidateCounterTypeId(CountersReader, int, int)"/>.
         /// </summary>
         /// <param name="aeron"> to resolve a counters' reader. </param>
         /// <param name="counter"> to be checked for the appropriate counterTypeId. </param>
@@ -458,7 +484,7 @@ namespace Adaptive.Aeron
             int state = metaDataBuffer.GetIntVolatile(counterMetaDataOffset);
             if (CountersReader.RECORD_ALLOCATED != state)
             {
-                throw new System.ArgumentException("counter id " + counterId + " state != RECORD_ALLOCATED");
+                throw new ArgumentException("counter id " + counterId + " is not allocated, state: " + state);
             }
 
             int existingLabelLength = metaDataBuffer.GetInt(counterMetaDataOffset + CountersReader.LABEL_OFFSET);

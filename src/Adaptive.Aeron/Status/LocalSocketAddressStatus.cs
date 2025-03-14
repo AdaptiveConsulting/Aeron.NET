@@ -54,18 +54,18 @@ namespace Adaptive.Aeron.Status
             List<string> bindings = new List<string>(2);
             IDirectBuffer buffer = countersReader.MetaDataBuffer;
 
-            for (int i = 0, size = countersReader.MaxCounterId; i < size; i++)
+            for (int counterId = 0, maxId = countersReader.MaxCounterId; counterId < maxId; counterId++)
             {
-                int counterState = countersReader.GetCounterState(i);
+                int counterState = countersReader.GetCounterState(counterId);
                 if (CountersReader.RECORD_ALLOCATED == counterState)
                 {
-                    if (countersReader.GetCounterTypeId(i) == LOCAL_SOCKET_ADDRESS_STATUS_TYPE_ID)
+                    if (countersReader.GetCounterTypeId(counterId) == LOCAL_SOCKET_ADDRESS_STATUS_TYPE_ID)
                     {
-                        int recordOffset = CountersReader.MetaDataOffset(i);
+                        int recordOffset = CountersReader.MetaDataOffset(counterId);
                         int keyIndex = recordOffset + CountersReader.KEY_OFFSET;
 
                         if (channelStatusId == buffer.GetInt(keyIndex + CHANNEL_STATUS_ID_OFFSET) &&
-                            ChannelEndpointStatus.ACTIVE == countersReader.GetCounterValue(i))
+                            ChannelEndpointStatus.ACTIVE == countersReader.GetCounterValue(counterId))
                         {
                             int length = buffer.GetInt(keyIndex + LOCAL_SOCKET_ADDRESS_LENGTH_OFFSET);
                             if (length > 0)
@@ -102,18 +102,18 @@ namespace Adaptive.Aeron.Status
             {
                 IDirectBuffer buffer = countersReader.MetaDataBuffer;
 
-                for (int i = 0, size = countersReader.MaxCounterId; i < size; i++)
+                for (int counterId = 0, maxId = countersReader.MaxCounterId; counterId < maxId; counterId++)
                 {
-                    int counterState = countersReader.GetCounterState(i);
+                    int counterState = countersReader.GetCounterState(counterId);
                     if (CountersReader.RECORD_ALLOCATED == counterState)
                     {
-                        if (countersReader.GetCounterTypeId(i) == LOCAL_SOCKET_ADDRESS_STATUS_TYPE_ID)
+                        if (countersReader.GetCounterTypeId(counterId) == LOCAL_SOCKET_ADDRESS_STATUS_TYPE_ID)
                         {
-                            int recordOffset = CountersReader.MetaDataOffset(i);
+                            int recordOffset = CountersReader.MetaDataOffset(counterId);
                             int keyIndex = recordOffset + CountersReader.KEY_OFFSET;
 
                             if (channelStatusId == buffer.GetInt(keyIndex + CHANNEL_STATUS_ID_OFFSET) &&
-                                ChannelEndpointStatus.ACTIVE == countersReader.GetCounterValue(i))
+                                ChannelEndpointStatus.ACTIVE == countersReader.GetCounterValue(counterId))
                             {
                                 int length = buffer.GetInt(keyIndex + LOCAL_SOCKET_ADDRESS_LENGTH_OFFSET);
                                 if (length > 0)
@@ -146,12 +146,12 @@ namespace Adaptive.Aeron.Status
         {
             int result = 0;
 
-            for (int i = 0, size = countersReader.MaxCounterId; i < size; i++)
+            for (int counterId = 0, maxId = countersReader.MaxCounterId; counterId < maxId; counterId++)
             {
-                int counterState = countersReader.GetCounterState(i);
+                int counterState = countersReader.GetCounterState(counterId);
                 if (counterState == CountersReader.RECORD_ALLOCATED && 
-                    countersReader.GetCounterTypeId(i) == LOCAL_SOCKET_ADDRESS_STATUS_TYPE_ID && 
-                    countersReader.GetCounterRegistrationId(i) == registrationId)
+                    countersReader.GetCounterTypeId(counterId) == LOCAL_SOCKET_ADDRESS_STATUS_TYPE_ID && 
+                    countersReader.GetCounterRegistrationId(counterId) == registrationId)
                 {
                     result++;
                 }
@@ -174,18 +174,18 @@ namespace Adaptive.Aeron.Status
         {
             IDirectBuffer buffer = countersReader.MetaDataBuffer;
 
-            for (int i = 0, size = countersReader.MaxCounterId; i < size; i++)
+            for (int counterId = 0, maxId = countersReader.MaxCounterId; counterId < maxId; counterId++)
             {
-                int counterState = countersReader.GetCounterState(i);
+                int counterState = countersReader.GetCounterState(counterId);
                 if (CountersReader.RECORD_ALLOCATED == counterState)
                 {
-                    if (countersReader.GetCounterTypeId(i) == LOCAL_SOCKET_ADDRESS_STATUS_TYPE_ID)
+                    if (countersReader.GetCounterTypeId(counterId) == LOCAL_SOCKET_ADDRESS_STATUS_TYPE_ID)
                     {
-                        int recordOffset = CountersReader.MetaDataOffset(i);
+                        int recordOffset = CountersReader.MetaDataOffset(counterId);
                         int keyIndex = recordOffset + CountersReader.KEY_OFFSET;
 
                         if (channelStatusId == buffer.GetInt(keyIndex + CHANNEL_STATUS_ID_OFFSET) && 
-                            ChannelEndpointStatus.ACTIVE == countersReader.GetCounterValue(i))
+                            ChannelEndpointStatus.ACTIVE == countersReader.GetCounterValue(counterId))
                         {
                             return true;
                         }

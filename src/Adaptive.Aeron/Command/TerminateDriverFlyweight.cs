@@ -23,6 +23,7 @@ namespace Adaptive.Aeron.Command
     /// ...                                                              |
     ///  +---------------------------------------------------------------+
     /// </pre>
+    /// <see cref="ControlProtocolEvents"/>
     public class TerminateDriverFlyweight : CorrelatedMessageFlyweight
     {
         private static readonly int TOKEN_LENGTH_OFFSET = CORRELATION_ID_FIELD_OFFSET + BitUtil.SIZE_OF_LONG;
@@ -42,18 +43,18 @@ namespace Adaptive.Aeron.Command
         }
         
         /// <summary>
-        /// Relative offset of the token buffer
+        /// Relative offset of the token buffer.
         /// </summary>
-        /// <returns> relative offset of the token buffer </returns>
+        /// <returns> relative offset of the token buffer. </returns>
         public int TokenBufferOffset()
         {
             return TOKEN_BUFFER_OFFSET;
         }
 
         /// <summary>
-        /// Length of the token buffer in bytes
+        /// Length of the token buffer in bytes.
         /// </summary>
-        /// <returns> length of token buffer in bytes </returns>
+        /// <returns> length of token buffer in bytes. </returns>
         public int TokenBufferLength()
         {
             return buffer.GetInt(offset + TOKEN_LENGTH_OFFSET);

@@ -39,52 +39,72 @@ namespace Adaptive.Aeron.Protocol
         public static readonly byte[] EMPTY_BUFFER = new byte[0];
 
         /// <summary>
-        /// header type PAD 
+        /// Header type PAD. 
         /// </summary>
         public const int HDR_TYPE_PAD = 0x00;
 
         /// <summary>
-        /// header type DATA 
+        /// Header type DATA.
         /// </summary>
         public const int HDR_TYPE_DATA = 0x01;
 
         /// <summary>
-        /// header type NAK 
+        /// Header type NAK.
         /// </summary>
         public const int HDR_TYPE_NAK = 0x02;
 
         /// <summary>
-        /// header type SM 
+        /// Header type SM.
         /// </summary>
         public const int HDR_TYPE_SM = 0x03;
 
         /// <summary>
-        /// header type ERR 
+        /// Header type ERR. 
         /// </summary>
         public const int HDR_TYPE_ERR = 0x04;
 
         /// <summary>
-        /// header type SETUP
+        /// Header type SETUP.
         /// </summary>
         public const int HDR_TYPE_SETUP = 0x05;
 
         /// <summary>
-        /// header type RTT Measurement 
+        /// Header type RTT Measurement. 
         /// </summary>
         public const int HDR_TYPE_RTTM = 0x06;
         
         /// <summary>
-        /// header type RESOLUTION
+        /// Header type RESOLUTION.
         /// </summary>
         public const int HDR_TYPE_RES = 0x07;
 
         /// <summary>
-        /// header type EXT 
+        /// Header type ATS Data.
+        /// </summary>
+        public const int HDR_TYPE_ATS_DATA = 0x08;
+
+        /// <summary>
+        /// Header type ATS Status Message.
+        /// </summary>
+        public const int HDR_TYPE_ATS_SM = 0x09;
+
+        /// <summary>
+        /// Header type ATS Setup.
+        /// </summary>
+        public const int HDR_TYPE_ATS_SETUP = 0x0A;
+
+        /// <summary>
+        /// Header type Response Setup.
+        /// </summary>
+        public const int HDR_TYPE_RSP_SETUP = 0x0B;
+        
+        /// <summary>
+        /// Header type EXT. 
         /// </summary>
         public const int HDR_TYPE_EXT = 0xFFFF;
 
         /// <summary>
-        /// default version 
+        /// Default version.
         /// </summary>
         public const byte CURRENT_VERSION = 0x0;
 

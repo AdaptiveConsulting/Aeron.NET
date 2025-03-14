@@ -152,7 +152,7 @@ namespace Adaptive.Aeron
         /// </summary>
         /// <param name="fragmentHandler"> callback for handling each message fragment as it is read. </param>
         /// <param name="fragmentLimit">   number of message fragments to limit when polling across multiple <seealso cref="Image"/>s. </param>
-        /// <returns> the number of fragments received </returns>
+        /// <returns> the number of fragments received. </returns>
         public int Poll(FragmentHandler fragmentHandler, int fragmentLimit)
         {
             var handler = HandlerHelper.ToFragmentHandler(fragmentHandler);
@@ -172,7 +172,7 @@ namespace Adaptive.Aeron
         /// </summary>
         /// <param name="fragmentHandler"> callback for handling each message fragment as it is read. </param>
         /// <param name="fragmentLimit">   number of message fragments to limit when polling across multiple <seealso cref="Image"/>s. </param>
-        /// <returns> the number of fragments received </returns>
+        /// <returns> the number of fragments received. </returns>
         public int Poll(IFragmentHandler fragmentHandler, int fragmentLimit)
         {
             var images = _fields.images;
@@ -213,7 +213,7 @@ namespace Adaptive.Aeron
         /// </summary>
         /// <param name="fragmentHandler"> callback for handling each message fragment as it is read. </param>
         /// <param name="fragmentLimit">   number of message fragments to limit when polling across multiple <seealso cref="Image"/>s. </param>
-        /// <returns> the number of fragments received </returns>
+        /// <returns> the number of fragments received. </returns>
         /// <seealso cref="ControlledFragmentHandler" />
         public int ControlledPoll(IControlledFragmentHandler fragmentHandler, int fragmentLimit)
         {
@@ -340,8 +340,8 @@ namespace Adaptive.Aeron
         /// <summary>
         /// Get the <see cref="Image"/> at the given index from the images array.
         /// </summary>
-        /// <param name="index"> in the array</param>
-        /// <returns> image at given index</returns>
+        /// <param name="index"> in the array. </param>
+        /// <returns> image at given index. </returns>
         public Image ImageAtIndex(int index)
         {
             return Images[index];
@@ -603,12 +603,18 @@ namespace Adaptive.Aeron
             return removedImage;
         }
 
+        internal void RejectImage(long correlationId, long position, String reason)
+        {
+            _fields.conductor.RejectImage(correlationId, position, reason);
+        }
+
         /// <inheritdoc />
         public override string ToString()
         {
             return "Subscription{" +
                    "registrationId=" + RegistrationId +
                    ", isClosed=" + IsClosed +
+                   ", isConnected=" + IsConnected +
                    ", streamId=" + StreamId +
                    ", channel='" + Channel + '\'' +
                    ", localSocketAddresses='" + LocalSocketAddresses +

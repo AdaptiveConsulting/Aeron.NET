@@ -109,7 +109,7 @@ namespace Adaptive.Aeron
             TermBufferLength = logBuffers.TermLength();
             MaxMessageLength = ComputeMaxMessageLength(TermBufferLength);
             MaxPayloadLength = LogBufferDescriptor.MtuLength(logMetaDataBuffer) - HEADER_LENGTH;
-            _maxFramedLength = ComputeFramedLength(MaxMessageLength, MaxPayloadLength);
+            _maxFramedLength = LogBufferDescriptor.ComputeFragmentedFrameLength(MaxMessageLength, MaxPayloadLength);
             _maxPossiblePosition = TermBufferLength * (1L << 31);
             _conductor = clientConductor;
             Channel = channel;
@@ -431,7 +431,7 @@ namespace Adaptive.Aeron
         /// </code>
         /// 
         /// </summary>
-        /// <param name="length">      of the range to claim, in bytes.. </param>
+        /// <param name="length">      of the range to claim, in bytes. </param>
         /// <param name="bufferClaim"> to be populated if the claim succeeds. </param>
         /// <returns> The new stream position, otherwise <seealso cref="NOT_CONNECTED"/>, <seealso cref="BACK_PRESSURED"/>,
         /// <seealso cref="ADMIN_ACTION"/>, <seealso cref="CLOSED"/> or <see cref="MAX_POSITION_EXCEEDED"/>. </returns>
@@ -468,7 +468,21 @@ namespace Adaptive.Aeron
 
             _conductor.RemoveDestination(_originalRegistrationId, endpointChannel);
         }
-        
+
+        /// <summary>
+        /// Remove a previously added destination manually from a multi-destination-cast Publication.
+        /// </summary>
+        /// <param name="registrationId"> for the destination to remove. </param>
+        public void RemoveDestination(long registrationId)
+        {
+            if (_isClosed)
+            {
+                throw new AeronException("Publication is closed");
+            }
+
+            _conductor.RemoveDestination(_originalRegistrationId, registrationId);
+        }
+
         /// <summary>
         /// Asynchronously add a destination manually to a multi-destination-cast Publication.
         /// <para>
@@ -507,6 +521,26 @@ namespace Adaptive.Aeron
             }
 
             return _conductor.AsyncRemoveDestination(RegistrationId, endpointChannel);
+        }
+        
+        /// <summary>
+        /// Asynchronously remove a previously added destination from a multi-destination-cast Publication by registrationId.
+        /// <para>
+        /// Errors will be delivered asynchronously to the <seealso cref="Aeron.Context.ErrorHandler()"/>. Completion can be
+        /// tracked by passing the returned correlation id to <seealso cref="Aeron.IsCommandActive(long)"/>.
+        /// 
+        /// </para>
+        /// </summary>
+        /// <param name="destinationRegistrationId"> for the destination to remove. </param>
+        /// <returns> the correlationId for the command. </returns>
+        public long AsyncRemoveDestination(long destinationRegistrationId)
+        {
+            if (_isClosed)
+            {
+                throw new AeronException("Publication is closed");
+            }
+
+            return _conductor.AsyncRemoveDestination(RegistrationId, destinationRegistrationId);
         }
 
         internal void InternalClose()
@@ -566,15 +600,6 @@ namespace Adaptive.Aeron
             }
         }
         
-        internal static int ComputeFramedLength(int length, int maxPayloadLength)
-        {
-            int numMaxPayloads = length / maxPayloadLength;
-            int remainingPayload = length % maxPayloadLength;
-            int lastFrameLength = remainingPayload > 0 ? Align(remainingPayload + HEADER_LENGTH, FRAME_ALIGNMENT) : 0;
-
-            return (numMaxPayloads * (maxPayloadLength + HEADER_LENGTH)) + lastFrameLength;
-        }
-
         internal static int ValidateAndComputeLength(int lengthOne, int lengthTwo)
         {
             if (lengthOne < 0)
@@ -597,8 +622,8 @@ namespace Adaptive.Aeron
         }
         
         /// <summary>
-        /// Returns a string representation of a position.  Generally used for errors.  If the position is a valid error then
-        /// String name of the error will be returned.  If the value is 0 or greater the text will be "NONE". If the position
+        /// Returns a string representation of a position. Generally used for errors. If the position is a valid error then
+        /// String name of the error will be returned. If the value is 0 or greater the text will be "NONE". If the position
         /// is negative, but not a known error code then "UNKNOWN" will be returned.
         /// </summary>
         /// <param name="position"> position value returned from a call to offer. </param>
