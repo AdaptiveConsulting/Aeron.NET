@@ -211,11 +211,15 @@ namespace Adaptive.Cluster.Service
                         messageHeaderDecoder.BlockLength(),
                         messageHeaderDecoder.Version());
 
+                    var flags = ClusterActionRequestDecoder.FlagsNullValue() != actionRequestDecoder.Flags() ?
+                        actionRequestDecoder.Flags() : ClusteredServiceContainer.CLUSTER_ACTION_FLAGS_DEFAULT;
+                    
                     agent.OnServiceAction(
                         actionRequestDecoder.LeadershipTermId(),
                         actionRequestDecoder.LogPosition(),
                         actionRequestDecoder.Timestamp(),
-                        actionRequestDecoder.Action());
+                        actionRequestDecoder.Action(),
+                        flags);
                     break;
 
                 case NewLeadershipTermEventDecoder.TEMPLATE_ID:
@@ -242,18 +246,7 @@ namespace Adaptive.Cluster.Service
                     break;
 
                 case MembershipChangeEventDecoder.TEMPLATE_ID:
-                    membershipChangeEventDecoder.Wrap(
-                        buffer,
-                        offset + MessageHeaderDecoder.ENCODED_LENGTH,
-                        messageHeaderDecoder.BlockLength(),
-                        messageHeaderDecoder.Version()
-                    );
-
-                    agent.OnMembershipChange(
-                        membershipChangeEventDecoder.LogPosition(),
-                        membershipChangeEventDecoder.Timestamp(),
-                        membershipChangeEventDecoder.ChangeType(),
-                        membershipChangeEventDecoder.MemberId());
+                    // Removed Dynamic Join.
                     break;
             }
 

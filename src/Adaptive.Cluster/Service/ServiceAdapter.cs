@@ -17,7 +17,7 @@ namespace Adaptive.Cluster.Service
 
         private readonly MessageHeaderDecoder messageHeaderDecoder = new MessageHeaderDecoder();
         private readonly JoinLogDecoder joinLogDecoder = new JoinLogDecoder();
-
+        private readonly RequestServiceAckDecoder requestServiceAckDecoder = new RequestServiceAckDecoder();
         private readonly ServiceTerminationPositionDecoder serviceTerminationPositionDecoder =
             new ServiceTerminationPositionDecoder();
 
@@ -77,6 +77,16 @@ namespace Adaptive.Cluster.Service
                         messageHeaderDecoder.Version());
 
                     clusteredServiceAgent.OnServiceTerminationPosition(serviceTerminationPositionDecoder.LogPosition());
+                    break;
+                
+                case RequestServiceAckDecoder.TEMPLATE_ID:
+                    requestServiceAckDecoder.Wrap(
+                        buffer,
+                        offset + MessageHeaderDecoder.ENCODED_LENGTH,
+                        messageHeaderDecoder.BlockLength(),
+                        messageHeaderDecoder.Version());
+
+                    clusteredServiceAgent.OnRequestServiceAck(requestServiceAckDecoder.LogPosition());
                     break;
             }
         }

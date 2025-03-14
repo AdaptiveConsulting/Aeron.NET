@@ -12,7 +12,7 @@ public class JoinLogEncoder
     public const ushort BLOCK_LENGTH = 36;
     public const ushort TEMPLATE_ID = 40;
     public const ushort SCHEMA_ID = 111;
-    public const ushort SCHEMA_VERSION = 9;
+    public const ushort SCHEMA_VERSION = 12;
 
     private JoinLogEncoder _parentMessage;
     private IMutableDirectBuffer _buffer;

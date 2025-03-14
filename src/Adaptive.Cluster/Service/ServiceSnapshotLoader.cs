@@ -89,7 +89,7 @@ namespace Adaptive.Cluster.Service
                             timeUnit = snapshotMarkerDecoder.TimeUnit() == ClusterTimeUnit.NULL_VALUE
                                 ? ClusterTimeUnit.MILLIS
                                 : snapshotMarkerDecoder.TimeUnit();
-                            
+
                             return ControlledFragmentHandlerAction.CONTINUE;
 
                         case SnapshotMark.END:
@@ -100,6 +100,10 @@ namespace Adaptive.Cluster.Service
 
                             isDone = true;
                             return ControlledFragmentHandlerAction.BREAK;
+
+                        case SnapshotMark.SECTION:
+                        case SnapshotMark.NULL_VALUE:
+                            break;
                     }
 
                     break;

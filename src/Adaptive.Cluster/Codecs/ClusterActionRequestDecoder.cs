@@ -9,10 +9,10 @@ namespace Adaptive.Cluster.Codecs {
 
 public class ClusterActionRequestDecoder
 {
-    public const ushort BLOCK_LENGTH = 28;
+    public const ushort BLOCK_LENGTH = 32;
     public const ushort TEMPLATE_ID = 23;
     public const ushort SCHEMA_ID = 111;
-    public const ushort SCHEMA_VERSION = 9;
+    public const ushort SCHEMA_VERSION = 12;
 
     private ClusterActionRequestDecoder _parentMessage;
     private IDirectBuffer _buffer;
@@ -289,6 +289,60 @@ public class ClusterActionRequestDecoder
     }
 
 
+    public static int FlagsId()
+    {
+        return 5;
+    }
+
+    public static int FlagsSinceVersion()
+    {
+        return 11;
+    }
+
+    public static int FlagsEncodingOffset()
+    {
+        return 28;
+    }
+
+    public static int FlagsEncodingLength()
+    {
+        return 4;
+    }
+
+    public static string FlagsMetaAttribute(MetaAttribute metaAttribute)
+    {
+        switch (metaAttribute)
+        {
+            case MetaAttribute.EPOCH: return "unix";
+            case MetaAttribute.TIME_UNIT: return "nanosecond";
+            case MetaAttribute.SEMANTIC_TYPE: return "";
+            case MetaAttribute.PRESENCE: return "optional";
+        }
+
+        return "";
+    }
+
+    public static int FlagsNullValue()
+    {
+        return -2147483648;
+    }
+
+    public static int FlagsMinValue()
+    {
+        return -2147483647;
+    }
+
+    public static int FlagsMaxValue()
+    {
+        return 2147483647;
+    }
+
+    public int Flags()
+    {
+        return _buffer.GetInt(_offset + 28, ByteOrder.LittleEndian);
+    }
+
+
 
     public override string ToString()
     {
@@ -337,6 +391,11 @@ public class ClusterActionRequestDecoder
         //Token{signal=BEGIN_ENUM, name='ClusterAction', referencedName='null', description='Action to be taken by cluster nodes.', id=-1, version=0, deprecated=0, encodedLength=4, offset=24, componentTokenCount=5, encoding=Encoding{presence=REQUIRED, primitiveType=INT32, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='null', timeUnit=null, semanticType='null'}}
         builder.Append("Action=");
         builder.Append(Action());
+        builder.Append('|');
+        //Token{signal=BEGIN_FIELD, name='flags', referencedName='null', description='null', id=5, version=11, deprecated=0, encodedLength=0, offset=28, componentTokenCount=3, encoding=Encoding{presence=OPTIONAL, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=ENCODING, name='int32', referencedName='null', description='null', id=-1, version=0, deprecated=0, encodedLength=4, offset=28, componentTokenCount=1, encoding=Encoding{presence=OPTIONAL, primitiveType=INT32, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        builder.Append("Flags=");
+        builder.Append(Flags());
 
         Limit(originalLimit);
 

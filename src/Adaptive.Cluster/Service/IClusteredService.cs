@@ -92,7 +92,7 @@ namespace Adaptive.Cluster.Service
         void OnRoleChange(ClusterRole newRole);
 
         /// <summary>
-        /// Called when the container is going to terminate.
+        /// Called when the container is going to terminate but only after a successful start.
         /// </summary>
         /// <param name="cluster"> with which the service can interact. </param>
         void OnTerminate(ICluster cluster);
@@ -126,6 +126,9 @@ namespace Adaptive.Cluster.Service
         /// <param name="nowNs"> which can be used for measuring elapsed time and be used in the same way as
         ///              <seealso cref="SystemNanoClock.NanoTime()"/>. This is <b>not</b> <seealso cref="ICluster.Time()"/>. </param>
         /// <returns> 0 if no work is done otherwise a positive number. </returns>
+        /// <remarks>
+        /// <para>Since: 1.40.0</para>
+        /// </remarks>
         int DoBackgroundWork(long nowNs);
     }
 }

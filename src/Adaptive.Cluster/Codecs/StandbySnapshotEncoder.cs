@@ -7,19 +7,19 @@ using Adaptive.Agrona;
 
 namespace Adaptive.Cluster.Codecs {
 
-public class SnapshotRecordingsEncoder
+public class StandbySnapshotEncoder
 {
-    public const ushort BLOCK_LENGTH = 8;
-    public const ushort TEMPLATE_ID = 73;
+    public const ushort BLOCK_LENGTH = 16;
+    public const ushort TEMPLATE_ID = 81;
     public const ushort SCHEMA_ID = 111;
     public const ushort SCHEMA_VERSION = 12;
 
-    private SnapshotRecordingsEncoder _parentMessage;
+    private StandbySnapshotEncoder _parentMessage;
     private IMutableDirectBuffer _buffer;
     protected int _offset;
     protected int _limit;
 
-    public SnapshotRecordingsEncoder()
+    public StandbySnapshotEncoder()
     {
         _parentMessage = this;
     }
@@ -59,7 +59,7 @@ public class SnapshotRecordingsEncoder
         return _offset;
     }
 
-    public SnapshotRecordingsEncoder Wrap(IMutableDirectBuffer buffer, int offset)
+    public StandbySnapshotEncoder Wrap(IMutableDirectBuffer buffer, int offset)
     {
         this._buffer = buffer;
         this._offset = offset;
@@ -68,7 +68,7 @@ public class SnapshotRecordingsEncoder
         return this;
     }
 
-    public SnapshotRecordingsEncoder WrapAndApplyHeader(
+    public StandbySnapshotEncoder WrapAndApplyHeader(
         IMutableDirectBuffer buffer, int offset, MessageHeaderEncoder headerEncoder)
     {
         headerEncoder
@@ -121,9 +121,73 @@ public class SnapshotRecordingsEncoder
         return 9223372036854775807L;
     }
 
-    public SnapshotRecordingsEncoder CorrelationId(long value)
+    public StandbySnapshotEncoder CorrelationId(long value)
     {
         _buffer.PutLong(_offset + 0, value, ByteOrder.LittleEndian);
+        return this;
+    }
+
+
+    public static int VersionEncodingOffset()
+    {
+        return 8;
+    }
+
+    public static int VersionEncodingLength()
+    {
+        return 4;
+    }
+
+    public static int VersionNullValue()
+    {
+        return -2147483648;
+    }
+
+    public static int VersionMinValue()
+    {
+        return -2147483647;
+    }
+
+    public static int VersionMaxValue()
+    {
+        return 2147483647;
+    }
+
+    public StandbySnapshotEncoder Version(int value)
+    {
+        _buffer.PutInt(_offset + 8, value, ByteOrder.LittleEndian);
+        return this;
+    }
+
+
+    public static int ResponseStreamIdEncodingOffset()
+    {
+        return 12;
+    }
+
+    public static int ResponseStreamIdEncodingLength()
+    {
+        return 4;
+    }
+
+    public static int ResponseStreamIdNullValue()
+    {
+        return -2147483648;
+    }
+
+    public static int ResponseStreamIdMinValue()
+    {
+        return -2147483647;
+    }
+
+    public static int ResponseStreamIdMaxValue()
+    {
+        return 2147483647;
+    }
+
+    public StandbySnapshotEncoder ResponseStreamId(int value)
+    {
+        _buffer.PutInt(_offset + 12, value, ByteOrder.LittleEndian);
         return this;
     }
 
@@ -132,7 +196,7 @@ public class SnapshotRecordingsEncoder
 
     public static long SnapshotsId()
     {
-        return 3;
+        return 4;
     }
 
     public SnapshotsEncoder SnapshotsCount(int count)
@@ -145,14 +209,14 @@ public class SnapshotRecordingsEncoder
     {
         private static int HEADER_SIZE = 4;
         private GroupSizeEncodingEncoder _dimensions = new GroupSizeEncodingEncoder();
-        private SnapshotRecordingsEncoder _parentMessage;
+        private StandbySnapshotEncoder _parentMessage;
         private IMutableDirectBuffer _buffer;
         private int _count;
         private int _index;
         private int _offset;
 
         public void Wrap(
-            SnapshotRecordingsEncoder parentMessage, IMutableDirectBuffer buffer, int count)
+            StandbySnapshotEncoder parentMessage, IMutableDirectBuffer buffer, int count)
         {
             if (count < 0 || count > 65534)
             {
@@ -384,19 +448,96 @@ public class SnapshotRecordingsEncoder
             return this;
         }
 
+
+        public static int ArchiveEndpointId()
+        {
+            return 11;
+        }
+
+        public static string ArchiveEndpointCharacterEncoding()
+        {
+            return "US-ASCII";
+        }
+
+        public static string ArchiveEndpointMetaAttribute(MetaAttribute metaAttribute)
+        {
+            switch (metaAttribute)
+            {
+                case MetaAttribute.EPOCH: return "unix";
+                case MetaAttribute.TIME_UNIT: return "nanosecond";
+                case MetaAttribute.SEMANTIC_TYPE: return "";
+                case MetaAttribute.PRESENCE: return "required";
+            }
+
+            return "";
+        }
+
+        public static int ArchiveEndpointHeaderLength()
+        {
+            return 4;
+        }
+
+        public SnapshotsEncoder PutArchiveEndpoint(IDirectBuffer src, int srcOffset, int length)
+        {
+            if (length > 1073741824)
+            {
+                throw new InvalidOperationException("length > maxValue for type: " + length);
+            }
+
+            int headerLength = 4;
+            int limit = _parentMessage.Limit();
+            _parentMessage.Limit(limit + headerLength + length);
+            _buffer.PutInt(limit, unchecked((int)length), ByteOrder.LittleEndian);
+            _buffer.PutBytes(limit + headerLength, src, srcOffset, length);
+
+            return this;
+        }
+
+        public SnapshotsEncoder PutArchiveEndpoint(byte[] src, int srcOffset, int length)
+        {
+            if (length > 1073741824)
+            {
+                throw new InvalidOperationException("length > maxValue for type: " + length);
+            }
+
+            int headerLength = 4;
+            int limit = _parentMessage.Limit();
+            _parentMessage.Limit(limit + headerLength + length);
+            _buffer.PutInt(limit, unchecked((int)length), ByteOrder.LittleEndian);
+            _buffer.PutBytes(limit + headerLength, src, srcOffset, length);
+
+            return this;
+        }
+
+        public SnapshotsEncoder ArchiveEndpoint(string value)
+        {
+            int length = value.Length;
+            if (length > 1073741824)
+            {
+                throw new InvalidOperationException("length > maxValue for type: " + length);
+            }
+
+            int headerLength = 4;
+            int limit = _parentMessage.Limit();
+            _parentMessage.Limit(limit + headerLength + length);
+            _buffer.PutInt(limit, unchecked((int)length), ByteOrder.LittleEndian);
+            _buffer.PutStringWithoutLengthAscii(limit + headerLength, value);
+
+            return this;
+        }
     }
 
-    public static int MemberEndpointsId()
+    public static int ResponseChannelId()
     {
-        return 10;
+        return 12;
     }
 
-    public static string MemberEndpointsCharacterEncoding()
+    public static string ResponseChannelCharacterEncoding()
     {
         return "US-ASCII";
     }
 
-    public static string MemberEndpointsMetaAttribute(MetaAttribute metaAttribute)
+    public static string ResponseChannelMetaAttribute(MetaAttribute metaAttribute)
     {
         switch (metaAttribute)
         {
@@ -409,12 +550,12 @@ public class SnapshotRecordingsEncoder
         return "";
     }
 
-    public static int MemberEndpointsHeaderLength()
+    public static int ResponseChannelHeaderLength()
     {
         return 4;
     }
 
-    public SnapshotRecordingsEncoder PutMemberEndpoints(IDirectBuffer src, int srcOffset, int length)
+    public StandbySnapshotEncoder PutResponseChannel(IDirectBuffer src, int srcOffset, int length)
     {
         if (length > 1073741824)
         {
@@ -430,7 +571,7 @@ public class SnapshotRecordingsEncoder
         return this;
     }
 
-    public SnapshotRecordingsEncoder PutMemberEndpoints(byte[] src, int srcOffset, int length)
+    public StandbySnapshotEncoder PutResponseChannel(byte[] src, int srcOffset, int length)
     {
         if (length > 1073741824)
         {
@@ -446,7 +587,7 @@ public class SnapshotRecordingsEncoder
         return this;
     }
 
-    public SnapshotRecordingsEncoder MemberEndpoints(string value)
+    public StandbySnapshotEncoder ResponseChannel(string value)
     {
         int length = value.Length;
         if (length > 1073741824)
@@ -463,6 +604,61 @@ public class SnapshotRecordingsEncoder
         return this;
     }
 
+    public static int EncodedCredentialsId()
+    {
+        return 13;
+    }
+
+    public static string EncodedCredentialsMetaAttribute(MetaAttribute metaAttribute)
+    {
+        switch (metaAttribute)
+        {
+            case MetaAttribute.EPOCH: return "unix";
+            case MetaAttribute.TIME_UNIT: return "nanosecond";
+            case MetaAttribute.SEMANTIC_TYPE: return "";
+            case MetaAttribute.PRESENCE: return "required";
+        }
+
+        return "";
+    }
+
+    public static int EncodedCredentialsHeaderLength()
+    {
+        return 4;
+    }
+
+    public StandbySnapshotEncoder PutEncodedCredentials(IDirectBuffer src, int srcOffset, int length)
+    {
+        if (length > 1073741824)
+        {
+            throw new InvalidOperationException("length > maxValue for type: " + length);
+        }
+
+        int headerLength = 4;
+        int limit = _parentMessage.Limit();
+        _parentMessage.Limit(limit + headerLength + length);
+        _buffer.PutInt(limit, unchecked((int)length), ByteOrder.LittleEndian);
+        _buffer.PutBytes(limit + headerLength, src, srcOffset, length);
+
+        return this;
+    }
+
+    public StandbySnapshotEncoder PutEncodedCredentials(byte[] src, int srcOffset, int length)
+    {
+        if (length > 1073741824)
+        {
+            throw new InvalidOperationException("length > maxValue for type: " + length);
+        }
+
+        int headerLength = 4;
+        int limit = _parentMessage.Limit();
+        _parentMessage.Limit(limit + headerLength + length);
+        _buffer.PutInt(limit, unchecked((int)length), ByteOrder.LittleEndian);
+        _buffer.PutBytes(limit + headerLength, src, srcOffset, length);
+
+        return this;
+    }
+
 
     public override string ToString()
     {
@@ -471,7 +667,7 @@ public class SnapshotRecordingsEncoder
 
     public StringBuilder AppendTo(StringBuilder builder)
     {
-        SnapshotRecordingsDecoder writer = new SnapshotRecordingsDecoder();
+        StandbySnapshotDecoder writer = new StandbySnapshotDecoder();
         writer.Wrap(_buffer, _offset, BLOCK_LENGTH, SCHEMA_VERSION);
 
         return writer.AppendTo(builder);

@@ -21,6 +21,16 @@ namespace Adaptive.Cluster.Service
     public sealed class ClusteredServiceContainer : IDisposable
     {
         /// <summary>
+        /// Default set of flags when taking a snapshot
+        /// </summary>
+        public const int CLUSTER_ACTION_FLAGS_DEFAULT = 0;
+
+        /// <summary>
+        /// Flag for a snapshot taken on a standby node.
+        /// </summary>
+        public const int CLUSTER_ACTION_FLAGS_STANDBY_SNAPSHOT = 1;
+        
+        /// <summary>
         /// Launch the clustered service container and await a shutdown signal.
         /// </summary>
         /// <param name="args"> command line argument which is a list for properties files as URLs or filenames. </param>
@@ -227,6 +237,17 @@ namespace Adaptive.Cluster.Service
             /// Directory to use for the aeron cluster.
             /// </summary>
             public const string CLUSTER_DIR_PROP_NAME = "aeron.cluster.dir";
+            
+            /// <summary>
+            /// Directory to use for the aeron cluster services, will default to <seealso cref="CLUSTER_DIR_PROP_NAME"/> if not
+            /// specified.
+            /// </summary>
+            public const string CLUSTER_SERVICES_DIR_PROP_NAME = "aeron.cluster.services.dir";
+
+            /// <summary>
+            /// Directory to use for the Cluster component's mark file.
+            /// </summary>
+            public const string MARK_FILE_DIR_PROP_NAME = "aeron.cluster.mark.file.dir";
 
             /// <summary>
             /// Default directory to use for the aeron cluster.
@@ -406,6 +427,12 @@ namespace Adaptive.Cluster.Service
             public const string CLUSTER_IDLE_STRATEGY_PROP_NAME = "aeron.cluster.idle.strategy";
 
             /// <summary>
+            /// Property to configure if this node should take standby snapshots. The default for this property is
+            /// <code>false</code>.
+            /// </summary>
+            public const string STANDBY_SNAPSHOT_ENABLED_PROP_NAME = "aeron.cluster.standby.snapshot.enabled";
+            
+            /// <summary>
             /// Create a supplier of <seealso cref="IIdleStrategy"/>s that will use the system property.
             /// </summary>
             /// <param name="controllableStatus"> if a <seealso cref="ControllableIdleStrategy"/> is required. </param>
@@ -426,6 +453,15 @@ namespace Adaptive.Cluster.Service
             public static string ClusterDirName()
             {
                 return Config.GetProperty(CLUSTER_DIR_PROP_NAME, CLUSTER_DIR_DEFAULT);
+            }
+            
+            /// <summary>
+            /// The value of system property <seealso cref="CLUSTER_DIR_PROP_NAME"/> if set or null.
+            /// </summary>
+            /// <returns> <seealso cref="CLUSTER_DIR_PROP_NAME"/> if set or null. </returns>
+            public static string ClusterServicesDirName()
+            {
+                return Config.GetProperty(CLUSTER_DIR_PROP_NAME);
             }
 
             /// <summary>
@@ -472,6 +508,15 @@ namespace Adaptive.Cluster.Service
             {
                 return Config.GetDurationInNanos(CYCLE_THRESHOLD_PROP_NAME, CYCLE_THRESHOLD_DEFAULT_NS);
             }
+            
+            /// <summary>
+            /// Get the configuration value to determine if this node should take standby snapshots be enabled.
+            /// </summary>
+            /// <returns> configuration value for standby snapshots being enabled. </returns>
+            public static bool StandbySnapshotEnabled()
+            {
+                return Config.GetBoolean(STANDBY_SNAPSHOT_ENABLED_PROP_NAME);
+            }
 
             /// <summary>
             /// Create a new <seealso cref="IClusteredService"/> based on the configured <seealso cref="SERVICE_CLASS_NAME_PROP_NAME"/>.
@@ -503,6 +548,15 @@ namespace Adaptive.Cluster.Service
 
                 return null;
             }
+            
+            /// <summary>
+            /// Get the alternative directory to be used for storing the Cluster component's mark file.
+            /// </summary>
+            /// <returns> the directory to be used for storing the archive mark file. </returns>
+            public static string MarkFileDir()
+            {
+                return Config.GetProperty(MARK_FILE_DIR_PROP_NAME);
+            }
         }
 
         /// <summary>
@@ -527,6 +581,7 @@ namespace Adaptive.Cluster.Service
             private bool isRespondingService = Configuration.IsRespondingService();
             private int logFragmentLimit = Configuration.LogFragmentLimit();
             private long cycleThresholdNs = Configuration.CycleThresholdNs();
+            private bool standbySnapshotEnabled = Configuration.StandbySnapshotEnabled();
 
             private CountdownEvent abortLatch;
             private IThreadFactory threadFactory;
@@ -541,6 +596,7 @@ namespace Adaptive.Cluster.Service
             private AeronArchive.Context archiveContext;
             private string clusterDirectoryName = Configuration.ClusterDirName();
             private DirectoryInfo clusterDir;
+            private DirectoryInfo markFileDir;
             private string aeronDirectoryName = Adaptive.Aeron.Aeron.Context.GetAeronDirectoryName();
             private Aeron.Aeron aeron;
             private DutyCycleTracker dutyCycleTracker;
@@ -610,14 +666,29 @@ namespace Adaptive.Cluster.Service
                 {
                     Directory.CreateDirectory(clusterDir.FullName);
                 }
+                
+                if (null == markFileDir)
+                {
+                    String dir = Configuration.MarkFileDir();
+                    markFileDir = string.IsNullOrEmpty(dir) ? clusterDir : new DirectoryInfo(dir);
+                }
+                
+                if (!markFileDir.Exists)
+                {
+                    Directory.CreateDirectory(markFileDir.FullName);
+                }
 
                 if (null == markFile)
                 {
                     markFile = new ClusterMarkFile(
-                        new FileInfo(Path.Combine(clusterDir.FullName,
-                            Cluster.ClusterMarkFile.MarkFilenameForService(serviceId))),
+                        new FileInfo(Path.Combine(markFileDir.FullName, Cluster.ClusterMarkFile.MarkFilenameForService(serviceId))),
                         ClusterComponentType.CONTAINER, errorBufferLength, epochClock, Configuration.LIVENESS_TIMEOUT_MS);
                 }
+                
+                MarkFile.EnsureMarkFileLink(
+                    clusterDir,
+                    new FileInfo(Path.Combine(markFileDir.FullName, Cluster.ClusterMarkFile.MarkFilenameForService(serviceId))),
+                    Cluster.ClusterMarkFile.LinkFilenameForService(serviceId));
 
                 if (null == errorLog)
                 {
@@ -658,11 +729,11 @@ namespace Adaptive.Cluster.Service
                 {
                     throw new ClusterException("Aeron client must use a RethrowingErrorHandler");
                 }
-
+                
+                ExpandableArrayBuffer tempBuffer = new ExpandableArrayBuffer();
                 if (null == errorCounter)
                 {
-                    String label = "Cluster Container Errors - clusterId=" + clusterId + " serviceId=" + serviceId;
-                    errorCounter = aeron.AddCounter(Configuration.CLUSTERED_SERVICE_ERROR_COUNT_TYPE_ID, label);
+                    errorCounter = ClusterCounters.AllocateServiceErrorCounter(aeron, tempBuffer, clusterId, serviceId);
                 }
 
                 if (null == countedErrorHandler)
@@ -677,12 +748,20 @@ namespace Adaptive.Cluster.Service
                 if (null == dutyCycleTracker)
                 {
                     dutyCycleTracker = new DutyCycleStallTracker(
-                        aeron.AddCounter(AeronCounters.CLUSTER_CLUSTERED_SERVICE_MAX_CYCLE_TIME_TYPE_ID,
-                            "Cluster container max cycle time in ns - clusterId=" + clusterId +
-                            " serviceId=" + serviceId),
-                        aeron.AddCounter(AeronCounters.CLUSTER_CLUSTERED_SERVICE_CYCLE_TIME_THRESHOLD_EXCEEDED_TYPE_ID,
-                            "Cluster container work cycle time exceeded count: threshold=" + cycleThresholdNs +
-                            "ns - clusterId=" + clusterId + " serviceId=" + serviceId),
+                        ClusterCounters.AllocateServiceCounter(
+                            aeron, 
+                            tempBuffer, 
+                            "Cluster container max cycle time in ns", 
+                            AeronCounters.CLUSTER_CLUSTERED_SERVICE_MAX_CYCLE_TIME_TYPE_ID, 
+                            clusterId, 
+                            serviceId), 
+                        ClusterCounters.AllocateServiceCounter(
+                            aeron, 
+                            tempBuffer,
+                            "Cluster container work cycle time exceeded count: threshold=" + cycleThresholdNs, 
+                            AeronCounters.CLUSTER_CLUSTERED_SERVICE_CYCLE_TIME_THRESHOLD_EXCEEDED_TYPE_ID, 
+                            clusterId, 
+                            serviceId), 
                         cycleThresholdNs);
                 }
 
@@ -1344,6 +1423,33 @@ namespace Adaptive.Cluster.Service
             {
                 return clusterDir;
             }
+            
+            /// <summary>
+            /// Get the directory in which the ClusteredServiceContainer will store mark file (i.e. {@code
+            /// cluster-mark-service-0.dat}). It defaults to <seealso cref="ClusterDir()"/> if it is not set explicitly via the {@link
+            /// ClusteredServiceContainer.Configuration#MARK_FILE_DIR_PROP_NAME}.
+            /// </summary>
+            /// <returns> the directory in which the ClusteredServiceContainer will store mark file (i.e. {@code
+            ///         cluster-mark-service-0.dat}). </returns>
+            /// <seealso cref="ClusteredServiceContainer.Configuration.MARK_FILE_DIR_PROP_NAME"/>
+            /// <seealso cref="ClusterDir()"/>
+            public DirectoryInfo MarkFileDir()
+            {
+                return markFileDir;
+            }
+
+            /// <summary>
+            /// Set the directory in which the ClusteredServiceContainer will store mark file (i.e. {@code
+            /// cluster-mark-service-0.dat}).
+            /// </summary>
+            /// <param name="markFileDir"> the directory in which the ClusteredServiceContainer will store mark file (i.e. {@code
+            ///                    cluster-mark-service-0.dat}). </param>
+            /// <returns> this for a fluent API. </returns>
+            public ClusteredServiceContainer.Context MarkFileDir(DirectoryInfo markFileDir)
+            {
+                this.markFileDir = markFileDir;
+                return this;
+            }
 
             /// <summary>
             /// Set the <seealso cref="Agrona.Concurrent.ShutdownSignalBarrier"/> that can be used to shut down a clustered service.
@@ -1522,6 +1628,30 @@ namespace Adaptive.Cluster.Service
                 {
                     IoUtil.Delete(clusterDir, false);
                 }
+            }
+            
+            /// <summary>
+            /// Indicates if this node should take standby snapshots
+            /// </summary>
+            /// <returns> <code>true</code> if this should take standby snapshots, <code>false</code> otherwise. </returns>
+            /// <seealso cref="ClusteredServiceContainer.Configuration.STANDBY_SNAPSHOT_ENABLED_PROP_NAME"/>
+            /// <seealso cref="ClusteredServiceContainer.Configuration.StandbySnapshotEnabled()"/>
+            public bool StandbySnapshotEnabled()
+            {
+                return standbySnapshotEnabled;
+            }
+
+            /// <summary>
+            /// Indicates if this node should take standby snapshots
+            /// </summary>
+            /// <param name="standbySnapshotEnabled"> if this node should take standby snapshots. </param>
+            /// <returns> this for a fluent API. </returns>
+            /// <seealso cref="ClusteredServiceContainer.Configuration.STANDBY_SNAPSHOT_ENABLED_PROP_NAME"/>
+            /// <seealso cref="ClusteredServiceContainer.Configuration.StandbySnapshotEnabled()"/>
+            public ClusteredServiceContainer.Context StandbySnapshotEnabled(bool standbySnapshotEnabled)
+            {
+                this.standbySnapshotEnabled = standbySnapshotEnabled;
+                return this;
             }
 
             /// <summary>

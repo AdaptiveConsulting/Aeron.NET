@@ -12,7 +12,7 @@ public class RequestVoteEncoder
     public const ushort BLOCK_LENGTH = 32;
     public const ushort TEMPLATE_ID = 51;
     public const ushort SCHEMA_ID = 111;
-    public const ushort SCHEMA_VERSION = 9;
+    public const ushort SCHEMA_VERSION = 12;
 
     private RequestVoteEncoder _parentMessage;
     private IMutableDirectBuffer _buffer;

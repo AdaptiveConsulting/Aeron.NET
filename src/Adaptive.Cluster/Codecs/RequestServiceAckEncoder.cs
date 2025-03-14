@@ -7,19 +7,19 @@ using Adaptive.Agrona;
 
 namespace Adaptive.Cluster.Codecs {
 
-public class CloseSessionEncoder
+public class RequestServiceAckEncoder
 {
     public const ushort BLOCK_LENGTH = 8;
-    public const ushort TEMPLATE_ID = 30;
+    public const ushort TEMPLATE_ID = 108;
     public const ushort SCHEMA_ID = 111;
     public const ushort SCHEMA_VERSION = 12;
 
-    private CloseSessionEncoder _parentMessage;
+    private RequestServiceAckEncoder _parentMessage;
     private IMutableDirectBuffer _buffer;
     protected int _offset;
     protected int _limit;
 
-    public CloseSessionEncoder()
+    public RequestServiceAckEncoder()
     {
         _parentMessage = this;
     }
@@ -59,7 +59,7 @@ public class CloseSessionEncoder
         return _offset;
     }
 
-    public CloseSessionEncoder Wrap(IMutableDirectBuffer buffer, int offset)
+    public RequestServiceAckEncoder Wrap(IMutableDirectBuffer buffer, int offset)
     {
         this._buffer = buffer;
         this._offset = offset;
@@ -68,7 +68,7 @@ public class CloseSessionEncoder
         return this;
     }
 
-    public CloseSessionEncoder WrapAndApplyHeader(
+    public RequestServiceAckEncoder WrapAndApplyHeader(
         IMutableDirectBuffer buffer, int offset, MessageHeaderEncoder headerEncoder)
     {
         headerEncoder
@@ -96,32 +96,32 @@ public class CloseSessionEncoder
         this._limit = limit;
     }
 
-    public static int ClusterSessionIdEncodingOffset()
+    public static int LogPositionEncodingOffset()
     {
         return 0;
     }
 
-    public static int ClusterSessionIdEncodingLength()
+    public static int LogPositionEncodingLength()
     {
         return 8;
     }
 
-    public static long ClusterSessionIdNullValue()
+    public static long LogPositionNullValue()
     {
         return -9223372036854775808L;
     }
 
-    public static long ClusterSessionIdMinValue()
+    public static long LogPositionMinValue()
     {
         return -9223372036854775807L;
     }
 
-    public static long ClusterSessionIdMaxValue()
+    public static long LogPositionMaxValue()
     {
         return 9223372036854775807L;
     }
 
-    public CloseSessionEncoder ClusterSessionId(long value)
+    public RequestServiceAckEncoder LogPosition(long value)
     {
         _buffer.PutLong(_offset + 0, value, ByteOrder.LittleEndian);
         return this;
@@ -136,7 +136,7 @@ public class CloseSessionEncoder
 
     public StringBuilder AppendTo(StringBuilder builder)
     {
-        CloseSessionDecoder writer = new CloseSessionDecoder();
+        RequestServiceAckDecoder writer = new RequestServiceAckDecoder();
         writer.Wrap(_buffer, _offset, BLOCK_LENGTH, SCHEMA_VERSION);
 
         return writer.AppendTo(builder);

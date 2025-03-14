@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Text;
 using System.Threading;
 using Adaptive.Agrona.Concurrent;
 using Adaptive.Agrona.Util;
@@ -207,7 +208,7 @@ namespace Adaptive.Agrona
             IoUtil.Delete(parentDir, ignoreFailures);
         }
 
-        public DirectoryInfo CncDirectory()
+        public DirectoryInfo ParentDirectory()
         {
             return parentDir;
         }
@@ -249,7 +250,7 @@ namespace Adaptive.Agrona
                     try
                     {
                         if (IsActive(cncByteBuffer, epochClock, timeoutMs, versionFieldOffset, timestampFieldOffset,
-                            versionCheck, logger))
+                                versionCheck, logger))
                         {
                             throw new System.InvalidOperationException("active mark file detected");
                         }
@@ -442,6 +443,69 @@ namespace Adaptive.Agrona
             if ((versionFieldOffset + BitUtil.SIZE_OF_INT) > timestampFieldOffset)
             {
                 throw new ArgumentException("version field must precede the timestamp field");
+            }
+        }
+
+        /// <summary>
+        /// Ensure a link file exists if required for the actual mark file. A link file will contain the pathname of the
+        /// actual mark file's parent directory. This is useful if the mark file should be stored on a different storage
+        /// medium to the directory of the service. This will create a file with name of <paramref name="linkFilename"/> in the <paramref name="serviceDir"/>.
+        /// If <paramref name="actualFile"/> is an immediate child of <paramref name="serviceDir"/> then any file with the name of
+        /// <paramref name="linkFilename"/> will be deleted from the <paramref name="serviceDir"/> (so that links won't be present if not
+        /// required).
+        /// </summary>
+        /// <param name="serviceDir">Directory where the mark file would normally be stored (e.g. archiveDir, clusterDir).</param>
+        /// <param name="actualFile">Location of actual mark file, e.g. /dev/shm/service/node0/archive-mark.dat</param>
+        /// <param name="linkFilename">Short name that should be used for the link file, e.g. archive-mark.lnk</param>
+        public static void EnsureMarkFileLink(DirectoryInfo serviceDir, FileInfo actualFile, string linkFilename)
+        {
+            string serviceDirPath;
+            string markFileParentPath;
+
+            try
+            {
+                serviceDirPath = serviceDir.FullName;
+            }
+            catch (Exception)
+            {
+                throw new ArgumentException("Failed to resolve canonical path for serviceDir=" + serviceDir);
+            }
+
+            try
+            {
+                markFileParentPath = actualFile.Directory.FullName;
+            }
+            catch (Exception)
+            {
+                throw new ArgumentException("Failed to resolve canonical path for markFile parent dir of " +
+                                            actualFile);
+            }
+
+            string linkFilePath = Path.Combine(serviceDirPath, linkFilename);
+            if (serviceDirPath.Equals(markFileParentPath, StringComparison.OrdinalIgnoreCase))
+            {
+                try
+                {
+                    if (File.Exists(linkFilePath))
+                    {
+                        File.Delete(linkFilePath);
+                    }
+                }
+                catch (IOException ex)
+                {
+                    throw new Exception("Failed to remove old link file", ex);
+                }
+            }
+            else
+            {
+                try
+                {
+                    File.WriteAllText(linkFilePath, markFileParentPath, Encoding.ASCII);
+                }
+                catch (IOException ex)
+                {
+                    throw new Exception("Failed to create link for mark file directory", ex);
+                }
             }
         }
 

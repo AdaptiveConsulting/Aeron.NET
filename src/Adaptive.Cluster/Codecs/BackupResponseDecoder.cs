@@ -9,10 +9,10 @@ namespace Adaptive.Cluster.Codecs {
 
 public class BackupResponseDecoder
 {
-    public const ushort BLOCK_LENGTH = 56;
+    public const ushort BLOCK_LENGTH = 60;
     public const ushort TEMPLATE_ID = 78;
     public const ushort SCHEMA_ID = 111;
-    public const ushort SCHEMA_VERSION = 9;
+    public const ushort SCHEMA_VERSION = 12;
 
     private BackupResponseDecoder _parentMessage;
     private IDirectBuffer _buffer;
@@ -517,6 +517,60 @@ public class BackupResponseDecoder
     public int LeaderMemberId()
     {
         return _buffer.GetInt(_offset + 52, ByteOrder.LittleEndian);
+    }
+
+
+    public static int MemberIdId()
+    {
+        return 17;
+    }
+
+    public static int MemberIdSinceVersion()
+    {
+        return 10;
+    }
+
+    public static int MemberIdEncodingOffset()
+    {
+        return 56;
+    }
+
+    public static int MemberIdEncodingLength()
+    {
+        return 4;
+    }
+
+    public static string MemberIdMetaAttribute(MetaAttribute metaAttribute)
+    {
+        switch (metaAttribute)
+        {
+            case MetaAttribute.EPOCH: return "unix";
+            case MetaAttribute.TIME_UNIT: return "nanosecond";
+            case MetaAttribute.SEMANTIC_TYPE: return "";
+            case MetaAttribute.PRESENCE: return "required";
+        }
+
+        return "";
+    }
+
+    public static int MemberIdNullValue()
+    {
+        return -2147483648;
+    }
+
+    public static int MemberIdMinValue()
+    {
+        return -2147483647;
+    }
+
+    public static int MemberIdMaxValue()
+    {
+        return 2147483647;
+    }
+
+    public int MemberId()
+    {
+        return _buffer.GetInt(_offset + 56, ByteOrder.LittleEndian);
     }
 
 
@@ -1111,7 +1165,12 @@ public class BackupResponseDecoder
         builder.Append("LeaderMemberId=");
         builder.Append(LeaderMemberId());
         builder.Append('|');
-        //Token{signal=BEGIN_GROUP, name='snapshots', referencedName='null', description='Snapshots of state for the consensus module and services.', id=9, version=0, deprecated=0, encodedLength=44, offset=56, componentTokenCount=24, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='null', timeUnit=null, semanticType='null'}}
+        //Token{signal=BEGIN_FIELD, name='memberId', referencedName='null', description='id of member providing the response.', id=17, version=10, deprecated=0, encodedLength=0, offset=56, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=ENCODING, name='int32', referencedName='null', description='null', id=-1, version=0, deprecated=0, encodedLength=4, offset=56, componentTokenCount=1, encoding=Encoding{presence=REQUIRED, primitiveType=INT32, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        builder.Append("MemberId=");
+        builder.Append(MemberId());
+        builder.Append('|');
+        //Token{signal=BEGIN_GROUP, name='snapshots', referencedName='null', description='Snapshots of state for the consensus module and services.', id=9, version=0, deprecated=0, encodedLength=44, offset=60, componentTokenCount=24, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='null', timeUnit=null, semanticType='null'}}
         builder.Append("Snapshots=[");
         SnapshotsDecoder Snapshots = this.Snapshots();
         if (Snapshots.Count() > 0)

@@ -7,21 +7,21 @@ using Adaptive.Agrona;
 
 namespace Adaptive.Cluster.Codecs {
 
-public class CancelTimerDecoder
+public class RequestServiceAckDecoder
 {
     public const ushort BLOCK_LENGTH = 8;
-    public const ushort TEMPLATE_ID = 32;
+    public const ushort TEMPLATE_ID = 108;
     public const ushort SCHEMA_ID = 111;
     public const ushort SCHEMA_VERSION = 12;
 
-    private CancelTimerDecoder _parentMessage;
+    private RequestServiceAckDecoder _parentMessage;
     private IDirectBuffer _buffer;
     protected int _offset;
     protected int _limit;
     protected int _actingBlockLength;
     protected int _actingVersion;
 
-    public CancelTimerDecoder()
+    public RequestServiceAckDecoder()
     {
         _parentMessage = this;
     }
@@ -61,7 +61,7 @@ public class CancelTimerDecoder
         return _offset;
     }
 
-    public CancelTimerDecoder Wrap(
+    public RequestServiceAckDecoder Wrap(
         IDirectBuffer buffer, int offset, int actingBlockLength, int actingVersion)
     {
         this._buffer = buffer;
@@ -88,27 +88,27 @@ public class CancelTimerDecoder
         this._limit = limit;
     }
 
-    public static int CorrelationIdId()
+    public static int LogPositionId()
     {
         return 1;
     }
 
-    public static int CorrelationIdSinceVersion()
+    public static int LogPositionSinceVersion()
     {
         return 0;
     }
 
-    public static int CorrelationIdEncodingOffset()
+    public static int LogPositionEncodingOffset()
     {
         return 0;
     }
 
-    public static int CorrelationIdEncodingLength()
+    public static int LogPositionEncodingLength()
     {
         return 8;
     }
 
-    public static string CorrelationIdMetaAttribute(MetaAttribute metaAttribute)
+    public static string LogPositionMetaAttribute(MetaAttribute metaAttribute)
     {
         switch (metaAttribute)
         {
@@ -121,22 +121,22 @@ public class CancelTimerDecoder
         return "";
     }
 
-    public static long CorrelationIdNullValue()
+    public static long LogPositionNullValue()
     {
         return -9223372036854775808L;
     }
 
-    public static long CorrelationIdMinValue()
+    public static long LogPositionMinValue()
     {
         return -9223372036854775807L;
     }
 
-    public static long CorrelationIdMaxValue()
+    public static long LogPositionMaxValue()
     {
         return 9223372036854775807L;
     }
 
-    public long CorrelationId()
+    public long LogPosition()
     {
         return _buffer.GetLong(_offset + 0, ByteOrder.LittleEndian);
     }
@@ -152,7 +152,7 @@ public class CancelTimerDecoder
     {
         int originalLimit = Limit();
         Limit(_offset + _actingBlockLength);
-        builder.Append("[CancelTimer](sbeTemplateId=");
+        builder.Append("[requestServiceAck](sbeTemplateId=");
         builder.Append(TEMPLATE_ID);
         builder.Append("|sbeSchemaId=");
         builder.Append(SCHEMA_ID);
@@ -171,10 +171,10 @@ public class CancelTimerDecoder
         }
         builder.Append(BLOCK_LENGTH);
         builder.Append("):");
-        //Token{signal=BEGIN_FIELD, name='correlationId', referencedName='null', description='null', id=1, version=0, deprecated=0, encodedLength=0, offset=0, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=BEGIN_FIELD, name='logPosition', referencedName='null', description='null', id=1, version=0, deprecated=0, encodedLength=0, offset=0, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
         //Token{signal=ENCODING, name='int64', referencedName='null', description='null', id=-1, version=0, deprecated=0, encodedLength=8, offset=0, componentTokenCount=1, encoding=Encoding{presence=REQUIRED, primitiveType=INT64, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
-        builder.Append("CorrelationId=");
-        builder.Append(CorrelationId());
+        builder.Append("LogPosition=");
+        builder.Append(LogPosition());
 
         Limit(originalLimit);
 

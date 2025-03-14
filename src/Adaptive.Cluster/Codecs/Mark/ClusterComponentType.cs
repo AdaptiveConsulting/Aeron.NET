@@ -7,6 +7,7 @@ namespace Adaptive.Cluster.Codecs.Mark {
         CONSENSUS_MODULE = 1,
         CONTAINER = 2,
         BACKUP = 3,
+        STANDBY = 4,
         NULL_VALUE = -2147483648
     }
 }

@@ -17,6 +17,7 @@ using Adaptive.Cluster.Codecs;
 using static Adaptive.Aeron.Aeron;
 using static Adaptive.Archiver.AeronArchive;
 using static Adaptive.Cluster.Client.AeronCluster;
+using static Adaptive.Cluster.Service.ClusteredServiceContainer;
 using MessageHeaderEncoder = Adaptive.Cluster.Codecs.MessageHeaderEncoder;
 
 namespace Adaptive.Cluster.Service
@@ -62,11 +63,14 @@ namespace Adaptive.Cluster.Service
         private readonly BoundedLogAdapter logAdapter;
         private readonly DutyCycleTracker dutyCycleTracker;
         private readonly String subscriptionAlias;
+        private readonly int standbySnapshotFlags;
+        
         private string activeLifecycleCallbackName;
         private ReadableCounter commitPosition;
         private ActiveLogEvent activeLogEvent;
         private ClusterRole role = ClusterRole.Follower;
         private ClusterTimeUnit timeUnit = ClusterTimeUnit.NULL_VALUE;
+        private long requestedAckPosition = NULL_POSITION;
         
         internal ClusteredServiceAgent(ClusteredServiceContainer.Context ctx)
         {
@@ -92,6 +96,8 @@ namespace Adaptive.Cluster.Service
                 new ConsensusModuleProxy(aeron.AddPublication(channel, ctx.ConsensusModuleStreamId()));
             _serviceAdapter = new ServiceAdapter(aeron.AddSubscription(channel, ctx.ServiceStreamId()), this);
             _sessionMessageHeaderEncoder.WrapAndApplyHeader(headerBuffer, 0, new MessageHeaderEncoder());
+            this.standbySnapshotFlags = ctx.StandbySnapshotEnabled() ? CLUSTER_ACTION_FLAGS_STANDBY_SNAPSHOT :
+                CLUSTER_ACTION_FLAGS_DEFAULT;
         }
 
         public void OnStart()
@@ -103,6 +109,7 @@ namespace Adaptive.Cluster.Service
 
             RecoverState(counters);
             dutyCycleTracker.Update(nanoClock.NanoTime());
+            isServiceActive = true;
         }
 
         public void OnClose()
@@ -130,12 +137,13 @@ namespace Adaptive.Cluster.Service
                     }
                 }
 
+                CloseHelper.Dispose(errorHandler, logAdapter);
+                
                 if (!ctx.OwnsAeronClient() && !aeron.IsClosed)
                 {
-                    DisconnectEgress(errorHandler);
-                    CloseHelper.Dispose(errorHandler, logAdapter);
                     CloseHelper.Dispose(errorHandler, _serviceAdapter);
                     CloseHelper.Dispose(errorHandler, _consensusModuleProxy);
+                    DisconnectEgress(errorHandler);
                 }
             }
 
@@ -154,8 +162,7 @@ namespace Adaptive.Cluster.Service
             {
                 if (CheckForClockTick(nowNs))
                 {
-                    PollServiceAdapter();
-                    workCount += 1;
+                    workCount += PollServiceAdapter();
                 }
 
                 if (null != logAdapter.Image())
@@ -169,15 +176,7 @@ namespace Adaptive.Cluster.Service
                     }
                 }
                 
-                try
-                {
-                    isBackgroundInvocation = true;
-                    workCount += service.DoBackgroundWork(nowNs);
-                }
-                finally
-                {
-                    isBackgroundInvocation = false;
-                }
+                workCount += InvokeBackgroundWork(nowNs);
             }
             catch (AgentTerminationException)
             {
@@ -321,6 +320,21 @@ namespace Adaptive.Cluster.Service
         public void Idle()
         {
             idleStrategy.Idle();
+            DoIdleWork();
+        }
+
+        public void Idle(int workCount)
+        {
+            idleStrategy.Idle(workCount);
+
+            if (workCount <= 0)
+            {
+                DoIdleWork();
+            }
+        }
+
+        private void DoIdleWork()
+        {
             try
             {
                 Thread.Sleep(0);
@@ -330,25 +344,13 @@ namespace Adaptive.Cluster.Service
                 throw new AgentTerminationException();
             }
 
-            CheckForClockTick(nanoClock.NanoTime());
-        }
-
-        public void Idle(int workCount)
-        {
-            idleStrategy.Idle(workCount);
-
-            if (workCount <= 0)
+            long nowNs = nanoClock.NanoTime();
+            
+            CheckForClockTick(nowNs);
+            
+            if (isServiceActive)
             {
-                try
-                {
-                    Thread.Sleep(0);
-                }
-                catch (ThreadInterruptedException)
-                {
-                    throw new AgentTerminationException();
-                }
-
-                CheckForClockTick(nanoClock.NanoTime());
+                InvokeBackgroundWork(nowNs);
             }
         }
 
@@ -377,6 +379,11 @@ namespace Adaptive.Cluster.Service
         internal void OnServiceTerminationPosition(long logPosition)
         {
             terminationPosition = logPosition;
+        }
+        
+        internal void OnRequestServiceAck(long logPosition)
+        {
+            requestedAckPosition = logPosition;
         }
 
         internal void OnSessionMessage(
@@ -442,29 +449,39 @@ namespace Adaptive.Cluster.Service
 
             if (null == session)
             {
-                throw new ClusterException(
-                    "unknown clusterSessionId=" + clusterSessionId + " for close reason=" + closeReason +
-                    " leadershipTermId=" + leadershipTermId + " logPosition=" + logPosition);
+                ctx.CountedErrorHandler().OnError(
+                    new ClusterEvent(
+                        "unknown clusterSessionId=" + clusterSessionId + " for close reason=" + closeReason +
+                        " leadershipTermId=" + leadershipTermId + " logPosition=" + logPosition)
+                );
             }
-
-            for (int i = 0, size = sessions.Count; i < size; i++)
+            else
             {
-                if (sessions[i].Id == clusterSessionId)
+
+                for (int i = 0, size = sessions.Count; i < size; i++)
                 {
-                    sessions.RemoveAt(i);
-                    break;
+                    if (sessions[i].Id == clusterSessionId)
+                    {
+                        sessions.RemoveAt(i);
+                        break;
+                    }
                 }
+
+                ((ContainerClientSession)session).Disconnect(ctx.CountedErrorHandler().OnError);
+                service.OnSessionClose(session, timestamp, closeReason);
             }
-            
-            ((ContainerClientSession)session).Disconnect(ctx.CountedErrorHandler().OnError);
-            service.OnSessionClose(session, timestamp, closeReason);
         }
 
-        internal void OnServiceAction(long leadershipTermId, long logPosition, long timestamp, ClusterAction action)
+        internal void OnServiceAction(
+            long leadershipTermId,
+            long logPosition, 
+            long timestamp, 
+            ClusterAction action,
+            int flags)
         {
             this.logPosition = logPosition;
             clusterTime = timestamp;
-            ExecuteAction(action, logPosition, leadershipTermId);
+            ExecuteAction(action, logPosition, leadershipTermId, flags);
         }
 
         internal void OnNewLeadershipTermEvent(
@@ -479,7 +496,7 @@ namespace Adaptive.Cluster.Service
         {
             if (!ctx.AppVersionValidator().IsVersionCompatible(ctx.AppVersion(), appVersion))
             {
-                ctx.ErrorHandler().OnError(new ClusterException("incompatible version: " +
+                ctx.CountedErrorHandler().OnError(new ClusterException("incompatible version: " +
                                                         SemanticVersion.ToString(ctx.AppVersion()) + " log=" +
                                                         SemanticVersion.ToString(appVersion)));
                 throw new AgentTerminationException();
@@ -499,17 +516,6 @@ namespace Adaptive.Cluster.Service
                 logSessionId,
                 timeUnit,
                 appVersion);
-        }
-
-        internal void OnMembershipChange(long logPosition, long timestamp, ChangeType changeType, int memberId)
-        {
-            this.logPosition = logPosition;
-            clusterTime = timestamp;
-
-            if (memberId == this.memberId && changeType == ChangeType.QUIT)
-            {
-                Terminate(true);
-            }
         }
 
         internal void AddSession(long clusterSessionId, int responseStreamId, string responseChannel, byte[] encodedPrincipal)
@@ -634,7 +640,6 @@ namespace Adaptive.Cluster.Service
             clusterTime = RecoveryState.GetTimestamp(counters, recoveryCounterId);
             long leadershipTermId = RecoveryState.GetLeadershipTermId(counters, recoveryCounterId);
             _sessionMessageHeaderEncoder.LeadershipTermId(leadershipTermId);
-            isServiceActive = true;
 
             activeLifecycleCallbackName = "onStart";
             try
@@ -909,9 +914,9 @@ namespace Adaptive.Cluster.Service
                 timeUnit, ctx.AppVersion());
         }
 
-        private void ExecuteAction(ClusterAction action, long logPosition, long leadershipTermId)
+        private void ExecuteAction(ClusterAction action, long logPosition, long leadershipTermId, int flags)
         {
-            if (ClusterAction.SNAPSHOT == action)
+            if (ClusterAction.SNAPSHOT == action && ShouldSnapshot(flags))
             {
                 long recordingId = OnTakeSnapshot(logPosition, leadershipTermId);
                 long id = ackId++;
@@ -921,6 +926,11 @@ namespace Adaptive.Cluster.Service
                     Idle();
                 }
             }
+        }
+        
+        private bool ShouldSnapshot(int flags)
+        {
+            return CLUSTER_ACTION_FLAGS_DEFAULT == flags || 0 != (flags & standbySnapshotFlags);
         }
 
         private int AwaitRecordingCounter(int sessionId, CountersReader counters, AeronArchive archive)
@@ -948,16 +958,7 @@ namespace Adaptive.Cluster.Service
             if (nowNs - lastSlowTickNs > ONE_MILLISECOND_NS)
             {
                 lastSlowTickNs = nowNs;
-                long nowMs = epochClock.Time();
-
-                if (null != commitPosition && commitPosition.IsClosed)
-                { 
-                    ctx.ErrorLog().Record(new AeronException(
-                        "commit-pos counter unexpectedly closed, terminating", Category.WARN));
-
-                    throw new ClusterTerminationException(true);
-                }
-                
+               
                 if (null != aeronAgentInvoker)
                 {
                     aeronAgentInvoker.Invoke();
@@ -967,7 +968,15 @@ namespace Adaptive.Cluster.Service
                         throw new AgentTerminationException("unexpected Aeron close");
                     }
                 }
+                
+                if (null != commitPosition && commitPosition.IsClosed)
+                {
+                    ctx.ErrorLog().Record(new AeronEvent("commit-pos counter unexpectedly closed, terminating", Category.WARN));
 
+                    throw new ClusterTerminationException(true);
+                }
+
+                long nowMs = epochClock.Time();
                 if (nowMs >= markFileUpdateDeadlineMs)
                 {
                     markFileUpdateDeadlineMs = nowMs + MARK_FILE_UPDATE_INTERVAL_MS;
@@ -980,10 +989,12 @@ namespace Adaptive.Cluster.Service
             return false;
         }
 
-        private void PollServiceAdapter()
+        private int PollServiceAdapter()
         {
-            _serviceAdapter.Poll();
+            int workCount = 0;
 
+            workCount += _serviceAdapter.Poll();
+            
             if (null != activeLogEvent && null == logAdapter.Image())
             {
                 ActiveLogEvent @event = activeLogEvent;
@@ -1001,6 +1012,23 @@ namespace Adaptive.Cluster.Service
 
                 Terminate(logPosition == terminationPosition);
             }
+            
+            if (NULL_POSITION != requestedAckPosition && logPosition >= requestedAckPosition)
+            {
+                if (logPosition > requestedAckPosition)
+                {
+                    ctx.CountedErrorHandler().OnError(new ClusterEvent(
+                        "service terminate: logPosition=" + logPosition + 
+                        " > requestedAckPosition=" + terminationPosition));
+                }
+
+                if (_consensusModuleProxy.Ack(logPosition, clusterTime, ackId++, NULL_VALUE, serviceId))
+                {
+                    requestedAckPosition = NULL_POSITION;
+                }
+            }
+
+            return workCount;
         }
 
         private void Terminate(bool isTerminationExpected)
@@ -1084,6 +1112,19 @@ namespace Adaptive.Cluster.Service
                 commitPosition.RegistrationId == registrationId)
             {
                 commitPosition.Dispose();
+            }
+        }
+        
+        private int InvokeBackgroundWork(long nowNs)
+        {
+            try
+            {
+                isBackgroundInvocation = true;
+                return service.DoBackgroundWork(nowNs);
+            }
+            finally
+            {
+                isBackgroundInvocation = false;
             }
         }
 

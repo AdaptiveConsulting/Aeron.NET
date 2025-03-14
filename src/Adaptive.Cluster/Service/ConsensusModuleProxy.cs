@@ -25,7 +25,6 @@ namespace Adaptive.Cluster.Service
         private readonly ServiceAckEncoder _serviceAckEncoder = new ServiceAckEncoder();
         private readonly CloseSessionEncoder _closeSessionEncoder = new CloseSessionEncoder();
         private readonly ClusterMembersQueryEncoder _clusterMembersQueryEncoder = new ClusterMembersQueryEncoder();
-        private readonly RemoveMemberEncoder _removeMemberEncoder = new RemoveMemberEncoder();
         private readonly Publication _publication;
 
         /// <summary>
@@ -194,38 +193,6 @@ namespace Adaptive.Cluster.Service
                         .WrapAndApplyHeader(_bufferClaim.Buffer, _bufferClaim.Offset, _messageHeaderEncoder)
                         .CorrelationId(correlationId)
                         .Extended(BooleanType.TRUE);
-
-                    _bufferClaim.Commit();
-
-                    return true;
-                }
-
-                CheckResult(result);
-            } while (--attempts > 0);
-
-            return false;
-        }
-
-        /// <summary>
-        /// Remove a member by id from the cluster.
-        /// </summary>
-        /// <param name="memberId">  to be removed. </param>
-        /// <param name="isPassive"> to indicate if the member is passive or not. </param>
-        /// <returns> true of the request was successfully sent, otherwise false. </returns>
-        public bool RemoveMember(int memberId, BooleanType isPassive)
-        {
-            int length = MessageHeaderEncoder.ENCODED_LENGTH + RemoveMemberEncoder.BLOCK_LENGTH;
-
-            int attempts = SEND_ATTEMPTS;
-            do
-            {
-                long result = _publication.TryClaim(length, _bufferClaim);
-                if (result > 0)
-                {
-                    _removeMemberEncoder
-                        .WrapAndApplyHeader(_bufferClaim.Buffer, _bufferClaim.Offset, _messageHeaderEncoder)
-                        .MemberId(memberId)
-                        .IsPassive(isPassive);
 
                     _bufferClaim.Commit();
 

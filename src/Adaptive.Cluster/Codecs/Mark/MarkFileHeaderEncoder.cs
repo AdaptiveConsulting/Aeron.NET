@@ -12,7 +12,7 @@ public class MarkFileHeaderEncoder
     public const ushort BLOCK_LENGTH = 128;
     public const ushort TEMPLATE_ID = 200;
     public const ushort SCHEMA_ID = 110;
-    public const ushort SCHEMA_VERSION = 0;
+    public const ushort SCHEMA_VERSION = 1;
 
     private MarkFileHeaderEncoder _parentMessage;
     private IMutableDirectBuffer _buffer;
@@ -929,6 +929,83 @@ public class MarkFileHeaderEncoder
     }
 
     public MarkFileHeaderEncoder Authenticator(string value)
+    {
+        int length = value.Length;
+        if (length > 1073741824)
+        {
+            throw new InvalidOperationException("length > maxValue for type: " + length);
+        }
+
+        int headerLength = 4;
+        int limit = _parentMessage.Limit();
+        _parentMessage.Limit(limit + headerLength + length);
+        _buffer.PutInt(limit, unchecked((int)length), ByteOrder.LittleEndian);
+        _buffer.PutStringWithoutLengthAscii(limit + headerLength, value);
+
+        return this;
+    }
+
+    public static int ServicesClusterDirId()
+    {
+        return 21;
+    }
+
+    public static string ServicesClusterDirCharacterEncoding()
+    {
+        return "US-ASCII";
+    }
+
+    public static string ServicesClusterDirMetaAttribute(MetaAttribute metaAttribute)
+    {
+        switch (metaAttribute)
+        {
+            case MetaAttribute.EPOCH: return "unix";
+            case MetaAttribute.TIME_UNIT: return "nanosecond";
+            case MetaAttribute.SEMANTIC_TYPE: return "";
+            case MetaAttribute.PRESENCE: return "required";
+        }
+
+        return "";
+    }
+
+    public static int ServicesClusterDirHeaderLength()
+    {
+        return 4;
+    }
+
+    public MarkFileHeaderEncoder PutServicesClusterDir(IDirectBuffer src, int srcOffset, int length)
+    {
+        if (length > 1073741824)
+        {
+            throw new InvalidOperationException("length > maxValue for type: " + length);
+        }
+
+        int headerLength = 4;
+        int limit = _parentMessage.Limit();
+        _parentMessage.Limit(limit + headerLength + length);
+        _buffer.PutInt(limit, unchecked((int)length), ByteOrder.LittleEndian);
+        _buffer.PutBytes(limit + headerLength, src, srcOffset, length);
+
+        return this;
+    }
+
+    public MarkFileHeaderEncoder PutServicesClusterDir(byte[] src, int srcOffset, int length)
+    {
+        if (length > 1073741824)
+        {
+            throw new InvalidOperationException("length > maxValue for type: " + length);
+        }
+
+        int headerLength = 4;
+        int limit = _parentMessage.Limit();
+        _parentMessage.Limit(limit + headerLength + length);
+        _buffer.PutInt(limit, unchecked((int)length), ByteOrder.LittleEndian);
+        _buffer.PutBytes(limit + headerLength, src, srcOffset, length);
+
+        return this;
+    }
+
+    public MarkFileHeaderEncoder ServicesClusterDir(string value)
     {
         int length = value.Length;
         if (length > 1073741824)

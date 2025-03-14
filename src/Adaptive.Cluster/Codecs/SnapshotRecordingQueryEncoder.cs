@@ -12,7 +12,7 @@ public class SnapshotRecordingQueryEncoder
     public const ushort BLOCK_LENGTH = 12;
     public const ushort TEMPLATE_ID = 72;
     public const ushort SCHEMA_ID = 111;
-    public const ushort SCHEMA_VERSION = 9;
+    public const ushort SCHEMA_VERSION = 12;
 
     private SnapshotRecordingQueryEncoder _parentMessage;
     private IMutableDirectBuffer _buffer;

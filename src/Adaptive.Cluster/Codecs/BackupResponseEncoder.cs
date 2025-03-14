@@ -9,10 +9,10 @@ namespace Adaptive.Cluster.Codecs {
 
 public class BackupResponseEncoder
 {
-    public const ushort BLOCK_LENGTH = 56;
+    public const ushort BLOCK_LENGTH = 60;
     public const ushort TEMPLATE_ID = 78;
     public const ushort SCHEMA_ID = 111;
-    public const ushort SCHEMA_VERSION = 9;
+    public const ushort SCHEMA_VERSION = 12;
 
     private BackupResponseEncoder _parentMessage;
     private IMutableDirectBuffer _buffer;
@@ -348,6 +348,38 @@ public class BackupResponseEncoder
     public BackupResponseEncoder LeaderMemberId(int value)
     {
         _buffer.PutInt(_offset + 52, value, ByteOrder.LittleEndian);
+        return this;
+    }
+
+
+    public static int MemberIdEncodingOffset()
+    {
+        return 56;
+    }
+
+    public static int MemberIdEncodingLength()
+    {
+        return 4;
+    }
+
+    public static int MemberIdNullValue()
+    {
+        return -2147483648;
+    }
+
+    public static int MemberIdMinValue()
+    {
+        return -2147483647;
+    }
+
+    public static int MemberIdMaxValue()
+    {
+        return 2147483647;
+    }
+
+    public BackupResponseEncoder MemberId(int value)
+    {
+        _buffer.PutInt(_offset + 56, value, ByteOrder.LittleEndian);
         return this;
     }
 

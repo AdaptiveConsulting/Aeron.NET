@@ -23,9 +23,14 @@ namespace Adaptive.Cluster
 
         public const int HEADER_LENGTH = 8 * 1024;
         public const int VERSION_FAILED = -1;
+        public const int ERROR_BUFFER_MIN_LENGTH = 1024 * 1024;
+        public const int ERROR_BUFFER_MAX_LENGTH = int.MaxValue - HEADER_LENGTH;
+
         
         public const string FILE_EXTENSION = ".dat";
+        public const string LINK_FILE_EXTENSION = ".lnk";
         public const string FILENAME = "cluster-mark" + FILE_EXTENSION;
+        public const string LINK_FILENAME = "cluster-mark" + LINK_FILE_EXTENSION;
         public const string SERVICE_FILENAME_PREFIX = "cluster-mark-service-";
 
         private readonly MarkFileHeaderDecoder headerDecoder = new MarkFileHeaderDecoder();
@@ -49,6 +54,11 @@ namespace Adaptive.Cluster
             IEpochClock epochClock,
             long timeoutMs)
         {
+            if (errorBufferLength < ERROR_BUFFER_MIN_LENGTH || errorBufferLength > ERROR_BUFFER_MAX_LENGTH)
+            {
+                throw new ArgumentException("Invalid errorBufferLength: " + errorBufferLength);
+            }
+            
             var markFileExists = file.Exists;
             int totalFileLength = HEADER_LENGTH + errorBufferLength;
 
@@ -141,8 +151,9 @@ namespace Adaptive.Cluster
                 {
                     if (SemanticVersion.Major(version) != MAJOR_VERSION)
                     {
-                        throw new ClusterException("mark file major version " + SemanticVersion.Major(version) + 
-                                                    " does not match software: " + AeronCluster.Configuration.PROTOCOL_MAJOR_VERSION);
+                        throw new ClusterException(
+                            "mark file major version " + SemanticVersion.Major(version) + 
+                            " does not match software: " + AeronCluster.Configuration.PROTOCOL_MAJOR_VERSION);
                     }
 
                 },
@@ -152,6 +163,17 @@ namespace Adaptive.Cluster
             headerDecoder.Wrap(buffer, 0, MarkFileHeaderDecoder.BLOCK_LENGTH, MarkFileHeaderDecoder.SCHEMA_VERSION);
             errorBuffer = new UnsafeBuffer(buffer, headerDecoder.HeaderLength(), headerDecoder.ErrorBufferLength());
         }
+        
+        /// <summary>
+        /// Get the parent directory containing the mark file.
+        /// </summary>
+        /// <returns> parent directory of the mark file. </returns>
+        /// <seealso cref="MarkFile.ParentDirectory()"/>
+        public DirectoryInfo ParentDirectory()
+        {
+            return markFile.ParentDirectory();
+        }
+
 
         /// <summary>
         /// Determines if this path name matches the service mark file name pattern
@@ -192,50 +214,6 @@ namespace Adaptive.Cluster
             }
         }
         
-        /// <summary>
-        /// Get the current value of a candidate term id if a vote is placed in an election.
-        /// </summary>
-        /// <returns> the current candidate term id within an election after voting or <see cref="Adaptive.Aeron.Aeron.NULL_VALUE"/> if
-        /// no voting phase of an election is currently active. </returns>
-        public long CandidateTermId()
-        {
-            return buffer.GetLongVolatile(MarkFileHeaderDecoder.CandidateTermIdEncodingOffset());
-        }
-
-        /// <summary>
-        /// Record the fact that a node is aware of an election, so it can survive a restart.
-        /// </summary>
-        /// <param name="candidateTermId"> to record that a vote has taken place. </param>
-        /// <param name="fileSyncLevel"> as defined by cluster file sync level.</param>
-        public void CandidateTermId(long candidateTermId, int fileSyncLevel)
-        {
-            buffer.PutLongVolatile(MarkFileHeaderEncoder.CandidateTermIdEncodingOffset(), candidateTermId);
-
-            if (fileSyncLevel > 0)
-            {
-                markFile.MappedByteBuffer().Flush();
-            }
-        }
-        
-        /// <summary>
-        /// Record the fact that a node is aware of an election, so it can survive a restart.
-        /// </summary>
-        /// <param name="candidateTermId"> to record that a vote has taken place. </param>
-        /// <param name="fileSyncLevel">   as defined by cluster file sync level. </param>
-        /// <returns> the max of the existing and proposed candidateTermId. </returns>
-        public long ProposeMaxCandidateTermId(long candidateTermId, int fileSyncLevel)
-        {
-            long existingCandidateTermId = buffer.GetLongVolatile(MarkFileHeaderEncoder.CandidateTermIdEncodingOffset());
-
-            if (candidateTermId > existingCandidateTermId)
-            {
-                CandidateTermId(candidateTermId, fileSyncLevel);
-                return candidateTermId;
-            }
-
-            return existingCandidateTermId;
-        }
-
         /// <summary>
         /// Cluster member id either assigned statically or as the result of dynamic membership join.
         /// </summary>
@@ -398,6 +376,16 @@ namespace Adaptive.Cluster
         public static string MarkFilenameForService(int serviceId)
         {
             return SERVICE_FILENAME_PREFIX + serviceId + FILE_EXTENSION;
+        }
+        
+        /// <summary>
+        /// The filename to be used for the link file given a service id.
+        /// </summary>
+        /// <param name="serviceId"> of the service the <seealso cref="ClusterMarkFile"/> represents. </param>
+        /// <returns> the filename to be used for the link file given a service id. </returns>
+        public static string LinkFilenameForService(int serviceId)
+        {
+            return SERVICE_FILENAME_PREFIX + serviceId + LINK_FILE_EXTENSION;
         }
         
         /// <summary>

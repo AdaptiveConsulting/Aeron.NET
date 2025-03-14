@@ -103,7 +103,6 @@ namespace Adaptive.Cluster.Service
                    ", responseStreamId=" + responseStreamId +
                    ", responseChannel='" + responseChannel + '\'' +
                    ", encodedPrincipal=" + encodedPrincipal +
-                   ", clusteredServiceAgent=" + clusteredServiceAgent +
                    ", responsePublication=" + responsePublication +
                    ", isClosing=" + isClosing +
                    '}';

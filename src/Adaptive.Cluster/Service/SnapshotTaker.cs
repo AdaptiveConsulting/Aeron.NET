@@ -1,6 +1,7 @@
 ﻿using System.Threading;
 using Adaptive.Aeron;
 using Adaptive.Aeron.LogBuffer;
+using Adaptive.Agrona;
 using Adaptive.Agrona.Concurrent;
 using Adaptive.Cluster.Client;
 using Adaptive.Cluster.Codecs;
@@ -179,9 +180,30 @@ namespace Adaptive.Cluster.Service
         /// <summary>
         /// Invoke the Aeron client agent if necessary.
         /// </summary>
-        protected void InvokeAgentClient()
+        private void InvokeAgentClient()
         {
             aeronAgentInvoker?.Invoke();
+        }
+        
+        /// <summary>
+        /// Helper method to offer a message into the snapshot publication.
+        /// </summary>
+        /// <param name="buffer"> containing the message. </param>
+        /// <param name="offset"> at which the message begins. </param>
+        /// <param name="length"> of the message. </param>
+        protected void Offer(IDirectBuffer buffer, int offset, int length)
+        {
+            idleStrategy.Reset();
+            while (true)
+            {
+                long result = publication.Offer(buffer, offset, length);
+                if (result > 0)
+                {
+                    break;
+                }
+
+                CheckResultAndIdle(result);
+            }
         }
     }
 }

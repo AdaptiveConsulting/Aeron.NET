@@ -12,7 +12,7 @@ public class MarkFileHeaderDecoder
     public const ushort BLOCK_LENGTH = 128;
     public const ushort TEMPLATE_ID = 200;
     public const ushort SCHEMA_ID = 110;
-    public const ushort SCHEMA_VERSION = 0;
+    public const ushort SCHEMA_VERSION = 1;
 
     private MarkFileHeaderDecoder _parentMessage;
     private IDirectBuffer _buffer;
@@ -71,7 +71,6 @@ public class MarkFileHeaderDecoder
         IDirectBuffer buffer, int offset, int actingBlockLength, int actingVersion)
     {
         this._buffer = buffer;
-        this._initialOffset = offset;
         this._offset = offset;
         this._actingBlockLength = actingBlockLength;
         this._actingVersion = actingVersion;
@@ -1265,6 +1264,101 @@ public class MarkFileHeaderDecoder
         return Encoding.ASCII.GetString(tmp);
     }
 
+    public static int ServicesClusterDirId()
+    {
+        return 21;
+    }
+
+    public static int ServicesClusterDirSinceVersion()
+    {
+        return 1;
+    }
+
+    public static string ServicesClusterDirCharacterEncoding()
+    {
+        return "US-ASCII";
+    }
+
+    public static string ServicesClusterDirMetaAttribute(MetaAttribute metaAttribute)
+    {
+        switch (metaAttribute)
+        {
+            case MetaAttribute.EPOCH: return "unix";
+            case MetaAttribute.TIME_UNIT: return "nanosecond";
+            case MetaAttribute.SEMANTIC_TYPE: return "";
+            case MetaAttribute.PRESENCE: return "required";
+        }
+
+        return "";
+    }
+
+    public static int ServicesClusterDirHeaderLength()
+    {
+        return 4;
+    }
+
+    public int ServicesClusterDirLength()
+    {
+        if (_parentMessage._actingVersion < 1)
+        {
+            return 0;
+        }
+
+        int limit = _parentMessage.Limit();
+        return (int)unchecked((uint)_buffer.GetInt(limit, ByteOrder.LittleEndian));
+    }
+
+    public int GetServicesClusterDir(IMutableDirectBuffer dst, int dstOffset, int length)
+    {
+        if (_parentMessage._actingVersion < 1)
+        {
+            return 0;
+        }
+
+        int headerLength = 4;
+        int limit = _parentMessage.Limit();
+        int dataLength = (int)unchecked((uint)_buffer.GetInt(limit, ByteOrder.LittleEndian));
+        int bytesCopied = Math.Min(length, dataLength);
+        _parentMessage.Limit(limit + headerLength + dataLength);
+        _buffer.GetBytes(limit + headerLength, dst, dstOffset, bytesCopied);
+
+        return bytesCopied;
+    }
+
+    public int GetServicesClusterDir(byte[] dst, int dstOffset, int length)
+    {
+        if (_parentMessage._actingVersion < 1)
+        {
+            return 0;
+        }
+
+        int headerLength = 4;
+        int limit = _parentMessage.Limit();
+        int dataLength = (int)unchecked((uint)_buffer.GetInt(limit, ByteOrder.LittleEndian));
+        int bytesCopied = Math.Min(length, dataLength);
+        _parentMessage.Limit(limit + headerLength + dataLength);
+        _buffer.GetBytes(limit + headerLength, dst, dstOffset, bytesCopied);
+
+        return bytesCopied;
+    }
+
+    public string ServicesClusterDir()
+    {
+        if (_parentMessage._actingVersion < 1)
+        {
+            return "";
+        }
+
+        int headerLength = 4;
+        int limit = _parentMessage.Limit();
+        int dataLength = (int)unchecked((uint)_buffer.GetInt(limit, ByteOrder.LittleEndian));
+        _parentMessage.Limit(limit + headerLength + dataLength);
+        byte[] tmp = new byte[dataLength];
+        _buffer.GetBytes(limit + headerLength, tmp, 0, dataLength);
+
+        return Encoding.ASCII.GetString(tmp);
+    }
+
 
     public override string ToString()
     {
@@ -1299,8 +1393,8 @@ public class MarkFileHeaderDecoder
         builder.Append("Version=");
         builder.Append(Version());
         builder.Append('|');
-        //Token{signal=BEGIN_FIELD, name='componentType', referencedName='null', description='null', id=2, version=0, deprecated=0, encodedLength=0, offset=4, componentTokenCount=8, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
-        //Token{signal=BEGIN_ENUM, name='ClusterComponentType', referencedName='null', description='Type of Cluster Component', id=-1, version=0, deprecated=0, encodedLength=4, offset=4, componentTokenCount=6, encoding=Encoding{presence=REQUIRED, primitiveType=INT32, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='null', timeUnit=null, semanticType='null'}}
+        //Token{signal=BEGIN_FIELD, name='componentType', referencedName='null', description='null', id=2, version=0, deprecated=0, encodedLength=0, offset=4, componentTokenCount=9, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=BEGIN_ENUM, name='ClusterComponentType', referencedName='null', description='Type of Cluster Component', id=-1, version=0, deprecated=0, encodedLength=4, offset=4, componentTokenCount=7, encoding=Encoding{presence=REQUIRED, primitiveType=INT32, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='null', timeUnit=null, semanticType='null'}}
         builder.Append("ComponentType=");
         builder.Append(ComponentType());
         builder.Append('|');
@@ -1388,6 +1482,10 @@ public class MarkFileHeaderDecoder
         //Token{signal=BEGIN_VAR_DATA, name='authenticator', referencedName='null', description='null', id=20, version=0, deprecated=0, encodedLength=0, offset=-1, componentTokenCount=6, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
         builder.Append("Authenticator=");
         builder.Append(Authenticator());
+        builder.Append('|');
+        //Token{signal=BEGIN_VAR_DATA, name='servicesClusterDir', referencedName='null', description='null', id=21, version=1, deprecated=0, encodedLength=0, offset=-1, componentTokenCount=6, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        builder.Append("ServicesClusterDir=");
+        builder.Append(ServicesClusterDir());
 
         Limit(originalLimit);
 

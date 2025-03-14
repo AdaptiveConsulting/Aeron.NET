@@ -9,10 +9,10 @@ namespace Adaptive.Cluster.Codecs {
 
 public class ClusterActionRequestEncoder
 {
-    public const ushort BLOCK_LENGTH = 28;
+    public const ushort BLOCK_LENGTH = 32;
     public const ushort TEMPLATE_ID = 23;
     public const ushort SCHEMA_ID = 111;
-    public const ushort SCHEMA_VERSION = 9;
+    public const ushort SCHEMA_VERSION = 12;
 
     private ClusterActionRequestEncoder _parentMessage;
     private IMutableDirectBuffer _buffer;
@@ -207,6 +207,38 @@ public class ClusterActionRequestEncoder
         _buffer.PutInt(_offset + 24, (int)value, ByteOrder.LittleEndian);
         return this;
     }
+
+    public static int FlagsEncodingOffset()
+    {
+        return 28;
+    }
+
+    public static int FlagsEncodingLength()
+    {
+        return 4;
+    }
+
+    public static int FlagsNullValue()
+    {
+        return -2147483648;
+    }
+
+    public static int FlagsMinValue()
+    {
+        return -2147483647;
+    }
+
+    public static int FlagsMaxValue()
+    {
+        return 2147483647;
+    }
+
+    public ClusterActionRequestEncoder Flags(int value)
+    {
+        _buffer.PutInt(_offset + 28, value, ByteOrder.LittleEndian);
+        return this;
+    }
+
 
 
     public override string ToString()

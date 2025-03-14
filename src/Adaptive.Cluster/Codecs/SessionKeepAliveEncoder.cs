@@ -12,7 +12,7 @@ public class SessionKeepAliveEncoder
     public const ushort BLOCK_LENGTH = 16;
     public const ushort TEMPLATE_ID = 5;
     public const ushort SCHEMA_ID = 111;
-    public const ushort SCHEMA_VERSION = 9;
+    public const ushort SCHEMA_VERSION = 12;
 
     private SessionKeepAliveEncoder _parentMessage;
     private IMutableDirectBuffer _buffer;
