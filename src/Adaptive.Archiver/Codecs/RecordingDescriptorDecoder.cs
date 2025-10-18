@@ -12,7 +12,7 @@ public class RecordingDescriptorDecoder
     public const ushort BLOCK_LENGTH = 80;
     public const ushort TEMPLATE_ID = 22;
     public const ushort SCHEMA_ID = 101;
-    public const ushort SCHEMA_VERSION = 10;
+    public const ushort SCHEMA_VERSION = 11;
 
     private RecordingDescriptorDecoder _parentMessage;
     private IDirectBuffer _buffer;

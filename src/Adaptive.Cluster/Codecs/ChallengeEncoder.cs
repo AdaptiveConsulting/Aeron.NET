@@ -12,7 +12,7 @@ public class ChallengeEncoder
     public const ushort BLOCK_LENGTH = 16;
     public const ushort TEMPLATE_ID = 7;
     public const ushort SCHEMA_ID = 111;
-    public const ushort SCHEMA_VERSION = 12;
+    public const ushort SCHEMA_VERSION = 13;
 
     private ChallengeEncoder _parentMessage;
     private IMutableDirectBuffer _buffer;

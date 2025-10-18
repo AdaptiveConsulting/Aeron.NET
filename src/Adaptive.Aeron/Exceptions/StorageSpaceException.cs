@@ -30,8 +30,7 @@ namespace Adaptive.Aeron.Exceptions
             {
                 if (cause is IOException)
                 {
-                    string msg = cause.Message;
-                    if ("No space left on device".Equals(msg) || "There is not enough space on the disk".Equals(msg))
+                    if ((uint)error.HResult == 0x80070070)
                     {
                         return true;
                     }

@@ -192,6 +192,11 @@ namespace Adaptive.Agrona
         {
             buffer.PutLongOrdered(timestampFieldOffset, timestamp);
         }
+        
+        public void TimestampRelease(long timestamp)
+        {
+            buffer.PutLongRelease(timestampFieldOffset, timestamp);
+        }
 
         public long TimestampVolatile()
         {

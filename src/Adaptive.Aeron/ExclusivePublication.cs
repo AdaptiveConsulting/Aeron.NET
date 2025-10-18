@@ -90,6 +90,31 @@ namespace Adaptive.Aeron
 			_termBeginPosition = ComputeTermBeginPosition(_termId, PositionBitsToShift, InitialTermId);
 		}
 
+		/// <summary>
+		/// Mark the publication to be revoked when <seealso cref="Publication.Dispose()"/> is called.  See  <seealso cref="Revoke()"/>
+		/// </summary>
+		public void RevokeOnClose()
+		{
+			revokeOnClose = true;
+		}
+
+		/// <summary>
+		/// Immediately revoke and <seealso cref="Publication.Dispose()"/> the publication.
+		/// 
+		/// Revoking disposes of resources as soon as possible. On the publication side the log buffer won't linger,
+		/// while on the subscription side the image will go unavailable without requiring all data to be drained.
+		/// Hence, it should be used only when it's known that all subscribers have received all the data,
+		/// or if it doesn't matter if they have.
+		/// </summary>
+		public void Revoke()
+		{
+			if (!_isClosed)
+			{
+				revokeOnClose = true;
+				Dispose();
+			}
+		}
+		
 		/// <inheritdoc />
 		public override long Position
 		{
@@ -484,7 +509,7 @@ namespace Adaptive.Aeron
 			int termLength = termBuffer.Capacity;
 
 			int resultingOffset = _termOffset + alignedLength;
-			_logMetaDataBuffer.PutLongOrdered(tailCounterOffset, PackTail(_termId, resultingOffset));
+			_logMetaDataBuffer.PutLongRelease(tailCounterOffset, PackTail(_termId, resultingOffset));
 
 			if (resultingOffset > termLength)
 			{
@@ -519,7 +544,7 @@ namespace Adaptive.Aeron
 			int termLength = termBuffer.Capacity;
 
 			int resultingOffset = _termOffset + framedLength;
-			_logMetaDataBuffer.PutLongOrdered(tailCounterOffset, PackTail(_termId, resultingOffset));
+			_logMetaDataBuffer.PutLongRelease(tailCounterOffset, PackTail(_termId, resultingOffset));
 
 			if (resultingOffset > termLength)
 			{
@@ -580,7 +605,7 @@ namespace Adaptive.Aeron
 			int termLength = termBuffer.Capacity;
 
 			int resultingOffset = _termOffset + alignedLength;
-			_logMetaDataBuffer.PutLongOrdered(tailCounterOffset, PackTail(_termId, resultingOffset));
+			_logMetaDataBuffer.PutLongRelease(tailCounterOffset, PackTail(_termId, resultingOffset));
 
 			if (resultingOffset > termLength)
 			{
@@ -621,7 +646,7 @@ namespace Adaptive.Aeron
 			int termLength = termBuffer.Capacity;
 
 			int resultingOffset = _termOffset + framedLength;
-			_logMetaDataBuffer.PutLongOrdered(tailCounterOffset, PackTail(_termId, resultingOffset));
+			_logMetaDataBuffer.PutLongRelease(tailCounterOffset, PackTail(_termId, resultingOffset));
 
 			if (resultingOffset > termLength)
 			{
@@ -704,7 +729,7 @@ namespace Adaptive.Aeron
 			int termLength = termBuffer.Capacity;
 
 			int resultingOffset = _termOffset + alignedLength;
-			_logMetaDataBuffer.PutLongOrdered(tailCounterOffset, PackTail(_termId, resultingOffset));
+			_logMetaDataBuffer.PutLongRelease(tailCounterOffset, PackTail(_termId, resultingOffset));
 
 			if (resultingOffset > termLength)
 			{
@@ -744,7 +769,7 @@ namespace Adaptive.Aeron
 			int termLength = termBuffer.Capacity;
 
 			int resultingOffset = _termOffset + framedLength;
-			_logMetaDataBuffer.PutLongOrdered(tailCounterOffset, PackTail(_termId, resultingOffset));
+			_logMetaDataBuffer.PutLongRelease(tailCounterOffset, PackTail(_termId, resultingOffset));
 
 			if (resultingOffset > termLength)
 			{
@@ -822,7 +847,7 @@ namespace Adaptive.Aeron
 			int termLength = termBuffer.Capacity;
 
 			int resultingOffset = _termOffset + alignedLength;
-			_logMetaDataBuffer.PutLongOrdered(tailCounterOffset, PackTail(_termId, resultingOffset));
+			_logMetaDataBuffer.PutLongRelease(tailCounterOffset, PackTail(_termId, resultingOffset));
 
 			if (resultingOffset > termLength)
 			{
@@ -847,7 +872,7 @@ namespace Adaptive.Aeron
 			int termLength = termBuffer.Capacity;
 
 			int resultingOffset = _termOffset + alignedLength;
-			_logMetaDataBuffer.PutLongOrdered(tailCounterOffset, PackTail(_termId, resultingOffset));
+			_logMetaDataBuffer.PutLongRelease(tailCounterOffset, PackTail(_termId, resultingOffset));
 
 			if (resultingOffset > termLength)
 			{
@@ -873,10 +898,13 @@ namespace Adaptive.Aeron
 			int resultingOffset = _termOffset + length;
 			int lengthOfFirstFrame = buffer.GetInt(offset, ByteOrder.LittleEndian);
 
-			_logMetaDataBuffer.PutLongOrdered(tailCounterOffset, PackTail(_termId, resultingOffset));
-			buffer.PutInt(offset, 0, ByteOrder.LittleEndian);
-			termBuffer.PutBytes(_termOffset, buffer, offset, length);
-			FrameLengthOrdered(termBuffer, _termOffset, lengthOfFirstFrame);
+			_logMetaDataBuffer.PutLongRelease(tailCounterOffset, PackTail(_termId, resultingOffset));
+			
+			termBuffer.PutBytes(_termOffset + HEADER_LENGTH, buffer, offset + HEADER_LENGTH, length - HEADER_LENGTH);
+			termBuffer.PutLong(_termOffset + 24, buffer.GetLong(offset + 24));
+			termBuffer.PutLong(_termOffset + 16, buffer.GetLong(offset + 16));
+			termBuffer.PutLong(_termOffset + 8, buffer.GetLong(offset + 8));
+			termBuffer.PutLongRelease(_termOffset, buffer.GetLong(offset));
 
 			return resultingOffset;
 		}

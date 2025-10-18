@@ -12,7 +12,7 @@ public class RecordingSignalEventEncoder
     public const ushort BLOCK_LENGTH = 44;
     public const ushort TEMPLATE_ID = 24;
     public const ushort SCHEMA_ID = 101;
-    public const ushort SCHEMA_VERSION = 10;
+    public const ushort SCHEMA_VERSION = 11;
 
     private RecordingSignalEventEncoder _parentMessage;
     private IMutableDirectBuffer _buffer;

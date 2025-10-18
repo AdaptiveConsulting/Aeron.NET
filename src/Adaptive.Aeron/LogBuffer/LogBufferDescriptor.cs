@@ -153,6 +153,11 @@ namespace Adaptive.Aeron.LogBuffer
          */
         public static readonly int LOG_TETHER_OFFSET;
 
+        /// <summary>
+        /// Offset within the log metadata where the 'publication revoked' status is indicated.
+        /// </summary>
+        public static readonly int LOG_IS_PUBLICATION_REVOKED_OFFSET;
+
         /**
          * Offset within the log metadata where the rejoin property is stored.
          */
@@ -204,12 +209,17 @@ namespace Adaptive.Aeron.LogBuffer
         public static readonly int LOG_PUBLICATION_WINDOW_LENGTH_OFFSET;
 
         /**
-         * Offset within the log metadata where the window limit timeout ns is stored.
+         * Offset within the log metadata where the untethered window limit timeout ns is stored.
          */
         public static readonly int LOG_UNTETHERED_WINDOW_LIMIT_TIMEOUT_NS_OFFSET;
 
+        /// <summary>
+        /// Offset within the log metadata where the untethered linger timeout ns is stored.
+        /// </summary>
+        public static readonly int LOG_UNTETHERED_LINGER_TIMEOUT_NS_OFFSET;
+
         /**
-         * Offset within the log metadata where the untether resting timeout ns is stored.
+         * Offset within the log metadata where the untethered resting timeout ns is stored.
          */
         public static readonly int LOG_UNTETHERED_RESTING_TIMEOUT_NS_OFFSET;
 
@@ -348,6 +358,14 @@ namespace Adaptive.Aeron.LogBuffer
         ///  +---------------------------------------------------------------+
         ///  |                          Tether                               |
         ///  +---------------------------------------------------------------+
+        ///  |                     Is publication revoked                    |
+        ///  +---------------------------------------------------------------+
+        ///  |                         Alignment gap                         |
+        ///  +---------------------------------------------------------------+
+        ///  |                  Untethered Linger Timeout (ns)               |
+        ///  |                                                               |
+        ///  +---------------------------------------------------------------+
+        /// 
         /// </pre>
         /// </summary>
         public static readonly int LOG_META_DATA_LENGTH;
@@ -393,6 +411,8 @@ namespace Adaptive.Aeron.LogBuffer
             LOG_SIGNAL_EOS_OFFSET = LOG_SPARSE_OFFSET + SIZE_OF_BYTE;
             LOG_SPIES_SIMULATE_CONNECTION_OFFSET = LOG_SIGNAL_EOS_OFFSET + SIZE_OF_BYTE;
             LOG_TETHER_OFFSET = LOG_SPIES_SIMULATE_CONNECTION_OFFSET + SIZE_OF_BYTE;
+            LOG_IS_PUBLICATION_REVOKED_OFFSET = LOG_TETHER_OFFSET + SIZE_OF_BYTE;
+            LOG_UNTETHERED_LINGER_TIMEOUT_NS_OFFSET = LOG_IS_PUBLICATION_REVOKED_OFFSET + SIZE_OF_INT;
 
             LOG_META_DATA_LENGTH = PAGE_MIN_SIZE;
         }
@@ -560,7 +580,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// <param name="isConnected">       or not. </param>
         public static void IsConnected(UnsafeBuffer metaDataBuffer, bool isConnected)
         {
-            metaDataBuffer.PutIntOrdered(LOG_IS_CONNECTED_OFFSET, isConnected ? 1 : 0);
+            metaDataBuffer.PutIntRelease(LOG_IS_CONNECTED_OFFSET, isConnected ? 1 : 0);
         }
 
         /// <summary>
@@ -580,7 +600,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// <param name="numberOfActiveTransports"> value to be set. </param>
         public static void ActiveTransportCount(UnsafeBuffer metadataBuffer, int numberOfActiveTransports)
         {
-            metadataBuffer.PutIntOrdered(LOG_ACTIVE_TRANSPORT_COUNT, numberOfActiveTransports);
+            metadataBuffer.PutIntRelease(LOG_ACTIVE_TRANSPORT_COUNT, numberOfActiveTransports);
         }
 
         /// <summary>
@@ -600,7 +620,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// <param name="position">          value of the end of stream position. </param>
         public static void EndOfStreamPosition(UnsafeBuffer metaDataBuffer, long position)
         {
-            metaDataBuffer.PutLongOrdered(LOG_END_OF_STREAM_POSITION_OFFSET, position);
+            metaDataBuffer.PutLongRelease(LOG_END_OF_STREAM_POSITION_OFFSET, position);
         }
 
         /// <summary>
@@ -615,13 +635,13 @@ namespace Adaptive.Aeron.LogBuffer
         }
 
         /// <summary>
-        ///     Set the value of the current active term count for the producer using memory ordered semantics.
+        ///     Set the value of the current active term count for the producer using memory release semantics.
         /// </summary>
         /// <param name="metaDataBuffer"> containing the metadata. </param>
         /// <param name="termCount">         value of the active term count used by the producer of this log. </param>
         public static void ActiveTermCountOrdered(UnsafeBuffer metaDataBuffer, int termCount)
         {
-            metaDataBuffer.PutIntOrdered(LOG_ACTIVE_TERM_COUNT_OFFSET, termCount);
+            metaDataBuffer.PutIntRelease(LOG_ACTIVE_TERM_COUNT_OFFSET, termCount);
         }
 
         /// <summary>
@@ -1032,7 +1052,7 @@ namespace Adaptive.Aeron.LogBuffer
             return (numMaxPayloads * (maxPayloadSize + HEADER_LENGTH)) + lastFrameLength;
         }
 
-        
+
         /// <summary>
         /// Compute frame length for a message that has been reassembled from chunks of {@code maxPayloadSize}.
         /// </summary>
@@ -1085,6 +1105,26 @@ namespace Adaptive.Aeron.LogBuffer
         public static void Tether(UnsafeBuffer metadataBuffer, bool value)
         {
             metadataBuffer.PutByte(LOG_TETHER_OFFSET, (byte)(value ? 1 : 0));
+        }
+
+        /// <summary>
+        /// Get whether the log's publication was revoked.
+        /// </summary>
+        /// <param name="metadataBuffer"> containing the meta data. </param>
+        /// <returns> true if the log's publication was revoked, otherwise false. </returns>
+        public static bool IsPublicationRevoked(UnsafeBuffer metadataBuffer)
+        {
+            return metadataBuffer.GetByte(LOG_IS_PUBLICATION_REVOKED_OFFSET) == 1;
+        }
+
+        /// <summary>
+        /// Set whether the log's publication was revoked.
+        /// </summary>
+        /// <param name="metadataBuffer"> containing the meta data. </param>
+        /// <param name="value">          true if the log's publication was revoked, otherwise false. </param>
+        public static void IsPublicationRevoked(UnsafeBuffer metadataBuffer, bool value)
+        {
+            metadataBuffer.PutByte(LOG_IS_PUBLICATION_REVOKED_OFFSET, (byte)(value ? 1 : 0));
         }
 
         /// <summary>
@@ -1346,6 +1386,26 @@ namespace Adaptive.Aeron.LogBuffer
         public static void UntetheredWindowLimitTimeoutNs(UnsafeBuffer metadataBuffer, long value)
         {
             metadataBuffer.PutLong(LOG_UNTETHERED_WINDOW_LIMIT_TIMEOUT_NS_OFFSET, value);
+        }
+
+        /// <summary>
+        /// Get the untethered linger timeout in nanoseconds from the metadata.
+        /// </summary>
+        /// <param name="metadataBuffer"> containing the meta data. </param>
+        /// <returns> the untethered window limit timeout in nanoseconds. </returns>
+        public static long UntetheredLingerTimeoutNs(UnsafeBuffer metadataBuffer)
+        {
+            return metadataBuffer.GetLong(LOG_UNTETHERED_LINGER_TIMEOUT_NS_OFFSET);
+        }
+
+        /// <summary>
+        /// Set the untethered linger timeout in nanoseconds in the metadata.
+        /// </summary>
+        /// <param name="metadataBuffer"> containing the meta data. </param>
+        /// <param name="value">          the untethered linger timeout to set. </param>
+        public static void UntetheredLingerTimeoutNs(UnsafeBuffer metadataBuffer, long value)
+        {
+            metadataBuffer.PutLong(LOG_UNTETHERED_LINGER_TIMEOUT_NS_OFFSET, value);
         }
 
         /// <summary>

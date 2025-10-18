@@ -12,7 +12,7 @@ public class ReplayRequestDecoder
     public const ushort BLOCK_LENGTH = 56;
     public const ushort TEMPLATE_ID = 6;
     public const ushort SCHEMA_ID = 101;
-    public const ushort SCHEMA_VERSION = 10;
+    public const ushort SCHEMA_VERSION = 11;
 
     private ReplayRequestDecoder _parentMessage;
     private IDirectBuffer _buffer;

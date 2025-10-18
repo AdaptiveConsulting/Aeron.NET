@@ -16,31 +16,15 @@
 
 using Adaptive.Aeron.Exceptions;
 using Adaptive.Agrona;
+using static Adaptive.Aeron.ErrorCode;
+using static Adaptive.Agrona.BitUtil;
 
 namespace Adaptive.Aeron.Command
 {
-    /// <summary>
-    /// Control message for removing a Publication or Subscription.
-    /// 
-    /// <para>
-    /// 0                   1                   2                   3
-    /// 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-    /// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    /// |                            Client ID                          |
-    /// |                                                               |
-    /// +---------------------------------------------------------------+
-    /// |                    Command Correlation ID                     |
-    /// |                                                               |
-    /// +---------------------------------------------------------------+
-    /// |                         Registration ID                       |
-    /// |                                                               |
-    /// +---------------------------------------------------------------+
-    /// </para>
-    /// </summary>
-    public class RemoveMessageFlyweight : CorrelatedMessageFlyweight
+    public abstract class RemoveMessageFlyweight : CorrelatedMessageFlyweight
     {
-        private static readonly int REGISTRATION_ID_OFFSET = CORRELATION_ID_FIELD_OFFSET + BitUtil.SIZE_OF_LONG;
-        private static readonly int MINIMUM_LENGTH = REGISTRATION_ID_OFFSET + BitUtil.SIZE_OF_LONG;
+        internal static readonly int REGISTRATION_ID_FIELD_OFFSET = CORRELATION_ID_FIELD_OFFSET + SIZE_OF_LONG;
+        private static readonly int MINIMUM_LENGTH = REGISTRATION_ID_FIELD_OFFSET + SIZE_OF_LONG;
 
         /// <summary>
         /// Wrap the buffer at a given offset for updates.
@@ -54,24 +38,24 @@ namespace Adaptive.Aeron.Command
 
             return this;
         }
-        
+
         /// <summary>
         /// Get the registration id field.
         /// </summary>
         /// <returns> registration id field. </returns>
         public long RegistrationId()
         {
-            return buffer.GetLong(offset + REGISTRATION_ID_OFFSET);
+            return buffer.GetLong(offset + REGISTRATION_ID_FIELD_OFFSET);
         }
 
         /// <summary>
-        /// Set registration  id field.
+        /// Set registration id field.
         /// </summary>
         /// <param name="registrationId"> field value. </param>
         /// <returns> this for a fluent API. </returns>
         public RemoveMessageFlyweight RegistrationId(long registrationId)
         {
-            buffer.PutLong(offset + REGISTRATION_ID_OFFSET, registrationId);
+            buffer.PutLong(offset + REGISTRATION_ID_FIELD_OFFSET, registrationId);
 
             return this;
         }
@@ -82,7 +66,20 @@ namespace Adaptive.Aeron.Command
         /// <returns> length of the message in bytes. </returns>
         public static int Length()
         {
-            return LENGTH + BitUtil.SIZE_OF_LONG;
+            return LENGTH + SIZE_OF_LONG;
+        }
+
+        /// <summary>
+        /// Validate buffer length is long enough for message.
+        /// </summary>
+        /// <param name="msgTypeId"> type of message. </param>
+        /// <param name="length"> of message in bytes to validate. </param>
+        public new void ValidateLength(int msgTypeId, int length)
+        {
+            if (length < MINIMUM_LENGTH)
+            {
+                throw new ControlProtocolException(MALFORMED_COMMAND, "command=" + msgTypeId + " too short: length=" + length);
+            }
         }
     }
 }

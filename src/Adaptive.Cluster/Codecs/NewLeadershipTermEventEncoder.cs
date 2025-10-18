@@ -12,7 +12,7 @@ public class NewLeadershipTermEventEncoder
     public const ushort BLOCK_LENGTH = 48;
     public const ushort TEMPLATE_ID = 24;
     public const ushort SCHEMA_ID = 111;
-    public const ushort SCHEMA_VERSION = 12;
+    public const ushort SCHEMA_VERSION = 13;
 
     private NewLeadershipTermEventEncoder _parentMessage;
     private IMutableDirectBuffer _buffer;

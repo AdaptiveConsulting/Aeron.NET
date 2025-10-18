@@ -12,7 +12,7 @@ public class StartRecordingRequest2Decoder
     public const ushort BLOCK_LENGTH = 28;
     public const ushort TEMPLATE_ID = 63;
     public const ushort SCHEMA_ID = 101;
-    public const ushort SCHEMA_VERSION = 10;
+    public const ushort SCHEMA_VERSION = 11;
 
     private StartRecordingRequest2Decoder _parentMessage;
     private IDirectBuffer _buffer;

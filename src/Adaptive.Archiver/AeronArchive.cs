@@ -2764,12 +2764,32 @@ namespace Adaptive.Archiver
                 {
                     throw new ConfigurationException("AeronArchive.Context.ControlResponseChannel must be set");
                 }
+                
+                
+                ChannelUri requestChannel = ApplyDefaultParams(controlRequestChannel);
+                ChannelUri responseChannel = ApplyDefaultParams(controlResponseChannel);
+                string nameSuffix;
+                if (!CONTROL_MODE_RESPONSE.Equals(responseChannel.Get(MDC_CONTROL_MODE_PARAM_NAME)))
+                {
+                    string sessionId = Convert.ToString(BitUtil.GenerateRandomisedId());
+                    nameSuffix = "session-id=" + sessionId;
+                    requestChannel.Put(SESSION_ID_PARAM_NAME, sessionId);
+                    responseChannel.Put(SESSION_ID_PARAM_NAME, sessionId);
+                }
+                else
+                {
+                    nameSuffix = "control-mode=response";
+                }
+                controlRequestChannel = requestChannel.ToString();
+                controlResponseChannel = responseChannel.ToString();
+
 
                 if (null == aeron)
                 {
                     aeron = Aeron.Aeron.Connect(
                         new Aeron.Aeron.Context()
                             .AeronDirectoryName(aeronDirectoryName)
+                            .ClientName("archive-client " + nameSuffix)
                             .ErrorHandler(errorHandler)
                     );
 
@@ -2794,19 +2814,6 @@ namespace Adaptive.Archiver
                 {
                     _lock = new ReentrantLock();
                 }
-
-
-                ChannelUri requestChannel = ApplyDefaultParams(controlRequestChannel);
-                ChannelUri responseChannel = ApplyDefaultParams(controlResponseChannel);
-                if (!CONTROL_MODE_RESPONSE.Equals(responseChannel.Get(MDC_CONTROL_MODE_PARAM_NAME)))
-                {
-                    string sessionId = Convert.ToString(BitUtil.GenerateRandomisedId());
-                    requestChannel.Put(SESSION_ID_PARAM_NAME, sessionId);
-                    responseChannel.Put(SESSION_ID_PARAM_NAME, sessionId);
-                }
-
-                controlRequestChannel = requestChannel.ToString();
-                controlResponseChannel = responseChannel.ToString();
             }
 
             /// <summary>

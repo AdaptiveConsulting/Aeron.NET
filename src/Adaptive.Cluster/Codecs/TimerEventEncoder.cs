@@ -12,7 +12,7 @@ public class TimerEventEncoder
     public const ushort BLOCK_LENGTH = 24;
     public const ushort TEMPLATE_ID = 20;
     public const ushort SCHEMA_ID = 111;
-    public const ushort SCHEMA_VERSION = 12;
+    public const ushort SCHEMA_VERSION = 13;
 
     private TimerEventEncoder _parentMessage;
     private IMutableDirectBuffer _buffer;

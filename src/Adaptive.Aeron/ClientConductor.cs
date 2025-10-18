@@ -613,7 +613,7 @@ namespace Adaptive.Aeron
                     {
                         ReleaseLogBuffers(publication.LogBuffers, publication.OriginalRegistrationId,
                             EXPLICIT_CLOSE_LINGER_NS);
-                        _asyncCommandIdSet.Add(_driverProxy.RemovePublication(publication.RegistrationId));
+                        _asyncCommandIdSet.Add(_driverProxy.RemovePublication(publication.RegistrationId, publication.revokeOnClose));
                     }
                 }
             }
@@ -642,17 +642,19 @@ namespace Adaptive.Aeron
                 }
 
                 Publication publication = (Publication)resource;
+                bool revokeOnClose = false;
                 if (null != publication)
                 {
                     _resourceByRegIdMap.Remove(publicationRegistrationId);
                     publication.InternalClose();
                     ReleaseLogBuffers(publication.LogBuffers, publication.OriginalRegistrationId,
                         EXPLICIT_CLOSE_LINGER_NS);
+                    revokeOnClose = publication.revokeOnClose;
                 }
 
                 if (_asyncCommandIdSet.Remove(publicationRegistrationId) || null != publication)
                 {
-                    _asyncCommandIdSet.Add(_driverProxy.RemovePublication(publicationRegistrationId));
+                    _asyncCommandIdSet.Add(_driverProxy.RemovePublication(publicationRegistrationId, revokeOnClose));
                     _stashedChannelByRegistrationId.Remove(publicationRegistrationId);
                 }
             }
@@ -1428,8 +1430,6 @@ namespace Adaptive.Aeron
                 EnsureActive();
                 EnsureNotReentrant();
 
-                // TODO, check reason length??
-
                 long registrationId = _driverProxy.RejectImage(correlationId, position, reason);
                 AwaitResponse(registrationId);
             }
@@ -1636,7 +1636,7 @@ namespace Adaptive.Aeron
                         try
                         {
                             _heartbeatTimestamp = new AtomicCounter(_counterValuesBuffer, counterId);
-                            _heartbeatTimestamp.SetOrdered(nowMs);
+                            _heartbeatTimestamp.SetRelease(nowMs);
                             AeronCounters.AppendToLabel(
                                 _countersReader.MetaDataBuffer,
                                 counterId,
@@ -1662,7 +1662,7 @@ namespace Adaptive.Aeron
                         throw new AeronException("unexpected close of heartbeat timestamp counter: " + counterId);
                     }
 
-                    _heartbeatTimestamp.SetOrdered(nowMs);
+                    _heartbeatTimestamp.SetRelease(nowMs);
                     _timeOfLastKeepAliveNs = nowNs;
                 }
 

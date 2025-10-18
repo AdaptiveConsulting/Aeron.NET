@@ -12,7 +12,7 @@ public class ClusterMembersChangeEncoder
     public const ushort BLOCK_LENGTH = 12;
     public const ushort TEMPLATE_ID = 71;
     public const ushort SCHEMA_ID = 111;
-    public const ushort SCHEMA_VERSION = 12;
+    public const ushort SCHEMA_VERSION = 13;
 
     private ClusterMembersChangeEncoder _parentMessage;
     private IMutableDirectBuffer _buffer;

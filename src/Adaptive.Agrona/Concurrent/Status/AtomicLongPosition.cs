@@ -53,6 +53,12 @@ namespace Adaptive.Agrona.Concurrent.Status
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void SetRelease(long value)
+        {
+            _value.Set(value);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void SetVolatile(long value)
         {
             _value.Set(value);

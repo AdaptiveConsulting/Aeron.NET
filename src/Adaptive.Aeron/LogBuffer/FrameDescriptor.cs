@@ -308,7 +308,7 @@ namespace Adaptive.Aeron.LogBuffer
             //    frameLength = Integer.ReverseBytes(frameLength);
             //}
 
-            buffer.PutIntOrdered(termOffset, frameLength);
+            buffer.PutIntRelease(termOffset, frameLength);
         }
 
         /// <summary>

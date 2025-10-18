@@ -52,7 +52,7 @@ namespace Adaptive.Aeron.Tests.LogBuffer
                 .Then(A.CallTo(() => _termBuffer.PutLong(termOffset + 24, packet.GetLong(24))).MustHaveHappened())
                 .Then(A.CallTo(() => _termBuffer.PutLong(termOffset + 16, packet.GetLong(16))).MustHaveHappened())
                 .Then(A.CallTo(() => _termBuffer.PutLong(termOffset + 8, packet.GetLong(8))).MustHaveHappened())
-                .Then(A.CallTo(() => _termBuffer.PutLongOrdered(termOffset, packet.GetLong(0))).MustHaveHappened());
+                .Then(A.CallTo(() => _termBuffer.PutLongRelease(termOffset, packet.GetLong(0))).MustHaveHappened());
         }
 
 

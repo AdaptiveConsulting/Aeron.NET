@@ -45,7 +45,7 @@ namespace Adaptive.Aeron.LogBuffer
                 termBuffer.PutLong(termOffset + 16, packet.GetLong(16));
                 termBuffer.PutLong(termOffset + 8, packet.GetLong(8));
 
-                termBuffer.PutLongOrdered(termOffset, packet.GetLong(0));
+                termBuffer.PutLongRelease(termOffset, packet.GetLong(0));
             }
         }
     }

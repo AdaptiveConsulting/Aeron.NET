@@ -430,6 +430,8 @@ namespace Adaptive.Aeron
         /// Allocate a counter on the media driver and return a <seealso cref="Counter"/> for it.
         /// <para>
         /// The counter should be freed by calling <seealso cref="Counter.Dispose()"/>.
+        ///
+        /// The typeId should be 1000 or greater. Values lower than that are reserved for use by Aeron.
         ///   
         /// </para>
         /// </summary>
@@ -452,6 +454,8 @@ namespace Adaptive.Aeron
         /// Allocate a counter on the media driver and return a <seealso cref="Counter"/> for it.
         /// <para>
         /// The counter should be freed by calling <seealso cref="Counter.Dispose()"/>.
+        ///
+        /// The typeId should be 1000 or greater. Values lower than that are reserved for use by Aeron.
         /// 
         /// </para>
         /// </summary>
@@ -466,11 +470,13 @@ namespace Adaptive.Aeron
 
         /// <summary>
         /// Allocates or returns an existing static counter instance using specified {@code typeId} and
-        /// {@code registrationId} pair. Such counter cannot be deleted and its lifecycle is decoupled from this
+        /// {@code registrationId} pair. Such a counter cannot be deleted and its lifecycle is decoupled from this
         /// <seealso cref="Aeron"/> instance, i.e. won't be closed when this instance is closed or times out.
         /// <para>
         /// <em><strong>Note:</strong> calling <seealso cref="Counter.Dispose()"/> will only close the counter instance itself but will
         /// not free the counter in the CnC file.</em>
+        ///
+        /// The typeId should be 1000 or greater. Values lower than that are reserved for use by Aeron.
         /// 
         /// </para>
         /// </summary>
@@ -494,11 +500,13 @@ namespace Adaptive.Aeron
 
         /// <summary>
         /// Allocates or returns an existing static counter instance using specified {@code typeId} and
-        /// {@code registrationId} pair. Such counter cannot be deleted and its lifecycle is decoupled from this
+        /// {@code registrationId} pair. Such a counter cannot be deleted and its lifecycle is decoupled from this
         /// <seealso cref="Aeron"/> instance, i.e. won't be closed when this instance is closed or times out.
         /// <para>
         /// <em><strong>Note:</strong> calling <seealso cref="Counter.Dispose()"/> will only close the counter instance itself but will
         /// not free the counter in the CnC file.</em>
+        ///
+        /// The typeId should be 1000 or greater. Values lower than that are reserved for use by Aeron.
         /// 
         /// </para>
         /// </summary>
@@ -825,10 +833,12 @@ namespace Adaptive.Aeron
             private IPublicationErrorFrameHandler publicationErrorFrameHandler = new NoOpPublicationErrorFrameHandler();
             private Action _closeHandler;
             private long _keepAliveIntervalNs = Configuration.KeepaliveIntervalNs;
-            private long _interServiceTimeoutNs = 0;
+            private long _interServiceTimeoutNs;
             private long idleSleepDurationNs = Configuration.IdleSleepDurationNs();
             private long _resourceLingerDurationNs = Configuration.ResourceLingerDurationNs();
             private long _closeLingerDurationNs = Configuration.CloseLingerDurationNs();
+            private int filePageSize;
+            
             private int _isConcluded = 0;
             private long _driverTimeoutMs = DRIVER_TIMEOUT_MS;
             private string _aeronDirectoryName = GetAeronDirectoryName();
@@ -1169,6 +1179,13 @@ namespace Adaptive.Aeron
             public const string UNTETHERED_WINDOW_LIMIT_TIMEOUT_PARAM_NAME = "untethered-window-limit-timeout";
 
             /// <summary>
+            /// Parameter name to set explicit untethered linger timeout, e.g. {@code untethered-linger-timeout=10s}.
+            ///     
+            /// <remarks>Since 1.48.0</remarks>
+            /// </summary>
+            public const string UNTETHERED_LINGER_TIMEOUT_PARAM_NAME = "untethered-linger-timeout";
+            
+            /// <summary>
             /// Parameter name to set explicit untethered resting timeout, e.g. {@code untethered-resting-timeout=10s}.
             /// </summary>
             /// <remarks>Since 1.45.0</remarks>
@@ -1201,7 +1218,6 @@ namespace Adaptive.Aeron
             {
                 return "true".Equals(Config.GetProperty(PRINT_CONFIGURATION_ON_START_PROP_NAME));
             }
-
             
             /// <summary>
             /// Get the current fallback logger based on the supplied property.
@@ -1286,14 +1302,21 @@ namespace Adaptive.Aeron
                 }
                 else if (_clientLock is NoOpLock && !_useConductorAgentInvoker)
                 {
-                    throw new AeronException(
+                    throw new ConfigurationException(
                         "Must use Aeron.Context.UseConductorAgentInvoker(true) when Aeron.Context.ClientLock(...) " +
                         "is using a NoOpLock");
+                }
+                
+                if (null != _driverAgentInvoker && !_useConductorAgentInvoker)
+                {
+                    throw new ConfigurationException(
+                        "Must use Aeron.Context.useConductorAgentInvoker(true) when Aeron.Context.driverAgentInvoker() " +
+                        "is set");
                 }
 
                 if (null != clientName && clientName.Length > Configuration.MAX_CLIENT_NAME_LENGTH)
                 {
-                    throw new AeronException("clientName length must <= " + Configuration.MAX_CLIENT_NAME_LENGTH);
+                    throw new ConfigurationException("clientName length must <= " + Configuration.MAX_CLIENT_NAME_LENGTH);
                 }
 
                 if (_epochClock == null)
@@ -1322,10 +1345,8 @@ namespace Adaptive.Aeron
                     _awaitingIdleStrategy = new SleepingIdleStrategy(Configuration.AWAITING_IDLE_SLEEP_MS);
                 }
 
-                if (CncFile() != null)
-                {
-                    ConnectToDriver();
-                }
+                ConnectToDriver();
+                filePageSize = DriverFilePageSize(_cncMetaDataBuffer);
 
                 _interServiceTimeoutNs = CncFileDescriptor.ClientLivenessTimeoutNs(_cncMetaDataBuffer);
                 if (_interServiceTimeoutNs <= _keepAliveIntervalNs)
@@ -2208,6 +2229,17 @@ namespace Adaptive.Aeron
             }
 
             /// <summary>
+            /// Get file page size from running media driver.
+            /// </summary>
+            /// <returns> file page size or zero (if not connected to the media driver). </returns>
+            /// <remarks>Since 1.48.0</remarks>
+            public int FilePageSize()
+            {
+                return filePageSize;
+            }
+
+            
+            /// <summary>
             /// Clean up all resources that the client uses to communicate with the Media Driver.
             /// </summary>
             public void Dispose()
@@ -2269,20 +2301,20 @@ namespace Adaptive.Aeron
             private void ConnectToDriver()
             {
                 var clock = _epochClock;
-                long deadLineMs = clock.Time() + DriverTimeoutMs();
+                long deadlineMs = clock.Time() + DriverTimeoutMs();
                 FileInfo cncFile = CncFile();
 
                 while (null == _toDriverBuffer)
                 {
                     cncFile.Refresh();
 
-                    _cncByteBuffer = WaitForFileMapping(cncFile, clock, deadLineMs);
+                    _cncByteBuffer = WaitForFileMapping(cncFile, clock, deadlineMs);
                     _cncMetaDataBuffer = CncFileDescriptor.CreateMetaDataBuffer(_cncByteBuffer);
 
                     int cncVersion;
                     while (0 == (cncVersion = _cncMetaDataBuffer.GetIntVolatile(CncFileDescriptor.CncVersionOffset(0))))
                     {
-                        if (clock.Time() > deadLineMs)
+                        if (clock.Time() > deadlineMs)
                         {
                             throw new DriverTimeoutException("CnC file is created but not initialised: " +
                                                              cncFile.FullName);
@@ -2316,7 +2348,7 @@ namespace Adaptive.Aeron
 
                     while (0 == ringBuffer.ConsumerHeartbeatTime())
                     {
-                        if (clock.Time() > deadLineMs)
+                        if (clock.Time() > deadlineMs)
                         {
                             throw new DriverTimeoutException("no driver heartbeat detected.");
                         }
@@ -2327,7 +2359,7 @@ namespace Adaptive.Aeron
                     long timeMs = clock.Time();
                     if (ringBuffer.ConsumerHeartbeatTime() < (timeMs - DriverTimeoutMs()))
                     {
-                        if (timeMs > deadLineMs)
+                        if (timeMs > deadlineMs)
                         {
                             throw new DriverTimeoutException("no driver heartbeat detected.");
                         }
@@ -2349,7 +2381,7 @@ namespace Adaptive.Aeron
             {
                 while (true)
                 {
-                    while (!cncFile.Exists || cncFile.Length <= 0)
+                    while (!cncFile.Exists || cncFile.Length < CncFileDescriptor.META_DATA_LENGTH)
                     {
                         if (clock.Time() > deadLineMs)
                         {
@@ -2411,7 +2443,7 @@ namespace Adaptive.Aeron
             {
                 FileInfo cncFile = new FileInfo(Path.Combine(_aeronDirectory.FullName, CncFileDescriptor.CNC_FILE));
 
-                if (cncFile.Exists && cncFile.Length > CncFileDescriptor.END_OF_METADATA_OFFSET)
+                if (cncFile.Exists && cncFile.Length > CncFileDescriptor.META_DATA_LENGTH)
                 {
                     if (null != logProgress)
                     {
@@ -2427,7 +2459,7 @@ namespace Adaptive.Aeron
             /// <summary>
             /// Is a media driver active in the given direction?
             /// </summary>
-            /// <param name="directory"> to check</param>
+            /// <param name="directory"> to check.</param>
             /// <param name="driverTimeoutMs"> for the driver liveness check.</param>
             /// <param name="logger"> for feedback as liveness checked.</param>
             /// <returns> true if a driver is active or false if not.</returns>
@@ -2435,7 +2467,7 @@ namespace Adaptive.Aeron
             {
                 FileInfo cncFile = new FileInfo(Path.Combine(directory.FullName, CncFileDescriptor.CNC_FILE));
 
-                if (cncFile.Exists && cncFile.Length > CncFileDescriptor.END_OF_METADATA_OFFSET)
+                if (cncFile.Exists && cncFile.Length > CncFileDescriptor.META_DATA_LENGTH)
                 {
                     logger("INFO: Aeron CnC file " + cncFile + " exists");
 
@@ -2532,7 +2564,7 @@ namespace Adaptive.Aeron
             {
                 FileInfo cncFile = new FileInfo(Path.Combine(directory.FullName, CncFileDescriptor.CNC_FILE));
 
-                if (cncFile.Exists && cncFile.Length > CncFileDescriptor.END_OF_METADATA_OFFSET)
+                if (cncFile.Exists && cncFile.Length > CncFileDescriptor.META_DATA_LENGTH)
                 {
                     var cncByteBuffer = IoUtil.MapExistingFile(cncFile, "CnC file");
                     try
@@ -2660,7 +2692,42 @@ namespace Adaptive.Aeron
                     return new ErrorHandlerWrapper(loggingErrorHandler, userErrorHandler);
                 }
             }
+            
+            /// <summary>
+            /// Connect to the media driver and extract file page size from the C'n'C file.
+            /// </summary>
+            /// <param name="aeronDirectory"> where driver is running. </param>
+            /// <param name="clock">          to use. </param>
+            /// <param name="timeoutMs">      for awaiting connection. </param>
+            /// <returns> file page size from running media driver or <seealso cref="LogBufferDescriptor.PAGE_MIN_SIZE"/> if driver is old.
+            /// @since 1.48.0 </returns>
+            public static int DriverFilePageSize(DirectoryInfo aeronDirectory, IEpochClock clock, long timeoutMs)
+            {
+                MappedByteBuffer cncByteBuffer = null;
+                UnsafeBuffer cncMetaDataBuffer = null;
+                
+                try
+                {
+                    FileInfo cncFile = new FileInfo(Path.Combine(aeronDirectory.FullName, CncFileDescriptor.CNC_FILE));
+                    cncByteBuffer = WaitForFileMapping(cncFile, clock, timeoutMs);
+                    cncMetaDataBuffer = CncFileDescriptor.CreateMetaDataBuffer(cncByteBuffer);
 
+                    return DriverFilePageSize(cncMetaDataBuffer);
+                }
+                finally
+                {
+                    cncMetaDataBuffer?.Dispose();
+                    cncByteBuffer?.Dispose();
+                }
+            }
+
+            
+            internal static int DriverFilePageSize(IDirectBuffer metadata)
+            {
+                int pageSize = CncFileDescriptor.FilePageSize(metadata);
+                return 0 != pageSize ? pageSize : LogBufferDescriptor.PAGE_MIN_SIZE;
+            }
+            
             private static void Sleep(int durationMs)
             {
                 try

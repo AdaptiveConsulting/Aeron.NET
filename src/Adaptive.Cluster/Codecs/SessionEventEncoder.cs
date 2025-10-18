@@ -9,10 +9,10 @@ namespace Adaptive.Cluster.Codecs {
 
 public class SessionEventEncoder
 {
-    public const ushort BLOCK_LENGTH = 36;
+    public const ushort BLOCK_LENGTH = 44;
     public const ushort TEMPLATE_ID = 2;
     public const ushort SCHEMA_ID = 111;
-    public const ushort SCHEMA_VERSION = 12;
+    public const ushort SCHEMA_VERSION = 13;
 
     private SessionEventEncoder _parentMessage;
     private IMutableDirectBuffer _buffer;
@@ -268,6 +268,38 @@ public class SessionEventEncoder
     public SessionEventEncoder Version(int value)
     {
         _buffer.PutInt(_offset + 32, value, ByteOrder.LittleEndian);
+        return this;
+    }
+
+
+    public static int LeaderHeartbeatTimeoutNsEncodingOffset()
+    {
+        return 36;
+    }
+
+    public static int LeaderHeartbeatTimeoutNsEncodingLength()
+    {
+        return 8;
+    }
+
+    public static long LeaderHeartbeatTimeoutNsNullValue()
+    {
+        return -9223372036854775808L;
+    }
+
+    public static long LeaderHeartbeatTimeoutNsMinValue()
+    {
+        return -9223372036854775807L;
+    }
+
+    public static long LeaderHeartbeatTimeoutNsMaxValue()
+    {
+        return 9223372036854775807L;
+    }
+
+    public SessionEventEncoder LeaderHeartbeatTimeoutNs(long value)
+    {
+        _buffer.PutLong(_offset + 36, value, ByteOrder.LittleEndian);
         return this;
     }
 

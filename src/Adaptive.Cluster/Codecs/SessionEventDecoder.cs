@@ -9,10 +9,10 @@ namespace Adaptive.Cluster.Codecs {
 
 public class SessionEventDecoder
 {
-    public const ushort BLOCK_LENGTH = 36;
+    public const ushort BLOCK_LENGTH = 44;
     public const ushort TEMPLATE_ID = 2;
     public const ushort SCHEMA_ID = 111;
-    public const ushort SCHEMA_VERSION = 12;
+    public const ushort SCHEMA_VERSION = 13;
 
     private SessionEventDecoder _parentMessage;
     private IDirectBuffer _buffer;
@@ -397,6 +397,60 @@ public class SessionEventDecoder
     }
 
 
+    public static int LeaderHeartbeatTimeoutNsId()
+    {
+        return 8;
+    }
+
+    public static int LeaderHeartbeatTimeoutNsSinceVersion()
+    {
+        return 13;
+    }
+
+    public static int LeaderHeartbeatTimeoutNsEncodingOffset()
+    {
+        return 36;
+    }
+
+    public static int LeaderHeartbeatTimeoutNsEncodingLength()
+    {
+        return 8;
+    }
+
+    public static string LeaderHeartbeatTimeoutNsMetaAttribute(MetaAttribute metaAttribute)
+    {
+        switch (metaAttribute)
+        {
+            case MetaAttribute.EPOCH: return "unix";
+            case MetaAttribute.TIME_UNIT: return "nanosecond";
+            case MetaAttribute.SEMANTIC_TYPE: return "";
+            case MetaAttribute.PRESENCE: return "optional";
+        }
+
+        return "";
+    }
+
+    public static long LeaderHeartbeatTimeoutNsNullValue()
+    {
+        return -9223372036854775808L;
+    }
+
+    public static long LeaderHeartbeatTimeoutNsMinValue()
+    {
+        return -9223372036854775807L;
+    }
+
+    public static long LeaderHeartbeatTimeoutNsMaxValue()
+    {
+        return 9223372036854775807L;
+    }
+
+    public long LeaderHeartbeatTimeoutNs()
+    {
+        return _buffer.GetLong(_offset + 36, ByteOrder.LittleEndian);
+    }
+
+
     public static int DetailId()
     {
         return 7;
@@ -531,7 +585,12 @@ public class SessionEventDecoder
         builder.Append("Version=");
         builder.Append(Version());
         builder.Append('|');
-        //Token{signal=BEGIN_VAR_DATA, name='detail', referencedName='null', description='Further detail such as an error message or list of cluster ingress endpoints.', id=7, version=0, deprecated=0, encodedLength=0, offset=36, componentTokenCount=6, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=BEGIN_FIELD, name='leaderHeartbeatTimeoutNs', referencedName='null', description='Leader heartbeat timeout in nanoseconds as configured on the leader.', id=8, version=13, deprecated=0, encodedLength=0, offset=36, componentTokenCount=3, encoding=Encoding{presence=OPTIONAL, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=ENCODING, name='int64', referencedName='null', description='null', id=-1, version=0, deprecated=0, encodedLength=8, offset=36, componentTokenCount=1, encoding=Encoding{presence=OPTIONAL, primitiveType=INT64, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        builder.Append("LeaderHeartbeatTimeoutNs=");
+        builder.Append(LeaderHeartbeatTimeoutNs());
+        builder.Append('|');
+        //Token{signal=BEGIN_VAR_DATA, name='detail', referencedName='null', description='Further detail such as an error message or list of cluster ingress endpoints.', id=7, version=0, deprecated=0, encodedLength=0, offset=44, componentTokenCount=6, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
         builder.Append("Detail=");
         builder.Append(Detail());
 

@@ -34,7 +34,9 @@ namespace Adaptive.Aeron
         private readonly long _clientId;
         private readonly PublicationMessageFlyweight _publicationMessage = new PublicationMessageFlyweight();
         private readonly SubscriptionMessageFlyweight _subscriptionMessage = new SubscriptionMessageFlyweight();
-        private readonly RemoveMessageFlyweight _removeMessage = new RemoveMessageFlyweight();
+        private readonly RemoveCounterFlyweight removeCounter = new RemoveCounterFlyweight();
+        private readonly RemovePublicationFlyweight removePublication = new RemovePublicationFlyweight();
+        private readonly RemoveSubscriptionFlyweight removeSubscription = new RemoveSubscriptionFlyweight();
         private readonly DestinationMessageFlyweight _destinationMessage = new DestinationMessageFlyweight();
 
         private readonly DestinationByIdMessageFlyweight
@@ -123,19 +125,21 @@ namespace Adaptive.Aeron
         /// Instruct the driver to remove a publication by its registration id.
         /// </summary>
         /// <param name="registrationId"> for the publication to be removed. </param>
+        /// <param name="revoke"> whether the publication is being revoked.</param>
         /// <returns> the correlation id for the command. </returns>
-        public long RemovePublication(long registrationId)
+        public long RemovePublication(long registrationId, bool revoke)
         {
             long correlationId = _toDriverCommandBuffer.NextCorrelationId();
             int index = _toDriverCommandBuffer.TryClaim(REMOVE_PUBLICATION,
-                RemoveMessageFlyweight.Length());
+                RemovePublicationFlyweight.Length());
             if (index < 0)
             {
                 throw new AeronException("could not write remove publication command");
             }
 
-            _removeMessage
+            removePublication
                 .Wrap(_toDriverCommandBuffer.Buffer(), index)
+                .Revoke(revoke)
                 .RegistrationId(registrationId)
                 .ClientId(_clientId)
                 .CorrelationId(correlationId);
@@ -184,13 +188,13 @@ namespace Adaptive.Aeron
         {
             long correlationId = _toDriverCommandBuffer.NextCorrelationId();
             int index = _toDriverCommandBuffer.TryClaim(REMOVE_SUBSCRIPTION,
-                RemoveMessageFlyweight.Length());
+                RemoveSubscriptionFlyweight.Length());
             if (index < 0)
             {
                 throw new AeronException("could not write remove subscription command");
             }
 
-            _removeMessage
+            removeSubscription
                 .Wrap(_toDriverCommandBuffer.Buffer(), index)
                 .RegistrationId(registrationId)
                 .ClientId(_clientId)
@@ -414,13 +418,13 @@ namespace Adaptive.Aeron
         {
             long correlationId = _toDriverCommandBuffer.NextCorrelationId();
             int index = _toDriverCommandBuffer.TryClaim(REMOVE_COUNTER,
-                RemoveMessageFlyweight.Length());
+                RemoveCounterFlyweight.Length());
             if (index < 0)
             {
                 throw new AeronException("could not write remove counter command");
             }
 
-            _removeMessage
+            removeCounter
                 .Wrap(_toDriverCommandBuffer.Buffer(), index)
                 .RegistrationId(registrationId)
                 .ClientId(_clientId)

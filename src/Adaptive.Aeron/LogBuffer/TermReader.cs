@@ -88,7 +88,7 @@ namespace Adaptive.Aeron.LogBuffer
                 long newPosition = currentPosition + (offset - termOffset);
                 if (newPosition > currentPosition)
                 {
-                    subscriberPosition.SetOrdered(newPosition);
+                    subscriberPosition.SetRelease(newPosition);
                 }
             }
 

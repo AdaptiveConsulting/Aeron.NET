@@ -49,6 +49,13 @@ namespace Adaptive.Agrona.Concurrent
         /// <param name="index"> in bytes for where to put. </param>
         /// <param name="value"> for at a given index </param>
         void PutLongOrdered(int index, long value);
+        
+        /// <summary>
+        /// Put a value to a given index with release semantics.
+        /// </summary>
+        /// <param name="index"> in bytes for where to put. </param>
+        /// <param name="value"> for at a given index </param>
+        void PutLongRelease(int index, long value);
 
         /// <summary>
         /// Add a value to a given index with ordered store semantics. Use a negative increment to decrement. </summary>
@@ -95,6 +102,13 @@ namespace Adaptive.Agrona.Concurrent
         /// <param name="index"> in bytes for where to put. </param>
         /// <param name="value"> for at a given index </param>
         void PutIntOrdered(int index, int value);
+        
+        /// <summary>
+        /// Put a value to a given index with release semantics.
+        /// </summary>
+        /// <param name="index"> in bytes for where to put. </param>
+        /// <param name="value"> for at a given index </param>
+        void PutIntRelease(int index, int value);
 
         /// <summary>
         /// Add a value to a given index with ordered store semantics. Use a negative increment to decrement. </summary>

@@ -12,7 +12,7 @@ public class ReplayTokenRequestEncoder
     public const ushort BLOCK_LENGTH = 24;
     public const ushort TEMPLATE_ID = 105;
     public const ushort SCHEMA_ID = 101;
-    public const ushort SCHEMA_VERSION = 10;
+    public const ushort SCHEMA_VERSION = 11;
 
     private ReplayTokenRequestEncoder _parentMessage;
     private IMutableDirectBuffer _buffer;

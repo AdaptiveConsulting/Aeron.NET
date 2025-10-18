@@ -22,6 +22,7 @@ using Adaptive.Agrona;
 using Adaptive.Agrona.Concurrent;
 using Adaptive.Agrona.Concurrent.Status;
 using Adaptive.Agrona.Util;
+using static Adaptive.Aeron.LogBuffer.ControlledFragmentHandlerAction;
 using static Adaptive.Aeron.LogBuffer.FrameDescriptor;
 using static Adaptive.Aeron.Protocol.DataHeaderFlyweight;
 
@@ -50,6 +51,7 @@ namespace Adaptive.Aeron
         private long _eosPosition = long.MaxValue;
         private bool _isEos;
         private volatile bool _isClosed;
+        private volatile bool _isRevoked;
 
         private readonly IPosition _subscriberPosition;
         private readonly UnsafeBuffer[] _termBuffers;
@@ -177,7 +179,7 @@ namespace Adaptive.Aeron
                 if (!_isClosed)
                 {
                     ValidatePosition(value);
-                    _subscriberPosition.SetOrdered(value);
+                    _subscriberPosition.SetRelease(value);
                 }
             }
         }
@@ -240,6 +242,24 @@ namespace Adaptive.Aeron
 
             return LogBufferDescriptor.ActiveTransportCount(_logBuffers.MetaDataBuffer());
         }
+        
+        /// <summary>
+        /// Has the associated publication been revoked?
+        /// </summary>
+        /// <returns> true if the associated publication was revoked otherwise false. </returns>
+        public bool PublicationRevoked
+        {
+            get
+            {
+                if (_isClosed)
+                {
+                    return _isRevoked;
+                }
+    
+                return LogBufferDescriptor.IsPublicationRevoked(_logBuffers.MetaDataBuffer());
+            }
+        }
+
 
         ///// <summary>
         ///// The <seealso cref="FileChannel"/> to the raw log of the Image.
@@ -323,9 +343,9 @@ namespace Adaptive.Aeron
             finally
             {
                 long newPosition = initialPosition + (offset - initialOffset);
-                if (newPosition > initialPosition)
+                if (newPosition > initialPosition && !_isClosed)
                 {
-                    _subscriberPosition.SetOrdered(newPosition);
+                    _subscriberPosition.SetRelease(newPosition);
                 }
             }
 
@@ -388,23 +408,26 @@ namespace Adaptive.Aeron
                         length - HEADER_LENGTH,
                         header);
 
-                    if (ControlledFragmentHandlerAction.ABORT == action)
+                    if (ABORT == action)
                     {
                         --fragmentsRead;
                         offset -= alignedLength;
                         break;
                     }
 
-                    if (ControlledFragmentHandlerAction.BREAK == action)
+                    if (BREAK == action)
                     {
                         break;
                     }
 
-                    if (ControlledFragmentHandlerAction.COMMIT == action)
+                    if (COMMIT == action)
                     {
                         initialPosition += (offset - initialOffset);
                         initialOffset = offset;
-                        _subscriberPosition.SetOrdered(initialPosition);
+                        if (!_isClosed)
+                        {
+                            _subscriberPosition.SetRelease(initialPosition);
+                        }
                     }
                 }
             }
@@ -415,9 +438,9 @@ namespace Adaptive.Aeron
             finally
             {
                 long resultingPosition = initialPosition + (offset - initialOffset);
-                if (resultingPosition > initialPosition)
+                if (resultingPosition > initialPosition && !_isClosed)
                 {
-                    _subscriberPosition.SetOrdered(resultingPosition);
+                    _subscriberPosition.SetRelease(resultingPosition);
                 }
             }
 
@@ -509,9 +532,9 @@ namespace Adaptive.Aeron
             finally
             {
                 long resultingPosition = initialPosition + (offset - initialOffset);
-                if (resultingPosition > initialPosition)
+                if (resultingPosition > initialPosition && !_isClosed)
                 {
-                    _subscriberPosition.SetOrdered(resultingPosition);
+                    _subscriberPosition.SetRelease(resultingPosition);
                 }
             }
 
@@ -605,23 +628,27 @@ namespace Adaptive.Aeron
                         frameOffset + HEADER_LENGTH,
                         length - HEADER_LENGTH, header);
 
-                    if (ControlledFragmentHandlerAction.ABORT == action)
+                    if (ABORT == action)
                     {
                         --fragmentsRead;
                         offset -= alignedLength;
                         break;
                     }
                    
-                    if (ControlledFragmentHandlerAction.BREAK == action)
+                    if (BREAK == action)
                     {
                         break;
                     }
                     
-                    if (ControlledFragmentHandlerAction.COMMIT == action)
+                    if (COMMIT == action)
                     {
                         initialPosition += (offset - initialOffset);
                         initialOffset = offset;
-                        _subscriberPosition.SetOrdered(initialPosition);
+
+                        if (!_isClosed)
+                        {
+                            _subscriberPosition.SetRelease(initialPosition);
+                        }
                     }
                 }
             }
@@ -632,9 +659,9 @@ namespace Adaptive.Aeron
             finally
             {
                 long resultingPosition = initialPosition + (offset - initialOffset);
-                if (resultingPosition > initialPosition)
+                if (resultingPosition > initialPosition && !_isClosed)
                 {
-                    _subscriberPosition.SetOrdered(resultingPosition);
+                    _subscriberPosition.SetRelease(resultingPosition);
                 }
             }
 
@@ -730,7 +757,7 @@ namespace Adaptive.Aeron
                         length - HEADER_LENGTH,
                         _header);
 
-                    if (ControlledFragmentHandlerAction.ABORT == action)
+                    if (ABORT == action)
                     {
                         break;
                     }
@@ -743,7 +770,7 @@ namespace Adaptive.Aeron
                         resultingPosition = position;
                     }
 
-                    if (ControlledFragmentHandlerAction.BREAK == action)
+                    if (BREAK == action)
                     {
                         break;
                     }
@@ -805,13 +832,20 @@ namespace Adaptive.Aeron
                 }
                 finally
                 {
-                    _subscriberPosition.SetOrdered(position + length);
+                    if (_isClosed)
+                    {
+                        _subscriberPosition.SetRelease(position + length);
+                    }
                 }
             }
 
             return length;
         }
 
+        /// <summary>
+        /// Reject this image.
+        /// </summary>
+        /// <param name="reason"> a String indicating the reason why this image is being rejected. </param>
         void Reject(string reason)
         {
             Subscription.RejectImage(CorrelationId, Position, reason);
@@ -846,6 +880,7 @@ namespace Adaptive.Aeron
             _finalPosition = _subscriberPosition.GetVolatile();
             _eosPosition = LogBufferDescriptor.EndOfStreamPosition(_logBuffers.MetaDataBuffer());
             _isEos = _finalPosition >= _eosPosition;
+            _isRevoked = LogBufferDescriptor.IsPublicationRevoked(_logBuffers.MetaDataBuffer());
             _isClosed = true;
         }
 

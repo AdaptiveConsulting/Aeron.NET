@@ -100,6 +100,15 @@ namespace Adaptive.Agrona.Concurrent.Status
         }
 
         /// <summary>
+        /// Set the counter with release semantics.
+        /// </summary>
+        /// <param name="value"> to be set with ordered semantics. </param>
+        public void SetRelease(long value)
+        {
+            _buffer.PutLongRelease(_offset, value);
+        }
+
+        /// <summary>
         /// Add an increment to the counter that will not lose updates across threads.
         /// </summary>
         /// <param name="increment"> to be added. </param>

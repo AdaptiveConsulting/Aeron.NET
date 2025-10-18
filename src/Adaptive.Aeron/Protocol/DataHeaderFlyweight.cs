@@ -61,6 +61,16 @@ namespace Adaptive.Aeron.Protocol
         public static readonly short BEGIN_END_AND_EOS_FLAGS = BEGIN_FLAG | END_FLAG | EOS_FLAG;
 
         /// <summary>
+        /// (R) - Revoked Flag for heartbeats after the publication is revoked.
+        /// </summary>
+        public const short REVOKED_FLAG = 0x10;
+
+        /// <summary>
+        /// Begin, End, EOS, and Revoked Flags.
+        /// </summary>
+        public static readonly short BEGIN_END_EOS_AND_REVOKED_FLAGS = BEGIN_FLAG | END_FLAG | EOS_FLAG | REVOKED_FLAG;
+        
+        /// <summary>
         /// Default value to be placed in the reserved value field.
         /// </summary>
         public const long DEFAULT_RESERVE_VALUE = 0L;
@@ -139,7 +149,17 @@ namespace Adaptive.Aeron.Protocol
         /// <returns> true if the EOS flag is set otherwise false. </returns>
         public static bool IsEndOfStream(UnsafeBuffer packet)
         {
-            return BEGIN_END_AND_EOS_FLAGS == (packet.GetByte(FLAGS_FIELD_OFFSET) & 0xFF);
+            return 0 != (packet.GetByte(FLAGS_FIELD_OFFSET) & EOS_FLAG);
+        }
+
+        /// <summary>
+        /// Does the data frame in the packet have the REVOKED flag set?
+        /// </summary>
+        /// <param name="packet"> containing the data frame </param>
+        /// <returns> true if the REVOKED flag is set otherwise false. </returns>
+        public static bool IsRevoked(UnsafeBuffer packet)
+        {
+            return 0 != (packet.GetByte(FLAGS_FIELD_OFFSET) & REVOKED_FLAG);
         }
 
         /// <summary>

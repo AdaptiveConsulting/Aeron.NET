@@ -10,7 +10,8 @@ namespace Adaptive.Aeron
     /// <summary>
     /// This class serves as a registry for all counter type IDs used by Aeron.
     /// <para>
-    /// The following ranges are reserved:
+    /// Type IDs less than 1000 are reserved for Aeron use. Any custom counters should use a typeId of 1000 or higher.
+    /// Aeron uses the following specific ranges:
     /// <ul>
     ///     <li>{@code 0 - 99}: for client/driver counters.</li>
     ///     <li>{@code 100 - 199}: for archive counters.</li>
@@ -124,7 +125,16 @@ namespace Adaptive.Aeron
         /// </summary>
         public const int MDC_DESTINATIONS_COUNTER_TYPE_ID = 18;
 
+        /// <summary>
+        /// The number of NAK messages received by the Sender.
+        /// </summary>
+        public const int DRIVER_SENDER_NAKS_RECEIVED_TYPE_ID = 19;
 
+        /// <summary>
+        /// The number of NAK messages sent by the Receiver.
+        /// </summary>
+        public const int DRIVER_RECEIVER_NAKS_SENT_TYPE_ID = 20;
+        
         // Archive counters
         /// <summary>
         /// The position a recording has reached when being archived.
@@ -497,7 +507,7 @@ namespace Adaptive.Aeron
                 remainingLabelLength);
             if (writtenLength > 0)
             {
-                metaDataBuffer.PutIntOrdered(counterMetaDataOffset + CountersReader.LABEL_OFFSET,
+                metaDataBuffer.PutIntRelease(counterMetaDataOffset + CountersReader.LABEL_OFFSET,
                     existingLabelLength + writtenLength);
             }
 

@@ -605,6 +605,11 @@ namespace Adaptive.Aeron
 
         internal void RejectImage(long correlationId, long position, String reason)
         {
+            if (Channel.StartsWith(Aeron.Context.SPY_PREFIX))
+            {
+                throw new AeronException("spies can not reject images");
+            }
+            
             _fields.conductor.RejectImage(correlationId, position, reason);
         }
 

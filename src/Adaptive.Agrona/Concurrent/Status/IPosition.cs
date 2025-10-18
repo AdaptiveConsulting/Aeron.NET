@@ -40,6 +40,12 @@ namespace Adaptive.Agrona.Concurrent.Status
         /// </summary>
         /// <param name="value"> the current position of the component. </param>
         void SetOrdered(long value);
+        
+        /// <summary>
+        /// Sets the current position of the component with release memory semantics.
+        /// </summary>
+        /// <param name="value"> the current position of the component. </param>
+        void SetRelease(long value);
 
         /// <summary>
         /// Sets the current position of the component with volatile memory semantics.

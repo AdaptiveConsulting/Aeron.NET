@@ -157,7 +157,7 @@ namespace Adaptive.Aeron.LogBuffer
         {
             var frameLength = _buffer.Capacity;
 
-            _buffer.PutIntOrdered(HeaderFlyweight.FRAME_LENGTH_FIELD_OFFSET, frameLength);
+            _buffer.PutIntRelease(HeaderFlyweight.FRAME_LENGTH_FIELD_OFFSET, frameLength);
         }
 
         /// <summary>
@@ -168,7 +168,7 @@ namespace Adaptive.Aeron.LogBuffer
             var frameLength = _buffer.Capacity;
 
             _buffer.PutShort(HeaderFlyweight.TYPE_FIELD_OFFSET, (short) HeaderFlyweight.HDR_TYPE_PAD, ByteOrder.LittleEndian);
-            _buffer.PutIntOrdered(HeaderFlyweight.FRAME_LENGTH_FIELD_OFFSET, frameLength);
+            _buffer.PutIntRelease(HeaderFlyweight.FRAME_LENGTH_FIELD_OFFSET, frameLength);
         }
     }
 }

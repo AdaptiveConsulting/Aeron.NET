@@ -3,6 +3,7 @@ using Adaptive.Aeron;
 using Adaptive.Aeron.LogBuffer;
 using Adaptive.Agrona;
 using Adaptive.Cluster.Codecs;
+using static Adaptive.Aeron.Aeron;
 using static Adaptive.Aeron.LogBuffer.ControlledFragmentHandlerAction;
 
 namespace Adaptive.Cluster.Client
@@ -22,12 +23,13 @@ namespace Adaptive.Cluster.Client
         private readonly Subscription subscription;
 
         private Image egressImage;
-        private long clusterSessionId = Aeron.Aeron.NULL_VALUE;
-        private long correlationId = Aeron.Aeron.NULL_VALUE;
-        private long leadershipTermId = Aeron.Aeron.NULL_VALUE;
-        private int leaderMemberId = Aeron.Aeron.NULL_VALUE;
-        private int templateId = Aeron.Aeron.NULL_VALUE;
+        private long clusterSessionId = NULL_VALUE;
+        private long correlationId = NULL_VALUE;
+        private long leadershipTermId = NULL_VALUE;
+        private int leaderMemberId = NULL_VALUE;
+        private int templateId = NULL_VALUE;
         private int version = 0;
+        private long leaderHeartbeatTimeoutNs = NULL_VALUE;
         private bool isPollComplete = false;
         private EventCode eventCode;
         private string detail = "";
@@ -126,6 +128,15 @@ namespace Adaptive.Cluster.Client
         {
             return version;
         }
+        
+        /// <summary>
+        /// Leader heartbeat timeout of the last polled event or <seealso cref="NULL_VALUE"/> if not available.
+        /// </summary>
+        /// <returns> leader heartbeat timeout of the last polled event or <seealso cref="NULL_VALUE"/> if not available. </returns>
+        public long LeaderHeartbeatTimeoutNs()
+        {
+            return leaderHeartbeatTimeoutNs;
+        }
 
         /// <summary>
         /// Get the detail returned from the last session event.
@@ -171,12 +182,13 @@ namespace Adaptive.Cluster.Client
         {
             if (isPollComplete)
             {
-                clusterSessionId = Aeron.Aeron.NULL_VALUE;
-                correlationId = Aeron.Aeron.NULL_VALUE;
-                leadershipTermId = Aeron.Aeron.NULL_VALUE;
-                leaderMemberId = Aeron.Aeron.NULL_VALUE;
-                templateId = Aeron.Aeron.NULL_VALUE;
+                clusterSessionId = NULL_VALUE;
+                correlationId = NULL_VALUE;
+                leadershipTermId = NULL_VALUE;
+                leaderMemberId = NULL_VALUE;
+                templateId = NULL_VALUE;
                 version = 0;
+                leaderHeartbeatTimeoutNs = NULL_VALUE;
                 eventCode = Codecs.EventCode.NULL_VALUE;
                 detail = "";
                 encodedChallenge = null;
@@ -225,6 +237,7 @@ namespace Adaptive.Cluster.Client
                     leaderMemberId = sessionEventDecoder.LeaderMemberId();
                     eventCode = sessionEventDecoder.Code();
                     version = sessionEventDecoder.Version();
+                    leaderHeartbeatTimeoutNs = LeaderHeartbeatTimeoutNs(sessionEventDecoder);
                     detail = sessionEventDecoder.Detail();
                     isPollComplete = true;
                     egressImage = (Image)header.Context;
@@ -258,5 +271,18 @@ namespace Adaptive.Cluster.Client
 
             return CONTINUE;
         }
+        
+        private static long LeaderHeartbeatTimeoutNs(SessionEventDecoder sessionEventDecoder)
+        {
+            long leaderHeartbeatTimeoutNs = sessionEventDecoder.LeaderHeartbeatTimeoutNs();
+
+            if (leaderHeartbeatTimeoutNs == SessionEventDecoder.LeaderHeartbeatTimeoutNsNullValue())
+            {
+                return NULL_VALUE;
+            }
+
+            return leaderHeartbeatTimeoutNs;
+        }
+
     }
 }

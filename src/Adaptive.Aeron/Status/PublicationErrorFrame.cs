@@ -131,5 +131,25 @@ namespace Adaptive.Aeron.Status
         {
             return MemberwiseClone();
         }
+        
+        /// <summary>
+        /// Build a String representation of the error frame.
+        /// </summary>
+        /// <returns> a String representation of the error frame. </returns>
+        public override string ToString()
+        {
+            return "CounterMessageFlyweight{" +
+                   "registrationId=" + registrationId +
+                   ", sessionId=" + sessionId +
+                   ", streamId=" + streamId +
+                   ", receiverId=" + receiverId +
+                   ", destinationRegistrationId=" + destinationRegistrationId +
+                   ", groupTag=" + groupTag +
+                   ", errorCode=" + errorCode +
+                   ", errorMessage=" + errorMessage +
+                   ", sourceAddress=" + sourceAddress +
+                   "}";
+        }
+
     }
 }

@@ -398,6 +398,14 @@ namespace Adaptive.Agrona.Concurrent
 
             Volatile.Write(ref *(long*) (_pBuffer + index), value);
         }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void PutLongRelease(int index, long value)
+        {
+            BoundsCheck0(index, BitUtil.SIZE_OF_LONG);
+
+            Volatile.Write(ref *(long*) (_pBuffer + index), value);
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public long AddLongOrdered(int index, long increment)
@@ -478,6 +486,14 @@ namespace Adaptive.Agrona.Concurrent
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void PutIntOrdered(int index, int value)
+        {
+            BoundsCheck0(index, BitUtil.SIZE_OF_INT);
+
+            Volatile.Write(ref *(int*) (_pBuffer + index), value);
+        }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void PutIntRelease(int index, int value)
         {
             BoundsCheck0(index, BitUtil.SIZE_OF_INT);
 

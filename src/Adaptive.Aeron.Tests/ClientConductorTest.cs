@@ -84,9 +84,9 @@ namespace Adaptive.Aeron.Tests
         private ILogBuffersFactory LogBuffersFactory;
         private ILock mockClientLock = A.Fake<ILock>();
         private Aeron MockAeron;
-        
+
         private bool SuppressPrintError = false;
-        
+
         private class PrintingErrorHandler : IErrorHandler
         {
             private readonly ClientConductorTest _test;
@@ -142,7 +142,7 @@ namespace Adaptive.Aeron.Tests
 
             A.CallTo(() => DriverProxy.AddPublication(CHANNEL, STREAM_ID_1)).Returns(CORRELATION_ID);
             A.CallTo(() => DriverProxy.AddPublication(CHANNEL, STREAM_ID_2)).Returns(CORRELATION_ID_2);
-            A.CallTo(() => DriverProxy.RemovePublication(CORRELATION_ID)).Returns(CLOSE_CORRELATION_ID);
+            A.CallTo(() => DriverProxy.RemovePublication(CORRELATION_ID, false)).Returns(CLOSE_CORRELATION_ID);
             A.CallTo(() => DriverProxy.AddSubscription(A<string>._, A<int>._)).Returns(CORRELATION_ID);
             A.CallTo(() => DriverProxy.RemoveSubscription(CORRELATION_ID)).Returns(CLOSE_CORRELATION_ID);
 
@@ -163,7 +163,7 @@ namespace Adaptive.Aeron.Tests
                 .InterServiceTimeoutNs(INTER_SERVICE_TIMEOUT_MS * 1000000)
                 .CountersValuesBuffer(CounterValuesBuffer)
                 .CountersMetaDataBuffer(CounterMetaDataBuffer);
-            
+
 
             Conductor = new ClientConductor(ctx, MockAeron);
 
@@ -261,7 +261,7 @@ namespace Adaptive.Aeron.Tests
 
             publication.Dispose();
 
-            A.CallTo(() => DriverProxy.RemovePublication(CORRELATION_ID)).MustHaveHappened();
+            A.CallTo(() => DriverProxy.RemovePublication(CORRELATION_ID, false)).MustHaveHappened();
         }
 
         [Test]
@@ -324,8 +324,8 @@ namespace Adaptive.Aeron.Tests
 
             publication.Dispose();
 
-            A.CallTo(() => DriverProxy.RemovePublication(CORRELATION_ID)).MustHaveHappened();
-            A.CallTo(() => DriverProxy.RemovePublication(CORRELATION_ID_2)).MustNotHaveHappened();
+            A.CallTo(() => DriverProxy.RemovePublication(CORRELATION_ID, false)).MustHaveHappened();
+            A.CallTo(() => DriverProxy.RemovePublication(CORRELATION_ID_2, false)).MustNotHaveHappened();
         }
 
         [Test]

@@ -49,10 +49,10 @@ namespace Adaptive.Aeron.Tests
         [Test]
         public void ThreadSendsRemoveChannelMessage()
         {
-            conductor.RemovePublication(CORRELATION_ID);
+            conductor.RemovePublication(CORRELATION_ID, false);
             AssertReadsOneMessage((msgTypeId, buffer, index, length) =>
             {
-                RemoveMessageFlyweight message = new RemoveMessageFlyweight();
+                RemovePublicationFlyweight message = new RemovePublicationFlyweight();
                 message.Wrap(buffer, index);
                 Assert.AreEqual(ControlProtocolEvents.REMOVE_PUBLICATION, msgTypeId);
                 Assert.AreEqual(CORRELATION_ID, message.RegistrationId());
@@ -80,7 +80,7 @@ namespace Adaptive.Aeron.Tests
 
             AssertReadsOneMessage((msgTypeId, buffer, index, length) =>
             {
-                RemoveMessageFlyweight removeMessage = new RemoveMessageFlyweight();
+                RemoveSubscriptionFlyweight removeMessage = new RemoveSubscriptionFlyweight();
                 removeMessage.Wrap(buffer, index);
                 Assert.AreEqual(ControlProtocolEvents.REMOVE_SUBSCRIPTION, msgTypeId);
                 Assert.AreEqual(CORRELATION_ID, removeMessage.RegistrationId());

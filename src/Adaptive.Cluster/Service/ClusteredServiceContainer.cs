@@ -10,7 +10,11 @@ using Adaptive.Agrona.Concurrent.Status;
 using Adaptive.Archiver;
 using Adaptive.Cluster.Client;
 using Adaptive.Cluster.Codecs.Mark;
+using static Adaptive.Aeron.Aeron;
+using static Adaptive.Aeron.Aeron.Context;
 using static Adaptive.Aeron.ChannelUri;
+using static Adaptive.Cluster.ClusterMarkFile;
+using static Adaptive.Cluster.Service.ClusteredServiceContainer.Configuration;
 
 namespace Adaptive.Cluster.Service
 {
@@ -174,7 +178,7 @@ namespace Adaptive.Cluster.Service
             /// <summary>
             /// Channel to be used for log or snapshot replay on startup.
             /// </summary>
-            public static readonly string REPLAY_CHANNEL_DEFAULT = Aeron.Aeron.Context.IPC_CHANNEL;
+            public static readonly string REPLAY_CHANNEL_DEFAULT = IPC_CHANNEL;
 
             /// <summary>
             /// Stream id within a channel for the clustered log or snapshot replay.
@@ -599,7 +603,7 @@ namespace Adaptive.Cluster.Service
             private int appVersion = SemanticVersion.Compose(0, 0, 1);
             private int clusterId = Configuration.ClusterId();
             private int serviceId = Configuration.ServiceId();
-            private string serviceName = Config.GetProperty(Configuration.SERVICE_NAME_PROP_NAME);
+            private string serviceName = Config.GetProperty(SERVICE_NAME_PROP_NAME);
             private string replayChannel = Configuration.ReplayChannel();
             private int replayStreamId = Configuration.ReplayStreamId();
             private string controlChannel = Configuration.ControlChannel();
@@ -625,10 +629,10 @@ namespace Adaptive.Cluster.Service
             private AtomicCounter errorCounter;
             private CountedErrorHandler countedErrorHandler;
             private AeronArchive.Context archiveContext;
-            private string clusterDirectoryName = Configuration.ClusterDirName();
+            private string clusterDirectoryName = ClusterDirName();
             private DirectoryInfo clusterDir;
             private DirectoryInfo markFileDir;
-            private string aeronDirectoryName = Adaptive.Aeron.Aeron.Context.GetAeronDirectoryName();
+            private string aeronDirectoryName = GetAeronDirectoryName();
             private Aeron.Aeron aeron;
             private DutyCycleTracker dutyCycleTracker;
             private SnapshotDurationTracker snapshotDurationTracker;
@@ -709,29 +713,33 @@ namespace Adaptive.Cluster.Service
 
                 if (null == markFile)
                 {
-                    markFile = new ClusterMarkFile(
-                        new FileInfo(Path.Combine(markFileDir.FullName,
-                            Cluster.ClusterMarkFile.MarkFilenameForService(serviceId))),
-                        ClusterComponentType.CONTAINER, errorBufferLength, epochClock,
-                        Configuration.LIVENESS_TIMEOUT_MS);
+                    int filePageSize = null != aeron ? aeron.Ctx.FilePageSize() : 
+                        DriverFilePageSize(new DirectoryInfo(aeronDirectoryName), epochClock, new Aeron.Aeron.Context().DriverTimeoutMs());
+                    markFile = new ClusterMarkFile( 
+                        new FileInfo(Path.Combine(markFileDir.FullName, MarkFilenameForService(serviceId))), 
+                        ClusterComponentType.CONTAINER, 
+                        errorBufferLength, 
+                        epochClock, 
+                        LIVENESS_TIMEOUT_MS, 
+                        filePageSize);
                 }
 
                 MarkFile.EnsureMarkFileLink(
                     clusterDir,
                     new FileInfo(Path.Combine(markFileDir.FullName,
-                        Cluster.ClusterMarkFile.MarkFilenameForService(serviceId))),
-                    Cluster.ClusterMarkFile.LinkFilenameForService(serviceId));
+                        MarkFilenameForService(serviceId))),
+                    LinkFilenameForService(serviceId));
 
                 if (null == errorLog)
                 {
                     errorLog = new DistinctErrorLog(markFile.ErrorBuffer, epochClock); // US_ASCII
                 }
 
-                errorHandler = Adaptive.Aeron.Aeron.Context.SetupErrorHandler(errorHandler, errorLog);
+                errorHandler = SetupErrorHandler(errorHandler, errorLog);
 
                 if (null == delegatingErrorHandler)
                 {
-                    delegatingErrorHandler = Configuration.NewDelegatingErrorHandler();
+                    delegatingErrorHandler = NewDelegatingErrorHandler();
                     if (null != delegatingErrorHandler)
                     {
                         delegatingErrorHandler.Next(errorHandler);
@@ -751,7 +759,7 @@ namespace Adaptive.Cluster.Service
                 
                 if (null == aeron)
                 {
-                    aeron = Adaptive.Aeron.Aeron.Connect(
+                    aeron = Connect(
                         new Aeron.Aeron.Context()
                             .AeronDirectoryName(aeronDirectoryName)
                             .ErrorHandler(errorHandler)
@@ -833,12 +841,12 @@ namespace Adaptive.Cluster.Service
                             clusterId * 100 + 100 + AeronArchive.Configuration.ControlResponseStreamId() + (serviceId + 1));;
                 }
 
-                if (!archiveContext.ControlRequestChannel().StartsWith(Adaptive.Aeron.Aeron.Context.IPC_CHANNEL))
+                if (!archiveContext.ControlRequestChannel().StartsWith(IPC_CHANNEL))
                 {
                     throw new ClusterException("local archive control must be IPC");
                 }
 
-                if (!archiveContext.ControlResponseChannel().StartsWith(Adaptive.Aeron.Aeron.Context.IPC_CHANNEL))
+                if (!archiveContext.ControlResponseChannel().StartsWith(IPC_CHANNEL))
                 {
                     throw new ClusterException("local archive control must be IPC");
                 }
@@ -867,13 +875,13 @@ namespace Adaptive.Cluster.Service
 
                 if (null == clusteredService)
                 {
-                    clusteredService = Configuration.NewClusteredService();
+                    clusteredService = NewClusteredService();
                 }
 
-                abortLatch = new CountdownEvent(aeron.ConductorAgentInvoker == null ? 1 : 0);
+                abortLatch = new CountdownEvent(aeron.Ctx.UseConductorAgentInvoker() ? 1 : 0);
                 ConcludeMarkFile();
                 
-                if (Aeron.Aeron.Context.ShouldPrintConfigurationOnStart())
+                if (ShouldPrintConfigurationOnStart())
                 {
                     Console.WriteLine(this);
                 }
@@ -1801,7 +1809,7 @@ namespace Adaptive.Cluster.Service
 
             private void ConcludeMarkFile()
             {
-                Cluster.ClusterMarkFile.CheckHeaderLength(
+                CheckHeaderLength(
                     aeron.Ctx.AeronDirectoryName(), ControlChannel(), null, serviceName, null);
 
                 var encoder = markFile.Encoder();
@@ -1810,8 +1818,8 @@ namespace Adaptive.Cluster.Service
                     .ArchiveStreamId(archiveContext.ControlRequestStreamId())
                     .ServiceStreamId(serviceStreamId)
                     .ConsensusModuleStreamId(consensusModuleStreamId)
-                    .IngressStreamId(Adaptive.Aeron.Aeron.NULL_VALUE)
-                    .MemberId(Adaptive.Aeron.Aeron.NULL_VALUE)
+                    .IngressStreamId(NULL_VALUE)
+                    .MemberId(NULL_VALUE)
                     .ServiceId(serviceId)
                     .ClusterId(clusterId)
                     .AeronDirectory(aeron.Ctx.AeronDirectoryName())

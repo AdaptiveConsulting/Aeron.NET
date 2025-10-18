@@ -12,7 +12,7 @@ public class ReplicateRequestDecoder
     public const ushort BLOCK_LENGTH = 36;
     public const ushort TEMPLATE_ID = 50;
     public const ushort SCHEMA_ID = 101;
-    public const ushort SCHEMA_VERSION = 10;
+    public const ushort SCHEMA_VERSION = 11;
 
     private ReplicateRequestDecoder _parentMessage;
     private IDirectBuffer _buffer;

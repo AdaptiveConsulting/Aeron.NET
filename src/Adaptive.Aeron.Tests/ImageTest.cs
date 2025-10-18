@@ -109,7 +109,7 @@ namespace Adaptive.Aeron.Tests
             var image = CreateImage();
             var expectedPosition = TERM_BUFFER_LENGTH - 32;
 
-            Position.SetOrdered(expectedPosition);
+            Position.SetRelease(expectedPosition);
             Assert.AreEqual(image.Position, expectedPosition);
 
             image.Position = TERM_BUFFER_LENGTH;
@@ -122,7 +122,7 @@ namespace Adaptive.Aeron.Tests
             var image = CreateImage();
             var expectedPosition = TERM_BUFFER_LENGTH - 32;
 
-            Position.SetOrdered(expectedPosition);
+            Position.SetRelease(expectedPosition);
             Assert.AreEqual(image.Position, expectedPosition);
 
             Assert.Throws<ArgumentException>(() => image.Position = TERM_BUFFER_LENGTH + 32);
@@ -133,7 +133,7 @@ namespace Adaptive.Aeron.Tests
         {
             var initialPosition =
                 LogBufferDescriptor.ComputePosition(INITIAL_TERM_ID, 0, POSITION_BITS_TO_SHIFT, INITIAL_TERM_ID);
-            Position.SetOrdered(initialPosition);
+            Position.SetRelease(initialPosition);
             var image = CreateImage();
 
             InsertDataFrame(INITIAL_TERM_ID, OffsetForFrame(0));
@@ -145,8 +145,8 @@ namespace Adaptive.Aeron.Tests
                 MockFragmentHandler.OnFragment(A<UnsafeBuffer>._, DataHeaderFlyweight.HEADER_LENGTH, DATA.Length,
                     A<Header>._)).MustHaveHappened();
 
-            A.CallTo(() => Position.SetOrdered(initialPosition)).MustHaveHappened().Then(
-                A.CallTo(() => Position.SetOrdered(initialPosition + ALIGNED_FRAME_LENGTH)).MustHaveHappened()
+            A.CallTo(() => Position.SetRelease(initialPosition)).MustHaveHappened().Then(
+                A.CallTo(() => Position.SetRelease(initialPosition + ALIGNED_FRAME_LENGTH)).MustHaveHappened()
             );
         }
 
@@ -158,7 +158,7 @@ namespace Adaptive.Aeron.Tests
             var initialPosition = LogBufferDescriptor.ComputePosition(INITIAL_TERM_ID, initialTermOffset,
                 POSITION_BITS_TO_SHIFT, INITIAL_TERM_ID);
 
-            Position.SetOrdered(initialPosition);
+            Position.SetRelease(initialPosition);
             var image = CreateImage();
 
             InsertDataFrame(INITIAL_TERM_ID, OffsetForFrame(initialMessageIndex));
@@ -169,8 +169,8 @@ namespace Adaptive.Aeron.Tests
             A.CallTo(() => MockFragmentHandler.OnFragment(A<UnsafeBuffer>._,
                 initialTermOffset + DataHeaderFlyweight.HEADER_LENGTH, DATA.Length, A<Header>._)).MustHaveHappened();
 
-            A.CallTo(() => Position.SetOrdered(initialPosition)).MustHaveHappened().Then(
-                A.CallTo(() => Position.SetOrdered(initialPosition + ALIGNED_FRAME_LENGTH)).MustHaveHappened()
+            A.CallTo(() => Position.SetRelease(initialPosition)).MustHaveHappened().Then(
+                A.CallTo(() => Position.SetRelease(initialPosition + ALIGNED_FRAME_LENGTH)).MustHaveHappened()
             );
         }
 
@@ -183,7 +183,7 @@ namespace Adaptive.Aeron.Tests
             var initialPosition = LogBufferDescriptor.ComputePosition(activeTermId, initialTermOffset,
                 POSITION_BITS_TO_SHIFT, INITIAL_TERM_ID);
 
-            Position.SetOrdered(initialPosition);
+            Position.SetRelease(initialPosition);
             var image = CreateImage();
 
             InsertDataFrame(activeTermId, OffsetForFrame(initialMessageIndex));
@@ -194,8 +194,8 @@ namespace Adaptive.Aeron.Tests
             A.CallTo(() => MockFragmentHandler.OnFragment(A<UnsafeBuffer>._,
                 initialTermOffset + DataHeaderFlyweight.HEADER_LENGTH, DATA.Length, A<Header>._)).MustHaveHappened();
 
-            A.CallTo(() => Position.SetOrdered(initialPosition)).MustHaveHappened().Then(
-                A.CallTo(() => Position.SetOrdered(initialPosition + ALIGNED_FRAME_LENGTH)).MustHaveHappened()
+            A.CallTo(() => Position.SetRelease(initialPosition)).MustHaveHappened().Then(
+                A.CallTo(() => Position.SetRelease(initialPosition + ALIGNED_FRAME_LENGTH)).MustHaveHappened()
             );
         }
 
@@ -207,7 +207,7 @@ namespace Adaptive.Aeron.Tests
 
             Assert.AreEqual(0, fragmentsRead);
 
-            A.CallTo(() => Position.SetOrdered(A<long>._)).MustNotHaveHappened();
+            A.CallTo(() => Position.SetRelease(A<long>._)).MustNotHaveHappened();
             A.CallTo(() => MockFragmentHandler.OnFragment(A<UnsafeBuffer>._, A<int>._, A<int>._, A<Header>._))
                 .MustNotHaveHappened();
         }
@@ -217,7 +217,7 @@ namespace Adaptive.Aeron.Tests
         {
             var initialPosition =
                 LogBufferDescriptor.ComputePosition(INITIAL_TERM_ID, 0, POSITION_BITS_TO_SHIFT, INITIAL_TERM_ID);
-            Position.SetOrdered(initialPosition);
+            Position.SetRelease(initialPosition);
             var image = CreateImage();
 
             InsertDataFrame(INITIAL_TERM_ID, OffsetForFrame(0));
@@ -231,7 +231,7 @@ namespace Adaptive.Aeron.Tests
 
             A.CallTo(() => MockControlledFragmentHandler.OnFragment(A<UnsafeBuffer>._,
                 DataHeaderFlyweight.HEADER_LENGTH, DATA.Length, A<Header>._)).MustHaveHappened().Then(
-                A.CallTo(() => Position.SetOrdered(initialPosition + ALIGNED_FRAME_LENGTH)).MustHaveHappened());
+                A.CallTo(() => Position.SetRelease(initialPosition + ALIGNED_FRAME_LENGTH)).MustHaveHappened());
         }
 
         [Test]
@@ -239,7 +239,7 @@ namespace Adaptive.Aeron.Tests
         {
             long initialPosition =
                 LogBufferDescriptor.ComputePosition(INITIAL_TERM_ID, 0, POSITION_BITS_TO_SHIFT, INITIAL_TERM_ID);
-            Position.SetOrdered(initialPosition);
+            Position.SetRelease(initialPosition);
             var image = CreateImage();
 
             InsertDataFrame(INITIAL_TERM_ID, OffsetForFrame(0));
@@ -272,7 +272,7 @@ namespace Adaptive.Aeron.Tests
         {
             long initialPosition =
                 LogBufferDescriptor.ComputePosition(INITIAL_TERM_ID, 0, POSITION_BITS_TO_SHIFT, INITIAL_TERM_ID);
-            Position.SetOrdered(initialPosition);
+            Position.SetRelease(initialPosition);
             var image = CreateImage();
 
             InsertDataFrame(INITIAL_TERM_ID, OffsetForFrame(0));
@@ -307,7 +307,7 @@ namespace Adaptive.Aeron.Tests
         {
             var initialPosition =
                 LogBufferDescriptor.ComputePosition(INITIAL_TERM_ID, 0, POSITION_BITS_TO_SHIFT, INITIAL_TERM_ID);
-            Position.SetOrdered(initialPosition);
+            Position.SetRelease(initialPosition);
             var image = CreateImage();
 
             InsertDataFrame(INITIAL_TERM_ID, OffsetForFrame(0));
@@ -329,7 +329,7 @@ namespace Adaptive.Aeron.Tests
         {
             var initialPosition =
                 LogBufferDescriptor.ComputePosition(INITIAL_TERM_ID, 0, POSITION_BITS_TO_SHIFT, INITIAL_TERM_ID);
-            Position.SetOrdered(initialPosition);
+            Position.SetRelease(initialPosition);
             var image = CreateImage();
 
             InsertDataFrame(INITIAL_TERM_ID, OffsetForFrame(0));
@@ -344,7 +344,7 @@ namespace Adaptive.Aeron.Tests
 
             A.CallTo(() => MockControlledFragmentHandler.OnFragment(A<UnsafeBuffer>._,
                 DataHeaderFlyweight.HEADER_LENGTH, DATA.Length, A<Header>._)).MustHaveHappened().Then(
-                A.CallTo(() => Position.SetOrdered(initialPosition + ALIGNED_FRAME_LENGTH)).MustHaveHappened());
+                A.CallTo(() => Position.SetRelease(initialPosition + ALIGNED_FRAME_LENGTH)).MustHaveHappened());
         }
 
         [Test]
@@ -352,7 +352,7 @@ namespace Adaptive.Aeron.Tests
         {
             var initialPosition =
                 LogBufferDescriptor.ComputePosition(INITIAL_TERM_ID, 0, POSITION_BITS_TO_SHIFT, INITIAL_TERM_ID);
-            Position.SetOrdered(initialPosition);
+            Position.SetRelease(initialPosition);
             var image = CreateImage();
 
             InsertDataFrame(INITIAL_TERM_ID, OffsetForFrame(0));
@@ -367,11 +367,11 @@ namespace Adaptive.Aeron.Tests
 
             A.CallTo(() => MockControlledFragmentHandler.OnFragment(A<UnsafeBuffer>._,
                     DataHeaderFlyweight.HEADER_LENGTH, DATA.Length, A<Header>._)).MustHaveHappened()
-                .Then(A.CallTo(() => Position.SetOrdered(initialPosition + ALIGNED_FRAME_LENGTH)).MustHaveHappened())
+                .Then(A.CallTo(() => Position.SetRelease(initialPosition + ALIGNED_FRAME_LENGTH)).MustHaveHappened())
                 .Then(A.CallTo(() => MockControlledFragmentHandler.OnFragment(A<UnsafeBuffer>._,
                         ALIGNED_FRAME_LENGTH + DataHeaderFlyweight.HEADER_LENGTH, DATA.Length, A<Header>._))
                     .MustHaveHappened())
-                .Then(A.CallTo(() => Position.SetOrdered(initialPosition + ALIGNED_FRAME_LENGTH * 2L))
+                .Then(A.CallTo(() => Position.SetRelease(initialPosition + ALIGNED_FRAME_LENGTH * 2L))
                     .MustHaveHappened());
         }
 
@@ -381,7 +381,7 @@ namespace Adaptive.Aeron.Tests
             var initialPosition =
                 LogBufferDescriptor.ComputePosition(INITIAL_TERM_ID, 0, POSITION_BITS_TO_SHIFT, INITIAL_TERM_ID);
             var maxPosition = initialPosition - DataHeaderFlyweight.HEADER_LENGTH;
-            Position.SetOrdered(initialPosition);
+            Position.SetRelease(initialPosition);
             var image = CreateImage();
 
             InsertDataFrame(INITIAL_TERM_ID, OffsetForFrame(0));
@@ -406,7 +406,7 @@ namespace Adaptive.Aeron.Tests
             var initialPosition = LogBufferDescriptor.ComputePosition(
                 INITIAL_TERM_ID, OffsetForFrame(1), POSITION_BITS_TO_SHIFT, INITIAL_TERM_ID);
             var maxPosition = initialPosition + ALIGNED_FRAME_LENGTH;
-            Position.SetOrdered(initialPosition);
+            Position.SetRelease(initialPosition);
             var image = CreateImage();
 
             InsertDataFrame(INITIAL_TERM_ID, OffsetForFrame(1));
@@ -430,7 +430,7 @@ namespace Adaptive.Aeron.Tests
             var initialPosition =
                 LogBufferDescriptor.ComputePosition(INITIAL_TERM_ID, 0, POSITION_BITS_TO_SHIFT, INITIAL_TERM_ID);
             var maxPosition = initialPosition + ALIGNED_FRAME_LENGTH;
-            Position.SetOrdered(initialPosition);
+            Position.SetRelease(initialPosition);
             var image = CreateImage();
 
             InsertDataFrame(INITIAL_TERM_ID, OffsetForFrame(0));
@@ -446,7 +446,7 @@ namespace Adaptive.Aeron.Tests
 
             A.CallTo(() => MockControlledFragmentHandler.OnFragment(A<UnsafeBuffer>._,
                     DataHeaderFlyweight.HEADER_LENGTH, DATA.Length, A<Header>._)).MustHaveHappened()
-                .Then(A.CallTo(() => Position.SetOrdered(initialPosition + ALIGNED_FRAME_LENGTH)).MustHaveHappened());
+                .Then(A.CallTo(() => Position.SetRelease(initialPosition + ALIGNED_FRAME_LENGTH)).MustHaveHappened());
         }
 
         [Test]
@@ -455,7 +455,7 @@ namespace Adaptive.Aeron.Tests
             var initialPosition =
                 LogBufferDescriptor.ComputePosition(INITIAL_TERM_ID, 0, POSITION_BITS_TO_SHIFT, INITIAL_TERM_ID);
             var maxPosition = initialPosition + ALIGNED_FRAME_LENGTH;
-            Position.SetOrdered(initialPosition);
+            Position.SetRelease(initialPosition);
             var image = CreateImage();
 
             InsertDataFrame(INITIAL_TERM_ID, OffsetForFrame(0));
@@ -468,7 +468,7 @@ namespace Adaptive.Aeron.Tests
 
             A.CallTo(() => MockFragmentHandler.OnFragment(A<UnsafeBuffer>._,
                     DataHeaderFlyweight.HEADER_LENGTH, DATA.Length, A<Header>._)).MustHaveHappened()
-                .Then(A.CallTo(() => Position.SetOrdered(initialPosition + ALIGNED_FRAME_LENGTH)).MustHaveHappened());
+                .Then(A.CallTo(() => Position.SetRelease(initialPosition + ALIGNED_FRAME_LENGTH)).MustHaveHappened());
         }
 
         [Test]
@@ -478,7 +478,7 @@ namespace Adaptive.Aeron.Tests
             var initialPosition = LogBufferDescriptor.ComputePosition(INITIAL_TERM_ID, initialOffset,
                 POSITION_BITS_TO_SHIFT, INITIAL_TERM_ID);
             var maxPosition = initialPosition + TERM_BUFFER_LENGTH;
-            Position.SetOrdered(initialPosition);
+            Position.SetRelease(initialPosition);
             var image = CreateImage();
 
             InsertDataFrame(INITIAL_TERM_ID, initialOffset);
@@ -492,7 +492,7 @@ namespace Adaptive.Aeron.Tests
 
             A.CallTo(() => MockControlledFragmentHandler.OnFragment(A<UnsafeBuffer>._,
                     initialOffset + DataHeaderFlyweight.HEADER_LENGTH, DATA.Length, A<Header>._)).MustHaveHappened()
-                .Then(A.CallTo(() => Position.SetOrdered(TERM_BUFFER_LENGTH)).MustHaveHappened());
+                .Then(A.CallTo(() => Position.SetRelease(TERM_BUFFER_LENGTH)).MustHaveHappened());
         }
 
         [Test]
@@ -500,7 +500,7 @@ namespace Adaptive.Aeron.Tests
         {
             var initialPosition =
                 LogBufferDescriptor.ComputePosition(INITIAL_TERM_ID, 0, POSITION_BITS_TO_SHIFT, INITIAL_TERM_ID);
-            Position.SetOrdered(initialPosition);
+            Position.SetRelease(initialPosition);
             var image = CreateImage();
 
             InsertDataFrame(INITIAL_TERM_ID, OffsetForFrame(0));
@@ -520,12 +520,12 @@ namespace Adaptive.Aeron.Tests
                 .Then(A.CallTo(() => MockControlledFragmentHandler.OnFragment(A<UnsafeBuffer>._,
                         ALIGNED_FRAME_LENGTH + DataHeaderFlyweight.HEADER_LENGTH, DATA.Length, A<Header>._))
                     .MustHaveHappened())
-                .Then(A.CallTo(() => Position.SetOrdered(initialPosition + ALIGNED_FRAME_LENGTH * 2L))
+                .Then(A.CallTo(() => Position.SetRelease(initialPosition + ALIGNED_FRAME_LENGTH * 2L))
                     .MustHaveHappened())
                 .Then(A.CallTo(() => MockControlledFragmentHandler.OnFragment(A<UnsafeBuffer>._,
                         2 * ALIGNED_FRAME_LENGTH + DataHeaderFlyweight.HEADER_LENGTH, DATA.Length, A<Header>._))
                     .MustHaveHappened())
-                .Then(A.CallTo(() => Position.SetOrdered(initialPosition + ALIGNED_FRAME_LENGTH * 3L))
+                .Then(A.CallTo(() => Position.SetRelease(initialPosition + ALIGNED_FRAME_LENGTH * 3L))
                     .MustHaveHappened());
         }
 
@@ -534,7 +534,7 @@ namespace Adaptive.Aeron.Tests
         {
             var initialPosition =
                 LogBufferDescriptor.ComputePosition(INITIAL_TERM_ID, 0, POSITION_BITS_TO_SHIFT, INITIAL_TERM_ID);
-            Position.SetOrdered(initialPosition);
+            Position.SetRelease(initialPosition);
             var image = CreateImage();
 
             InsertDataFrame(INITIAL_TERM_ID, OffsetForFrame(0));
@@ -552,7 +552,7 @@ namespace Adaptive.Aeron.Tests
                 .Then(A.CallTo(() => MockControlledFragmentHandler.OnFragment(A<UnsafeBuffer>._,
                         ALIGNED_FRAME_LENGTH + DataHeaderFlyweight.HEADER_LENGTH, DATA.Length, A<Header>._))
                     .MustHaveHappened())
-                .Then(A.CallTo(() => Position.SetOrdered(initialPosition + ALIGNED_FRAME_LENGTH * 2L))
+                .Then(A.CallTo(() => Position.SetRelease(initialPosition + ALIGNED_FRAME_LENGTH * 2L))
                     .MustHaveHappened());
         }
 
@@ -564,7 +564,7 @@ namespace Adaptive.Aeron.Tests
             var initialPosition = LogBufferDescriptor.ComputePosition(
                 INITIAL_TERM_ID, initialOffset, POSITION_BITS_TO_SHIFT, INITIAL_TERM_ID);
             var maxPosition = (long) int.MaxValue + 1000;
-            Position.SetOrdered(initialPosition);
+            Position.SetRelease(initialPosition);
             var image = CreateImage();
 
             InsertDataFrame(INITIAL_TERM_ID, initialOffset);
@@ -575,7 +575,7 @@ namespace Adaptive.Aeron.Tests
 
             A.CallTo(() => MockFragmentHandler.OnFragment(A<UnsafeBuffer>._,
                     initialOffset + DataHeaderFlyweight.HEADER_LENGTH, DATA.Length, A<Header>._)).MustHaveHappened()
-                .Then(A.CallTo(() => Position.SetOrdered(TERM_BUFFER_LENGTH)).MustHaveHappened());
+                .Then(A.CallTo(() => Position.SetRelease(TERM_BUFFER_LENGTH)).MustHaveHappened());
         }
 
         private Image CreateImage()

@@ -78,6 +78,12 @@ namespace Adaptive.Agrona.Concurrent.Status
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void SetRelease(long value)
+        {
+            _buffer.PutLongOrdered(_offset, value);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void SetVolatile(long value)
         {
             _buffer.PutLongVolatile(_offset, value);

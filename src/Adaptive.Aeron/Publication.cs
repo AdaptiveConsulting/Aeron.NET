@@ -86,6 +86,7 @@ namespace Adaptive.Aeron
         
         internal readonly int _maxFramedLength;
         internal volatile bool _isClosed;
+        internal bool revokeOnClose = false;
 
         internal readonly IReadablePosition _positionLimit;
         internal readonly UnsafeBuffer[] _termBuffers;

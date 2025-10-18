@@ -64,6 +64,7 @@ namespace Adaptive.Aeron
         private long? responseCorrelationId;
         private long? nakDelay;
         private long? _untetheredWindowLimitTimeoutNs;
+        private long? _untetheredLingerTimeoutNs;
         private long? untetheredRestingTimeoutNs;
         private bool _isSessionIdTagged;
 
@@ -127,6 +128,7 @@ namespace Adaptive.Aeron
             ResponseCorrelationId(channelUri);
             NakDelay(channelUri);
             UntetheredWindowLimitTimeout(channelUri);
+            UntetheredLingerTimeout(channelUri);
             UntetheredRestingTimeout(channelUri);
             MaxResend(channelUri);
             StreamId(channelUri);
@@ -2017,6 +2019,60 @@ namespace Adaptive.Aeron
         {
             return _untetheredWindowLimitTimeoutNs;
         }
+        
+        /// <summary>
+        /// The time for an untethered subscription to linger.
+        /// </summary>
+        /// <param name="timeout"> specified either in nanoseconds or using a units suffix, e.g. 1ms, 1us. </param>
+        /// <returns> this for a fluent API. </returns>
+        /// <seealso cref="Aeron.Context.UNTETHERED_LINGER_TIMEOUT_PARAM_NAME"/>
+        public ChannelUriStringBuilder UntetheredLingerTimeout(string timeout)
+        {
+            if (null != timeout)
+            {
+                _untetheredLingerTimeoutNs = SystemUtil.ParseDuration(UNTETHERED_LINGER_TIMEOUT_PARAM_NAME, timeout);
+            }
+            else
+            {
+                _untetheredLingerTimeoutNs = null;
+            }
+          
+            return this;
+        }
+
+        /// <summary>
+        /// The time for an untethered subscription to linger.
+        /// </summary>
+        /// <param name="timeout"> specified either in nanoseconds. </param>
+        /// <returns> this for a fluent API. </returns>
+        /// <seealso cref="Aeron.Context.UNTETHERED_LINGER_TIMEOUT_PARAM_NAME"/>
+        public ChannelUriStringBuilder UntetheredLingerTimeoutNs(long? timeout)
+        {
+            _untetheredLingerTimeoutNs = timeout;
+            return this;
+        }
+
+        /// <summary>
+        /// The time for an untethered subscription to linger.
+        /// </summary>
+        /// <param name="channelUri"> the existing URI to extract the untetheredLingerTimeout from. </param>
+        /// <returns> this for a fluent API. </returns>
+        /// <seealso cref="Aeron.Context.UNTETHERED_LINGER_TIMEOUT_PARAM_NAME"/>
+        public ChannelUriStringBuilder UntetheredLingerTimeout(ChannelUri channelUri)
+        {
+            this.UntetheredLingerTimeout(channelUri.Get(UNTETHERED_LINGER_TIMEOUT_PARAM_NAME));
+            return this;
+        }
+
+        /// <summary>
+        /// The time for an untethered subscription to linger.
+        /// </summary>
+        /// <returns> the timeout in ns. </returns>
+        /// <seealso cref="Aeron.Context.UNTETHERED_LINGER_TIMEOUT_PARAM_NAME"/>
+        public long? UntetheredLingerTimeoutNs()
+        {
+            return _untetheredLingerTimeoutNs;
+        }
 
         /// <summary>
         /// The timeout for when an untethered subscription is resting after not being able to keep up before it is allowed
@@ -2276,6 +2332,7 @@ namespace Adaptive.Aeron
             AppendParameter(_sb, RESPONSE_CORRELATION_ID_PARAM_NAME, responseCorrelationId);
             AppendParameter(_sb, NAK_DELAY_PARAM_NAME, nakDelay);
             AppendParameter(_sb, UNTETHERED_WINDOW_LIMIT_TIMEOUT_PARAM_NAME, _untetheredWindowLimitTimeoutNs);
+            AppendParameter(_sb, UNTETHERED_LINGER_TIMEOUT_PARAM_NAME, _untetheredLingerTimeoutNs);
             AppendParameter(_sb, UNTETHERED_RESTING_TIMEOUT_PARAM_NAME, untetheredRestingTimeoutNs);
             AppendParameter(_sb, MAX_RESEND_PARAM_NAME, _maxResend);
             AppendParameter(_sb, STREAM_ID_PARAM_NAME, _streamId);

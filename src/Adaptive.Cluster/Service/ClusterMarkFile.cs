@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
+using Adaptive.Aeron.LogBuffer;
 using Adaptive.Agrona;
 using Adaptive.Agrona.Concurrent;
 using Adaptive.Agrona.Concurrent.Errors;
@@ -12,7 +13,7 @@ using Adaptive.Cluster.Service;
 namespace Adaptive.Cluster
 {
     /// <summary>
-    /// Used to indicate if a cluster service is running and what configuration it is using. Errors encountered by
+    /// Used to indicate if a cluster component is running and what configuration it is using. Errors encountered by
     /// the service are recorded in within this file by a <see cref="DistinctErrorLog"/>
     /// </summary>
     public class ClusterMarkFile : IDisposable
@@ -70,6 +71,8 @@ namespace Adaptive.Cluster
         /// Service mark file name.
         /// </summary>
         public const string SERVICE_FILENAME_PREFIX = "cluster-mark-service-";
+        
+        private static readonly UnsafeBuffer EMPTY_BUFFER = new UnsafeBuffer((IntPtr)0, 0);
 
         private static readonly int HEADER_OFFSET = MessageHeaderDecoder.ENCODED_LENGTH;
 
@@ -81,33 +84,41 @@ namespace Adaptive.Cluster
         private readonly int headerOffset;
 
         /// <summary>
-        /// Create new <seealso cref="MarkFile"/> for a cluster service but check if an existing service is active.
+        /// Create new <seealso cref="MarkFile"/> for a cluster component but check if an existing service is active.
         /// </summary>
         /// <param name="file">              full qualified file to the <seealso cref="MarkFile"/>. </param>
         /// <param name="type">              of cluster component the <seealso cref="MarkFile"/> represents. </param>
         /// <param name="errorBufferLength"> for storing the error log. </param>
         /// <param name="epochClock">        for checking liveness against. </param>
         /// <param name="timeoutMs">         for the activity check on an existing <seealso cref="MarkFile"/>. </param>
-        public ClusterMarkFile(FileInfo file, ClusterComponentType type, int errorBufferLength, IEpochClock epochClock,
-            long timeoutMs)
+        /// <param name="filePageSize">      for aligning file length to.</param>
+        public ClusterMarkFile(
+            FileInfo file,
+            ClusterComponentType type,
+            int errorBufferLength,
+            IEpochClock epochClock,
+            long timeoutMs,
+            int filePageSize)
         {
             if (errorBufferLength < ERROR_BUFFER_MIN_LENGTH || errorBufferLength > ERROR_BUFFER_MAX_LENGTH)
             {
                 throw new ArgumentException("Invalid errorBufferLength: " + errorBufferLength);
             }
+            
+            LogBufferDescriptor.CheckPageSize(filePageSize);
 
             bool markFileExists = file.Exists;
-            int totalFileLength = HEADER_LENGTH + errorBufferLength;
+            int totalFileLength = BitUtil.Align(HEADER_LENGTH + errorBufferLength, filePageSize);
 
             MessageHeaderDecoder messageHeaderDecoder = new MessageHeaderDecoder();
 
             long candidateTermId;
             if (markFileExists)
             {
-                int headerOffset = HeaderOffset(file);
-                MarkFile markFile = new MarkFile(file, true,
-                    headerOffset + MarkFileHeaderDecoder.VersionEncodingOffset(),
-                    headerOffset + MarkFileHeaderDecoder.ActivityTimestampEncodingOffset(), 
+                int currentHeaderOffset = HeaderOffset(file);
+                MarkFile existingMarkFile = new MarkFile(file, true,
+                    currentHeaderOffset + MarkFileHeaderDecoder.VersionEncodingOffset(),
+                    currentHeaderOffset + MarkFileHeaderDecoder.ActivityTimestampEncodingOffset(), 
                     totalFileLength, 
                     timeoutMs,
                     epochClock,
@@ -123,26 +134,19 @@ namespace Adaptive.Cluster
                                                        " does not match software: " + MAJOR_VERSION);
                         }
                     }, null);
-                UnsafeBuffer buffer = markFile.Buffer();
+                UnsafeBuffer existingBuffer = existingMarkFile.Buffer();
 
-                if (buffer.Capacity != totalFileLength)
+                if (0 != currentHeaderOffset)
                 {
-                    throw new ClusterException("ClusterMarkFile capacity=" + buffer.Capacity +
-                                               " < expectedCapacity=" + totalFileLength);
-                }
-
-                if (0 != headerOffset)
-                {
-                    headerDecoder.WrapAndApplyHeader(buffer, 0, messageHeaderDecoder);
+                    headerDecoder.WrapAndApplyHeader(existingBuffer, 0, messageHeaderDecoder);
                 }
                 else
                 {
-                    headerDecoder.Wrap(buffer, 0, MarkFileHeaderDecoder.BLOCK_LENGTH,
-                        MarkFileHeaderDecoder.SCHEMA_VERSION);
+                    headerDecoder.Wrap(
+                        existingBuffer, 0, MarkFileHeaderDecoder.BLOCK_LENGTH, MarkFileHeaderDecoder.SCHEMA_VERSION);
                 }
 
                 ClusterComponentType existingType = headerDecoder.ComponentType();
-
                 if (existingType != ClusterComponentType.UNKNOWN && existingType != type)
                 {
                     if (existingType != ClusterComponentType.BACKUP || ClusterComponentType.CONSENSUS_MODULE != type)
@@ -153,28 +157,36 @@ namespace Adaptive.Cluster
                 }
 
                 int existingErrorBufferLength = headerDecoder.ErrorBufferLength();
+                var headerLength = headerDecoder.HeaderLength();
                 UnsafeBuffer existingErrorBuffer =
-                    new UnsafeBuffer(buffer, headerDecoder.HeaderLength(), existingErrorBufferLength);
+                    new UnsafeBuffer(existingBuffer, headerLength, existingErrorBufferLength);
 
                 SaveExistingErrors(file, existingErrorBuffer, type, Aeron.Aeron.Context.FallbackLogger());
                 existingErrorBuffer.SetMemory(0, existingErrorBufferLength, 0);
 
                 candidateTermId = headerDecoder.CandidateTermId();
 
-                if (0 != headerOffset)
+                if (0 != currentHeaderOffset)
                 {
-                    this.markFile = markFile;
-                    this.buffer = buffer;
+                    markFile = existingMarkFile;
+                    buffer = existingBuffer;
                 }
                 else
                 {
-                    CloseHelper.Dispose(markFile);
-                    this.markFile = new MarkFile(file, false,
+                    headerDecoder.Wrap(EMPTY_BUFFER, 0, 0, 0);
+                    CloseHelper.Dispose(existingMarkFile);
+                    markFile = new MarkFile(
+                        file, 
+                        false,
                         HEADER_OFFSET + MarkFileHeaderDecoder.VersionEncodingOffset(),
-                        HEADER_OFFSET + MarkFileHeaderDecoder.ActivityTimestampEncodingOffset(), totalFileLength,
-                        timeoutMs, epochClock, null, null);
-                    this.buffer = markFile.Buffer();
-                    this.buffer.SetMemory(0, headerDecoder.HeaderLength(), 0);
+                        HEADER_OFFSET + MarkFileHeaderDecoder.ActivityTimestampEncodingOffset(), 
+                        totalFileLength,
+                        timeoutMs, 
+                        epochClock, 
+                        null, 
+                        null);
+                    buffer = existingMarkFile.Buffer();
+                    buffer.SetMemory(0, headerLength, 0);
                 }
             }
             else
@@ -282,14 +294,11 @@ namespace Adaptive.Cluster
         {
             if (!markFile.IsClosed())
             {
+                headerEncoder.Wrap(EMPTY_BUFFER, 0);
+                headerDecoder.Wrap(EMPTY_BUFFER, 0, 0, 0);
+                errorBuffer.Wrap(0, 0);
                 CloseHelper.Dispose(markFile);
-                UnsafeBuffer emptyBuffer = new UnsafeBuffer();
-                headerEncoder.Wrap(emptyBuffer, 0);
-                headerDecoder.Wrap(emptyBuffer, 0, 0, 0);
-                errorBuffer.Wrap(emptyBuffer, 0, 0);
             }
-
-            markFile?.Dispose();
         }
 
         /// <summary>
@@ -385,7 +394,7 @@ namespace Adaptive.Cluster
         {
             if (!markFile.IsClosed())
             {
-                markFile.TimestampOrdered(nowMs);
+                markFile.TimestampRelease(nowMs);
             }
         }
 
@@ -505,16 +514,22 @@ namespace Adaptive.Cluster
         /// <summary>
         /// The control properties for communicating between the consensus module and the services.
         /// </summary>
-        /// <returns> the control properties for communicating between the consensus module and the services. </returns>
+        /// <returns> the control properties for communicating between the consensus module and the services or <code>null</code>
+        /// if mark file was already closed. </returns>
         public ClusterNodeControlProperties LoadControlProperties()
         {
-            headerDecoder.SbeRewind();
-            return new ClusterNodeControlProperties(
-                headerDecoder.MemberId(),
-                headerDecoder.ServiceStreamId(),
-                headerDecoder.ConsensusModuleStreamId(),
-                headerDecoder.AeronDirectory(),
-                headerDecoder.ControlChannel());
+            if (!markFile.IsClosed())
+            {
+                headerDecoder.SbeRewind();
+                return new ClusterNodeControlProperties(
+                    headerDecoder.MemberId(),
+                    headerDecoder.ServiceStreamId(),
+                    headerDecoder.ConsensusModuleStreamId(),
+                    headerDecoder.AeronDirectory(),
+                    headerDecoder.ControlChannel());
+            }
+
+            return null;
         }
 
         /// <summary>
