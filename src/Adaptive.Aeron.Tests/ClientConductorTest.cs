@@ -39,7 +39,7 @@ namespace Adaptive.Aeron.Tests
         private const int STREAM_ID_1 = 1002;
         private const int STREAM_ID_2 = 1004;
         private const int SEND_BUFFER_CAPACITY = 1024;
-        private const int COUNTER_BUFFER_LENGTH = 1024;
+        private const int COUNTER_BUFFER_LENGTH = 512 * 1024;
 
         private const long CORRELATION_ID = 2000;
         private const long CORRELATION_ID_2 = 2002;
@@ -163,8 +163,7 @@ namespace Adaptive.Aeron.Tests
                 .InterServiceTimeoutNs(INTER_SERVICE_TIMEOUT_MS * 1000000)
                 .CountersValuesBuffer(CounterValuesBuffer)
                 .CountersMetaDataBuffer(CounterMetaDataBuffer);
-
-
+            
             Conductor = new ClientConductor(ctx, MockAeron);
 
             PublicationReady.Wrap(PublicationReadyBuffer, 0);

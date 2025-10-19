@@ -12,7 +12,7 @@ public class StopRecordingRequestDecoder
     public const ushort BLOCK_LENGTH = 20;
     public const ushort TEMPLATE_ID = 5;
     public const ushort SCHEMA_ID = 101;
-    public const ushort SCHEMA_VERSION = 11;
+    public const ushort SCHEMA_VERSION = 13;
 
     private StopRecordingRequestDecoder _parentMessage;
     private IDirectBuffer _buffer;

@@ -71,5 +71,10 @@ namespace Adaptive.Aeron
             base.Dispose();
             _isClosed.Set(true);
         }
+        
+        internal ClientConductor ClientConductor()
+        {
+            return _clientConductor;
+        }
     }
 }

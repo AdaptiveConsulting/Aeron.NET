@@ -12,6 +12,7 @@ using Adaptive.Aeron.Security;
 using Adaptive.Agrona.Collections;
 using static Adaptive.Aeron.Aeron;
 using static Adaptive.Aeron.Aeron.Context;
+using static Adaptive.Cluster.Client.AeronCluster;
 using static Adaptive.Cluster.Client.AeronCluster.AsyncConnect.AsyncConnectState;
 using static Adaptive.Cluster.Client.AeronCluster.Configuration;
 
@@ -1016,7 +1017,7 @@ namespace Adaptive.Cluster.Client
             return endpointByIdMap;
         }
 
-        private static Publication AddIngressPublication(Context ctx, string channel, int streamId)
+        internal static Publication AddIngressPublication(Context ctx, string channel, int streamId)
         {
             if (ctx.IsIngressExclusive())
             {
@@ -1058,15 +1059,8 @@ namespace Adaptive.Cluster.Client
 
             var map = ParseIngressEndpoints(_ctx, ingressEndpoints);
             var newLeader = map.Get(leaderMemberId);
-            var channelUri = ChannelUri.Parse(_ctx.IngressChannel());
-
-            if (channelUri.IsUdp)
-            {
-                channelUri.Put(ENDPOINT_PARAM_NAME, newLeader.endpoint);
-            }
-
-            _publication = AddIngressPublication(_ctx, channelUri.ToString(), _ctx.IngressStreamId());
-            newLeader.publication = _publication;
+            newLeader.CreateIngressPublication();
+            _publication = newLeader.publication;
             _endpointByIdMap = map;
         }
 
@@ -1269,6 +1263,12 @@ namespace Adaptive.Cluster.Client
             /// Default stream id within a channel for receiving messages from a cluster.
             /// </summary>
             public const int EGRESS_STREAM_ID_DEFAULT = 102;
+            
+            /// <summary>
+            /// System property to name Cluster client. Defaults to empty string.
+            /// </summary>
+            /// <remarks>Since 1.49.0</remarks>
+            public const string CLIENT_NAME_PROP_NAME = "aeron.cluster.client.name";
 
             /// <summary>
             /// Timeout for a leader if no heartbeat is received by another member.
@@ -1333,6 +1333,17 @@ namespace Adaptive.Cluster.Client
             public static int EgressStreamId()
             {
                 return Config.GetInteger(EGRESS_STREAM_ID_PROP_NAME, EGRESS_STREAM_ID_DEFAULT);
+            }
+            
+            /// <summary>
+            /// Get the configured client name.
+            /// </summary>
+            /// <returns> specified client name or empty string if not set. </returns>
+            /// <seealso cref="CLIENT_NAME_PROP_NAME"/>
+            /// <remarks>Since 1.49.0</remarks>
+            public static string ClientName()
+            {
+                return Config.GetProperty(CLIENT_NAME_PROP_NAME, "");
             }
         }
 
@@ -1418,6 +1429,7 @@ namespace Adaptive.Cluster.Client
             private IEgressListener _egressListener;
             private IControlledEgressListener _controlledEgressListener;
             private AgentInvoker agentInvoker;
+            private String clientName = Configuration.ClientName();
 
             /// <summary>
             /// Perform a shallow copy of the object.
@@ -1462,6 +1474,12 @@ namespace Adaptive.Cluster.Client
                     egressChannelUri.Put(REJOIN_PARAM_NAME, "false");
                     _egressChannel = egressChannelUri.ToString();
                 }
+                
+                if (clientName.Length > Aeron.Aeron.Configuration.MAX_CLIENT_NAME_LENGTH)
+                {
+                    throw new ConfigurationException(
+                        "AeronCluster.Context.clientName length must be <= " + Aeron.Aeron.Configuration.MAX_CLIENT_NAME_LENGTH);
+                }
 
                 if (null == _aeron)
                 {
@@ -1469,7 +1487,7 @@ namespace Adaptive.Cluster.Client
                         new Aeron.Aeron.Context()
                             .AeronDirectoryName(_aeronDirectoryName)
                             .ErrorHandler(_errorHandler)
-                            .ClientName("cluster-client"));
+                            .ClientName(string.IsNullOrEmpty(clientName) ? "cluster-client" : clientName));
                     _ownsAeronClient = true;
                 }
 
@@ -1694,6 +1712,31 @@ namespace Adaptive.Cluster.Client
             {
                 return _idleStrategy;
             }
+            
+            /// <summary>
+            /// Sets the name used to identify this client among other clients connected to the Cluster.
+            /// </summary>
+            /// <param name="clientName"> to use. </param>
+            /// <returns> this for a fluent API. </returns>
+            /// <seealso cref="AeronCluster.Configuration.CLIENT_NAME_PROP_NAME"/>
+            /// <remarks>Since 1.49.0</remarks>
+            public Context ClientName(string clientName)
+            {
+                this.clientName = string.IsNullOrEmpty(clientName) ? "" : clientName;
+                return this;
+            }
+
+            /// <summary>
+            /// Returns the name of this Cluster client.
+            /// </summary>
+            /// <returns> name of this client or empty String if not configured. </returns>
+            /// <seealso cref="AeronCluster.Configuration.CLIENT_NAME_PROP_NAME"/>
+            /// <remarks>Since 1.49.0</remarks>
+            public string ClientName()
+            {
+                return clientName;
+            }
+
 
             /// <summary>
             /// Set the top level Aeron directory used for communication between the Aeron client and Media Driver.
@@ -2318,13 +2361,17 @@ namespace Adaptive.Cluster.Client
                 correlationId = ctx.AeronClient().NextCorrelationId();
                 var encodedCredentials = ctx.CredentialsSupplier().EncodedCredentials();
 
+                string clientInfo = "name=" + ctx.ClientName();
+                                          //  + " " + AeronCounters.formatVersionInfo(AeronClusterVersion.VERSION, AeronClusterVersion.GIT_SHA);
+                
                 var encoder = new SessionConnectRequestEncoder()
                     .WrapAndApplyHeader(buffer, 0, messageHeaderEncoder)
                     .CorrelationId(correlationId)
                     .ResponseStreamId(ctx.EgressStreamId())
                     .Version(PROTOCOL_SEMANTIC_VERSION)
                     .ResponseChannel(responseChannel)
-                    .PutEncodedCredentials(encodedCredentials, 0, encodedCredentials.Length);
+                    .PutEncodedCredentials(encodedCredentials, 0, encodedCredentials.Length)
+                    .ClientInfo(clientInfo);
 
                 messageLength = MessageHeaderEncoder.ENCODED_LENGTH + encoder.EncodedLength();
                 State(SEND_MESSAGE);
@@ -2401,28 +2448,15 @@ namespace Adaptive.Cluster.Client
 
             private void UpdateMembers()
             {
-                leaderMemberId = egressPoller.LeaderMemberId();
-                MemberIngress leader = memberByIdMap.Get(leaderMemberId);
-                if (null != leader)
-                {
-                    ingressPublication = leader.publication;
-                    leader.publication = null;
-                }
-
+                CloseHelper.Dispose(ingressPublication);
                 CloseHelper.CloseAll(memberByIdMap.Values);
+                
+                leaderMemberId = egressPoller.LeaderMemberId();
                 memberByIdMap = ParseIngressEndpoints(ctx, egressPoller.Detail());
 
-                if (null == ingressPublication)
-                {
-                    MemberIngress member = memberByIdMap.Get(leaderMemberId);
-                    ChannelUri channelUri = ChannelUri.Parse(ctx.IngressChannel());
-                    if (channelUri.IsUdp)
-                    {
-                        channelUri.Put(ENDPOINT_PARAM_NAME, member.endpoint);
-                    }
-
-                    ingressPublication = AddIngressPublication(ctx, channelUri.ToString(), ctx.IngressStreamId());
-                }
+                MemberIngress leader = memberByIdMap.Get(leaderMemberId);
+                leader.CreateIngressPublication();
+                ingressPublication = leader.publication;
 
                 State(AWAIT_PUBLICATION_CONNECTED);
             }
@@ -2464,6 +2498,17 @@ namespace Adaptive.Cluster.Client
             this.endpoint = endpoint;
         }
 
+        internal void CreateIngressPublication()
+        {
+            ChannelUri channelUri = ChannelUri.Parse(ctx.IngressChannel());
+            if (channelUri.IsUdp)
+            {
+                channelUri.Put(ENDPOINT_PARAM_NAME, endpoint);
+            }
+
+            publication = AddIngressPublication(ctx, channelUri.ToString(), ctx.IngressStreamId());
+        }
+        
         public void Dispose()
         {
             if (null != publication)

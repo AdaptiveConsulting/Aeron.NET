@@ -38,6 +38,7 @@ namespace Adaptive.Aeron
         private string _mediaReceiveTimestampOffset;
         private string _channelReceiveTimestampOffset;
         private string _channelSendTimestampOffset;
+        private string _responseCorrelationId;
         private string _responseEndpoint;
         private bool? _reliable;
         private bool? _sparse;
@@ -61,7 +62,6 @@ namespace Adaptive.Aeron
         private long? _sessionId;
         private long? _groupTag;
         private long? _linger;
-        private long? responseCorrelationId;
         private long? nakDelay;
         private long? _untetheredWindowLimitTimeoutNs;
         private long? _untetheredLingerTimeoutNs;
@@ -174,7 +174,7 @@ namespace Adaptive.Aeron
             _channelReceiveTimestampOffset = null;
             _channelSendTimestampOffset = null;
             _responseEndpoint = null;
-            responseCorrelationId = null;
+            _responseCorrelationId = null;
             _maxResend = null;
             _streamId = null;
             _publicationWindowLength = null;
@@ -1882,6 +1882,17 @@ namespace Adaptive.Aeron
         }
 
         /// <summary>
+        /// Get the correlation id from the image received on the response "server's" subscription to be used by a response
+        /// publication.
+        /// </summary>
+        /// <returns> correlation id of an image from the response "server's" subscription. </returns>
+        /// <seealso cref="Aeron.Context.RESPONSE_CORRELATION_ID_PARAM_NAME"/>
+        public string ResponseCorrelationId()
+        {
+            return _responseCorrelationId;
+        }
+
+        /// <summary>
         /// Set the correlation id from the image received on the response "server's" subscription to be used by a response
         /// publication.
         /// </summary>
@@ -1890,7 +1901,37 @@ namespace Adaptive.Aeron
         /// <seealso cref="Aeron.Context.RESPONSE_CORRELATION_ID_PARAM_NAME"/>
         public ChannelUriStringBuilder ResponseCorrelationId(long? responseCorrelationId)
         {
-            this.responseCorrelationId = responseCorrelationId;
+            _responseCorrelationId = Convert.ToString(responseCorrelationId);
+            return this;
+        }
+
+        /// <summary>
+        /// Set the correlation id from the image received on the response "server's" subscription to be used by a response
+        /// publication.
+        /// </summary>
+        /// <param name="responseCorrelationId"> correlation id of an image from the response "server's" subscription. </param>
+        /// <returns> this for a fluent API. </returns>
+        /// <seealso cref="Aeron.Context.RESPONSE_CORRELATION_ID_PARAM_NAME"/>
+        public ChannelUriStringBuilder ResponseCorrelationId(string responseCorrelationId)
+        {
+            if (null != responseCorrelationId && !PROTOTYPE_CORRELATION_ID.Equals(responseCorrelationId))
+            {
+                try
+                {
+                    if (long.Parse(responseCorrelationId) < -1)
+                    {
+                        throw new FormatException("responseCorrelationId must be positive");
+                    }
+                }
+                catch (FormatException)
+                {
+                    throw new System.ArgumentException(
+                        "responseCorrelationId must be a number greater than or equal to -1, or the value '" +
+                        PROTOTYPE_CORRELATION_ID + "' found: " + responseCorrelationId);
+                }
+            }
+
+            _responseCorrelationId = responseCorrelationId;
             return this;
         }
 
@@ -1907,14 +1948,7 @@ namespace Adaptive.Aeron
 
             if (null != responseCorrelationIdString)
             {
-                try
-                {
-                    ResponseCorrelationId(Convert.ToInt64(responseCorrelationIdString));
-                }
-                catch (System.FormatException ex)
-                {
-                    throw new System.ArgumentException("'response-correlation-id' must be a valid long value", ex);
-                }
+                ResponseCorrelationId(responseCorrelationIdString);
             }
 
             return this;
@@ -2019,7 +2053,7 @@ namespace Adaptive.Aeron
         {
             return _untetheredWindowLimitTimeoutNs;
         }
-        
+
         /// <summary>
         /// The time for an untethered subscription to linger.
         /// </summary>
@@ -2036,7 +2070,7 @@ namespace Adaptive.Aeron
             {
                 _untetheredLingerTimeoutNs = null;
             }
-          
+
             return this;
         }
 
@@ -2326,10 +2360,10 @@ namespace Adaptive.Aeron
             AppendParameter(_sb, RECEIVER_WINDOW_LENGTH_PARAM_NAME, _receiverWindowLength);
             AppendParameter(_sb, MEDIA_RCV_TIMESTAMP_OFFSET_PARAM_NAME, _mediaReceiveTimestampOffset);
             AppendParameter(_sb, CHANNEL_RECEIVE_TIMESTAMP_OFFSET_PARAM_NAME,
-               _channelReceiveTimestampOffset);
+                _channelReceiveTimestampOffset);
             AppendParameter(_sb, CHANNEL_SEND_TIMESTAMP_OFFSET_PARAM_NAME, _channelSendTimestampOffset);
             AppendParameter(_sb, RESPONSE_ENDPOINT_PARAM_NAME, _responseEndpoint);
-            AppendParameter(_sb, RESPONSE_CORRELATION_ID_PARAM_NAME, responseCorrelationId);
+            AppendParameter(_sb, RESPONSE_CORRELATION_ID_PARAM_NAME, _responseCorrelationId);
             AppendParameter(_sb, NAK_DELAY_PARAM_NAME, nakDelay);
             AppendParameter(_sb, UNTETHERED_WINDOW_LIMIT_TIMEOUT_PARAM_NAME, _untetheredWindowLimitTimeoutNs);
             AppendParameter(_sb, UNTETHERED_LINGER_TIMEOUT_PARAM_NAME, _untetheredLingerTimeoutNs);
@@ -2337,7 +2371,6 @@ namespace Adaptive.Aeron
             AppendParameter(_sb, MAX_RESEND_PARAM_NAME, _maxResend);
             AppendParameter(_sb, STREAM_ID_PARAM_NAME, _streamId);
             AppendParameter(_sb, PUBLICATION_WINDOW_LENGTH_PARAM_NAME, _publicationWindowLength);
-
 
 
             char lastChar = _sb[_sb.Length - 1];

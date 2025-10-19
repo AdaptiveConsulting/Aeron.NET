@@ -39,6 +39,7 @@ namespace Adaptive.Aeron
         private readonly CounterUpdateFlyweight _counterUpdate = new CounterUpdateFlyweight();
         private readonly ClientTimeoutFlyweight _clientTimeout = new ClientTimeoutFlyweight();
         private readonly StaticCounterFlyweight _staticCounter = new StaticCounterFlyweight();
+        private readonly NextAvailableSessionIdFlyweight _nextSessionId = new NextAvailableSessionIdFlyweight();
         private readonly CopyBroadcastReceiver _receiver;
         private readonly ClientConductor _conductor;
         private readonly HashSet<long> _asyncCommandIdSet;
@@ -99,6 +100,7 @@ namespace Adaptive.Aeron
 
                     if (ErrorCode.CHANNEL_ENDPOINT_ERROR == errorCode)
                     {
+                        // This code is left for backwards compatibility with older media driver versions
                         notProcessed = false;
                         _conductor.OnChannelEndpointError(correlationId, _errorResponse.ErrorMessage());
                     }
@@ -108,10 +110,11 @@ namespace Adaptive.Aeron
                         _receivedCorrelationId = correlationId;
                         _conductor.OnError(correlationId, errorCodeValue, errorCode, _errorResponse.ErrorMessage());
                     }
-                    
+
                     if (_asyncCommandIdSet.Remove(correlationId) && notProcessed)
                     {
-                        _conductor.OnAsyncError(correlationId, errorCodeValue, errorCode, _errorResponse.ErrorMessage());
+                        _conductor.OnAsyncError(correlationId, errorCodeValue, errorCode,
+                            _errorResponse.ErrorMessage());
                     }
 
                     break;
@@ -186,7 +189,7 @@ namespace Adaptive.Aeron
                     _imageMessage.Wrap(buffer, index);
 
                     _conductor.OnUnavailableImage(
-                        _imageMessage.CorrelationId(), 
+                        _imageMessage.CorrelationId(),
                         _imageMessage.SubscriptionRegistrationId()
                     );
                     break;
@@ -197,7 +200,7 @@ namespace Adaptive.Aeron
                     _publicationReady.Wrap(buffer, index);
 
                     long correlationId = _publicationReady.CorrelationId();
-                    if (correlationId == _activeCorrelationId  || _asyncCommandIdSet.Remove(correlationId))
+                    if (correlationId == _activeCorrelationId || _asyncCommandIdSet.Remove(correlationId))
                     {
                         _receivedCorrelationId = correlationId;
                         _conductor.OnNewExclusivePublication(
@@ -219,7 +222,7 @@ namespace Adaptive.Aeron
 
                     int counterId = _counterUpdate.CounterId();
                     long correlationId = _counterUpdate.CorrelationId();
-                    if (correlationId == _activeCorrelationId)
+                    if (correlationId == _activeCorrelationId || _asyncCommandIdSet.Remove(correlationId))
                     {
                         _receivedCorrelationId = correlationId;
                         _conductor.OnNewCounter(correlationId, counterId);
@@ -251,18 +254,19 @@ namespace Adaptive.Aeron
 
                     break;
                 }
-                
+
                 case ON_STATIC_COUNTER:
                 {
                     _staticCounter.Wrap(buffer, index);
 
                     long correlationId = _staticCounter.CorrelationId();
-                    if (correlationId == _activeCorrelationId)
+                    if (correlationId == _activeCorrelationId || _asyncCommandIdSet.Remove(correlationId))
                     {
                         int counterId = _staticCounter.CounterId();
                         _receivedCorrelationId = correlationId;
                         _conductor.OnStaticCounter(correlationId, counterId);
                     }
+
                     break;
                 }
 
@@ -271,6 +275,20 @@ namespace Adaptive.Aeron
                     _publicationErrorFrame.Wrap(buffer, index);
 
                     _conductor.OnPublicationError(_publicationErrorFrame);
+                    break;
+                }
+
+                case ON_NEXT_AVAILABLE_SESSION_ID:
+                {
+                    _nextSessionId.Wrap(buffer, index);
+
+                    long correlationId = _nextSessionId.CorrelationId();
+                    if (correlationId == _activeCorrelationId)
+                    {
+                        _receivedCorrelationId = correlationId;
+                        _conductor.OnNextAvailableSessionId(_nextSessionId.NextSessionId());
+                    }
+
                     break;
                 }
             }

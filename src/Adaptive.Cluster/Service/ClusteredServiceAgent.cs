@@ -25,6 +25,7 @@ namespace Adaptive.Cluster.Service
     internal sealed class ClusteredServiceAgent : IAgent, ICluster, IIdleStrategy
     {
         static long ONE_MILLISECOND_NS = Agrona.TimeUnit.MILLIS.ToNanos(1);
+
         static long MARK_FILE_UPDATE_INTERVAL_MS =
             Agrona.TimeUnit.NANOSECONDS.ToMillis(ClusteredServiceContainer.Configuration.MARK_FILE_UPDATE_INTERVAL_NS);
 
@@ -35,7 +36,7 @@ namespace Adaptive.Cluster.Service
         const int LIFECYCLE_CALLBACK_ON_TERMINATE = 2;
         const int LIFECYCLE_CALLBACK_ON_ROLE_CHANGE = 3;
         const int LIFECYCLE_CALLBACK_DO_BACKGROUND_WORK = 4;
-        
+
         static String LifecycleName(int activeLifecycleCallback)
         {
             switch (activeLifecycleCallback)
@@ -54,9 +55,9 @@ namespace Adaptive.Cluster.Service
                     return "unknown";
             }
         }
-        
+
         private int activeLifecycleCallback;
-        
+
         private volatile bool isAbort;
         private bool isServiceActive;
         private readonly int serviceId;
@@ -90,16 +91,17 @@ namespace Adaptive.Cluster.Service
         private readonly SnapshotDurationTracker snapshotDurationTracker;
         private readonly String subscriptionAlias;
         private readonly int standbySnapshotFlags;
-        
+
         private ReadableCounter commitPosition;
         private ActiveLogEvent activeLogEvent;
         private ClusterRole role = ClusterRole.Follower;
         private ClusterTimeUnit timeUnit = ClusterTimeUnit.NULL_VALUE;
         private long requestedAckPosition = NULL_POSITION;
-        
+
         internal ClusteredServiceAgent(ClusteredServiceContainer.Context ctx)
         {
-            headerBuffer = new UnsafeBuffer(messageBuffer, DataHeaderFlyweight.HEADER_LENGTH, MAX_UDP_PAYLOAD_LENGTH - DataHeaderFlyweight.HEADER_LENGTH);
+            headerBuffer = new UnsafeBuffer(messageBuffer, DataHeaderFlyweight.HEADER_LENGTH,
+                MAX_UDP_PAYLOAD_LENGTH - DataHeaderFlyweight.HEADER_LENGTH);
             headerVector = new DirectBufferVector(headerBuffer, 0, SESSION_HEADER_LENGTH);
 
             logAdapter = new BoundedLogAdapter(this, ctx.LogFragmentLimit());
@@ -122,8 +124,9 @@ namespace Adaptive.Cluster.Service
                 new ConsensusModuleProxy(aeron.AddPublication(channel, ctx.ConsensusModuleStreamId()));
             _serviceAdapter = new ServiceAdapter(aeron.AddSubscription(channel, ctx.ServiceStreamId()), this);
             _sessionMessageHeaderEncoder.WrapAndApplyHeader(headerBuffer, 0, new MessageHeaderEncoder());
-            this.standbySnapshotFlags = ctx.StandbySnapshotEnabled() ? CLUSTER_ACTION_FLAGS_STANDBY_SNAPSHOT :
-                CLUSTER_ACTION_FLAGS_DEFAULT;
+            this.standbySnapshotFlags = ctx.StandbySnapshotEnabled()
+                ? CLUSTER_ACTION_FLAGS_STANDBY_SNAPSHOT
+                : CLUSTER_ACTION_FLAGS_DEFAULT;
         }
 
         public void OnStart()
@@ -164,7 +167,7 @@ namespace Adaptive.Cluster.Service
                 }
 
                 CloseHelper.Dispose(errorHandler, logAdapter);
-                
+
                 if (!ctx.OwnsAeronClient() && !aeron.IsClosed)
                 {
                     CloseHelper.Dispose(errorHandler, _serviceAdapter);
@@ -202,7 +205,7 @@ namespace Adaptive.Cluster.Service
                         CloseLog();
                     }
                 }
-                
+
                 workCount += InvokeBackgroundWork(nowNs);
             }
             catch (AgentTerminationException)
@@ -282,10 +285,10 @@ namespace Adaptive.Cluster.Service
                     clientSession.MarkClosing();
                     return true;
                 }
+
                 Idle();
-            }
-            while (--attempts > 0);
-           
+            } while (--attempts > 0);
+
             return false;
         }
 
@@ -378,9 +381,9 @@ namespace Adaptive.Cluster.Service
             }
 
             long nowNs = nanoClock.NanoTime();
-            
+
             CheckForClockTick(nowNs);
-            
+
             if (isServiceActive)
             {
                 InvokeBackgroundWork(nowNs);
@@ -413,7 +416,7 @@ namespace Adaptive.Cluster.Service
         {
             terminationPosition = logPosition;
         }
-        
+
         internal void OnRequestServiceAck(long logPosition)
         {
             requestedAckPosition = logPosition;
@@ -490,7 +493,6 @@ namespace Adaptive.Cluster.Service
             }
             else
             {
-
                 for (int i = 0, size = sessions.Count; i < size; i++)
                 {
                     if (sessions[i].Id == clusterSessionId)
@@ -507,8 +509,8 @@ namespace Adaptive.Cluster.Service
 
         internal void OnServiceAction(
             long leadershipTermId,
-            long logPosition, 
-            long timestamp, 
+            long logPosition,
+            long timestamp,
             ClusterAction action,
             int flags)
         {
@@ -530,8 +532,9 @@ namespace Adaptive.Cluster.Service
             if (!ctx.AppVersionValidator().IsVersionCompatible(ctx.AppVersion(), appVersion))
             {
                 ctx.CountedErrorHandler().OnError(new ClusterException("incompatible version: " +
-                                                        SemanticVersion.ToString(ctx.AppVersion()) + " log=" +
-                                                        SemanticVersion.ToString(appVersion)));
+                                                                       SemanticVersion.ToString(ctx.AppVersion()) +
+                                                                       " log=" +
+                                                                       SemanticVersion.ToString(appVersion)));
                 throw new AgentTerminationException();
             }
 
@@ -551,7 +554,8 @@ namespace Adaptive.Cluster.Service
                 appVersion);
         }
 
-        internal void AddSession(long clusterSessionId, int responseStreamId, string responseChannel, byte[] encodedPrincipal)
+        internal void AddSession(long clusterSessionId, int responseStreamId, string responseChannel,
+            byte[] encodedPrincipal)
         {
             ContainerClientSession session = new ContainerClientSession(
                 clusterSessionId, responseStreamId, responseChannel, encodedPrincipal, this);
@@ -646,7 +650,7 @@ namespace Adaptive.Cluster.Service
 
                 bufferClaim.Wrap(
                     messageBuffer, 0, DataHeaderFlyweight.HEADER_LENGTH + SESSION_HEADER_LENGTH + length
-                    );
+                );
                 return ClientSessionConstants.MOCKED_OFFER;
             }
 
@@ -719,7 +723,7 @@ namespace Adaptive.Cluster.Service
             DisconnectEgress(ctx.CountedErrorHandler().AsErrorHandler);
             Role = ClusterRole.Follower;
         }
-        
+
         private void DisconnectEgress(ErrorHandler errorHandler)
         {
             for (int i = 0, size = sessions.Count; i < size; i++)
@@ -781,7 +785,7 @@ namespace Adaptive.Cluster.Service
                 for (var i = 0; i < sessions.Count; i++)
                 {
                     var session = sessions[i];
-                    
+
                     if (ctx.IsRespondingService() && !activeLog.isStartup)
                     {
                         session.Connect(aeron);
@@ -890,11 +894,9 @@ namespace Adaptive.Cluster.Service
                     SnapshotState(publication, logPosition, leadershipTermId);
                     CheckForClockTick(nanoClock.NanoTime());
                     archive.CheckForErrorResponse();
-                    
-                    snapshotDurationTracker.OnSnapshotBegin(nanoClock.NanoTime());
+
                     service.OnTakeSnapshot(publication);
-                    snapshotDurationTracker.OnSnapshotEnd(nanoClock.NanoTime());
-                    
+
                     AwaitRecordingComplete(recordingId, publication.Position, counters, counterId, archive);
 
                     return recordingId;
@@ -955,6 +957,7 @@ namespace Adaptive.Cluster.Service
             {
                 long recordingId = NULL_VALUE;
                 Exception exception = null;
+                snapshotDurationTracker.OnSnapshotBegin(nanoClock.NanoTime());
                 try
                 {
                     recordingId = OnTakeSnapshot(logPosition, leadershipTermId);
@@ -962,6 +965,10 @@ namespace Adaptive.Cluster.Service
                 catch (Exception ex)
                 {
                     exception = ex;
+                }
+                finally
+                {
+                    snapshotDurationTracker.OnSnapshotEnd(nanoClock.NanoTime());
                 }
 
                 long id = ackId++;
@@ -976,7 +983,7 @@ namespace Adaptive.Cluster.Service
                 }
             }
         }
-        
+
         private bool ShouldSnapshot(int flags)
         {
             return CLUSTER_ACTION_FLAGS_DEFAULT == flags || 0 != (flags & standbySnapshotFlags);
@@ -1008,7 +1015,7 @@ namespace Adaptive.Cluster.Service
             if (nowNs - lastSlowTickNs > ONE_MILLISECOND_NS)
             {
                 lastSlowTickNs = nowNs;
-               
+
                 if (null != aeronAgentInvoker)
                 {
                     aeronAgentInvoker.Invoke();
@@ -1018,10 +1025,11 @@ namespace Adaptive.Cluster.Service
                         throw new AgentTerminationException("unexpected Aeron close");
                     }
                 }
-                
+
                 if (null != commitPosition && commitPosition.IsClosed)
                 {
-                    ctx.ErrorLog().Record(new AeronEvent("commit-pos counter unexpectedly closed, terminating", Category.WARN));
+                    ctx.ErrorLog().Record(new AeronEvent("commit-pos counter unexpectedly closed, terminating",
+                        Category.WARN));
 
                     throw new ClusterTerminationException(true);
                 }
@@ -1044,7 +1052,7 @@ namespace Adaptive.Cluster.Service
             int workCount = 0;
 
             workCount += _serviceAdapter.Poll();
-            
+
             if (null != activeLogEvent && null == logAdapter.Image())
             {
                 ActiveLogEvent @event = activeLogEvent;
@@ -1057,18 +1065,19 @@ namespace Adaptive.Cluster.Service
                 if (logPosition > terminationPosition)
                 {
                     ctx.CountedErrorHandler().OnError(new ClusterException(
-                        "service terminate: logPosition=" + logPosition + " > terminationPosition=" + terminationPosition));
+                        "service terminate: logPosition=" + logPosition + " > terminationPosition=" +
+                        terminationPosition));
                 }
 
                 Terminate(logPosition == terminationPosition);
             }
-            
+
             if (NULL_POSITION != requestedAckPosition && logPosition >= requestedAckPosition)
             {
                 if (logPosition > requestedAckPosition)
                 {
                     ctx.CountedErrorHandler().OnError(new ClusterEvent(
-                        "invalid ack request: logPosition=" + logPosition + 
+                        "invalid ack request: logPosition=" + logPosition +
                         " > requestedAckPosition=" + requestedAckPosition));
                 }
 
@@ -1077,6 +1086,7 @@ namespace Adaptive.Cluster.Service
                 {
                     Idle();
                 }
+
                 requestedAckPosition = NULL_POSITION;
             }
 
@@ -1129,7 +1139,8 @@ namespace Adaptive.Cluster.Service
             if (LIFECYCLE_CALLBACK_NONE != activeLifecycleCallback)
             {
                 throw new ClusterException(
-                    "sending messages or scheduling timers is not allowed from " + LifecycleName(activeLifecycleCallback));
+                    "sending messages or scheduling timers is not allowed from " +
+                    LifecycleName(activeLifecycleCallback));
             }
         }
 
@@ -1160,7 +1171,7 @@ namespace Adaptive.Cluster.Service
                 commitPosition.Dispose();
             }
         }
-        
+
         private int InvokeBackgroundWork(long nowNs)
         {
             try

@@ -12,7 +12,7 @@ public class TimerDecoder
     public const ushort BLOCK_LENGTH = 16;
     public const ushort TEMPLATE_ID = 104;
     public const ushort SCHEMA_ID = 111;
-    public const ushort SCHEMA_VERSION = 13;
+    public const ushort SCHEMA_VERSION = 14;
 
     private TimerDecoder _parentMessage;
     private IDirectBuffer _buffer;

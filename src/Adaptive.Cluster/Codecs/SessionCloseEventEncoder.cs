@@ -12,7 +12,7 @@ public class SessionCloseEventEncoder
     public const ushort BLOCK_LENGTH = 28;
     public const ushort TEMPLATE_ID = 22;
     public const ushort SCHEMA_ID = 111;
-    public const ushort SCHEMA_VERSION = 13;
+    public const ushort SCHEMA_VERSION = 14;
 
     private SessionCloseEventEncoder _parentMessage;
     private IMutableDirectBuffer _buffer;

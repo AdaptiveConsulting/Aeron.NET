@@ -1,4 +1,5 @@
 ﻿using System;
+using Adaptive.Agrona.Concurrent;
 using Adaptive.Cluster.Service;
 
 namespace Adaptive.Aeron.Samples.ClusterService
@@ -9,16 +10,17 @@ namespace Adaptive.Aeron.Samples.ClusterService
         {
             var context = new ClusteredServiceContainer.Context()
                 .ClusteredService(new EchoService());
-            
-            using (ClusteredServiceContainer.Launch(context))
+
+            using (ShutdownSignalBarrier barrier = new ShutdownSignalBarrier())
+            using (ClusteredServiceContainer.Launch(context.TerminationHook(() => barrier.SignalAll())))
             {
                 Console.WriteLine("Started Service Container...");
-                
-                context.ShutdownSignalBarrier().Await();
-                
+
+                barrier.Await();
+
                 Console.WriteLine("Stopping Service Container...");
             }
-            
+
             Console.WriteLine("Stopped.");
         }
     }

@@ -25,7 +25,12 @@ namespace Adaptive.Aeron.Security
     /// </summary>
     public class AllowAllAuthorisationService : IAuthorisationService
     {
-        public static IAuthorisationService INSTANCE = new AllowAllAuthorisationService();
+        public static readonly IAuthorisationService INSTANCE = new AllowAllAuthorisationService();
+        
+        /// <summary>
+        /// Special case token for authorisation service supplier that allow all requests.
+        /// </summary>
+        public static readonly string ALLOW_ALL_NAME = "ALLOW_ALL";
         
         public bool IsAuthorised(int protocolId, int actionId, object type, byte[] encodedPrincipal)
         {
@@ -38,7 +43,12 @@ namespace Adaptive.Aeron.Security
     /// </summary>
     public class DenyAllAuthorisationService : IAuthorisationService
     {
-        public static IAuthorisationService INSTANCE = new DenyAllAuthorisationService();
+        public static readonly IAuthorisationService INSTANCE = new DenyAllAuthorisationService();
+        
+        /// <summary>
+        /// Special case token for authorisation service supplier that will deny all requests.
+        /// </summary>
+        public static readonly string DENY_ALL_NAME = "DENY_ALL";
         
         public bool IsAuthorised(int protocolId, int actionId, object type, byte[] encodedPrincipal)
         {

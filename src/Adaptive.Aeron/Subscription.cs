@@ -97,6 +97,12 @@ namespace Adaptive.Aeron
     {
         private SubscriptionFields _fields;
 
+        // For testing purposes only
+        internal Subscription()
+        {
+            
+        }
+        
         internal Subscription(
             ClientConductor conductor,
             string channel,

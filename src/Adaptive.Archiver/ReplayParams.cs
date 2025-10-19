@@ -32,7 +32,7 @@ namespace Adaptive.Archiver
             boundingLimitCounterId = Aeron.Aeron.NULL_VALUE;
             fileIoMaxLength = Aeron.Aeron.NULL_VALUE;
             position = AeronArchive.NULL_POSITION;
-            length = AeronArchive.NULL_LENGTH;
+            length = AeronArchive.REPLAY_ALL_AND_FOLLOW;
             replayToken = Aeron.Aeron.NULL_VALUE;
             subscriptionRegistrationId = Aeron.Aeron.NULL_VALUE;
             return this;
@@ -61,8 +61,15 @@ namespace Adaptive.Archiver
         }
 
         /// <summary>
-        /// The length of the recorded stream to replay. If set to <seealso cref="AeronArchive.NULL_POSITION"/> (the default) will
-        /// replay a whole stream of unknown length. If set to <seealso cref="long.MaxValue"/> it will follow a live recording.
+        /// The length of the recorded stream to replay. If set to <seealso cref="AeronArchive.REPLAY_ALL_AND_FOLLOW"/> (the default)
+        /// it will replay a whole stream of unknown length and then continue to follow the replay if it is live. If set to
+        /// <seealso cref="AeronArchive.REPLAY_ALL_AND_STOP"/> it will replay up the limit calculated when the replay request is
+        /// received then stop the replay, thereby ending the stream.
+        /// <para>
+        /// <seealso cref="AeronArchive.REPLAY_ALL_AND_FOLLOW"/> retains the same behaviour as using <seealso cref="AeronArchive.NULL_LENGTH"/>
+        /// or <seealso cref="long.MaxValue"/>.
+        ///     
+        /// </para>
         /// </summary>
         /// <param name="length"> of the recording to be replayed. </param>
         /// <returns> this for a fluent API. </returns>

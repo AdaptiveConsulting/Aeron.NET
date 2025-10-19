@@ -12,7 +12,7 @@ public class AttachSegmentsRequestDecoder
     public const ushort BLOCK_LENGTH = 24;
     public const ushort TEMPLATE_ID = 56;
     public const ushort SCHEMA_ID = 101;
-    public const ushort SCHEMA_VERSION = 11;
+    public const ushort SCHEMA_VERSION = 13;
 
     private AttachSegmentsRequestDecoder _parentMessage;
     private IDirectBuffer _buffer;

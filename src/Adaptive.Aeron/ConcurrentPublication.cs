@@ -27,6 +27,12 @@ namespace Adaptive.Aeron
 	/// <seealso cref="BufferClaim"></seealso>
 	public sealed class ConcurrentPublication : Publication
 	{
+		// For testing purposes only
+		internal ConcurrentPublication()
+		{
+			
+		}
+		
 		internal ConcurrentPublication(
 			ClientConductor clientConductor,
 			string channel,

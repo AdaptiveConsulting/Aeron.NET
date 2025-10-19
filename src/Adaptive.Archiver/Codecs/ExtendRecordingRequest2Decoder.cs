@@ -12,7 +12,7 @@ public class ExtendRecordingRequest2Decoder
     public const ushort BLOCK_LENGTH = 36;
     public const ushort TEMPLATE_ID = 64;
     public const ushort SCHEMA_ID = 101;
-    public const ushort SCHEMA_VERSION = 11;
+    public const ushort SCHEMA_VERSION = 13;
 
     private ExtendRecordingRequest2Decoder _parentMessage;
     private IDirectBuffer _buffer;

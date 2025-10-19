@@ -174,11 +174,14 @@ namespace Adaptive.Aeron.LogBuffer
 
         /// <summary>
         /// Total amount of space occupied by this message when it is within the term buffer. When fragmented this will
-        /// include the length of the header for each fragment. Used when doing reassembly of fragmented packets.
+        /// include the length of the header for each fragment. Used when doing reassembly of fragmented packets. If
+        /// the packet is not fragmented this will be <seealso cref="Aeron.NULL_VALUE"/>.
         /// </summary>
         /// <param name="value"> total fragmented length of the message. </param>
+        /// <returns> total fragmented length of this message or <code>Aeron.NULL_VALUE</code> if not fragmented. </returns>
         public int FragmentedFrameLength
         {
+            get => _fragmentedFrameLength;
             set => _fragmentedFrameLength = value;
         }
 

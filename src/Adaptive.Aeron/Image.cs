@@ -43,15 +43,15 @@ namespace Adaptive.Aeron
     public class Image
     {
         private readonly long _joinPosition;
-        private long _finalPosition;
         private readonly int _initialTermId;
-
         private readonly int _termLengthMask;
+        private readonly int _mtu;
 
+        private long _finalPosition;
         private long _eosPosition = long.MaxValue;
         private bool _isEos;
+        private bool _isRevoked;
         private volatile bool _isClosed;
-        private volatile bool _isRevoked;
 
         private readonly IPosition _subscriberPosition;
         private readonly UnsafeBuffer[] _termBuffers;
@@ -91,6 +91,7 @@ namespace Adaptive.Aeron
             _termLengthMask = termLength - 1;
             PositionBitsToShift = LogBufferDescriptor.PositionBitsToShift(termLength);
             _initialTermId = LogBufferDescriptor.InitialTermId(logBuffers.MetaDataBuffer());
+            _mtu = LogBufferDescriptor.MtuLength(logBuffers.MetaDataBuffer());
             _header = new Header(LogBufferDescriptor.InitialTermId(logBuffers.MetaDataBuffer()), PositionBitsToShift,
                 this);
         }
@@ -124,7 +125,7 @@ namespace Adaptive.Aeron
         /// The length in bytes of the MTU (Maximum Transmission Unit) the Sender used for the datagram.
         /// </summary>
         /// <returns> length in bytes of the MTU (Maximum Transmission Unit) the Sender used for the datagram. </returns>
-        public int MtuLength => LogBufferDescriptor.MtuLength(_logBuffers.MetaDataBuffer());
+        public int MtuLength => _mtu;
 
         /// <summary>
         /// The initial term at which the stream started for this session.

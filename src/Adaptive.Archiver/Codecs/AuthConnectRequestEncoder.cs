@@ -12,7 +12,7 @@ public class AuthConnectRequestEncoder
     public const ushort BLOCK_LENGTH = 16;
     public const ushort TEMPLATE_ID = 58;
     public const ushort SCHEMA_ID = 101;
-    public const ushort SCHEMA_VERSION = 11;
+    public const ushort SCHEMA_VERSION = 13;
 
     private AuthConnectRequestEncoder _parentMessage;
     private IMutableDirectBuffer _buffer;
@@ -320,6 +320,83 @@ public class AuthConnectRequestEncoder
         _parentMessage.Limit(limit + headerLength + length);
         _buffer.PutInt(limit, unchecked((int)length), ByteOrder.LittleEndian);
         _buffer.PutBytes(limit + headerLength, src, srcOffset, length);
+
+        return this;
+    }
+
+    public static int ClientInfoId()
+    {
+        return 6;
+    }
+
+    public static string ClientInfoCharacterEncoding()
+    {
+        return "US-ASCII";
+    }
+
+    public static string ClientInfoMetaAttribute(MetaAttribute metaAttribute)
+    {
+        switch (metaAttribute)
+        {
+            case MetaAttribute.EPOCH: return "unix";
+            case MetaAttribute.TIME_UNIT: return "nanosecond";
+            case MetaAttribute.SEMANTIC_TYPE: return "";
+            case MetaAttribute.PRESENCE: return "required";
+        }
+
+        return "";
+    }
+
+    public static int ClientInfoHeaderLength()
+    {
+        return 4;
+    }
+
+    public AuthConnectRequestEncoder PutClientInfo(IDirectBuffer src, int srcOffset, int length)
+    {
+        if (length > 1073741824)
+        {
+            throw new InvalidOperationException("length > maxValue for type: " + length);
+        }
+
+        int headerLength = 4;
+        int limit = _parentMessage.Limit();
+        _parentMessage.Limit(limit + headerLength + length);
+        _buffer.PutInt(limit, unchecked((int)length), ByteOrder.LittleEndian);
+        _buffer.PutBytes(limit + headerLength, src, srcOffset, length);
+
+        return this;
+    }
+
+    public AuthConnectRequestEncoder PutClientInfo(byte[] src, int srcOffset, int length)
+    {
+        if (length > 1073741824)
+        {
+            throw new InvalidOperationException("length > maxValue for type: " + length);
+        }
+
+        int headerLength = 4;
+        int limit = _parentMessage.Limit();
+        _parentMessage.Limit(limit + headerLength + length);
+        _buffer.PutInt(limit, unchecked((int)length), ByteOrder.LittleEndian);
+        _buffer.PutBytes(limit + headerLength, src, srcOffset, length);
+
+        return this;
+    }
+
+    public AuthConnectRequestEncoder ClientInfo(string value)
+    {
+        int length = value.Length;
+        if (length > 1073741824)
+        {
+            throw new InvalidOperationException("length > maxValue for type: " + length);
+        }
+
+        int headerLength = 4;
+        int limit = _parentMessage.Limit();
+        _parentMessage.Limit(limit + headerLength + length);
+        _buffer.PutInt(limit, unchecked((int)length), ByteOrder.LittleEndian);
+        _buffer.PutStringWithoutLengthAscii(limit + headerLength, value);
 
         return this;
     }

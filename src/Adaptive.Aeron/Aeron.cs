@@ -56,6 +56,12 @@ namespace Adaptive.Aeron
         private readonly AgentRunner _conductorRunner;
         private readonly Context _ctx;
 
+        // For testing purposes only
+        internal Aeron()
+        {
+            
+        }
+        
         internal Aeron(Context ctx)
         {
             try
@@ -261,7 +267,7 @@ namespace Adaptive.Aeron
         /// <summary>
         /// Asynchronously remove a <seealso cref="Publication"/>.
         /// </summary>
-        /// <param name="registrationId"> to be of the publication removed. </param>
+        /// <param name="registrationId"> of the publication to be removed. </param>
         /// <seealso cref="AsyncAddPublication(String, int)"/>
         /// <seealso cref="AsyncAddExclusivePublication(String, int)"/>
         public void AsyncRemovePublication(long registrationId)
@@ -391,14 +397,14 @@ namespace Adaptive.Aeron
         }
 
         /// <summary>
-        /// Generate the next correlation id that is unique for the connected Media Driver.
+        /// Generate the next correlation id that is unique for the connected media driver.
         /// 
         /// This is useful generating correlation identifiers for pairing requests with responses in a clients own
         /// application protocol.
         /// 
         /// This method is thread safe and will work across processes that all use the same media driver.
         /// </summary>
-        /// <returns> next correlation id that is unique for the Media Driver. </returns>
+        /// <returns> next correlation id that is unique for the media driver. </returns>
         public long NextCorrelationId()
         {
             if (_isClosed.Get())
@@ -407,6 +413,29 @@ namespace Adaptive.Aeron
             }
 
             return _commandBuffer.NextCorrelationId();
+        }
+
+        /// <summary>
+        /// Get next available session id from the media driver. The session id will be unique for the connected media
+        /// driver and given {@code streamId}.
+        /// <para>
+        /// If media driver's version is 1.49.0 or higher, then the session id is returned by the media driver. Otherwise,
+        /// a random session id is generated.
+        ///    
+        /// </para>
+        /// </summary>
+        /// <param name="streamId"> for which a new session id is requested. Media driver only checks for session clashes at the
+        ///                 stream level. </param>
+        /// <returns> next available session id that is unique for the media driver and given {@code streamId}.
+        /// @since 1.49.0 </returns>
+        public int NextSessionId(int streamId)
+        {
+            if (_isClosed.Get())
+            {
+                throw new AeronException("client is closed");
+            }
+
+            return _conductor.NextSessionId(streamId);
         }
 
         /// <summary>
@@ -519,6 +548,137 @@ namespace Adaptive.Aeron
         public Counter AddStaticCounter(int typeId, string label, long registrationId)
         {
             return _conductor.AddStaticCounter(typeId, label, registrationId);
+        }
+
+        /// <summary>
+        /// Asynchronously allocate a counter on the media driver.
+        /// <para>
+        /// The typeId should be 1000 or greater. Values lower than that are reserved for use by Aeron.
+        ///    
+        /// </para>
+        /// </summary>
+        /// <param name="typeId"> for the counter. </param>
+        /// <param name="label">  for the counter. It should be US-ASCII. </param>
+        /// <returns> the registration id of the counter which can be used to get it by calling <seealso cref="GetCounter(long)"/>
+        /// method. </returns>
+        /// <seealso cref="GetCounter(long)"/>
+        /// <remarks>Since 1.49.0</remarks>
+        public long AsyncAddCounter(int typeId, string label)
+        {
+            return _conductor.AsyncAddCounter(typeId, label);
+        }
+
+        /// <summary>
+        /// Asynchronously allocate a counter on the media driver.
+        /// <para>
+        /// The typeId should be 1000 or greater. Values lower than that are reserved for use by Aeron.
+        /// 
+        /// </para>
+        /// </summary>
+        /// <param name="typeId">      for the counter. </param>
+        /// <param name="keyBuffer">   containing the optional key for the counter. </param>
+        /// <param name="keyOffset">   within the keyBuffer at which the key begins. </param>
+        /// <param name="keyLength">   of the key in the keyBuffer. </param>
+        /// <param name="labelBuffer"> containing the mandatory label for the counter. The label should not be length prefixed. </param>
+        /// <param name="labelOffset"> within the labelBuffer at which the label begins. </param>
+        /// <param name="labelLength"> of the label in the labelBuffer. </param>
+        /// <returns> the registration id of the counter which can be used to get it by calling <seealso cref="GetCounter(long)"/>
+        /// method. </returns>
+        /// <seealso cref="GetCounter(long)"/>
+        /// <remarks>Since 1.49.0</remarks>
+        public long AsyncAddCounter(int typeId, IDirectBuffer keyBuffer, int keyOffset, int keyLength,
+            IDirectBuffer labelBuffer, int labelOffset, int labelLength)
+        {
+            return _conductor.AsyncAddCounter(typeId, keyBuffer, keyOffset, keyLength, labelBuffer, labelOffset,
+                labelLength);
+        }
+
+        /// <summary>
+        /// Asynchronously allocates or returns an existing static counter instance using specified {@code typeId} and
+        /// {@code registrationId} pair. Such a counter cannot be deleted and its lifecycle is decoupled from this
+        /// <seealso cref="Aeron"/> instance, i.e. won't be closed when this instance is closed or times out.
+        /// <para>
+        /// <em><strong>Note:</strong> calling <seealso cref="Counter.Dispose()"/> will only close the counter instance itself but will
+        /// not free the counter in the CnC file.</em>
+        /// </para>
+        /// <para>
+        /// The typeId should be 1000 or greater. Values lower than that are reserved for use by Aeron.
+        /// 
+        /// </para>
+        /// </summary>
+        /// <param name="typeId">         for the counter. </param>
+        /// <param name="label">          for the counter. It should be US-ASCII. </param>
+        /// <param name="registrationId"> that uniquely identifies the static counter for a given {@code typeId}. </param>
+        /// <returns> the correlation id of the command which can be used to get the counter by calling
+        /// <seealso cref="GetCounter(long)"/> method. </returns>
+        /// <seealso cref="GetCounter(long)"/>
+        /// <remarks>Since 1.49.0</remarks>
+        public long AsyncAddStaticCounter(int typeId, string label, long registrationId)
+        {
+            return _conductor.AsyncAddStaticCounter(typeId, label, registrationId);
+        }
+
+        /// <summary>
+        /// Asynchronously allocates or returns an existing static counter instance using specified {@code typeId} and
+        /// {@code registrationId} pair. Such a counter cannot be deleted and its lifecycle is decoupled from this
+        /// <seealso cref="Aeron"/> instance, i.e. won't be closed when this instance is closed or times out.
+        /// <para>
+        /// <em><strong>Note:</strong> calling <seealso cref="Counter.Dispose()"/> will only close the counter instance itself but will
+        /// not free the counter in the CnC file.</em>
+        /// </para>
+        /// <para>
+        /// The typeId should be 1000 or greater. Values lower than that are reserved for use by Aeron.
+        /// 
+        /// </para>
+        /// </summary>
+        /// <param name="typeId">         for the counter. </param>
+        /// <param name="keyBuffer">      containing the optional key for the counter. </param>
+        /// <param name="keyOffset">      within the keyBuffer at which the key begins. </param>
+        /// <param name="keyLength">      of the key in the keyBuffer. </param>
+        /// <param name="labelBuffer">    containing the mandatory label for the counter. The label should not be length prefixed. </param>
+        /// <param name="labelOffset">    within the labelBuffer at which the label begins. </param>
+        /// <param name="labelLength">    of the label in the labelBuffer. </param>
+        /// <param name="registrationId"> that uniquely identifies the static counter for a given {@code typeId}. </param>
+        /// <returns> the correlation id of the command which can be used to get the counter by calling
+        /// <seealso cref="GetCounter(long)"/> method. </returns>
+        /// <seealso cref="GetCounter(long)"/>
+        /// <remarks>Since 1.49.0</remarks>
+        public long AsyncAddStaticCounter(int typeId, IDirectBuffer keyBuffer, int keyOffset, int keyLength,
+            IDirectBuffer labelBuffer, int labelOffset, int labelLength, long registrationId)
+        {
+            return _conductor.AsyncAddStaticCounter(typeId, keyBuffer, keyOffset, keyLength, labelBuffer, labelOffset,
+                labelLength, registrationId);
+        }
+
+        /// <summary>
+        /// Get a <seealso cref="Counter"/> that was created asynchronously.
+        /// </summary>
+        /// <param name="correlationId"> returned from one of the async methods:
+        ///                      <seealso cref="AsyncAddCounter(int, String)"/>,
+        ///                      <seealso cref="AsyncAddCounter(int, IDirectBuffer, int, int, IDirectBuffer, int, int)"/>,
+        ///                      <seealso cref="AsyncAddStaticCounter(int, String, long)"/> or
+        ///                      <seealso cref="AsyncAddStaticCounter(int, IDirectBuffer, int, int, IDirectBuffer, int, int, long)"/>. </param>
+        /// <returns> a new <seealso cref="Counter"/> when available, otherwise {@code null}. </returns>
+        /// <seealso cref="AsyncAddCounter(int, String)"/>
+        /// <seealso cref="AsyncAddCounter(int, IDirectBuffer, int, int, IDirectBuffer, int, int)"/>
+        /// <seealso cref="AsyncAddStaticCounter(int, String, long)"/>
+        /// <seealso cref="AsyncAddStaticCounter(int, IDirectBuffer, int, int, IDirectBuffer, int, int, long)"/>
+        /// <remarks>Since 1.49.0</remarks>
+        public Counter GetCounter(long correlationId)
+        {
+            return _conductor.GetCounter(correlationId);
+        }
+
+        /// <summary>
+        /// Asynchronously remove a <seealso cref="Counter"/>.
+        /// </summary>
+        /// <param name="registrationId"> of the counter to be removed. </param>
+        /// <seealso cref="AsyncAddCounter(int, String)"/>
+        /// <seealso cref="AsyncAddCounter(int, IDirectBuffer, int, int, IDirectBuffer, int, int)"/>
+        /// <remarks>Since 1.49.0</remarks>
+        public void AsyncRemoveCounter(long registrationId)
+        {
+            _conductor.AsyncRemoveCounter(registrationId);
         }
 
         /// <summary>
@@ -838,7 +998,7 @@ namespace Adaptive.Aeron
             private long _resourceLingerDurationNs = Configuration.ResourceLingerDurationNs();
             private long _closeLingerDurationNs = Configuration.CloseLingerDurationNs();
             private int filePageSize;
-            
+
             private int _isConcluded = 0;
             private long _driverTimeoutMs = DRIVER_TIMEOUT_MS;
             private string _aeronDirectoryName = GetAeronDirectoryName();
@@ -941,7 +1101,7 @@ namespace Adaptive.Aeron
             /// Should a component print its configuration on start to <seealso cref="Console.WriteLine(string)"/>.
             /// </summary>
             public const string PRINT_CONFIGURATION_ON_START_PROP_NAME = "aeron.print.configuration";
-            
+
             /// <summary>
             /// Timeout in which the driver is expected to respond.
             /// </summary>
@@ -1167,6 +1327,12 @@ namespace Adaptive.Aeron
             public const string RESPONSE_CORRELATION_ID_PARAM_NAME = "response-correlation-id";
 
             /// <summary>
+            /// Placeholder value to use in response channels where the publication is to be pre-created to reserve and hold
+            /// onto the local port.
+            /// </summary>
+            public const string PROTOTYPE_CORRELATION_ID = "prototype";
+            
+            /// <summary>
             /// Parameter name to set explicit NAK delay (e.g. {@code nak-delay=200ms}).
             /// </summary>
             /// <remarks>Since 1.44.0</remarks>
@@ -1184,7 +1350,7 @@ namespace Adaptive.Aeron
             /// <remarks>Since 1.48.0</remarks>
             /// </summary>
             public const string UNTETHERED_LINGER_TIMEOUT_PARAM_NAME = "untethered-linger-timeout";
-            
+
             /// <summary>
             /// Parameter name to set explicit untethered resting timeout, e.g. {@code untethered-resting-timeout=10s}.
             /// </summary>
@@ -1218,7 +1384,7 @@ namespace Adaptive.Aeron
             {
                 return "true".Equals(Config.GetProperty(PRINT_CONFIGURATION_ON_START_PROP_NAME));
             }
-            
+
             /// <summary>
             /// Get the current fallback logger based on the supplied property.
             /// </summary>
@@ -1306,7 +1472,7 @@ namespace Adaptive.Aeron
                         "Must use Aeron.Context.UseConductorAgentInvoker(true) when Aeron.Context.ClientLock(...) " +
                         "is using a NoOpLock");
                 }
-                
+
                 if (null != _driverAgentInvoker && !_useConductorAgentInvoker)
                 {
                     throw new ConfigurationException(
@@ -1314,9 +1480,10 @@ namespace Adaptive.Aeron
                         "is set");
                 }
 
-                if (null != clientName && clientName.Length > Configuration.MAX_CLIENT_NAME_LENGTH)
+                if (clientName.Length > Configuration.MAX_CLIENT_NAME_LENGTH)
                 {
-                    throw new ConfigurationException("clientName length must <= " + Configuration.MAX_CLIENT_NAME_LENGTH);
+                    throw new ConfigurationException(
+                        "clientName length must <= " + Configuration.MAX_CLIENT_NAME_LENGTH);
                 }
 
                 if (_epochClock == null)
@@ -1364,9 +1531,8 @@ namespace Adaptive.Aeron
 
                 if (_toClientBuffer == null)
                 {
-                    
                     _toClientBuffer = new CopyBroadcastReceiver(new BroadcastReceiver(
-                        CncFileDescriptor.CreateToClientsBuffer(_cncByteBuffer, _cncMetaDataBuffer)),
+                            CncFileDescriptor.CreateToClientsBuffer(_cncByteBuffer, _cncMetaDataBuffer)),
                         new ExpandableArrayBuffer(CopyBroadcastReceiver.ScratchBufferSize));
                 }
 
@@ -1424,7 +1590,7 @@ namespace Adaptive.Aeron
             {
                 return _clientId;
             }
-            
+
             /// <summary>
             /// Sets the name used to identify this client among other clients connected to the media driver.
             /// </summary>
@@ -2087,7 +2253,7 @@ namespace Adaptive.Aeron
             {
                 return idleSleepDurationNs;
             }
-            
+
             /// <summary>
             /// Duration to wait while lingering an entity such as an <seealso cref="Image"/> before deleting underlying resources
             /// such as memory mapped files.
@@ -2203,7 +2369,7 @@ namespace Adaptive.Aeron
             {
                 return _threadFactory;
             }
-            
+
             /// <summary>
             /// Set the handler to receive error frames that have been received by the local driver for publications added by
             /// this client.
@@ -2238,7 +2404,7 @@ namespace Adaptive.Aeron
                 return filePageSize;
             }
 
-            
+
             /// <summary>
             /// Clean up all resources that the client uses to communicate with the Media Driver.
             /// </summary>
@@ -2657,8 +2823,8 @@ namespace Adaptive.Aeron
                 }
                 else
                 {
-                    Console.Out.WriteLine();
-                    Console.Out.WriteLine("0 distinct errors observed");
+                    @out.WriteLine();
+                    @out.WriteLine("0 distinct errors observed");
                 }
 
                 return distinctErrorCount;
@@ -2692,7 +2858,7 @@ namespace Adaptive.Aeron
                     return new ErrorHandlerWrapper(loggingErrorHandler, userErrorHandler);
                 }
             }
-            
+
             /// <summary>
             /// Connect to the media driver and extract file page size from the C'n'C file.
             /// </summary>
@@ -2705,7 +2871,7 @@ namespace Adaptive.Aeron
             {
                 MappedByteBuffer cncByteBuffer = null;
                 UnsafeBuffer cncMetaDataBuffer = null;
-                
+
                 try
                 {
                     FileInfo cncFile = new FileInfo(Path.Combine(aeronDirectory.FullName, CncFileDescriptor.CNC_FILE));
@@ -2721,13 +2887,13 @@ namespace Adaptive.Aeron
                 }
             }
 
-            
+
             internal static int DriverFilePageSize(IDirectBuffer metadata)
             {
                 int pageSize = CncFileDescriptor.FilePageSize(metadata);
                 return 0 != pageSize ? pageSize : LogBufferDescriptor.PAGE_MIN_SIZE;
             }
-            
+
             private static void Sleep(int durationMs)
             {
                 try

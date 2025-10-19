@@ -12,7 +12,7 @@ public class ServiceTerminationPositionEncoder
     public const ushort BLOCK_LENGTH = 8;
     public const ushort TEMPLATE_ID = 42;
     public const ushort SCHEMA_ID = 111;
-    public const ushort SCHEMA_VERSION = 13;
+    public const ushort SCHEMA_VERSION = 14;
 
     private ServiceTerminationPositionEncoder _parentMessage;
     private IMutableDirectBuffer _buffer;

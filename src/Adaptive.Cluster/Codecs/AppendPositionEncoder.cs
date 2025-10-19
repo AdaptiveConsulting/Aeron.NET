@@ -12,7 +12,7 @@ public class AppendPositionEncoder
     public const ushort BLOCK_LENGTH = 21;
     public const ushort TEMPLATE_ID = 54;
     public const ushort SCHEMA_ID = 111;
-    public const ushort SCHEMA_VERSION = 13;
+    public const ushort SCHEMA_VERSION = 14;
 
     private AppendPositionEncoder _parentMessage;
     private IMutableDirectBuffer _buffer;

@@ -12,6 +12,12 @@ namespace Adaptive.Cluster.Service
 	public class ClusterCounters
 	{
 		/// <summary>
+		/// Suffix for `clusterId` in the counter label.
+		/// </summary>
+		public const string CLUSTER_ID_LABEL_SUFFIX = " - clusterId=";
+		internal const string SERVICE_ID_SUFFIX = " serviceId=";
+		
+		/// <summary>
 		/// Find the counter id for a type of counter in a cluster.
 		/// </summary>
 		/// <param name="counters">  to search within. </param>
@@ -66,8 +72,8 @@ namespace Adaptive.Cluster.Service
 			int keyLength = index;
 
 			index += tempBuffer.PutStringWithoutLengthAscii(index, name);
-			index += tempBuffer.PutStringWithoutLengthAscii(index, " - clusterId=" + clusterId);
-			index += tempBuffer.PutStringWithoutLengthAscii(index, " serviceId=" + serviceId);
+			index += tempBuffer.PutStringWithoutLengthAscii(index, CLUSTER_ID_LABEL_SUFFIX + clusterId);
+			index += tempBuffer.PutStringWithoutLengthAscii(index, SERVICE_ID_SUFFIX + serviceId);
 
 			return aeron.AddCounter(typeId, tempBuffer, 0, keyLength, tempBuffer, keyLength, index - keyLength);
 		}
@@ -84,8 +90,8 @@ namespace Adaptive.Cluster.Service
 			int keyLength = index;
 
 			index += tempBuffer.PutStringWithoutLengthAscii(index, "Cluster Container Errors");
-			index += tempBuffer.PutStringWithoutLengthAscii(index, " - clusterId=" + clusterId);
-			index += tempBuffer.PutStringWithoutLengthAscii(index, " serviceId=" + serviceId);
+			index += tempBuffer.PutStringWithoutLengthAscii(index, CLUSTER_ID_LABEL_SUFFIX + clusterId);
+			index += tempBuffer.PutStringWithoutLengthAscii(index, SERVICE_ID_SUFFIX + serviceId);
 			// index += AeronCounters.AppendVersionInfo(tempBuffer, index, ClusteredServiceContainerVersion.VERSION,
 			// 	ClusteredServiceContainerVersion.GIT_SHA);
 

@@ -12,7 +12,7 @@ public class SessionOpenEventEncoder
     public const ushort BLOCK_LENGTH = 36;
     public const ushort TEMPLATE_ID = 21;
     public const ushort SCHEMA_ID = 111;
-    public const ushort SCHEMA_VERSION = 13;
+    public const ushort SCHEMA_VERSION = 14;
 
     private SessionOpenEventEncoder _parentMessage;
     private IMutableDirectBuffer _buffer;

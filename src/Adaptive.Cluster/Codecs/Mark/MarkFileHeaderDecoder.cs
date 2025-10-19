@@ -63,11 +63,6 @@ public class MarkFileHeaderDecoder
         return _offset;
     }
 
-    public int InitialOffset()
-    {
-        return _initialOffset;
-    }
-
     public MarkFileHeaderDecoder Wrap(
         IDirectBuffer buffer, int offset, int actingBlockLength, int actingVersion)
     {

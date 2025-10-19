@@ -323,18 +323,18 @@ namespace Adaptive.Cluster
         }
 
         /// <summary>
-        /// Cluster member id either assigned statically or as the result of dynamic membership join.
+        /// Cluster member id.
         /// </summary>
-        /// <returns> cluster member id either assigned statically or as the result of dynamic membership join. </returns>
+        /// <returns> cluster member id. </returns>
         public int MemberId()
         {
             return markFile.IsClosed() ? Aeron.Aeron.NULL_VALUE : headerDecoder.MemberId();
         }
 
         /// <summary>
-        /// Member id assigned as part of dynamic join of a cluster.
+        /// Member id assigned as part of active join to the log in a clustered service.
         /// </summary>
-        /// <param name="memberId"> assigned as part of dynamic join of a cluster. </param>
+        /// <param name="memberId"> assigned as part of active join to the log in a clustered service. </param>
         public void MemberId(int memberId)
         {
             if (!markFile.IsClosed())

@@ -2,7 +2,7 @@
 <sbe:messageSchema xmlns:sbe="http://fixprotocol.io/2016/sbe"
                    package="Adaptive.Cluster.Codecs"
                    id="111"
-                   version="13"
+                   version="14"
                    semanticVersion="5.4"
                    description="Message Codecs for communicating with, and within, an Aeron Cluster."
                    byteOrder="littleEndian">
@@ -166,6 +166,7 @@
         <field name="version"                  id="3" type="version_t" presence="optional" sinceVersion="2"/>
         <data  name="responseChannel"          id="4" type="varAsciiEncoding"/>
         <data  name="encodedCredentials"       id="5" type="varDataEncoding"/>
+        <data  name="clientInfo"               id="6" type="varAsciiEncoding" sinceVersion="14"/>
     </sbe:message>
 
     <sbe:message name="SessionCloseRequest"

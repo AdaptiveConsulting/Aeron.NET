@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+using Adaptive.Agrona;
+
 namespace Adaptive.Aeron.Command
 {
     /// <summary>
@@ -21,6 +23,35 @@ namespace Adaptive.Aeron.Command
     /// </summary>
     public class ControlProtocolEvents
     {
+        /// <summary>
+        /// Major version of the control protocol between client and the media driver.
+        ///    
+        /// <remarks>Since 1.49.0</remarks>
+        /// </summary>
+        public const int CONTROL_PROTOCOL_MAJOR_VERSION = 1;
+
+        /// <summary>
+        /// Minor version of the control protocol between client and the media driver.
+        /// 
+        /// <remarks>Since 1.49.0</remarks>
+        /// </summary>
+        public const int CONTROL_PROTOCOL_MINOR_VERSION = 0;
+
+        /// <summary>
+        /// Patch version of the control protocol between client and the media driver.
+        /// 
+        /// <remarks>Since 1.49.0</remarks>
+        /// </summary>
+        public const int CONTROL_PROTOCOL_PATCH_VERSION = 0;
+
+        /// <summary>
+        /// Semantic version of the control protocol between clients and media driver.
+        /// 
+        /// <remarks>Since 1.49.0</remarks>
+        /// </summary>
+        public static readonly int ControlProtocolSemanticVersion = SemanticVersion.Compose(
+            CONTROL_PROTOCOL_MAJOR_VERSION, CONTROL_PROTOCOL_MINOR_VERSION, CONTROL_PROTOCOL_PATCH_VERSION);
+        
         // Clients to Media Driver
 
         /// <summary>
@@ -103,12 +134,21 @@ namespace Adaptive.Aeron.Command
         /// <summary>
         /// Invalidate an image.
         /// </summary>
+        /// <remarks>Since 1.47.0</remarks>
         public const int REJECT_IMAGE = 0x10;
 
         /// <summary>
         /// Remove a destination by registration id.
         /// </summary>
+        /// <remarks>Since 1.47.0</remarks>
         public const int REMOVE_DESTINATION_BY_ID = 0x11;
+        
+        /// <summary>
+        /// Get next available session id from the media driver.
+        ///     
+        /// </summary>
+        /// <remarks>Since 1.49.0</remarks>
+        public const int GET_NEXT_AVAILABLE_SESSION_ID = 0x12;
         
         // Media Driver to Clients
 
@@ -165,15 +205,19 @@ namespace Adaptive.Aeron.Command
         /// <summary>
         /// A response to <seealso cref="ADD_STATIC_COUNTER"/> command.
         /// </summary>
-        /// /// <remarks>Since 1.45.0</remarks>
+        /// <remarks>Since 1.45.0</remarks>
         public const int ON_STATIC_COUNTER = 0x0F0B;
 
         /// <summary>
         /// Inform clients of error frame received by publication.
         /// </summary>
-        /// /// <remarks>Since 1.47.0</remarks>
+        /// <remarks>Since 1.47.0</remarks>
         public const int ON_PUBLICATION_ERROR = 0x0F0C;
-
+        
+        /// <summary>
+        /// A response to the <seealso cref="GET_NEXT_AVAILABLE_SESSION_ID"/> command.
+        /// </summary>
+        /// <remarks>Since 1.49.0</remarks>
+        public const int ON_NEXT_AVAILABLE_SESSION_ID = 0x0F0D;
     }
-
 }

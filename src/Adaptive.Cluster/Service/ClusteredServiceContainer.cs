@@ -41,9 +41,11 @@ namespace Adaptive.Cluster.Service
         /// <param name="args"> command line argument which is a list for properties files as URLs or filenames. </param>
         public static void Main(string[] args)
         {
-            using (ClusteredServiceContainer container = Launch())
+            using (ShutdownSignalBarrier barrier = new ShutdownSignalBarrier())
+            using (ClusteredServiceContainer container =
+                   Launch(new Context().TerminationHook(() => barrier.SignalAll())))
             {
-                container.Ctx().ShutdownSignalBarrier().Await();
+                barrier.Await();
 
                 Console.WriteLine("Shutdown ClusteredServiceContainer...");
             }
@@ -306,7 +308,7 @@ namespace Adaptive.Cluster.Service
             /// <summary>
             /// Default threshold value for the container work cycle threshold to track for being exceeded.
             /// </summary>
-            public const long CYCLE_THRESHOLD_DEFAULT_NS = 1000000000; // 1S
+            public const long CYCLE_THRESHOLD_DEFAULT_NS = 1_000_000; // 1S
 
             /// <summary>
             /// Property name for threshold value, which is used for tracking snapshot duration breaches.
@@ -640,7 +642,6 @@ namespace Adaptive.Cluster.Service
             private bool ownsAeronClient;
 
             private IClusteredService clusteredService;
-            private ShutdownSignalBarrier shutdownSignalBarrier;
             private Action terminationHook;
             private ClusterMarkFile markFile;
 
@@ -713,14 +714,16 @@ namespace Adaptive.Cluster.Service
 
                 if (null == markFile)
                 {
-                    int filePageSize = null != aeron ? aeron.Ctx.FilePageSize() : 
-                        DriverFilePageSize(new DirectoryInfo(aeronDirectoryName), epochClock, new Aeron.Aeron.Context().DriverTimeoutMs());
-                    markFile = new ClusterMarkFile( 
-                        new FileInfo(Path.Combine(markFileDir.FullName, MarkFilenameForService(serviceId))), 
-                        ClusterComponentType.CONTAINER, 
-                        errorBufferLength, 
-                        epochClock, 
-                        LIVENESS_TIMEOUT_MS, 
+                    int filePageSize = null != aeron
+                        ? aeron.Ctx.FilePageSize()
+                        : DriverFilePageSize(new DirectoryInfo(aeronDirectoryName), epochClock,
+                            new Aeron.Aeron.Context().DriverTimeoutMs());
+                    markFile = new ClusterMarkFile(
+                        new FileInfo(Path.Combine(markFileDir.FullName, MarkFilenameForService(serviceId))),
+                        ClusterComponentType.CONTAINER,
+                        errorBufferLength,
+                        epochClock,
+                        LIVENESS_TIMEOUT_MS,
                         filePageSize);
                 }
 
@@ -756,7 +759,7 @@ namespace Adaptive.Cluster.Service
                 {
                     serviceName = "clustered-service-" + clusterId + "-" + serviceId;
                 }
-                
+
                 if (null == aeron)
                 {
                     aeron = Connect(
@@ -810,7 +813,7 @@ namespace Adaptive.Cluster.Service
                             serviceId),
                         cycleThresholdNs);
                 }
-                
+
                 if (null == snapshotDurationTracker)
                 {
                     snapshotDurationTracker = new SnapshotDurationTracker(
@@ -838,7 +841,9 @@ namespace Adaptive.Cluster.Service
                         .ControlResponseChannel(AeronArchive.Configuration.LocalControlChannel())
                         .ControlRequestStreamId(AeronArchive.Configuration.LocalControlStreamId())
                         .ControlResponseStreamId(
-                            clusterId * 100 + 100 + AeronArchive.Configuration.ControlResponseStreamId() + (serviceId + 1));;
+                            clusterId * 100 + 100 + AeronArchive.Configuration.ControlResponseStreamId() +
+                            (serviceId + 1));
+                    ;
                 }
 
                 if (!archiveContext.ControlRequestChannel().StartsWith(IPC_CHANNEL))
@@ -861,16 +866,12 @@ namespace Adaptive.Cluster.Service
                         "sc-" + serviceId + "-archive-ctrl-req-cluster-" + clusterId))
                     .ControlResponseChannel(AddAliasIfAbsent(
                         archiveContext.ControlResponseChannel(),
-                        "sc-" + serviceId + "-archive-ctrl-resp-cluster-" + clusterId));
-
-                if (null == shutdownSignalBarrier)
-                {
-                    shutdownSignalBarrier = new ShutdownSignalBarrier();
-                }
+                        "sc-" + serviceId + "-archive-ctrl-resp-cluster-" + clusterId))
+                    .ClientName(serviceName);
 
                 if (null == terminationHook)
                 {
-                    terminationHook = () => shutdownSignalBarrier.Signal();
+                    terminationHook = () => { };
                 }
 
                 if (null == clusteredService)
@@ -880,13 +881,13 @@ namespace Adaptive.Cluster.Service
 
                 abortLatch = new CountdownEvent(aeron.Ctx.UseConductorAgentInvoker() ? 1 : 0);
                 ConcludeMarkFile();
-                
+
                 if (ShouldPrintConfigurationOnStart())
                 {
                     Console.WriteLine(this);
                 }
             }
-            
+
             /// <summary>
             /// Has the context had the <seealso cref="Conclude()"/> method called.
             /// </summary>
@@ -1537,26 +1538,6 @@ namespace Adaptive.Cluster.Service
             }
 
             /// <summary>
-            /// Set the <seealso cref="Agrona.Concurrent.ShutdownSignalBarrier"/> that can be used to shut down a clustered service.
-            /// </summary>
-            /// <param name="barrier"> that can be used to shut down a clustered service. </param>
-            /// <returns> this for a fluent API. </returns>
-            public Context ShutdownSignalBarrier(ShutdownSignalBarrier barrier)
-            {
-                shutdownSignalBarrier = barrier;
-                return this;
-            }
-
-            /// <summary>
-            /// Get the <seealso cref="Agrona.Concurrent.ShutdownSignalBarrier"/> that can be used to shut down a clustered service.
-            /// </summary>
-            /// <returns> the <seealso cref="Agrona.Concurrent.ShutdownSignalBarrier"/> that can be used to shut down a clustered service. </returns>
-            public ShutdownSignalBarrier ShutdownSignalBarrier()
-            {
-                return shutdownSignalBarrier;
-            }
-
-            /// <summary>
             /// Set the <seealso cref="Action"/> that is called when container is instructed to terminate.
             /// </summary>
             /// <param name="terminationHook"> that can be used to terminate a service container. </param>
@@ -1569,10 +1550,6 @@ namespace Adaptive.Cluster.Service
 
             /// <summary>
             /// Get the <seealso cref="Action"/> that is called when container is instructed to terminate.
-            /// <para>
-            /// The default action is to call signal on the <seealso cref="ShutdownSignalBarrier()"/>.
-            /// 
-            /// </para>
             /// </summary>
             /// <returns> the <seealso cref="Action"/> that can be used to terminate a service container. </returns>
             public Action TerminationHook()
@@ -1703,7 +1680,7 @@ namespace Adaptive.Cluster.Service
             {
                 return dutyCycleTracker;
             }
-            
+
             /// <summary>
             /// Set a threshold for snapshot duration which when exceeded will result in a counter increment.
             /// </summary>
@@ -1799,7 +1776,7 @@ namespace Adaptive.Cluster.Service
                     CloseHelper.Dispose(errorHandler, aeron);
                 }
 
-                CloseHelper.Dispose(errorHandler, markFile);
+                CloseHelper.Dispose(markFile);
             }
 
             internal CountdownEvent AbortLatch()
@@ -1871,7 +1848,6 @@ namespace Adaptive.Cluster.Service
                        "\n    errorCounter=" + errorCounter +
                        "\n    countedErrorHandler=" + countedErrorHandler +
                        "\n    clusteredService=" + clusteredService +
-                       "\n    shutdownSignalBarrier=" + shutdownSignalBarrier +
                        "\n    terminationHook=" + terminationHook +
                        "\n    cycleThresholdNs=" + cycleThresholdNs +
                        "\n    dutyCycleTracker=" + dutyCycleTracker +

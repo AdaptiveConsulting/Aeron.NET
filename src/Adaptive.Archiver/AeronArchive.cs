@@ -45,9 +45,20 @@ namespace Adaptive.Archiver
         public const string NOT_CONNECTED_MSG = "not connected";
 
         /// <summary>
+        /// When replaying a live recording, replay the whole stream and follow the live recording. This will behave the
+        /// same way as providing <seealso cref="AeronArchive.NULL_LENGTH"/>
+        /// </summary>
+        public static readonly long REPLAY_ALL_AND_FOLLOW = NULL_LENGTH;
+
+        /// <summary>
+        /// When replaying a live recording, replay up to the current limit then stop the replay and end the stream.
+        /// </summary>
+        public const long REPLAY_ALL_AND_STOP = -2;
+        
+        /// <summary>
         /// Describes state of the client instance.
         /// </summary>
-        public enum State
+        public enum ArchiveState
         {
             /// <summary>
             /// Client connected to the archive.
@@ -70,7 +81,7 @@ namespace Adaptive.Archiver
 
         private const int FRAGMENT_LIMIT = 10;
 
-        private volatile State state;
+        private volatile ArchiveState state;
         private bool isInCallback = false;
         private long lastCorrelationId = Aeron.Aeron.NULL_VALUE;
         private readonly long controlSessionId;
@@ -107,7 +118,7 @@ namespace Adaptive.Archiver
             this.archiveProxy = archiveProxy;
             this.controlSessionId = controlSessionId;
             this.archiveId = archiveId;
-            state = State.CONNECTED;
+            state = ArchiveState.CONNECTED;
         }
 
         /// <summary>
@@ -133,7 +144,7 @@ namespace Adaptive.Archiver
         /// Returns the state of this client.
         /// </summary>
         /// <returns> client state. </returns>
-        public State CurrentState()
+        public ArchiveState State()
         {
             return state;
         }
@@ -147,9 +158,9 @@ namespace Adaptive.Archiver
             _lock.Lock();
             try
             {
-                if (State.CLOSED != state)
+                if (ArchiveState.CLOSED != state)
                 {
-                    state = State.CLOSED;
+                    State(ArchiveState.CLOSED);
                     IErrorHandler errorHandler = context.ErrorHandler();
                     Exception resultEx = null;
 
@@ -388,7 +399,7 @@ namespace Adaptive.Archiver
                 ControlResponsePoller poller = controlResponsePoller;
                 if (!poller.Subscription().IsConnected)
                 {
-                    state = State.DISCONNECTED;
+                    State(ArchiveState.DISCONNECTED);
                     return NOT_CONNECTED_MSG;
                 }
 
@@ -435,7 +446,7 @@ namespace Adaptive.Archiver
                 ControlResponsePoller poller = controlResponsePoller;
                 if (!poller.Subscription().IsConnected)
                 {
-                    state = State.DISCONNECTED;
+                    State(ArchiveState.DISCONNECTED);
                     if (null != context.ErrorHandler())
                     {
                         context.ErrorHandler().OnError(new ArchiveException(NOT_CONNECTED_MSG));
@@ -940,7 +951,7 @@ namespace Adaptive.Archiver
         /// </summary>
         /// <param name="recordingId">    to be replayed. </param>
         /// <param name="position">       from which the replay should begin or <seealso cref="NULL_POSITION"/> if from the start. </param>
-        /// <param name="length">         of the stream to be replayed. Use <seealso cref="long.MaxValue"/> to follow a live recording or <see cref="NULL_LENGTH"/> to replay the whole stream of unknown length. </param>
+        /// <param name="length">         of the stream to be replayed or <seealso cref="REPLAY_ALL_AND_FOLLOW"/> to follow a live recording. Use <seealso cref="REPLAY_ALL_AND_STOP"/> to read up the available limit and stop the replay. <seealso cref="long.MaxValue"/> can also be used to follow a live stream. </param>
         /// <param name="replayChannel">  to which the replay should be sent. </param>
         /// <param name="replayStreamId"> to which the replay should be sent. </param>
         /// <returns> the id of the replay session which will be the same as the <seealso cref="Image.SessionId"/> of the received
@@ -983,8 +994,7 @@ namespace Adaptive.Archiver
         /// </summary>
         /// <param name="recordingId">       to be replayed. </param>
         /// <param name="position">          from which the replay should begin or <seealso cref="NULL_POSITION"/> if from the start. </param>
-        /// <param name="length">            of the stream to be replayed. Use <seealso cref="long.MaxValue"/> to follow a live recording or
-        ///                          <seealso cref="NULL_LENGTH"/> to replay the whole stream of unknown length. </param>
+        /// <param name="length">            of the stream to be replayed or <seealso cref="REPLAY_ALL_AND_FOLLOW"/> to follow a live recording. Use <seealso cref="REPLAY_ALL_AND_STOP"/> to read up the available limit and stop the replay. <seealso cref="long.MaxValue"/> can also be used to follow a live stream. </param>
         /// <param name="limitCounterId">    to use to bound replay. </param>
         /// <param name="replayChannel">     to which the replay should be sent. </param>
         /// <param name="replayStreamId">    to which the replay should be sent. </param>
@@ -1116,7 +1126,7 @@ namespace Adaptive.Archiver
         /// </summary>
         /// <param name="recordingId">    to be replayed. </param>
         /// <param name="position">       from which the replay should begin or <seealso cref="NULL_POSITION"/> if from the start. </param>
-        /// <param name="length">         of the stream to be replayed or <seealso cref="long.MaxValue"/> to follow a live recording. </param>
+        /// <param name="length">         of the stream to be replayed or <seealso cref="REPLAY_ALL_AND_FOLLOW"/> to follow a live recording. Use <seealso cref="REPLAY_ALL_AND_STOP"/> to read up the available limit and stop the replay. <seealso cref="long.MaxValue"/> can also be used to follow a live stream. </param>
         /// <param name="replayChannel">  to which the replay should be sent. </param>
         /// <param name="replayStreamId"> to which the replay should be sent. </param>
         /// <returns> the <seealso cref="Subscription"/> for consuming the replay. </returns>
@@ -1156,7 +1166,7 @@ namespace Adaptive.Archiver
         /// </summary>
         /// <param name="recordingId">             to be replayed. </param>
         /// <param name="position">                from which the replay should begin or <seealso cref="NULL_POSITION"/> if from the start. </param>
-        /// <param name="length">                  of the stream to be replayed or <seealso cref="long.MaxValue"/> to follow a live recording. </param>
+        /// <param name="length">                  of the stream to be replayed or <seealso cref="REPLAY_ALL_AND_FOLLOW"/> to follow a live recording. Use <seealso cref="REPLAY_ALL_AND_STOP"/> to read up the available limit and stop the replay. <seealso cref="long.MaxValue"/> can also be used to follow a live stream. </param>
         /// <param name="replayChannel">           to which the replay should be sent. </param>
         /// <param name="replayStreamId">          to which the replay should be sent. </param>
         /// <param name="availableImageHandler">   to be called when the replay image becomes available. </param>
@@ -2120,6 +2130,33 @@ namespace Adaptive.Archiver
             }
         }
 
+        /// <summary>
+        /// Update the channel for a recording, i.e. replace original and stripped channel information in the catalog.
+        /// </summary>
+        /// <param name="recordingId"> the recording id to update. </param>
+        /// <param name="newChannel">  to use in the catalogue. </param>
+        public void UpdateChannel(long recordingId, string newChannel)
+        {
+            _lock.Lock();
+            try
+            {
+                EnsureConnected();
+                EnsureNotReentrant();
+
+                lastCorrelationId = aeron.NextCorrelationId();
+
+                if (!archiveProxy.UpdateChannel(recordingId, newChannel, lastCorrelationId, controlSessionId))
+                {
+                    throw new ArchiveException("failed to send migrate segments request");
+                }
+
+                PollForResponse(lastCorrelationId);
+            }
+            finally
+            {
+                _lock.Unlock();
+            }
+        }
 
         private void CheckDeadline(long deadlineNs, string errorMessage, long correlationId)
         {
@@ -2178,7 +2215,7 @@ namespace Adaptive.Archiver
         {
             if (!subscription.IsConnected)
             {
-                state = State.DISCONNECTED;
+                State(ArchiveState.DISCONNECTED);
                 throw new ArchiveException(
                     "response channel from archive is not connected, " +
                     "channel=" + subscription.Channel +
@@ -2384,10 +2421,17 @@ namespace Adaptive.Archiver
 
         private void EnsureConnected()
         {
-            if (State.CONNECTED != state)
+            ArchiveState currentState = state;
+            if (ArchiveState.CONNECTED != currentState)
             {
-                Dispose();
-                throw new ArchiveException("client is closed");
+                if (ArchiveState.CLOSED == currentState)
+                {
+                    throw new ArchiveException("client is closed");
+                }
+                else
+                {
+                    Dispose();
+                }
             }
         }
 
@@ -2396,6 +2440,15 @@ namespace Adaptive.Archiver
             if (isInCallback)
             {
                 throw new AeronException("reentrant calls not permitted during callbacks");
+            }
+        }
+        
+        
+        private void State(ArchiveState newState)
+        {
+            if (ArchiveState.CLOSED != state)
+            {
+                state = newState;
             }
         }
 
@@ -2414,7 +2467,7 @@ namespace Adaptive.Archiver
             /// Minor version of the network protocol from client to archive. If these don't match then some features may
             /// not be available.
             /// </summary>
-            public const int PROTOCOL_MINOR_VERSION = 11;
+            public const int PROTOCOL_MINOR_VERSION = 12;
 
             /// <summary>
             /// Patch version of the network protocol from client to archive. If these don't match then bug fixes may not
@@ -2557,6 +2610,12 @@ namespace Adaptive.Archiver
             /// </summary>
             public const int CONTROL_MTU_LENGTH_DEFAULT = 1408;
 
+            /// <summary>
+            /// System property to name Archive client. Defaults to empty string.
+            /// </summary>
+            /// <remarks>Since 1.49.0</remarks>
+            public const string CLIENT_NAME_PROP_NAME = "aeron.archive.client.name";
+            
             private sealed class NoOpRecordingSignalConsumer : IRecordingSignalConsumer
             {
                 public void OnSignal(long controlSessionId, long correlationId, long recordingId, long subscriptionId,
@@ -2707,6 +2766,17 @@ namespace Adaptive.Archiver
                     System.Convert.ToString(RECORDING_EVENTS_ENABLED_DEFAULT));
                 return "true".Equals(propValue);
             }
+            
+            /// <summary>
+            /// Get the configured client name.
+            /// </summary>
+            /// <returns> specified client name or empty string if not set. </returns>
+            /// <seealso cref="CLIENT_NAME_PROP_NAME"/>
+            /// <remarks>Since 1.49.0</remarks>
+            public static string ClientName()
+            {
+                return Config.GetProperty(CLIENT_NAME_PROP_NAME, "");
+            }
         }
 
         /// <summary>
@@ -2720,6 +2790,7 @@ namespace Adaptive.Archiver
             private int _isConcluded = 0;
 
             internal long messageTimeoutNs = Configuration.MessageTimeoutNs();
+            internal String clientName = AeronArchive.Configuration.ClientName();
             internal string recordingEventsChannel = Configuration.RecordingEventsChannel();
             internal int recordingEventsStreamId = Configuration.RecordingEventsStreamId();
             internal string controlRequestChannel = Configuration.ControlChannel();
@@ -2765,36 +2836,33 @@ namespace Adaptive.Archiver
                     throw new ConfigurationException("AeronArchive.Context.ControlResponseChannel must be set");
                 }
                 
-                
-                ChannelUri requestChannel = ApplyDefaultParams(controlRequestChannel);
-                ChannelUri responseChannel = ApplyDefaultParams(controlResponseChannel);
-                string nameSuffix;
-                if (!CONTROL_MODE_RESPONSE.Equals(responseChannel.Get(MDC_CONTROL_MODE_PARAM_NAME)))
+                if (clientName.Length > Aeron.Aeron.Configuration.MAX_CLIENT_NAME_LENGTH)
                 {
-                    string sessionId = Convert.ToString(BitUtil.GenerateRandomisedId());
-                    nameSuffix = "session-id=" + sessionId;
-                    requestChannel.Put(SESSION_ID_PARAM_NAME, sessionId);
-                    responseChannel.Put(SESSION_ID_PARAM_NAME, sessionId);
+                    throw new ConfigurationException("AeronArchive.Context.clientName length must be <= " +  Aeron.Aeron.Configuration.MAX_CLIENT_NAME_LENGTH);
                 }
-                else
-                {
-                    nameSuffix = "control-mode=response";
-                }
-                controlRequestChannel = requestChannel.ToString();
-                controlResponseChannel = responseChannel.ToString();
-
 
                 if (null == aeron)
                 {
                     aeron = Aeron.Aeron.Connect(
                         new Aeron.Aeron.Context()
                             .AeronDirectoryName(aeronDirectoryName)
-                            .ClientName("archive-client " + nameSuffix)
+                            .ClientName(string.IsNullOrEmpty(clientName) ? "archive-client" : clientName)
                             .ErrorHandler(errorHandler)
                     );
 
                     ownsAeronClient = true;
                 }
+
+                ChannelUri requestChannel = ApplyDefaultParams(controlRequestChannel);
+                ChannelUri responseChannel = ApplyDefaultParams(controlResponseChannel);
+                if (!CONTROL_MODE_RESPONSE.Equals(responseChannel.Get(MDC_CONTROL_MODE_PARAM_NAME)))
+                {
+                    String sessionId = Convert.ToString(aeron.NextSessionId(controlRequestStreamId));
+                    requestChannel.Put(SESSION_ID_PARAM_NAME, sessionId);
+                    responseChannel.Put(SESSION_ID_PARAM_NAME, sessionId);
+                }
+                controlRequestChannel = requestChannel.ToString();
+                controlResponseChannel = responseChannel.ToString();
 
                 if (null == idleStrategy)
                 {
@@ -3084,6 +3152,30 @@ namespace Adaptive.Archiver
                 return aeronDirectoryName;
             }
 
+            /// <summary>
+            /// Sets the name used to identify this client among other clients connected to the Archive.
+            /// </summary>
+            /// <param name="clientName"> to use. </param>
+            /// <returns> this for a fluent API. </returns>
+            /// <seealso cref="AeronArchive.Configuration.CLIENT_NAME_PROP_NAME"/>
+            /// <remarks>Since 1.49.0</remarks>
+            public Context ClientName(string clientName)
+            {
+                this.clientName = string.IsNullOrEmpty(clientName) ? "" : clientName;
+                return this;
+            }
+
+            /// <summary>
+            /// Returns the name of this client.
+            /// </summary>
+            /// <returns> name of this client or empty String if not configured. </returns>
+            /// <seealso cref="AeronArchive.Configuration.CLIENT_NAME_PROP_NAME"/>
+            /// <remarks>Since 1.49.0</remarks>
+            public string ClientName()
+            {
+                return clientName;
+            }
+            
             /// <summary>
             /// <seealso cref="Adaptive.Aeron.Aeron"/> client for communicating with the local Media Driver.
             /// <para>
@@ -3394,7 +3486,7 @@ namespace Adaptive.Archiver
                             AeronArchive client = aeronArchive;
                             if (null != client)
                             {
-                                client.state = AeronArchive.State.DISCONNECTED;
+                                client.State(ArchiveState.DISCONNECTED);
                             }
                         }));
 
@@ -3492,14 +3584,17 @@ namespace Adaptive.Archiver
                         ctx.AeronClient().GetExclusivePublication(publicationRegistrationId);
                     if (null != publication)
                     {
-                        publicationRegistrationId = Aeron.Aeron.NULL_VALUE;
+                        string clientInfo = "name=" + ctx.ClientName();
+                            //  + " " + AeronCounters.formatVersionInfo(AeronArchiveVersion.VERSION, AeronArchiveVersion.GIT_SHA);
+                            publicationRegistrationId = Aeron.Aeron.NULL_VALUE;
                         archiveProxy = new ArchiveProxy(
                             publication,
                             ctx.IdleStrategy(),
                             ctx.AeronClient().Ctx.NanoClock(),
                             ctx.MessageTimeoutNs(),
                             ArchiveProxy.DEFAULT_RETRY_ATTEMPTS,
-                            ctx.CredentialsSupplier());
+                            ctx.CredentialsSupplier(),
+                            clientInfo);
 
                         State(AsyncConnectState.AWAIT_PUBLICATION_CONNECTED);
                     }
@@ -3525,7 +3620,8 @@ namespace Adaptive.Archiver
 
                     correlationId = ctx.AeronClient().NextCorrelationId();
 
-                    if (!archiveProxy.TryConnect(responseChannel, ctx.ControlResponseStreamId(), correlationId))
+                    if (!archiveProxy.TryConnect(
+                            responseChannel, ctx.ControlResponseStreamId(), correlationId))
                     {
                         return null;
                     }

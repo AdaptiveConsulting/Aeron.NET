@@ -12,7 +12,7 @@ public class CatalogHeaderDecoder
     public const ushort BLOCK_LENGTH = 32;
     public const ushort TEMPLATE_ID = 20;
     public const ushort SCHEMA_ID = 101;
-    public const ushort SCHEMA_VERSION = 11;
+    public const ushort SCHEMA_VERSION = 13;
 
     private CatalogHeaderDecoder _parentMessage;
     private IDirectBuffer _buffer;

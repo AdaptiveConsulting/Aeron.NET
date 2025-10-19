@@ -12,7 +12,7 @@ public class CommitPositionDecoder
     public const ushort BLOCK_LENGTH = 20;
     public const ushort TEMPLATE_ID = 55;
     public const ushort SCHEMA_ID = 111;
-    public const ushort SCHEMA_VERSION = 13;
+    public const ushort SCHEMA_VERSION = 14;
 
     private CommitPositionDecoder _parentMessage;
     private IDirectBuffer _buffer;

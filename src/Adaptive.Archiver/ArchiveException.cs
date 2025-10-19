@@ -81,6 +81,11 @@ namespace Adaptive.Archiver
         public const int REPLICATION_CONNECTION_FAILURE = 14;
 
         /// <summary>
+        /// The recording specified for replay is empty.
+        /// </summary>
+        public const short EMPTY_RECORDING = 15;
+        
+        /// <summary>
         /// Error code providing more detail into what went wrong.
         /// </summary>
         /// <returns> code providing more detail into what went wrong. </returns>

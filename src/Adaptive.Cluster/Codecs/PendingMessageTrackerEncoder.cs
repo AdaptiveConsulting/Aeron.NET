@@ -12,7 +12,7 @@ public class PendingMessageTrackerEncoder
     public const ushort BLOCK_LENGTH = 24;
     public const ushort TEMPLATE_ID = 107;
     public const ushort SCHEMA_ID = 111;
-    public const ushort SCHEMA_VERSION = 13;
+    public const ushort SCHEMA_VERSION = 14;
 
     private PendingMessageTrackerEncoder _parentMessage;
     private IMutableDirectBuffer _buffer;

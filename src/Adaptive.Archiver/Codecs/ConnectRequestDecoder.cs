@@ -12,7 +12,7 @@ public class ConnectRequestDecoder
     public const ushort BLOCK_LENGTH = 16;
     public const ushort TEMPLATE_ID = 2;
     public const ushort SCHEMA_ID = 101;
-    public const ushort SCHEMA_VERSION = 11;
+    public const ushort SCHEMA_VERSION = 13;
 
     private ConnectRequestDecoder _parentMessage;
     private IDirectBuffer _buffer;

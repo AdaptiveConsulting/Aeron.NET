@@ -26,11 +26,8 @@ namespace Adaptive.Cluster.Service
         private readonly SessionOpenEventDecoder openEventDecoder = new SessionOpenEventDecoder();
         private readonly SessionCloseEventDecoder closeEventDecoder = new SessionCloseEventDecoder();
         private readonly ClusterActionRequestDecoder actionRequestDecoder = new ClusterActionRequestDecoder();
-
         private readonly NewLeadershipTermEventDecoder newLeadershipTermEventDecoder =
             new NewLeadershipTermEventDecoder();
-
-        private readonly MembershipChangeEventDecoder membershipChangeEventDecoder = new MembershipChangeEventDecoder();
 
         internal BoundedLogAdapter(ClusteredServiceAgent agent, int fragmentLimit)
         {

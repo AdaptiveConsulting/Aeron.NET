@@ -95,6 +95,12 @@ namespace Adaptive.Aeron
         internal readonly LogBuffers _logBuffers;
         internal readonly ClientConductor _conductor;
 
+        // For testing purposes only
+        internal Publication()
+        {
+            
+        }
+        
         internal Publication(
             ClientConductor clientConductor,
             string channel,

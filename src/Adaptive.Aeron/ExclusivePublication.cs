@@ -57,6 +57,12 @@ namespace Adaptive.Aeron
 		private int _termId;
 		private int _termOffset;
 
+		// For testing purposes only
+		internal ExclusivePublication()
+		{
+			
+		}
+		
 		internal ExclusivePublication(
 			ClientConductor clientConductor,
 			string channel,

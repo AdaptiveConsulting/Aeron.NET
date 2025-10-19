@@ -12,7 +12,7 @@ public class SessionConnectRequestDecoder
     public const ushort BLOCK_LENGTH = 16;
     public const ushort TEMPLATE_ID = 3;
     public const ushort SCHEMA_ID = 111;
-    public const ushort SCHEMA_VERSION = 13;
+    public const ushort SCHEMA_VERSION = 14;
 
     private SessionConnectRequestDecoder _parentMessage;
     private IDirectBuffer _buffer;
@@ -383,6 +383,101 @@ public class SessionConnectRequestDecoder
         return bytesCopied;
     }
 
+    public static int ClientInfoId()
+    {
+        return 6;
+    }
+
+    public static int ClientInfoSinceVersion()
+    {
+        return 14;
+    }
+
+    public static string ClientInfoCharacterEncoding()
+    {
+        return "US-ASCII";
+    }
+
+    public static string ClientInfoMetaAttribute(MetaAttribute metaAttribute)
+    {
+        switch (metaAttribute)
+        {
+            case MetaAttribute.EPOCH: return "unix";
+            case MetaAttribute.TIME_UNIT: return "nanosecond";
+            case MetaAttribute.SEMANTIC_TYPE: return "";
+            case MetaAttribute.PRESENCE: return "required";
+        }
+
+        return "";
+    }
+
+    public static int ClientInfoHeaderLength()
+    {
+        return 4;
+    }
+
+    public int ClientInfoLength()
+    {
+        if (_parentMessage._actingVersion < 14)
+        {
+            return 0;
+        }
+
+        int limit = _parentMessage.Limit();
+        return (int)unchecked((uint)_buffer.GetInt(limit, ByteOrder.LittleEndian));
+    }
+
+    public int GetClientInfo(IMutableDirectBuffer dst, int dstOffset, int length)
+    {
+        if (_parentMessage._actingVersion < 14)
+        {
+            return 0;
+        }
+
+        int headerLength = 4;
+        int limit = _parentMessage.Limit();
+        int dataLength = (int)unchecked((uint)_buffer.GetInt(limit, ByteOrder.LittleEndian));
+        int bytesCopied = Math.Min(length, dataLength);
+        _parentMessage.Limit(limit + headerLength + dataLength);
+        _buffer.GetBytes(limit + headerLength, dst, dstOffset, bytesCopied);
+
+        return bytesCopied;
+    }
+
+    public int GetClientInfo(byte[] dst, int dstOffset, int length)
+    {
+        if (_parentMessage._actingVersion < 14)
+        {
+            return 0;
+        }
+
+        int headerLength = 4;
+        int limit = _parentMessage.Limit();
+        int dataLength = (int)unchecked((uint)_buffer.GetInt(limit, ByteOrder.LittleEndian));
+        int bytesCopied = Math.Min(length, dataLength);
+        _parentMessage.Limit(limit + headerLength + dataLength);
+        _buffer.GetBytes(limit + headerLength, dst, dstOffset, bytesCopied);
+
+        return bytesCopied;
+    }
+
+    public string ClientInfo()
+    {
+        if (_parentMessage._actingVersion < 14)
+        {
+            return "";
+        }
+
+        int headerLength = 4;
+        int limit = _parentMessage.Limit();
+        int dataLength = (int)unchecked((uint)_buffer.GetInt(limit, ByteOrder.LittleEndian));
+        _parentMessage.Limit(limit + headerLength + dataLength);
+        byte[] tmp = new byte[dataLength];
+        _buffer.GetBytes(limit + headerLength, tmp, 0, dataLength);
+
+        return Encoding.ASCII.GetString(tmp);
+    }
+
 
     public override string ToString()
     {
@@ -434,6 +529,10 @@ public class SessionConnectRequestDecoder
         //Token{signal=BEGIN_VAR_DATA, name='encodedCredentials', referencedName='null', description='null', id=5, version=0, deprecated=0, encodedLength=0, offset=-1, componentTokenCount=6, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
         builder.Append("EncodedCredentials=");
         builder.Append(EncodedCredentialsLength() + " raw bytes");
+        builder.Append('|');
+        //Token{signal=BEGIN_VAR_DATA, name='clientInfo', referencedName='null', description='null', id=6, version=14, deprecated=0, encodedLength=0, offset=-1, componentTokenCount=6, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        builder.Append("ClientInfo=");
+        builder.Append(ClientInfo());
 
         Limit(originalLimit);
 

@@ -12,7 +12,7 @@ public class ArchiveIdRequestEncoder
     public const ushort BLOCK_LENGTH = 16;
     public const ushort TEMPLATE_ID = 68;
     public const ushort SCHEMA_ID = 101;
-    public const ushort SCHEMA_VERSION = 11;
+    public const ushort SCHEMA_VERSION = 13;
 
     private ArchiveIdRequestEncoder _parentMessage;
     private IMutableDirectBuffer _buffer;

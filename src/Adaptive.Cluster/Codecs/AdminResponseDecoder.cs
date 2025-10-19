@@ -12,7 +12,7 @@ public class AdminResponseDecoder
     public const ushort BLOCK_LENGTH = 24;
     public const ushort TEMPLATE_ID = 27;
     public const ushort SCHEMA_ID = 111;
-    public const ushort SCHEMA_VERSION = 13;
+    public const ushort SCHEMA_VERSION = 14;
 
     private AdminResponseDecoder _parentMessage;
     private IDirectBuffer _buffer;

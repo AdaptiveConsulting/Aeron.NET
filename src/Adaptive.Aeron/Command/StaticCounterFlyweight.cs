@@ -90,7 +90,9 @@ namespace Adaptive.Aeron.Command
 		/// </summary>
 		public override string ToString()
 		{
-			return "AddStaticCounterFlyweight{" + "correlationId=" + CorrelationId() + ", counterId=" + CounterId() +
+			return "StaticCounterFlyweight{" + 
+			       "correlationId=" + CorrelationId() + 
+			       ", counterId=" + CounterId() +
 			       "}";
 		}
 	}

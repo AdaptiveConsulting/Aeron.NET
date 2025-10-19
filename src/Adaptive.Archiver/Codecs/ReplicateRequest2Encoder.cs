@@ -12,7 +12,7 @@ public class ReplicateRequest2Encoder
     public const ushort BLOCK_LENGTH = 68;
     public const ushort TEMPLATE_ID = 66;
     public const ushort SCHEMA_ID = 101;
-    public const ushort SCHEMA_VERSION = 11;
+    public const ushort SCHEMA_VERSION = 13;
 
     private ReplicateRequest2Encoder _parentMessage;
     private IMutableDirectBuffer _buffer;
