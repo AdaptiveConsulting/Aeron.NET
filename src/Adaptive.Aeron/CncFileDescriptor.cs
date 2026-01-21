@@ -313,7 +313,7 @@ namespace Adaptive.Aeron
                          metaDataBuffer.GetInt(TO_CLIENTS_BUFFER_LENGTH_FIELD_OFFSET);
 
             return new UnsafeBuffer(buffer.Pointer, offset,
-                metaDataBuffer.GetInt(TO_CLIENTS_BUFFER_LENGTH_FIELD_OFFSET));
+                metaDataBuffer.GetInt(COUNTERS_METADATA_BUFFER_LENGTH_FIELD_OFFSET));
         }
 
         /// <summary>
