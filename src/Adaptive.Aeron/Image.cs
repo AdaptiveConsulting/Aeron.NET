@@ -847,7 +847,7 @@ namespace Adaptive.Aeron
         /// Reject this image.
         /// </summary>
         /// <param name="reason"> a String indicating the reason why this image is being rejected. </param>
-        void Reject(string reason)
+        public void Reject(string reason)
         {
             Subscription.RejectImage(CorrelationId, Position, reason);
         }
