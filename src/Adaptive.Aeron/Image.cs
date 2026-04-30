@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright 2014 - 2017 Adaptive Financial Consulting Ltd
+ * Copyright 2014 - 2026 Adaptive Financial Consulting Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
  */
 
 using System;
+using System.IO;
 using System.Runtime.CompilerServices;
 using Adaptive.Aeron.LogBuffer;
 using Adaptive.Aeron.Protocol;
@@ -262,14 +263,11 @@ namespace Adaptive.Aeron
         }
 
 
-        ///// <summary>
-        ///// The <seealso cref="FileChannel"/> to the raw log of the Image.
-        ///// </summary>
-        ///// <returns> the <seealso cref="FileChannel"/> to the raw log of the Image. </returns>
-        //public FileChannel FileChannel()
-        //{
-        //    return logBuffers.FileChannel();
-        //}
+        /// <summary>
+        /// The <see cref="FileStream"/> for the raw log of the Image.
+        /// </summary>
+        /// <returns> the <see cref="FileStream"/> for the raw log of the Image. </returns>
+        public FileStream FileStream => _logBuffers.FileStream;
 
         /// <summary>
         /// Poll for new messages in a stream. If new messages are found beyond the last consumed position then they
@@ -814,7 +812,9 @@ namespace Adaptive.Aeron
 
             var position = _subscriberPosition.Get();
             var offset = (int) position & _termLengthMask;
-            var limitOffset = Math.Min(offset + blockLengthLimit, _termLengthMask + 1);
+            var capacity = _termLengthMask + 1;
+            var highLimitOffset = (long)offset + blockLengthLimit;
+            var limitOffset = (long)capacity < highLimitOffset ? capacity : (int)highLimitOffset;
             var termBuffer = ActiveTermBuffer(position);
             var resultingOffset = TermBlockScanner.Scan(termBuffer, offset, limitOffset);
             var length = resultingOffset - offset;
@@ -833,7 +833,68 @@ namespace Adaptive.Aeron
                 }
                 finally
                 {
-                    if (_isClosed)
+                    if (!_isClosed)
+                    {
+                        _subscriberPosition.SetRelease(position + length);
+                    }
+                }
+            }
+
+            return length;
+        }
+
+        /// <summary>
+        /// Poll for new messages in a stream. If new messages are found beyond the last consumed position then they
+        /// will be delivered to the <see cref="RawBlockHandler"/> up to a limited number of bytes.
+        /// <para>
+        /// This method is useful for operations like bulk archiving a stream to a file or a socket.
+        /// </para>
+        /// <para>
+        /// A scan will terminate if a padding frame is encountered. If first frame in a scan is padding then a block
+        /// for the padding is notified. If the padding comes after the first frame in a scan then the scan terminates
+        /// at the offset the padding frame begins. Padding frames are delivered singularly in a block.
+        /// </para>
+        /// <para>
+        /// Padding frames may be for a greater range than the limit offset but only the header needs to be valid so
+        /// relevant length of the frame is <see cref="DataHeaderFlyweight.HEADER_LENGTH"/>.
+        /// </para>
+        /// </summary>
+        /// <param name="handler"> to which block is delivered. </param>
+        /// <param name="blockLengthLimit"> up to which a block may be in length. </param>
+        /// <returns> the number of bytes that have been consumed. </returns>
+        public int RawPoll(RawBlockHandler handler, int blockLengthLimit)
+        {
+            if (_isClosed)
+            {
+                return 0;
+            }
+
+            long position = _subscriberPosition.Get();
+            int offset = (int)position & _termLengthMask;
+            int activeIndex = LogBufferDescriptor.IndexByPosition(position, PositionBitsToShift);
+            UnsafeBuffer termBuffer = _termBuffers[activeIndex];
+            int capacity = termBuffer.Capacity;
+            long highLimitOffset = (long)offset + blockLengthLimit;
+            int limitOffset = (long)capacity < highLimitOffset ? capacity : (int)highLimitOffset;
+            int resultingOffset = TermBlockScanner.Scan(termBuffer, offset, limitOffset);
+            int length = resultingOffset - offset;
+
+            if (resultingOffset > offset)
+            {
+                try
+                {
+                    long fileOffset = ((long)capacity * activeIndex) + offset;
+                    int termId = termBuffer.GetInt(offset + TERM_ID_FIELD_OFFSET);
+
+                    handler(_logBuffers.FileStream, fileOffset, termBuffer, offset, length, SessionId, termId);
+                }
+                catch (Exception ex)
+                {
+                    _errorHandler.OnError(ex);
+                }
+                finally
+                {
+                    if (!_isClosed)
                     {
                         _subscriberPosition.SetRelease(position + length);
                     }
