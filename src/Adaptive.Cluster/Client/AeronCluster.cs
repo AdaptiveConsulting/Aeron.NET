@@ -2001,12 +2001,15 @@ namespace Adaptive.Cluster.Client
             {
                 int workDone = 0;
 
-                AgentInvoker conductorAgentInvoker = _aeron?.ConductorAgentInvoker;
-                if (null != conductorAgentInvoker)
+                if (null != _aeron)
                 {
-                    workDone += conductorAgentInvoker.Invoke();
+                    AgentInvoker conductorAgentInvoker = _aeron.ConductorAgentInvoker;
+                    if (null != conductorAgentInvoker)
+                    {
+                        workDone += conductorAgentInvoker.Invoke();
+                    }
                 }
-
+                
                 if (null != agentInvoker)
                 {
                     workDone += agentInvoker.Invoke();
