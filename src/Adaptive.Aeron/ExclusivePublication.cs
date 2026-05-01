@@ -636,19 +636,19 @@ namespace Adaptive.Aeron
 		}
 
 		private int AppendFragmentedMessage(
-			UnsafeBuffer termBuffer, 
-			int tailCounterOffset, 
+			UnsafeBuffer termBuffer,
+			int tailCounterOffset,
 			IDirectBuffer bufferOne,
-			int offsetOne, 
-			int lengthOne, 
+			int offsetOne,
+			int lengthOne,
 			IDirectBuffer bufferTwo,
 			int offsetTwo,
-			int lengthTwo, 
+			int lengthTwo,
 			int maxPayloadLength,
 			ReservedValueSupplier reservedValueSupplier)
 		{
 			int length = lengthOne + lengthTwo;
-			int framedLength = ComputeFragmentedFrameLength(length, MaxPayloadLength);
+			int framedLength = ComputeFragmentedFrameLength(length, maxPayloadLength);
 			int termLength = termBuffer.Capacity;
 
 			int resultingOffset = _termOffset + framedLength;
