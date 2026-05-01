@@ -8,8 +8,15 @@ namespace Adaptive.Aeron.Tests
 {
     class CncFileDescriptorTest
     {
+        private EmbeddedMediaDriver _driver;
+
+        [SetUp]
+        public void StartDriver() => _driver = new EmbeddedMediaDriver();
+
+        [TearDown]
+        public void StopDriver() => _driver?.Dispose();
+
         [Test]
-        [Ignore("Media driver needs to be running")]
         public void ShouldAllocateCapacityForCounterMetadataBuffer()
         {
             string aeronDir = Aeron.Context.GetAeronDirectoryName();
