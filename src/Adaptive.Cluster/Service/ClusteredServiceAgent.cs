@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.ExceptionServices;
 using System.Threading;
 using Adaptive.Aeron;
 using Adaptive.Aeron.Exceptions;
@@ -979,7 +980,7 @@ namespace Adaptive.Cluster.Service
 
                 if (null != exception)
                 {
-                    throw exception;
+                    ExceptionDispatchInfo.Capture(exception).Throw();
                 }
             }
         }
