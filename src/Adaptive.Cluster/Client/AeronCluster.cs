@@ -1969,6 +1969,24 @@ namespace Adaptive.Cluster.Client
                 return agentInvoker;
             }
 
+            internal int RunAgentInvokers()
+            {
+                int workDone = 0;
+
+                AgentInvoker conductorAgentInvoker = _aeron?.ConductorAgentInvoker;
+                if (null != conductorAgentInvoker)
+                {
+                    workDone += conductorAgentInvoker.Invoke();
+                }
+
+                if (null != agentInvoker)
+                {
+                    workDone += agentInvoker.Invoke();
+                }
+
+                return workDone;
+            }
+
             /// <summary>
             /// Close the context and free applicable resources.
             /// <para>
@@ -2168,6 +2186,7 @@ namespace Adaptive.Cluster.Client
             public AeronCluster Poll()
             {
                 CheckDeadline();
+                ctx.RunAgentInvokers();
 
                 switch (state)
                 {
