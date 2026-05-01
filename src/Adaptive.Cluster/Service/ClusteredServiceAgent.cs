@@ -1022,6 +1022,7 @@ namespace Adaptive.Cluster.Service
 
                     if (isAbort || aeron.IsClosed)
                     {
+                        isAbort = true;
                         throw new AgentTerminationException("unexpected Aeron close");
                     }
                 }
