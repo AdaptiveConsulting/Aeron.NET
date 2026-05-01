@@ -906,7 +906,7 @@ namespace Adaptive.Cluster.Service
             {
                 if (ex.ErrorCode == ArchiveException.STORAGE_SPACE)
                 {
-                    throw new AgentTerminationException();
+                    throw new AgentTerminationException(ex);
                 }
 
                 throw;
