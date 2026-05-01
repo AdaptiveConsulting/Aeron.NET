@@ -1759,7 +1759,7 @@ namespace Adaptive.Aeron
 
                     if (!IsClientApiCall(correlationId))
                     {
-                        throw new AeronException("Driver events adapter is invalid");
+                        throw new AeronException("Driver events adapter is invalid", ex);
                     }
                 }
 
