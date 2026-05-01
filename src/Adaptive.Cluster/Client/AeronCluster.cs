@@ -2244,7 +2244,20 @@ namespace Adaptive.Cluster.Client
                     egressRegistrationId = ctx.AeronClient().AsyncAddSubscription(ctx.EgressChannel(), ctx.EgressStreamId());
                 }
 
-                egressSubscription = ctx.AeronClient().GetSubscription(egressRegistrationId);
+                try
+                {
+                    egressSubscription = ctx.AeronClient().GetSubscription(egressRegistrationId);
+                }
+                catch (RegistrationException ex)
+                {
+                    egressRegistrationId = NULL_VALUE;
+
+                    if (ErrorCode.RESOURCE_TEMPORARILY_UNAVAILABLE != ex.ErrorCode())
+                    {
+                        throw;
+                    }
+                }
+
                 if (null != egressSubscription)
                 {
                     egressPoller = new EgressPoller(egressSubscription, FRAGMENT_LIMIT);
