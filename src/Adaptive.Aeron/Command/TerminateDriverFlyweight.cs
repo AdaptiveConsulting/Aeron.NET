@@ -27,7 +27,7 @@ namespace Adaptive.Aeron.Command
     public class TerminateDriverFlyweight : CorrelatedMessageFlyweight
     {
         private static readonly int TOKEN_LENGTH_OFFSET = CORRELATION_ID_FIELD_OFFSET + BitUtil.SIZE_OF_LONG;
-        static readonly int TOKEN_BUFFER_OFFSET = TOKEN_LENGTH_OFFSET + BitUtil.SIZE_OF_INT;
+        internal static readonly int TOKEN_BUFFER_OFFSET = TOKEN_LENGTH_OFFSET + BitUtil.SIZE_OF_INT;
         private static readonly int MINIMUM_LENGTH = TOKEN_LENGTH_OFFSET + BitUtil.SIZE_OF_INT;
 
         /// <summary>

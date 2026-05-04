@@ -54,7 +54,7 @@ namespace Adaptive.Aeron.Command
     {
         private static readonly int COUNTER_TYPE_ID_FIELD_OFFSET = CORRELATION_ID_FIELD_OFFSET + BitUtil.SIZE_OF_LONG;
         private static readonly int KEY_LENGTH_OFFSET = COUNTER_TYPE_ID_FIELD_OFFSET + BitUtil.SIZE_OF_INT;
-        static readonly int KEY_BUFFER_OFFSET = KEY_LENGTH_OFFSET + BitUtil.SIZE_OF_INT;
+        internal static readonly int KEY_BUFFER_OFFSET = KEY_LENGTH_OFFSET + BitUtil.SIZE_OF_INT;
         private static readonly int MINIMUM_LENGTH = KEY_BUFFER_OFFSET + BitUtil.SIZE_OF_INT;
 
         /// <summary>

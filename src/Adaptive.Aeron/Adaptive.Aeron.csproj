@@ -31,4 +31,7 @@
     <ItemGroup>
         <None Remove="FodyWeavers.xsd" />
     </ItemGroup>
+    <ItemGroup>
+        <InternalsVisibleTo Include="Adaptive.Aeron.Tests" />
+    </ItemGroup>
 </Project>

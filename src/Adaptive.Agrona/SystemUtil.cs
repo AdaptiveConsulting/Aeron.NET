@@ -120,5 +120,97 @@ namespace Adaptive.Agrona
                 }
             }
         }
+
+        private const long ONE_KILOBYTE = 1024;
+        private const long ONE_MEGABYTE = 1024 * 1024;
+        private const long ONE_GIGABYTE = 1024 * 1024 * 1024;
+
+        /// <summary>
+        /// Format size value as the shortest possible string with a 'k', 'm', or 'g' suffix when the value is
+        /// an exact multiple of the corresponding power-of-two. Returns the bare integer otherwise.
+        /// </summary>
+        /// <param name="size"> to format. Must be non-negative. </param>
+        /// <returns> formatted value. </returns>
+        /// <exception cref="ArgumentException"> if <paramref name="size"/> is negative. </exception>
+        public static string FormatSize(long size)
+        {
+            if (size < 0)
+            {
+                throw new ArgumentException("size must be positive: " + size);
+            }
+
+            if (size >= ONE_GIGABYTE)
+            {
+                long value = size / ONE_GIGABYTE;
+                if (size == value * ONE_GIGABYTE)
+                {
+                    return value + "g";
+                }
+            }
+
+            if (size >= ONE_MEGABYTE)
+            {
+                long value = size / ONE_MEGABYTE;
+                if (size == value * ONE_MEGABYTE)
+                {
+                    return value + "m";
+                }
+            }
+
+            if (size >= ONE_KILOBYTE)
+            {
+                long value = size / ONE_KILOBYTE;
+                if (size == value * ONE_KILOBYTE)
+                {
+                    return value + "k";
+                }
+            }
+
+            return size.ToString();
+        }
+
+        /// <summary>
+        /// Format duration value as the shortest possible string with a 'ns', 'us', 'ms', or 's' suffix.
+        /// Returns the bare integer with 'ns' suffix otherwise.
+        /// </summary>
+        /// <param name="durationNs"> value in nanoseconds. Must be non-negative. </param>
+        /// <returns> formatted value. </returns>
+        /// <exception cref="ArgumentException"> if <paramref name="durationNs"/> is negative. </exception>
+        public static string FormatDuration(long durationNs)
+        {
+            if (durationNs < 0)
+            {
+                throw new ArgumentException("duration must be positive: " + durationNs);
+            }
+
+            if (durationNs >= SECONDS_TO_NANOS)
+            {
+                long value = durationNs / SECONDS_TO_NANOS;
+                if (durationNs == value * SECONDS_TO_NANOS)
+                {
+                    return value + "s";
+                }
+            }
+
+            if (durationNs >= MILLS_TO_NANOS)
+            {
+                long value = durationNs / MILLS_TO_NANOS;
+                if (durationNs == value * MILLS_TO_NANOS)
+                {
+                    return value + "ms";
+                }
+            }
+
+            if (durationNs >= MICROS_TO_NANOS)
+            {
+                long value = durationNs / MICROS_TO_NANOS;
+                if (durationNs == value * MICROS_TO_NANOS)
+                {
+                    return value + "us";
+                }
+            }
+
+            return durationNs + "ns";
+        }
     }
 }

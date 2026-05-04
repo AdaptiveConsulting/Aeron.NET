@@ -431,7 +431,7 @@ namespace Adaptive.Aeron.LogBuffer
 
             if (termLength > TERM_MAX_LENGTH)
                 ThrowHelper.ThrowInvalidOperationException(
-                    $"Term length more than max length of {TERM_MAX_LENGTH:D}: length = {termLength:D}");
+                    $"Term length more than max length of {TERM_MAX_LENGTH:D}: length={termLength:D}");
 
             if (!IsPowerOfTwo(termLength))
                 ThrowHelper.ThrowInvalidOperationException("Term length not a power of 2: length=" + termLength);

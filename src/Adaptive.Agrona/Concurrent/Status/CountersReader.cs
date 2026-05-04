@@ -140,6 +140,12 @@ namespace Adaptive.Agrona.Concurrent.Status
         public static readonly int OWNER_ID_OFFSET = REGISTRATION_ID_OFFSET + BitUtil.SIZE_OF_LONG;
 
         /// <summary>
+        /// Offset in the record at which the reference id field is stored. The reference id is an abstract concept
+        /// which can be used to associate counters with another resource lifecycle for reference accounting.
+        /// </summary>
+        public static readonly int REFERENCE_ID_OFFSET = OWNER_ID_OFFSET + BitUtil.SIZE_OF_LONG;
+
+        /// <summary>
         /// Offset in the record at which the type id field is stored.
         /// </summary>
         public static readonly int TYPE_ID_OFFSET = BitUtil.SIZE_OF_INT;
