@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <TargetFramework>netstandard2.0</TargetFramework>
+        <AssemblyName>Unsealer.Fody</AssemblyName>
+        <RootNamespace>Unsealer.Fody</RootNamespace>
+        <IsPackable>false</IsPackable>
+        <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+        <Description>Fody addin (Debug-only) that strips the `sealed` modifier from class types
+in the assembly being woven, so test mocking frameworks (FakeItEasy, Moq, NSubstitute)
+that rely on Castle DynamicProxy can subclass them. Mirrors what Virtuosity.Fody does
+for `virtual`. Skips value types and compiler-generated types.</Description>
+    </PropertyGroup>
+    <ItemGroup>
+        <PackageReference Include="FodyHelpers" Version="6.9.3" />
+    </ItemGroup>
+</Project>

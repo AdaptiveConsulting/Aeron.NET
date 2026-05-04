@@ -23,4 +23,24 @@
     <ItemGroup>
         <Folder Include="Codecs" />
     </ItemGroup>
+    <ItemGroup Condition=" '$(Configuration)' == 'Debug' ">
+        <PackageReference Include="Fody" Version="6.9.3">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="Virtuosity.Fody" Version="3.1.2">
+            <PrivateAssets>all</PrivateAssets>
+        </PackageReference>
+        <ProjectReference Include="..\Weavers\Unsealer.Fody\Unsealer.Fody.csproj">
+            <PrivateAssets>all</PrivateAssets>
+            <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+        </ProjectReference>
+        <WeaverFiles Include="..\Weavers\Unsealer.Fody\bin\$(Configuration)\netstandard2.0\Unsealer.Fody.dll" />
+    </ItemGroup>
+    <ItemGroup>
+        <None Remove="FodyWeavers.xsd" />
+    </ItemGroup>
+    <ItemGroup>
+        <InternalsVisibleTo Include="Adaptive.Archiver.Tests" />
+    </ItemGroup>
 </Project>

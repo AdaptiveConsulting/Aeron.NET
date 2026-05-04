@@ -158,7 +158,7 @@ namespace Adaptive.Cluster.Client
                     {
                         _listener.OnNewLeader(
                             sessionId,
-                            _sessionEventDecoder.LeadershipTermId(),
+                            _newLeaderEventDecoder.LeadershipTermId(),
                             _newLeaderEventDecoder.LeaderMemberId(),
                             _newLeaderEventDecoder.IngressEndpoints());
                     }
