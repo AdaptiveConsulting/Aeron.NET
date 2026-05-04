@@ -17,7 +17,7 @@
         <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
     </PropertyGroup>
     <ItemGroup Condition=" '$(Configuration)' == 'Debug' ">
-        <PackageReference Include="Fody" Version="6.9.2">
+        <PackageReference Include="Fody" Version="6.9.3">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
         </PackageReference>
