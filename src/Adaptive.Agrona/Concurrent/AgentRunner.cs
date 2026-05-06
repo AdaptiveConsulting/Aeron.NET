@@ -191,7 +191,7 @@ namespace Adaptive.Agrona.Concurrent
                     _errorHandler.OnError(ex);
                 }
             }
-            if (TOMBSTONE != thread)
+            else if (TOMBSTONE != thread)
             {
                 while (true)
                 {
