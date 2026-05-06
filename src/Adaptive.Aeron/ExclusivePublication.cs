@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright 2014 - 2017 Adaptive Financial Consulting Ltd
+ * Copyright 2014 - 2026 Adaptive Financial Consulting Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -902,7 +902,6 @@ namespace Adaptive.Aeron
 			int length)
 		{
 			int resultingOffset = _termOffset + length;
-			int lengthOfFirstFrame = buffer.GetInt(offset, ByteOrder.LittleEndian);
 
 			_logMetaDataBuffer.PutLongRelease(tailCounterOffset, PackTail(_termId, resultingOffset));
 			
