@@ -11,5 +11,9 @@ namespace Adaptive.Agrona.Concurrent
         public AgentTerminationException(string message) : base(message)
         {
         }
+
+        public AgentTerminationException(Exception innerException) : base(innerException?.ToString(), innerException)
+        {
+        }
     }
 }
