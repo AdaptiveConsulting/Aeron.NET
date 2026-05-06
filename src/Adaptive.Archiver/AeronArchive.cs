@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.ExceptionServices;
 using System.Threading;
 using Adaptive.Aeron;
 using Adaptive.Aeron.Exceptions;
@@ -3499,7 +3500,7 @@ namespace Adaptive.Archiver
                 catch (Exception ex)
                 {
                     Dispose();
-                    throw ex;
+                    ExceptionDispatchInfo.Capture(ex).Throw();
                 }
             }
 
