@@ -3326,6 +3326,28 @@ namespace Adaptive.Archiver
                 return agentInvoker;
             }
 
+            internal int RunInvokers()
+            {
+                int workCount = 0;
+
+                Aeron.Aeron aeronClient = AeronClient();
+                if (null != aeronClient)
+                {
+                    AgentInvoker conductorAgentInvoker = aeronClient.ConductorAgentInvoker;
+                    if (null != conductorAgentInvoker)
+                    {
+                        workCount += conductorAgentInvoker.Invoke();
+                    }
+                }
+
+                if (null != agentInvoker)
+                {
+                    workCount += agentInvoker.Invoke();
+                }
+
+                return workCount;
+            }
+
             /// <summary>
             /// Get the <seealso cref="ICredentialsSupplier"/> to be used for authentication with the archive.
             /// </summary>
@@ -3578,6 +3600,7 @@ namespace Adaptive.Archiver
             public AeronArchive Poll()
             {
                 CheckDeadline();
+                ctx.RunInvokers();
 
                 if (AsyncConnectState.ADD_PUBLICATION == state)
                 {
