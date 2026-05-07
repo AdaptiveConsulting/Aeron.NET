@@ -6,8 +6,15 @@ namespace Adaptive.Aeron.Tests
     [TestFixture]
     public class ContextText
     {
+        private EmbeddedMediaDriver _driver;
+
+        [SetUp]
+        public void StartDriver() => _driver = new EmbeddedMediaDriver();
+
+        [TearDown]
+        public void StopDriver() => _driver?.Dispose();
+
         [Test]
-        [Ignore("Media driver needs to be running")]
         public void ShouldNotAllowConcludeMoreThanOnce()
         {
             var ctx = new Aeron.Context();
@@ -16,7 +23,6 @@ namespace Adaptive.Aeron.Tests
             Assert.Throws(typeof(ConcurrentConcludeException), () => ctx.Conclude());
         }
         [Test]
-        [Ignore("Media driver needs to be running")]
         public void ShouldAllowConcludeOfClonedContext()
         {
             var ctx = new Aeron.Context();
