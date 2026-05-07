@@ -445,7 +445,7 @@ namespace Adaptive.Agrona.Concurrent.Status
             return LabelValue(MetaDataOffset(counterId));
         }
 
-        private void ValidateCounterId(int counterId)
+        protected void ValidateCounterId(int counterId)
         {
             if (counterId < 0 || counterId > MaxCounterId)
             {

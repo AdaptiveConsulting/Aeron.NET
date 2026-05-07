@@ -314,9 +314,16 @@ namespace Adaptive.Agrona.Concurrent.Status
         /// <param name="counterId"> the counter to freed </param>
         public void Free(int counterId)
         {
+            ValidateCounterId(counterId);
             int recordOffset = MetaDataOffset(counterId);
 
+            if (RECORD_ALLOCATED != MetaDataBuffer.GetIntVolatile(recordOffset))
+            {
+                throw new System.InvalidOperationException("counter not allocated: id=" + counterId);
+            }
+
             MetaDataBuffer.PutLong(recordOffset + FREE_FOR_REUSE_DEADLINE_OFFSET, _epochClock.Time() + _freeToReuseTimeoutMs);
+            MetaDataBuffer.SetMemory(recordOffset + KEY_OFFSET, MAX_KEY_LENGTH, 0);
             MetaDataBuffer.PutIntOrdered(recordOffset, RECORD_RECLAIMED);
             _freeList.Add(counterId);
         }
@@ -343,7 +350,7 @@ namespace Adaptive.Agrona.Concurrent.Status
 
                 if (nowMs >= deadlineMs)
                 {
-                    _freeList.Remove(i);
+                    _freeList.RemoveAt(i);
                     ValuesBuffer.PutLongOrdered(CounterOffset(counterId), 0L);
 
                     return counterId;
