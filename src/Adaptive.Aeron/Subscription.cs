@@ -291,6 +291,27 @@ namespace Adaptive.Aeron
         }
 
         /// <summary>
+        /// Poll in a non-blocking manner for available message fragments on each <see cref="Image"/> in turn,
+        /// delivered to the supplied <see cref="RawBlockHandler"/> as raw blocks.
+        /// <para>
+        /// This method is useful for operations like bulk archiving a stream to file.
+        /// </para>
+        /// </summary>
+        /// <param name="rawBlockHandler"> to receive a block of fragments from each <see cref="Image"/>. </param>
+        /// <param name="blockLengthLimit"> for each <see cref="Image"/> polled. </param>
+        /// <returns> the number of bytes consumed across all images. </returns>
+        public long RawPoll(RawBlockHandler rawBlockHandler, int blockLengthLimit)
+        {
+            long bytesConsumed = 0;
+            foreach (var image in _fields.images)
+            {
+                bytesConsumed += image.RawPoll(rawBlockHandler, blockLengthLimit);
+            }
+
+            return bytesConsumed;
+        }
+
+        /// <summary>
         /// Is this subscription connected by having at least one open publication <seealso cref="Image"/>.
         /// </summary>
         /// <returns> true if this subscription connected by having at least one open publication  <seealso cref="Image"/>. </returns>

@@ -578,6 +578,277 @@ namespace Adaptive.Aeron.Tests
                 .Then(A.CallTo(() => Position.SetRelease(TERM_BUFFER_LENGTH)).MustHaveHappened());
         }
 
+        [Test]
+        public void BlockPollDeliversBlockAndAdvancesPosition()
+        {
+            var initialPosition = LogBufferDescriptor.ComputePosition(
+                INITIAL_TERM_ID, 0, POSITION_BITS_TO_SHIFT, INITIAL_TERM_ID);
+            Position.SetRelease(initialPosition);
+            var image = CreateImage();
+
+            InsertDataFrame(INITIAL_TERM_ID, OffsetForFrame(0));
+
+            int handlerCallCount = 0;
+            int receivedOffset = -1, receivedLength = -1, receivedSessionId = -1, receivedTermId = -1;
+            var bytes = image.BlockPoll(
+                (buffer, offset, length, sessionId, termId) =>
+                {
+                    handlerCallCount++;
+                    receivedOffset = offset;
+                    receivedLength = length;
+                    receivedSessionId = sessionId;
+                    receivedTermId = termId;
+                },
+                int.MaxValue);
+
+            Assert.AreEqual(ALIGNED_FRAME_LENGTH, bytes);
+            Assert.AreEqual(1, handlerCallCount);
+            Assert.AreEqual(0, receivedOffset);
+            Assert.AreEqual(ALIGNED_FRAME_LENGTH, receivedLength);
+            Assert.AreEqual(SESSION_ID, receivedSessionId);
+            Assert.AreEqual(INITIAL_TERM_ID, receivedTermId);
+            Assert.AreEqual(initialPosition + ALIGNED_FRAME_LENGTH, image.Position);
+        }
+
+        [Test]
+        public void BlockPollReturnsZeroAndDoesNothingWhenClosed()
+        {
+            var initialPosition = LogBufferDescriptor.ComputePosition(
+                INITIAL_TERM_ID, 0, POSITION_BITS_TO_SHIFT, INITIAL_TERM_ID);
+            Position.SetRelease(initialPosition);
+            var image = CreateImage();
+
+            InsertDataFrame(INITIAL_TERM_ID, OffsetForFrame(0));
+            image.Close();
+
+            bool handlerCalled = false;
+            var bytes = image.BlockPoll((b, o, l, s, t) => handlerCalled = true, int.MaxValue);
+
+            Assert.AreEqual(0, bytes);
+            Assert.IsFalse(handlerCalled);
+            Assert.AreEqual(initialPosition, image.Position);
+        }
+
+        [Test]
+        public void BlockPollReturnsZeroWhenNoFramesAvailable()
+        {
+            var image = CreateImage();
+
+            bool handlerCalled = false;
+            var bytes = image.BlockPoll((b, o, l, s, t) => handlerCalled = true, int.MaxValue);
+
+            Assert.AreEqual(0, bytes);
+            Assert.IsFalse(handlerCalled);
+        }
+
+        [Test]
+        public void BlockPollRespectsBlockLengthLimit()
+        {
+            var initialPosition = LogBufferDescriptor.ComputePosition(
+                INITIAL_TERM_ID, 0, POSITION_BITS_TO_SHIFT, INITIAL_TERM_ID);
+            Position.SetRelease(initialPosition);
+            var image = CreateImage();
+
+            InsertDataFrame(INITIAL_TERM_ID, OffsetForFrame(0));
+            InsertDataFrame(INITIAL_TERM_ID, OffsetForFrame(1));
+
+            int handlerCallCount = 0;
+            int receivedLength = -1;
+            var bytes = image.BlockPoll(
+                (b, o, l, s, t) => { handlerCallCount++; receivedLength = l; },
+                ALIGNED_FRAME_LENGTH + 1);
+
+            Assert.AreEqual(ALIGNED_FRAME_LENGTH, bytes);
+            Assert.AreEqual(1, handlerCallCount);
+            Assert.AreEqual(ALIGNED_FRAME_LENGTH, receivedLength);
+            Assert.AreEqual(initialPosition + ALIGNED_FRAME_LENGTH, image.Position);
+        }
+
+        [Test]
+        public void BlockPollDeliversPaddingFrameWhenFirstFrameIsPadding()
+        {
+            // Padding frame placed near end of term so the helper's TermRebuilder.Insert call
+            // copies only ALIGNED_FRAME_LENGTH bytes (RcvBuffer's capacity). Scan starts at
+            // paddingOffset and the first frame is padding, exercising the corner case.
+            int paddingOffset = TERM_BUFFER_LENGTH - ALIGNED_FRAME_LENGTH;
+            var initialPosition = LogBufferDescriptor.ComputePosition(
+                INITIAL_TERM_ID, paddingOffset, POSITION_BITS_TO_SHIFT, INITIAL_TERM_ID);
+            Position.SetRelease(initialPosition);
+            var image = CreateImage();
+
+            InsertPaddingFrame(INITIAL_TERM_ID, paddingOffset);
+
+            int handlerCallCount = 0;
+            int receivedLength = -1;
+            var bytes = image.BlockPoll(
+                (b, o, l, s, t) => { handlerCallCount++; receivedLength = l; },
+                TERM_BUFFER_LENGTH);
+
+            Assert.AreEqual(ALIGNED_FRAME_LENGTH, bytes);
+            Assert.AreEqual(1, handlerCallCount);
+            Assert.AreEqual(ALIGNED_FRAME_LENGTH, receivedLength);
+            Assert.AreEqual(initialPosition + ALIGNED_FRAME_LENGTH, image.Position);
+        }
+
+        [Test]
+        public void RawPollDeliversBlockAndAdvancesPosition()
+        {
+            var initialPosition = LogBufferDescriptor.ComputePosition(
+                INITIAL_TERM_ID, 0, POSITION_BITS_TO_SHIFT, INITIAL_TERM_ID);
+            Position.SetRelease(initialPosition);
+            var image = CreateImage();
+
+            InsertDataFrame(INITIAL_TERM_ID, OffsetForFrame(0));
+
+            int handlerCallCount = 0;
+            long receivedFileOffset = -1;
+            int receivedTermOffset = -1, receivedLength = -1, receivedSessionId = -1, receivedTermId = -1;
+            var bytes = image.RawPoll(
+                (fs, fileOffset, buf, termOffset, length, sessionId, termId) =>
+                {
+                    handlerCallCount++;
+                    receivedFileOffset = fileOffset;
+                    receivedTermOffset = termOffset;
+                    receivedLength = length;
+                    receivedSessionId = sessionId;
+                    receivedTermId = termId;
+                },
+                int.MaxValue);
+
+            Assert.AreEqual(ALIGNED_FRAME_LENGTH, bytes);
+            Assert.AreEqual(1, handlerCallCount);
+            Assert.AreEqual(0L, receivedFileOffset);
+            Assert.AreEqual(0, receivedTermOffset);
+            Assert.AreEqual(ALIGNED_FRAME_LENGTH, receivedLength);
+            Assert.AreEqual(SESSION_ID, receivedSessionId);
+            Assert.AreEqual(INITIAL_TERM_ID, receivedTermId);
+            Assert.AreEqual(initialPosition + ALIGNED_FRAME_LENGTH, image.Position);
+        }
+
+        [Test]
+        public void RawPollComputesFileOffsetForNonZeroPartition()
+        {
+            // Place the subscriber position into partition index 2; fileOffset must be
+            // (capacity * activeIndex) + termOffset.
+            int activeTermId = INITIAL_TERM_ID + 2;
+            int termOffset = OffsetForFrame(0);
+            var initialPosition = LogBufferDescriptor.ComputePosition(
+                activeTermId, termOffset, POSITION_BITS_TO_SHIFT, INITIAL_TERM_ID);
+            Position.SetRelease(initialPosition);
+            var image = CreateImage();
+
+            InsertDataFrame(activeTermId, termOffset);
+
+            long receivedFileOffset = -1;
+            var bytes = image.RawPoll(
+                (fs, fileOffset, buf, to, l, s, t) => receivedFileOffset = fileOffset,
+                int.MaxValue);
+
+            Assert.AreEqual(ALIGNED_FRAME_LENGTH, bytes);
+            long expectedFileOffset = (long)TERM_BUFFER_LENGTH * 2 + termOffset;
+            Assert.AreEqual(expectedFileOffset, receivedFileOffset);
+        }
+
+        [Test]
+        public void RawPollReturnsZeroAndDoesNothingWhenClosed()
+        {
+            var initialPosition = LogBufferDescriptor.ComputePosition(
+                INITIAL_TERM_ID, 0, POSITION_BITS_TO_SHIFT, INITIAL_TERM_ID);
+            Position.SetRelease(initialPosition);
+            var image = CreateImage();
+
+            InsertDataFrame(INITIAL_TERM_ID, OffsetForFrame(0));
+            image.Close();
+
+            bool handlerCalled = false;
+            var bytes = image.RawPoll((fs, fo, buf, to, l, s, t) => handlerCalled = true, int.MaxValue);
+
+            Assert.AreEqual(0, bytes);
+            Assert.IsFalse(handlerCalled);
+            Assert.AreEqual(initialPosition, image.Position);
+        }
+
+        [Test]
+        public void RawPollReturnsZeroWhenNoFramesAvailable()
+        {
+            var image = CreateImage();
+
+            bool handlerCalled = false;
+            var bytes = image.RawPoll((fs, fo, buf, to, l, s, t) => handlerCalled = true, int.MaxValue);
+
+            Assert.AreEqual(0, bytes);
+            Assert.IsFalse(handlerCalled);
+        }
+
+        [Test]
+        public void RawPollDeliversPaddingFrameWhenFirstFrameIsPadding()
+        {
+            int paddingOffset = TERM_BUFFER_LENGTH - ALIGNED_FRAME_LENGTH;
+            var initialPosition = LogBufferDescriptor.ComputePosition(
+                INITIAL_TERM_ID, paddingOffset, POSITION_BITS_TO_SHIFT, INITIAL_TERM_ID);
+            Position.SetRelease(initialPosition);
+            var image = CreateImage();
+
+            InsertPaddingFrame(INITIAL_TERM_ID, paddingOffset);
+
+            int handlerCallCount = 0;
+            int receivedLength = -1;
+            var bytes = image.RawPoll(
+                (fs, fo, buf, to, l, s, t) => { handlerCallCount++; receivedLength = l; },
+                TERM_BUFFER_LENGTH);
+
+            Assert.AreEqual(ALIGNED_FRAME_LENGTH, bytes);
+            Assert.AreEqual(1, handlerCallCount);
+            Assert.AreEqual(ALIGNED_FRAME_LENGTH, receivedLength);
+            Assert.AreEqual(initialPosition + ALIGNED_FRAME_LENGTH, image.Position);
+        }
+
+        [Test]
+        public void BlockPollClampsBlockLengthLimitWithoutIntegerOverflow()
+        {
+            int frameOffset = ALIGNED_FRAME_LENGTH;
+            var initialPosition = LogBufferDescriptor.ComputePosition(
+                INITIAL_TERM_ID, frameOffset, POSITION_BITS_TO_SHIFT, INITIAL_TERM_ID);
+            Position.SetRelease(initialPosition);
+            var image = CreateImage();
+
+            InsertDataFrame(INITIAL_TERM_ID, frameOffset);
+
+            int handlerCallCount = 0;
+            int receivedLength = -1;
+            var bytes = image.BlockPoll(
+                (b, o, l, s, t) => { handlerCallCount++; receivedLength = l; },
+                int.MaxValue);
+
+            Assert.AreEqual(ALIGNED_FRAME_LENGTH, bytes);
+            Assert.AreEqual(1, handlerCallCount);
+            Assert.AreEqual(ALIGNED_FRAME_LENGTH, receivedLength);
+            Assert.AreEqual(initialPosition + ALIGNED_FRAME_LENGTH, image.Position);
+        }
+
+        [Test]
+        public void RawPollClampsBlockLengthLimitWithoutIntegerOverflow()
+        {
+            int frameOffset = ALIGNED_FRAME_LENGTH;
+            var initialPosition = LogBufferDescriptor.ComputePosition(
+                INITIAL_TERM_ID, frameOffset, POSITION_BITS_TO_SHIFT, INITIAL_TERM_ID);
+            Position.SetRelease(initialPosition);
+            var image = CreateImage();
+
+            InsertDataFrame(INITIAL_TERM_ID, frameOffset);
+
+            int handlerCallCount = 0;
+            int receivedLength = -1;
+            var bytes = image.RawPoll(
+                (fs, fo, buf, to, l, s, t) => { handlerCallCount++; receivedLength = l; },
+                int.MaxValue);
+
+            Assert.AreEqual(ALIGNED_FRAME_LENGTH, bytes);
+            Assert.AreEqual(1, handlerCallCount);
+            Assert.AreEqual(ALIGNED_FRAME_LENGTH, receivedLength);
+            Assert.AreEqual(initialPosition + ALIGNED_FRAME_LENGTH, image.Position);
+        }
+
         private Image CreateImage()
         {
             return new Image(Subscription, SESSION_ID, Position, LogBuffers, ErrorHandler, SOURCE_IDENTITY,

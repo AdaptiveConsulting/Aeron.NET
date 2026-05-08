@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright 2014 - 2017 Adaptive Financial Consulting Ltd
+ * Copyright 2014 - 2026 Adaptive Financial Consulting Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -39,6 +39,7 @@ namespace Adaptive.Aeron
         private readonly UnsafeBuffer[] _termBuffers = new UnsafeBuffer[LogBufferDescriptor.PARTITION_COUNT];
         private readonly UnsafeBuffer _logMetaDataBuffer;
         private readonly MappedByteBuffer[] _mappedByteBuffers;
+        private readonly FileStream _fileStream;
 
         // ReSharper disable once UnusedMember.Global
         //
@@ -57,12 +58,19 @@ namespace Adaptive.Aeron
             int termLength = 0;
             UnsafeBuffer logMetaDataBuffer = null;
             MappedByteBuffer[] mappedByteBuffers = null;
+            FileStream fileStream = null;
 
             try
             {
                 var fileInfo = new FileInfo(logFileName);
 
                 var logLength = fileInfo.Length;
+
+                fileStream = new FileStream(
+                    logFileName,
+                    FileMode.Open,
+                    FileAccess.Read,
+                    FileShare.ReadWrite | FileShare.Delete);
                 
                 if (logLength < LogBufferDescriptor.LOG_META_DATA_LENGTH)
                 {
@@ -137,14 +145,22 @@ namespace Adaptive.Aeron
             }
             catch (InvalidOperationException)
             {
-                Dispose(logMetaDataBuffer, mappedByteBuffers);
+                Dispose(logMetaDataBuffer, mappedByteBuffers, fileStream);
                 throw;
             }
-            
+
             _termLength = termLength;
             _logMetaDataBuffer = logMetaDataBuffer;
             _mappedByteBuffers = mappedByteBuffers;
+            _fileStream = fileStream;
         }
+
+        /// <summary>
+        /// Read-only stream over the log file. Shares the underlying file with the memory mapping;
+        /// callers must not write to it. Useful for raw-block consumers that want positioned reads
+        /// or zero-copy hand-off to a socket via <c>Socket.SendFile</c>.
+        /// </summary>
+        public FileStream FileStream => _fileStream;
 
         public UnsafeBuffer[] DuplicateTermBuffers()
         {
@@ -182,7 +198,7 @@ namespace Adaptive.Aeron
 
         public void Dispose()
         {
-           Dispose(_logMetaDataBuffer, _mappedByteBuffers);
+            Dispose(_logMetaDataBuffer, _mappedByteBuffers, _fileStream);
         }
 
         /// <summary>
@@ -230,7 +246,8 @@ namespace Adaptive.Aeron
             return lingerDeadlineNs;
         }
 
-        private static void Dispose(UnsafeBuffer logMetaDataBuffer, MappedByteBuffer[] mappedByteBuffers)
+        private static void Dispose(
+            UnsafeBuffer logMetaDataBuffer, MappedByteBuffer[] mappedByteBuffers, FileStream fileStream)
         {
             if (null != logMetaDataBuffer)
             {
@@ -247,6 +264,10 @@ namespace Adaptive.Aeron
                 }
             }
 
+            if (null != fileStream)
+            {
+                fileStream.Dispose();
+            }
         }
     }
 }
