@@ -2530,7 +2530,8 @@ namespace Adaptive.Cluster.Client
                     null == oldLeader.publicationException &&
                     newLeader.endpoint.Equals(oldLeader.endpoint))
                 {
-                    ingressPublication = newLeader.publication = oldLeader.publication;
+                    newLeader.publication = oldLeader.publication;
+                    ingressPublication = oldLeader.publication;
                     newLeader.registrationId = oldLeader.registrationId;
                 }
                 else
