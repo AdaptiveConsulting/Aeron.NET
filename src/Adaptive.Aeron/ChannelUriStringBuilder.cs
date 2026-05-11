@@ -927,7 +927,7 @@ namespace Adaptive.Aeron
         {
             if (null != lingerNs && lingerNs < 0)
             {
-                throw new ArgumentException("linger value cannot be negative: " + lingerNs);
+                throw new ArgumentException("`linger` value cannot be negative: " + lingerNs);
             }
 
             _linger = lingerNs;
@@ -1962,7 +1962,7 @@ namespace Adaptive.Aeron
         /// <seealso cref="Aeron.Context.NAK_DELAY_PARAM_NAME"/>
         public ChannelUriStringBuilder NakDelay(string nakDelay)
         {
-            if (null != this.nakDelay)
+            if (null != nakDelay)
             {
                 this.nakDelay = SystemUtil.ParseDuration(NAK_DELAY_PARAM_NAME, nakDelay);
             }
@@ -1971,6 +1971,22 @@ namespace Adaptive.Aeron
                 this.nakDelay = null;
             }
 
+            return this;
+        }
+
+        /// <summary>
+        /// The delay in nanoseconds to apply before sending a NAK in response to a gap being detected by the receiver.
+        /// </summary>
+        /// <param name="nakDelayNs"> in nanoseconds; must be non-negative; null clears. </param>
+        /// <returns> this for a fluent API. </returns>
+        /// <seealso cref="Aeron.Context.NAK_DELAY_PARAM_NAME"/>
+        public ChannelUriStringBuilder NakDelay(long? nakDelayNs)
+        {
+            if (null != nakDelayNs && nakDelayNs.Value < 0)
+            {
+                throw new ArgumentException("`" + NAK_DELAY_PARAM_NAME + "` value cannot be negative: " + nakDelayNs);
+            }
+            this.nakDelay = nakDelayNs;
             return this;
         }
 
@@ -2331,8 +2347,8 @@ namespace Adaptive.Aeron
             AppendParameter(_sb, INTERFACE_PARAM_NAME, _networkInterface);
             AppendParameter(_sb, MDC_CONTROL_PARAM_NAME, _controlEndpoint);
             AppendParameter(_sb, MDC_CONTROL_MODE_PARAM_NAME, _controlMode);
-            AppendParameter(_sb, MTU_LENGTH_PARAM_NAME, _mtu);
-            AppendParameter(_sb, TERM_LENGTH_PARAM_NAME, _termLength);
+            AppendSize(_sb, MTU_LENGTH_PARAM_NAME, _mtu);
+            AppendSize(_sb, TERM_LENGTH_PARAM_NAME, _termLength);
             AppendParameter(_sb, INITIAL_TERM_ID_PARAM_NAME, _initialTermId);
             AppendParameter(_sb, TERM_ID_PARAM_NAME, _termId);
             AppendParameter(_sb, TERM_OFFSET_PARAM_NAME, _termOffset);
@@ -2344,7 +2360,7 @@ namespace Adaptive.Aeron
 
             AppendParameter(_sb, TTL_PARAM_NAME, _ttl);
             AppendParameter(_sb, RELIABLE_STREAM_PARAM_NAME, _reliable);
-            AppendParameter(_sb, LINGER_PARAM_NAME, _linger);
+            AppendDuration(_sb, LINGER_PARAM_NAME, _linger);
             AppendParameter(_sb, ALIAS_PARAM_NAME, _alias);
             AppendParameter(_sb, CONGESTION_CONTROL_PARAM_NAME, _cc);
             AppendParameter(_sb, FLOW_CONTROL_PARAM_NAME, _fc);
@@ -2355,22 +2371,22 @@ namespace Adaptive.Aeron
             AppendParameter(_sb, GROUP_PARAM_NAME, _group);
             AppendParameter(_sb, REJOIN_PARAM_NAME, _rejoin);
             AppendParameter(_sb, SPIES_SIMULATE_CONNECTION_PARAM_NAME, _ssc);
-            AppendParameter(_sb, SOCKET_SNDBUF_PARAM_NAME, _socketSndbufLength);
-            AppendParameter(_sb, SOCKET_RCVBUF_PARAM_NAME, _socketRcvbufLength);
-            AppendParameter(_sb, RECEIVER_WINDOW_LENGTH_PARAM_NAME, _receiverWindowLength);
+            AppendSize(_sb, SOCKET_SNDBUF_PARAM_NAME, _socketSndbufLength);
+            AppendSize(_sb, SOCKET_RCVBUF_PARAM_NAME, _socketRcvbufLength);
+            AppendSize(_sb, RECEIVER_WINDOW_LENGTH_PARAM_NAME, _receiverWindowLength);
             AppendParameter(_sb, MEDIA_RCV_TIMESTAMP_OFFSET_PARAM_NAME, _mediaReceiveTimestampOffset);
             AppendParameter(_sb, CHANNEL_RECEIVE_TIMESTAMP_OFFSET_PARAM_NAME,
                 _channelReceiveTimestampOffset);
             AppendParameter(_sb, CHANNEL_SEND_TIMESTAMP_OFFSET_PARAM_NAME, _channelSendTimestampOffset);
             AppendParameter(_sb, RESPONSE_ENDPOINT_PARAM_NAME, _responseEndpoint);
             AppendParameter(_sb, RESPONSE_CORRELATION_ID_PARAM_NAME, _responseCorrelationId);
-            AppendParameter(_sb, NAK_DELAY_PARAM_NAME, nakDelay);
-            AppendParameter(_sb, UNTETHERED_WINDOW_LIMIT_TIMEOUT_PARAM_NAME, _untetheredWindowLimitTimeoutNs);
-            AppendParameter(_sb, UNTETHERED_LINGER_TIMEOUT_PARAM_NAME, _untetheredLingerTimeoutNs);
-            AppendParameter(_sb, UNTETHERED_RESTING_TIMEOUT_PARAM_NAME, untetheredRestingTimeoutNs);
+            AppendDuration(_sb, NAK_DELAY_PARAM_NAME, nakDelay);
+            AppendDuration(_sb, UNTETHERED_WINDOW_LIMIT_TIMEOUT_PARAM_NAME, _untetheredWindowLimitTimeoutNs);
+            AppendDuration(_sb, UNTETHERED_LINGER_TIMEOUT_PARAM_NAME, _untetheredLingerTimeoutNs);
+            AppendDuration(_sb, UNTETHERED_RESTING_TIMEOUT_PARAM_NAME, untetheredRestingTimeoutNs);
             AppendParameter(_sb, MAX_RESEND_PARAM_NAME, _maxResend);
             AppendParameter(_sb, STREAM_ID_PARAM_NAME, _streamId);
-            AppendParameter(_sb, PUBLICATION_WINDOW_LENGTH_PARAM_NAME, _publicationWindowLength);
+            AppendSize(_sb, PUBLICATION_WINDOW_LENGTH_PARAM_NAME, _publicationWindowLength);
 
 
             char lastChar = _sb[_sb.Length - 1];
@@ -2386,7 +2402,29 @@ namespace Adaptive.Aeron
         {
             if (null != paramValue)
             {
-                sb.Append(paramName).Append('=').Append(paramValue).Append('|');
+                sb.Append(paramName).Append('=').Append(FormatValue(paramValue)).Append('|');
+            }
+        }
+
+        private static string FormatValue(object value)
+        {
+            if (value is bool b) return b ? "true" : "false";
+            return value.ToString();
+        }
+
+        private static void AppendSize(StringBuilder sb, string paramName, int? value)
+        {
+            if (null != value)
+            {
+                sb.Append(paramName).Append('=').Append(SystemUtil.FormatSize(value.Value)).Append('|');
+            }
+        }
+
+        private static void AppendDuration(StringBuilder sb, string paramName, long? valueNs)
+        {
+            if (null != valueNs)
+            {
+                sb.Append(paramName).Append('=').Append(SystemUtil.FormatDuration(valueNs.Value)).Append('|');
             }
         }
 

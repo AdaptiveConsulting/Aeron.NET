@@ -576,6 +576,61 @@ namespace Adaptive.Aeron
         }
 
         /// <summary>
+        /// Compute a map of differences between this <see cref="ChannelUri"/> and another. Each entry's value
+        /// is a "this != that" string describing the divergence.
+        /// </summary>
+        /// <param name="that"> to compare against. </param>
+        /// <returns> a map of differences, empty if the two URIs are equivalent. </returns>
+        public IDictionary<string, string> Diff(ChannelUri that)
+        {
+            var differingValues = new Dictionary<string, string>();
+
+            if (!string.Equals(_prefix, that._prefix))
+            {
+                differingValues["prefix"] = _prefix + " != " + that._prefix;
+            }
+
+            if (!string.Equals(_media, that._media))
+            {
+                differingValues["media"] = _media + " != " + that._media;
+            }
+
+            _params.ForEach((key, value) =>
+            {
+                string thatValue = that._params.Get(key);
+                if (!string.Equals(value, thatValue))
+                {
+                    differingValues[key] = value + " != " + thatValue;
+                }
+            });
+
+            if (!TagsEqual(_tags, that._tags))
+            {
+                differingValues[TAGS_PARAM_NAME] = TagsToString(_tags) + " != " + TagsToString(that._tags);
+            }
+
+            return differingValues;
+        }
+
+        private static bool TagsEqual(string[] a, string[] b)
+        {
+            if (ReferenceEquals(a, b)) return true;
+            if (a == null || b == null) return false;
+            if (a.Length != b.Length) return false;
+            for (int i = 0; i < a.Length; i++)
+            {
+                if (!string.Equals(a[i], b[i])) return false;
+            }
+            return true;
+        }
+
+        private static string TagsToString(string[] tags)
+        {
+            if (tags == null) return "null";
+            return "[" + string.Join(", ", tags) + "]";
+        }
+
+        /// <summary>
         /// Determines if this channel has specified <code>control-mode=response</code>.
         /// </summary>
         /// <returns> true if this channel has specified <code>control-mode=response</code>. </returns>

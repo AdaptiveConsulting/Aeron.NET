@@ -28,9 +28,22 @@ namespace Adaptive.Aeron.Exceptions
             Exception cause = error;
             while (null != cause)
             {
+                if (cause is StorageSpaceException)
+                {
+                    return true;
+                }
+
                 if (cause is IOException)
                 {
-                    if ((uint)error.HResult == 0x80070070)
+                    string message = cause.Message;
+                    if (null != message &&
+                        (message.Contains("No space left on device") ||
+                         message.Contains("There is not enough space on the disk")))
+                    {
+                        return true;
+                    }
+
+                    if ((uint)cause.HResult == 0x80070070)
                     {
                         return true;
                     }

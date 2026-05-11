@@ -837,6 +837,23 @@ namespace Adaptive.Aeron
         }
 
         /// <summary>
+        /// Append version information at the end of the counter's label, including a commit hash.
+        /// </summary>
+        /// <param name="tempBuffer">     to append label to. </param>
+        /// <param name="offset">         at which current label data ends. </param>
+        /// <param name="fullVersion">    of the component. </param>
+        /// <param name="commitHashCode"> identifying the commit. </param>
+        /// <returns> length of the suffix appended. </returns>
+        public static int AppendVersionInfo(
+            IMutableDirectBuffer tempBuffer, int offset, string fullVersion, string commitHashCode)
+        {
+            int length = tempBuffer.PutStringWithoutLengthAscii(offset, " ");
+            length += tempBuffer.PutStringWithoutLengthAscii(
+                offset + length, FormatVersionInfo(fullVersion, commitHashCode));
+            return length;
+        }
+
+        /// <summary>
         /// Append specified {@code value} at the end of the counter's label as ASCII encoded value up to the
         /// <seealso cref="CountersReader.MAX_LABEL_LENGTH"/>.
         /// </summary>
@@ -882,6 +899,34 @@ namespace Adaptive.Aeron
         public static string FormatVersionInfo(string fullVersion)
         {
             return "version=" + fullVersion;
+        }
+
+        /// <summary>
+        /// Format version information together with a commit hash for display purposes.
+        /// </summary>
+        /// <param name="fullVersion"> of the component. </param>
+        /// <param name="commitHash">  identifying the commit. </param>
+        /// <returns> formatted String. </returns>
+        public static string FormatVersionInfo(string fullVersion, string commitHash)
+        {
+            return "version=" + fullVersion + " commit=" + commitHash;
+        }
+
+        /// <summary>
+        /// Set a reference id for a given counter id.
+        /// </summary>
+        /// <param name="metaDataBuffer"> containing the counter metadata. </param>
+        /// <param name="valuesBuffer">   containing the counter values. </param>
+        /// <param name="counterId">      to be set. </param>
+        /// <param name="referenceId">    to set for the counter. </param>
+        public static void SetReferenceId(
+            IAtomicBuffer metaDataBuffer, IAtomicBuffer valuesBuffer, int counterId, long referenceId)
+        {
+            if (null == metaDataBuffer) throw new ArgumentNullException(nameof(metaDataBuffer));
+            if (null == valuesBuffer) throw new ArgumentNullException(nameof(valuesBuffer));
+            ValidateCounterId(metaDataBuffer, counterId);
+
+            valuesBuffer.PutLongRelease(CounterOffset(counterId) + REFERENCE_ID_OFFSET, referenceId);
         }
 
         private static void ValidateCounterId(IAtomicBuffer metaDataBuffer, int counterId)
