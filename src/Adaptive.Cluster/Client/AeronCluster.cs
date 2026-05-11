@@ -956,7 +956,7 @@ namespace Adaptive.Cluster.Client
             }
             else
             {
-                _publication = AddIngressPublication(_ctx, _ctx.IngressChannel(), _ctx.IngressStreamId());
+                _publication = AddNewLeaderIngressPublication(_ctx, _ctx.IngressChannel(), _ctx.IngressStreamId());
             }
 
             _fragmentAssembler.Clear();
@@ -2009,7 +2009,7 @@ namespace Adaptive.Cluster.Client
                         workDone += conductorAgentInvoker.Invoke();
                     }
                 }
-                
+
                 if (null != agentInvoker)
                 {
                     workDone += agentInvoker.Invoke();
@@ -2320,18 +2320,25 @@ namespace Adaptive.Cluster.Client
             {
                 if (null == ctx.IngressEndpoints())
                 {
-                    if (NULL_VALUE == ingressRegistrationId)
-                    {
-                        ingressRegistrationId =
-                            AsyncAddIngressPublication(ctx, ctx.IngressChannel(), ctx.IngressStreamId());
-                    }
-
                     if (null == ingressPublication)
                     {
-                        ingressPublication = GetIngressPublication(ctx, ingressRegistrationId);
-                    }
+                        if (NULL_VALUE == ingressRegistrationId)
+                        {
+                            ingressRegistrationId =
+                                AsyncAddIngressPublication(ctx, ctx.IngressChannel(), ctx.IngressStreamId());
+                        }
 
-                    if (null != ingressPublication)
+                        try
+                        {
+                            ingressPublication = GetIngressPublication(ctx, ingressRegistrationId);
+                        }
+                        catch (RegistrationException)
+                        {
+                            ingressRegistrationId = NULL_VALUE;
+                            throw;
+                        }
+                    }
+                    else
                     {
                         ingressRegistrationId = NULL_VALUE;
                         State(AWAIT_PUBLICATION_CONNECTED);

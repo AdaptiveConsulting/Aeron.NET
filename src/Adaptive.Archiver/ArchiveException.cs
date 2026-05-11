@@ -170,5 +170,33 @@ namespace Adaptive.Archiver
             ErrorCode = errorCode;
             CorrelationId = correlationId;
         }
+
+        /// <summary>
+        /// Get the human-readable name for an error code.
+        /// </summary>
+        /// <param name="errorCode"> to lookup. </param>
+        /// <returns> the name of the error code, or "unknown error code: {errorCode}" if unrecognised. </returns>
+        public static string ErrorCodeAsString(int errorCode)
+        {
+            switch (errorCode)
+            {
+                case GENERIC: return "GENERIC";
+                case ACTIVE_LISTING: return "ACTIVE_LISTING";
+                case ACTIVE_RECORDING: return "ACTIVE_RECORDING";
+                case ACTIVE_SUBSCRIPTION: return "ACTIVE_SUBSCRIPTION";
+                case UNKNOWN_SUBSCRIPTION: return "UNKNOWN_SUBSCRIPTION";
+                case UNKNOWN_RECORDING: return "UNKNOWN_RECORDING";
+                case UNKNOWN_REPLAY: return "UNKNOWN_REPLAY";
+                case MAX_REPLAYS: return "MAX_REPLAYS";
+                case MAX_RECORDINGS: return "MAX_RECORDINGS";
+                case INVALID_EXTENSION: return "INVALID_EXTENSION";
+                case AUTHENTICATION_REJECTED: return "AUTHENTICATION_REJECTED";
+                case STORAGE_SPACE: return "STORAGE_SPACE";
+                case UNKNOWN_REPLICATION: return "UNKNOWN_REPLICATION";
+                case UNAUTHORISED_ACTION: return "UNAUTHORISED_ACTION";
+                case REPLICATION_CONNECTION_FAILURE: return "REPLICATION_CONNECTION_FAILURE";
+                default: return "unknown error code: " + errorCode;
+            }
+        }
     }
 }

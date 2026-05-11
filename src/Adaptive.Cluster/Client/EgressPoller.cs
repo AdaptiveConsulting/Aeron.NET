@@ -211,8 +211,7 @@ namespace Adaptive.Cluster.Client
             int schemaId = messageHeaderDecoder.SchemaId();
             if (schemaId != MessageHeaderDecoder.SCHEMA_ID)
             {
-                throw new ClusterException("expected schemaId=" + MessageHeaderDecoder.SCHEMA_ID + ", actual=" +
-                                           schemaId);
+                return CONTINUE;
             }
 
             templateId = messageHeaderDecoder.TemplateId();
