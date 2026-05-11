@@ -461,7 +461,7 @@ namespace Adaptive.Aeron.Tests
             {
                 const int partitionIndex = 2;
                 int termId = TERM_ID_1 + 2;
-                const int termOffset = 978;
+                const int termOffset = 992;
                 const int offset = 11;
                 const int length = 23;
                 A.CallTo(() => _publicationLimit.GetVolatile()).Returns(int.MaxValue);
@@ -472,7 +472,7 @@ namespace Adaptive.Aeron.Tests
                 long position = _publication.Offer(sendBuffer, offset, length,
                     (termBuffer, frameOffset, frameLength) => long.MinValue);
 
-                Assert.AreEqual(525330, position);
+                Assert.AreEqual(525344, position);
                 UnsafeBuffer termBuffer = _termBuffers[partitionIndex];
                 Assert.AreEqual(long.MinValue, ReservedValue(termBuffer, termOffset));
                 for (int i = 0; i < length; i++)
