@@ -400,8 +400,8 @@ namespace Adaptive.Aeron.Tests
 
             protected override void OnSuccess(UnsafeBuffer termBuffer, int termOffset, int length)
             {
-                int index = 0,
-                    processedBytes = 0;
+                int index = 0;
+                int processedBytes = 0;
                 int offset = termOffset;
                 UnsafeBuffer dataBuffer = Buffer(0);
                 while (processedBytes < length)
