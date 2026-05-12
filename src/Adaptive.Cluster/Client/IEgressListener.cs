@@ -1,4 +1,20 @@
-﻿using Adaptive.Aeron.LogBuffer;
+﻿/*
+ * Copyright 2014 - 2026 Adaptive Financial Consulting Ltd
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+using Adaptive.Aeron.LogBuffer;
 using Adaptive.Agrona;
 using Adaptive.Cluster.Codecs;
 
@@ -24,7 +40,8 @@ namespace Adaptive.Cluster.Client
             IDirectBuffer buffer,
             int offset,
             int length,
-            Header header);
+            Header header
+        );
 
         /// <summary>
         /// Session event emitted from the cluster which after connect can indicate an error or session close.
@@ -41,7 +58,8 @@ namespace Adaptive.Cluster.Client
             long leadershipTermId,
             int leaderMemberId,
             EventCode code,
-            string detail);
+            string detail
+        );
 
         /// <summary>
         /// Event indicating a new leader has been elected.
@@ -49,9 +67,10 @@ namespace Adaptive.Cluster.Client
         /// <param name="clusterSessionId"> to which the event belongs. </param>
         /// <param name="leadershipTermId"> for identifying the active term of leadership </param>
         /// <param name="leaderMemberId">   identity of the active leader. </param>
-        /// <param name="ingressEndpoints">  for connecting to the cluster which can be updated due to dynamic membership. </param>
+        /// <param name="ingressEndpoints"> for connecting to the cluster which can be updated due to dynamic
+        /// membership. </param>
         void OnNewLeader(long clusterSessionId, long leadershipTermId, int leaderMemberId, string ingressEndpoints);
-        
+
         /// <summary>
         /// Message returned in response to an admin request.
         /// </summary>
@@ -63,7 +82,15 @@ namespace Adaptive.Cluster.Client
         /// <param name="payload">          delivered with the response, can be empty. </param>
         /// <param name="payloadOffset">    into the payload buffer. </param>
         /// <param name="payloadLength">    of the payload. </param>
-        void OnAdminResponse(long clusterSessionId, long correlationId, AdminRequestType requestType,
-            AdminResponseCode responseCode, string message, IDirectBuffer payload, int payloadOffset, int payloadLength);
+        void OnAdminResponse(
+            long clusterSessionId,
+            long correlationId,
+            AdminRequestType requestType,
+            AdminResponseCode responseCode,
+            string message,
+            IDirectBuffer payload,
+            int payloadOffset,
+            int payloadLength
+        );
     }
 }

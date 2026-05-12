@@ -19,7 +19,7 @@ using System.Threading;
 namespace Adaptive.Agrona.Concurrent
 {
     /// <summary>
-    /// <see cref="IIdleStrategy"/> which uses a <see cref="SpinWait"/>.
+    /// <see cref="IIdleStrategy"/> which uses a <see cref="SpinWait"/> .
     /// </summary>
     public class SpinWaitIdleStrategy : IIdleStrategy
     {

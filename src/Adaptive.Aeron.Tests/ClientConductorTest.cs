@@ -30,62 +30,62 @@ namespace Adaptive.Aeron.Tests
 {
     public class ClientConductorTest
     {
-        private static readonly int TERM_BUFFER_LENGTH = LogBufferDescriptor.TERM_MIN_LENGTH;
+        private static readonly int TermBufferLength = LogBufferDescriptor.TERM_MIN_LENGTH;
 
-        private const int SESSION_ID_1 = 13;
-        private const int SESSION_ID_2 = 15;
+        private const int SessionId1 = 13;
+        private const int SessionId2 = 15;
 
-        private const string CHANNEL = "aeron:udp?endpoint=localhost:40124";
-        private const int STREAM_ID_1 = 1002;
-        private const int STREAM_ID_2 = 1004;
-        private const int SEND_BUFFER_CAPACITY = 1024;
-        private const int COUNTER_BUFFER_LENGTH = 512 * 1024;
+        private const string Channel = "aeron:udp?endpoint=localhost:40124";
+        private const int StreamId1 = 1002;
+        private const int StreamId2 = 1004;
+        private const int SendBufferCapacity = 1024;
+        private const int CounterBufferLength = 512 * 1024;
 
-        private const long CORRELATION_ID = 2000;
-        private const long CORRELATION_ID_2 = 2002;
-        private const long CLOSE_CORRELATION_ID = 2001;
-        private const long UNKNOWN_CORRELATION_ID = 3000;
+        private const long CorrelationId = 2000;
+        private const long CorrelationId2 = 2002;
+        private const long CloseCorrelationId = 2001;
+        private const long UnknownCorrelationId = 3000;
 
-        private static readonly long KEEP_ALIVE_INTERVAL = NanoUtil.FromMilliseconds(500);
-        private const long AWAIT_TIMEOUT = 100;
-        private const long INTER_SERVICE_TIMEOUT_MS = 1000;
+        private static readonly long KeepAliveInterval = NanoUtil.FromMilliseconds(500);
+        private const long AwaitTimeout = 100;
+        private const long InterServiceTimeoutMs = 1000;
 
-        private const int SUBSCRIPTION_POSITION_ID = 2;
-        private const int SUBSCRIPTION_POSITION_REGISTRATION_ID = 4001;
+        private const int SubscriptionPositionId = 2;
+        private const int SubscriptionPositionRegistrationId = 4001;
 
-        private const string SOURCE_INFO = "127.0.0.1:40789";
+        private const string SourceInfo = "127.0.0.1:40789";
 
-        private PublicationBuffersReadyFlyweight PublicationReady;
-        private SubscriptionReadyFlyweight SubscriptionReady;
-        private OperationSucceededFlyweight OperationSuccess;
-        private ErrorResponseFlyweight ErrorResponse;
-        private ClientTimeoutFlyweight ClientTimeout;
+        private PublicationBuffersReadyFlyweight _publicationReady;
+        private SubscriptionReadyFlyweight _subscriptionReady;
+        private OperationSucceededFlyweight _operationSuccess;
+        private ErrorResponseFlyweight _errorResponse;
+        private ClientTimeoutFlyweight _clientTimeout;
 
-        private UnsafeBuffer PublicationReadyBuffer;
-        private UnsafeBuffer SubscriptionReadyBuffer;
-        private UnsafeBuffer OperationSuccessBuffer;
-        private UnsafeBuffer ErrorMessageBuffer;
-        private UnsafeBuffer ClientTimeoutBuffer;
+        private UnsafeBuffer _publicationReadyBuffer;
+        private UnsafeBuffer _subscriptionReadyBuffer;
+        private UnsafeBuffer _operationSuccessBuffer;
+        private UnsafeBuffer _errorMessageBuffer;
+        private UnsafeBuffer _clientTimeoutBuffer;
 
-        private CopyBroadcastReceiver MockToClientReceiver;
+        private CopyBroadcastReceiver _mockToClientReceiver;
 
-        private UnsafeBuffer CounterValuesBuffer;
-        private UnsafeBuffer CounterMetaDataBuffer;
+        private UnsafeBuffer _counterValuesBuffer;
+        private UnsafeBuffer _counterMetaDataBuffer;
 
-        private readonly TestEpochClock EpochClock = new TestEpochClock();
-        private readonly TestNanoClock NanoClock = new TestNanoClock();
-        private IErrorHandler MockClientErrorHandler;
+        private readonly TestEpochClock _epochClock = new TestEpochClock();
+        private readonly TestNanoClock _nanoClock = new TestNanoClock();
+        private IErrorHandler _mockClientErrorHandler;
 
-        private ClientConductor Conductor;
-        private DriverProxy DriverProxy;
-        private AvailableImageHandler MockAvailableImageHandler;
-        private UnavailableImageHandler MockUnavailableImageHandler;
-        private Action MockCloseHandler;
-        private ILogBuffersFactory LogBuffersFactory;
-        private ILock mockClientLock = A.Fake<ILock>();
-        private Aeron MockAeron;
+        private ClientConductor _conductor;
+        private DriverProxy _driverProxy;
+        private AvailableImageHandler _mockAvailableImageHandler;
+        private UnavailableImageHandler _mockUnavailableImageHandler;
+        private Action _mockCloseHandler;
+        private ILogBuffersFactory _logBuffersFactory;
+        private ILock _mockClientLock = A.Fake<ILock>();
+        private Aeron _mockAeron;
 
-        private bool SuppressPrintError = false;
+        private bool _suppressPrintError = false;
 
         private class PrintingErrorHandler : IErrorHandler
         {
@@ -98,7 +98,7 @@ namespace Adaptive.Aeron.Tests
 
             public void OnError(Exception throwable)
             {
-                if (!_test.SuppressPrintError)
+                if (!_test._suppressPrintError)
                 {
                     Console.WriteLine(throwable.ToString());
                     Console.Write(throwable.StackTrace);
@@ -109,91 +109,93 @@ namespace Adaptive.Aeron.Tests
         [SetUp]
         public void SetUp()
         {
-            MockClientErrorHandler = A.Fake<IErrorHandler>(options => options.Wrapping(new PrintingErrorHandler(this)));
+            _mockClientErrorHandler = A.Fake<IErrorHandler>(options =>
+                options.Wrapping(new PrintingErrorHandler(this))
+            );
 
-            PublicationReady = new PublicationBuffersReadyFlyweight();
-            SubscriptionReady = new SubscriptionReadyFlyweight();
-            OperationSuccess = new OperationSucceededFlyweight();
-            ErrorResponse = new ErrorResponseFlyweight();
-            ClientTimeout = new ClientTimeoutFlyweight();
+            _publicationReady = new PublicationBuffersReadyFlyweight();
+            _subscriptionReady = new SubscriptionReadyFlyweight();
+            _operationSuccess = new OperationSucceededFlyweight();
+            _errorResponse = new ErrorResponseFlyweight();
+            _clientTimeout = new ClientTimeoutFlyweight();
 
-            PublicationReadyBuffer = new UnsafeBuffer(new byte[SEND_BUFFER_CAPACITY]);
-            SubscriptionReadyBuffer = new UnsafeBuffer(new byte[SEND_BUFFER_CAPACITY]);
-            OperationSuccessBuffer = new UnsafeBuffer(new byte[SEND_BUFFER_CAPACITY]);
-            ErrorMessageBuffer = new UnsafeBuffer(new byte[SEND_BUFFER_CAPACITY]);
-            ClientTimeoutBuffer = new UnsafeBuffer(new byte[SEND_BUFFER_CAPACITY]);
+            _publicationReadyBuffer = new UnsafeBuffer(new byte[SendBufferCapacity]);
+            _subscriptionReadyBuffer = new UnsafeBuffer(new byte[SendBufferCapacity]);
+            _operationSuccessBuffer = new UnsafeBuffer(new byte[SendBufferCapacity]);
+            _errorMessageBuffer = new UnsafeBuffer(new byte[SendBufferCapacity]);
+            _clientTimeoutBuffer = new UnsafeBuffer(new byte[SendBufferCapacity]);
 
-            CounterValuesBuffer = new UnsafeBuffer(new byte[COUNTER_BUFFER_LENGTH]);
-            CounterMetaDataBuffer = new UnsafeBuffer(new byte[COUNTER_BUFFER_LENGTH]);
+            _counterValuesBuffer = new UnsafeBuffer(new byte[CounterBufferLength]);
+            _counterMetaDataBuffer = new UnsafeBuffer(new byte[CounterBufferLength]);
 
-            MockToClientReceiver = A.Fake<CopyBroadcastReceiver>();
+            _mockToClientReceiver = A.Fake<CopyBroadcastReceiver>();
 
-            MockAvailableImageHandler = A.Fake<AvailableImageHandler>();
-            MockUnavailableImageHandler = A.Fake<UnavailableImageHandler>();
-            MockCloseHandler = A.Fake<Action>();
+            _mockAvailableImageHandler = A.Fake<AvailableImageHandler>();
+            _mockUnavailableImageHandler = A.Fake<UnavailableImageHandler>();
+            _mockCloseHandler = A.Fake<Action>();
 
-            LogBuffersFactory = A.Fake<ILogBuffersFactory>();
+            _logBuffersFactory = A.Fake<ILogBuffersFactory>();
 
-            DriverProxy = A.Fake<DriverProxy>();
+            _driverProxy = A.Fake<DriverProxy>();
 
-            MockAeron = A.Fake<Aeron>();
+            _mockAeron = A.Fake<Aeron>();
 
-            A.CallTo(() => mockClientLock.TryLock()).Returns(true);
+            A.CallTo(() => _mockClientLock.TryLock()).Returns(true);
 
-            A.CallTo(() => DriverProxy.AddPublication(CHANNEL, STREAM_ID_1)).Returns(CORRELATION_ID);
-            A.CallTo(() => DriverProxy.AddPublication(CHANNEL, STREAM_ID_2)).Returns(CORRELATION_ID_2);
-            A.CallTo(() => DriverProxy.RemovePublication(CORRELATION_ID, false)).Returns(CLOSE_CORRELATION_ID);
-            A.CallTo(() => DriverProxy.AddSubscription(A<string>._, A<int>._)).Returns(CORRELATION_ID);
-            A.CallTo(() => DriverProxy.RemoveSubscription(CORRELATION_ID)).Returns(CLOSE_CORRELATION_ID);
+            A.CallTo(() => _driverProxy.AddPublication(Channel, StreamId1)).Returns(CorrelationId);
+            A.CallTo(() => _driverProxy.AddPublication(Channel, StreamId2)).Returns(CorrelationId2);
+            A.CallTo(() => _driverProxy.RemovePublication(CorrelationId, false)).Returns(CloseCorrelationId);
+            A.CallTo(() => _driverProxy.AddSubscription(A<string>._, A<int>._)).Returns(CorrelationId);
+            A.CallTo(() => _driverProxy.RemoveSubscription(CorrelationId)).Returns(CloseCorrelationId);
 
             Aeron.Context ctx = new Aeron.Context()
-                .ClientLock(mockClientLock)
-                .EpochClock(EpochClock)
-                .NanoClock(NanoClock)
+                .ClientLock(_mockClientLock)
+                .EpochClock(_epochClock)
+                .NanoClock(_nanoClock)
                 .AwaitingIdleStrategy(new NoOpIdleStrategy())
-                .ToClientBuffer(MockToClientReceiver)
-                .DriverProxy(DriverProxy)
-                .LogBuffersFactory(LogBuffersFactory)
-                .ErrorHandler(MockClientErrorHandler)
-                .AvailableImageHandler(MockAvailableImageHandler)
-                .UnavailableImageHandler(MockUnavailableImageHandler)
-                .CloseHandler(MockCloseHandler)
-                .KeepAliveIntervalNs(KEEP_ALIVE_INTERVAL)
-                .DriverTimeoutMs(AWAIT_TIMEOUT)
-                .InterServiceTimeoutNs(INTER_SERVICE_TIMEOUT_MS * 1000000)
-                .CountersValuesBuffer(CounterValuesBuffer)
-                .CountersMetaDataBuffer(CounterMetaDataBuffer);
-            
-            Conductor = new ClientConductor(ctx, MockAeron);
+                .ToClientBuffer(_mockToClientReceiver)
+                .DriverProxy(_driverProxy)
+                .LogBuffersFactory(_logBuffersFactory)
+                .ErrorHandler(_mockClientErrorHandler)
+                .AvailableImageHandler(_mockAvailableImageHandler)
+                .UnavailableImageHandler(_mockUnavailableImageHandler)
+                .CloseHandler(_mockCloseHandler)
+                .KeepAliveIntervalNs(KeepAliveInterval)
+                .DriverTimeoutMs(AwaitTimeout)
+                .InterServiceTimeoutNs(InterServiceTimeoutMs * 1000000)
+                .CountersValuesBuffer(_counterValuesBuffer)
+                .CountersMetaDataBuffer(_counterMetaDataBuffer);
 
-            PublicationReady.Wrap(PublicationReadyBuffer, 0);
-            SubscriptionReady.Wrap(SubscriptionReadyBuffer, 0);
-            OperationSuccess.Wrap(OperationSuccessBuffer, 0);
-            ErrorResponse.Wrap(ErrorMessageBuffer, 0);
-            ClientTimeout.Wrap(ClientTimeoutBuffer, 0);
+            _conductor = new ClientConductor(ctx, _mockAeron);
 
-            PublicationReady.CorrelationId(CORRELATION_ID);
-            PublicationReady.RegistrationId(CORRELATION_ID);
-            PublicationReady.SessionId(SESSION_ID_1);
-            PublicationReady.StreamId(STREAM_ID_1);
-            PublicationReady.LogFileName(SESSION_ID_1 + "-log");
+            _publicationReady.Wrap(_publicationReadyBuffer, 0);
+            _subscriptionReady.Wrap(_subscriptionReadyBuffer, 0);
+            _operationSuccess.Wrap(_operationSuccessBuffer, 0);
+            _errorResponse.Wrap(_errorMessageBuffer, 0);
+            _clientTimeout.Wrap(_clientTimeoutBuffer, 0);
 
-            OperationSuccess.CorrelationId(CLOSE_CORRELATION_ID);
+            _publicationReady.CorrelationId(CorrelationId);
+            _publicationReady.RegistrationId(CorrelationId);
+            _publicationReady.SessionId(SessionId1);
+            _publicationReady.StreamId(StreamId1);
+            _publicationReady.LogFileName(SessionId1 + "-log");
+
+            _operationSuccess.CorrelationId(CloseCorrelationId);
 
             var termBuffersSession1 = new UnsafeBuffer[LogBufferDescriptor.PARTITION_COUNT];
             var termBuffersSession2 = new UnsafeBuffer[LogBufferDescriptor.PARTITION_COUNT];
 
             for (var i = 0; i < LogBufferDescriptor.PARTITION_COUNT; i++)
             {
-                termBuffersSession1[i] = new UnsafeBuffer(new byte[TERM_BUFFER_LENGTH]);
-                termBuffersSession2[i] = new UnsafeBuffer(new byte[TERM_BUFFER_LENGTH]);
+                termBuffersSession1[i] = new UnsafeBuffer(new byte[TermBufferLength]);
+                termBuffersSession2[i] = new UnsafeBuffer(new byte[TermBufferLength]);
             }
 
-            UnsafeBuffer logMetaDataSession1 = new UnsafeBuffer(new byte[TERM_BUFFER_LENGTH]);
-            UnsafeBuffer logMetaDataSession2 = new UnsafeBuffer(new byte[TERM_BUFFER_LENGTH]);
+            UnsafeBuffer logMetaDataSession1 = new UnsafeBuffer(new byte[TermBufferLength]);
+            UnsafeBuffer logMetaDataSession2 = new UnsafeBuffer(new byte[TermBufferLength]);
 
-            IMutableDirectBuffer header1 = DataHeaderFlyweight.CreateDefaultHeader(SESSION_ID_1, STREAM_ID_1, 0);
-            IMutableDirectBuffer header2 = DataHeaderFlyweight.CreateDefaultHeader(SESSION_ID_2, STREAM_ID_2, 0);
+            IMutableDirectBuffer header1 = DataHeaderFlyweight.CreateDefaultHeader(SessionId1, StreamId1, 0);
+            IMutableDirectBuffer header2 = DataHeaderFlyweight.CreateDefaultHeader(SessionId2, StreamId2, 0);
 
             LogBufferDescriptor.StoreDefaultFrameHeader(logMetaDataSession1, header1);
             LogBufferDescriptor.StoreDefaultFrameHeader(logMetaDataSession2, header2);
@@ -201,8 +203,8 @@ namespace Adaptive.Aeron.Tests
             var logBuffersSession1 = A.Fake<LogBuffers>();
             var logBuffersSession2 = A.Fake<LogBuffers>();
 
-            A.CallTo(() => LogBuffersFactory.Map(SESSION_ID_1 + "-log")).Returns(logBuffersSession1);
-            A.CallTo(() => LogBuffersFactory.Map(SESSION_ID_2 + "-log")).Returns(logBuffersSession2);
+            A.CallTo(() => _logBuffersFactory.Map(SessionId1 + "-log")).Returns(logBuffersSession1);
+            A.CallTo(() => _logBuffersFactory.Map(SessionId2 + "-log")).Returns(logBuffersSession2);
 
             A.CallTo(() => logBuffersSession1.DuplicateTermBuffers()).Returns(termBuffersSession1);
             A.CallTo(() => logBuffersSession2.DuplicateTermBuffers()).Returns(termBuffersSession2);
@@ -210,8 +212,8 @@ namespace Adaptive.Aeron.Tests
             A.CallTo(() => logBuffersSession1.MetaDataBuffer()).Returns(logMetaDataSession1);
             A.CallTo(() => logBuffersSession2.MetaDataBuffer()).Returns(logMetaDataSession2);
 
-            A.CallTo(() => logBuffersSession1.TermLength()).Returns(TERM_BUFFER_LENGTH);
-            A.CallTo(() => logBuffersSession2.TermLength()).Returns(TERM_BUFFER_LENGTH);
+            A.CallTo(() => logBuffersSession1.TermLength()).Returns(TermBufferLength);
+            A.CallTo(() => logBuffersSession2.TermLength()).Returns(TermBufferLength);
         }
 
         // --------------------------------
@@ -221,65 +223,86 @@ namespace Adaptive.Aeron.Tests
         [Test]
         public void AddPublicationShouldNotifyMediaDriver()
         {
-            WhenReceiveBroadcastOnMessage(ControlProtocolEvents.ON_PUBLICATION_READY, PublicationReadyBuffer,
-                buffer => PublicationReady.Length());
+            WhenReceiveBroadcastOnMessage(
+                ControlProtocolEvents.ON_PUBLICATION_READY,
+                _publicationReadyBuffer,
+                buffer => _publicationReady.Length()
+            );
 
-            Conductor.AddPublication(CHANNEL, STREAM_ID_1);
+            _conductor.AddPublication(Channel, StreamId1);
 
-            A.CallTo(() => DriverProxy.AddPublication(CHANNEL, STREAM_ID_1)).MustHaveHappened();
+            A.CallTo(() => _driverProxy.AddPublication(Channel, StreamId1)).MustHaveHappened();
         }
 
         [Test]
         public void AddPublicationShouldMapLogFile()
         {
-            WhenReceiveBroadcastOnMessage(ControlProtocolEvents.ON_PUBLICATION_READY, PublicationReadyBuffer,
-                buffer => PublicationReady.Length());
+            WhenReceiveBroadcastOnMessage(
+                ControlProtocolEvents.ON_PUBLICATION_READY,
+                _publicationReadyBuffer,
+                buffer => _publicationReady.Length()
+            );
 
-            Conductor.AddPublication(CHANNEL, STREAM_ID_1);
+            _conductor.AddPublication(Channel, StreamId1);
 
-            A.CallTo(() => LogBuffersFactory.Map(SESSION_ID_1 + "-log")).MustHaveHappened();
+            A.CallTo(() => _logBuffersFactory.Map(SessionId1 + "-log")).MustHaveHappened();
         }
 
         [Test]
         [Timeout(5000)]
         public void AddPublicationShouldTimeoutWithoutReadyMessage()
         {
-            Assert.Throws(typeof(DriverTimeoutException), () => Conductor.AddPublication(CHANNEL, STREAM_ID_1));
+            Assert.Throws(typeof(DriverTimeoutException), () => _conductor.AddPublication(Channel, StreamId1));
         }
 
         [Test]
         public void ClosingPublicationShouldNotifyMediaDriver()
         {
-            WhenReceiveBroadcastOnMessage(ControlProtocolEvents.ON_PUBLICATION_READY, PublicationReadyBuffer,
-                buffer => PublicationReady.Length());
+            WhenReceiveBroadcastOnMessage(
+                ControlProtocolEvents.ON_PUBLICATION_READY,
+                _publicationReadyBuffer,
+                buffer => _publicationReady.Length()
+            );
 
-            var publication = Conductor.AddPublication(CHANNEL, STREAM_ID_1);
+            var publication = _conductor.AddPublication(Channel, StreamId1);
 
-            WhenReceiveBroadcastOnMessage(ControlProtocolEvents.ON_OPERATION_SUCCESS, OperationSuccessBuffer,
-                buffer => OperationSucceededFlyweight.LENGTH);
+            WhenReceiveBroadcastOnMessage(
+                ControlProtocolEvents.ON_OPERATION_SUCCESS,
+                _operationSuccessBuffer,
+                buffer => OperationSucceededFlyweight.LENGTH
+            );
 
             publication.Dispose();
 
-            A.CallTo(() => DriverProxy.RemovePublication(CORRELATION_ID, false)).MustHaveHappened();
+            A.CallTo(() => _driverProxy.RemovePublication(CorrelationId, false)).MustHaveHappened();
         }
 
         [Test]
         public void ClosingPublicationShouldPurgeCache()
         {
-            WhenReceiveBroadcastOnMessage(ControlProtocolEvents.ON_PUBLICATION_READY, PublicationReadyBuffer,
-                buffer => PublicationReady.Length());
+            WhenReceiveBroadcastOnMessage(
+                ControlProtocolEvents.ON_PUBLICATION_READY,
+                _publicationReadyBuffer,
+                buffer => _publicationReady.Length()
+            );
 
-            var firstPublication = Conductor.AddPublication(CHANNEL, STREAM_ID_1);
+            var firstPublication = _conductor.AddPublication(Channel, StreamId1);
 
-            WhenReceiveBroadcastOnMessage(ControlProtocolEvents.ON_OPERATION_SUCCESS, OperationSuccessBuffer,
-                buffer => OperationSucceededFlyweight.LENGTH);
+            WhenReceiveBroadcastOnMessage(
+                ControlProtocolEvents.ON_OPERATION_SUCCESS,
+                _operationSuccessBuffer,
+                buffer => OperationSucceededFlyweight.LENGTH
+            );
 
             firstPublication.Dispose();
 
-            WhenReceiveBroadcastOnMessage(ControlProtocolEvents.ON_PUBLICATION_READY, PublicationReadyBuffer,
-                buffer => PublicationReady.Length());
+            WhenReceiveBroadcastOnMessage(
+                ControlProtocolEvents.ON_PUBLICATION_READY,
+                _publicationReadyBuffer,
+                buffer => _publicationReady.Length()
+            );
 
-            var secondPublication = Conductor.AddPublication(CHANNEL, STREAM_ID_1);
+            var secondPublication = _conductor.AddPublication(Channel, StreamId1);
 
             Assert.AreNotSame(firstPublication, secondPublication);
         }
@@ -287,67 +310,89 @@ namespace Adaptive.Aeron.Tests
         [Test]
         public void ShouldFailToAddPublicationOnMediaDriverError()
         {
-            WhenReceiveBroadcastOnMessage(ControlProtocolEvents.ON_ERROR, ErrorMessageBuffer, buffer =>
-            {
-                ErrorResponse.ErrorCode(ErrorCode.INVALID_CHANNEL);
-                ErrorResponse.ErrorMessage("invalid channel");
-                ErrorResponse.OffendingCommandCorrelationId(CORRELATION_ID);
-                return ErrorResponse.Length();
-            });
+            WhenReceiveBroadcastOnMessage(
+                ControlProtocolEvents.ON_ERROR,
+                _errorMessageBuffer,
+                buffer =>
+                {
+                    _errorResponse.ErrorCode(ErrorCode.INVALID_CHANNEL);
+                    _errorResponse.ErrorMessage("invalid channel");
+                    _errorResponse.OffendingCommandCorrelationId(CorrelationId);
+                    return _errorResponse.Length();
+                }
+            );
 
-            Assert.Throws(typeof(RegistrationException), () => Conductor.AddPublication(CHANNEL, STREAM_ID_1));
+            Assert.Throws(typeof(RegistrationException), () => _conductor.AddPublication(Channel, StreamId1));
         }
 
         [Test]
         public void ClosingPublicationDoesNotRemoveOtherPublications()
         {
-            WhenReceiveBroadcastOnMessage(ControlProtocolEvents.ON_PUBLICATION_READY, PublicationReadyBuffer,
-                buffer => PublicationReady.Length());
+            WhenReceiveBroadcastOnMessage(
+                ControlProtocolEvents.ON_PUBLICATION_READY,
+                _publicationReadyBuffer,
+                buffer => _publicationReady.Length()
+            );
 
-            var publication = Conductor.AddPublication(CHANNEL, STREAM_ID_1);
+            var publication = _conductor.AddPublication(Channel, StreamId1);
 
-            WhenReceiveBroadcastOnMessage(ControlProtocolEvents.ON_PUBLICATION_READY, PublicationReadyBuffer, buffer =>
-            {
-                PublicationReady.StreamId(STREAM_ID_2);
-                PublicationReady.SessionId(SESSION_ID_2);
-                PublicationReady.LogFileName(SESSION_ID_2 + "-log");
-                PublicationReady.CorrelationId(CORRELATION_ID_2);
-                PublicationReady.RegistrationId(CORRELATION_ID_2);
-                return PublicationReady.Length();
-            });
+            WhenReceiveBroadcastOnMessage(
+                ControlProtocolEvents.ON_PUBLICATION_READY,
+                _publicationReadyBuffer,
+                buffer =>
+                {
+                    _publicationReady.StreamId(StreamId2);
+                    _publicationReady.SessionId(SessionId2);
+                    _publicationReady.LogFileName(SessionId2 + "-log");
+                    _publicationReady.CorrelationId(CorrelationId2);
+                    _publicationReady.RegistrationId(CorrelationId2);
+                    return _publicationReady.Length();
+                }
+            );
 
-            Conductor.AddPublication(CHANNEL, STREAM_ID_2);
+            _conductor.AddPublication(Channel, StreamId2);
 
-            WhenReceiveBroadcastOnMessage(ControlProtocolEvents.ON_OPERATION_SUCCESS, OperationSuccessBuffer,
-                buffer => OperationSucceededFlyweight.LENGTH);
+            WhenReceiveBroadcastOnMessage(
+                ControlProtocolEvents.ON_OPERATION_SUCCESS,
+                _operationSuccessBuffer,
+                buffer => OperationSucceededFlyweight.LENGTH
+            );
 
             publication.Dispose();
 
-            A.CallTo(() => DriverProxy.RemovePublication(CORRELATION_ID, false)).MustHaveHappened();
-            A.CallTo(() => DriverProxy.RemovePublication(CORRELATION_ID_2, false)).MustNotHaveHappened();
+            A.CallTo(() => _driverProxy.RemovePublication(CorrelationId, false)).MustHaveHappened();
+            A.CallTo(() => _driverProxy.RemovePublication(CorrelationId2, false)).MustNotHaveHappened();
         }
 
         [Test]
         public void ShouldNotMapBuffersForUnknownCorrelationId()
         {
-            WhenReceiveBroadcastOnMessage(ControlProtocolEvents.ON_PUBLICATION_READY, PublicationReadyBuffer, buffer =>
-            {
-                PublicationReady.CorrelationId(UNKNOWN_CORRELATION_ID);
-                PublicationReady.RegistrationId(UNKNOWN_CORRELATION_ID);
-                return PublicationReady.Length();
-            });
+            WhenReceiveBroadcastOnMessage(
+                ControlProtocolEvents.ON_PUBLICATION_READY,
+                _publicationReadyBuffer,
+                buffer =>
+                {
+                    _publicationReady.CorrelationId(UnknownCorrelationId);
+                    _publicationReady.RegistrationId(UnknownCorrelationId);
+                    return _publicationReady.Length();
+                }
+            );
 
-            WhenReceiveBroadcastOnMessage(ControlProtocolEvents.ON_PUBLICATION_READY, PublicationReadyBuffer, buffer =>
-            {
-                PublicationReady.CorrelationId(CORRELATION_ID);
-                return PublicationReady.Length();
-            });
+            WhenReceiveBroadcastOnMessage(
+                ControlProtocolEvents.ON_PUBLICATION_READY,
+                _publicationReadyBuffer,
+                buffer =>
+                {
+                    _publicationReady.CorrelationId(CorrelationId);
+                    return _publicationReady.Length();
+                }
+            );
 
-            var publication = Conductor.AddPublication(CHANNEL, STREAM_ID_1);
-            Conductor.DoWork();
+            var publication = _conductor.AddPublication(Channel, StreamId1);
+            _conductor.DoWork();
 
-            A.CallTo(() => LogBuffersFactory.Map(A<string>._)).MustHaveHappened(1, Times.Exactly);
-            Assert.AreEqual(publication.RegistrationId, CORRELATION_ID);
+            A.CallTo(() => _logBuffersFactory.Map(A<string>._)).MustHaveHappened(1, Times.Exactly);
+            Assert.AreEqual(publication.RegistrationId, CorrelationId);
         }
 
         // ---------------------------------
@@ -357,113 +402,135 @@ namespace Adaptive.Aeron.Tests
         [Test]
         public void AddSubscriptionShouldNotifyMediaDriver()
         {
-            WhenReceiveBroadcastOnMessage(ControlProtocolEvents.ON_SUBSCRIPTION_READY, SubscriptionReadyBuffer,
+            WhenReceiveBroadcastOnMessage(
+                ControlProtocolEvents.ON_SUBSCRIPTION_READY,
+                _subscriptionReadyBuffer,
                 buffer =>
                 {
-                    SubscriptionReady.CorrelationId(CORRELATION_ID);
+                    _subscriptionReady.CorrelationId(CorrelationId);
                     return SubscriptionReadyFlyweight.LENGTH;
-                });
+                }
+            );
 
-            Conductor.AddSubscription(CHANNEL, STREAM_ID_1);
+            _conductor.AddSubscription(Channel, StreamId1);
 
-            A.CallTo(() => DriverProxy.AddSubscription(CHANNEL, STREAM_ID_1)).MustHaveHappened();
+            A.CallTo(() => _driverProxy.AddSubscription(Channel, StreamId1)).MustHaveHappened();
         }
 
         [Test]
         public void ClosingSubscriptionShouldNotifyMediaDriver()
         {
-            WhenReceiveBroadcastOnMessage(ControlProtocolEvents.ON_SUBSCRIPTION_READY, SubscriptionReadyBuffer,
+            WhenReceiveBroadcastOnMessage(
+                ControlProtocolEvents.ON_SUBSCRIPTION_READY,
+                _subscriptionReadyBuffer,
                 buffer =>
                 {
-                    SubscriptionReady.CorrelationId(CORRELATION_ID);
+                    _subscriptionReady.CorrelationId(CorrelationId);
                     return SubscriptionReadyFlyweight.LENGTH;
-                });
+                }
+            );
 
-            var subscription = Conductor.AddSubscription(CHANNEL, STREAM_ID_1);
+            var subscription = _conductor.AddSubscription(Channel, StreamId1);
 
-            WhenReceiveBroadcastOnMessage(ControlProtocolEvents.ON_OPERATION_SUCCESS, OperationSuccessBuffer, buffer =>
-            {
-                OperationSuccess.CorrelationId(CLOSE_CORRELATION_ID);
-                return OperationSucceededFlyweight.LENGTH;
-            });
+            WhenReceiveBroadcastOnMessage(
+                ControlProtocolEvents.ON_OPERATION_SUCCESS,
+                _operationSuccessBuffer,
+                buffer =>
+                {
+                    _operationSuccess.CorrelationId(CloseCorrelationId);
+                    return OperationSucceededFlyweight.LENGTH;
+                }
+            );
 
             subscription.Dispose();
 
-            A.CallTo(() => DriverProxy.RemoveSubscription(CORRELATION_ID)).MustHaveHappened();
+            A.CallTo(() => _driverProxy.RemoveSubscription(CorrelationId)).MustHaveHappened();
         }
 
         [Test]
         [Timeout(5000)]
         public void AddSubscriptionShouldTimeoutWithoutOperationSuccessful()
         {
-            Assert.Throws(typeof(DriverTimeoutException), () => Conductor.AddSubscription(CHANNEL, STREAM_ID_1));
+            Assert.Throws(typeof(DriverTimeoutException), () => _conductor.AddSubscription(Channel, StreamId1));
         }
 
         [Test]
         public void ShouldFailToAddSubscriptionOnMediaDriverError()
         {
-            WhenReceiveBroadcastOnMessage(ControlProtocolEvents.ON_ERROR, ErrorMessageBuffer, buffer =>
-            {
-                ErrorResponse.ErrorCode(ErrorCode.INVALID_CHANNEL);
-                ErrorResponse.ErrorMessage("invalid channel");
-                ErrorResponse.OffendingCommandCorrelationId(CORRELATION_ID);
-                return ErrorResponse.Length();
-            });
+            WhenReceiveBroadcastOnMessage(
+                ControlProtocolEvents.ON_ERROR,
+                _errorMessageBuffer,
+                buffer =>
+                {
+                    _errorResponse.ErrorCode(ErrorCode.INVALID_CHANNEL);
+                    _errorResponse.ErrorMessage("invalid channel");
+                    _errorResponse.OffendingCommandCorrelationId(CorrelationId);
+                    return _errorResponse.Length();
+                }
+            );
 
-            Assert.Throws(typeof(RegistrationException), () => Conductor.AddSubscription(CHANNEL, STREAM_ID_1));
+            Assert.Throws(typeof(RegistrationException), () => _conductor.AddSubscription(Channel, StreamId1));
         }
 
         [Test]
         public void ClientNotifiedOfNewImageShouldMapLogFile()
         {
-            WhenReceiveBroadcastOnMessage(ControlProtocolEvents.ON_SUBSCRIPTION_READY, SubscriptionReadyBuffer,
+            WhenReceiveBroadcastOnMessage(
+                ControlProtocolEvents.ON_SUBSCRIPTION_READY,
+                _subscriptionReadyBuffer,
                 buffer =>
                 {
-                    SubscriptionReady.CorrelationId(CORRELATION_ID);
+                    _subscriptionReady.CorrelationId(CorrelationId);
                     return SubscriptionReadyFlyweight.LENGTH;
-                });
+                }
+            );
 
-            Subscription subscription = Conductor.AddSubscription(CHANNEL, STREAM_ID_1);
+            Subscription subscription = _conductor.AddSubscription(Channel, StreamId1);
 
-            Conductor.OnAvailableImage(
-                CORRELATION_ID,
-                SESSION_ID_1,
+            _conductor.OnAvailableImage(
+                CorrelationId,
+                SessionId1,
                 subscription.RegistrationId,
-                SUBSCRIPTION_POSITION_ID,
-                SESSION_ID_1 + "-log",
-                SOURCE_INFO);
+                SubscriptionPositionId,
+                SessionId1 + "-log",
+                SourceInfo
+            );
 
-            A.CallTo(() => LogBuffersFactory.Map(SESSION_ID_1 + "-log")).MustHaveHappened();
+            A.CallTo(() => _logBuffersFactory.Map(SessionId1 + "-log")).MustHaveHappened();
         }
 
         [Test]
         public void ClientNotifiedOfNewAndInactiveImages()
         {
-            WhenReceiveBroadcastOnMessage(ControlProtocolEvents.ON_SUBSCRIPTION_READY, SubscriptionReadyBuffer,
+            WhenReceiveBroadcastOnMessage(
+                ControlProtocolEvents.ON_SUBSCRIPTION_READY,
+                _subscriptionReadyBuffer,
                 buffer =>
                 {
-                    SubscriptionReady.CorrelationId(CORRELATION_ID);
+                    _subscriptionReady.CorrelationId(CorrelationId);
                     return SubscriptionReadyFlyweight.LENGTH;
-                });
+                }
+            );
 
-            var subscription = Conductor.AddSubscription(CHANNEL, STREAM_ID_1);
+            var subscription = _conductor.AddSubscription(Channel, StreamId1);
 
-            Conductor.OnAvailableImage(
-                CORRELATION_ID,
-                SESSION_ID_1,
+            _conductor.OnAvailableImage(
+                CorrelationId,
+                SessionId1,
                 subscription.RegistrationId,
-                SUBSCRIPTION_POSITION_ID,
-                SESSION_ID_1 + "-log",
-                SOURCE_INFO);
+                SubscriptionPositionId,
+                SessionId1 + "-log",
+                SourceInfo
+            );
 
             Assert.False(subscription.HasNoImages);
             Assert.True(subscription.IsConnected);
 
-            A.CallTo(() => MockAvailableImageHandler(A<Image>._)).MustHaveHappened();
+            A.CallTo(() => _mockAvailableImageHandler(A<Image>._)).MustHaveHappened();
 
-            Conductor.OnUnavailableImage(CORRELATION_ID, subscription.RegistrationId);
+            _conductor.OnUnavailableImage(CorrelationId, subscription.RegistrationId);
 
-            A.CallTo(() => MockUnavailableImageHandler(A<Image>._)).MustHaveHappened();
+            A.CallTo(() => _mockUnavailableImageHandler(A<Image>._)).MustHaveHappened();
 
             Assert.True(subscription.HasNoImages);
             Assert.False(subscription.IsConnected);
@@ -472,55 +539,56 @@ namespace Adaptive.Aeron.Tests
         [Test]
         public void ShouldIgnoreUnknownNewImage()
         {
-            Conductor.OnAvailableImage(
-                CORRELATION_ID_2,
-                SESSION_ID_2,
-                SUBSCRIPTION_POSITION_REGISTRATION_ID,
-                SUBSCRIPTION_POSITION_ID,
-                SESSION_ID_2 + "-log",
-                SOURCE_INFO);
+            _conductor.OnAvailableImage(
+                CorrelationId2,
+                SessionId2,
+                SubscriptionPositionRegistrationId,
+                SubscriptionPositionId,
+                SessionId2 + "-log",
+                SourceInfo
+            );
 
-            A.CallTo(() => LogBuffersFactory.Map(A<string>._)).MustNotHaveHappened();
-            A.CallTo(() => MockAvailableImageHandler(A<Image>._)).MustNotHaveHappened();
+            A.CallTo(() => _logBuffersFactory.Map(A<string>._)).MustNotHaveHappened();
+            A.CallTo(() => _mockAvailableImageHandler(A<Image>._)).MustNotHaveHappened();
         }
 
         [Test]
         public void ShouldIgnoreUnknownInactiveImage()
         {
-            Conductor.OnUnavailableImage(CORRELATION_ID_2, SUBSCRIPTION_POSITION_REGISTRATION_ID);
+            _conductor.OnUnavailableImage(CorrelationId2, SubscriptionPositionRegistrationId);
 
-            A.CallTo(() => LogBuffersFactory.Map(A<string>._)).MustNotHaveHappened();
-            A.CallTo(() => MockAvailableImageHandler(A<Image>._)).MustNotHaveHappened();
+            A.CallTo(() => _logBuffersFactory.Map(A<string>._)).MustNotHaveHappened();
+            A.CallTo(() => _mockAvailableImageHandler(A<Image>._)).MustNotHaveHappened();
         }
 
         [Test]
         public void ShouldTimeoutInterServiceIfTooLongBetweenDoWorkCalls()
         {
-            SuppressPrintError = true;
+            _suppressPrintError = true;
 
-            Conductor.DoWork();
-            NanoClock.AdvanceMillis(INTER_SERVICE_TIMEOUT_MS);
-            NanoClock.AdvancedNanos(1);
-            Conductor.DoWork();
+            _conductor.DoWork();
+            _nanoClock.AdvanceMillis(InterServiceTimeoutMs);
+            _nanoClock.AdvancedNanos(1);
+            _conductor.DoWork();
 
-            A.CallTo(() => MockClientErrorHandler.OnError(A<ConductorServiceTimeoutException>._)).MustHaveHappened();
+            A.CallTo(() => _mockClientErrorHandler.OnError(A<ConductorServiceTimeoutException>._)).MustHaveHappened();
 
-            Assert.True(Conductor.IsTerminating());
+            Assert.True(_conductor.IsTerminating());
         }
 
         [Test]
         public void ShouldTerminateAndErrorOnClientTimeoutFromDriver()
         {
-            SuppressPrintError = true;
+            _suppressPrintError = true;
 
-            Conductor.OnClientTimeout();
+            _conductor.OnClientTimeout();
 
-            A.CallTo(() => MockClientErrorHandler.OnError(A<Exception>._)).MustHaveHappened();
+            A.CallTo(() => _mockClientErrorHandler.OnError(A<Exception>._)).MustHaveHappened();
 
             bool threwException = false;
             try
             {
-                Conductor.DoWork();
+                _conductor.DoWork();
             }
             catch (AgentTerminationException)
             {
@@ -528,10 +596,10 @@ namespace Adaptive.Aeron.Tests
             }
 
             Assert.True(threwException);
-            Assert.True(Conductor.IsTerminating());
+            Assert.True(_conductor.IsTerminating());
 
-            Conductor.OnClose();
-            A.CallTo(() => MockCloseHandler.Invoke()).MustHaveHappened();
+            _conductor.OnClose();
+            A.CallTo(() => _mockCloseHandler.Invoke()).MustHaveHappened();
         }
 
         [Test]
@@ -539,28 +607,33 @@ namespace Adaptive.Aeron.Tests
         {
             WhenReceiveBroadcastOnMessage(
                 ControlProtocolEvents.ON_CLIENT_TIMEOUT,
-                ClientTimeoutBuffer,
+                _clientTimeoutBuffer,
                 buffer =>
                 {
-                    ClientTimeout.ClientId(Conductor.DriverListenerAdapter().ClientId + 1);
+                    _clientTimeout.ClientId(_conductor.DriverListenerAdapter().ClientId + 1);
                     return ClientTimeoutFlyweight.LENGTH;
-                });
+                }
+            );
 
-            Conductor.DoWork();
+            _conductor.DoWork();
 
-            A.CallTo(() => MockClientErrorHandler.OnError(A<Exception>._)).MustNotHaveHappened();
+            A.CallTo(() => _mockClientErrorHandler.OnError(A<Exception>._)).MustNotHaveHappened();
 
-            Assert.False(Conductor.IsClosed());
+            Assert.False(_conductor.IsClosed());
         }
 
-        private void WhenReceiveBroadcastOnMessage(int msgTypeId, IMutableDirectBuffer buffer,
-            Func<IMutableDirectBuffer, int> filler)
+        private void WhenReceiveBroadcastOnMessage(
+            int msgTypeId,
+            IMutableDirectBuffer buffer,
+            Func<IMutableDirectBuffer, int> filler
+        )
         {
-            A.CallTo(() => MockToClientReceiver.Receive(A<MessageHandler>._)).Invokes(() =>
-            {
-                var length = filler(buffer);
-                Conductor.DriverListenerAdapter().OnMessage(msgTypeId, buffer, 0, length);
-            });
+            A.CallTo(() => _mockToClientReceiver.Receive(A<MessageHandler>._))
+                .Invokes(() =>
+                {
+                    var length = filler(buffer);
+                    _conductor.DriverListenerAdapter().OnMessage(msgTypeId, buffer, 0, length);
+                });
         }
     }
 

@@ -22,6 +22,11 @@ namespace Adaptive.Agrona.Collections
     /// <summary>
     /// Utility functions for collection objects.
     /// </summary>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage(
+        "Major Code Smell",
+        "S1118:Utility classes should not have public constructors",
+        Justification = "Public ctor in shipped API surface; marking static would break consumers."
+    )]
     public class CollectionUtil
     {
         /// <summary>
@@ -31,10 +36,13 @@ namespace Adaptive.Agrona.Collections
         /// <param name="key"> on which the lookup is done. </param>
         /// <param name="supplier"> of the default value if one is not found. </param>
         /// <returns> the value if found or a new default which as been added to the map. </returns>
-        public static TValue GetOrDefault<TKey, TValue>(IDictionary<TKey, TValue> map, TKey key, Func<TKey, TValue> supplier)
+        public static TValue GetOrDefault<TKey, TValue>(
+            IDictionary<TKey, TValue> map,
+            TKey key,
+            Func<TKey, TValue> supplier
+        )
         {
-            TValue value;
-            if (!map.TryGetValue(key, out value))
+            if (!map.TryGetValue(key, out TValue value))
             {
                 value = supplier(key);
                 map[key] = value;

@@ -21,8 +21,7 @@ namespace Adaptive.Aeron.Exceptions
     /// </summary>
     public class DriverTimeoutException : AeronTimeoutException
     {
-        public DriverTimeoutException(string message) : base(message, Category.FATAL)
-        {
-        }
+        public DriverTimeoutException(string message)
+            : base(message, Category.FATAL) { }
     }
 }

@@ -19,16 +19,15 @@ using System.Threading;
 using Adaptive.Aeron.Samples.Common;
 using Adaptive.Agrona;
 using Adaptive.Agrona.Concurrent;
-using Adaptive.Agrona.Util;
 
 namespace Adaptive.Aeron.Samples.StreamingPublisher
 {
     /// <summary>
     /// Publisher that sends as fast as possible a given number of messages at a given length.
     /// </summary>
-    public class StreamingPublisher
+    public static class StreamingPublisher
     {
-        private static readonly int StreamID = SampleConfiguration.STREAM_ID;
+        private static readonly int StreamId = SampleConfiguration.STREAM_ID;
         private static readonly string Channel = SampleConfiguration.CHANNEL;
         private static readonly int MessageLength = SampleConfiguration.MESSAGE_LENGTH;
         private static readonly long NumberOfMessages = SampleConfiguration.NUMBER_OF_MESSAGES;
@@ -36,9 +35,9 @@ namespace Adaptive.Aeron.Samples.StreamingPublisher
         private static readonly bool RandomMessageLength = SampleConfiguration.RANDOM_MESSAGE_LENGTH;
         private static readonly IIdleStrategy OfferIdleStrategy = new BusySpinIdleStrategy();
         private static readonly IntSupplier LengthGenerator = new IntSupplier(RandomMessageLength, MessageLength);
-        private static Thread _reporterThread;
+        private static Thread s_reporterThread;
 
-        private static volatile bool _printingActive = true;
+        private static volatile bool s_printingActive = true;
 
         public static void Main()
         {
@@ -52,22 +51,24 @@ namespace Adaptive.Aeron.Samples.StreamingPublisher
             var context = new Aeron.Context();
             var reporter = new RateReporter(1000, PrintRate);
 
-            _reporterThread = new Thread(_ => reporter.Run());
-            _reporterThread.Start();
+            s_reporterThread = new Thread(_ => reporter.Run());
+            s_reporterThread.Start();
 
             // Connect to media driver and add publication to send messages on the configured channel and stream ID.
             // The Aeron and Publication classes implement AutoCloseable, and will automatically
             // clean up resources when this try block is finished.
             using (var aeron = Aeron.Connect(context))
-            using (var publication = aeron.AddPublication(Channel, StreamID))
+            using (var publication = aeron.AddPublication(Channel, StreamId))
             using (var byteBuffer = BufferUtil.AllocateDirectAligned(MessageLength, BitUtil.CACHE_LINE_LENGTH))
             using (var buffer = new UnsafeBuffer(byteBuffer))
             {
                 do
                 {
-                    _printingActive = true;
+                    s_printingActive = true;
 
-                    Console.WriteLine($"Streaming {NumberOfMessages} messages of {(RandomMessageLength ? " random" : "")} size {MessageLength} bytes to {Channel} on stream Id {StreamID}");
+                    Console.WriteLine(
+                        $"Streaming {NumberOfMessages} messages of {(RandomMessageLength ? " random" : "")} size {MessageLength} bytes to {Channel} on stream Id {StreamId}"
+                    );
 
                     long backPressureCount = 0;
 
@@ -89,29 +90,33 @@ namespace Adaptive.Aeron.Samples.StreamingPublisher
                         reporter.OnMessage(1, length);
                     }
 
-                    Console.WriteLine("Done streaming. Back pressure ratio " + (double) backPressureCount/NumberOfMessages);
+                    Console.WriteLine(
+                        "Done streaming. Back pressure ratio " + (double)backPressureCount / NumberOfMessages
+                    );
 
                     if (0 < LingerTimeoutMs)
                     {
                         Console.WriteLine("Lingering for " + LingerTimeoutMs + " milliseconds...");
-                        Thread.Sleep((int) LingerTimeoutMs);
+                        Thread.Sleep((int)LingerTimeoutMs);
                     }
 
-                    _printingActive = false;
+                    s_printingActive = false;
 
                     Console.WriteLine("Execute again?");
                 } while (Console.ReadLine() == "y");
             }
 
             reporter.Halt();
-            _reporterThread.Join();
+            s_reporterThread.Join();
         }
 
         public static void PrintRate(double messagesPerSec, double bytesPerSec, long totalFragments, long totalBytes)
         {
-            if (_printingActive)
+            if (s_printingActive)
             {
-                Console.WriteLine($"{messagesPerSec:g02} msgs/sec, {bytesPerSec:g02} bytes/sec, totals {totalFragments:D} messages {totalBytes/(1024*1024):D} MB, GC0 {GC.CollectionCount(0)}, GC1 {GC.CollectionCount(1)}, GC2 {GC.CollectionCount(2)}");
+                Console.WriteLine(
+                    $"{messagesPerSec:g02} msgs/sec, {bytesPerSec:g02} bytes/sec, totals {totalFragments:D} messages {totalBytes / (1024 * 1024):D} MB, GC0 {GC.CollectionCount(0)}, GC1 {GC.CollectionCount(1)}, GC2 {GC.CollectionCount(2)}"
+                );
             }
         }
     }

@@ -27,7 +27,7 @@ namespace Adaptive.Agrona.Util
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void ParkNanos(long nanos)
         {
-            var iterations = (int) (15 * nanos / 1000);
+            var iterations = (int)(15 * nanos / 1000);
             Thread.SpinWait(iterations);
         }
     }

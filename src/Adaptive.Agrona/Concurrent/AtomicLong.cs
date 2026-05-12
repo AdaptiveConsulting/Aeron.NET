@@ -49,7 +49,7 @@ namespace Adaptive.Agrona.Concurrent
         {
             Interlocked.Add(ref _long, add);
         }
-        
+
         /// <summary>
         /// Atomically increments the current value
         /// </summary>

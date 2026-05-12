@@ -24,10 +24,10 @@ namespace Adaptive.Aeron.LogBuffer
 {
     /// <summary>
     /// Description of the structure for message framing in a log buffer.
-    /// 
+    ///
     /// All messages are logged in frames that have a minimum header layout as follows plus a reserve then
     /// the encoded message follows:
-    /// 
+    /// <pre>
     ///   0                   1                   2                   3
     ///   0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
     ///  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -43,15 +43,20 @@ namespace Adaptive.Aeron.LogBuffer
     ///  |                        Encoded Message                       ...
     /// ...                                                              |
     ///  +---------------------------------------------------------------+
-    /// 
+    /// </pre>
     /// The (B)egin and (E)nd flags are used for message fragmentation. R is for reserved bit.
     /// Both (B)egin and (E)nd flags are set for a message that does not span frames.
     /// </summary>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage(
+        "Major Code Smell",
+        "S1118:Utility classes should not have public constructors",
+        Justification = "Public ctor in shipped API surface; marking static would break consumers."
+    )]
     public class FrameDescriptor
     {
         /// <summary>
-        /// Set a pragmatic maximum message length regardless of term length to encourage better design.
-        /// Messages larger than half the cache size should be broken up into chunks and streamed.
+        /// Set a pragmatic maximum message length regardless of term length to encourage better design. Messages larger
+        /// than half the cache size should be broken up into chunks and streamed.
         /// </summary>
         public const int MAX_MESSAGE_LENGTH = 16 * 1024 * 1024;
 
@@ -104,7 +109,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// Offset within a frame at which the session id field begins.
         /// </summary>
         public const int SESSION_ID_OFFSET = DataHeaderFlyweight.SESSION_ID_FIELD_OFFSET;
-        
+
         /// <summary>
         /// Padding frame type to indicate the message should be ignored.
         /// </summary>
@@ -196,7 +201,7 @@ namespace Adaptive.Aeron.LogBuffer
         {
             return termOffset + SESSION_ID_OFFSET;
         }
-        
+
         /// <summary>
         /// Read the type of the frame from header.
         /// </summary>
@@ -257,7 +262,7 @@ namespace Adaptive.Aeron.LogBuffer
         {
             return buffer.GetInt(termOffset);
         }
-        
+
         /// <summary>
         /// Get the term id of a frame from the header.
         /// </summary>
@@ -320,7 +325,7 @@ namespace Adaptive.Aeron.LogBuffer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void FrameType(IAtomicBuffer buffer, int termOffset, int type)
         {
-            buffer.PutShort(TypeOffset(termOffset), (short) type);
+            buffer.PutShort(TypeOffset(termOffset), (short)type);
         }
 
         /// <summary>
@@ -357,7 +362,7 @@ namespace Adaptive.Aeron.LogBuffer
         {
             buffer.PutInt(TermIdOffset(termOffset), termId);
         }
-        
+
         /// <summary>
         /// Write the session id field for a frame.
         /// </summary>

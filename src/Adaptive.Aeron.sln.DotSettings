@@ -1,0 +1,23 @@
+<wpf:ResourceDictionary xml:space="preserve" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:s="clr-namespace:System;assembly=mscorlib" xmlns:ss="urn:shemas-jetbrains-com:settings-storage-xaml" xmlns:wpf="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
+	<s:String x:Key="/Default/CodeStyle/CodeCleanup/Profiles/=Aeron_0020Naming_0020Only/@EntryIndexedValue">Aeron Naming Only</s:String>
+	<s:Boolean x:Key="/Default/CodeStyle/CodeCleanup/Profiles/=Aeron_0020Naming_0020Only/@EntryIndexedValue/CSArrangeAttributes/@EntryValue">False</s:Boolean>
+	<s:Boolean x:Key="/Default/CodeStyle/CodeCleanup/Profiles/=Aeron_0020Naming_0020Only/@EntryIndexedValue/CSArrangeQualifiers/@EntryValue">False</s:Boolean>
+	<s:Boolean x:Key="/Default/CodeStyle/CodeCleanup/Profiles/=Aeron_0020Naming_0020Only/@EntryIndexedValue/CSEnforceVarKeywordUsageSettings/@EntryValue">False</s:Boolean>
+	<s:Boolean x:Key="/Default/CodeStyle/CodeCleanup/Profiles/=Aeron_0020Naming_0020Only/@EntryIndexedValue/CSFixBuiltinTypeReferences/@EntryValue">False</s:Boolean>
+	<s:Boolean x:Key="/Default/CodeStyle/CodeCleanup/Profiles/=Aeron_0020Naming_0020Only/@EntryIndexedValue/CSOptimizeUsings/@EntryValue">False</s:Boolean>
+	<s:Boolean x:Key="/Default/CodeStyle/CodeCleanup/Profiles/=Aeron_0020Naming_0020Only/@EntryIndexedValue/CSReformatCode/@EntryValue">False</s:Boolean>
+	<s:Boolean x:Key="/Default/CodeStyle/CodeCleanup/Profiles/=Aeron_0020Naming_0020Only/@EntryIndexedValue/CSReorderTypeMembers/@EntryValue">False</s:Boolean>
+	<s:Boolean x:Key="/Default/CodeStyle/CodeCleanup/Profiles/=Aeron_0020Naming_0020Only/@EntryIndexedValue/CSShortenReferences/@EntryValue">False</s:Boolean>
+	<s:Boolean x:Key="/Default/CodeStyle/CodeCleanup/Profiles/=Aeron_0020Naming_0020Only/@EntryIndexedValue/CSUpdateFileHeader/@EntryValue">False</s:Boolean>
+	<s:Boolean x:Key="/Default/CodeStyle/CodeCleanup/Profiles/=Aeron_0020Naming_0020Only/@EntryIndexedValue/CSUseAutoProperty/@EntryValue">False</s:Boolean>
+	<s:Boolean x:Key="/Default/CodeStyle/CodeCleanup/Profiles/=Aeron_0020Naming_0020Only/@EntryIndexedValue/RemoveCodeRedundanciesCSharp/@EntryValue">False</s:Boolean>
+	<s:Boolean x:Key="/Default/CodeStyle/CodeCleanup/Profiles/=Aeron_0020Naming_0020Only/@EntryIndexedValue/CSCodeStyleAttributes/@EntryValue">False</s:Boolean>
+	<s:Boolean x:Key="/Default/CodeStyle/CodeCleanup/Profiles/=Aeron_0020Naming_0020Only/@EntryIndexedValue/CSFixInconsistentNaming/@EntryValue">True</s:Boolean>
+	<s:String x:Key="/Default/CodeStyle/Naming/CSharpNaming/Abbreviations/=DB/@EntryIndexedValue">DB</s:String>
+	<s:String x:Key="/Default/CodeStyle/Naming/CSharpNaming/Abbreviations/=GC/@EntryIndexedValue">GC</s:String>
+	<s:String x:Key="/Default/CodeStyle/Naming/CSharpNaming/Abbreviations/=ID/@EntryIndexedValue">ID</s:String>
+	<s:String x:Key="/Default/CodeStyle/Naming/CSharpNaming/Abbreviations/=IO/@EntryIndexedValue">IO</s:String>
+	<s:String x:Key="/Default/CodeStyle/Naming/CSharpNaming/Abbreviations/=IP/@EntryIndexedValue">IP</s:String>
+	<s:String x:Key="/Default/CodeStyle/Naming/CSharpNaming/Abbreviations/=OK/@EntryIndexedValue">OK</s:String>
+	<s:String x:Key="/Default/CodeStyle/Naming/CSharpNaming/Abbreviations/=UI/@EntryIndexedValue">UI</s:String>
+</wpf:ResourceDictionary>

@@ -18,7 +18,7 @@ namespace Adaptive.Agrona.Concurrent.Status
 {
     /// <summary>
     /// Reports on how far through a buffer some component has progressed.
-    /// 
+    ///
     /// Threadsafe to write to from a single writer.
     /// </summary>
     public interface IPosition : IReadablePosition
@@ -40,7 +40,7 @@ namespace Adaptive.Agrona.Concurrent.Status
         /// </summary>
         /// <param name="value"> the current position of the component. </param>
         void SetOrdered(long value);
-        
+
         /// <summary>
         /// Sets the current position of the component with release memory semantics.
         /// </summary>
@@ -52,7 +52,7 @@ namespace Adaptive.Agrona.Concurrent.Status
         /// </summary>
         /// <param name="value"> the current position of the component. </param>
         void SetVolatile(long value);
-        
+
         /// <summary>
         /// Set the position to a new proposedValue if greater than the current value with memory ordering semantics.
         /// </summary>

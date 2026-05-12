@@ -36,7 +36,7 @@ namespace Adaptive.Agrona
             ptr = (ptr + byteAlignment - 1) & ~(byteAlignment - 1);
             BufferPointer = new IntPtr(ptr);
         }
-        
+
         ~ByteBuffer()
         {
             Dispose(false);
@@ -50,7 +50,9 @@ namespace Adaptive.Agrona
         private void Dispose(bool disposing)
         {
             if (_disposed)
+            {
                 return;
+            }
 
             _bufferHandle.Free();
 

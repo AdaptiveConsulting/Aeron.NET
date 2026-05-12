@@ -60,18 +60,31 @@ namespace NUnit.Framework
                 catch (Exception ex)
                 {
                     if (ex is NUnitException)
+                    {
                         ex = ex.InnerException;
+                    }
+
                     caughtType = ex.GetType();
                 }
 
                 if (caughtType == _expectedType)
+                {
                     context.CurrentResult.SetResult(ResultState.Success);
+                }
                 else if (caughtType != null)
-                    context.CurrentResult.SetResult(ResultState.Failure,
-                        string.Format("Expected {0} but got {1}", _expectedType.Name, caughtType.Name));
+                {
+                    context.CurrentResult.SetResult(
+                        ResultState.Failure,
+                        string.Format("Expected {0} but got {1}", _expectedType.Name, caughtType.Name)
+                    );
+                }
                 else
-                    context.CurrentResult.SetResult(ResultState.Failure,
-                        string.Format("Expected {0} but no exception was thrown", _expectedType.Name));
+                {
+                    context.CurrentResult.SetResult(
+                        ResultState.Failure,
+                        string.Format("Expected {0} but no exception was thrown", _expectedType.Name)
+                    );
+                }
 
                 return context.CurrentResult;
             }

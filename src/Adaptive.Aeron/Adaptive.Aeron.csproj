@@ -34,6 +34,16 @@
         <ProjectReference Include="..\Adaptive.Agrona\Adaptive.Agrona.csproj" />
     </ItemGroup>
     <ItemGroup>
+        <PackageReference Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" Version="3.11.0-beta1.24605.2">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+    </ItemGroup>
+    <ItemGroup>
+        <AdditionalFiles Include="PublicAPI.Shipped.txt" />
+        <AdditionalFiles Include="PublicAPI.Unshipped.txt" />
+    </ItemGroup>
+    <ItemGroup>
         <None Remove="FodyWeavers.xsd" />
     </ItemGroup>
     <ItemGroup>

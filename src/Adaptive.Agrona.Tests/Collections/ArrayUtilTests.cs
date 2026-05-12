@@ -50,7 +50,7 @@ namespace Adaptive.Agrona.Tests.Collections
         {
             var result = ArrayUtil.Remove(_values, One);
 
-            Assert.That(new [] { Two }, Is.EqualTo(result));
+            Assert.That(new[] { Two }, Is.EqualTo(result));
         }
 
         [Test]
@@ -58,8 +58,7 @@ namespace Adaptive.Agrona.Tests.Collections
         {
             var result = ArrayUtil.Remove(_values, 0);
 
-            Assert.That(new [] { Two }, Is.EqualTo(result));
+            Assert.That(new[] { Two }, Is.EqualTo(result));
         }
     }
-
 }

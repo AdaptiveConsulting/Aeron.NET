@@ -26,8 +26,9 @@ namespace Adaptive.Agrona.Collections
     public static class ListUtil
     {
         /// <summary>
-        /// Removes element at index i, but instead of copying all elements to the left, moves into the same slot the last
-        /// element. This avoids the copy costs, but spoils the list order. If i is the last element it is just removed.
+        /// Removes element at index i, but instead of copying all elements to the left, moves into the same slot the
+        /// last element. This avoids the copy costs, but spoils the list order. If i is the last element it is just
+        /// removed.
         /// </summary>
         /// <param name="list">      to be modified.</param>
         /// <param name="i">         removal index.</param>

@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-using Adaptive.Aeron.Exceptions;
 using Adaptive.Agrona;
 
 namespace Adaptive.Aeron.Command
@@ -23,7 +22,7 @@ namespace Adaptive.Aeron.Command
     /// Message to denote a new counter.
     ///
     /// <b>Note:</b> Layout should be SBE 2.0 compliant so that the label length is aligned.
-    /// 
+    ///
     /// </summary>
     /// <seealso cref="ControlProtocolEvents">
     /// <pre>
@@ -52,10 +51,10 @@ namespace Adaptive.Aeron.Command
     /// </seealso>
     public class CounterMessageFlyweight : CorrelatedMessageFlyweight
     {
-        private static readonly int COUNTER_TYPE_ID_FIELD_OFFSET = CORRELATION_ID_FIELD_OFFSET + BitUtil.SIZE_OF_LONG;
-        private static readonly int KEY_LENGTH_OFFSET = COUNTER_TYPE_ID_FIELD_OFFSET + BitUtil.SIZE_OF_INT;
-        internal static readonly int KEY_BUFFER_OFFSET = KEY_LENGTH_OFFSET + BitUtil.SIZE_OF_INT;
-        private static readonly int MINIMUM_LENGTH = KEY_BUFFER_OFFSET + BitUtil.SIZE_OF_INT;
+        private static readonly int CounterTypeIdFieldOffset = CorrelationIdFieldOffset + BitUtil.SIZE_OF_LONG;
+        private static readonly int KeyLengthOffset = CounterTypeIdFieldOffset + BitUtil.SIZE_OF_INT;
+        internal static readonly int KeyBufferFieldOffset = KeyLengthOffset + BitUtil.SIZE_OF_INT;
+        private static readonly int MinimumLength = KeyBufferFieldOffset + BitUtil.SIZE_OF_INT;
 
         /// <summary>
         /// Wrap the buffer at a given offset for updates.
@@ -76,7 +75,7 @@ namespace Adaptive.Aeron.Command
         /// <returns> type id field. </returns>
         public int TypeId()
         {
-            return buffer.GetInt(offset + COUNTER_TYPE_ID_FIELD_OFFSET);
+            return _buffer.GetInt(_offset + CounterTypeIdFieldOffset);
         }
 
         /// <summary>
@@ -86,7 +85,7 @@ namespace Adaptive.Aeron.Command
         /// <returns> this for a fluent API. </returns>
         public CounterMessageFlyweight TypeId(int typeId)
         {
-            buffer.PutInt(offset + COUNTER_TYPE_ID_FIELD_OFFSET, typeId);
+            _buffer.PutInt(_offset + CounterTypeIdFieldOffset, typeId);
 
             return this;
         }
@@ -97,7 +96,7 @@ namespace Adaptive.Aeron.Command
         /// <returns> relative offset of the key buffer. </returns>
         public int KeyBufferOffset()
         {
-            return KEY_BUFFER_OFFSET;
+            return KeyBufferFieldOffset;
         }
 
         /// <summary>
@@ -106,7 +105,7 @@ namespace Adaptive.Aeron.Command
         /// <returns> length of key buffer in bytes. </returns>
         public int KeyBufferLength()
         {
-            return buffer.GetInt(offset + KEY_LENGTH_OFFSET);
+            return _buffer.GetInt(_offset + KeyLengthOffset);
         }
 
         /// <summary>
@@ -118,10 +117,10 @@ namespace Adaptive.Aeron.Command
         /// <returns> this for a fluent API. </returns>
         public CounterMessageFlyweight KeyBuffer(IDirectBuffer keyBuffer, int keyOffset, int keyLength)
         {
-            buffer.PutInt(offset + KEY_LENGTH_OFFSET, keyLength);
+            _buffer.PutInt(_offset + KeyLengthOffset, keyLength);
             if (null != keyBuffer && keyLength > 0)
             {
-                buffer.PutBytes(offset + KEY_BUFFER_OFFSET, keyBuffer, keyOffset, keyLength);
+                _buffer.PutBytes(_offset + KeyBufferFieldOffset, keyBuffer, keyOffset, keyLength);
             }
 
             return this;
@@ -142,7 +141,7 @@ namespace Adaptive.Aeron.Command
         /// <returns> length of label buffer in bytes </returns>
         public int LabelBufferLength()
         {
-            return buffer.GetInt(offset + LabelLengthOffset());
+            return _buffer.GetInt(_offset + LabelLengthOffset());
         }
 
         /// <summary>
@@ -155,17 +154,20 @@ namespace Adaptive.Aeron.Command
         public CounterMessageFlyweight LabelBuffer(IDirectBuffer labelBuffer, int labelOffset, int labelLength)
         {
             int labelLengthOffset = LabelLengthOffset();
-            buffer.PutInt(offset + labelLengthOffset, labelLength);
+            _buffer.PutInt(_offset + labelLengthOffset, labelLength);
 
             if (null != labelBuffer && labelLength > 0)
             {
-                buffer.PutBytes(offset + labelLengthOffset + BitUtil.SIZE_OF_INT, labelBuffer, labelOffset,
-                    labelLength);
+                _buffer.PutBytes(
+                    _offset + labelLengthOffset + BitUtil.SIZE_OF_INT,
+                    labelBuffer,
+                    labelOffset,
+                    labelLength
+                );
             }
 
             return this;
         }
-
 
         /// <summary>
         /// Fill the label.
@@ -174,7 +176,7 @@ namespace Adaptive.Aeron.Command
         /// <returns> this for a fluent API. </returns>
         public CounterMessageFlyweight Label(string label)
         {
-            buffer.PutStringAscii(offset + LabelLengthOffset(), label);
+            _buffer.PutStringAscii(_offset + LabelLengthOffset(), label);
             return this;
         }
 
@@ -182,7 +184,7 @@ namespace Adaptive.Aeron.Command
         /// Get the length of the current message.
         /// <para>
         /// NB: must be called after the data is written in order to be accurate.
-        /// 
+        ///
         /// </para>
         /// </summary>
         /// <returns> the length of the current message </returns>
@@ -191,7 +193,7 @@ namespace Adaptive.Aeron.Command
             int labelOffset = LabelLengthOffset();
             return labelOffset + BitUtil.SIZE_OF_INT + LabelBufferLength();
         }
-        
+
         /// <summary>
         /// Compute the length of the command message given key and label length.
         /// </summary>
@@ -200,7 +202,7 @@ namespace Adaptive.Aeron.Command
         /// <returns> the length of the command message given key and label length. </returns>
         public static int ComputeLength(int keyLength, int labelLength)
         {
-            return MINIMUM_LENGTH + BitUtil.Align(keyLength, BitUtil.SIZE_OF_INT) + BitUtil.SIZE_OF_INT + labelLength;
+            return MinimumLength + BitUtil.Align(keyLength, BitUtil.SIZE_OF_INT) + BitUtil.SIZE_OF_INT + labelLength;
         }
 
         /// <summary>
@@ -208,22 +210,31 @@ namespace Adaptive.Aeron.Command
         /// </summary>
         public override string ToString()
         {
-            return "CounterMessageFlyweight{" +
-                   "clientId=" + ClientId() +
-                   ", correlationId=" + CorrelationId() +
-                   ", typeId=" + TypeId() +
-                   ", keyBufferOffset=" + KeyBufferOffset() +
-                   ", keyBufferLength=" + KeyBufferLength() +
-                   ", labelLengthOffset=" + LabelLengthOffset() +
-                   ", labelBufferOffset=" + LabelBufferOffset() +
-                   ", labelBufferLength=" + LabelBufferLength() +
-                   ", length=" + Length() +
-                   "}";
+            return "CounterMessageFlyweight{"
+                + "clientId="
+                + ClientId()
+                + ", correlationId="
+                + CorrelationId()
+                + ", typeId="
+                + TypeId()
+                + ", keyBufferOffset="
+                + KeyBufferOffset()
+                + ", keyBufferLength="
+                + KeyBufferLength()
+                + ", labelLengthOffset="
+                + LabelLengthOffset()
+                + ", labelBufferOffset="
+                + LabelBufferOffset()
+                + ", labelBufferLength="
+                + LabelBufferLength()
+                + ", length="
+                + Length()
+                + "}";
         }
 
         private int LabelLengthOffset()
         {
-            return KEY_BUFFER_OFFSET + BitUtil.Align(KeyBufferLength(), BitUtil.SIZE_OF_INT);
+            return KeyBufferFieldOffset + BitUtil.Align(KeyBufferLength(), BitUtil.SIZE_OF_INT);
         }
     }
 }

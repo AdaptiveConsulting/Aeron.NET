@@ -21,7 +21,7 @@ namespace Adaptive.Aeron.Command
 {
     /// <summary>
     /// Base flyweight that can be extended to track a client request.
-    /// 
+    ///
     /// 0                   1                   2                   3
     /// 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
     /// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -38,11 +38,11 @@ namespace Adaptive.Aeron.Command
         /// Length of the header
         /// </summary>
         public static readonly int LENGTH = 2 * BitUtil.SIZE_OF_LONG;
-        private const int CLIENT_ID_FIELD_OFFSET = 0;
-        internal static readonly int CORRELATION_ID_FIELD_OFFSET = CLIENT_ID_FIELD_OFFSET + BitUtil.SIZE_OF_LONG;
+        private const int ClientIdFieldOffset = 0;
+        internal static readonly int CorrelationIdFieldOffset = ClientIdFieldOffset + BitUtil.SIZE_OF_LONG;
 
-        internal IMutableDirectBuffer buffer;
-        internal int offset;
+        internal IMutableDirectBuffer _buffer;
+        internal int _offset;
 
         /// <summary>
         /// Wrap the buffer at a given offset for updates.
@@ -52,8 +52,8 @@ namespace Adaptive.Aeron.Command
         /// <returns> this for a fluent API. </returns>
         public CorrelatedMessageFlyweight Wrap(IMutableDirectBuffer buffer, int offset)
         {
-            this.buffer = buffer;
-            this.offset = offset;
+            _buffer = buffer;
+            _offset = offset;
 
             return this;
         }
@@ -64,7 +64,7 @@ namespace Adaptive.Aeron.Command
         /// <returns> client id field. </returns>
         public long ClientId()
         {
-            return buffer.GetLong(offset + CLIENT_ID_FIELD_OFFSET);
+            return _buffer.GetLong(_offset + ClientIdFieldOffset);
         }
 
         /// <summary>
@@ -74,7 +74,7 @@ namespace Adaptive.Aeron.Command
         /// <returns> this for a fluent API. </returns>
         public CorrelatedMessageFlyweight ClientId(long clientId)
         {
-            buffer.PutLong(offset + CLIENT_ID_FIELD_OFFSET, clientId);
+            _buffer.PutLong(_offset + ClientIdFieldOffset, clientId);
 
             return this;
         }
@@ -85,7 +85,7 @@ namespace Adaptive.Aeron.Command
         /// <returns> correlation id field. </returns>
         public long CorrelationId()
         {
-            return buffer.GetLong(offset + CORRELATION_ID_FIELD_OFFSET);
+            return _buffer.GetLong(_offset + CorrelationIdFieldOffset);
         }
 
         /// <summary>
@@ -95,11 +95,11 @@ namespace Adaptive.Aeron.Command
         /// <returns> for fluent API. </returns>
         public CorrelatedMessageFlyweight CorrelationId(long correlationId)
         {
-            buffer.PutLong(offset + CORRELATION_ID_FIELD_OFFSET, correlationId);
+            _buffer.PutLong(_offset + CorrelationIdFieldOffset, correlationId);
 
             return this;
         }
-        
+
         /// <summary>
         /// Validate buffer length is long enough for message.
         /// </summary>
@@ -109,7 +109,10 @@ namespace Adaptive.Aeron.Command
         {
             if (length < LENGTH)
             {
-                throw new ControlProtocolException(ErrorCode.MALFORMED_COMMAND, "command=" + msgTypeId + " too short: length=" + length);
+                throw new ControlProtocolException(
+                    ErrorCode.MALFORMED_COMMAND,
+                    "command=" + msgTypeId + " too short: length=" + length
+                );
             }
         }
     }

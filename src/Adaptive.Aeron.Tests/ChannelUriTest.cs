@@ -15,12 +15,6 @@
  */
 
 using System;
-using Adaptive.Aeron.LogBuffer;
-using Adaptive.Aeron.Protocol;
-using Adaptive.Agrona;
-using Adaptive.Agrona.Concurrent;
-using Adaptive.Agrona.Concurrent.Status;
-using FakeItEasy;
 using NUnit.Framework;
 
 namespace Adaptive.Aeron.Tests
@@ -30,9 +24,21 @@ namespace Adaptive.Aeron.Tests
         [Test]
         public void ShouldSubstituteEndpoint()
         {
-            AssertSubstitution("aeron:udp?endpoint=localhost:12345", "aeron:udp?endpoint=localhost:0", "localhost:12345");
-            AssertSubstitution("aeron:udp?endpoint=localhost:12345", "aeron:udp?endpoint=localhost:12345", "localhost:54321");
-            AssertSubstitution("aeron:udp?endpoint=localhost:12345", "aeron:udp?endpoint=localhost:0", "127.0.0.1:12345");
+            AssertSubstitution(
+                "aeron:udp?endpoint=localhost:12345",
+                "aeron:udp?endpoint=localhost:0",
+                "localhost:12345"
+            );
+            AssertSubstitution(
+                "aeron:udp?endpoint=localhost:12345",
+                "aeron:udp?endpoint=localhost:12345",
+                "localhost:54321"
+            );
+            AssertSubstitution(
+                "aeron:udp?endpoint=localhost:12345",
+                "aeron:udp?endpoint=localhost:0",
+                "127.0.0.1:12345"
+            );
             AssertSubstitution("aeron:udp?endpoint=127.0.0.1:12345", "aeron:udp", "127.0.0.1:12345");
         }
 
@@ -40,7 +46,7 @@ namespace Adaptive.Aeron.Tests
         public void ShouldThrowIfResolvedEndpointInvalid()
         {
             ChannelUri uri = ChannelUri.Parse("aeron:udp?endpoint=localhost:0");
-            
+
             Assert.Throws(typeof(ArgumentException), () => uri.ReplaceEndpointWildcardPort("localhost:0"));
             Assert.Throws(typeof(ArgumentException), () => uri.ReplaceEndpointWildcardPort("localhost"));
             Assert.Throws(typeof(ArgumentNullException), () => uri.ReplaceEndpointWildcardPort(null));

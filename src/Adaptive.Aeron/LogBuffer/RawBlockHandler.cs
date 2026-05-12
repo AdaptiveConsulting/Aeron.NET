@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Copyright 2026 Adaptive Financial Consulting Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -25,8 +25,10 @@ namespace Adaptive.Aeron.LogBuffer
     /// <param name="fileStream"> read-only stream over the log file containing the block. </param>
     /// <param name="fileOffset"> at which the block begins, including any frame headers. </param>
     /// <param name="termBuffer"> mapped over the block of fragments. </param>
-    /// <param name="termOffset"> in <paramref name="termBuffer"/> at which the block begins, including any frame headers. </param>
-    /// <param name="length"> of the block in bytes, including any frame headers, aligned up to <see cref="FrameDescriptor.FRAME_ALIGNMENT"/>. </param>
+    /// <param name="termOffset"> in <paramref name="termBuffer"/> at which the block begins, including any frame
+    /// headers. </param>
+    /// <param name="length"> of the block in bytes, including any frame headers, aligned up to
+    /// <see cref="FrameDescriptor.FRAME_ALIGNMENT"/> . </param>
     /// <param name="sessionId"> of the stream of fragments. </param>
     /// <param name="termId"> of the stream of fragments. </param>
     public delegate void RawBlockHandler(
@@ -36,5 +38,6 @@ namespace Adaptive.Aeron.LogBuffer
         int termOffset,
         int length,
         int sessionId,
-        int termId);
+        int termId
+    );
 }

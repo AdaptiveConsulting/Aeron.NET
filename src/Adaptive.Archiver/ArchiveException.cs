@@ -1,4 +1,19 @@
-﻿using System;
+﻿/*
+ * Copyright 2014 - 2026 Adaptive Financial Consulting Ltd
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 using Adaptive.Aeron.Exceptions;
 
 namespace Adaptive.Archiver
@@ -69,12 +84,12 @@ namespace Adaptive.Archiver
         /// The replication identity for this operation is not known to the archive.
         /// </summary>
         public const int UNKNOWN_REPLICATION = 12;
-        
+
         /// <summary>
-        /// The principle was not authorised to take the requested action. 
+        /// The principle was not authorised to take the requested action.
         /// </summary>
         public const int UNAUTHORISED_ACTION = 13;
-        
+
         /// <summary>
         /// The replication session failed to connect to the source archive
         /// </summary>
@@ -84,15 +99,16 @@ namespace Adaptive.Archiver
         /// The recording specified for replay is empty.
         /// </summary>
         public const short EMPTY_RECORDING = 15;
-        
+
         /// <summary>
         /// Error code providing more detail into what went wrong.
         /// </summary>
         /// <returns> code providing more detail into what went wrong. </returns>
         public int ErrorCode { get; }
-        
+
         /// <summary>
-        /// Optional correlation-id associated with a control protocol request. Will be <seealso cref="Aeron.Aeron.NULL_VALUE"/> if
+        /// Optional correlation-id associated with a control protocol request. Will be
+        /// <seealso cref="Aeron.Aeron.NULL_VALUE"/> if
         /// not set.
         /// </summary>
         /// <returns> correlation-id associated with a control protocol request. </returns>
@@ -113,59 +129,64 @@ namespace Adaptive.Archiver
         /// <seealso cref="ErrorCode"/> = <seealso cref="GENERIC"/>, plus detail.
         /// </summary>
         /// <param name="message"> providing detail. </param>
-        public ArchiveException(string message) : base(message)
+        public ArchiveException(string message)
+            : base(message)
         {
             ErrorCode = GENERIC;
             CorrelationId = Aeron.Aeron.NULL_VALUE;
         }
 
         /// <summary>
-        /// ArchiveException exception as <seealso cref="Aeron.Exceptions.Category.ERROR"/>, plus detail and
-        /// error code.
+        /// ArchiveException exception as <seealso cref="Aeron.Exceptions.Category.ERROR"/> , plus detail and error
+        /// code.
         /// </summary>
         /// <param name="message">   providing detail. </param>
         /// <param name="errorCode"> for type. </param>
-        public ArchiveException(string message, int errorCode) : base(message)
+        public ArchiveException(string message, int errorCode)
+            : base(message)
         {
             ErrorCode = errorCode;
             CorrelationId = Aeron.Aeron.NULL_VALUE;
         }
 
         /// <summary>
-        /// ArchiveException exception as <seealso cref="Aeron.Exceptions.Category.ERROR"/>, plus detail, error code,
+        /// ArchiveException exception as <seealso cref="Aeron.Exceptions.Category.ERROR"/> , plus detail, error code,
         /// and correlation if of the control request.
         /// </summary>
         /// <param name="message">       providing detail. </param>
         /// <param name="errorCode">     for type. </param>
         /// <param name="correlationId"> of the control request. </param>
-        public ArchiveException(string message, int errorCode, long correlationId) : base(message)
+        public ArchiveException(string message, int errorCode, long correlationId)
+            : base(message)
         {
             ErrorCode = errorCode;
             CorrelationId = correlationId;
         }
 
         /// <summary>
-        /// ArchiveException exception <seealso cref="ErrorCode()"/> = <seealso cref="GENERIC"/>, plus detail, correlation id of control
-        /// request, and <seealso cref="Category"/>.
+        /// ArchiveException exception <seealso cref="ErrorCode()"/> = <seealso cref="GENERIC"/> , plus detail,
+        /// correlation id of control request, and <seealso cref="Category"/> .
         /// </summary>
         /// <param name="message">       providing detail. </param>
         /// <param name="correlationId"> of the control request. </param>
         /// <param name="category">      for type. </param>
-        public ArchiveException(string message, long correlationId, Category category) : base(message, category)
+        public ArchiveException(string message, long correlationId, Category category)
+            : base(message, category)
         {
             ErrorCode = GENERIC;
             CorrelationId = correlationId;
         }
 
         /// <summary>
-        /// ArchiveException exception, plus detail, error code, correlation id of control request,
-        /// and <seealso cref="Category"/>.
+        /// ArchiveException exception, plus detail, error code, correlation id of control request, and
+        /// <seealso cref="Category"/> .
         /// </summary>
         /// <param name="message">       providing detail. </param>
         /// <param name="errorCode">     for type. </param>
         /// <param name="correlationId"> of the control request. </param>
         /// <param name="category">      for type. </param>
-        public ArchiveException(string message, int errorCode, long correlationId, Category category) : base(message, category)
+        public ArchiveException(string message, int errorCode, long correlationId, Category category)
+            : base(message, category)
         {
             ErrorCode = errorCode;
             CorrelationId = correlationId;
@@ -180,22 +201,38 @@ namespace Adaptive.Archiver
         {
             switch (errorCode)
             {
-                case GENERIC: return "GENERIC";
-                case ACTIVE_LISTING: return "ACTIVE_LISTING";
-                case ACTIVE_RECORDING: return "ACTIVE_RECORDING";
-                case ACTIVE_SUBSCRIPTION: return "ACTIVE_SUBSCRIPTION";
-                case UNKNOWN_SUBSCRIPTION: return "UNKNOWN_SUBSCRIPTION";
-                case UNKNOWN_RECORDING: return "UNKNOWN_RECORDING";
-                case UNKNOWN_REPLAY: return "UNKNOWN_REPLAY";
-                case MAX_REPLAYS: return "MAX_REPLAYS";
-                case MAX_RECORDINGS: return "MAX_RECORDINGS";
-                case INVALID_EXTENSION: return "INVALID_EXTENSION";
-                case AUTHENTICATION_REJECTED: return "AUTHENTICATION_REJECTED";
-                case STORAGE_SPACE: return "STORAGE_SPACE";
-                case UNKNOWN_REPLICATION: return "UNKNOWN_REPLICATION";
-                case UNAUTHORISED_ACTION: return "UNAUTHORISED_ACTION";
-                case REPLICATION_CONNECTION_FAILURE: return "REPLICATION_CONNECTION_FAILURE";
-                default: return "unknown error code: " + errorCode;
+                case GENERIC:
+                    return "GENERIC";
+                case ACTIVE_LISTING:
+                    return "ACTIVE_LISTING";
+                case ACTIVE_RECORDING:
+                    return "ACTIVE_RECORDING";
+                case ACTIVE_SUBSCRIPTION:
+                    return "ACTIVE_SUBSCRIPTION";
+                case UNKNOWN_SUBSCRIPTION:
+                    return "UNKNOWN_SUBSCRIPTION";
+                case UNKNOWN_RECORDING:
+                    return "UNKNOWN_RECORDING";
+                case UNKNOWN_REPLAY:
+                    return "UNKNOWN_REPLAY";
+                case MAX_REPLAYS:
+                    return "MAX_REPLAYS";
+                case MAX_RECORDINGS:
+                    return "MAX_RECORDINGS";
+                case INVALID_EXTENSION:
+                    return "INVALID_EXTENSION";
+                case AUTHENTICATION_REJECTED:
+                    return "AUTHENTICATION_REJECTED";
+                case STORAGE_SPACE:
+                    return "STORAGE_SPACE";
+                case UNKNOWN_REPLICATION:
+                    return "UNKNOWN_REPLICATION";
+                case UNAUTHORISED_ACTION:
+                    return "UNAUTHORISED_ACTION";
+                case REPLICATION_CONNECTION_FAILURE:
+                    return "REPLICATION_CONNECTION_FAILURE";
+                default:
+                    return "unknown error code: " + errorCode;
             }
         }
     }

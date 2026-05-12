@@ -1,4 +1,20 @@
-﻿using System;
+﻿/*
+ * Copyright 2014 - 2026 Adaptive Financial Consulting Ltd
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+using System;
 using Adaptive.Agrona;
 using Adaptive.Agrona.Concurrent;
 using Adaptive.Agrona.Concurrent.Status;
@@ -6,11 +22,11 @@ using Adaptive.Agrona.Concurrent.Status;
 namespace Adaptive.Aeron.Status
 {
     /// <summary>
-    /// Readonly view of an associated <seealso cref="Counter"/>.
+    /// Readonly view of an associated <seealso cref="Counter"/> .
     /// <para>
-    /// <b>Note:</b>The user should call <seealso cref="IsClosed"/> and ensure the result is false to avoid a race on reading a
-    /// closed <seealso cref="Counter"/>.
-    /// 
+    /// <b>Note:</b> The user should call <seealso cref="IsClosed"/> and ensure the result is false to avoid a race on
+    /// reading a closed <seealso cref="Counter"/> .
+    ///
     /// </para>
     /// </summary>
     public sealed class ReadableCounter : IDisposable
@@ -25,15 +41,19 @@ namespace Adaptive.Aeron.Status
         /// Construct a view of an existing counter.
         /// </summary>
         /// <param name="countersReader"> for getting access to the buffers. </param>
-        /// <param name="registrationId"> assigned by the driver for the counter or <see cref="Adaptive.Aeron.Aeron.NULL_VALUE"/> if not known. </param>
+        /// <param name="registrationId"> assigned by the driver for the counter or
+        /// <see cref="Adaptive.Aeron.Aeron.NULL_VALUE"/> if not known. </param>
         /// <param name="counterId">      for the counter to be viewed. </param>
-        /// <exception cref="InvalidOperationException"> if the id has for the counter has not been allocated. </exception>
+        /// <exception cref="InvalidOperationException"> if the id has for the counter has not been allocated.
+        /// </exception>
         public ReadableCounter(CountersReader countersReader, long registrationId, int counterId)
         {
             var counterState = countersReader.GetCounterState(counterId);
             if (counterState != CountersReader.RECORD_ALLOCATED)
             {
-                throw new InvalidOperationException("Counter not allocated: id=" + counterId + " state=" + counterState);
+                throw new InvalidOperationException(
+                    "Counter not allocated: id=" + counterId + " state=" + counterState
+                );
             }
 
             _countersReader = countersReader;
@@ -52,11 +72,10 @@ namespace Adaptive.Aeron.Status
         /// </summary>
         /// <param name="countersReader"> for getting access to the buffers. </param>
         /// <param name="counterId">      for the counter to be viewed. </param>
-        /// <exception cref="InvalidOperationException"> if the id has for the counter has not been allocated. </exception>
-        public ReadableCounter(CountersReader countersReader, int counterId) : this(countersReader, Aeron.NULL_VALUE,
-            counterId)
-        {
-        }
+        /// <exception cref="InvalidOperationException"> if the id has for the counter has not been allocated.
+        /// </exception>
+        public ReadableCounter(CountersReader countersReader, int counterId)
+            : this(countersReader, Aeron.NULL_VALUE, counterId) { }
 
         /// <summary>
         /// Return the registration id for the counter.
@@ -88,9 +107,9 @@ namespace Adaptive.Aeron.Status
         /// <summary>
         /// Get the latest value for the counter with volatile semantics.
         /// <para>
-        /// <b>Note:</b>The user should call <seealso cref="IsClosed"/> and ensure the result is false to avoid a race on reading
-        /// a closed counter.
-        /// 
+        /// <b>Note:</b> The user should call <seealso cref="IsClosed"/> and ensure the result is false to avoid a race
+        /// on reading a closed counter.
+        ///
         /// </para>
         /// </summary>
         /// <returns> the latest value for the counter. </returns>

@@ -1,4 +1,20 @@
-﻿using System;
+﻿/*
+ * Copyright 2014 - 2026 Adaptive Financial Consulting Ltd
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
@@ -7,18 +23,18 @@ using System.Threading;
 namespace Adaptive.Agrona.Concurrent
 {
     /// <summary>
-    /// One time barrier for blocking one or more threads until a SIGINT or SIGTERM signal is received from the operating
-    /// system or by programmatically calling <seealso cref="Signal"/>. Useful for shutting down a service.
+    /// One time barrier for blocking one or more threads until a SIGINT or SIGTERM signal is received from the
+    /// operating system or by programmatically calling <seealso cref="Signal"/> . Useful for shutting down a service.
     /// </summary>
     public sealed class ShutdownSignalBarrier : IDisposable
     {
         /// <summary>Delegate notified when the barrier is signaled.</summary>
         public delegate void SignalHandler();
 
-        private static readonly SignalHandler NO_OP_SIGNAL_HANDLER = () => { };
+        private static readonly SignalHandler NoOpSignalHandler = () => { };
 
         // Registry of all active barriers (value is unused).
-        private static readonly ConcurrentDictionary<ShutdownSignalBarrier, byte> BARRIERS =
+        private static readonly ConcurrentDictionary<ShutdownSignalBarrier, byte> Barriers =
             new ConcurrentDictionary<ShutdownSignalBarrier, byte>();
 
         // Static ctor: hook process termination and Ctrl+C, like Java's shutdown hook.
@@ -48,16 +64,19 @@ namespace Adaptive.Agrona.Concurrent
         private readonly SignalHandler _signalHandler;
 
         /// <summary>Construct and register the barrier ready for use.</summary>
-        public ShutdownSignalBarrier() : this(NO_OP_SIGNAL_HANDLER)
-        {
-        }
+        public ShutdownSignalBarrier()
+            : this(NoOpSignalHandler) { }
 
         /// <summary>Construct and register the barrier with a signal handler.</summary>
         public ShutdownSignalBarrier(SignalHandler signalHandler)
         {
-            if (signalHandler == null) throw new ArgumentNullException(nameof(signalHandler));
+            if (signalHandler == null)
+            {
+                throw new ArgumentNullException(nameof(signalHandler));
+            }
+
             _signalHandler = signalHandler;
-            BARRIERS.TryAdd(this, 0);
+            Barriers.TryAdd(this, 0);
         }
 
         /// <summary>Programmatically signal awaiting thread on this barrier.</summary>
@@ -65,7 +84,7 @@ namespace Adaptive.Agrona.Concurrent
         {
             if (Interlocked.CompareExchange(ref _signaled, 1, 0) == 0)
             {
-                BARRIERS.TryRemove(this, out _);
+                Barriers.TryRemove(this, out _);
                 _waitEvent.Set();
                 _signalHandler();
             }
@@ -80,7 +99,7 @@ namespace Adaptive.Agrona.Concurrent
         /// <summary>Remove this barrier from global shutdown handling.</summary>
         public void Remove()
         {
-            BARRIERS.TryRemove(this, out _);
+            Barriers.TryRemove(this, out _);
         }
 
         /// <summary>Await the reception of the shutdown signal.</summary>
@@ -125,11 +144,14 @@ namespace Adaptive.Agrona.Concurrent
 
         public override string ToString()
         {
-            return "ShutdownSignalBarrier{" +
-                   "waitEvent=" + _waitEvent.IsSet +
-                   ", closeEvent=" + _closeEvent.IsSet +
-                   ", signaled=" + (_signaled == 1) +
-                   "}";
+            return "ShutdownSignalBarrier{"
+                + "waitEvent="
+                + _waitEvent.IsSet
+                + ", closeEvent="
+                + _closeEvent.IsSet
+                + ", signaled="
+                + (_signaled == 1)
+                + "}";
         }
 
         // --------- Static helpers (Java's private static methods) ---------
@@ -137,9 +159,9 @@ namespace Adaptive.Agrona.Concurrent
         private static ShutdownSignalBarrier[] SignalAndClearAll()
         {
             // Snapshot then clear, like CopyOnWriteArrayList semantics.
-            var snapshot = new ShutdownSignalBarrier[BARRIERS.Count];
-            BARRIERS.Keys.CopyTo(snapshot, 0);
-            BARRIERS.Clear();
+            var snapshot = new ShutdownSignalBarrier[Barriers.Count];
+            Barriers.Keys.CopyTo(snapshot, 0);
+            Barriers.Clear();
 
             List<Exception> exceptions = null;
 
@@ -151,7 +173,11 @@ namespace Adaptive.Agrona.Concurrent
                 }
                 catch (Exception ex)
                 {
-                    if (exceptions == null) exceptions = new List<Exception>(4);
+                    if (exceptions == null)
+                    {
+                        exceptions = new List<Exception>(4);
+                    }
+
                     exceptions.Add(ex);
                 }
             }
@@ -168,9 +194,13 @@ namespace Adaptive.Agrona.Concurrent
         private static void AwaitTermination(
             ShutdownSignalBarrier[] barriers,
             TimeSpan timeoutPerBarrier,
-            TextWriter output)
+            TextWriter output
+        )
         {
-            if (barriers == null || barriers.Length == 0) return;
+            if (barriers == null || barriers.Length == 0)
+            {
+                return;
+            }
 
             bool wasInterrupted = false;
 
@@ -184,7 +214,10 @@ namespace Adaptive.Agrona.Concurrent
                     for (int i = 0; i < remaining.Length; i++)
                     {
                         var barrier = remaining[i];
-                        if (barrier == null) continue;
+                        if (barrier == null)
+                        {
+                            continue;
+                        }
 
                         try
                         {
@@ -196,9 +229,10 @@ namespace Adaptive.Agrona.Concurrent
                             else
                             {
                                 output.WriteLine(
-                                    "WARN: ShutdownSignalBarrier hasn't terminated in " +
-                                    timeoutPerBarrier.TotalSeconds.ToString("N0") +
-                                    " seconds! Did you forget to call Close()/Dispose() on it?");
+                                    "WARN: ShutdownSignalBarrier hasn't terminated in "
+                                        + timeoutPerBarrier.TotalSeconds.ToString("N0")
+                                        + " seconds! Did you forget to call Close()/Dispose() on it?"
+                                );
                             }
                         }
                         catch (ThreadInterruptedException)

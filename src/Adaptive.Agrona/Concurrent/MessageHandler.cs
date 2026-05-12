@@ -17,8 +17,8 @@
 namespace Adaptive.Agrona.Concurrent
 {
     /// <summary>
-    /// Callback interface for processing of messages that are read from a buffer.
-    /// Called for the processing of each message read from a buffer in turn.
+    /// Callback interface for processing of messages that are read from a buffer. Called for the processing of each
+    /// message read from a buffer in turn.
     /// </summary>
     /// <param name="msgTypeId"> type of the encoded message.</param>
     /// <param name="buffer"> containing the encoded message.</param>

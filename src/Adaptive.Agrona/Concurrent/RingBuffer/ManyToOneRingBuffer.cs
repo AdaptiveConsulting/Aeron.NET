@@ -44,9 +44,9 @@ namespace Adaptive.Agrona.Concurrent.RingBuffer
         private readonly IAtomicBuffer _buffer;
 
         /// <summary>
-        /// Construct a new <seealso cref="RingBuffer"/> based on an underlying <seealso cref="IAtomicBuffer"/>.
-        /// The underlying buffer must a power of 2 in size plus sufficient space
-        /// for the <seealso cref="RingBufferDescriptor.TrailerLength"/>.
+        /// Construct a new <seealso cref="RingBuffer"/> based on an underlying <seealso cref="IAtomicBuffer"/> . The
+        /// underlying buffer must a power of 2 in size plus sufficient space for the
+        /// <seealso cref="RingBufferDescriptor.TrailerLength"/> .
         /// </summary>
         /// <param name="buffer"> via which events will be exchanged. </param>
         /// <exception cref="InvalidOperationException"> if the buffer capacity is not a power of 2
@@ -101,7 +101,6 @@ namespace Adaptive.Agrona.Concurrent.RingBuffer
             return true;
         }
 
-
         /// <summary>
         /// Read as many messages as are available from the ring buffer.
         /// </summary>
@@ -151,8 +150,12 @@ namespace Adaptive.Agrona.Concurrent.RingBuffer
                     }
 
                     ++messagesRead;
-                    handler(messageTypeId, buffer, recordIndex + RecordDescriptor.HeaderLength,
-                        recordLength - RecordDescriptor.HeaderLength);
+                    handler(
+                        messageTypeId,
+                        buffer,
+                        recordIndex + RecordDescriptor.HeaderLength,
+                        recordLength - RecordDescriptor.HeaderLength
+                    );
                 }
             }
             finally
@@ -167,7 +170,6 @@ namespace Adaptive.Agrona.Concurrent.RingBuffer
             return messagesRead;
         }
 
-
         /// <summary>
         /// The maximum message length in bytes supported by the underlying ring buffer.
         /// </summary>
@@ -178,8 +180,9 @@ namespace Adaptive.Agrona.Concurrent.RingBuffer
         }
 
         /// <summary>
-        /// Get the next value that can be used for a correlation id on an message when a response needs to be correlated.
-        /// 
+        /// Get the next value that can be used for a correlation id on an message when a response needs to be
+        /// correlated.
+        ///
         /// This method should be thread safe.
         /// </summary>
         /// <returns> the next value in the correlation sequence. </returns>
@@ -199,7 +202,7 @@ namespace Adaptive.Agrona.Concurrent.RingBuffer
 
         /// <summary>
         /// Set the time of the last consumer heartbeat.
-        /// 
+        ///
         /// <b>Note:</b> The value for time must be valid across processes.
         /// </summary>
         /// <param name="time"> of the last consumer heartbeat. </param>
@@ -218,8 +221,8 @@ namespace Adaptive.Agrona.Concurrent.RingBuffer
         }
 
         /// <summary>
-        /// The position in bytes from start up of the producers.  The figure includes the headers.
-        /// This is the range they are working with but could still be in the act of working with.
+        /// The position in bytes from start up of the producers. The figure includes the headers. This is the range
+        /// they are working with but could still be in the act of working with.
         /// </summary>
         /// <returns> number of bytes produced by the producers in claimed space. </returns>
         public long ProducerPosition()
@@ -228,7 +231,7 @@ namespace Adaptive.Agrona.Concurrent.RingBuffer
         }
 
         /// <summary>
-        /// The position in bytes from start up for the consumers.  The figure includes the headers.
+        /// The position in bytes from start up for the consumers. The figure includes the headers.
         /// </summary>
         /// <returns> the count of bytes consumed by the consumers. </returns>
         public long ConsumerPosition()
@@ -237,7 +240,8 @@ namespace Adaptive.Agrona.Concurrent.RingBuffer
         }
 
         /// <summary>
-        /// Size of the backlog of bytes in the buffer between producers and consumers. The figure includes the size of headers.
+        /// Size of the backlog of bytes in the buffer between producers and consumers. The figure includes the size of
+        /// headers.
         /// </summary>
         /// <returns> size of the backlog of bytes in the buffer between producers and consumers. </returns>
         public int Size()
@@ -464,11 +468,14 @@ namespace Adaptive.Agrona.Concurrent.RingBuffer
                 return recordLength;
             }
 
-            throw new InvalidOperationException("claimed space previously " +
-                                                (PaddingMsgTypeId ==
-                                                 buffer.GetInt(RecordDescriptor.TypeOffset(recordIndex))
-                                                    ? "aborted"
-                                                    : "committed"));
+            throw new InvalidOperationException(
+                "claimed space previously "
+                    + (
+                        PaddingMsgTypeId == buffer.GetInt(RecordDescriptor.TypeOffset(recordIndex))
+                            ? "aborted"
+                            : "committed"
+                    )
+            );
         }
     }
 }

@@ -1,17 +1,34 @@
-﻿using System;
+﻿/*
+ * Copyright 2014 - 2026 Adaptive Financial Consulting Ltd
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+using System;
 using System.Threading;
 using Adaptive.Agrona.Concurrent.Status;
 
 namespace Adaptive.Agrona.Concurrent
 {
     /// <summary>
-    /// <see cref="Agent"/> container which does not start a thread. It instead allows the duty ctyle <see cref="IAgent.DoWork"/> to be
-    /// invoked directly.
-    /// 
-    /// Exceptions which occur during the <see cref="IAgent.DoWork"/> invocation will be caught and passed to the provided <see cref="ErrorHandler"/>.
-    /// 
+    /// <see cref="Agent"/> container which does not start a thread. It instead allows the duty ctyle
+    /// <see cref="IAgent.DoWork"/> to be invoked directly.
+    ///
+    /// Exceptions which occur during the <see cref="IAgent.DoWork"/> invocation will be caught and passed to the
+    /// provided <see cref="ErrorHandler"/> .
+    ///
     /// <b>Note: </b> This class is not threadsafe.
-    /// 
+    ///
     /// </summary>
     public class AgentInvoker : IDisposable
     {
@@ -38,13 +55,10 @@ namespace Adaptive.Agrona.Concurrent
         /// Create an agent and initialise it.
         /// </summary>
         /// <param name="errorHandler"> to be called if an <seealso cref="Exception"/> is encountered </param>
-        /// <param name="errorCounter"> to be incremented each time an exception is encountered. This may be null. </param>
+        /// <param name="errorCounter"> to be incremented each time an exception is encountered. This may be null.
+        /// </param>
         /// <param name="agent">        to be run in this thread. </param>
-        public AgentInvoker(
-            IErrorHandler errorHandler,
-            AtomicCounter errorCounter,
-            IAgent agent
-        )
+        public AgentInvoker(IErrorHandler errorHandler, AtomicCounter errorCounter, IAgent agent)
         {
             Objects.RequireNonNull(errorHandler, "errorHandler");
             Objects.RequireNonNull(agent, "agent");
@@ -89,13 +103,15 @@ namespace Adaptive.Agrona.Concurrent
 
         /// <summary>
         /// Invoke the <seealso cref="IAgent.DoWork()"/> method and return the work count.
-        /// 
-        /// If an error occurs then the <seealso cref="AtomicCounter.Increment"/> will be called on the errorCounter if not null
-        /// and the <seealso cref="Exception"/> will be passed to the <seealso cref="ErrorHandler"/> method. If the error
-        /// is an <seealso cref="AgentTerminationException"/> then <seealso cref="Dispose"/> will be called after the error handler.
-        /// 
-        /// If not successfully started or after closed then this method will return without invoking the <seealso cref="Agent"/>.
-        ///     
+        ///
+        /// If an error occurs then the <seealso cref="AtomicCounter.Increment"/> will be called on the errorCounter if
+        /// not null and the <seealso cref="Exception"/> will be passed to the <seealso cref="ErrorHandler"/> method. If
+        /// the error is an <seealso cref="AgentTerminationException"/> then <seealso cref="Dispose"/> will be called
+        /// after the error handler.
+        ///
+        /// If not successfully started or after closed then this method will return without invoking the
+        /// <seealso cref="Agent"/>.
+        ///
         /// </summary>
         /// <returns> the work count for the <seealso cref="IAgent.DoWork"/> method. </returns>
         public int Invoke()
@@ -147,7 +163,6 @@ namespace Adaptive.Agrona.Concurrent
             {
                 HandleError(exception);
             }
-
         }
 
         private void HandleError(Exception exception)

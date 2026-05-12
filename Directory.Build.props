@@ -1,0 +1,49 @@
+<Project>
+  <PropertyGroup>
+    <!-- Enforce .editorconfig style and naming rules during dotnet build, not just in the IDE.
+         Without this, IDE0xxx and IDE1006 diagnostics are silent at build time. -->
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+
+    <!-- IDE0005 (unused usings) only fires at build when an XML doc file is being produced.
+         Cheapest way to satisfy that without forcing the doc-comment warnings on every
+         public symbol is to emit the file and suppress the doc-coverage / cref warnings.
+           CS1591 — missing XML comment for publicly visible type or member
+           CS1584 — XML comment has syntactically incorrect cref attribute
+           CS1658 — overrides an existing warning (fires alongside CS1584) -->
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);CS1591;CS1584;CS1658</NoWarn>
+  </PropertyGroup>
+
+  <!-- Repo-wide analyzer packs. PrivateAssets=all keeps them out of the package graph
+       of any consumer that references our shipped libraries. -->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="9.0.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="SonarAnalyzer.CSharp" Version="10.4.0.108396">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <!-- Local custom analyzer. Wired as an Analyzer-only ProjectReference so the
+       output DLL is loaded by Roslyn at compile time without becoming part of
+       the consumer's reference closure. Skipped on the analyzer project itself
+       to avoid a self-cycle and on Fody weavers which run in a different host. -->
+  <ItemGroup Condition="'$(MSBuildProjectName)' != 'Adaptive.Aeron.Analyzers' AND '$(MSBuildProjectName)' != 'Unsealer.Fody'">
+    <ProjectReference Include="$(MSBuildThisFileDirectory)src/Adaptive.Aeron.Analyzers/Adaptive.Aeron.Analyzers.csproj"
+                      OutputItemType="Analyzer"
+                      ReferenceOutputAssembly="false" />
+  </ItemGroup>
+
+  <!-- SonarAnalyzer parameterised-rule config. Standalone NuGet ignores
+       `sonar.cs.SXXX.<param>` from .editorconfig (SonarCloud/SonarQube only)
+       but honours rule parameters supplied through SonarLint.xml when wired
+       in as a Roslyn AdditionalFiles input. -->
+  <ItemGroup>
+    <AdditionalFiles Include="$(MSBuildThisFileDirectory)SonarLint.xml"
+                     Link="Properties\SonarLint.xml"
+                     Visible="false" />
+  </ItemGroup>
+</Project>

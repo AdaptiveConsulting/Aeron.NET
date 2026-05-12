@@ -1,4 +1,20 @@
-﻿using Adaptive.Aeron;
+﻿/*
+ * Copyright 2014 - 2026 Adaptive Financial Consulting Ltd
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+using Adaptive.Aeron;
 using Adaptive.Aeron.LogBuffer;
 using Adaptive.Agrona;
 using Adaptive.Cluster.Codecs;
@@ -6,7 +22,7 @@ using Adaptive.Cluster.Codecs;
 namespace Adaptive.Cluster.Client
 {
     /// <summary>
-    /// Adapter for dispatching egress messages from a cluster to a <seealso cref="IEgressListener"/>.
+    /// Adapter for dispatching egress messages from a cluster to a <seealso cref="IEgressListener"/> .
     /// </summary>
     public class EgressAdapter : IFragmentHandler
     {
@@ -34,11 +50,10 @@ namespace Adaptive.Cluster.Client
             IEgressListener listener,
             long clusterSessionId,
             Subscription subscription,
-            int fragmentLimit) : this(listener, null, clusterSessionId, subscription, fragmentLimit)
-        {
-           
-        }
-        
+            int fragmentLimit
+        )
+            : this(listener, null, clusterSessionId, subscription, fragmentLimit) { }
+
         /// <summary>
         /// Construct an adapter for cluster egress which consumes from the subscription and dispatches to the
         /// <seealso cref="IEgressListener"/> or extension messages to <seealso cref="IEgressListenerExtension"/>.
@@ -53,10 +68,11 @@ namespace Adaptive.Cluster.Client
             IEgressListenerExtension listenerExtension,
             long clusterSessionId,
             Subscription subscription,
-            int fragmentLimit)
+            int fragmentLimit
+        )
         {
             _fragmentAssembler = new FragmentAssembler(this);
-            
+
             _clusterSessionId = clusterSessionId;
             _fragmentLimit = fragmentLimit;
             _listener = listener;
@@ -65,7 +81,7 @@ namespace Adaptive.Cluster.Client
         }
 
         /// <summary>
-        /// Poll the egress subscription and dispatch assembled events to the <seealso cref="IEgressListener"/>.
+        /// Poll the egress subscription and dispatch assembled events to the <seealso cref="IEgressListener"/> .
         /// </summary>
         /// <returns> the number of fragments consumed. </returns>
         public int Poll()
@@ -74,6 +90,12 @@ namespace Adaptive.Cluster.Client
         }
 
         /// <inheritdoc />
+        // Upstream: io.aeron.cluster.client.EgressAdapter#onFragment is @SuppressWarnings("MethodLength").
+        [System.Diagnostics.CodeAnalysis.SuppressMessage(
+            "Major Code Smell",
+            "S138:Functions should not have too many lines",
+            Justification = "Upstream Java parity; method is itself @SuppressWarnings(\"MethodLength\")."
+        )]
         public void OnFragment(IDirectBuffer buffer, int offset, int length, Header header)
         {
             _messageHeaderDecoder.Wrap(buffer, offset);
@@ -91,10 +113,13 @@ namespace Adaptive.Cluster.Client
                         _messageHeaderDecoder.Version(),
                         buffer,
                         offset + MessageHeaderDecoder.ENCODED_LENGTH,
-                        length - MessageHeaderDecoder.ENCODED_LENGTH);
+                        length - MessageHeaderDecoder.ENCODED_LENGTH
+                    );
                     return;
                 }
-                throw new ClusterException("expected schemaId=" + MessageHeaderDecoder.SCHEMA_ID + ", actual=" + schemaId);
+                throw new ClusterException(
+                    "expected schemaId=" + MessageHeaderDecoder.SCHEMA_ID + ", actual=" + schemaId
+                );
             }
 
             switch (templateId)
@@ -105,7 +130,8 @@ namespace Adaptive.Cluster.Client
                         buffer,
                         offset + MessageHeaderDecoder.ENCODED_LENGTH,
                         _messageHeaderDecoder.BlockLength(),
-                        _messageHeaderDecoder.Version());
+                        _messageHeaderDecoder.Version()
+                    );
 
                     var sessionId = _sessionMessageHeaderDecoder.ClusterSessionId();
                     if (sessionId == _clusterSessionId)
@@ -116,19 +142,21 @@ namespace Adaptive.Cluster.Client
                             buffer,
                             offset + AeronCluster.SESSION_HEADER_LENGTH,
                             length - AeronCluster.SESSION_HEADER_LENGTH,
-                            header);
+                            header
+                        );
                     }
 
                     break;
                 }
-                
+
                 case SessionEventDecoder.TEMPLATE_ID:
                 {
                     _sessionEventDecoder.Wrap(
                         buffer,
                         offset + MessageHeaderDecoder.ENCODED_LENGTH,
                         _messageHeaderDecoder.BlockLength(),
-                        _messageHeaderDecoder.Version());
+                        _messageHeaderDecoder.Version()
+                    );
 
                     var sessionId = _sessionEventDecoder.ClusterSessionId();
                     if (sessionId == _clusterSessionId)
@@ -139,7 +167,8 @@ namespace Adaptive.Cluster.Client
                             _sessionEventDecoder.LeadershipTermId(),
                             _sessionEventDecoder.LeaderMemberId(),
                             _sessionEventDecoder.Code(),
-                            _sessionEventDecoder.Detail());
+                            _sessionEventDecoder.Detail()
+                        );
                     }
 
                     break;
@@ -151,7 +180,8 @@ namespace Adaptive.Cluster.Client
                         buffer,
                         offset + MessageHeaderDecoder.ENCODED_LENGTH,
                         _messageHeaderDecoder.BlockLength(),
-                        _messageHeaderDecoder.Version());
+                        _messageHeaderDecoder.Version()
+                    );
 
                     var sessionId = _newLeaderEventDecoder.ClusterSessionId();
                     if (sessionId == _clusterSessionId)
@@ -160,7 +190,8 @@ namespace Adaptive.Cluster.Client
                             sessionId,
                             _newLeaderEventDecoder.LeadershipTermId(),
                             _newLeaderEventDecoder.LeaderMemberId(),
-                            _newLeaderEventDecoder.IngressEndpoints());
+                            _newLeaderEventDecoder.IngressEndpoints()
+                        );
                     }
 
                     break;
@@ -172,7 +203,8 @@ namespace Adaptive.Cluster.Client
                         buffer,
                         offset + MessageHeaderDecoder.ENCODED_LENGTH,
                         _messageHeaderDecoder.BlockLength(),
-                        _messageHeaderDecoder.Version());
+                        _messageHeaderDecoder.Version()
+                    );
 
                     long sessionId = _adminResponseDecoder.ClusterSessionId();
                     if (sessionId == _clusterSessionId)
@@ -181,11 +213,12 @@ namespace Adaptive.Cluster.Client
                         AdminRequestType requestType = _adminResponseDecoder.RequestType();
                         AdminResponseCode responseCode = _adminResponseDecoder.ResponseCode();
                         string message = _adminResponseDecoder.Message();
-                        int payloadOffset = _adminResponseDecoder.Offset() +
-                                            AdminResponseDecoder.BLOCK_LENGTH +
-                                            AdminResponseDecoder.MessageHeaderLength() +
-                                            message.Length +
-                                            AdminResponseDecoder.PayloadHeaderLength();
+                        int payloadOffset =
+                            _adminResponseDecoder.Offset()
+                            + AdminResponseDecoder.BLOCK_LENGTH
+                            + AdminResponseDecoder.MessageHeaderLength()
+                            + message.Length
+                            + AdminResponseDecoder.PayloadHeaderLength();
                         int payloadLength = _adminResponseDecoder.PayloadLength();
                         _listener.OnAdminResponse(
                             sessionId,
@@ -195,7 +228,8 @@ namespace Adaptive.Cluster.Client
                             message,
                             buffer,
                             payloadOffset,
-                            payloadLength);
+                            payloadLength
+                        );
                     }
 
                     break;

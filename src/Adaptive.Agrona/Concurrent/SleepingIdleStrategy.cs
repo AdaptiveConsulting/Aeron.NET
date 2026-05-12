@@ -28,8 +28,8 @@ namespace Adaptive.Agrona.Concurrent
         /// <summary>
         /// Constructed a new strategy that will sleep for a given period when idle.
         /// </summary>
-        /// <param name="sleepPeriodMs"> period in millisecond for which the strategy will sleep when work count is 0. </param>
-
+        /// <param name="sleepPeriodMs"> period in millisecond for which the strategy will sleep when work count is 0.
+        /// </param>
         public SleepingIdleStrategy(int sleepPeriodMs)
         {
             _sleepPeriodMs = sleepPeriodMs;
@@ -50,9 +50,6 @@ namespace Adaptive.Agrona.Concurrent
             Thread.Sleep(_sleepPeriodMs);
         }
 
-        public void Reset()
-        {
-        }
+        public void Reset() { }
     }
-
 }

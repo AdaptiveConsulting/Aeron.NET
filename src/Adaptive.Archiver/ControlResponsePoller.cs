@@ -1,4 +1,20 @@
-﻿using Adaptive.Aeron;
+﻿/*
+ * Copyright 2014 - 2026 Adaptive Financial Consulting Ltd
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+using Adaptive.Aeron;
 using Adaptive.Aeron.LogBuffer;
 using Adaptive.Agrona;
 using Adaptive.Archiver.Codecs;
@@ -16,37 +32,36 @@ namespace Adaptive.Archiver
         /// </summary>
         public const int FRAGMENT_LIMIT = 10;
 
-        private readonly MessageHeaderDecoder messageHeaderDecoder = new MessageHeaderDecoder();
-        private readonly ControlResponseDecoder controlResponseDecoder = new ControlResponseDecoder();
-        private readonly ChallengeDecoder challengeDecoder = new ChallengeDecoder();
-        private readonly RecordingSignalEventDecoder recordingSignalEventDecoder = new RecordingSignalEventDecoder();
+        private readonly MessageHeaderDecoder _messageHeaderDecoder = new MessageHeaderDecoder();
+        private readonly ControlResponseDecoder _controlResponseDecoder = new ControlResponseDecoder();
+        private readonly ChallengeDecoder _challengeDecoder = new ChallengeDecoder();
+        private readonly RecordingSignalEventDecoder _recordingSignalEventDecoder = new RecordingSignalEventDecoder();
 
-        private readonly Subscription subscription;
-        private ControlledFragmentAssembler fragmentAssembler;
-        private readonly int fragmentLimit;
-        
-        private long controlSessionId = Aeron.Aeron.NULL_VALUE;
-        private long correlationId = Aeron.Aeron.NULL_VALUE;
-        private long relevantId = Aeron.Aeron.NULL_VALUE;
-        private int templateId = Aeron.Aeron.NULL_VALUE;
-        private int version = 0;
-        private ControlResponseCode code = ControlResponseCode.NULL_VALUE;
-        private string errorMessage = null;
-        private long recordingId = Aeron.Aeron.NULL_VALUE;
-        private long subscriptionId = Aeron.Aeron.NULL_VALUE;
-        private long position = Aeron.Aeron.NULL_VALUE;
-        private RecordingSignal recordingSignal = Codecs.RecordingSignal.NULL_VALUE;
-        private byte[] encodedChallenge = null;
-        private bool isPollComplete = false;
+        private readonly Subscription _subscription;
+        private ControlledFragmentAssembler _fragmentAssembler;
+        private readonly int _fragmentLimit;
+
+        private long _controlSessionId = Aeron.Aeron.NULL_VALUE;
+        private long _correlationId = Aeron.Aeron.NULL_VALUE;
+        private long _relevantId = Aeron.Aeron.NULL_VALUE;
+        private int _templateId = Aeron.Aeron.NULL_VALUE;
+        private int _version = 0;
+        private ControlResponseCode _code = ControlResponseCode.NULL_VALUE;
+        private string _errorMessage = null;
+        private long _recordingId = Aeron.Aeron.NULL_VALUE;
+        private long _subscriptionId = Aeron.Aeron.NULL_VALUE;
+        private long _position = Aeron.Aeron.NULL_VALUE;
+        private RecordingSignal _recordingSignal = Codecs.RecordingSignal.NULL_VALUE;
+        private byte[] _encodedChallenge = null;
+        private bool _isPollComplete = false;
 
         /// <summary>
-        /// Create a poller for a given subscription to an archive for control response messages with a default
-        /// fragment limit for polling as <seealso cref="FRAGMENT_LIMIT"/>.
+        /// Create a poller for a given subscription to an archive for control response messages with a default fragment
+        /// limit for polling as <seealso cref="FRAGMENT_LIMIT"/> .
         /// </summary>
         /// <param name="subscription">  to poll for new events. </param>
-        public ControlResponsePoller(Subscription subscription) : this(subscription, FRAGMENT_LIMIT)
-        {
-        }
+        public ControlResponsePoller(Subscription subscription)
+            : this(subscription, FRAGMENT_LIMIT) { }
 
         /// <summary>
         /// Create a poller for a given subscription to an archive for control response messages.
@@ -55,10 +70,10 @@ namespace Adaptive.Archiver
         /// <param name="fragmentLimit"> to apply when polling. </param>
         public ControlResponsePoller(Subscription subscription, int fragmentLimit)
         {
-            this.fragmentAssembler = new ControlledFragmentAssembler(this);
+            this._fragmentAssembler = new ControlledFragmentAssembler(this);
 
-            this.subscription = Objects.RequireNonNull(subscription);
-            this.fragmentLimit = fragmentLimit;
+            this._subscription = Objects.RequireNonNull(subscription);
+            this._fragmentLimit = fragmentLimit;
         }
 
         /// <summary>
@@ -67,7 +82,7 @@ namespace Adaptive.Archiver
         /// <returns> the <seealso cref="Subscription"/> used for polling responses. </returns>
         public Subscription Subscription()
         {
-            return subscription;
+            return _subscription;
         }
 
         /// <summary>
@@ -76,51 +91,56 @@ namespace Adaptive.Archiver
         /// <returns> the number of fragments read during the operation. Zero if no events are available. </returns>
         public int Poll()
         {
-            if (isPollComplete)
+            if (_isPollComplete)
             {
-                controlSessionId = Aeron.Aeron.NULL_VALUE;
-                correlationId = Aeron.Aeron.NULL_VALUE;
-                relevantId = Aeron.Aeron.NULL_VALUE;
-                templateId = Aeron.Aeron.NULL_VALUE;
-                version = 0;
-                code = ControlResponseCode.NULL_VALUE;
-                errorMessage = null;
-                recordingId = Aeron.Aeron.NULL_VALUE;
-                subscriptionId = Aeron.Aeron.NULL_VALUE;
-                position = Aeron.Aeron.NULL_VALUE;
-                encodedChallenge = null;
-                recordingSignal = Codecs.RecordingSignal.NULL_VALUE;
-                isPollComplete = false;
+                _controlSessionId = Aeron.Aeron.NULL_VALUE;
+                _correlationId = Aeron.Aeron.NULL_VALUE;
+                _relevantId = Aeron.Aeron.NULL_VALUE;
+                _templateId = Aeron.Aeron.NULL_VALUE;
+                _version = 0;
+                _code = ControlResponseCode.NULL_VALUE;
+                _errorMessage = null;
+                _recordingId = Aeron.Aeron.NULL_VALUE;
+                _subscriptionId = Aeron.Aeron.NULL_VALUE;
+                _position = Aeron.Aeron.NULL_VALUE;
+                _encodedChallenge = null;
+                _recordingSignal = Codecs.RecordingSignal.NULL_VALUE;
+                _isPollComplete = false;
             }
 
-            return subscription.ControlledPoll(fragmentAssembler, fragmentLimit);
+            return _subscription.ControlledPoll(_fragmentAssembler, _fragmentLimit);
         }
 
         /// <summary>
-        /// SBE template id of polled message or <seealso cref="Adaptive.Aeron.Aeron.NULL_VALUE"/> if poll returned nothing.
+        /// SBE template id of polled message or <seealso cref="Adaptive.Aeron.Aeron.NULL_VALUE"/> if poll returned
+        /// nothing.
         /// </summary>
-        /// <returns> SBE template id of polled message or <seealso cref="Adaptive.Aeron.Aeron.NULL_VALUE"/> if poll returned nothing. </returns>
+        /// <returns> SBE template id of polled message or <seealso cref="Adaptive.Aeron.Aeron.NULL_VALUE"/> if poll
+        /// returned nothing. </returns>
         public int TemplateId()
         {
-            return templateId;
+            return _templateId;
         }
-        
+
         /// <summary>
-        /// Control session id of polled message or <seealso cref="Adaptive.Aeron.Aeron.NULL_VALUE"/> if poll returned nothing.
+        /// Control session id of polled message or <seealso cref="Adaptive.Aeron.Aeron.NULL_VALUE"/> if poll returned
+        /// nothing.
         /// </summary>
-        /// <returns> control session id of polled message or <seealso cref="Adaptive.Aeron.Aeron.NULL_VALUE"/> if poll returned nothing. </returns>
+        /// <returns> control session id of polled message or <seealso cref="Adaptive.Aeron.Aeron.NULL_VALUE"/> if poll
+        /// returned nothing. </returns>
         public long ControlSessionId()
         {
-            return controlSessionId;
+            return _controlSessionId;
         }
 
         /// <summary>
         /// Correlation id of the message or <seealso cref="Adaptive.Aeron.Aeron.NULL_VALUE"/> if poll returned nothing.
         /// </summary>
-        /// <returns> correlation id of polled message or <seealso cref="Adaptive.Aeron.Aeron.NULL_VALUE"/> if poll returned nothing. </returns>
+        /// <returns> correlation id of polled message or <seealso cref="Adaptive.Aeron.Aeron.NULL_VALUE"/> if poll
+        /// returned nothing. </returns>
         public long CorrelationId()
         {
-            return correlationId;
+            return _correlationId;
         }
 
         /// <summary>
@@ -129,34 +149,40 @@ namespace Adaptive.Archiver
         /// <returns> the relevant id returned with the response. </returns>
         public long RelevantId()
         {
-            return relevantId;
+            return _relevantId;
         }
-        
+
         /// <summary>
-        /// Recording id of polled <seealso cref="RecordingSignal"/> or <seealso cref="Adaptive.Aeron.Aeron.NULL_VALUE"/> if poll returned nothing.
+        /// Recording id of polled <seealso cref="RecordingSignal"/> or
+        /// <seealso cref="Adaptive.Aeron.Aeron.NULL_VALUE"/> if poll returned nothing.
         /// </summary>
-        /// <returns> recording id of polled <seealso cref="RecordingSignal"/> or <seealso cref="Adaptive.Aeron.Aeron.NULL_VALUE"/> if poll returned nothing. </returns>
+        /// <returns> recording id of polled <seealso cref="RecordingSignal"/> or
+        /// <seealso cref="Adaptive.Aeron.Aeron.NULL_VALUE"/> if poll returned nothing. </returns>
         public long RecordingId()
         {
-            return recordingId;
+            return _recordingId;
         }
 
         /// <summary>
-        /// Subscription id of polled <seealso cref="RecordingSignal"/> or <seealso cref="Adaptive.Aeron.Aeron.NULL_VALUE"/> if poll returned nothing.
+        /// Subscription id of polled <seealso cref="RecordingSignal"/> or
+        /// <seealso cref="Adaptive.Aeron.Aeron.NULL_VALUE"/> if poll returned nothing.
         /// </summary>
-        /// <returns> subscription id of polled <seealso cref="RecordingSignal"/> or <seealso cref="Adaptive.Aeron.Aeron.NULL_VALUE"/> if poll returned nothing. </returns>
+        /// <returns> subscription id of polled <seealso cref="RecordingSignal"/> or
+        /// <seealso cref="Adaptive.Aeron.Aeron.NULL_VALUE"/> if poll returned nothing. </returns>
         public long SubscriptionId()
         {
-            return subscriptionId;
+            return _subscriptionId;
         }
 
         /// <summary>
-        /// Position of polled <seealso cref="RecordingSignal"/> or <seealso cref="Adaptive.Aeron.Aeron.NULL_VALUE"/> if poll returned nothing.
+        /// Position of polled <seealso cref="RecordingSignal"/> or <seealso cref="Adaptive.Aeron.Aeron.NULL_VALUE"/> if
+        /// poll returned nothing.
         /// </summary>
-        /// <returns> position of polled <seealso cref="RecordingSignal"/> or <seealso cref="Adaptive.Aeron.Aeron.NULL_VALUE"/> if poll returned nothing. </returns>
+        /// <returns> position of polled <seealso cref="RecordingSignal"/> or
+        /// <seealso cref="Adaptive.Aeron.Aeron.NULL_VALUE"/> if poll returned nothing. </returns>
         public long Position()
         {
-            return position;
+            return _position;
         }
 
         /// <summary>
@@ -165,7 +191,7 @@ namespace Adaptive.Archiver
         /// <returns> enum of polled <seealso cref="RecordingSignal"/> or null if poll returned nothing. </returns>
         public RecordingSignal RecordingSignal()
         {
-            return recordingSignal;
+            return _recordingSignal;
         }
 
         /// <summary>
@@ -174,7 +200,7 @@ namespace Adaptive.Archiver
         /// <returns> response from the server in semantic version form. </returns>
         public int Version()
         {
-            return version;
+            return _version;
         }
 
         /// <summary>
@@ -183,7 +209,7 @@ namespace Adaptive.Archiver
         /// <returns> true if the last polling action received a complete message? </returns>
         public bool PollComplete
         {
-            get { return isPollComplete; }
+            get { return _isPollComplete; }
         }
 
         /// <summary>
@@ -192,7 +218,7 @@ namespace Adaptive.Archiver
         /// <returns> the response code of the last response. </returns>
         public ControlResponseCode Code()
         {
-            return code;
+            return _code;
         }
 
         /// <summary>
@@ -201,7 +227,7 @@ namespace Adaptive.Archiver
         /// <returns> the error message of the response. </returns>
         public string ErrorMessage()
         {
-            return errorMessage;
+            return _errorMessage;
         }
 
         /// <summary>
@@ -210,7 +236,7 @@ namespace Adaptive.Archiver
         /// <returns> true if the last polling action received was a challenge message, false if not. </returns>
         public bool WasChallenged()
         {
-            return null != encodedChallenge;
+            return null != _encodedChallenge;
         }
 
         /// <summary>
@@ -219,92 +245,95 @@ namespace Adaptive.Archiver
         /// <returns> the encoded challenge of the last challenge. </returns>
         public byte[] EncodedChallenge()
         {
-            return encodedChallenge;
+            return _encodedChallenge;
         }
 
         public ControlledFragmentHandlerAction OnFragment(IDirectBuffer buffer, int offset, int length, Header header)
         {
-            if (isPollComplete)
+            if (_isPollComplete)
             {
                 return ABORT;
             }
 
-            messageHeaderDecoder.Wrap(buffer, offset);
+            _messageHeaderDecoder.Wrap(buffer, offset);
 
-            int schemaId = messageHeaderDecoder.SchemaId();
+            int schemaId = _messageHeaderDecoder.SchemaId();
             if (schemaId != MessageHeaderDecoder.SCHEMA_ID)
             {
-                throw new ArchiveException("expected schemaId=" + MessageHeaderDecoder.SCHEMA_ID + ", actual=" +
-                                           schemaId);
+                throw new ArchiveException(
+                    "expected schemaId=" + MessageHeaderDecoder.SCHEMA_ID + ", actual=" + schemaId
+                );
             }
 
-            templateId = messageHeaderDecoder.TemplateId();
-            switch (templateId)
+            _templateId = _messageHeaderDecoder.TemplateId();
+            switch (_templateId)
             {
                 case ControlResponseDecoder.TEMPLATE_ID:
                 {
-                    controlResponseDecoder.Wrap(
-                        buffer, 
+                    _controlResponseDecoder.Wrap(
+                        buffer,
                         offset + MessageHeaderEncoder.ENCODED_LENGTH,
-                        messageHeaderDecoder.BlockLength(), 
-                        messageHeaderDecoder.Version());
+                        _messageHeaderDecoder.BlockLength(),
+                        _messageHeaderDecoder.Version()
+                    );
 
-                    controlSessionId = controlResponseDecoder.ControlSessionId();
-                    correlationId = controlResponseDecoder.CorrelationId();
-                    relevantId = controlResponseDecoder.RelevantId();
-                    code = controlResponseDecoder.Code();
-                    version = controlResponseDecoder.Version();
-                    errorMessage = controlResponseDecoder.ErrorMessage();
-                    isPollComplete = true;
-                    
+                    _controlSessionId = _controlResponseDecoder.ControlSessionId();
+                    _correlationId = _controlResponseDecoder.CorrelationId();
+                    _relevantId = _controlResponseDecoder.RelevantId();
+                    _code = _controlResponseDecoder.Code();
+                    _version = _controlResponseDecoder.Version();
+                    _errorMessage = _controlResponseDecoder.ErrorMessage();
+                    _isPollComplete = true;
+
                     return BREAK;
                 }
 
                 case ChallengeDecoder.TEMPLATE_ID:
                 {
-                    challengeDecoder.Wrap(
-                        buffer, 
+                    _challengeDecoder.Wrap(
+                        buffer,
                         offset + MessageHeaderEncoder.ENCODED_LENGTH,
-                        messageHeaderDecoder.BlockLength(), 
-                        messageHeaderDecoder.Version());
+                        _messageHeaderDecoder.BlockLength(),
+                        _messageHeaderDecoder.Version()
+                    );
 
-                    controlSessionId = challengeDecoder.ControlSessionId();
-                    correlationId = challengeDecoder.CorrelationId();
-                    relevantId = Aeron.Aeron.NULL_VALUE;
-                    code = ControlResponseCode.NULL_VALUE;
-                    version = challengeDecoder.Version();
-                    errorMessage = "";
+                    _controlSessionId = _challengeDecoder.ControlSessionId();
+                    _correlationId = _challengeDecoder.CorrelationId();
+                    _relevantId = Aeron.Aeron.NULL_VALUE;
+                    _code = ControlResponseCode.NULL_VALUE;
+                    _version = _challengeDecoder.Version();
+                    _errorMessage = "";
 
-                    int encodedChallengeLength = challengeDecoder.EncodedChallengeLength();
-                    encodedChallenge = new byte[encodedChallengeLength];
-                    challengeDecoder.GetEncodedChallenge(encodedChallenge, 0, encodedChallengeLength);
+                    int encodedChallengeLength = _challengeDecoder.EncodedChallengeLength();
+                    _encodedChallenge = new byte[encodedChallengeLength];
+                    _challengeDecoder.GetEncodedChallenge(_encodedChallenge, 0, encodedChallengeLength);
 
-                    isPollComplete = true;
+                    _isPollComplete = true;
 
                     return BREAK;
                 }
-                
+
                 case RecordingSignalEventDecoder.TEMPLATE_ID:
                 {
-                    recordingSignalEventDecoder.Wrap(
-                        buffer, 
-                        offset + MessageHeaderDecoder.ENCODED_LENGTH, 
-                        messageHeaderDecoder.BlockLength(), 
-                        messageHeaderDecoder.Version());
+                    _recordingSignalEventDecoder.Wrap(
+                        buffer,
+                        offset + MessageHeaderDecoder.ENCODED_LENGTH,
+                        _messageHeaderDecoder.BlockLength(),
+                        _messageHeaderDecoder.Version()
+                    );
 
-                    controlSessionId = recordingSignalEventDecoder.ControlSessionId();
-                    correlationId = recordingSignalEventDecoder.CorrelationId();
-                    recordingId = recordingSignalEventDecoder.RecordingId();
-                    subscriptionId = recordingSignalEventDecoder.SubscriptionId();
-                    position = recordingSignalEventDecoder.Position();
-                    recordingSignal = recordingSignalEventDecoder.Signal();
+                    _controlSessionId = _recordingSignalEventDecoder.ControlSessionId();
+                    _correlationId = _recordingSignalEventDecoder.CorrelationId();
+                    _recordingId = _recordingSignalEventDecoder.RecordingId();
+                    _subscriptionId = _recordingSignalEventDecoder.SubscriptionId();
+                    _position = _recordingSignalEventDecoder.Position();
+                    _recordingSignal = _recordingSignalEventDecoder.Signal();
 
-                    isPollComplete = true;
+                    _isPollComplete = true;
 
                     return BREAK;
                 }
 
-                
                 default:
                     return CONTINUE;
             }
@@ -312,20 +341,33 @@ namespace Adaptive.Archiver
 
         public override string ToString()
         {
-            return "ControlResponsePoller{" +
-                   "templateId=" + templateId +
-                   ", controlSessionId=" + controlSessionId +
-                   ", correlationId=" + correlationId +
-                   ", relevantId=" + relevantId +
-                   ", recordingId=" + recordingId +
-                   ", subscriptionId=" + subscriptionId +
-                   ", position=" + position +
-                   ", recordingSignal=" + recordingSignal +
-                   ", code=" + code +
-                   ", version=" + SemanticVersion.ToString(version) +
-                   ", errorMessage='" + errorMessage + '\'' +
-                   ", isPollComplete=" + isPollComplete +
-                   '}';
+            return "ControlResponsePoller{"
+                + "templateId="
+                + _templateId
+                + ", controlSessionId="
+                + _controlSessionId
+                + ", correlationId="
+                + _correlationId
+                + ", relevantId="
+                + _relevantId
+                + ", recordingId="
+                + _recordingId
+                + ", subscriptionId="
+                + _subscriptionId
+                + ", position="
+                + _position
+                + ", recordingSignal="
+                + _recordingSignal
+                + ", code="
+                + _code
+                + ", version="
+                + SemanticVersion.ToString(_version)
+                + ", errorMessage='"
+                + _errorMessage
+                + '\''
+                + ", isPollComplete="
+                + _isPollComplete
+                + '}';
         }
     }
 }

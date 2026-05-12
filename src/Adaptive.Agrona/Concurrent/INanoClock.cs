@@ -16,7 +16,6 @@
 
 namespace Adaptive.Agrona.Concurrent
 {
-
     /// <summary>
     /// Functional interface for return the current time as system wide monotonic tick of 1 nanosecond precision.
     /// </summary>
@@ -28,5 +27,4 @@ namespace Adaptive.Agrona.Concurrent
         /// <returns> number of ticks in nanoseconds the clock has advanced since starting.</returns>
         long NanoTime();
     }
-
 }

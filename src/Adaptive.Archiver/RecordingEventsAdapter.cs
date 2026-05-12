@@ -1,4 +1,20 @@
-﻿using Adaptive.Aeron;
+﻿/*
+ * Copyright 2014 - 2026 Adaptive Financial Consulting Ltd
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+using Adaptive.Aeron;
 using Adaptive.Aeron.LogBuffer;
 using Adaptive.Agrona;
 using Adaptive.Archiver.Codecs;
@@ -33,7 +49,8 @@ namespace Adaptive.Archiver
         }
 
         /// <summary>
-        /// Poll for recording events and dispatch them to the <seealso cref="IRecordingEventsListener"/> for this instance.
+        /// Poll for recording events and dispatch them to the <seealso cref="IRecordingEventsListener"/> for this
+        /// instance.
         /// </summary>
         /// <returns> the number of fragments read during the operation. Zero if no events are available. </returns>
         public int Poll()
@@ -49,8 +66,9 @@ namespace Adaptive.Archiver
             int schemaId = _messageHeaderDecoder.SchemaId();
             if (schemaId != MessageHeaderDecoder.SCHEMA_ID)
             {
-                throw new ArchiveException("expected schemaId=" + MessageHeaderDecoder.SCHEMA_ID + ", actual=" +
-                                           schemaId);
+                throw new ArchiveException(
+                    "expected schemaId=" + MessageHeaderDecoder.SCHEMA_ID + ", actual=" + schemaId
+                );
             }
 
             switch (_messageHeaderDecoder.TemplateId())
@@ -60,7 +78,8 @@ namespace Adaptive.Archiver
                         buffer,
                         offset + MessageHeaderDecoder.ENCODED_LENGTH,
                         _messageHeaderDecoder.BlockLength(),
-                        _messageHeaderDecoder.Version());
+                        _messageHeaderDecoder.Version()
+                    );
 
                     _listener.OnStart(
                         _recordingStartedDecoder.RecordingId(),
@@ -68,7 +87,8 @@ namespace Adaptive.Archiver
                         _recordingStartedDecoder.SessionId(),
                         _recordingStartedDecoder.StreamId(),
                         _recordingStartedDecoder.Channel(),
-                        _recordingStartedDecoder.SourceIdentity());
+                        _recordingStartedDecoder.SourceIdentity()
+                    );
                     break;
 
                 case RecordingProgressDecoder.TEMPLATE_ID:
@@ -76,12 +96,14 @@ namespace Adaptive.Archiver
                         buffer,
                         offset + MessageHeaderDecoder.ENCODED_LENGTH,
                         _messageHeaderDecoder.BlockLength(),
-                        _messageHeaderDecoder.Version());
+                        _messageHeaderDecoder.Version()
+                    );
 
                     _listener.OnProgress(
                         _recordingProgressDecoder.RecordingId(),
                         _recordingProgressDecoder.StartPosition(),
-                        _recordingProgressDecoder.Position());
+                        _recordingProgressDecoder.Position()
+                    );
                     break;
 
                 case RecordingStoppedDecoder.TEMPLATE_ID:
@@ -89,12 +111,14 @@ namespace Adaptive.Archiver
                         buffer,
                         offset + MessageHeaderDecoder.ENCODED_LENGTH,
                         _messageHeaderDecoder.BlockLength(),
-                        _messageHeaderDecoder.Version());
+                        _messageHeaderDecoder.Version()
+                    );
 
                     _listener.OnStop(
                         _recordingStoppedDecoder.RecordingId(),
                         _recordingStoppedDecoder.StartPosition(),
-                        _recordingStoppedDecoder.StopPosition());
+                        _recordingStoppedDecoder.StopPosition()
+                    );
                     break;
             }
         }

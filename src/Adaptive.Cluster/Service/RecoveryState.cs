@@ -1,4 +1,20 @@
-﻿using Adaptive.Aeron;
+﻿/*
+ * Copyright 2014 - 2026 Adaptive Financial Consulting Ltd
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+using Adaptive.Aeron;
 using Adaptive.Agrona;
 using Adaptive.Agrona.Concurrent.Status;
 using Adaptive.Cluster.Client;
@@ -8,31 +24,18 @@ namespace Adaptive.Cluster.Service
 {
     /// <summary>
     /// Counter representing the Recovery State for the cluster.
-    /// 
+    ///
     /// Key layout as follows:
     ///
-    ///   0                   1                   2                   3
-    ///   0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-    ///  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    ///  |                     Leadership Term ID                        |
-    ///  |                                                               |
-    ///  +---------------------------------------------------------------+
-    ///  |                  Log position for Snapshot                    |
-    ///  |                                                               |
-    ///  +---------------------------------------------------------------+
-    ///  |              Timestamp at beginning of Recovery               |
-    ///  |                                                               |
-    ///  +---------------------------------------------------------------+
-    ///  |                         Cluster ID                            |
-    ///  +---------------------------------------------------------------+
-    ///  |                     Count of Services                         |
-    ///  +---------------------------------------------------------------+
-    ///  |             Snapshot Recording ID (Service ID 0)              |
-    ///  |                                                               |
-    ///  +---------------------------------------------------------------+
-    ///  |             Snapshot Recording ID (Service ID n)              |
-    ///  |                                                               |
-    ///  +---------------------------------------------------------------+
+    /// 0 1 2 3 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+    /// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ | Leadership Term ID | | |
+    /// +---------------------------------------------------------------+ | Log position for Snapshot | | |
+    /// +---------------------------------------------------------------+ | Timestamp at beginning of Recovery | | |
+    /// +---------------------------------------------------------------+ | Cluster ID |
+    /// +---------------------------------------------------------------+ | Count of Services |
+    /// +---------------------------------------------------------------+ | Snapshot Recording ID (Service ID 0) | | |
+    /// +---------------------------------------------------------------+ | Snapshot Recording ID (Service ID n) | | |
+    /// +---------------------------------------------------------------+
     ///
     /// </summary>
     public static class RecoveryState
@@ -90,11 +93,15 @@ namespace Adaptive.Cluster.Service
             for (int i = 0, size = counters.MaxCounterId; i < size; i++)
             {
                 var counterState = counters.GetCounterState(i);
-                if (CountersReader.RECORD_ALLOCATED == counterState &&
-                    RECOVERY_STATE_TYPE_ID == counters.GetCounterTypeId(i))
+                if (
+                    CountersReader.RECORD_ALLOCATED == counterState
+                    && RECOVERY_STATE_TYPE_ID == counters.GetCounterTypeId(i)
+                )
                 {
-                    if (buffer.GetInt(CountersReader.MetaDataOffset(i) + CountersReader.KEY_OFFSET +
-                                      CLUSTER_ID_OFFSET) == clusterId)
+                    if (
+                        buffer.GetInt(CountersReader.MetaDataOffset(i) + CountersReader.KEY_OFFSET + CLUSTER_ID_OFFSET)
+                        == clusterId
+                    )
                     {
                         return i;
                     }
@@ -109,27 +116,33 @@ namespace Adaptive.Cluster.Service
         }
 
         /// <summary>
-        /// Get the leadership term id for the snapshot state. <see cref="Adaptive.Aeron.Aeron.NULL_VALUE"/> if no snapshot for recovery.
+        /// Get the leadership term id for the snapshot state. <see cref="Adaptive.Aeron.Aeron.NULL_VALUE"/> if no
+        /// snapshot for recovery.
         /// </summary>
         /// <param name="counters">  to search within. </param>
         /// <param name="counterId"> for the active consensus position. </param>
-        /// <returns> the leadership term id if found otherwise <see cref="Adaptive.Aeron.Aeron.NULL_VALUE"/>. </returns>
+        /// <returns> the leadership term id if found otherwise <see cref="Adaptive.Aeron.Aeron.NULL_VALUE"/>.
+        /// </returns>
         public static long GetLeadershipTermId(CountersReader counters, int counterId)
         {
             IDirectBuffer buffer = counters.MetaDataBuffer;
 
-            if (counters.GetCounterState(counterId) == CountersReader.RECORD_ALLOCATED &&
-                counters.GetCounterTypeId(counterId) == RECOVERY_STATE_TYPE_ID)
+            if (
+                counters.GetCounterState(counterId) == CountersReader.RECORD_ALLOCATED
+                && counters.GetCounterTypeId(counterId) == RECOVERY_STATE_TYPE_ID
+            )
             {
-                return buffer.GetLong(CountersReader.MetaDataOffset(counterId) + CountersReader.KEY_OFFSET +
-                                      LEADERSHIP_TERM_ID_OFFSET);
+                return buffer.GetLong(
+                    CountersReader.MetaDataOffset(counterId) + CountersReader.KEY_OFFSET + LEADERSHIP_TERM_ID_OFFSET
+                );
             }
 
             return Aeron.Aeron.NULL_VALUE;
         }
 
         /// <summary>
-        ///  Get the position at which the snapshot was taken. <see cref="Adaptive.Aeron.Aeron.NULL_VALUE"/> if no snapshot for recovery.
+        /// Get the position at which the snapshot was taken. <see cref="Adaptive.Aeron.Aeron.NULL_VALUE"/> if no
+        /// snapshot for recovery.
         /// </summary>
         /// <param name="counters">  to search within. </param>
         /// <param name="counterId"> for the active consensus position. </param>
@@ -138,19 +151,22 @@ namespace Adaptive.Cluster.Service
         {
             IDirectBuffer buffer = counters.MetaDataBuffer;
 
-            if (counters.GetCounterState(counterId) == CountersReader.RECORD_ALLOCATED &&
-                counters.GetCounterTypeId(counterId) == RECOVERY_STATE_TYPE_ID)
+            if (
+                counters.GetCounterState(counterId) == CountersReader.RECORD_ALLOCATED
+                && counters.GetCounterTypeId(counterId) == RECOVERY_STATE_TYPE_ID
+            )
             {
-                return buffer.GetLong(CountersReader.MetaDataOffset(counterId) + CountersReader.KEY_OFFSET +
-                                      LOG_POSITION_OFFSET);
+                return buffer.GetLong(
+                    CountersReader.MetaDataOffset(counterId) + CountersReader.KEY_OFFSET + LOG_POSITION_OFFSET
+                );
             }
 
             return Aeron.Aeron.NULL_VALUE;
         }
 
-
         /// <summary>
-        /// Get the timestamp at the beginning of recovery. <see cref="Adaptive.Aeron.Aeron.NULL_VALUE"/> if no snapshot for recovery.
+        /// Get the timestamp at the beginning of recovery. <see cref="Adaptive.Aeron.Aeron.NULL_VALUE"/> if no snapshot
+        /// for recovery.
         /// </summary>
         /// <param name="counters">  to search within. </param>
         /// <param name="counterId"> for the active recovery counter. </param>
@@ -159,11 +175,14 @@ namespace Adaptive.Cluster.Service
         {
             IDirectBuffer buffer = counters.MetaDataBuffer;
 
-            if (counters.GetCounterState(counterId) == CountersReader.RECORD_ALLOCATED &&
-                counters.GetCounterTypeId(counterId) == RECOVERY_STATE_TYPE_ID)
+            if (
+                counters.GetCounterState(counterId) == CountersReader.RECORD_ALLOCATED
+                && counters.GetCounterTypeId(counterId) == RECOVERY_STATE_TYPE_ID
+            )
             {
-                return buffer.GetLong(CountersReader.MetaDataOffset(counterId) + CountersReader.KEY_OFFSET +
-                                      TIMESTAMP_OFFSET);
+                return buffer.GetLong(
+                    CountersReader.MetaDataOffset(counterId) + CountersReader.KEY_OFFSET + TIMESTAMP_OFFSET
+                );
             }
 
             return Aeron.Aeron.NULL_VALUE;
@@ -175,13 +194,16 @@ namespace Adaptive.Cluster.Service
         /// <param name="counters">  to search within. </param>
         /// <param name="counterId"> for the active recovery counter. </param>
         /// <param name="serviceId"> for the snapshot required. </param>
-        /// <returns> the count of replay terms if found otherwise <see cref="Adaptive.Aeron.Aeron.NULL_VALUE"/>. </returns>
+        /// <returns> the count of replay terms if found otherwise <see cref="Adaptive.Aeron.Aeron.NULL_VALUE"/>.
+        /// </returns>
         public static long GetSnapshotRecordingId(CountersReader counters, int counterId, int serviceId)
         {
             IDirectBuffer buffer = counters.MetaDataBuffer;
 
-            if (counters.GetCounterState(counterId) == CountersReader.RECORD_ALLOCATED &&
-                counters.GetCounterTypeId(counterId) == RECOVERY_STATE_TYPE_ID)
+            if (
+                counters.GetCounterState(counterId) == CountersReader.RECORD_ALLOCATED
+                && counters.GetCounterTypeId(counterId) == RECOVERY_STATE_TYPE_ID
+            )
             {
                 int recordOffset = CountersReader.MetaDataOffset(counterId);
 
@@ -191,8 +213,12 @@ namespace Adaptive.Cluster.Service
                     throw new ClusterException("invalid serviceId " + serviceId + " for count of " + serviceCount);
                 }
 
-                return buffer.GetLong(recordOffset + CountersReader.KEY_OFFSET + SNAPSHOT_RECORDING_IDS_OFFSET +
-                                      (serviceId * SIZE_OF_LONG));
+                return buffer.GetLong(
+                    recordOffset
+                        + CountersReader.KEY_OFFSET
+                        + SNAPSHOT_RECORDING_IDS_OFFSET
+                        + (serviceId * SIZE_OF_LONG)
+                );
             }
 
             throw new ClusterException("active counter not found " + counterId);

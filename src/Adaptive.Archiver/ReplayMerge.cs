@@ -1,8 +1,23 @@
+﻿/*
+ * Copyright 2014 - 2026 Adaptive Financial Consulting Ltd
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 using System;
 using Adaptive.Aeron;
 using Adaptive.Aeron.LogBuffer;
 using Adaptive.Agrona.Concurrent;
-using Adaptive.Archiver;
 using Adaptive.Archiver.Codecs;
 using static Adaptive.Aeron.Aeron;
 using static Adaptive.Aeron.Aeron.Context;
@@ -12,9 +27,11 @@ namespace Adaptive.Archiver
     /// <summary>
     /// Replay a recorded stream from a starting position and merge with live stream for a full history of a stream.
     /// <para>
-    /// Once constructed either of <seealso cref="Poll(FragmentHandler, int)"/> or <seealso cref="DoWork()"/>, interleaved with consumption
-    /// of the <seealso cref="Image()"/>, should be called in a duty cycle loop until <seealso cref="Merged"/> is {@code true}.
-    /// After which the <seealso cref="ReplayMerge"/> can be closed and continued usage can be made of the <seealso cref="Image"/> or its
+    /// Once constructed either of <seealso cref="Poll(FragmentHandler, int)"/> or <seealso cref="DoWork()"/>,
+    /// interleaved with consumption of the <seealso cref="Image()"/>, should be called in a duty cycle loop until
+    /// <seealso cref="Merged"/> is {@code true}. After which the <seealso cref="ReplayMerge"/> can be closed and
+    /// continued usage can be made of the
+    /// <seealso cref="Image"/> or its
     /// parent <seealso cref="Subscription"/>. If an exception occurs or progress stops, the merge will fail and
     /// <seealso cref="HasFailed()"/> will be {@code true}.
     /// </para>
@@ -36,11 +53,11 @@ namespace Adaptive.Archiver
         /// </summary>
         public const int LIVE_ADD_MAX_WINDOW = 32 * 1024 * 1024;
 
-        private const int REPLAY_REMOVE_THRESHOLD = 0;
-        private static readonly long MERGE_PROGRESS_TIMEOUT_DEFAULT_MS = 5_000;
-        private static readonly long INITIAL_GET_MAX_RECORDED_POSITION_BACKOFF_MS = 8;
-        private static readonly long GET_MAX_RECORDED_POSITION_BACKOFF_MAX_MS = 500;
-        private static readonly long ARCHIVE_POLL_INTERVAL_MS = 100;
+        private const int ReplayRemoveThreshold = 0;
+        private static readonly long MergeProgressTimeoutDefaultMs = 5_000;
+        private static readonly long InitialGetMaxRecordedPositionBackoffMs = 8;
+        private static readonly long GetMaxRecordedPositionBackoffMaxMs = 500;
+        private static readonly long ArchivePollIntervalMs = 100;
 
         internal enum State
         {
@@ -51,128 +68,157 @@ namespace Adaptive.Archiver
             ATTEMPT_LIVE_JOIN,
             MERGED,
             FAILED,
-            CLOSED
+            CLOSED,
         }
 
-        private readonly long recordingId;
-        private readonly long startPosition;
-        private readonly long mergeProgressTimeoutMs;
-        private long replaySessionId = NULL_VALUE;
-        private long activeCorrelationId = NULL_VALUE;
-        private long nextTargetPosition = NULL_VALUE;
-        private long positionOfLastProgress = NULL_VALUE;
-        private long timeOfLastProgressMs;
-        private long timeOfNextGetMaxRecordedPositionMs;
-        private long getMaxRecordedPositionBackoffMs = INITIAL_GET_MAX_RECORDED_POSITION_BACKOFF_MS;
-        private long timeOfLastScheduledArchivePollMs;
-        private bool isLiveAdded = false;
-        private bool isReplayActive = false;
-        private State state;
-        private Image image;
+        private readonly long _recordingId;
+        private readonly long _startPosition;
+        private readonly long _mergeProgressTimeoutMs;
+        private long _replaySessionId = NULL_VALUE;
+        private long _activeCorrelationId = NULL_VALUE;
+        private long _nextTargetPosition = NULL_VALUE;
+        private long _positionOfLastProgress = NULL_VALUE;
+        private long _timeOfLastProgressMs;
+        private long _timeOfNextGetMaxRecordedPositionMs;
+        private long _getMaxRecordedPositionBackoffMs = InitialGetMaxRecordedPositionBackoffMs;
+        private long _timeOfLastScheduledArchivePollMs;
+        private bool _isLiveAdded = false;
+        private bool _isReplayActive = false;
+        private State _state;
+        private Image _image;
 
-        private readonly AeronArchive archive;
-        private readonly Subscription subscription;
-        private readonly IEpochClock epochClock;
-        private readonly string replayDestination;
-        private readonly string liveDestination;
-        private readonly ChannelUri replayChannelUri;
+        private readonly AeronArchive _archive;
+        private readonly Subscription _subscription;
+        private readonly IEpochClock _epochClock;
+        private readonly string _replayDestination;
+        private readonly string _liveDestination;
+        private readonly ChannelUri _replayChannelUri;
 
         /// <summary>
-        /// Create a <seealso cref="ReplayMerge"/> to manage the merging of a replayed stream and switching over to live stream as
-        /// appropriate.
+        /// Create a <seealso cref="ReplayMerge"/> to manage the merging of a replayed stream and switching over to live
+        /// stream as appropriate.
         /// </summary>
-        /// <param name="subscription">           to use for the replay and live stream. Must be a multi-destination subscription. </param>
+        /// <param name="subscription"> to use for the replay and live stream. Must be a multi-destination subscription.
+        /// </param>
         /// <param name="archive">                to use for the replay. </param>
         /// <param name="replayChannel">          to as a template for what the archive will use. </param>
-        /// <param name="replayDestination">      to send the replay to and the destination added by the <seealso cref="Subscription"/>. </param>
-        /// <param name="liveDestination">        for the live stream and the destination added by the <seealso cref="Subscription"/>. </param>
+        /// <param name="replayDestination"> to send the replay to and the destination added by the
+        /// <seealso cref="Subscription"/>. </param>
+        /// <param name="liveDestination"> for the live stream and the destination added by the
+        /// <seealso cref="Subscription"/>. </param>
         /// <param name="recordingId">            for the replay. </param>
         /// <param name="startPosition">          for the replay. </param>
         /// <param name="epochClock">             to use for progress checks. </param>
         /// <param name="mergeProgressTimeoutMs"> to use for progress checks. </param>
-        public ReplayMerge(Subscription subscription, AeronArchive archive, string replayChannel,
+        public ReplayMerge(
+            Subscription subscription,
+            AeronArchive archive,
+            string replayChannel,
             string replayDestination,
-            string liveDestination, long recordingId, long startPosition, IEpochClock epochClock,
-            long mergeProgressTimeoutMs)
+            string liveDestination,
+            long recordingId,
+            long startPosition,
+            IEpochClock epochClock,
+            long mergeProgressTimeoutMs
+        )
         {
-            if (subscription.Channel.StartsWith(IPC_CHANNEL) ||
-                replayChannel.StartsWith(IPC_CHANNEL, StringComparison.Ordinal) ||
-                replayDestination.StartsWith(IPC_CHANNEL, StringComparison.Ordinal) ||
-                liveDestination.StartsWith(IPC_CHANNEL, StringComparison.Ordinal))
+            if (
+                subscription.Channel.StartsWith(IPC_CHANNEL)
+                || replayChannel.StartsWith(IPC_CHANNEL, StringComparison.Ordinal)
+                || replayDestination.StartsWith(IPC_CHANNEL, StringComparison.Ordinal)
+                || liveDestination.StartsWith(IPC_CHANNEL, StringComparison.Ordinal)
+            )
             {
                 throw new ArgumentException("IPC merging is not supported");
             }
 
             if (!subscription.Channel.Contains("control-mode=manual"))
             {
-                throw new ArgumentException("Subscription URI must have 'control-mode=manual' uri=" +
-                                            subscription.Channel);
+                throw new ArgumentException(
+                    "Subscription URI must have 'control-mode=manual' uri=" + subscription.Channel
+                );
             }
 
-            this.archive = archive;
-            this.subscription = subscription;
-            this.epochClock = epochClock;
-            this.replayDestination = replayDestination;
-            this.liveDestination = liveDestination;
-            this.recordingId = recordingId;
-            this.startPosition = startPosition;
-            this.mergeProgressTimeoutMs = mergeProgressTimeoutMs;
+            this._archive = archive;
+            this._subscription = subscription;
+            this._epochClock = epochClock;
+            this._replayDestination = replayDestination;
+            this._liveDestination = liveDestination;
+            this._recordingId = recordingId;
+            this._startPosition = startPosition;
+            this._mergeProgressTimeoutMs = mergeProgressTimeoutMs;
 
-            replayChannelUri = ChannelUri.Parse(replayChannel);
-            replayChannelUri.Put(LINGER_PARAM_NAME, "0");
-            replayChannelUri.Put(EOS_PARAM_NAME, "false");
+            _replayChannelUri = ChannelUri.Parse(replayChannel);
+            _replayChannelUri.Put(LINGER_PARAM_NAME, "0");
+            _replayChannelUri.Put(EOS_PARAM_NAME, "false");
 
             var replayEndpoint = ChannelUri.Parse(replayDestination).Get(ENDPOINT_PARAM_NAME);
             if (replayEndpoint.EndsWith(":0", StringComparison.Ordinal))
             {
-                state = State.RESOLVE_REPLAY_PORT;
+                _state = State.RESOLVE_REPLAY_PORT;
             }
             else
             {
-                replayChannelUri.Put(ENDPOINT_PARAM_NAME, replayEndpoint);
-                state = State.GET_RECORDING_POSITION;
+                _replayChannelUri.Put(ENDPOINT_PARAM_NAME, replayEndpoint);
+                _state = State.GET_RECORDING_POSITION;
             }
 
             subscription.AsyncAddDestination(replayDestination);
-            timeOfLastProgressMs = timeOfNextGetMaxRecordedPositionMs = epochClock.Time();
+            _timeOfLastProgressMs = _timeOfNextGetMaxRecordedPositionMs = epochClock.Time();
         }
 
         /// <summary>
-        /// Create a <seealso cref="ReplayMerge"/> to manage the merging of a replayed stream and switching over to live stream as
-        /// appropriate.
+        /// Create a <seealso cref="ReplayMerge"/> to manage the merging of a replayed stream and switching over to live
+        /// stream as appropriate.
         /// </summary>
-        /// <param name="subscription">      to use for the replay and live stream. Must be a multi-destination subscription. </param>
+        /// <param name="subscription"> to use for the replay and live stream. Must be a multi-destination subscription.
+        /// </param>
         /// <param name="archive">           to use for the replay. </param>
         /// <param name="replayChannel">     to use as a template for what the archive will use. </param>
-        /// <param name="replayDestination"> to send the replay to and the destination added by the <seealso cref="Subscription"/>. </param>
-        /// <param name="liveDestination">   for the live stream and the destination added by the <seealso cref="Subscription"/>. </param>
+        /// <param name="replayDestination"> to send the replay to and the destination added by the
+        /// <seealso cref="Subscription"/>. </param>
+        /// <param name="liveDestination"> for the live stream and the destination added by the
+        /// <seealso cref="Subscription"/>. </param>
         /// <param name="recordingId">       for the replay. </param>
         /// <param name="startPosition">     for the replay. </param>
-        public ReplayMerge(Subscription subscription, AeronArchive archive, string replayChannel,
+        public ReplayMerge(
+            Subscription subscription,
+            AeronArchive archive,
+            string replayChannel,
             string replayDestination,
-            string liveDestination, long recordingId, long startPosition) : this(subscription, archive, replayChannel,
-            replayDestination, liveDestination, recordingId, startPosition,
-            archive.Ctx().AeronClient().Ctx.EpochClock(), MERGE_PROGRESS_TIMEOUT_DEFAULT_MS)
-        {
-        }
+            string liveDestination,
+            long recordingId,
+            long startPosition
+        )
+            : this(
+                subscription,
+                archive,
+                replayChannel,
+                replayDestination,
+                liveDestination,
+                recordingId,
+                startPosition,
+                archive.Ctx().AeronClient().Ctx.EpochClock(),
+                MergeProgressTimeoutDefaultMs
+            ) { }
 
         /// <summary>
-        /// Close and stop any active replay. Will remove the replay destination from the subscription.
-        /// This operation Will NOT remove the live destination if it has been added, so it can be used for live consumption.
+        /// Close and stop any active replay. Will remove the replay destination from the subscription. This operation
+        /// Will NOT remove the live destination if it has been added, so it can be used for live consumption.
         /// </summary>
         public void Dispose()
         {
-            State state = this.state;
+            State state = this._state;
             if (State.CLOSED != state)
             {
-                if (!archive.Ctx().AeronClient().IsClosed)
+                if (!_archive.Ctx().AeronClient().IsClosed)
                 {
                     if (State.MERGED != state)
                     {
-                        subscription.AsyncRemoveDestination(replayDestination);
+                        _subscription.AsyncRemoveDestination(_replayDestination);
                     }
 
-                    if (isReplayActive && archive.Proxy().Pub().IsConnected)
+                    if (_isReplayActive && _archive.Proxy().Pub().IsConnected)
                     {
                         StopReplay();
                     }
@@ -188,22 +234,23 @@ namespace Adaptive.Archiver
         /// <returns> the <seealso cref="Subscription"/> used to consume the replayed and merged stream. </returns>
         public Subscription Subscription()
         {
-            return subscription;
+            return _subscription;
         }
 
         /// <summary>
-        /// Perform the work of replaying and merging. Should only be used if polling the underlying <seealso cref="Image"/> directly,
+        /// Perform the work of replaying and merging. Should only be used if polling the underlying
+        /// <seealso cref="Image"/> directly,
         /// call <seealso cref="Poll(FragmentHandler, int)"/> on this class.
         /// </summary>
         /// <returns> indication of work done processing the merge. </returns>
         public int DoWork()
         {
             int workCount = 0;
-            long nowMs = epochClock.Time();
+            long nowMs = _epochClock.Time();
 
             try
             {
-                switch (state)
+                switch (_state)
                 {
                     case State.RESOLVE_REPLAY_PORT:
                         workCount += ResolveReplayPort(nowMs);
@@ -230,7 +277,6 @@ namespace Adaptive.Archiver
                         CheckProgress(nowMs);
                         break;
 
-
                     case State.MERGED:
                     case State.CLOSED:
                     case State.FAILED:
@@ -247,7 +293,8 @@ namespace Adaptive.Archiver
         }
 
         /// <summary>
-        /// Poll the <seealso cref="Image"/> used for replay and merging and live stream. The <seealso cref="ReplayMerge.DoWork()"/> method
+        /// Poll the <seealso cref="Image"/> used for replay and merging and live stream. The
+        /// <seealso cref="ReplayMerge.DoWork()"/> method
         /// will be called before the poll so that processing of the merge can be done.
         /// </summary>
         /// <param name="fragmentHandler"> to call for fragments. </param>
@@ -256,7 +303,7 @@ namespace Adaptive.Archiver
         public int Poll(FragmentHandler fragmentHandler, int fragmentLimit)
         {
             DoWork();
-            return null == image ? 0 : image.Poll(fragmentHandler, fragmentLimit);
+            return null == _image ? 0 : _image.Poll(fragmentHandler, fragmentLimit);
         }
 
         /// <summary>
@@ -265,7 +312,7 @@ namespace Adaptive.Archiver
         /// <returns> true if live stream is merged and the replay stopped or false if not. </returns>
         public bool Merged
         {
-            get { return state == State.MERGED; }
+            get { return _state == State.MERGED; }
         }
 
         /// <summary>
@@ -274,7 +321,7 @@ namespace Adaptive.Archiver
         /// <returns> true if replay merge has failed due to an error. </returns>
         public bool HasFailed()
         {
-            return state == State.FAILED;
+            return _state == State.FAILED;
         }
 
         /// <summary>
@@ -283,7 +330,7 @@ namespace Adaptive.Archiver
         /// <returns> the <seealso cref="Image"/> which is a merge of the replay and live stream. </returns>
         public Image Image()
         {
-            return image;
+            return _image;
         }
 
         /// <summary>
@@ -292,19 +339,19 @@ namespace Adaptive.Archiver
         /// <returns> true if live destination added or false if not. </returns>
         public bool LiveAdded
         {
-            get { return isLiveAdded; }
+            get { return _isLiveAdded; }
         }
 
         private int ResolveReplayPort(long nowMs)
         {
             int workCount = 0;
 
-            string resolvedEndpoint = subscription.ResolvedEndpoint;
+            string resolvedEndpoint = _subscription.ResolvedEndpoint;
             if (null != resolvedEndpoint)
             {
-                replayChannelUri.ReplaceEndpointWildcardPort(resolvedEndpoint);
+                _replayChannelUri.ReplaceEndpointWildcardPort(resolvedEndpoint);
 
-                timeOfLastProgressMs = nowMs;
+                _timeOfLastProgressMs = nowMs;
                 SetState(State.GET_RECORDING_POSITION);
                 workCount += 1;
             }
@@ -316,22 +363,22 @@ namespace Adaptive.Archiver
         {
             int workCount = 0;
 
-            if (NULL_VALUE == activeCorrelationId)
+            if (NULL_VALUE == _activeCorrelationId)
             {
                 if (CallGetMaxRecordedPosition(nowMs))
                 {
-                    timeOfLastProgressMs = nowMs;
+                    _timeOfLastProgressMs = nowMs;
                     workCount += 1;
                 }
             }
-            else if (PollForResponse(archive, activeCorrelationId))
+            else if (PollForResponse(_archive, _activeCorrelationId))
             {
-                nextTargetPosition = PolledRelevantId(archive);
-                activeCorrelationId = NULL_VALUE;
+                _nextTargetPosition = PolledRelevantId(_archive);
+                _activeCorrelationId = NULL_VALUE;
 
-                if (AeronArchive.NULL_POSITION != nextTargetPosition)
+                if (AeronArchive.NULL_POSITION != _nextTargetPosition)
                 {
-                    timeOfLastProgressMs = nowMs;
+                    _timeOfLastProgressMs = nowMs;
                     SetState(State.REPLAY);
                 }
 
@@ -345,28 +392,39 @@ namespace Adaptive.Archiver
         {
             int workCount = 0;
 
-            if (NULL_VALUE == activeCorrelationId)
+            if (NULL_VALUE == _activeCorrelationId)
             {
-                long correlationId = archive.Ctx().AeronClient().NextCorrelationId();
+                long correlationId = _archive.Ctx().AeronClient().NextCorrelationId();
 
-                if (archive.Proxy().Replay(recordingId, startPosition, long.MaxValue, replayChannelUri.ToString(),
-                        subscription.StreamId, correlationId, archive.ControlSessionId()))
+                if (
+                    _archive
+                        .Proxy()
+                        .Replay(
+                            _recordingId,
+                            _startPosition,
+                            long.MaxValue,
+                            _replayChannelUri.ToString(),
+                            _subscription.StreamId,
+                            correlationId,
+                            _archive.ControlSessionId()
+                        )
+                )
                 {
-                    activeCorrelationId = correlationId;
-                    timeOfLastProgressMs = nowMs;
+                    _activeCorrelationId = correlationId;
+                    _timeOfLastProgressMs = nowMs;
                     workCount += 1;
                 }
             }
-            else if (PollForResponse(archive, activeCorrelationId))
+            else if (PollForResponse(_archive, _activeCorrelationId))
             {
-                isReplayActive = true;
-                replaySessionId = PolledRelevantId(archive);
-                timeOfLastProgressMs = nowMs;
-                activeCorrelationId = NULL_VALUE;
+                _isReplayActive = true;
+                _replaySessionId = PolledRelevantId(_archive);
+                _timeOfLastProgressMs = nowMs;
+                _activeCorrelationId = NULL_VALUE;
 
                 // reset getRecordingPosition backoff when moving to CATCHUP state
-                getMaxRecordedPositionBackoffMs = INITIAL_GET_MAX_RECORDED_POSITION_BACKOFF_MS;
-                timeOfNextGetMaxRecordedPositionMs = nowMs;
+                _getMaxRecordedPositionBackoffMs = InitialGetMaxRecordedPositionBackoffMs;
+                _timeOfNextGetMaxRecordedPositionMs = nowMs;
 
                 SetState(State.CATCHUP);
                 workCount += 1;
@@ -379,38 +437,38 @@ namespace Adaptive.Archiver
         {
             int workCount = 0;
 
-            if (null == image && subscription.IsConnected)
+            if (null == _image && _subscription.IsConnected)
             {
-                timeOfLastProgressMs = nowMs;
-                Image image = subscription.ImageBySessionId((int)replaySessionId);
+                _timeOfLastProgressMs = nowMs;
+                Image image = _subscription.ImageBySessionId((int)_replaySessionId);
 
-                if (null == this.image && null != image)
+                if (null == this._image && null != image)
                 {
-                    this.image = image;
-                    positionOfLastProgress = image.Position;
+                    this._image = image;
+                    _positionOfLastProgress = image.Position;
                 }
                 else
                 {
-                    positionOfLastProgress = NULL_VALUE;
+                    _positionOfLastProgress = NULL_VALUE;
                 }
             }
 
-            if (null != image)
+            if (null != _image)
             {
-                long position = image.Position;
-                if (position >= nextTargetPosition)
+                long position = _image.Position;
+                if (position >= _nextTargetPosition)
                 {
-                    timeOfLastProgressMs = nowMs;
-                    positionOfLastProgress = position;
+                    _timeOfLastProgressMs = nowMs;
+                    _positionOfLastProgress = position;
                     SetState(State.ATTEMPT_LIVE_JOIN);
                     workCount += 1;
                 }
-                else if (position > positionOfLastProgress)
+                else if (position > _positionOfLastProgress)
                 {
-                    timeOfLastProgressMs = nowMs;
-                    positionOfLastProgress = position;
+                    _timeOfLastProgressMs = nowMs;
+                    _positionOfLastProgress = position;
                 }
-                else if (image.Closed)
+                else if (_image.Closed)
                 {
                     throw new InvalidOperationException("ReplayMerge Image closed unexpectedly.");
                 }
@@ -423,39 +481,39 @@ namespace Adaptive.Archiver
         {
             int workCount = 0;
 
-            if (NULL_VALUE == activeCorrelationId)
+            if (NULL_VALUE == _activeCorrelationId)
             {
                 if (CallGetMaxRecordedPosition(nowMs))
                 {
-                    timeOfLastProgressMs = nowMs;
+                    _timeOfLastProgressMs = nowMs;
                     workCount += 1;
                 }
             }
-            else if (PollForResponse(archive, activeCorrelationId))
+            else if (PollForResponse(_archive, _activeCorrelationId))
             {
-                nextTargetPosition = PolledRelevantId(archive);
-                activeCorrelationId = NULL_VALUE;
+                _nextTargetPosition = PolledRelevantId(_archive);
+                _activeCorrelationId = NULL_VALUE;
 
-                if (AeronArchive.NULL_POSITION != nextTargetPosition)
+                if (AeronArchive.NULL_POSITION != _nextTargetPosition)
                 {
                     State nextState = State.CATCHUP;
 
-                    if (null != image)
+                    if (null != _image)
                     {
-                        long position = image.Position;
+                        long position = _image.Position;
                         if (ShouldAddLiveDestination(position))
                         {
-                            subscription.AsyncAddDestination(liveDestination);
-                            timeOfLastProgressMs = nowMs;
-                            positionOfLastProgress = position;
-                            isLiveAdded = true;
+                            _subscription.AsyncAddDestination(_liveDestination);
+                            _timeOfLastProgressMs = nowMs;
+                            _positionOfLastProgress = position;
+                            _isLiveAdded = true;
                         }
                         else if (ShouldStopAndRemoveReplay(position))
                         {
-                            subscription.AsyncRemoveDestination(replayDestination);
+                            _subscription.AsyncRemoveDestination(_replayDestination);
                             StopReplay();
-                            timeOfLastProgressMs = nowMs;
-                            positionOfLastProgress = position;
+                            _timeOfLastProgressMs = nowMs;
+                            _positionOfLastProgress = position;
                             nextState = State.MERGED;
                         }
                     }
@@ -471,72 +529,78 @@ namespace Adaptive.Archiver
 
         private bool CallGetMaxRecordedPosition(long nowMs)
         {
-            if (nowMs < timeOfNextGetMaxRecordedPositionMs)
+            if (nowMs < _timeOfNextGetMaxRecordedPositionMs)
             {
                 return false;
             }
 
-            long correlationId = archive.Ctx().AeronClient().NextCorrelationId();
+            long correlationId = _archive.Ctx().AeronClient().NextCorrelationId();
 
-            bool result = archive.Proxy()
-                .GetMaxRecordedPosition(recordingId, correlationId, archive.ControlSessionId());
+            bool result = _archive
+                .Proxy()
+                .GetMaxRecordedPosition(_recordingId, correlationId, _archive.ControlSessionId());
 
             if (result)
             {
-                activeCorrelationId = correlationId;
+                _activeCorrelationId = correlationId;
             }
 
             // increase backoff regardless of result
-            getMaxRecordedPositionBackoffMs = Math.Min(getMaxRecordedPositionBackoffMs * 2,
-                GET_MAX_RECORDED_POSITION_BACKOFF_MAX_MS);
-            timeOfNextGetMaxRecordedPositionMs = nowMs + getMaxRecordedPositionBackoffMs;
+            _getMaxRecordedPositionBackoffMs = Math.Min(
+                _getMaxRecordedPositionBackoffMs * 2,
+                GetMaxRecordedPositionBackoffMaxMs
+            );
+            _timeOfNextGetMaxRecordedPositionMs = nowMs + _getMaxRecordedPositionBackoffMs;
 
             return result;
         }
 
-
         private void StopReplay()
         {
-            long correlationId = archive.Ctx().AeronClient().NextCorrelationId();
-            if (archive.Proxy().StopReplay(replaySessionId, correlationId, archive.ControlSessionId()))
+            long correlationId = _archive.Ctx().AeronClient().NextCorrelationId();
+            if (_archive.Proxy().StopReplay(_replaySessionId, correlationId, _archive.ControlSessionId()))
             {
-                isReplayActive = false;
+                _isReplayActive = false;
             }
         }
 
         private void SetState(ReplayMerge.State newState)
         {
             //System.out.println(state + " -> " + newState);
-            state = newState;
-            activeCorrelationId = NULL_VALUE;
+            _state = newState;
+            _activeCorrelationId = NULL_VALUE;
         }
 
         private bool ShouldAddLiveDestination(long position)
         {
-            return !isLiveAdded && (nextTargetPosition - position) <=
-                Math.Min(image.TermBufferLength >> 2, LIVE_ADD_MAX_WINDOW);
+            return !_isLiveAdded
+                && (_nextTargetPosition - position) <= Math.Min(_image.TermBufferLength >> 2, LIVE_ADD_MAX_WINDOW);
         }
 
         private bool ShouldStopAndRemoveReplay(long position)
         {
-            return isLiveAdded && (nextTargetPosition - position) <= REPLAY_REMOVE_THRESHOLD &&
-                   image.ActiveTransportCount() >= 2;
+            return _isLiveAdded
+                && (_nextTargetPosition - position) <= ReplayRemoveThreshold
+                && _image.ActiveTransportCount() >= 2;
         }
 
         private void CheckProgress(long nowMs)
         {
-            if (nowMs > (timeOfLastProgressMs + mergeProgressTimeoutMs))
+            if (nowMs > (_timeOfLastProgressMs + _mergeProgressTimeoutMs))
             {
-                int transportCount = image?.ActiveTransportCount() ?? 0;
+                int transportCount = _image?.ActiveTransportCount() ?? 0;
                 throw new TimeoutException(
-                    "ReplayMerge no progress: state=" + state + ", activeTransportCount=" + transportCount);
+                    "ReplayMerge no progress: state=" + _state + ", activeTransportCount=" + transportCount
+                );
             }
 
-            if (NULL_VALUE == activeCorrelationId &&
-                (nowMs > (timeOfLastScheduledArchivePollMs + ARCHIVE_POLL_INTERVAL_MS)))
+            if (
+                NULL_VALUE == _activeCorrelationId
+                && (nowMs > (_timeOfLastScheduledArchivePollMs + ArchivePollIntervalMs))
+            )
             {
-                timeOfLastScheduledArchivePollMs = nowMs;
-                PollForResponse(archive, NULL_VALUE);
+                _timeOfLastScheduledArchivePollMs = nowMs;
+                PollForResponse(_archive, NULL_VALUE);
             }
         }
 
@@ -551,8 +615,13 @@ namespace Adaptive.Archiver
                     if (poller.Code() == ControlResponseCode.ERROR)
                     {
                         throw new ArchiveException(
-                            "archive response for correlationId=" + poller.CorrelationId() + ", error: " +
-                            poller.ErrorMessage(), (int)poller.RelevantId(), poller.CorrelationId());
+                            "archive response for correlationId="
+                                + poller.CorrelationId()
+                                + ", error: "
+                                + poller.ErrorMessage(),
+                            (int)poller.RelevantId(),
+                            poller.CorrelationId()
+                        );
                     }
 
                     return poller.CorrelationId() == correlationId;
@@ -576,16 +645,24 @@ namespace Adaptive.Archiver
         /// </summary>
         public override string ToString()
         {
-            return "ReplayMerge{" +
-                   "state=" + state +
-                   ", nextTargetPosition=" + nextTargetPosition +
-                   ", timeOfLastProgressMs=" + timeOfLastProgressMs +
-                   ", positionOfLastProgress=" + positionOfLastProgress +
-                   ", isLiveAdded=" + isLiveAdded +
-                   ", isReplayActive=" + isReplayActive +
-                   ", replayChannelUri=" + replayChannelUri +
-                   ", image=" + image +
-                   '}';
+            return "ReplayMerge{"
+                + "state="
+                + _state
+                + ", nextTargetPosition="
+                + _nextTargetPosition
+                + ", timeOfLastProgressMs="
+                + _timeOfLastProgressMs
+                + ", positionOfLastProgress="
+                + _positionOfLastProgress
+                + ", isLiveAdded="
+                + _isLiveAdded
+                + ", isReplayActive="
+                + _isReplayActive
+                + ", replayChannelUri="
+                + _replayChannelUri
+                + ", image="
+                + _image
+                + '}';
         }
     }
 }

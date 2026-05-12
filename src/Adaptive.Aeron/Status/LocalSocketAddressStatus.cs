@@ -1,6 +1,20 @@
-using System;
+﻿/*
+ * Copyright 2014 - 2026 Adaptive Financial Consulting Ltd
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 using System.Collections.Generic;
-using System.Linq;
 using Adaptive.Agrona;
 using Adaptive.Agrona.Concurrent.Status;
 
@@ -9,46 +23,50 @@ namespace Adaptive.Aeron.Status
     /// <summary>
     /// Counter used to store the status of a bind address and port for the local end of a channel.
     /// <para>
-    /// When the value is <seealso cref="ChannelEndpointStatus.ACTIVE"/> then the key value and label will be updated with the
-    /// socket address and port which is bound.
+    /// When the value is <seealso cref="ChannelEndpointStatus.ACTIVE"/> then the key value and label will be updated
+    /// with the socket address and port which is bound.
     /// </para>
     /// </summary>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage(
+        "Major Code Smell",
+        "S1118:Utility classes should not have public constructors",
+        Justification = "Public ctor in shipped API surface; marking static would break consumers."
+    )]
     public class LocalSocketAddressStatus
     {
-        private const int CHANNEL_STATUS_ID_OFFSET = 0;
-        private static readonly int LOCAL_SOCKET_ADDRESS_LENGTH_OFFSET = CHANNEL_STATUS_ID_OFFSET + BitUtil.SIZE_OF_INT;
+        private const int ChannelStatusIdOffset = 0;
+        private static readonly int LocalSocketAddressLengthOffset = ChannelStatusIdOffset + BitUtil.SIZE_OF_INT;
 
-        private static readonly int LOCAL_SOCKET_ADDRESS_STRING_OFFSET =
-            LOCAL_SOCKET_ADDRESS_LENGTH_OFFSET + BitUtil.SIZE_OF_INT;
+        private static readonly int LocalSocketAddressStringOffset =
+            LocalSocketAddressLengthOffset + BitUtil.SIZE_OF_INT;
 
-        private static readonly int MAX_IPV6_LENGTH = "[ffff:ffff:ffff:ffff:ffff:ffff:255.255.255.255]:65536".Length;
+        private static readonly int MaxIpv6Length = "[ffff:ffff:ffff:ffff:ffff:ffff:255.255.255.255]:65536".Length;
 
         /// <summary>
         /// Initial length for a key, this will be expanded later when bound.
         /// </summary>
         public static readonly int INITIAL_LENGTH = BitUtil.SIZE_OF_INT * 2;
 
-        private static readonly List<string> EMPTY_LIST = new List<string>();
+        private static readonly List<string> EmptyList = new List<string>();
 
         /// <summary>
         /// Type of the counter used to track a local socket address and port.
         /// </summary>
         public const int LOCAL_SOCKET_ADDRESS_STATUS_TYPE_ID = AeronCounters.DRIVER_LOCAL_SOCKET_ADDRESS_STATUS_TYPE_ID;
 
-
         /// <summary>
         /// Find the list of currently bound local sockets.
         /// </summary>
         /// <param name="countersReader">  for the connected driver. </param>
         /// <param name="channelStatus">   value for the channel which aggregates the transports. </param>
-        /// <param name="channelStatusId"> identity of the counter for the channel which aggregates the transports. </param>
+        /// <param name="channelStatusId"> identity of the counter for the channel which aggregates the transports.
+        /// </param>
         /// <returns> the list of active bound local socket addresses. </returns>
-        public static List<string> FindAddresses(CountersReader countersReader, long channelStatus,
-            int channelStatusId)
+        public static List<string> FindAddresses(CountersReader countersReader, long channelStatus, int channelStatusId)
         {
             if (channelStatus != ChannelEndpointStatus.ACTIVE)
             {
-                return EMPTY_LIST;
+                return EmptyList;
             }
 
             List<string> bindings = new List<string>(2);
@@ -64,15 +82,20 @@ namespace Adaptive.Aeron.Status
                         int recordOffset = CountersReader.MetaDataOffset(counterId);
                         int keyIndex = recordOffset + CountersReader.KEY_OFFSET;
 
-                        if (channelStatusId == buffer.GetInt(keyIndex + CHANNEL_STATUS_ID_OFFSET) &&
-                            ChannelEndpointStatus.ACTIVE == countersReader.GetCounterValue(counterId))
+                        if (
+                            channelStatusId == buffer.GetInt(keyIndex + ChannelStatusIdOffset)
+                            && ChannelEndpointStatus.ACTIVE == countersReader.GetCounterValue(counterId)
+                        )
                         {
-                            int length = buffer.GetInt(keyIndex + LOCAL_SOCKET_ADDRESS_LENGTH_OFFSET);
+                            int length = buffer.GetInt(keyIndex + LocalSocketAddressLengthOffset);
                             if (length > 0)
                             {
                                 bindings.Add(
-                                    buffer.GetStringWithoutLengthAscii(keyIndex + LOCAL_SOCKET_ADDRESS_STRING_OFFSET,
-                                        length));
+                                    buffer.GetStringWithoutLengthAscii(
+                                        keyIndex + LocalSocketAddressStringOffset,
+                                        length
+                                    )
+                                );
                             }
                         }
                     }
@@ -92,7 +115,8 @@ namespace Adaptive.Aeron.Status
         /// </summary>
         /// <param name="countersReader">  for the connected driver. </param>
         /// <param name="channelStatus">   value for the channel which aggregates the transports. </param>
-        /// <param name="channelStatusId"> identity of the counter for the channel which aggregates the transports. </param>
+        /// <param name="channelStatusId"> identity of the counter for the channel which aggregates the transports.
+        /// </param>
         /// <returns> the endpoint representing the bound socket address or null if not found. </returns>
         public static string FindAddress(CountersReader countersReader, long channelStatus, int channelStatusId)
         {
@@ -112,14 +136,18 @@ namespace Adaptive.Aeron.Status
                             int recordOffset = CountersReader.MetaDataOffset(counterId);
                             int keyIndex = recordOffset + CountersReader.KEY_OFFSET;
 
-                            if (channelStatusId == buffer.GetInt(keyIndex + CHANNEL_STATUS_ID_OFFSET) &&
-                                ChannelEndpointStatus.ACTIVE == countersReader.GetCounterValue(counterId))
+                            if (
+                                channelStatusId == buffer.GetInt(keyIndex + ChannelStatusIdOffset)
+                                && ChannelEndpointStatus.ACTIVE == countersReader.GetCounterValue(counterId)
+                            )
                             {
-                                int length = buffer.GetInt(keyIndex + LOCAL_SOCKET_ADDRESS_LENGTH_OFFSET);
+                                int length = buffer.GetInt(keyIndex + LocalSocketAddressLengthOffset);
                                 if (length > 0)
                                 {
                                     endpoint = buffer.GetStringWithoutLengthAscii(
-                                        keyIndex + LOCAL_SOCKET_ADDRESS_STRING_OFFSET, length);
+                                        keyIndex + LocalSocketAddressStringOffset,
+                                        length
+                                    );
                                 }
 
                                 break;
@@ -135,7 +163,7 @@ namespace Adaptive.Aeron.Status
 
             return endpoint;
         }
-        
+
         /// <summary>
         /// Return number of local addresses for the given subscription registration id.
         /// </summary>
@@ -149,9 +177,11 @@ namespace Adaptive.Aeron.Status
             for (int counterId = 0, maxId = countersReader.MaxCounterId; counterId < maxId; counterId++)
             {
                 int counterState = countersReader.GetCounterState(counterId);
-                if (counterState == CountersReader.RECORD_ALLOCATED && 
-                    countersReader.GetCounterTypeId(counterId) == LOCAL_SOCKET_ADDRESS_STATUS_TYPE_ID && 
-                    countersReader.GetCounterRegistrationId(counterId) == registrationId)
+                if (
+                    counterState == CountersReader.RECORD_ALLOCATED
+                    && countersReader.GetCounterTypeId(counterId) == LOCAL_SOCKET_ADDRESS_STATUS_TYPE_ID
+                    && countersReader.GetCounterRegistrationId(counterId) == registrationId
+                )
                 {
                     result++;
                 }
@@ -163,7 +193,7 @@ namespace Adaptive.Aeron.Status
 
             return result;
         }
-        
+
         /// <summary>
         /// Is a socket currently active for a channel.
         /// </summary>
@@ -184,8 +214,10 @@ namespace Adaptive.Aeron.Status
                         int recordOffset = CountersReader.MetaDataOffset(counterId);
                         int keyIndex = recordOffset + CountersReader.KEY_OFFSET;
 
-                        if (channelStatusId == buffer.GetInt(keyIndex + CHANNEL_STATUS_ID_OFFSET) && 
-                            ChannelEndpointStatus.ACTIVE == countersReader.GetCounterValue(counterId))
+                        if (
+                            channelStatusId == buffer.GetInt(keyIndex + ChannelStatusIdOffset)
+                            && ChannelEndpointStatus.ACTIVE == countersReader.GetCounterValue(counterId)
+                        )
                         {
                             return true;
                         }
@@ -199,6 +231,5 @@ namespace Adaptive.Aeron.Status
 
             return false;
         }
-
     }
 }

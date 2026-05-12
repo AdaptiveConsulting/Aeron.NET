@@ -24,7 +24,7 @@ namespace Adaptive.Aeron
     public interface ILogBuffersFactory
     {
         /// <summary>
-        /// Map a log file into memory and wrap each section with a <seealso cref="UnsafeBuffer"/>.
+        /// Map a log file into memory and wrap each section with a <seealso cref="UnsafeBuffer"/> .
         /// </summary>
         /// <param name="logFileName"> to be mapped into memory. </param>
         /// <returns> a representation of the mapped log buffer. </returns>

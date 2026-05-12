@@ -15,23 +15,23 @@
  */
 
 using Adaptive.Aeron.LogBuffer;
-using Adaptive.Aeron.Protocol;
 using Adaptive.Agrona;
 using Adaptive.Agrona.Collections;
 
 namespace Adaptive.Aeron
 {
     /// <summary>
-    /// A <seealso cref="IControlledFragmentHandler"/> that sits in a chain-of-responsibility pattern that reassembles fragmented
-    /// messages so that the next handler in the chain only sees whole messages.
-    /// 
-    /// Unfragmented messages are delegated without copy. Fragmented messages are copied to a temporary
-    /// buffer for reassembly before delegation.
-    /// 
+    /// A <seealso cref="IControlledFragmentHandler"/> that sits in a chain-of-responsibility pattern that reassembles
+    /// fragmented messages so that the next handler in the chain only sees whole messages.
+    ///
+    /// Unfragmented messages are delegated without copy. Fragmented messages are copied to a temporary buffer for
+    /// reassembly before delegation.
+    ///
     /// The <seealso cref="Header"/> passed to the delegate on assembling a message will be that of the last fragment.
-    /// 
+    ///
     /// Session based buffers will be allocated and grown as necessary based on the length of messages to be assembled.
-    /// When sessions go inactive see <seealso cref="UnavailableImageHandler"/>, it is possible to free the buffer by calling
+    /// When sessions go inactive see <seealso cref="UnavailableImageHandler"/> , it is possible to free the buffer by
+    /// calling
     /// <seealso cref="FreeSessionBuffer(int)"/>.
     /// </summary>
     /// <seealso cref="Subscription.ControlledPoll(Adaptive.Aeron.LogBuffer.IControlledFragmentHandler,int)"/>
@@ -64,13 +64,15 @@ namespace Adaptive.Aeron
         }
 
         /// <summary>
-        /// The implementation of <seealso cref="IControlledFragmentHandler"/> that reassembles and forwards whole messages.
+        /// The implementation of <seealso cref="IControlledFragmentHandler"/> that reassembles and forwards whole
+        /// messages.
         /// </summary>
         /// <param name="buffer"> containing the data. </param>
         /// <param name="offset"> at which the data begins. </param>
         /// <param name="length"> of the data in bytes. </param>
         /// <param name="header"> representing the metadata for the data. </param>
-        /// <returns> <seealso cref="ControlledFragmentHandlerAction"/> to be taken after processing fragment. </returns>
+        /// <returns> <seealso cref="ControlledFragmentHandlerAction"/> to be taken after processing fragment.
+        /// </returns>
         public ControlledFragmentHandlerAction OnFragment(IDirectBuffer buffer, int offset, int length, Header header)
         {
             byte flags = header.Flags;
@@ -83,7 +85,8 @@ namespace Adaptive.Aeron
             else if ((flags & FrameDescriptor.BEGIN_FRAG_FLAG) == FrameDescriptor.BEGIN_FRAG_FLAG)
             {
                 BufferBuilder builder = GetBufferBuilder(header.SessionId);
-                builder.Reset()
+                builder
+                    .Reset()
                     .CaptureHeader(header)
                     .Append(buffer, offset, length)
                     .NextTermOffset(header.NextTermOffset);
@@ -101,7 +104,12 @@ namespace Adaptive.Aeron
 
                         if ((flags & FrameDescriptor.END_FRAG_FLAG) == FrameDescriptor.END_FRAG_FLAG)
                         {
-                            action = _delegate.OnFragment(builder.Buffer(), 0, builder.Limit(), builder.CompleteHeader(header));
+                            action = _delegate.OnFragment(
+                                builder.Buffer(),
+                                0,
+                                builder.Limit(),
+                                builder.CompleteHeader(header)
+                            );
 
                             if (ControlledFragmentHandlerAction.ABORT == action)
                             {
@@ -128,8 +136,8 @@ namespace Adaptive.Aeron
         }
 
         /// <summary>
-        /// Free an existing session buffer to reduce memory pressure when an image goes inactive or no more
-        /// large messages are expected.
+        /// Free an existing session buffer to reduce memory pressure when an image goes inactive or no more large
+        /// messages are expected.
         /// </summary>
         /// <param name="sessionId"> to have its buffer freed </param>
         /// <returns> true if a buffer has been freed otherwise false. </returns>

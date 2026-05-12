@@ -31,10 +31,7 @@ namespace Adaptive.Agrona.Concurrent.Broadcast
         private readonly BroadcastReceiver _receiver;
         private readonly IMutableDirectBuffer _scratchBuffer;
 
-        public CopyBroadcastReceiver()
-        {
-            
-        }
+        public CopyBroadcastReceiver() { }
 
         /// <summary>
         /// Wrap a <seealso cref="BroadcastReceiver"/> to simplify the API for receiving messages.
@@ -46,7 +43,7 @@ namespace Adaptive.Agrona.Concurrent.Broadcast
             _receiver = receiver;
             _scratchBuffer = scratchBuffer;
         }
-        
+
         /// <summary>
         /// Wrap a <seealso cref="BroadcastReceiver"/> to simplify the API for receiving messages.
         /// </summary>
@@ -90,7 +87,9 @@ namespace Adaptive.Agrona.Concurrent.Broadcast
                 var capacity = _scratchBuffer.Capacity;
                 if (length > capacity)
                 {
-                    throw new InvalidOperationException($"Buffer required length of {length:D} but only has {capacity:D}");
+                    throw new InvalidOperationException(
+                        $"Buffer required length of {length:D} but only has {capacity:D}"
+                    );
                 }
 
                 var msgTypeId = receiver.TypeId();

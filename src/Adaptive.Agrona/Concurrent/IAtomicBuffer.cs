@@ -49,7 +49,7 @@ namespace Adaptive.Agrona.Concurrent
         /// <param name="index"> in bytes for where to put. </param>
         /// <param name="value"> for at a given index </param>
         void PutLongOrdered(int index, long value);
-        
+
         /// <summary>
         /// Put a value to a given index with release semantics.
         /// </summary>
@@ -74,8 +74,8 @@ namespace Adaptive.Agrona.Concurrent
         bool CompareAndSetLong(int index, long expectedValue, long updateValue);
 
         /// <summary>
-        /// Atomically add a delta to a value at a location returning the previous contents.
-        /// To decrement a negative delta can be provided.
+        /// Atomically add a delta to a value at a location returning the previous contents. To decrement a negative
+        /// delta can be provided.
         /// </summary>
         /// <param name="index"> in bytes for where to put. </param>
         /// <param name="delta"> to be added to the value at the index </param>
@@ -102,7 +102,7 @@ namespace Adaptive.Agrona.Concurrent
         /// <param name="index"> in bytes for where to put. </param>
         /// <param name="value"> for at a given index </param>
         void PutIntOrdered(int index, int value);
-        
+
         /// <summary>
         /// Put a value to a given index with release semantics.
         /// </summary>
@@ -127,8 +127,8 @@ namespace Adaptive.Agrona.Concurrent
         bool CompareAndSetInt(int index, int expectedValue, int updateValue);
 
         /// <summary>
-        /// Atomically add a delta to a value at a location returning the previous contents.
-        /// To decrement a negative delta can be provided.
+        /// Atomically add a delta to a value at a location returning the previous contents. To decrement a negative
+        /// delta can be provided.
         /// </summary>
         /// <param name="index"> in bytes for where to put. </param>
         /// <param name="delta"> to be added to the value at the index </param>
@@ -162,6 +162,5 @@ namespace Adaptive.Agrona.Concurrent
         /// <param name="index"> in bytes for where to put. </param>
         /// <param name="value"> for at a given index </param>
         void PutByteVolatile(int index, byte value);
-
     }
 }

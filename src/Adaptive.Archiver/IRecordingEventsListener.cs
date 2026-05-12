@@ -1,4 +1,20 @@
-﻿namespace Adaptive.Archiver
+﻿/*
+ * Copyright 2014 - 2026 Adaptive Financial Consulting Ltd
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+namespace Adaptive.Archiver
 {
     /// <summary>
     /// Event listener for observing the status of recordings for an Archive.
@@ -14,7 +30,14 @@
         /// <param name="streamId">       of the publication being recorded. </param>
         /// <param name="channel">        of the publication being recorded. </param>
         /// <param name="sourceIdentity"> of the publication being recorded. </param>
-        void OnStart(long recordingId, long startPosition, int sessionId, int streamId, string channel, string sourceIdentity);
+        void OnStart(
+            long recordingId,
+            long startPosition,
+            int sessionId,
+            int streamId,
+            string channel,
+            string sourceIdentity
+        );
 
         /// <summary>
         /// Progress indication of an active recording.

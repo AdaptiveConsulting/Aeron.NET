@@ -123,7 +123,7 @@ namespace Adaptive.Agrona.Tests
             const ulong input = 12;
 
             var result = EndianessConverter.ApplyUint64(ByteOrder.BigEndian, input);
-            
+
             ulong expected = BitConverter.ToUInt64(BitConverter.GetBytes(input).Reverse().ToArray(), 0);
             Assert.AreEqual(expected, result);
         }

@@ -27,51 +27,60 @@ namespace Adaptive.Aeron.Tests.LogBuffer
     [TestFixture]
     public class TermReaderTest
     {
-        private static readonly int TERM_BUFFER_CAPACITY = LogBufferDescriptor.TERM_MIN_LENGTH;
-        private static readonly int HEADER_LENGTH = DataHeaderFlyweight.HEADER_LENGTH;
-        private const int INITIAL_TERM_ID = 7;
-        private static readonly int POSITION_BITS_TO_SHIFT =
-            LogBufferDescriptor.PositionBitsToShift(TERM_BUFFER_CAPACITY);
+        private static readonly int TermBufferCapacity = LogBufferDescriptor.TERM_MIN_LENGTH;
+        private static readonly int HeaderLength = DataHeaderFlyweight.HEADER_LENGTH;
+        private const int InitialTermId = 7;
+        private static readonly int PositionBitsToShift = LogBufferDescriptor.PositionBitsToShift(TermBufferCapacity);
 
-        private Header header;
-        private UnsafeBuffer termBuffer;
-        private IErrorHandler errorHandler;
-        private IFragmentHandler handler;
-        private IPosition subscriberPosition;
+        private Header _header;
+        private UnsafeBuffer _termBuffer;
+        private IErrorHandler _errorHandler;
+        private IFragmentHandler _handler;
+        private IPosition _subscriberPosition;
 
         [SetUp]
         public void SetUp()
         {
-            header = new Header(INITIAL_TERM_ID, TERM_BUFFER_CAPACITY);
-            termBuffer = A.Fake<UnsafeBuffer>();
-            errorHandler = A.Fake<IErrorHandler>();
-            handler = A.Fake<IFragmentHandler>();
-            subscriberPosition = A.Fake<IPosition>();
+            _header = new Header(InitialTermId, TermBufferCapacity);
+            _termBuffer = A.Fake<UnsafeBuffer>();
+            _errorHandler = A.Fake<IErrorHandler>();
+            _handler = A.Fake<IFragmentHandler>();
+            _subscriberPosition = A.Fake<IPosition>();
 
-            A.CallTo(() => termBuffer.Capacity).Returns(TERM_BUFFER_CAPACITY);
+            A.CallTo(() => _termBuffer.Capacity).Returns(TermBufferCapacity);
         }
 
         [Test]
         public void ShouldReadFirstMessage()
         {
             const int msgLength = 1;
-            int frameLength = HEADER_LENGTH + msgLength;
+            int frameLength = HeaderLength + msgLength;
             int alignedFrameLength = BitUtil.Align(frameLength, FrameDescriptor.FRAME_ALIGNMENT);
             const int termOffset = 0;
 
-            A.CallTo(() => termBuffer.GetIntVolatile(0))
-                .Returns(frameLength);
-            A.CallTo(() => termBuffer.GetShort(FrameDescriptor.TypeOffset(0)))
-                .Returns((short) HeaderFlyweight.HDR_TYPE_DATA);
+            A.CallTo(() => _termBuffer.GetIntVolatile(0)).Returns(frameLength);
+            A.CallTo(() => _termBuffer.GetShort(FrameDescriptor.TypeOffset(0)))
+                .Returns((short)HeaderFlyweight.HDR_TYPE_DATA);
 
-            int readOutcome = TermReader.Read(termBuffer, termOffset, handler, int.MaxValue, header, errorHandler, 0,
-                subscriberPosition);
+            int readOutcome = TermReader.Read(
+                _termBuffer,
+                termOffset,
+                _handler,
+                int.MaxValue,
+                _header,
+                _errorHandler,
+                0,
+                _subscriberPosition
+            );
             Assert.AreEqual(1, TermReader.FragmentsRead(readOutcome));
 
-            A.CallTo(() => termBuffer.GetIntVolatile(0)).MustHaveHappened()
-                .Then(A.CallTo(() => handler.OnFragment(termBuffer, HEADER_LENGTH, msgLength, A<Header>._))
-                    .MustHaveHappened())
-                .Then(A.CallTo(() => subscriberPosition.SetRelease(alignedFrameLength)).MustHaveHappened());
+            A.CallTo(() => _termBuffer.GetIntVolatile(0))
+                .MustHaveHappened()
+                .Then(
+                    A.CallTo(() => _handler.OnFragment(_termBuffer, HeaderLength, msgLength, A<Header>._))
+                        .MustHaveHappened()
+                )
+                .Then(A.CallTo(() => _subscriberPosition.SetRelease(alignedFrameLength)).MustHaveHappened());
         }
 
         [Test]
@@ -79,14 +88,22 @@ namespace Adaptive.Aeron.Tests.LogBuffer
         {
             const int termOffset = 0;
 
-            int readOutcome = TermReader.Read(termBuffer, termOffset, handler, int.MaxValue, header, errorHandler, 0,
-                subscriberPosition);
+            int readOutcome = TermReader.Read(
+                _termBuffer,
+                termOffset,
+                _handler,
+                int.MaxValue,
+                _header,
+                _errorHandler,
+                0,
+                _subscriberPosition
+            );
 
             Assert.AreEqual(0, readOutcome);
 
-            A.CallTo(() => subscriberPosition.SetRelease(A<long>._)).MustNotHaveHappened();
-            A.CallTo(() => termBuffer.GetIntVolatile(0)).MustHaveHappened();
-            A.CallTo(() => handler.OnFragment(A<UnsafeBuffer>._, A<int>._, A<int>._, A<Header>._))
+            A.CallTo(() => _subscriberPosition.SetRelease(A<long>._)).MustNotHaveHappened();
+            A.CallTo(() => _termBuffer.GetIntVolatile(0)).MustHaveHappened();
+            A.CallTo(() => _handler.OnFragment(A<UnsafeBuffer>._, A<int>._, A<int>._, A<Header>._))
                 .MustNotHaveHappened();
         }
 
@@ -94,116 +111,152 @@ namespace Adaptive.Aeron.Tests.LogBuffer
         public void ShouldReadOneLimitedMessage()
         {
             const int msgLength = 1;
-            int frameLength = HEADER_LENGTH + msgLength;
+            int frameLength = HeaderLength + msgLength;
             int alignedFrameLength = BitUtil.Align(frameLength, FrameDescriptor.FRAME_ALIGNMENT);
             const int termOffset = 0;
 
-            A.CallTo(() => termBuffer.GetIntVolatile(A<int>._))
-                .Returns(frameLength);
-            A.CallTo(() => termBuffer.GetShort(A<int>._))
-                .Returns((short) HeaderFlyweight.HDR_TYPE_DATA);
+            A.CallTo(() => _termBuffer.GetIntVolatile(A<int>._)).Returns(frameLength);
+            A.CallTo(() => _termBuffer.GetShort(A<int>._)).Returns((short)HeaderFlyweight.HDR_TYPE_DATA);
 
-            int readOutcome = TermReader.Read(termBuffer, termOffset, handler, 1, header, errorHandler, 0,
-                subscriberPosition);
+            int readOutcome = TermReader.Read(
+                _termBuffer,
+                termOffset,
+                _handler,
+                1,
+                _header,
+                _errorHandler,
+                0,
+                _subscriberPosition
+            );
             Assert.AreEqual(1, readOutcome);
 
-            A.CallTo(() => termBuffer.GetIntVolatile(0)).MustHaveHappened()
-                .Then(A.CallTo(() => handler.OnFragment(termBuffer, HEADER_LENGTH, msgLength, A<Header>._))
-                    .MustHaveHappened())
-                .Then(A.CallTo(() => subscriberPosition.SetRelease(alignedFrameLength)).MustHaveHappened());
+            A.CallTo(() => _termBuffer.GetIntVolatile(0))
+                .MustHaveHappened()
+                .Then(
+                    A.CallTo(() => _handler.OnFragment(_termBuffer, HeaderLength, msgLength, A<Header>._))
+                        .MustHaveHappened()
+                )
+                .Then(A.CallTo(() => _subscriberPosition.SetRelease(alignedFrameLength)).MustHaveHappened());
         }
 
         [Test]
         public void ShouldReadMultipleMessages()
         {
             const int msgLength = 1;
-            int frameLength = HEADER_LENGTH + msgLength;
+            int frameLength = HeaderLength + msgLength;
             int alignedFrameLength = BitUtil.Align(frameLength, FrameDescriptor.FRAME_ALIGNMENT);
             const int termOffset = 0;
 
-            A.CallTo(() => termBuffer.GetIntVolatile(0)).Returns(frameLength);
-            A.CallTo(() => termBuffer.GetIntVolatile(alignedFrameLength)).Returns(frameLength);
-            A.CallTo(() => termBuffer.GetShort(A<int>._)).Returns((short) HeaderFlyweight.HDR_TYPE_DATA);
+            A.CallTo(() => _termBuffer.GetIntVolatile(0)).Returns(frameLength);
+            A.CallTo(() => _termBuffer.GetIntVolatile(alignedFrameLength)).Returns(frameLength);
+            A.CallTo(() => _termBuffer.GetShort(A<int>._)).Returns((short)HeaderFlyweight.HDR_TYPE_DATA);
 
-            int readOutcome = TermReader.Read(termBuffer, termOffset, handler, int.MaxValue, header, errorHandler, 0,
-                subscriberPosition);
+            int readOutcome = TermReader.Read(
+                _termBuffer,
+                termOffset,
+                _handler,
+                int.MaxValue,
+                _header,
+                _errorHandler,
+                0,
+                _subscriberPosition
+            );
             Assert.AreEqual(2, readOutcome);
 
-            A.CallTo(() => termBuffer.GetIntVolatile(0)).MustHaveHappened()
-                .Then(A.CallTo(() => handler.OnFragment(termBuffer, HEADER_LENGTH, msgLength, A<Header>._))
-                    .MustHaveHappened())
-                .Then(A.CallTo(() => termBuffer.GetIntVolatile(alignedFrameLength)).MustHaveHappened())
-                .Then(A.CallTo(() =>
-                        handler.OnFragment(termBuffer, alignedFrameLength + HEADER_LENGTH, msgLength, A<Header>._))
-                    .MustHaveHappened())
-                .Then(A.CallTo(() => subscriberPosition.SetRelease(alignedFrameLength * 2L)).MustHaveHappened());
+            A.CallTo(() => _termBuffer.GetIntVolatile(0))
+                .MustHaveHappened()
+                .Then(
+                    A.CallTo(() => _handler.OnFragment(_termBuffer, HeaderLength, msgLength, A<Header>._))
+                        .MustHaveHappened()
+                )
+                .Then(A.CallTo(() => _termBuffer.GetIntVolatile(alignedFrameLength)).MustHaveHappened())
+                .Then(
+                    A.CallTo(() =>
+                            _handler.OnFragment(_termBuffer, alignedFrameLength + HeaderLength, msgLength, A<Header>._)
+                        )
+                        .MustHaveHappened()
+                )
+                .Then(A.CallTo(() => _subscriberPosition.SetRelease(alignedFrameLength * 2L)).MustHaveHappened());
         }
 
         [Test]
         public void ShouldReadLastMessage()
         {
             const int msgLength = 1;
-            int frameLength = HEADER_LENGTH + msgLength;
+            int frameLength = HeaderLength + msgLength;
             int alignedFrameLength = BitUtil.Align(frameLength, FrameDescriptor.FRAME_ALIGNMENT);
-            int frameOffset = TERM_BUFFER_CAPACITY - alignedFrameLength;
+            int frameOffset = TermBufferCapacity - alignedFrameLength;
             long startingPosition = LogBufferDescriptor.ComputePosition(
-                INITIAL_TERM_ID, frameOffset, POSITION_BITS_TO_SHIFT, INITIAL_TERM_ID);
+                InitialTermId,
+                frameOffset,
+                PositionBitsToShift,
+                InitialTermId
+            );
 
-            A.CallTo(() => termBuffer.GetIntVolatile(frameOffset)).Returns(frameLength);
-            A.CallTo(() => termBuffer.GetShort(FrameDescriptor.TypeOffset(frameOffset)))
-                .Returns((short) HeaderFlyweight.HDR_TYPE_DATA);
-            A.CallTo(() => subscriberPosition.GetVolatile()).Returns(startingPosition);
+            A.CallTo(() => _termBuffer.GetIntVolatile(frameOffset)).Returns(frameLength);
+            A.CallTo(() => _termBuffer.GetShort(FrameDescriptor.TypeOffset(frameOffset)))
+                .Returns((short)HeaderFlyweight.HDR_TYPE_DATA);
+            A.CallTo(() => _subscriberPosition.GetVolatile()).Returns(startingPosition);
 
             int readOutcome = TermReader.Read(
-                termBuffer,
+                _termBuffer,
                 frameOffset,
-                handler,
+                _handler,
                 int.MaxValue,
-                header,
-                errorHandler,
+                _header,
+                _errorHandler,
                 startingPosition,
-                subscriberPosition);
-            
+                _subscriberPosition
+            );
+
             Assert.AreEqual(1, readOutcome);
 
-            A.CallTo(() => termBuffer.GetIntVolatile(frameOffset)).MustHaveHappened()
-                .Then(A.CallTo(
-                        () => handler.OnFragment(termBuffer, frameOffset + HEADER_LENGTH, msgLength, A<Header>._))
-                    .MustHaveHappened())
-                .Then(A.CallTo(() => subscriberPosition.SetRelease(TERM_BUFFER_CAPACITY)).MustHaveHappened());
+            A.CallTo(() => _termBuffer.GetIntVolatile(frameOffset))
+                .MustHaveHappened()
+                .Then(
+                    A.CallTo(() => _handler.OnFragment(_termBuffer, frameOffset + HeaderLength, msgLength, A<Header>._))
+                        .MustHaveHappened()
+                )
+                .Then(A.CallTo(() => _subscriberPosition.SetRelease(TermBufferCapacity)).MustHaveHappened());
         }
 
         [Test]
         public void ShouldNotReadLastMessageWhenPadding()
         {
             const int msgLength = 1;
-            int frameLength = HEADER_LENGTH + msgLength;
+            int frameLength = HeaderLength + msgLength;
             int alignedFrameLength = BitUtil.Align(frameLength, FrameDescriptor.FRAME_ALIGNMENT);
-            int frameOffset = TERM_BUFFER_CAPACITY - alignedFrameLength;
+            int frameOffset = TermBufferCapacity - alignedFrameLength;
             long startingPosition = LogBufferDescriptor.ComputePosition(
-                INITIAL_TERM_ID, frameOffset, POSITION_BITS_TO_SHIFT, INITIAL_TERM_ID);
+                InitialTermId,
+                frameOffset,
+                PositionBitsToShift,
+                InitialTermId
+            );
 
-            A.CallTo(() => termBuffer.GetIntVolatile(frameOffset)).Returns(frameLength);
-            A.CallTo(() => termBuffer.GetShort(FrameDescriptor.TypeOffset(frameOffset)))
-                .Returns((short) FrameDescriptor.PADDING_FRAME_TYPE);
-            A.CallTo(() => subscriberPosition.GetVolatile()).Returns(startingPosition);
+            A.CallTo(() => _termBuffer.GetIntVolatile(frameOffset)).Returns(frameLength);
+            A.CallTo(() => _termBuffer.GetShort(FrameDescriptor.TypeOffset(frameOffset)))
+                .Returns((short)FrameDescriptor.PADDING_FRAME_TYPE);
+            A.CallTo(() => _subscriberPosition.GetVolatile()).Returns(startingPosition);
 
             int readOutcome = TermReader.Read(
-                termBuffer,
+                _termBuffer,
                 frameOffset,
-                handler,
+                _handler,
                 int.MaxValue,
-                header,
-                errorHandler,
+                _header,
+                _errorHandler,
                 startingPosition,
-                subscriberPosition);
-            
+                _subscriberPosition
+            );
+
             Assert.AreEqual(0, readOutcome);
 
-            A.CallTo(() => termBuffer.GetIntVolatile(frameOffset)).MustHaveHappened()
-                .Then(A.CallTo(() => subscriberPosition.SetRelease(TERM_BUFFER_CAPACITY)).MustHaveHappened());
+            A.CallTo(() => _termBuffer.GetIntVolatile(frameOffset))
+                .MustHaveHappened()
+                .Then(A.CallTo(() => _subscriberPosition.SetRelease(TermBufferCapacity)).MustHaveHappened());
 
-            A.CallTo(() => handler.OnFragment(A<UnsafeBuffer>._, A<int>._, A<int>._, A<Header>._))
+            A.CallTo(() => _handler.OnFragment(A<UnsafeBuffer>._, A<int>._, A<int>._, A<Header>._))
                 .MustNotHaveHappened();
         }
     }

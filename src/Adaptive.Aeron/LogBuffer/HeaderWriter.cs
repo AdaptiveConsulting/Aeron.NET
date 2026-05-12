@@ -25,8 +25,8 @@ namespace Adaptive.Aeron.LogBuffer
     /// <summary>
     /// Utility for applying a header to a message in a term buffer.
     ///
-    /// This class is designed to be thread safe to be used across multiple producers and makes the header
-    /// visible in the correct order for consumers.
+    /// This class is designed to be thread safe to be used across multiple producers and makes the header visible in
+    /// the correct order for consumers.
     /// </summary>
     public class HeaderWriter
     {
@@ -34,9 +34,7 @@ namespace Adaptive.Aeron.LogBuffer
         protected readonly long _sessionId;
         protected readonly long _streamId;
 
-        public HeaderWriter()
-        {
-        }
+        public HeaderWriter() { }
 
         protected HeaderWriter(long versionFlagsType, long sessionId, long streamId)
         {
@@ -65,7 +63,8 @@ namespace Adaptive.Aeron.LogBuffer
         }
 
         /// <summary>
-        /// Write a header to the term buffer in <seealso cref="ByteOrder.LittleEndian"/> format using the minimum instructions.
+        /// Write a header to the term buffer in <seealso cref="ByteOrder.LittleEndian"/> format using the minimum
+        /// instructions.
         /// </summary>
         /// <param name="termBuffer"> to be written to. </param>
         /// <param name="offset">     at which the header should be written. </param>
@@ -86,13 +85,13 @@ namespace Adaptive.Aeron.LogBuffer
     }
 
     /// <summary>
-    /// Header writer for big-endian native byte order. On a big-endian host, byte-reverses the
-    /// length, term offset, and term id values so the resulting wire bytes remain little-endian
-    /// (the Aeron protocol's wire format is always little-endian).
+    /// Header writer for big-endian native byte order. On a big-endian host, byte-reverses the length, term offset, and
+    /// term id values so the resulting wire bytes remain little-endian (the Aeron protocol's wire format is always
+    /// little-endian).
     ///
-    /// Selected by <see cref="HeaderWriter.NewInstance"/> when <see cref="BitConverter.IsLittleEndian"/>
-    /// is false. .NET currently runs only on little-endian platforms, but BE platforms have
-    /// existed historically (e.g. PowerPC, MIPS) and may again.
+    /// Selected by <see cref="HeaderWriter.NewInstance"/> when <see cref="BitConverter.IsLittleEndian"/> is false. .NET
+    /// currently runs only on little-endian platforms, but BE platforms have existed historically (e.g. PowerPC, MIPS)
+    /// and may again.
     /// </summary>
     internal sealed class NativeBigEndianHeaderWriter : HeaderWriter
     {
@@ -100,33 +99,37 @@ namespace Adaptive.Aeron.LogBuffer
             : base(
                 defaultHeader.GetInt(HeaderFlyweight.VERSION_FIELD_OFFSET) & 0xFFFFFFFFL,
                 defaultHeader.GetInt(DataHeaderFlyweight.SESSION_ID_FIELD_OFFSET) & 0xFFFFFFFFL,
-                (long)defaultHeader.GetInt(DataHeaderFlyweight.STREAM_ID_FIELD_OFFSET) << 32)
-        {
-        }
+                (long)defaultHeader.GetInt(DataHeaderFlyweight.STREAM_ID_FIELD_OFFSET) << 32
+            ) { }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override void Write(UnsafeBuffer termBuffer, int offset, int length, int termId)
         {
             termBuffer.PutLongOrdered(
                 offset + HeaderFlyweight.FRAME_LENGTH_FIELD_OFFSET,
-                ((long)ReverseBytes(-length) << 32) | _versionFlagsType);
+                ((long)ReverseBytes(-length) << 32) | _versionFlagsType
+            );
 
             termBuffer.PutLongOrdered(
                 offset + DataHeaderFlyweight.TERM_OFFSET_FIELD_OFFSET,
-                ((long)ReverseBytes(offset) << 32) | _sessionId);
+                ((long)ReverseBytes(offset) << 32) | _sessionId
+            );
 
             termBuffer.PutLong(
                 offset + DataHeaderFlyweight.STREAM_ID_FIELD_OFFSET,
-                _streamId | (ReverseBytes(termId) & 0xFFFFFFFFL));
+                _streamId | (ReverseBytes(termId) & 0xFFFFFFFFL)
+            );
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static int ReverseBytes(int value)
         {
-            return (int)(((uint)value & 0x000000FFU) << 24
+            return (int)(
+                ((uint)value & 0x000000FFU) << 24
                 | ((uint)value & 0x0000FF00U) << 8
                 | ((uint)value & 0x00FF0000U) >> 8
-                | ((uint)value & 0xFF000000U) >> 24);
+                | ((uint)value & 0xFF000000U) >> 24
+            );
         }
     }
 }

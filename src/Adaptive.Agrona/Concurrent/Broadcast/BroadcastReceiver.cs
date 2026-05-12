@@ -20,11 +20,11 @@ using System.Threading;
 namespace Adaptive.Agrona.Concurrent.Broadcast
 {
     /// <summary>
-    /// Receive messages broadcast from a BroadcastTransmitter via an underlying buffer. Receivers can join
-    /// a transmission stream at any point by consuming the latest message at the point of joining and forward.
+    /// Receive messages broadcast from a BroadcastTransmitter via an underlying buffer. Receivers can join a
+    /// transmission stream at any point by consuming the latest message at the point of joining and forward.
     /// <para>
-    /// If a Receiver cannot keep up with the transmission stream then loss will be experienced. Loss is not an
-    /// error condition.
+    /// If a Receiver cannot keep up with the transmission stream then loss will be experienced. Loss is not an error
+    /// condition.
     /// </para>
     /// <para>
     /// <b>Note:</b> Each Receiver is not threadsafe but there can be zero or many receivers to a transmission stream.
@@ -45,9 +45,9 @@ namespace Adaptive.Agrona.Concurrent.Broadcast
         private readonly AtomicLong _lappedCount = new AtomicLong();
 
         /// <summary>
-        /// Construct a new broadcast receiver based on an underlying <seealso cref="IAtomicBuffer"/>.
-        /// The underlying buffer must a power of 2 in size plus sufficient space
-        /// for the <seealso cref="BroadcastBufferDescriptor.TrailerLength"/>.
+        /// Construct a new broadcast receiver based on an underlying <seealso cref="IAtomicBuffer"/> . The underlying
+        /// buffer must a power of 2 in size plus sufficient space for the
+        /// <seealso cref="BroadcastBufferDescriptor.TrailerLength"/> .
         /// </summary>
         /// <param name="buffer"> via which messages will be exchanged. </param>
         /// <exception cref="InvalidOperationException"> if the buffer capacity is not a power of 2
@@ -65,7 +65,7 @@ namespace Adaptive.Agrona.Concurrent.Broadcast
             _latestCounterIndex = _capacity + BroadcastBufferDescriptor.LatestCounterOffset;
 
             _cursor = _nextRecord = buffer.GetLongVolatile(_latestCounterIndex);
-            _recordOffset = (int) _cursor & (_capacity - 1);
+            _recordOffset = (int)_cursor & (_capacity - 1);
         }
 
         /// <summary>
@@ -78,11 +78,11 @@ namespace Adaptive.Agrona.Concurrent.Broadcast
         }
 
         /// <summary>
-        /// Get the number of times the transmitter has lapped this receiver around the buffer. On each lap
-        /// as least a buffer's worth of loss will be experienced.
+        /// Get the number of times the transmitter has lapped this receiver around the buffer. On each lap as least a
+        /// buffer's worth of loss will be experienced.
         /// <para>
         /// <b>Note:</b> This method is threadsafe for calling from an external monitoring thread.
-        /// 
+        ///
         /// </para>
         /// </summary>
         /// <returns> the capacity of the underlying broadcast buffer. </returns>
@@ -131,10 +131,11 @@ namespace Adaptive.Agrona.Concurrent.Broadcast
         /// Non-blocking receive of next message from the transmission stream.
         /// <para>
         /// If loss has occurred then <seealso cref="LappedCount()"/> will be incremented.
-        /// 
+        ///
         /// </para>
         /// </summary>
-        /// <returns> true if transmission is available with <seealso cref="Offset()"/>, <seealso cref="Length()"/> and <seealso cref="TypeId()"/>
+        /// <returns> true if transmission is available with <seealso cref="Offset()"/>, <seealso cref="Length()"/> and
+        /// <seealso cref="TypeId()"/>
         /// set for the next message to be consumed. If no transmission is available then false. </returns>
         public bool ReceiveNext()
         {
@@ -145,24 +146,32 @@ namespace Adaptive.Agrona.Concurrent.Broadcast
 
             if (tail > cursor)
             {
-                var recordOffset = (int) cursor & (_capacity - 1);
+                var recordOffset = (int)cursor & (_capacity - 1);
 
                 if (!Validate(cursor))
                 {
                     _lappedCount.LazySet(_lappedCount.Get() + 1);
 
                     cursor = buffer.GetLong(_latestCounterIndex);
-                    recordOffset = (int) cursor & (_capacity - 1);
+                    recordOffset = (int)cursor & (_capacity - 1);
                 }
 
                 _cursor = cursor;
-                _nextRecord = cursor + BitUtil.Align(buffer.GetInt(RecordDescriptor.GetLengthOffset(recordOffset)), RecordDescriptor.RecordAlignment);
+                _nextRecord =
+                    cursor
+                    + BitUtil.Align(
+                        buffer.GetInt(RecordDescriptor.GetLengthOffset(recordOffset)),
+                        RecordDescriptor.RecordAlignment
+                    );
 
                 if (RecordDescriptor.PaddingMsgTypeID == buffer.GetInt(RecordDescriptor.GetTypeOffset(recordOffset)))
                 {
                     recordOffset = 0;
                     _cursor = _nextRecord;
-                    _nextRecord += BitUtil.Align(buffer.GetInt(RecordDescriptor.GetLengthOffset(recordOffset)), RecordDescriptor.RecordAlignment);
+                    _nextRecord += BitUtil.Align(
+                        buffer.GetInt(RecordDescriptor.GetLengthOffset(recordOffset)),
+                        RecordDescriptor.RecordAlignment
+                    );
                 }
 
                 _recordOffset = recordOffset;
@@ -175,16 +184,17 @@ namespace Adaptive.Agrona.Concurrent.Broadcast
         /// <summary>
         /// Validate that the current received record is still valid and has not been overwritten.
         /// <para>
-        /// If the receiver is not consuming messages fast enough to keep up with the transmitter then loss
-        /// can be experienced resulting in messages being overwritten thus making them no longer valid.
-        /// 
+        /// If the receiver is not consuming messages fast enough to keep up with the transmitter then loss can be
+        /// experienced resulting in messages being overwritten thus making them no longer valid.
+        ///
         /// </para>
         /// </summary>
         /// <returns> true if still valid otherwise false. </returns>
         public bool Validate()
         {
             // TODO check equivalent semantics
-            // Replaces UNSAFE.loadFence(); Needed to prevent older loads being moved ahead of the validate, see j.u.c.StampedLock.
+            // Replaces UNSAFE.loadFence(); needed to prevent older loads being moved ahead of
+            // the validate, see j.u.c.StampedLock.
             Thread.MemoryBarrier();
 
             return Validate(_cursor);

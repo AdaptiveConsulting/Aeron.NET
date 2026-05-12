@@ -24,9 +24,14 @@ namespace Adaptive.Agrona
     public enum MapMode
     {
         ReadOnly,
-        ReadWrite
+        ReadWrite,
     }
 
+    [System.Diagnostics.CodeAnalysis.SuppressMessage(
+        "Major Code Smell",
+        "S1118:Utility classes should not have public constructors",
+        Justification = "Public ctor in shipped API surface; marking static would break consumers."
+    )]
     public class IoUtil
     {
         /// <summary>
@@ -58,7 +63,14 @@ namespace Adaptive.Agrona
             var fileShare = FileShare.ReadWrite | FileShare.Delete;
             var memoryMappedFileAccess = MemoryMappedFileAccess.ReadWrite;
             var f = new FileStream(cncFile.FullName, FileMode.CreateNew, fileAccess, fileShare);
-            var mmFile = MemoryMappedFile.CreateFromFile(f, null, length, memoryMappedFileAccess, HandleInheritability.None, false);
+            var mmFile = MemoryMappedFile.CreateFromFile(
+                f,
+                null,
+                length,
+                memoryMappedFileAccess,
+                HandleInheritability.None,
+                false
+            );
             var mappedByteBuffer = new MappedByteBuffer(mmFile, 0, length);
 
             if (fillWithZeros)
@@ -69,20 +81,25 @@ namespace Adaptive.Agrona
             return mappedByteBuffer;
         }
 
-
         public static MappedByteBuffer MapNewOrExistingFile(FileInfo cncFile, long length)
         {
             var fileAccess = FileAccess.ReadWrite;
             var fileShare = FileShare.ReadWrite | FileShare.Delete;
             var memoryMappedFileAccess = MemoryMappedFileAccess.ReadWrite;
-            
+
             var f = new FileStream(cncFile.FullName, FileMode.OpenOrCreate, fileAccess, fileShare);
-            var mmFile = MemoryMappedFile.CreateFromFile(f, null, length, memoryMappedFileAccess, HandleInheritability.None, false);
+            var mmFile = MemoryMappedFile.CreateFromFile(
+                f,
+                null,
+                length,
+                memoryMappedFileAccess,
+                HandleInheritability.None,
+                false
+            );
             var mappedByteBuffer = new MappedByteBuffer(mmFile, 0, length);
 
             return mappedByteBuffer;
         }
-
 
         /// <summary>
         /// Check that file exists and open file
@@ -91,7 +108,9 @@ namespace Adaptive.Agrona
         /// <returns> <seealso cref="MemoryMappedFile"/> the file </returns>
         public static MemoryMappedFile OpenMemoryMappedFile(string path)
         {
-            // mapMode == MapMode.ReadOnly -> here for parity with the Java version but no affect, UnauthorisedAccessExceptions/IOExceptions thrown when trying to open file in Read mode, all files are opened ReadWrite
+            // mapMode == MapMode.ReadOnly -> here for parity with the Java version but no affect;
+            // UnauthorisedAccessExceptions/IOExceptions thrown when trying to open file in Read
+            // mode, all files are opened ReadWrite
 
             CheckFileExists(path);
 
@@ -106,15 +125,21 @@ namespace Adaptive.Agrona
         private static MemoryMappedFile OpenMemoryMappedFile(FileStream f)
         {
             var memoryMappedFileAccess = MemoryMappedFileAccess.ReadWrite;
-            return MemoryMappedFile.CreateFromFile(f, null, 0, memoryMappedFileAccess, HandleInheritability.None,
-                false);
+            return MemoryMappedFile.CreateFromFile(
+                f,
+                null,
+                0,
+                memoryMappedFileAccess,
+                HandleInheritability.None,
+                false
+            );
         }
 
         /// <summary>
         /// Return MappedByteBuffer for entire file
         /// <para>
         /// The file itself will be closed, but the mapping will persist.
-        /// 
+        ///
         /// </para>
         /// </summary>
         /// <param name="fileStream">         of the file to map </param>
@@ -124,12 +149,11 @@ namespace Adaptive.Agrona
             return new MappedByteBuffer(OpenMemoryMappedFile(fileStream));
         }
 
-
         /// <summary>
         /// Check that file exists, open file, and return MappedByteBuffer for entire file
         /// <para>
         /// The file itself will be closed, but the mapping will persist.
-        /// 
+        ///
         /// </para>
         /// </summary>
         /// <param name="location">         of the file to map </param>
@@ -141,7 +165,6 @@ namespace Adaptive.Agrona
 
             return new MappedByteBuffer(OpenMemoryMappedFile(location.FullName));
         }
-
 
         /// <summary>
         /// Unmap a <seealso cref="MappedByteBuffer"/> without waiting for the next GC cycle.
@@ -195,8 +218,9 @@ namespace Adaptive.Agrona
 
                 if (!directory.Exists)
                 {
-                    throw new ArgumentException("could not create " + descriptionLabel + " directory: " +
-                                                directory.FullName);
+                    throw new ArgumentException(
+                        "could not create " + descriptionLabel + " directory: " + directory.FullName
+                    );
                 }
             }
         }

@@ -14,34 +14,39 @@
  * limitations under the License.
  */
 
-using Adaptive.Agrona.Util;
 using System;
+using Adaptive.Agrona.Util;
 
 namespace Adaptive.Agrona.Concurrent.Broadcast
 {
     /// <summary>
-    /// Layout of the broadcast buffer. The buffer consists of a ring of messages that is a power of 2 in size.
-    /// This is followed by a trailer section containing state information about the ring.
+    /// Layout of the broadcast buffer. The buffer consists of a ring of messages that is a power of 2 in size. This is
+    /// followed by a trailer section containing state information about the ring.
     /// </summary>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage(
+        "Major Code Smell",
+        "S1118:Utility classes should not have public constructors",
+        Justification = "Public ctor in shipped API surface; marking static would break consumers."
+    )]
     public class BroadcastBufferDescriptor
     {
         /// <summary>
-        /// Offset within the trailer for where the tail intended value is stored. 
+        /// Offset within the trailer for where the tail intended value is stored.
         /// </summary>
         public static readonly int TailIntentCounterOffset;
 
         /// <summary>
-        /// Offset within the trailer for where the tail value is stored. 
+        /// Offset within the trailer for where the tail value is stored.
         /// </summary>
         public static readonly int TailCounterOffset;
 
         /// <summary>
-        /// Offset within the trailer for where the latest sequence value is stored. 
+        /// Offset within the trailer for where the latest sequence value is stored.
         /// </summary>
         public static readonly int LatestCounterOffset;
 
-        /// <summary> 
-        /// Total size of the trailer 
+        /// <summary>
+        /// Total size of the trailer
         /// </summary>
         public static readonly int TrailerLength;
 
@@ -56,7 +61,7 @@ namespace Adaptive.Agrona.Concurrent.Broadcast
             offset += BitUtil.SIZE_OF_LONG;
             LatestCounterOffset = offset;
 
-            TrailerLength = BitUtil.CACHE_LINE_LENGTH*2;
+            TrailerLength = BitUtil.CACHE_LINE_LENGTH * 2;
         }
 
         /// <summary>

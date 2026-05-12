@@ -1,7 +1,22 @@
-﻿using System;
+﻿/*
+ * Copyright 2014 - 2026 Adaptive Financial Consulting Ltd
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+using System;
 using Adaptive.Aeron;
 using Adaptive.Agrona;
-using Adaptive.Agrona.Concurrent;
 using Adaptive.Agrona.Concurrent.Status;
 using static Adaptive.Agrona.Concurrent.Status.CountersReader;
 
@@ -30,6 +45,11 @@ namespace Adaptive.Archiver
     /// </pre>
     /// </para>
     /// </summary>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage(
+        "Major Code Smell",
+        "S1118:Utility classes should not have public constructors",
+        Justification = "Public ctor in shipped API surface; marking static would break consumers."
+    )]
     public class RecordingPos
     {
         /// <summary>
@@ -47,10 +67,10 @@ namespace Adaptive.Archiver
         /// </summary>
         public const string NAME = "rec-pos";
 
-        internal const int RECORDING_ID_OFFSET = 0;
-        internal static readonly int SESSION_ID_OFFSET = RECORDING_ID_OFFSET + BitUtil.SIZE_OF_LONG;
-        internal static readonly int SOURCE_IDENTITY_LENGTH_OFFSET = SESSION_ID_OFFSET + BitUtil.SIZE_OF_INT;
-        internal static readonly int SOURCE_IDENTITY_OFFSET = SOURCE_IDENTITY_LENGTH_OFFSET + BitUtil.SIZE_OF_INT;
+        internal const int RecordingIdOffset = 0;
+        internal static readonly int SessionIdOffset = RecordingIdOffset + BitUtil.SIZE_OF_LONG;
+        internal static readonly int SourceIdentityLengthOffset = SessionIdOffset + BitUtil.SIZE_OF_INT;
+        internal static readonly int SourceIdentityOffset = SourceIdentityLengthOffset + BitUtil.SIZE_OF_INT;
 
         /// <summary>
         /// Find the active counter id for a stream based on the recording id.
@@ -69,7 +89,8 @@ namespace Adaptive.Archiver
         /// </summary>
         /// <param name="countersReader"> to search within. </param>
         /// <param name="recordingId">    for the active recording. </param>
-        /// <param name="archiveId">      to target specific Archive. Use <see cref="Aeron.Aeron.NULL_VALUE"/> to emulate old behaviour.</param>
+        /// <param name="archiveId"> to target specific Archive. Use <see cref="Aeron.Aeron.NULL_VALUE"/> to emulate old
+        /// behaviour.</param>
         /// <returns> the counter id if found otherwise <seealso cref="CountersReader.NULL_COUNTER_ID"/>. </returns>
         public static int FindCounterIdByRecording(CountersReader countersReader, long recordingId, long archiveId)
         {
@@ -83,10 +104,10 @@ namespace Adaptive.Archiver
                     if (countersReader.GetCounterTypeId(counterId) == RECORDING_POSITION_TYPE_ID)
                     {
                         int keyOffset = MetaDataOffset(counterId) + KEY_OFFSET;
-                        if (buffer.GetLong(keyOffset + RECORDING_ID_OFFSET) == recordingId)
+                        if (buffer.GetLong(keyOffset + RecordingIdOffset) == recordingId)
                         {
-                            int sourceIdentityLength = buffer.GetInt(keyOffset + SOURCE_IDENTITY_LENGTH_OFFSET);
-                            int archiveIdOffset = keyOffset + SOURCE_IDENTITY_OFFSET + sourceIdentityLength;
+                            int sourceIdentityLength = buffer.GetInt(keyOffset + SourceIdentityLengthOffset);
+                            int archiveIdOffset = keyOffset + SourceIdentityOffset + sourceIdentityLength;
 
                             if (Aeron.Aeron.NULL_VALUE == archiveId || buffer.GetLong(archiveIdOffset) == archiveId)
                             {
@@ -106,7 +127,6 @@ namespace Adaptive.Archiver
             return NULL_COUNTER_ID;
         }
 
-        
         /// <summary>
         /// Find the active counter id for a stream based on the session id.
         /// </summary>
@@ -125,8 +145,8 @@ namespace Adaptive.Archiver
         /// <param name="countersReader">The reader to search within.</param>
         /// <param name="sessionId">The session ID for the active recording.</param>
         /// <param name="archiveId">
-        /// The archive ID to target a specific archive. 
-        /// Use <see cref="Aeron.Aeron.NULL_VALUE"/> to emulate the old behavior.
+        /// The archive ID to target a specific archive. Use <see cref="Aeron.Aeron.NULL_VALUE"/> to emulate the old
+        /// behavior.
         /// </param>
         /// <returns>
         /// The counter ID if found; otherwise <see cref="CountersReader.NULL_COUNTER_ID"/>.
@@ -144,10 +164,10 @@ namespace Adaptive.Archiver
                     if (countersReader.GetCounterTypeId(counterId) == RECORDING_POSITION_TYPE_ID)
                     {
                         int keyOffset = MetaDataOffset(counterId) + KEY_OFFSET;
-                        if (buffer.GetInt(keyOffset + SESSION_ID_OFFSET) == sessionId)
+                        if (buffer.GetInt(keyOffset + SessionIdOffset) == sessionId)
                         {
-                            int sourceIdentityLength = buffer.GetInt(keyOffset + SOURCE_IDENTITY_LENGTH_OFFSET);
-                            int archiveIdOffset = keyOffset + SOURCE_IDENTITY_OFFSET + sourceIdentityLength;
+                            int sourceIdentityLength = buffer.GetInt(keyOffset + SourceIdentityLengthOffset);
+                            int archiveIdOffset = keyOffset + SourceIdentityOffset + sourceIdentityLength;
 
                             if (Aeron.Aeron.NULL_VALUE == archiveId || buffer.GetLong(archiveIdOffset) == archiveId)
                             {
@@ -173,11 +193,14 @@ namespace Adaptive.Archiver
         /// <returns> the counter id if found otherwise <seealso cref="NULL_RECORDING_ID"/>. </returns>
         public static long GetRecordingId(CountersReader countersReader, int counterId)
         {
-            if (countersReader.GetCounterState(counterId) == RECORD_ALLOCATED &&
-                countersReader.GetCounterTypeId(counterId) == RECORDING_POSITION_TYPE_ID)
+            if (
+                countersReader.GetCounterState(counterId) == RECORD_ALLOCATED
+                && countersReader.GetCounterTypeId(counterId) == RECORDING_POSITION_TYPE_ID
+            )
             {
-                return countersReader.MetaDataBuffer
-                    .GetLong(MetaDataOffset(counterId) + KEY_OFFSET + RECORDING_ID_OFFSET);
+                return countersReader.MetaDataBuffer.GetLong(
+                    MetaDataOffset(counterId) + KEY_OFFSET + RecordingIdOffset
+                );
             }
 
             return NULL_RECORDING_ID;
@@ -191,12 +214,15 @@ namespace Adaptive.Archiver
         /// <returns> <seealso cref="Image.SourceIdentity()"/> for the recording or null if not found. </returns>
         public static string GetSourceIdentity(CountersReader counters, int counterId)
         {
-            if (counters.GetCounterState(counterId) == RECORD_ALLOCATED &&
-                counters.GetCounterTypeId(counterId) == RECORDING_POSITION_TYPE_ID)
+            if (
+                counters.GetCounterState(counterId) == RECORD_ALLOCATED
+                && counters.GetCounterTypeId(counterId) == RECORDING_POSITION_TYPE_ID
+            )
             {
                 int recordOffset = MetaDataOffset(counterId);
-                return counters.MetaDataBuffer.GetStringAscii(recordOffset + KEY_OFFSET +
-                                                              SOURCE_IDENTITY_LENGTH_OFFSET);
+                return counters.MetaDataBuffer.GetStringAscii(
+                    recordOffset + KEY_OFFSET + SourceIdentityLengthOffset
+                );
             }
 
             return null;
@@ -211,11 +237,11 @@ namespace Adaptive.Archiver
         /// <returns> true if the counter is still active otherwise false. </returns>
         public static bool IsActive(CountersReader counters, int counterId, long recordingId)
         {
-            int recordingIdOffset = MetaDataOffset(counterId) + +KEY_OFFSET + RECORDING_ID_OFFSET;
+            int recordingIdOffset = MetaDataOffset(counterId) + +KEY_OFFSET + RecordingIdOffset;
 
-            return counters.GetCounterState(counterId) == RECORD_ALLOCATED &&
-                   counters.GetCounterTypeId(counterId) == RECORDING_POSITION_TYPE_ID &&
-                   counters.MetaDataBuffer.GetLong(recordingIdOffset) == recordingId;
+            return counters.GetCounterState(counterId) == RECORD_ALLOCATED
+                && counters.GetCounterTypeId(counterId) == RECORDING_POSITION_TYPE_ID
+                && counters.MetaDataBuffer.GetLong(recordingIdOffset) == recordingId;
         }
     }
 }

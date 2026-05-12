@@ -127,7 +127,8 @@ namespace Adaptive.Agrona
         void PutBytes(int index, byte[] src, int offset, int length);
 
         /// <summary>
-        /// Put bytes from a source <seealso cref="IDirectBuffer"/> into this <seealso cref="IMutableDirectBuffer"/> at given indices.
+        /// Put bytes from a source <seealso cref="IDirectBuffer"/> into this <seealso cref="IMutableDirectBuffer"/> at
+        /// given indices.
         /// </summary>
         /// <param name="index">     in this buffer to begin putting the bytes. </param>
         /// <param name="srcBuffer"> from which the bytes will be copied. </param>
@@ -158,18 +159,18 @@ namespace Adaptive.Agrona
         /// <param name="value"> of the String to be encoded. </param>
         /// <returns> the number of bytes encoded. </returns>
         int PutStringWithoutLengthAscii(int index, string value);
-        
+
         /// <summary>
         /// Encode a String as ASCII bytes in the buffer without a length prefix taking a range of the value.
         /// </summary>
         /// <param name="index">       at which the String begins. </param>
         /// <param name="value">       of the String to be encoded. </param>
         /// <param name="valueOffset"> in the value String to begin. </param>
-        /// <param name="length">      of the value String to encode. If this is greater than valueOffset - value length then the
-        ///                    lesser will be used. </param>
+        /// <param name="length"> of the value String to encode. If this is greater than valueOffset - value length then
+        /// the lesser will be used. </param>
         /// <returns> the number of bytes encoded. </returns>
         int PutStringWithoutLengthAscii(int index, string value, int valueOffset, int length);
-        
+
         /// <summary>
         /// Encode a String as UTF-8 bytes the buffer with a length prefix with a maximum encoded size check.
         /// </summary>

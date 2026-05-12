@@ -29,7 +29,7 @@ namespace Adaptive.Agrona.Concurrent
 
         public long NanoTime()
         {
-            return _stopwatch.ElapsedTicks/Stopwatch.Frequency*1000000000;
+            return _stopwatch.ElapsedTicks / Stopwatch.Frequency * 1000000000;
         }
     }
 }

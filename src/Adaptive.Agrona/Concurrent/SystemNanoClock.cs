@@ -21,7 +21,7 @@ namespace Adaptive.Agrona.Concurrent
     public class SystemNanoClock : INanoClock
     {
         public static readonly SystemNanoClock INSTANCE = new SystemNanoClock();
-        
+
         private readonly Stopwatch _stopwatch;
 
         public SystemNanoClock()
@@ -31,7 +31,7 @@ namespace Adaptive.Agrona.Concurrent
 
         public long NanoTime()
         {
-            return _stopwatch.ElapsedMilliseconds*1000*1000;
+            return _stopwatch.ElapsedMilliseconds * 1000 * 1000;
         }
     }
 }

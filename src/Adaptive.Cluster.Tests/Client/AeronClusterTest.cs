@@ -1,3 +1,19 @@
+/*
+ * Copyright 2014 - 2026 Adaptive Financial Consulting Ltd
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 using System;
 using System.Collections.Generic;
 using Adaptive.Aeron;
@@ -17,8 +33,8 @@ namespace Adaptive.Cluster.Tests.Client
     [FixtureLifeCycle(LifeCycle.InstancePerTestCase)]
     public class AeronClusterTest
     {
-        private const string INGRESS_ENDPOINTS = "foo:1000,bar:1000,baz:1000";
-        private const int CLUSTER_SESSION_ID = 123;
+        private const string IngressEndpoints = "foo:1000,bar:1000,baz:1000";
+        private const int ClusterSessionId = 123;
 
         private readonly UnsafeBuffer _buffer = new UnsafeBuffer(new byte[1024]);
         private readonly UnsafeBuffer _appMessage = new UnsafeBuffer(new byte[8]);
@@ -56,44 +72,44 @@ namespace Adaptive.Cluster.Tests.Client
                 .EgressListener(_egressListener)
                 .NewLeaderTimeoutNs(TimeSpan.FromSeconds(1).Ticks * 100); // 1 second in nanos
 
-            const long _ingressPublicationRegistrationId = 42L;
-            A.CallTo(() => _ingressPublication.RegistrationId).Returns(_ingressPublicationRegistrationId);
+            const long ingressPublicationRegistrationId = 42L;
+            A.CallTo(() => _ingressPublication.RegistrationId).Returns(ingressPublicationRegistrationId);
             A.CallTo(() => _aeron.AsyncAddExclusivePublication(_context.IngressChannel(), _context.IngressStreamId()))
-                .Returns(_ingressPublicationRegistrationId);
-            A.CallTo(() => _aeron.GetExclusivePublication(_ingressPublicationRegistrationId))
+                .Returns(ingressPublicationRegistrationId);
+            A.CallTo(() => _aeron.GetExclusivePublication(ingressPublicationRegistrationId))
                 .Returns(_ingressPublication);
 
             _context.Conclude();
 
-            A.CallTo(() => _egressSubscription.Poll(A<IFragmentHandler>._, A<int>._)).ReturnsLazily(call =>
-            {
-                if (_newLeaderEventPending)
+            A.CallTo(() => _egressSubscription.Poll(A<IFragmentHandler>._, A<int>._))
+                .ReturnsLazily(call =>
                 {
-                    _newLeaderEventPending = false;
+                    if (_newLeaderEventPending)
+                    {
+                        _newLeaderEventPending = false;
 
-                    int offset = DataHeaderFlyweight.HEADER_LENGTH;
-                    FrameDescriptor.FrameFlags(_buffer, 0, FrameDescriptor.UNFRAGMENTED);
+                        int offset = DataHeaderFlyweight.HEADER_LENGTH;
+                        FrameDescriptor.FrameFlags(_buffer, 0, FrameDescriptor.UNFRAGMENTED);
 
-                    var newLeaderEventEncoder = new NewLeaderEventEncoder();
-                    newLeaderEventEncoder.WrapAndApplyHeader(_buffer, offset, new MessageHeaderEncoder());
-                    newLeaderEventEncoder.ClusterSessionId(CLUSTER_SESSION_ID);
-                    newLeaderEventEncoder.LeadershipTermId(++_leadershipTermId);
-                    newLeaderEventEncoder.LeaderMemberId(++_leaderMemberId);
-                    newLeaderEventEncoder.IngressEndpoints(INGRESS_ENDPOINTS);
+                        var newLeaderEventEncoder = new NewLeaderEventEncoder();
+                        newLeaderEventEncoder.WrapAndApplyHeader(_buffer, offset, new MessageHeaderEncoder());
+                        newLeaderEventEncoder.ClusterSessionId(ClusterSessionId);
+                        newLeaderEventEncoder.LeadershipTermId(++_leadershipTermId);
+                        newLeaderEventEncoder.LeaderMemberId(++_leaderMemberId);
+                        newLeaderEventEncoder.IngressEndpoints(IngressEndpoints);
 
-                    int length = MessageHeaderEncoder.ENCODED_LENGTH + newLeaderEventEncoder.EncodedLength();
+                        int length = MessageHeaderEncoder.ENCODED_LENGTH + newLeaderEventEncoder.EncodedLength();
 
-                    var header = new Header(0, 0, _egressImage);
-                    header.Buffer = _buffer;
+                        var header = new Header(0, 0, _egressImage) { Buffer = _buffer };
 
-                    var handler = call.GetArgument<IFragmentHandler>(0);
-                    handler.OnFragment(_buffer, offset, length, header);
+                        var handler = call.GetArgument<IFragmentHandler>(0);
+                        handler.OnFragment(_buffer, offset, length, header);
 
-                    return 1;
-                }
+                        return 1;
+                    }
 
-                return 0;
-            });
+                    return 0;
+                });
 
             _aeronCluster = new AeronCluster(
                 _context,
@@ -102,9 +118,10 @@ namespace Adaptive.Cluster.Tests.Client
                 _egressSubscription,
                 _egressImage,
                 new Map<int, MemberIngress>(),
-                CLUSTER_SESSION_ID,
+                ClusterSessionId,
                 _leadershipTermId,
-                _leaderMemberId);
+                _leaderMemberId
+            );
         }
 
         [TestCase(false)]
@@ -168,7 +185,14 @@ namespace Adaptive.Cluster.Tests.Client
 
             MakeEgressSubscriptionDeliverNewLeaderEvent();
             Assert.AreEqual(1, _aeronCluster.PollEgress());
-            A.CallTo(() => _egressListener.OnNewLeader(CLUSTER_SESSION_ID, _leadershipTermId, _leaderMemberId, INGRESS_ENDPOINTS))
+            A.CallTo(() =>
+                    _egressListener.OnNewLeader(
+                        ClusterSessionId,
+                        _leadershipTermId,
+                        _leaderMemberId,
+                        IngressEndpoints
+                    )
+                )
                 .MustHaveHappened();
             Assert.AreEqual(0, _aeronCluster.PollEgress());
 
@@ -192,7 +216,9 @@ namespace Adaptive.Cluster.Tests.Client
 
         [TestCase(false)]
         [TestCase(true)]
-        public void ShouldCloseItselfWhenUnableToSendMessageForLongerThanNewLeaderConnectionTimeout(bool withAppMessages)
+        public void ShouldCloseItselfWhenUnableToSendMessageForLongerThanNewLeaderConnectionTimeout(
+            bool withAppMessages
+        )
         {
             MakeIngressPublicationReturn(Publication.NOT_CONNECTED);
             if (withAppMessages)
@@ -243,8 +269,7 @@ namespace Adaptive.Cluster.Tests.Client
             // and in AWAIT_NEW_LEADER_CONNECTION state too
             A.CallTo(() => _egressImage.Closed).Returns(true);
             Assert.AreEqual(1, _aeronCluster.PollEgress());
-            A.CallTo(() => _ingressPublication.Dispose())
-                .MustHaveHappened(3, Times.OrMore);
+            A.CallTo(() => _ingressPublication.Dispose()).MustHaveHappened(3, Times.OrMore);
         }
 
         private void MakeIngressPublicationReturn(long result)
@@ -255,9 +280,12 @@ namespace Adaptive.Cluster.Tests.Client
                     .ReturnsLazily(call =>
                     {
                         int length = call.GetArgument<int>(0);
-                        length = BitUtil.Align(DataHeaderFlyweight.HEADER_LENGTH + length, FrameDescriptor.FRAME_ALIGNMENT);
-                        var _bufferClaim = call.GetArgument<BufferClaim>(1);
-                        _bufferClaim.Wrap(_buffer, 0, length);
+                        length = BitUtil.Align(
+                            DataHeaderFlyweight.HEADER_LENGTH + length,
+                            FrameDescriptor.FRAME_ALIGNMENT
+                        );
+                        var bufferClaim = call.GetArgument<BufferClaim>(1);
+                        bufferClaim.Wrap(_buffer, 0, length);
                         return result;
                     });
             }
@@ -266,10 +294,18 @@ namespace Adaptive.Cluster.Tests.Client
                 A.CallTo(() => _ingressPublication.TryClaim(A<int>._, A<BufferClaim>._)).Returns(result);
             }
 
-            A.CallTo(() => _ingressPublication.Offer(
-                    A<IDirectBuffer>._, A<int>._, A<int>._,
-                    A<IDirectBuffer>._, A<int>._, A<int>._,
-                    A<ReservedValueSupplier>._)).Returns(result);
+            A.CallTo(() =>
+                    _ingressPublication.Offer(
+                        A<IDirectBuffer>._,
+                        A<int>._,
+                        A<int>._,
+                        A<IDirectBuffer>._,
+                        A<int>._,
+                        A<int>._,
+                        A<ReservedValueSupplier>._
+                    )
+                )
+                .Returns(result);
         }
 
         private void MakeEgressSubscriptionDeliverNewLeaderEvent()

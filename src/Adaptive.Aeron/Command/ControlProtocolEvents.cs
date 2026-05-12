@@ -21,37 +21,45 @@ namespace Adaptive.Aeron.Command
     /// <summary>
     /// List of events used in the control protocol between client and the media driver.
     /// </summary>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage(
+        "Major Code Smell",
+        "S1118:Utility classes should not have public constructors",
+        Justification = "Public ctor in shipped API surface; marking static would break consumers."
+    )]
     public class ControlProtocolEvents
     {
         /// <summary>
         /// Major version of the control protocol between client and the media driver.
-        ///    
+        ///
         /// <remarks>Since 1.49.0</remarks>
         /// </summary>
         public const int CONTROL_PROTOCOL_MAJOR_VERSION = 1;
 
         /// <summary>
         /// Minor version of the control protocol between client and the media driver.
-        /// 
+        ///
         /// <remarks>Since 1.49.0</remarks>
         /// </summary>
         public const int CONTROL_PROTOCOL_MINOR_VERSION = 0;
 
         /// <summary>
         /// Patch version of the control protocol between client and the media driver.
-        /// 
+        ///
         /// <remarks>Since 1.49.0</remarks>
         /// </summary>
         public const int CONTROL_PROTOCOL_PATCH_VERSION = 0;
 
         /// <summary>
         /// Semantic version of the control protocol between clients and media driver.
-        /// 
+        ///
         /// <remarks>Since 1.49.0</remarks>
         /// </summary>
         public static readonly int ControlProtocolSemanticVersion = SemanticVersion.Compose(
-            CONTROL_PROTOCOL_MAJOR_VERSION, CONTROL_PROTOCOL_MINOR_VERSION, CONTROL_PROTOCOL_PATCH_VERSION);
-        
+            CONTROL_PROTOCOL_MAJOR_VERSION,
+            CONTROL_PROTOCOL_MINOR_VERSION,
+            CONTROL_PROTOCOL_PATCH_VERSION
+        );
+
         // Clients to Media Driver
 
         /// <summary>
@@ -93,7 +101,7 @@ namespace Adaptive.Aeron.Command
         /// Remove Destination from an existing Publication.
         /// </summary>
         public const int REMOVE_DESTINATION = 0x08;
-        
+
         /// <summary>
         /// Add a Counter to the counters-manager.
         /// </summary>
@@ -108,7 +116,7 @@ namespace Adaptive.Aeron.Command
         /// Close indication from Client.
         /// </summary>
         public const int CLIENT_CLOSE = 0x0B;
-        
+
         /// <summary>
         /// Add Destination for existing Subscription.
         /// </summary>
@@ -123,10 +131,10 @@ namespace Adaptive.Aeron.Command
         /// Request the driver to terminate.
         /// </summary>
         public const int TERMINATE_DRIVER = 0x0E;
-        
+
         /// <summary>
-        /// Add or return a static Counter, i.e. the Counter that cannot be deleted and whose lifecycle is decoupled from
-        /// the Aeron instance that created it.
+        /// Add or return a static Counter, i.e. the Counter that cannot be deleted and whose lifecycle is decoupled
+        /// from the Aeron instance that created it.
         /// </summary>
         /// <remarks>Since 1.45.0</remarks>
         public const int ADD_STATIC_COUNTER = 0x0F;
@@ -142,14 +150,14 @@ namespace Adaptive.Aeron.Command
         /// </summary>
         /// <remarks>Since 1.47.0</remarks>
         public const int REMOVE_DESTINATION_BY_ID = 0x11;
-        
+
         /// <summary>
         /// Get next available session id from the media driver.
-        ///     
+        ///
         /// </summary>
         /// <remarks>Since 1.49.0</remarks>
         public const int GET_NEXT_AVAILABLE_SESSION_ID = 0x12;
-        
+
         // Media Driver to Clients
 
         /// <summary>
@@ -161,7 +169,7 @@ namespace Adaptive.Aeron.Command
         /// Subscribed Image buffers are available notification.
         /// </summary>
         public const int ON_AVAILABLE_IMAGE = 0x0F02;
-        
+
         /// <summary>
         /// New Publication buffers are ready notification.
         /// </summary>
@@ -181,7 +189,7 @@ namespace Adaptive.Aeron.Command
         /// New Exclusive Publication buffers are ready notification.
         /// </summary>
         public const int ON_EXCLUSIVE_PUBLICATION_READY = 0x0F06;
-        
+
         /// <summary>
         /// New Subscription is ready notification.
         /// </summary>
@@ -196,12 +204,12 @@ namespace Adaptive.Aeron.Command
         /// Inform clients of removal of counter.
         /// </summary>
         public const int ON_UNAVAILABLE_COUNTER = 0x0F09;
-        
+
         /// <summary>
         /// Inform clients of client timeout.
         /// </summary>
         public const int ON_CLIENT_TIMEOUT = 0x0F0A;
-        
+
         /// <summary>
         /// A response to <seealso cref="ADD_STATIC_COUNTER"/> command.
         /// </summary>
@@ -213,7 +221,7 @@ namespace Adaptive.Aeron.Command
         /// </summary>
         /// <remarks>Since 1.47.0</remarks>
         public const int ON_PUBLICATION_ERROR = 0x0F0C;
-        
+
         /// <summary>
         /// A response to the <seealso cref="GET_NEXT_AVAILABLE_SESSION_ID"/> command.
         /// </summary>

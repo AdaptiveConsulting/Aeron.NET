@@ -30,16 +30,18 @@ using static Adaptive.Aeron.Protocol.DataHeaderFlyweight;
 namespace Adaptive.Aeron
 {
     /// <summary>
-    /// Represents a replicated <see cref="Publication"/> from a publisher which matches a <seealso cref="Subscription"/>.
-    /// Each <seealso cref="Image"/> identifies a source <see cref="Publication"/> by <see cref="SessionId"/>.
-    /// 
-    /// By default, fragmented messages are not reassembled before delivery. If an application must
-    /// receive whole messages, whether they were fragmented or not, then the Subscriber
-    /// should be created with a <seealso cref="FragmentAssembler"/> or a custom implementation.
-    /// 
-    /// It is an application's responsibility to <seealso cref="Poll(Adaptive.Aeron.LogBuffer.FragmentHandler,int)"/> the <seealso cref="Image"/> for new messages.
-    /// 
-    /// <b>Note:</b>Images are not threadsafe and should not be shared between subscribers.
+    /// Represents a replicated <see cref="Publication"/> from a publisher which matches a
+    /// <seealso cref="Subscription"/>.
+    /// Each <seealso cref="Image"/> identifies a source <see cref="Publication"/> by <see cref="SessionId"/> .
+    ///
+    /// By default, fragmented messages are not reassembled before delivery. If an application must receive whole
+    /// messages, whether they were fragmented or not, then the Subscriber should be created with a
+    /// <seealso cref="FragmentAssembler"/> or a custom implementation.
+    ///
+    /// It is an application's responsibility to <seealso cref="Poll(Adaptive.Aeron.LogBuffer.FragmentHandler,int)"/>
+    /// the <seealso cref="Image"/> for new messages.
+    ///
+    /// <b>Note:</b> Images are not threadsafe and should not be shared between subscribers.
     /// </summary>
     public class Image
     {
@@ -60,12 +62,10 @@ namespace Adaptive.Aeron
         private readonly IErrorHandler _errorHandler;
         private readonly LogBuffers _logBuffers;
 
-        internal Image()
-        {
-        }
+        internal Image() { }
 
         /// <summary>
-        /// Construct a new image over a log to represent a stream of messages from a <seealso cref="Publication"/>.
+        /// Construct a new image over a log to represent a stream of messages from a <seealso cref="Publication"/> .
         /// </summary>
         /// <param name="subscription">       to which this <seealso cref="Image"/> belongs. </param>
         /// <param name="sessionId">          of the stream of messages. </param>
@@ -74,8 +74,15 @@ namespace Adaptive.Aeron
         /// <param name="errorHandler">       to be called if an error occurs when polling for messages. </param>
         /// <param name="sourceIdentity">     of the source sending the stream of messages. </param>
         /// <param name="correlationId">      of the request to the media driver. </param>
-        public Image(Subscription subscription, int sessionId, IPosition subscriberPosition, LogBuffers logBuffers,
-            IErrorHandler errorHandler, string sourceIdentity, long correlationId)
+        public Image(
+            Subscription subscription,
+            int sessionId,
+            IPosition subscriberPosition,
+            LogBuffers logBuffers,
+            IErrorHandler errorHandler,
+            string sourceIdentity,
+            long correlationId
+        )
         {
             Subscription = subscription;
             SessionId = sessionId;
@@ -93,14 +100,18 @@ namespace Adaptive.Aeron
             PositionBitsToShift = LogBufferDescriptor.PositionBitsToShift(termLength);
             _initialTermId = LogBufferDescriptor.InitialTermId(logBuffers.MetaDataBuffer());
             _mtu = LogBufferDescriptor.MtuLength(logBuffers.MetaDataBuffer());
-            _header = new Header(LogBufferDescriptor.InitialTermId(logBuffers.MetaDataBuffer()), PositionBitsToShift,
-                this);
+            _header = new Header(
+                LogBufferDescriptor.InitialTermId(logBuffers.MetaDataBuffer()),
+                PositionBitsToShift,
+                this
+            );
         }
 
         /// <summary>
         /// Number of bits to right shift a position to get a term count for how far the stream has progressed.
         /// </summary>
-        /// <returns> of bits to right shift a position to get a term count for how far the stream has progressed. </returns>
+        /// <returns> of bits to right shift a position to get a term count for how far the stream has progressed.
+        /// </returns>
         public int PositionBitsToShift { get; }
 
         /// <summary>
@@ -110,8 +121,8 @@ namespace Adaptive.Aeron
         public int TermBufferLength => _termLengthMask + 1;
 
         /// <summary>
-        /// The sessionId for the steam of messages. Sessions are unique within a <see cref="Subscription"/> and unique across
-        /// all <see cref="Publication"/>s from a <see cref="SourceIdentity"/>
+        /// The sessionId for the steam of messages. Sessions are unique within a <see cref="Subscription"/> and unique
+        /// across all <see cref="Publication"/> s from a <see cref="SourceIdentity"/>
         /// </summary>
         /// <returns> the sessionId for the steam of messages. </returns>
         public int SessionId { get; }
@@ -119,13 +130,15 @@ namespace Adaptive.Aeron
         /// <summary>
         /// The source identity of the sending publisher as an abstract concept appropriate for the media.
         /// </summary>
-        /// <returns> source identity of the sending publisher as an abstract concept appropriate for the media. </returns>
+        /// <returns> source identity of the sending publisher as an abstract concept appropriate for the media.
+        /// </returns>
         public string SourceIdentity { get; }
 
         /// <summary>
         /// The length in bytes of the MTU (Maximum Transmission Unit) the Sender used for the datagram.
         /// </summary>
-        /// <returns> length in bytes of the MTU (Maximum Transmission Unit) the Sender used for the datagram. </returns>
+        /// <returns> length in bytes of the MTU (Maximum Transmission Unit) the Sender used for the datagram.
+        /// </returns>
         public int MtuLength => _mtu;
 
         /// <summary>
@@ -174,7 +187,6 @@ namespace Adaptive.Aeron
 
                 return _subscriberPosition.Get();
             }
-
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             set
             {
@@ -205,11 +217,11 @@ namespace Adaptive.Aeron
                     return _isEos;
                 }
 
-                return _subscriberPosition.Get() >=
-                       LogBufferDescriptor.EndOfStreamPosition(_logBuffers.MetaDataBuffer());
+                return _subscriberPosition.Get()
+                    >= LogBufferDescriptor.EndOfStreamPosition(_logBuffers.MetaDataBuffer());
             }
         }
-        
+
         /// <summary>
         /// The position the stream reached when EOS was received from the publisher. The position will be
         /// <seealso cref="long.MaxValue"/> until the stream ends and EOS is set.
@@ -230,9 +242,9 @@ namespace Adaptive.Aeron
 
         /// <summary>
         /// Count of observed active transports within the image liveness timeout.
-        ///   
-        /// If the image is closed, then this is 0. This may also be 0 if no actual datagrams have arrived. IPC
-        /// Images also will be 0.
+        ///
+        /// If the image is closed, then this is 0. This may also be 0 if no actual datagrams have arrived. IPC Images
+        /// also will be 0.
         /// </summary>
         /// <returns> count of active transports - 0 if Image is closed, no datagrams yet, or IPC. </returns>
         public int ActiveTransportCount()
@@ -244,7 +256,7 @@ namespace Adaptive.Aeron
 
             return LogBufferDescriptor.ActiveTransportCount(_logBuffers.MetaDataBuffer());
         }
-        
+
         /// <summary>
         /// Has the associated publication been revoked?
         /// </summary>
@@ -257,11 +269,10 @@ namespace Adaptive.Aeron
                 {
                     return _isRevoked;
                 }
-    
+
                 return LogBufferDescriptor.IsPublicationRevoked(_logBuffers.MetaDataBuffer());
             }
         }
-
 
         /// <summary>
         /// The <see cref="FileStream"/> for the raw log of the Image.
@@ -272,11 +283,12 @@ namespace Adaptive.Aeron
         /// <summary>
         /// Poll for new messages in a stream. If new messages are found beyond the last consumed position then they
         /// will be delivered to the <seealso cref="FragmentHandler"/> up to a limited number of fragments as specified.
-        /// 
+        ///
         /// Use a <see cref="FragmentAssembler"/> to assemble messages which span multiple fragments.
         /// </summary>
         /// <param name="fragmentHandler"> to which message fragments are delivered. </param>
-        /// <param name="fragmentLimit">   for the number of fragments to be consumed during one polling operation. </param>
+        /// <param name="fragmentLimit"> for the number of fragments to be consumed during one polling operation.
+        /// </param>
         /// <returns> the number of fragments that have been consumed. </returns>
         /// <seealso cref="FragmentAssembler" />
         /// <seealso cref="ImageFragmentAssembler" />
@@ -289,11 +301,12 @@ namespace Adaptive.Aeron
         /// <summary>
         /// Poll for new messages in a stream. If new messages are found beyond the last consumed position then they
         /// will be delivered to the <seealso cref="FragmentHandler"/> up to a limited number of fragments as specified.
-        /// 
+        ///
         /// Use a <see cref="FragmentAssembler"/> to assemble messages which span multiple fragments.
         /// </summary>
         /// <param name="fragmentHandler"> to which message fragments are delivered. </param>
-        /// <param name="fragmentLimit">   for the number of fragments to be consumed during one polling operation. </param>
+        /// <param name="fragmentLimit"> for the number of fragments to be consumed during one polling operation.
+        /// </param>
         /// <returns> the number of fragments that have been consumed. </returns>
         /// <seealso cref="FragmentAssembler" />
         /// <seealso cref="ImageFragmentAssembler" />
@@ -330,8 +343,12 @@ namespace Adaptive.Aeron
                     {
                         ++fragmentsRead;
                         header.Offset = frameOffset;
-                        fragmentHandler.OnFragment(termBuffer, frameOffset + HEADER_LENGTH, frameLength - HEADER_LENGTH,
-                            header);
+                        fragmentHandler.OnFragment(
+                            termBuffer,
+                            frameOffset + HEADER_LENGTH,
+                            frameLength - HEADER_LENGTH,
+                            header
+                        );
                     }
                 }
             }
@@ -353,13 +370,15 @@ namespace Adaptive.Aeron
 
         /// <summary>
         /// Poll for new messages in a stream. If new messages are found beyond the last consumed position then they
-        /// will be delivered to the <seealso cref="IControlledFragmentHandler"/> up to a limited number of fragments as specified.
-        ///     
-        /// Use a <see cref="ControlledFragmentAssembler"/>. to assemble messages which span multiple fragments.
-        /// 
+        /// will be delivered to the <seealso cref="IControlledFragmentHandler"/> up to a limited number of fragments as
+        /// specified.
+        ///
+        /// Use a <see cref="ControlledFragmentAssembler"/> . to assemble messages which span multiple fragments.
+        ///
         /// </summary>
         /// <param name="handler"> to which message fragments are delivered. </param>
-        /// <param name="fragmentLimit">   for the number of fragments to be consumed during one polling operation. </param>
+        /// <param name="fragmentLimit"> for the number of fragments to be consumed during one polling operation.
+        /// </param>
         /// <returns> the number of fragments that have been consumed. </returns>
         /// <seealso cref="ControlledFragmentAssembler" />
         /// <seealso cref="ImageControlledFragmentAssembler" />
@@ -372,7 +391,7 @@ namespace Adaptive.Aeron
 
             var fragmentsRead = 0;
             var initialPosition = _subscriberPosition.Get();
-            var initialOffset = (int) initialPosition & _termLengthMask;
+            var initialOffset = (int)initialPosition & _termLengthMask;
             var offset = initialOffset;
             var termBuffer = ActiveTermBuffer(initialPosition);
             int capacity = termBuffer.Capacity;
@@ -405,7 +424,8 @@ namespace Adaptive.Aeron
                         termBuffer,
                         frameOffset + HEADER_LENGTH,
                         length - HEADER_LENGTH,
-                        header);
+                        header
+                    );
 
                     if (ABORT == action)
                     {
@@ -448,13 +468,15 @@ namespace Adaptive.Aeron
 
         /// <summary>
         /// Poll for new messages in a stream. If new messages are found beyond the last consumed position then they
-        /// will be delivered to the <seealso cref="ControlledFragmentHandler"/> up to a limited number of fragments as specified.
-        ///     
-        /// Use a <see cref="ControlledFragmentAssembler"/>. to assemble messages which span multiple fragments.
-        /// 
+        /// will be delivered to the <seealso cref="ControlledFragmentHandler"/> up to a limited number of fragments as
+        /// specified.
+        ///
+        /// Use a <see cref="ControlledFragmentAssembler"/> . to assemble messages which span multiple fragments.
+        ///
         /// </summary>
         /// <param name="handler"> to which message fragments are delivered. </param>
-        /// <param name="fragmentLimit">   for the number of fragments to be consumed during one polling operation. </param>
+        /// <param name="fragmentLimit"> for the number of fragments to be consumed during one polling operation.
+        /// </param>
         /// <returns> the number of fragments that have been consumed. </returns>
         /// <seealso cref="ControlledFragmentAssembler" />
         /// <seealso cref="ImageControlledFragmentAssembler" />
@@ -463,19 +485,20 @@ namespace Adaptive.Aeron
             var fragmentHandler = HandlerHelper.ToControlledFragmentHandler(handler);
             return ControlledPoll(fragmentHandler, fragmentLimit);
         }
-        
+
         /// <summary>
         /// Poll for new messages in a stream. If new messages are found beyond the last consumed position then they
-        /// will be delivered to the <seealso cref="FragmentHandler"/> up to a limited number of fragments as specified or
-        /// the maximum position specified.
+        /// will be delivered to the <seealso cref="FragmentHandler"/> up to a limited number of fragments as specified
+        /// or the maximum position specified.
         /// <para>
         /// Use a <seealso cref="FragmentAssembler"/> to assemble messages which span multiple fragments.
-        ///    
+        ///
         /// </para>
         /// </summary>
         /// <param name="handler">       to which message fragments are delivered. </param>
         /// <param name="limitPosition"> to consume messages up to. </param>
-        /// <param name="fragmentLimit"> for the number of fragments to be consumed during one polling operation. </param>
+        /// <param name="fragmentLimit"> for the number of fragments to be consumed during one polling operation.
+        /// </param>
         /// <returns> the number of fragments that have been consumed. </returns>
         /// <seealso cref="FragmentAssembler" />
         /// <seealso cref="ImageFragmentAssembler" />
@@ -493,10 +516,10 @@ namespace Adaptive.Aeron
             }
 
             int fragmentsRead = 0;
-            int initialOffset = (int) initialPosition & _termLengthMask;
+            int initialOffset = (int)initialPosition & _termLengthMask;
             int offset = initialOffset;
             UnsafeBuffer termBuffer = ActiveTermBuffer(initialPosition);
-            int limitOffset = (int) Math.Min(termBuffer.Capacity, (limitPosition - initialPosition) + offset);
+            int limitOffset = (int)Math.Min(termBuffer.Capacity, (limitPosition - initialPosition) + offset);
             Header header = _header;
             header.Buffer = termBuffer;
 
@@ -539,20 +562,20 @@ namespace Adaptive.Aeron
 
             return fragmentsRead;
         }
-        
 
         /// <summary>
         /// Poll for new messages in a stream. If new messages are found beyond the last consumed position then they
-        /// will be delivered to the <seealso cref="FragmentHandler"/> up to a limited number of fragments as specified or
-        /// the maximum position specified.
+        /// will be delivered to the <seealso cref="FragmentHandler"/> up to a limited number of fragments as specified
+        /// or the maximum position specified.
         /// <para>
         /// Use a <seealso cref="FragmentAssembler"/> to assemble messages which span multiple fragments.
-        ///    
+        ///
         /// </para>
         /// </summary>
         /// <param name="handler">       to which message fragments are delivered. </param>
         /// <param name="limitPosition"> to consume messages up to. </param>
-        /// <param name="fragmentLimit"> for the number of fragments to be consumed during one polling operation. </param>
+        /// <param name="fragmentLimit"> for the number of fragments to be consumed during one polling operation.
+        /// </param>
         /// <returns> the number of fragments that have been consumed. </returns>
         /// <seealso cref="FragmentAssembler" />
         /// <seealso cref="ImageFragmentAssembler" />
@@ -562,24 +585,23 @@ namespace Adaptive.Aeron
             return BoundedPoll(fragmentHandler, limitPosition, fragmentLimit);
         }
 
-
         /// <summary>
         /// Poll for new messages in a stream. If new messages are found beyond the last consumed position then they
-        /// will be delivered to the <seealso cref="IControlledFragmentHandler"/> up to a limited number of fragments as specified or
-        /// the maximum position specified.
+        /// will be delivered to the <seealso cref="IControlledFragmentHandler"/> up to a limited number of fragments as
+        /// specified or the maximum position specified.
         /// <para>
         /// Use a <seealso cref="IControlledFragmentHandler"/> to assemble messages which span multiple fragments.
-        ///     
+        ///
         /// </para>
         /// </summary>
         /// <param name="handler"> to which message fragments are delivered. </param>
         /// <param name="limitPosition">     to consume messages up to. </param>
-        /// <param name="fragmentLimit">   for the number of fragments to be consumed during one polling operation. </param>
+        /// <param name="fragmentLimit"> for the number of fragments to be consumed during one polling operation.
+        /// </param>
         /// <returns> the number of fragments that have been consumed. </returns>
         /// <seealso cref="ControlledFragmentAssembler"/>
         /// <seealso cref="ImageControlledFragmentAssembler"/>
-        public int BoundedControlledPoll(IControlledFragmentHandler handler, long limitPosition,
-            int fragmentLimit)
+        public int BoundedControlledPoll(IControlledFragmentHandler handler, long limitPosition, int fragmentLimit)
         {
             if (_isClosed)
             {
@@ -592,12 +614,12 @@ namespace Adaptive.Aeron
             {
                 return 0;
             }
-            
+
             var fragmentsRead = 0;
-            var initialOffset = (int) initialPosition & _termLengthMask;
+            var initialOffset = (int)initialPosition & _termLengthMask;
             var offset = initialOffset;
             var termBuffer = ActiveTermBuffer(initialPosition);
-            var limitOffset = (int) Math.Min(termBuffer.Capacity, (limitPosition - initialPosition + initialOffset));
+            var limitOffset = (int)Math.Min(termBuffer.Capacity, (limitPosition - initialPosition + initialOffset));
             var header = _header;
             header.Buffer = termBuffer;
 
@@ -623,9 +645,12 @@ namespace Adaptive.Aeron
                     ++fragmentsRead;
                     header.Offset = frameOffset;
 
-                    var action = handler.OnFragment(termBuffer,
+                    var action = handler.OnFragment(
+                        termBuffer,
                         frameOffset + HEADER_LENGTH,
-                        length - HEADER_LENGTH, header);
+                        length - HEADER_LENGTH,
+                        header
+                    );
 
                     if (ABORT == action)
                     {
@@ -633,12 +658,12 @@ namespace Adaptive.Aeron
                         offset -= alignedLength;
                         break;
                     }
-                   
+
                     if (BREAK == action)
                     {
                         break;
                     }
-                    
+
                     if (COMMIT == action)
                     {
                         initialPosition += (offset - initialOffset);
@@ -669,33 +694,33 @@ namespace Adaptive.Aeron
 
         /// <summary>
         /// Poll for new messages in a stream. If new messages are found beyond the last consumed position then they
-        /// will be delivered to the <seealso cref="IControlledFragmentHandler"/> up to a limited number of fragments as specified or
-        /// the maximum position specified.
+        /// will be delivered to the <seealso cref="IControlledFragmentHandler"/> up to a limited number of fragments as
+        /// specified or the maximum position specified.
         /// <para>
         /// Use a <seealso cref="IControlledFragmentHandler"/> to assemble messages which span multiple fragments.
-        ///     
+        ///
         /// </para>
         /// </summary>
         /// <param name="handler"> to which message fragments are delivered. </param>
         /// <param name="limitPosition">     to consume messages up to. </param>
-        /// <param name="fragmentLimit">   for the number of fragments to be consumed during one polling operation. </param>
+        /// <param name="fragmentLimit"> for the number of fragments to be consumed during one polling operation.
+        /// </param>
         /// <returns> the number of fragments that have been consumed. </returns>
         /// <seealso cref="ControlledFragmentAssembler"/>
         /// <seealso cref="ImageControlledFragmentAssembler"/>
-        public int BoundedControlledPoll(ControlledFragmentHandler handler, long limitPosition,
-            int fragmentLimit)
+        public int BoundedControlledPoll(ControlledFragmentHandler handler, long limitPosition, int fragmentLimit)
         {
             var fragmentHandler = HandlerHelper.ToControlledFragmentHandler(handler);
             return BoundedControlledPoll(fragmentHandler, limitPosition, fragmentLimit);
         }
 
         /// <summary>
-        /// Peek for new messages in a stream by scanning forward from an initial position. If new messages are found then
-        /// they will be delivered to the <seealso cref="IControlledFragmentHandler"/> up to a limited position.
-        ///    
-        /// Use a <seealso cref="ControlledFragmentAssembler"/> to assemble messages which span multiple fragments. Scans must also
-        /// start at the beginning of a message so that the assembler is reset.
-        /// 
+        /// Peek for new messages in a stream by scanning forward from an initial position. If new messages are found
+        /// then they will be delivered to the <seealso cref="IControlledFragmentHandler"/> up to a limited position.
+        ///
+        /// Use a <seealso cref="ControlledFragmentAssembler"/> to assemble messages which span multiple fragments.
+        /// Scans must also start at the beginning of a message so that the assembler is reset.
+        ///
         /// </summary>
         /// <param name="initialPosition"> from which to peek forward. </param>
         /// <param name="handler"> to which message fragments are delivered. </param>
@@ -716,12 +741,11 @@ namespace Adaptive.Aeron
                 return initialPosition;
             }
 
-            int initialOffset = (int) initialPosition & _termLengthMask;
+            int initialOffset = (int)initialPosition & _termLengthMask;
             int offset = initialOffset;
             long position = initialPosition;
             UnsafeBuffer termBuffer = ActiveTermBuffer(initialPosition);
-            var header = _header;
-            int limitOffset = (int) Math.Min(termBuffer.Capacity, (limitPosition - initialPosition) + offset);
+            int limitOffset = (int)Math.Min(termBuffer.Capacity, (limitPosition - initialPosition) + offset);
             _header.Buffer = termBuffer;
             long resultingPosition = initialPosition;
 
@@ -749,12 +773,12 @@ namespace Adaptive.Aeron
 
                     _header.Offset = frameOffset;
 
-
                     var action = handler.OnFragment(
                         termBuffer,
                         frameOffset + HEADER_LENGTH,
                         length - HEADER_LENGTH,
-                        _header);
+                        _header
+                    );
 
                     if (ABORT == action)
                     {
@@ -811,7 +835,7 @@ namespace Adaptive.Aeron
             }
 
             var position = _subscriberPosition.Get();
-            var offset = (int) position & _termLengthMask;
+            var offset = (int)position & _termLengthMask;
             var capacity = _termLengthMask + 1;
             var highLimitOffset = (long)offset + blockLengthLimit;
             var limitOffset = (long)capacity < highLimitOffset ? capacity : (int)highLimitOffset;
@@ -856,7 +880,7 @@ namespace Adaptive.Aeron
         /// </para>
         /// <para>
         /// Padding frames may be for a greater range than the limit offset but only the header needs to be valid so
-        /// relevant length of the frame is <see cref="DataHeaderFlyweight.HEADER_LENGTH"/>.
+        /// relevant length of the frame is <see cref="DataHeaderFlyweight.HEADER_LENGTH"/> .
         /// </para>
         /// </summary>
         /// <param name="handler"> to which block is delivered. </param>
@@ -912,7 +936,7 @@ namespace Adaptive.Aeron
         {
             Subscription.RejectImage(CorrelationId, Position, reason);
         }
-        
+
         private UnsafeBuffer ActiveTermBuffer(long position)
         {
             return _termBuffers[LogBufferDescriptor.IndexByPosition(position, PositionBitsToShift)];
@@ -926,7 +950,8 @@ namespace Adaptive.Aeron
             if (position < currentPosition || position > limitPosition)
             {
                 ThrowHelper.ThrowArgumentException(
-                    $"{position} position out of range {currentPosition}-{limitPosition}");
+                    $"{position} position out of range {currentPosition}-{limitPosition}"
+                );
             }
 
             if (0 != (position & (FRAME_ALIGNMENT - 1)))
@@ -948,20 +973,20 @@ namespace Adaptive.Aeron
 
         public override string ToString()
         {
-            return "Image{" +
-                   $"correlationId={CorrelationId}, " +
-                   $"sessionId={SessionId}, " +
-                   $"isClosed={_isClosed}, " +
-                   $"isEos={IsEndOfStream}, " +
-                   $"initialTermId={InitialTermId}, " +
-                   $"termLength={TermBufferLength}, " +
-                   $"joinPosition={JoinPosition}, " +
-                   $"position={Position}, " +
-                   $"endOfStreamPosition={EndOfStreamPosition}, " +
-                   $"activeTransportCount={ActiveTransportCount()}, " +
-                   $"sourceIdentity='{SourceIdentity}', " +
-                   $"subscription={Subscription}" +
-                   '}';
+            return "Image{"
+                + $"correlationId={CorrelationId}, "
+                + $"sessionId={SessionId}, "
+                + $"isClosed={_isClosed}, "
+                + $"isEos={IsEndOfStream}, "
+                + $"initialTermId={InitialTermId}, "
+                + $"termLength={TermBufferLength}, "
+                + $"joinPosition={JoinPosition}, "
+                + $"position={Position}, "
+                + $"endOfStreamPosition={EndOfStreamPosition}, "
+                + $"activeTransportCount={ActiveTransportCount()}, "
+                + $"sourceIdentity='{SourceIdentity}', "
+                + $"subscription={Subscription}"
+                + '}';
         }
     }
 }

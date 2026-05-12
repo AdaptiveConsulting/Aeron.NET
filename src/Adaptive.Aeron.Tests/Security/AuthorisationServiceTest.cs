@@ -1,3 +1,19 @@
+﻿/*
+ * Copyright 2014 - 2026 Adaptive Financial Consulting Ltd
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 using System;
 using Adaptive.Aeron.Security;
 using Adaptive.Agrona;
@@ -6,31 +22,34 @@ using NUnit.Framework;
 
 namespace Adaptive.Aeron.Tests.Security
 {
-    public class authorisation_service_test
+    public class AuthorisationServiceTest
     {
         [Test]
         public void ShouldAllowAnyCommandIfAllowAllIsUsed()
         {
-            byte[] encodedCredentials = {0x1, 0x2, 0x3};
+            byte[] encodedCredentials = { 0x1, 0x2, 0x3 };
             var errorHandler = A.Fake<ErrorHandler>();
             const int protocolId = 77;
             int actionId = new Random().Next();
 
-            Assert.True(AllowAllAuthorisationService.INSTANCE.IsAuthorised(protocolId, actionId, null, encodedCredentials));
+            Assert.True(
+                AllowAllAuthorisationService.INSTANCE.IsAuthorised(protocolId, actionId, null, encodedCredentials)
+            );
             A.CallTo(errorHandler).MustNotHaveHappened();
         }
 
         [Test]
         public void ShouldForbidAllCommandsIfDenyAllIsUsed()
         {
-            byte[] encodedCredentials = {0x4, 0x5, 0x6};
+            byte[] encodedCredentials = { 0x4, 0x5, 0x6 };
             var errorHandler = A.Fake<ErrorHandler>();
             const int protocolId = 77;
             int actionId = new Random().Next();
 
-            Assert.False(DenyAllAuthorisationService.INSTANCE.IsAuthorised(protocolId, actionId, null, encodedCredentials));
+            Assert.False(
+                DenyAllAuthorisationService.INSTANCE.IsAuthorised(protocolId, actionId, null, encodedCredentials)
+            );
             A.CallTo(errorHandler).MustNotHaveHappened();
         }
     }
-
 }

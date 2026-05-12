@@ -26,11 +26,12 @@ namespace Adaptive.Aeron
     /// in the header plus the body of the frame will have been written at the point of supply.
     /// </para>
     /// <para>
-    /// The reserved value can be used for carrying out of band data with message fragments such a checksums or timestamps.
+    /// The reserved value can be used for carrying out of band data with message fragments such a checksums or
+    /// timestamps.
     /// </para>
-    /// 
-    /// Callback to provide the reserved value to be encoded with each message fragment as the last action
-    /// before the length field is set which commits the fragment for sending to the media.
+    ///
+    /// Callback to provide the reserved value to be encoded with each message fragment as the last action before the
+    /// length field is set which commits the fragment for sending to the media.
     /// </summary>
     /// <param name="termBuffer">  containing the encoding message fragment. </param>
     /// <param name="termOffset">  at which the header of the frame begins. </param>

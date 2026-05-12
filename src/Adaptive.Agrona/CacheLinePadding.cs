@@ -14,18 +14,43 @@
  * limitations under the License.
  */
 
+using System.Diagnostics.CodeAnalysis;
+
 namespace Adaptive.Agrona
 {
+    [SuppressMessage(
+        "Performance",
+        "CA1815",
+        Justification = "Cache-line padding struct; equality semantics are deliberately unused."
+    )]
     public struct CacheLinePadding
     {
 #pragma warning disable 649
-        private long p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13, p14, p15;
+        private long _p1,
+            _p2,
+            _p3,
+            _p4,
+            _p5,
+            _p6,
+            _p7,
+            _p8,
+            _p9,
+            _p10,
+            _p11,
+            _p12,
+            _p13,
+            _p14,
+            _p15;
 #pragma warning restore 649
 
         // To prevent compiler removing unused padding fields
         public override string ToString()
         {
-            return $"{nameof(p1)}: {p1}, {nameof(p2)}: {p2}, {nameof(p3)}: {p3}, {nameof(p4)}: {p4}, {nameof(p5)}: {p5}, {nameof(p6)}: {p6}, {nameof(p7)}: {p7}, {nameof(p8)}: {p8}, {nameof(p9)}: {p9}, {nameof(p10)}: {p10}, {nameof(p11)}: {p11}, {nameof(p12)}: {p12}, {nameof(p13)}: {p13}, {nameof(p14)}: {p14}, {nameof(p15)}: {p15}";
+            return $"{nameof(_p1)}: {_p1}, {nameof(_p2)}: {_p2}, {nameof(_p3)}: {_p3}, "
+                + $"{nameof(_p4)}: {_p4}, {nameof(_p5)}: {_p5}, {nameof(_p6)}: {_p6}, "
+                + $"{nameof(_p7)}: {_p7}, {nameof(_p8)}: {_p8}, {nameof(_p9)}: {_p9}, "
+                + $"{nameof(_p10)}: {_p10}, {nameof(_p11)}: {_p11}, {nameof(_p12)}: {_p12}, "
+                + $"{nameof(_p13)}: {_p13}, {nameof(_p14)}: {_p14}, {nameof(_p15)}: {_p15}";
         }
     }
 }

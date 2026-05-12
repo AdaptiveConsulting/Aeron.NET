@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 
-using Adaptive.Agrona;
-
 namespace Adaptive.Aeron
 {
     /// <summary>
@@ -28,5 +26,4 @@ namespace Adaptive.Aeron
             return new LogBuffers(logFileName);
         }
     }
-
 }

@@ -23,11 +23,17 @@ namespace Adaptive.Aeron.LogBuffer
     /// Rebuild a term buffer from received frames which can be out-of-order. The resulting data structure will only
     /// monotonically increase in state.
     /// </summary>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage(
+        "Major Code Smell",
+        "S1118:Utility classes should not have public constructors",
+        Justification = "Public ctor in shipped API surface; marking static would break consumers."
+    )]
     public class TermRebuilder
     {
         /// <summary>
-        /// Insert a packet of frames into the log at the appropriate termOffset as indicated by the term termOffset header.
-        /// 
+        /// Insert a packet of frames into the log at the appropriate termOffset as indicated by the term termOffset
+        /// header.
+        ///
         /// If the packet has already been inserted then this is a noop.
         /// </summary>
         /// <param name="termBuffer"> into which the packet should be inserted. </param>
@@ -38,8 +44,12 @@ namespace Adaptive.Aeron.LogBuffer
         {
             if (0 == termBuffer.GetInt(termOffset))
             {
-                termBuffer.PutBytes(termOffset + DataHeaderFlyweight.HEADER_LENGTH, packet,
-                    DataHeaderFlyweight.HEADER_LENGTH, length - DataHeaderFlyweight.HEADER_LENGTH);
+                termBuffer.PutBytes(
+                    termOffset + DataHeaderFlyweight.HEADER_LENGTH,
+                    packet,
+                    DataHeaderFlyweight.HEADER_LENGTH,
+                    length - DataHeaderFlyweight.HEADER_LENGTH
+                );
 
                 termBuffer.PutLong(termOffset + 24, packet.GetLong(24));
                 termBuffer.PutLong(termOffset + 16, packet.GetLong(16));

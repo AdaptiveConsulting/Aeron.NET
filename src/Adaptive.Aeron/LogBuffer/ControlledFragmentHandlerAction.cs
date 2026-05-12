@@ -17,7 +17,7 @@
 namespace Adaptive.Aeron.LogBuffer
 {
     /// <summary>
-    /// Action to be taken on return from <see cref="ControlledFragmentHandler"/>.
+    /// Action to be taken on return from <see cref="ControlledFragmentHandler"/> .
     /// </summary>
     public enum ControlledFragmentHandlerAction
     {
@@ -27,14 +27,14 @@ namespace Adaptive.Aeron.LogBuffer
         ABORT,
 
         /// <summary>
-        /// Break from the current polling operation and commit the position as of the end of the current fragment
-        /// being handled.
+        /// Break from the current polling operation and commit the position as of the end of the current fragment being
+        /// handled.
         /// </summary>
         BREAK,
 
         /// <summary>
-        /// Continue processing but commit the position as of the end of the current fragment so that
-        /// flow control is applied to this point.
+        /// Continue processing but commit the position as of the end of the current fragment so that flow control is
+        /// applied to this point.
         /// </summary>
         COMMIT,
 

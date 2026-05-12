@@ -25,7 +25,7 @@ namespace Adaptive.Aeron
 {
     /// <summary>
     /// Description of the command and control file used between driver and clients
-    /// 
+    ///
     /// File Layout
     /// <pre>
     ///  +----------------------------+
@@ -44,7 +44,7 @@ namespace Adaptive.Aeron
     ///  |          Error Log         |
     ///  +----------------------------+
     /// </pre>
-    /// 
+    ///
     /// Metadata Layout <see cref="CNC_VERSION"/>
     /// <pre>
     ///  0                   1                   2                   3
@@ -75,6 +75,11 @@ namespace Adaptive.Aeron
     /// +---------------------------------------------------------------+
     /// </pre>
     /// </summary>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage(
+        "Major Code Smell",
+        "S1118:Utility classes should not have public constructors",
+        Justification = "Public ctor in shipped API surface; marking static would break consumers."
+    )]
     public class CncFileDescriptor
     {
         /// <summary>
@@ -131,7 +136,7 @@ namespace Adaptive.Aeron
         /// Offset at which the PID value for the driver can be found.
         /// </summary>
         public static readonly int PID_FIELD_OFFSET;
-        
+
         /// <summary>
         /// Offset at which the file page size value for the driver can be found.
         /// </summary>
@@ -153,8 +158,7 @@ namespace Adaptive.Aeron
             TO_DRIVER_BUFFER_LENGTH_FIELD_OFFSET = CNC_VERSION_FIELD_OFFSET + SIZE_OF_INT;
             TO_CLIENTS_BUFFER_LENGTH_FIELD_OFFSET = TO_DRIVER_BUFFER_LENGTH_FIELD_OFFSET + SIZE_OF_INT;
             COUNTERS_METADATA_BUFFER_LENGTH_FIELD_OFFSET = TO_CLIENTS_BUFFER_LENGTH_FIELD_OFFSET + SIZE_OF_INT;
-            COUNTERS_VALUES_BUFFER_LENGTH_FIELD_OFFSET =
-                COUNTERS_METADATA_BUFFER_LENGTH_FIELD_OFFSET + SIZE_OF_INT;
+            COUNTERS_VALUES_BUFFER_LENGTH_FIELD_OFFSET = COUNTERS_METADATA_BUFFER_LENGTH_FIELD_OFFSET + SIZE_OF_INT;
             ERROR_LOG_BUFFER_LENGTH_FIELD_OFFSET = COUNTERS_VALUES_BUFFER_LENGTH_FIELD_OFFSET + SIZE_OF_INT;
             CLIENT_LIVENESS_TIMEOUT_FIELD_OFFSET = ERROR_LOG_BUFFER_LENGTH_FIELD_OFFSET + SIZE_OF_INT;
             START_TIMESTAMP_FIELD_OFFSET = CLIENT_LIVENESS_TIMEOUT_FIELD_OFFSET + SIZE_OF_LONG;
@@ -265,11 +269,13 @@ namespace Adaptive.Aeron
         {
             return baseOffset + PID_FIELD_OFFSET;
         }
-       
+
         /// <summary>
-        /// Create the buffer which wraps the area in the CnC file for the metadata about the CnC file itself. </summary>
+        /// Create the buffer which wraps the area in the CnC file for the metadata about the CnC file itself.
+        /// </summary>
         /// <param name="buffer"> for the CnC file. </param>
-        /// <returns> the buffer which wraps the area in the CnC file for the metadata about the CnC file itself. </returns>
+        /// <returns> the buffer which wraps the area in the CnC file for the metadata about the CnC file itself.
+        /// </returns>
         public static UnsafeBuffer CreateMetaDataBuffer(MappedByteBuffer buffer)
         {
             return new UnsafeBuffer(buffer.Pointer, 0, META_DATA_LENGTH);
@@ -280,24 +286,34 @@ namespace Adaptive.Aeron
         /// </summary>
         /// <param name="buffer">         for the CnC file. </param>
         /// <param name="metaDataBuffer"> within the CnC file. </param>
-        /// <returns> a buffer which wraps the section in the CnC file for the command buffer from clients to the driver. </returns>
+        /// <returns> a buffer which wraps the section in the CnC file for the command buffer from clients to the
+        /// driver. </returns>
         public static UnsafeBuffer CreateToDriverBuffer(MappedByteBuffer buffer, IDirectBuffer metaDataBuffer)
         {
-            return new UnsafeBuffer(buffer.Pointer, META_DATA_LENGTH,
-                metaDataBuffer.GetInt(TO_DRIVER_BUFFER_LENGTH_FIELD_OFFSET));
+            return new UnsafeBuffer(
+                buffer.Pointer,
+                META_DATA_LENGTH,
+                metaDataBuffer.GetInt(TO_DRIVER_BUFFER_LENGTH_FIELD_OFFSET)
+            );
         }
 
         /// <summary>
-        /// Create the buffer which wraps the section in the CnC file for the broadcast buffer from the driver to clients.
+        /// Create the buffer which wraps the section in the CnC file for the broadcast buffer from the driver to
+        /// clients.
         /// </summary>
         /// <param name="buffer">         for the CnC file. </param>
         /// <param name="metaDataBuffer"> within the CnC file. </param>
-        /// <returns> a buffer which wraps the section in the CnC file for the broadcast buffer from the driver to clients. </returns>
+        /// <returns> a buffer which wraps the section in the CnC file for the broadcast buffer from the driver to
+        /// clients. </returns>
         public static UnsafeBuffer CreateToClientsBuffer(MappedByteBuffer buffer, IDirectBuffer metaDataBuffer)
         {
             var offset = META_DATA_LENGTH + metaDataBuffer.GetInt(TO_DRIVER_BUFFER_LENGTH_FIELD_OFFSET);
 
-            return new UnsafeBuffer(buffer.Pointer, offset, metaDataBuffer.GetInt(TO_CLIENTS_BUFFER_LENGTH_FIELD_OFFSET));
+            return new UnsafeBuffer(
+                buffer.Pointer,
+                offset,
+                metaDataBuffer.GetInt(TO_CLIENTS_BUFFER_LENGTH_FIELD_OFFSET)
+            );
         }
 
         /// <summary>
@@ -308,12 +324,16 @@ namespace Adaptive.Aeron
         /// <returns> a buffer which wraps the section in the CnC file for the counter's metadata. </returns>
         public static UnsafeBuffer CreateCountersMetaDataBuffer(MappedByteBuffer buffer, IDirectBuffer metaDataBuffer)
         {
-            var offset = META_DATA_LENGTH + 
-                         metaDataBuffer.GetInt(TO_DRIVER_BUFFER_LENGTH_FIELD_OFFSET) +
-                         metaDataBuffer.GetInt(TO_CLIENTS_BUFFER_LENGTH_FIELD_OFFSET);
+            var offset =
+                META_DATA_LENGTH
+                + metaDataBuffer.GetInt(TO_DRIVER_BUFFER_LENGTH_FIELD_OFFSET)
+                + metaDataBuffer.GetInt(TO_CLIENTS_BUFFER_LENGTH_FIELD_OFFSET);
 
-            return new UnsafeBuffer(buffer.Pointer, offset,
-                metaDataBuffer.GetInt(COUNTERS_METADATA_BUFFER_LENGTH_FIELD_OFFSET));
+            return new UnsafeBuffer(
+                buffer.Pointer,
+                offset,
+                metaDataBuffer.GetInt(COUNTERS_METADATA_BUFFER_LENGTH_FIELD_OFFSET)
+            );
         }
 
         /// <summary>
@@ -324,12 +344,17 @@ namespace Adaptive.Aeron
         /// <returns> a buffer which wraps the section in the CnC file for the counter values. </returns>
         public static UnsafeBuffer CreateCountersValuesBuffer(MappedByteBuffer buffer, IDirectBuffer metaDataBuffer)
         {
-            var offset = META_DATA_LENGTH + 
-                         metaDataBuffer.GetInt(TO_DRIVER_BUFFER_LENGTH_FIELD_OFFSET) +
-                         metaDataBuffer.GetInt(TO_CLIENTS_BUFFER_LENGTH_FIELD_OFFSET) +
-                         metaDataBuffer.GetInt(COUNTERS_METADATA_BUFFER_LENGTH_FIELD_OFFSET);
+            var offset =
+                META_DATA_LENGTH
+                + metaDataBuffer.GetInt(TO_DRIVER_BUFFER_LENGTH_FIELD_OFFSET)
+                + metaDataBuffer.GetInt(TO_CLIENTS_BUFFER_LENGTH_FIELD_OFFSET)
+                + metaDataBuffer.GetInt(COUNTERS_METADATA_BUFFER_LENGTH_FIELD_OFFSET);
 
-            return new UnsafeBuffer(buffer.Pointer, offset, metaDataBuffer.GetInt(COUNTERS_VALUES_BUFFER_LENGTH_FIELD_OFFSET));
+            return new UnsafeBuffer(
+                buffer.Pointer,
+                offset,
+                metaDataBuffer.GetInt(COUNTERS_VALUES_BUFFER_LENGTH_FIELD_OFFSET)
+            );
         }
 
         /// <summary>
@@ -340,13 +365,18 @@ namespace Adaptive.Aeron
         /// <returns> a buffer which wraps the section in the CnC file for the error log. </returns>
         public static UnsafeBuffer CreateErrorLogBuffer(MappedByteBuffer buffer, IDirectBuffer metaDataBuffer)
         {
-            var offset = META_DATA_LENGTH + 
-                         metaDataBuffer.GetInt(TO_DRIVER_BUFFER_LENGTH_FIELD_OFFSET) +
-                         metaDataBuffer.GetInt(TO_CLIENTS_BUFFER_LENGTH_FIELD_OFFSET) +
-                         metaDataBuffer.GetInt(COUNTERS_METADATA_BUFFER_LENGTH_FIELD_OFFSET) +
-                         metaDataBuffer.GetInt(COUNTERS_VALUES_BUFFER_LENGTH_FIELD_OFFSET);
+            var offset =
+                META_DATA_LENGTH
+                + metaDataBuffer.GetInt(TO_DRIVER_BUFFER_LENGTH_FIELD_OFFSET)
+                + metaDataBuffer.GetInt(TO_CLIENTS_BUFFER_LENGTH_FIELD_OFFSET)
+                + metaDataBuffer.GetInt(COUNTERS_METADATA_BUFFER_LENGTH_FIELD_OFFSET)
+                + metaDataBuffer.GetInt(COUNTERS_VALUES_BUFFER_LENGTH_FIELD_OFFSET);
 
-            return new UnsafeBuffer(buffer.Pointer, offset, metaDataBuffer.GetInt(ERROR_LOG_BUFFER_LENGTH_FIELD_OFFSET));
+            return new UnsafeBuffer(
+                buffer.Pointer,
+                offset,
+                metaDataBuffer.GetInt(ERROR_LOG_BUFFER_LENGTH_FIELD_OFFSET)
+            );
         }
 
         /// <summary>
@@ -388,7 +418,7 @@ namespace Adaptive.Aeron
         {
             return metaDataBuffer.GetInt(FILE_PAGE_SIZE_FIELD_OFFSET);
         }
-        
+
         /// <summary>
         /// Check the version of the CnC file is compatible with application.
         /// </summary>
@@ -398,9 +428,13 @@ namespace Adaptive.Aeron
         {
             if (SemanticVersion.Major(CNC_VERSION) != SemanticVersion.Major(cncVersion))
             {
-                throw new AeronException("CnC version not compatible:" + " app=" +
-                                         SemanticVersion.ToString(CNC_VERSION) + " file=" +
-                                         SemanticVersion.ToString(cncVersion));
+                throw new AeronException(
+                    "CnC version not compatible:"
+                        + " app="
+                        + SemanticVersion.ToString(CNC_VERSION)
+                        + " file="
+                        + SemanticVersion.ToString(cncVersion)
+                );
             }
         }
 
@@ -413,16 +447,16 @@ namespace Adaptive.Aeron
         public static bool IsCncFileLengthSufficient(IDirectBuffer metaDataBuffer, long cncFileLength)
         {
             int metadataRequiredLength =
-                META_DATA_LENGTH +
-                metaDataBuffer.GetInt(TO_DRIVER_BUFFER_LENGTH_FIELD_OFFSET) +
-                metaDataBuffer.GetInt(TO_CLIENTS_BUFFER_LENGTH_FIELD_OFFSET) +
-                metaDataBuffer.GetInt(COUNTERS_METADATA_BUFFER_LENGTH_FIELD_OFFSET) +
-                metaDataBuffer.GetInt(COUNTERS_VALUES_BUFFER_LENGTH_FIELD_OFFSET) +
-                metaDataBuffer.GetInt(ERROR_LOG_BUFFER_LENGTH_FIELD_OFFSET);
+                META_DATA_LENGTH
+                + metaDataBuffer.GetInt(TO_DRIVER_BUFFER_LENGTH_FIELD_OFFSET)
+                + metaDataBuffer.GetInt(TO_CLIENTS_BUFFER_LENGTH_FIELD_OFFSET)
+                + metaDataBuffer.GetInt(COUNTERS_METADATA_BUFFER_LENGTH_FIELD_OFFSET)
+                + metaDataBuffer.GetInt(COUNTERS_VALUES_BUFFER_LENGTH_FIELD_OFFSET)
+                + metaDataBuffer.GetInt(ERROR_LOG_BUFFER_LENGTH_FIELD_OFFSET);
 
             return cncFileLength >= metadataRequiredLength;
         }
-        
+
         /// <summary>
         /// Determines if this path name matches the cnc file name pattern.
         /// </summary>

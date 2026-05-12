@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-using System;
 using System.Text;
 using Adaptive.Agrona;
 
@@ -22,7 +21,7 @@ namespace Adaptive.Aeron.Command
 {
     /// <summary>
     /// Control message flyweight for any errors sent from driver to clients
-    /// 
+    ///
     /// <para>
     /// 0                   1                   2                   3
     /// 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
@@ -41,9 +40,9 @@ namespace Adaptive.Aeron.Command
     /// </summary>
     public class ErrorResponseFlyweight
     {
-        private const int OFFENDING_COMMAND_CORRELATION_ID_OFFSET = 0;
-        private static readonly int ERROR_CODE_OFFSET = OFFENDING_COMMAND_CORRELATION_ID_OFFSET + BitUtil.SIZE_OF_LONG;
-        private static readonly int ERROR_MESSAGE_OFFSET = ERROR_CODE_OFFSET + BitUtil.SIZE_OF_INT;
+        private const int OffendingCommandCorrelationIdOffset = 0;
+        private static readonly int ErrorCodeOffset = OffendingCommandCorrelationIdOffset + BitUtil.SIZE_OF_LONG;
+        private static readonly int ErrorMessageOffset = ErrorCodeOffset + BitUtil.SIZE_OF_INT;
 
         private IMutableDirectBuffer _buffer;
         private int _offset;
@@ -68,7 +67,7 @@ namespace Adaptive.Aeron.Command
         /// <returns> correlation ID of the offending command </returns>
         public long OffendingCommandCorrelationId()
         {
-            return _buffer.GetLong(_offset + OFFENDING_COMMAND_CORRELATION_ID_OFFSET);
+            return _buffer.GetLong(_offset + OffendingCommandCorrelationIdOffset);
         }
 
         /// <summary>
@@ -78,7 +77,7 @@ namespace Adaptive.Aeron.Command
         /// <returns> this for a fluent API. </returns>
         public ErrorResponseFlyweight OffendingCommandCorrelationId(long correlationId)
         {
-            _buffer.PutLong(_offset + OFFENDING_COMMAND_CORRELATION_ID_OFFSET, correlationId);
+            _buffer.PutLong(_offset + OffendingCommandCorrelationIdOffset, correlationId);
             return this;
         }
 
@@ -88,18 +87,16 @@ namespace Adaptive.Aeron.Command
         /// <returns> error code for the command. </returns>
         public ErrorCode ErrorCode()
         {
-            
-            
-            return (ErrorCode)_buffer.GetInt(_offset + ERROR_CODE_OFFSET);
+            return (ErrorCode)_buffer.GetInt(_offset + ErrorCodeOffset);
         }
-        
+
         /// <summary>
         /// Error code value for the command.
         /// </summary>
         /// <returns>error code value for the command.</returns>
         public int ErrorCodeValue()
         {
-            return _buffer.GetInt(_offset + ERROR_CODE_OFFSET);
+            return _buffer.GetInt(_offset + ErrorCodeOffset);
         }
 
         /// <summary>
@@ -109,7 +106,7 @@ namespace Adaptive.Aeron.Command
         /// <returns> this for a fluent API. </returns>
         public ErrorResponseFlyweight ErrorCode(ErrorCode code)
         {
-            _buffer.PutInt(_offset + ERROR_CODE_OFFSET, (int)code);
+            _buffer.PutInt(_offset + ErrorCodeOffset, (int)code);
             return this;
         }
 
@@ -119,7 +116,7 @@ namespace Adaptive.Aeron.Command
         /// <returns> error message </returns>
         public string ErrorMessage()
         {
-            return _buffer.GetStringAscii(_offset + ERROR_MESSAGE_OFFSET);
+            return _buffer.GetStringAscii(_offset + ErrorMessageOffset);
         }
 
         /// <summary>
@@ -129,9 +126,9 @@ namespace Adaptive.Aeron.Command
         /// <returns> number bytes copied. </returns>
         public int AppendMessage(StringBuilder stringBuilder)
         {
-            return _buffer.GetStringAscii(_offset + ERROR_MESSAGE_OFFSET, stringBuilder);
+            return _buffer.GetStringAscii(_offset + ErrorMessageOffset, stringBuilder);
         }
-        
+
         /// <summary>
         /// Set the error message
         /// </summary>
@@ -139,7 +136,7 @@ namespace Adaptive.Aeron.Command
         /// <returns> this for a fluent API. </returns>
         public ErrorResponseFlyweight ErrorMessage(string message)
         {
-            _buffer.PutStringAscii(_offset + ERROR_MESSAGE_OFFSET, message);
+            _buffer.PutStringAscii(_offset + ErrorMessageOffset, message);
             return this;
         }
 
@@ -149,7 +146,7 @@ namespace Adaptive.Aeron.Command
         /// <returns> length of the error response in bytes. </returns>
         public int Length()
         {
-            return ERROR_MESSAGE_OFFSET + BitUtil.SIZE_OF_INT + _buffer.GetInt(_offset + ERROR_MESSAGE_OFFSET);
+            return ErrorMessageOffset + BitUtil.SIZE_OF_INT + _buffer.GetInt(_offset + ErrorMessageOffset);
         }
     }
 }

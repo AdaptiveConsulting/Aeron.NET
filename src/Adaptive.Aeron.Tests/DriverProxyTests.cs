@@ -28,70 +28,80 @@ namespace Adaptive.Aeron.Tests
         [SetUp]
         public void Setup()
         {
-            conductorBuffer = new ManyToOneRingBuffer(new UnsafeBuffer(BufferUtil.AllocateDirect(RingBufferDescriptor.TrailerLength + 1024)));
-            conductor = new DriverProxy(conductorBuffer, CLIENT_ID);
+            _conductorBuffer = new ManyToOneRingBuffer(
+                new UnsafeBuffer(BufferUtil.AllocateDirect(RingBufferDescriptor.TrailerLength + 1024))
+            );
+            _conductor = new DriverProxy(_conductorBuffer, ClientId);
         }
-        
-        public const string CHANNEL = "aeron:udp?interface=localhost:40123|endpoint=localhost:40124";
 
-        private const int STREAM_ID = 1001;
-        private const long CORRELATION_ID = 3;
-        private const long CLIENT_ID = 7;
-        private IRingBuffer conductorBuffer;
-        private DriverProxy conductor;
+        public const string Channel = "aeron:udp?interface=localhost:40123|endpoint=localhost:40124";
+
+        private const int StreamId = 1001;
+        private const long CorrelationId = 3;
+        private const long ClientId = 7;
+        private IRingBuffer _conductorBuffer;
+        private DriverProxy _conductor;
 
         [Test]
         public void ThreadSendsAddChannelMessage()
         {
-            ThreadSendsChannelMessage(() => conductor.AddPublication(CHANNEL, STREAM_ID), ControlProtocolEvents.ADD_PUBLICATION);
+            ThreadSendsChannelMessage(
+                () => _conductor.AddPublication(Channel, StreamId),
+                ControlProtocolEvents.ADD_PUBLICATION
+            );
         }
 
         [Test]
         public void ThreadSendsRemoveChannelMessage()
         {
-            conductor.RemovePublication(CORRELATION_ID, false);
-            AssertReadsOneMessage((msgTypeId, buffer, index, length) =>
-            {
-                RemovePublicationFlyweight message = new RemovePublicationFlyweight();
-                message.Wrap(buffer, index);
-                Assert.AreEqual(ControlProtocolEvents.REMOVE_PUBLICATION, msgTypeId);
-                Assert.AreEqual(CORRELATION_ID, message.RegistrationId());
-            });
+            _conductor.RemovePublication(CorrelationId, false);
+            AssertReadsOneMessage(
+                (msgTypeId, buffer, index, length) =>
+                {
+                    RemovePublicationFlyweight message = new RemovePublicationFlyweight();
+                    message.Wrap(buffer, index);
+                    Assert.AreEqual(ControlProtocolEvents.REMOVE_PUBLICATION, msgTypeId);
+                    Assert.AreEqual(CorrelationId, message.RegistrationId());
+                }
+            );
         }
 
         private void ThreadSendsChannelMessage(Action sendMessage, int expectedMsgTypeId)
         {
             sendMessage();
 
-            AssertReadsOneMessage((msgTypeId, buffer, index, length) =>
-            {
-                PublicationMessageFlyweight publicationMessage = new PublicationMessageFlyweight();
-                publicationMessage.Wrap(buffer, index);
-                Assert.AreEqual(expectedMsgTypeId, msgTypeId);
-                Assert.AreEqual(CHANNEL, publicationMessage.Channel());
-                Assert.AreEqual(STREAM_ID, publicationMessage.StreamId());
-            });
+            AssertReadsOneMessage(
+                (msgTypeId, buffer, index, length) =>
+                {
+                    PublicationMessageFlyweight publicationMessage = new PublicationMessageFlyweight();
+                    publicationMessage.Wrap(buffer, index);
+                    Assert.AreEqual(expectedMsgTypeId, msgTypeId);
+                    Assert.AreEqual(Channel, publicationMessage.Channel());
+                    Assert.AreEqual(StreamId, publicationMessage.StreamId());
+                }
+            );
         }
 
         [Test]
         public void ThreadSendsRemoveSubscriberMessage()
         {
-            conductor.RemoveSubscription(CORRELATION_ID);
+            _conductor.RemoveSubscription(CorrelationId);
 
-            AssertReadsOneMessage((msgTypeId, buffer, index, length) =>
-            {
-                RemoveSubscriptionFlyweight removeMessage = new RemoveSubscriptionFlyweight();
-                removeMessage.Wrap(buffer, index);
-                Assert.AreEqual(ControlProtocolEvents.REMOVE_SUBSCRIPTION, msgTypeId);
-                Assert.AreEqual(CORRELATION_ID, removeMessage.RegistrationId());
-            });
+            AssertReadsOneMessage(
+                (msgTypeId, buffer, index, length) =>
+                {
+                    RemoveSubscriptionFlyweight removeMessage = new RemoveSubscriptionFlyweight();
+                    removeMessage.Wrap(buffer, index);
+                    Assert.AreEqual(ControlProtocolEvents.REMOVE_SUBSCRIPTION, msgTypeId);
+                    Assert.AreEqual(CorrelationId, removeMessage.RegistrationId());
+                }
+            );
         }
 
         private void AssertReadsOneMessage(MessageHandler handler)
         {
-            int messageCount = conductorBuffer.Read(handler);
+            int messageCount = _conductorBuffer.Read(handler);
             Assert.AreEqual(1, messageCount);
         }
     }
-
 }

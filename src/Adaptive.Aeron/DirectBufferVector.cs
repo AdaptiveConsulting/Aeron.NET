@@ -1,4 +1,20 @@
-﻿using System;
+﻿/*
+ * Copyright 2014 - 2026 Adaptive Financial Consulting Ltd
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+using System;
 using Adaptive.Agrona;
 
 namespace Adaptive.Aeron
@@ -8,16 +24,14 @@ namespace Adaptive.Aeron
     /// </summary>
     public sealed class DirectBufferVector
     {
-        private IDirectBuffer buffer;
-        private int offset;
-        private int length;
+        private IDirectBuffer _buffer;
+        private int _offset;
+        private int _length;
 
         /// <summary>
         /// Default constructor so the fluent API can be used.
         /// </summary>
-        public DirectBufferVector()
-        {
-        }
+        public DirectBufferVector() { }
 
         /// <summary>
         /// Construct a new vector as a subset of a buffer.
@@ -27,9 +41,9 @@ namespace Adaptive.Aeron
         /// <param name="length"> of the vector. </param>
         public DirectBufferVector(IDirectBuffer buffer, int offset, int length)
         {
-            this.buffer = buffer;
-            this.offset = offset;
-            this.length = length;
+            _buffer = buffer;
+            _offset = offset;
+            _length = length;
         }
 
         /// <summary>
@@ -41,9 +55,9 @@ namespace Adaptive.Aeron
         /// <returns> this for a fluent API. </returns>
         public DirectBufferVector Reset(IDirectBuffer buffer, int offset, int length)
         {
-            this.buffer = buffer;
-            this.offset = offset;
-            this.length = length;
+            _buffer = buffer;
+            _offset = offset;
+            _length = length;
 
             return this;
         }
@@ -54,7 +68,7 @@ namespace Adaptive.Aeron
         /// <returns> buffer which the vector applies to. </returns>
         public IDirectBuffer Buffer()
         {
-            return buffer;
+            return _buffer;
         }
 
         /// <summary>
@@ -64,7 +78,7 @@ namespace Adaptive.Aeron
         /// <returns> this for a fluent API. </returns>
         public DirectBufferVector Buffer(IDirectBuffer buffer)
         {
-            this.buffer = buffer;
+            _buffer = buffer;
             return this;
         }
 
@@ -74,7 +88,7 @@ namespace Adaptive.Aeron
         /// <returns> offset in the buffer at which the vector starts. </returns>
         public int Offset()
         {
-            return offset;
+            return _offset;
         }
 
         /// <summary>
@@ -84,7 +98,7 @@ namespace Adaptive.Aeron
         /// <returns> this for a fluent API. </returns>
         public DirectBufferVector Offset(int offset)
         {
-            this.offset = offset;
+            _offset = offset;
             return this;
         }
 
@@ -94,7 +108,7 @@ namespace Adaptive.Aeron
         /// <returns> length of the vector in the buffer starting at the offset. </returns>
         public int Length()
         {
-            return length;
+            return _length;
         }
 
         /// <summary>
@@ -104,7 +118,7 @@ namespace Adaptive.Aeron
         /// <returns> this for a fluent API. </returns>
         public DirectBufferVector Length(int length)
         {
-            this.length = length;
+            _length = length;
             return this;
         }
 
@@ -117,15 +131,15 @@ namespace Adaptive.Aeron
         /// <returns> this for a fluent API. </returns>
         public DirectBufferVector Validate()
         {
-            int capacity = buffer.Capacity;
-            if (offset < 0 || offset >= capacity)
+            int capacity = _buffer.Capacity;
+            if (_offset < 0 || _offset >= capacity)
             {
-                throw new ArgumentException("offset=" + offset + " capacity=" + capacity);
+                throw new ArgumentException("offset=" + _offset + " capacity=" + capacity);
             }
 
-            if (length < 0 || length > (capacity - offset))
+            if (_length < 0 || _length > (capacity - _offset))
             {
-                throw new ArgumentException("offset=" + offset + " capacity=" + capacity + " length=" + length);
+                throw new ArgumentException("offset=" + _offset + " capacity=" + capacity + " length=" + _length);
             }
 
             return this;
@@ -133,11 +147,7 @@ namespace Adaptive.Aeron
 
         public override string ToString()
         {
-            return "DirectBufferVector{" +
-                   "buffer=" + buffer +
-                   ", offset=" + offset +
-                   ", length=" + length +
-                   '}';
+            return "DirectBufferVector{" + "buffer=" + _buffer + ", offset=" + _offset + ", length=" + _length + '}';
         }
 
         /// <summary>
@@ -151,7 +161,7 @@ namespace Adaptive.Aeron
             foreach (DirectBufferVector vector in vectors)
             {
                 vector.Validate();
-                messageLength += vector.length;
+                messageLength += vector._length;
 
                 if (messageLength < 0)
                 {

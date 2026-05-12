@@ -25,8 +25,7 @@ namespace Adaptive.Aeron.Exceptions
     /// </summary>
     public class ConductorServiceTimeoutException : AeronTimeoutException
     {
-        public ConductorServiceTimeoutException(string message) : base(message, Category.FATAL)
-        {
-        }
+        public ConductorServiceTimeoutException(string message)
+            : base(message, Category.FATAL) { }
     }
 }

@@ -1,4 +1,20 @@
-﻿using System;
+﻿/*
+ * Copyright 2014 - 2026 Adaptive Financial Consulting Ltd
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+using System;
 using System.IO;
 using System.Text;
 using System.Threading;
@@ -9,26 +25,26 @@ namespace Adaptive.Agrona
 {
     /// <summary>
     /// Interface for managing Command-n-Control files.
-    /// 
-    /// The assumptions are: (1) the version field is an int in size, (2) the timestamp field is a long in size,
-    /// and (3) the version field comes before the timestamp field.
+    ///
+    /// The assumptions are: (1) the version field is an int in size, (2) the timestamp field is a long in size, and (3)
+    /// the version field comes before the timestamp field.
     /// </summary>
     public class MarkFile : IDisposable
     {
-        private readonly int versionFieldOffset;
-        private readonly int timestampFieldOffset;
+        private readonly int _versionFieldOffset;
+        private readonly int _timestampFieldOffset;
 
-        private readonly DirectoryInfo parentDir;
-        private readonly FileInfo markFile;
-        private readonly MappedByteBuffer mappedBuffer;
-        private readonly UnsafeBuffer buffer;
+        private readonly DirectoryInfo _parentDir;
+        private readonly FileInfo _markFile;
+        private readonly MappedByteBuffer _mappedBuffer;
+        private readonly UnsafeBuffer _buffer;
 
-        private volatile bool isClosed = false;
+        private volatile bool _isClosed = false;
 
         /// <summary>
-        /// Create a CnC directory and file if none present. Checking if an active CnC file exists and is active. Old CnC
-        /// file is deleted and recreated if not active.
-        /// 
+        /// Create a CnC directory and file if none present. Checking if an active CnC file exists and is active. Old
+        /// CnC file is deleted and recreated if not active.
+        ///
         /// Total length of CnC file will be mapped until <seealso cref="Dispose"/> is called.
         /// </summary>
         /// <param name="directory">             for the CnC file </param>
@@ -42,27 +58,47 @@ namespace Adaptive.Agrona
         /// <param name="epochClock">            to use for time checks </param>
         /// <param name="versionCheck">          to use for existing CnC file and version field </param>
         /// <param name="logger">                to use to signal progress or null </param>
-        public MarkFile(DirectoryInfo directory, string filename, bool warnIfDirectoryExists, bool dirDeleteOnStart,
-            int versionFieldOffset, int timestampFieldOffset, int totalFileLength, long timeoutMs,
-            IEpochClock epochClock, Action<int> versionCheck, Action<string> logger)
+        public MarkFile(
+            DirectoryInfo directory,
+            string filename,
+            bool warnIfDirectoryExists,
+            bool dirDeleteOnStart,
+            int versionFieldOffset,
+            int timestampFieldOffset,
+            int totalFileLength,
+            long timeoutMs,
+            IEpochClock epochClock,
+            Action<int> versionCheck,
+            Action<string> logger
+        )
         {
             ValidateOffsets(versionFieldOffset, timestampFieldOffset);
 
-            EnsureDirectoryExists(directory, filename, warnIfDirectoryExists, dirDeleteOnStart, versionFieldOffset,
-                timestampFieldOffset, timeoutMs, epochClock, versionCheck, logger);
+            EnsureDirectoryExists(
+                directory,
+                filename,
+                warnIfDirectoryExists,
+                dirDeleteOnStart,
+                versionFieldOffset,
+                timestampFieldOffset,
+                timeoutMs,
+                epochClock,
+                versionCheck,
+                logger
+            );
 
-            this.parentDir = directory;
-            this.markFile = new FileInfo(Path.Combine(directory.Name, filename));
-            this.mappedBuffer = MapNewFile(markFile, totalFileLength);
-            this.buffer = new UnsafeBuffer(mappedBuffer.Pointer, totalFileLength);
-            this.versionFieldOffset = versionFieldOffset;
-            this.timestampFieldOffset = timestampFieldOffset;
+            _parentDir = directory;
+            _markFile = new FileInfo(Path.Combine(directory.Name, filename));
+            _mappedBuffer = MapNewFile(_markFile, totalFileLength);
+            _buffer = new UnsafeBuffer(_mappedBuffer.Pointer, totalFileLength);
+            _versionFieldOffset = versionFieldOffset;
+            _timestampFieldOffset = timestampFieldOffset;
         }
 
         /// <summary>
-        /// Create a CnC file if none present. Checking if an active CnC file exists and is active. Existing CnC file
-        /// is used if not active.
-        /// 
+        /// Create a CnC file if none present. Checking if an active CnC file exists and is active. Existing CnC file is
+        /// used if not active.
+        ///
         /// Total length of CnC file will be mapped until <seealso cref="Dispose"/> is called.
         /// </summary>
         /// <param name="markFile">               to use </param>
@@ -74,53 +110,86 @@ namespace Adaptive.Agrona
         /// <param name="epochClock">            to use for time checks </param>
         /// <param name="versionCheck">          to use for existing CnC file and version field </param>
         /// <param name="logger">                to use to signal progress or null </param>
-        public MarkFile(FileInfo markFile, bool shouldPreExist, int versionFieldOffset, int timestampFieldOffset,
-            int totalFileLength, long timeoutMs, IEpochClock epochClock, Action<int> versionCheck,
-            Action<string> logger)
+        public MarkFile(
+            FileInfo markFile,
+            bool shouldPreExist,
+            int versionFieldOffset,
+            int timestampFieldOffset,
+            int totalFileLength,
+            long timeoutMs,
+            IEpochClock epochClock,
+            Action<int> versionCheck,
+            Action<string> logger
+        )
         {
             ValidateOffsets(versionFieldOffset, timestampFieldOffset);
 
-            this.parentDir = markFile.Directory;
-            this.markFile = markFile;
-            this.mappedBuffer = mapNewOrExistingMarkFile(markFile, shouldPreExist, versionFieldOffset,
-                timestampFieldOffset, totalFileLength, timeoutMs, epochClock, versionCheck, logger);
+            _parentDir = markFile.Directory;
+            _markFile = markFile;
+            _mappedBuffer = mapNewOrExistingMarkFile(
+                markFile,
+                shouldPreExist,
+                versionFieldOffset,
+                timestampFieldOffset,
+                totalFileLength,
+                timeoutMs,
+                epochClock,
+                versionCheck,
+                logger
+            );
 
-            this.buffer = new UnsafeBuffer(mappedBuffer.Pointer, totalFileLength);
-            this.versionFieldOffset = versionFieldOffset;
-            this.timestampFieldOffset = timestampFieldOffset;
+            _buffer = new UnsafeBuffer(_mappedBuffer.Pointer, totalFileLength);
+            _versionFieldOffset = versionFieldOffset;
+            _timestampFieldOffset = timestampFieldOffset;
         }
 
         /// <summary>
         /// Map a pre-existing CnC file if one present and is active.
-        /// 
+        ///
         /// Total length of CnC file will be mapped until <seealso cref="Dispose"/> is called.
         /// </summary>
         /// <param name="directory">             for the CnC file </param>
         /// <param name="filename">              of the CnC file </param>
         /// <param name="versionFieldOffset">    to use for version field access </param>
         /// <param name="timestampFieldOffset">  to use for timestamp field access </param>
-        /// <param name="timeoutMs">             for the activity check (in milliseconds) and for how long to wait for file to exist </param>
+        /// <param name="timeoutMs"> for the activity check (in milliseconds) and for how long to wait for file to exist
+        /// </param>
         /// <param name="epochClock">            to use for time checks </param>
         /// <param name="versionCheck">          to use for existing CnC file and version field </param>
         /// <param name="logger">                to use to signal progress or null </param>
-        public MarkFile(DirectoryInfo directory, string filename, int versionFieldOffset, int timestampFieldOffset,
-            long timeoutMs, IEpochClock epochClock, Action<int> versionCheck, Action<string> logger)
+        public MarkFile(
+            DirectoryInfo directory,
+            string filename,
+            int versionFieldOffset,
+            int timestampFieldOffset,
+            long timeoutMs,
+            IEpochClock epochClock,
+            Action<int> versionCheck,
+            Action<string> logger
+        )
         {
             ValidateOffsets(versionFieldOffset, timestampFieldOffset);
 
-            this.parentDir = directory;
-            this.markFile = new FileInfo(Path.Combine(directory.FullName, filename));
-            this.mappedBuffer = MapExistingMarkFile(markFile, versionFieldOffset, timestampFieldOffset, timeoutMs,
-                epochClock, versionCheck, logger);
-            this.buffer = new UnsafeBuffer(mappedBuffer);
-            this.versionFieldOffset = versionFieldOffset;
-            this.timestampFieldOffset = timestampFieldOffset;
+            _parentDir = directory;
+            _markFile = new FileInfo(Path.Combine(directory.FullName, filename));
+            _mappedBuffer = MapExistingMarkFile(
+                _markFile,
+                versionFieldOffset,
+                timestampFieldOffset,
+                timeoutMs,
+                epochClock,
+                versionCheck,
+                logger
+            );
+            _buffer = new UnsafeBuffer(_mappedBuffer);
+            _versionFieldOffset = versionFieldOffset;
+            _timestampFieldOffset = timestampFieldOffset;
         }
 
         /// <summary>
         /// Manage a CnC file given a mapped file and offsets of version and timestamp.
-        /// 
-        /// If mappedCncBuffer is not null, then it will be unmapped upon <seealso cref="Dispose"/>.
+        ///
+        /// If mappedCncBuffer is not null, then it will be unmapped upon <seealso cref="Dispose"/> .
         /// </summary>
         /// <param name="mappedBuffer">      for the CnC fields </param>
         /// <param name="versionFieldOffset">   for the version field </param>
@@ -129,12 +198,12 @@ namespace Adaptive.Agrona
         {
             ValidateOffsets(versionFieldOffset, timestampFieldOffset);
 
-            this.parentDir = null;
-            this.markFile = null;
-            this.mappedBuffer = mappedBuffer;
-            this.buffer = new UnsafeBuffer(mappedBuffer);
-            this.versionFieldOffset = versionFieldOffset;
-            this.timestampFieldOffset = timestampFieldOffset;
+            _parentDir = null;
+            _markFile = null;
+            _mappedBuffer = mappedBuffer;
+            _buffer = new UnsafeBuffer(mappedBuffer);
+            _versionFieldOffset = versionFieldOffset;
+            _timestampFieldOffset = timestampFieldOffset;
         }
 
         /// <summary>
@@ -147,95 +216,104 @@ namespace Adaptive.Agrona
         {
             ValidateOffsets(versionFieldOffset, timestampFieldOffset);
 
-            this.parentDir = null;
-            this.markFile = null;
-            this.mappedBuffer = null;
-            this.buffer = buffer;
-            this.versionFieldOffset = versionFieldOffset;
-            this.timestampFieldOffset = timestampFieldOffset;
+            _parentDir = null;
+            _markFile = null;
+            _mappedBuffer = null;
+            _buffer = buffer;
+            _versionFieldOffset = versionFieldOffset;
+            _timestampFieldOffset = timestampFieldOffset;
         }
 
         public bool IsClosed()
         {
-            return isClosed;
+            return _isClosed;
         }
 
         public void Dispose()
         {
-            if (!isClosed)
+            if (!_isClosed)
             {
-                if (null != mappedBuffer)
+                if (null != _mappedBuffer)
                 {
-                    IoUtil.Unmap(mappedBuffer);
+                    IoUtil.Unmap(_mappedBuffer);
                 }
 
-                isClosed = true;
+                _isClosed = true;
             }
         }
 
         public void SignalReady(int version)
         {
-            buffer.PutIntOrdered(versionFieldOffset, version);
+            _buffer.PutIntOrdered(_versionFieldOffset, version);
         }
 
         public int VersionVolatile()
         {
-            return buffer.GetIntVolatile(versionFieldOffset);
+            return _buffer.GetIntVolatile(_versionFieldOffset);
         }
 
         public int VersionWeak()
         {
-            return buffer.GetInt(versionFieldOffset);
+            return _buffer.GetInt(_versionFieldOffset);
         }
 
         public void TimestampOrdered(long timestamp)
         {
-            buffer.PutLongOrdered(timestampFieldOffset, timestamp);
+            _buffer.PutLongOrdered(_timestampFieldOffset, timestamp);
         }
-        
+
         public void TimestampRelease(long timestamp)
         {
-            buffer.PutLongRelease(timestampFieldOffset, timestamp);
+            _buffer.PutLongRelease(_timestampFieldOffset, timestamp);
         }
 
         public long TimestampVolatile()
         {
-            return buffer.GetLongVolatile(timestampFieldOffset);
+            return _buffer.GetLongVolatile(_timestampFieldOffset);
         }
 
         public long TimestampWeak()
         {
-            return buffer.GetLong(timestampFieldOffset);
+            return _buffer.GetLong(_timestampFieldOffset);
         }
 
         public void DeleteDirectory(bool ignoreFailures)
         {
-            IoUtil.Delete(parentDir, ignoreFailures);
+            IoUtil.Delete(_parentDir, ignoreFailures);
         }
 
         public DirectoryInfo ParentDirectory()
         {
-            return parentDir;
+            return _parentDir;
         }
 
         public FileInfo FileName()
         {
-            return markFile;
+            return _markFile;
         }
 
         public MappedByteBuffer MappedByteBuffer()
         {
-            return mappedBuffer;
+            return _mappedBuffer;
         }
 
         public UnsafeBuffer Buffer()
         {
-            return buffer;
+            return _buffer;
         }
 
-        public static void EnsureDirectoryExists(DirectoryInfo directory, string filename, bool warnIfDirectoryExists,
-            bool dirDeleteOnStart, int versionFieldOffset, int timestampFieldOffset, long timeoutMs,
-            IEpochClock epochClock, Action<int> versionCheck, Action<string> logger)
+        public static void EnsureDirectoryExists(
+            DirectoryInfo directory,
+            string filename,
+            bool warnIfDirectoryExists,
+            bool dirDeleteOnStart,
+            int versionFieldOffset,
+            int timestampFieldOffset,
+            long timeoutMs,
+            IEpochClock epochClock,
+            Action<int> versionCheck,
+            Action<string> logger
+        )
         {
             FileInfo cncFile = new FileInfo(Path.Combine(directory.FullName, filename));
 
@@ -254,8 +332,17 @@ namespace Adaptive.Agrona
 
                     try
                     {
-                        if (IsActive(cncByteBuffer, epochClock, timeoutMs, versionFieldOffset, timestampFieldOffset,
-                                versionCheck, logger))
+                        if (
+                            IsActive(
+                                cncByteBuffer,
+                                epochClock,
+                                timeoutMs,
+                                versionFieldOffset,
+                                timestampFieldOffset,
+                                versionCheck,
+                                logger
+                            )
+                        )
                         {
                             throw new System.InvalidOperationException("active mark file detected");
                         }
@@ -272,9 +359,15 @@ namespace Adaptive.Agrona
             IoUtil.EnsureDirectoryExists(directory, directory.ToString());
         }
 
-        public static MappedByteBuffer MapExistingMarkFile(FileInfo markFile, int versionFieldOffset,
-            int timestampFieldOffset, long timeoutMs, IEpochClock epochClock, Action<int> versionCheck,
-            Action<string> logger)
+        public static MappedByteBuffer MapExistingMarkFile(
+            FileInfo markFile,
+            int versionFieldOffset,
+            int timestampFieldOffset,
+            long timeoutMs,
+            IEpochClock epochClock,
+            Action<int> versionCheck,
+            Action<string> logger
+        )
         {
             long startTimeMs = epochClock.Time();
 
@@ -320,9 +413,17 @@ namespace Adaptive.Agrona
             }
         }
 
-        public static MappedByteBuffer mapNewOrExistingMarkFile(FileInfo markFile, bool shouldPreExist,
-            int versionFieldOffset, int timestampFieldOffset, long totalFileLength, long timeoutMs,
-            IEpochClock epochClock, Action<int> versionCheck, Action<string> logger)
+        public static MappedByteBuffer mapNewOrExistingMarkFile(
+            FileInfo markFile,
+            bool shouldPreExist,
+            int versionFieldOffset,
+            int timestampFieldOffset,
+            long totalFileLength,
+            long timeoutMs,
+            IEpochClock epochClock,
+            Action<int> versionCheck,
+            Action<string> logger
+        )
         {
             MappedByteBuffer cncByteBuffer = null;
 
@@ -371,8 +472,12 @@ namespace Adaptive.Agrona
             return cncByteBuffer;
         }
 
-        public static MappedByteBuffer MapExistingFile(FileInfo cncFile, Action<string> logger, long offset,
-            long length)
+        public static MappedByteBuffer MapExistingFile(
+            FileInfo cncFile,
+            Action<string> logger,
+            long offset,
+            long length
+        )
         {
             if (cncFile.Exists)
             {
@@ -407,8 +512,15 @@ namespace Adaptive.Agrona
             return IoUtil.MapNewFile(cncFile, length);
         }
 
-        public static bool IsActive(MappedByteBuffer cncByteBuffer, IEpochClock epochClock, long timeoutMs,
-            int versionFieldOffset, int timestampFieldOffset, Action<int> versionCheck, Action<string> logger)
+        public static bool IsActive(
+            MappedByteBuffer cncByteBuffer,
+            IEpochClock epochClock,
+            long timeoutMs,
+            int versionFieldOffset,
+            int timestampFieldOffset,
+            Action<int> versionCheck,
+            Action<string> logger
+        )
         {
             if (null == cncByteBuffer)
             {
@@ -454,12 +566,14 @@ namespace Adaptive.Agrona
         /// <summary>
         /// Ensure a link file exists if required for the actual mark file. A link file will contain the pathname of the
         /// actual mark file's parent directory. This is useful if the mark file should be stored on a different storage
-        /// medium to the directory of the service. This will create a file with name of <paramref name="linkFilename"/> in the <paramref name="serviceDir"/>.
-        /// If <paramref name="actualFile"/> is an immediate child of <paramref name="serviceDir"/> then any file with the name of
-        /// <paramref name="linkFilename"/> will be deleted from the <paramref name="serviceDir"/> (so that links won't be present if not
-        /// required).
+        /// medium to the directory of the service. This will create a file with name of <paramref name="linkFilename"/>
+        /// in the <paramref name="serviceDir"/> . If <paramref name="actualFile"/> is an immediate child of
+        /// <paramref name="serviceDir"/> then any file with the name of
+        /// <paramref name="linkFilename"/> will be deleted from the <paramref name="serviceDir"/> (so that links won't
+        /// be present if not required).
         /// </summary>
-        /// <param name="serviceDir">Directory where the mark file would normally be stored (e.g. archiveDir, clusterDir).</param>
+        /// <param name="serviceDir">Directory where the mark file would normally be stored (e.g. archiveDir,
+        /// clusterDir).</param>
         /// <param name="actualFile">Location of actual mark file, e.g. /dev/shm/service/node0/archive-mark.dat</param>
         /// <param name="linkFilename">Short name that should be used for the link file, e.g. archive-mark.lnk</param>
         public static void EnsureMarkFileLink(DirectoryInfo serviceDir, FileInfo actualFile, string linkFilename)
@@ -482,8 +596,9 @@ namespace Adaptive.Agrona
             }
             catch (Exception)
             {
-                throw new ArgumentException("Failed to resolve canonical path for markFile parent dir of " +
-                                            actualFile);
+                throw new ArgumentException(
+                    "Failed to resolve canonical path for markFile parent dir of " + actualFile
+                );
             }
 
             string linkFilePath = Path.Combine(serviceDirPath, linkFilename);

@@ -1,3 +1,19 @@
+﻿/*
+ * Copyright 2014 - 2026 Adaptive Financial Consulting Ltd
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 using Adaptive.Aeron;
 using Adaptive.Aeron.LogBuffer;
 using Adaptive.Agrona;
@@ -6,33 +22,36 @@ using static Adaptive.Aeron.LogBuffer.ControlledFragmentHandlerAction;
 
 namespace Adaptive.Archiver
 {
+#pragma warning disable S103 // long cref atom; mirrors upstream Java @see exempted by Checkstyle ignorePattern
     /// <summary>
     /// Encapsulate the polling, decoding, dispatching of recording descriptors from an archive.
     /// </summary>
     /// <seealso cref="IRecordingSubscriptionDescriptorConsumer"></seealso>
     /// <seealso cref="ArchiveProxy.ListRecordingSubscriptions(int, int, string, int, bool, long, long)"></seealso>
-    /// <seealso cref="AeronArchive.ListRecordingSubscriptions(int, int, string, int, bool, IRecordingSubscriptionDescriptorConsumer)"></seealso>
+    /// <seealso cref="AeronArchive.ListRecordingSubscriptions(int, int, string, int, bool, IRecordingSubscriptionDescriptorConsumer)">
+    /// </seealso>
+#pragma warning restore S103
     public class RecordingSubscriptionDescriptorPoller : IControlledFragmentHandler
     {
-        private readonly MessageHeaderDecoder messageHeaderDecoder = new MessageHeaderDecoder();
-        private readonly ControlResponseDecoder controlResponseDecoder = new ControlResponseDecoder();
+        private readonly MessageHeaderDecoder _messageHeaderDecoder = new MessageHeaderDecoder();
+        private readonly ControlResponseDecoder _controlResponseDecoder = new ControlResponseDecoder();
 
-        private readonly RecordingSubscriptionDescriptorDecoder recordingSubscriptionDescriptorDecoder =
+        private readonly RecordingSubscriptionDescriptorDecoder _recordingSubscriptionDescriptorDecoder =
             new RecordingSubscriptionDescriptorDecoder();
 
-        private readonly RecordingSignalEventDecoder recordingSignalEventDecoder = new RecordingSignalEventDecoder();
+        private readonly RecordingSignalEventDecoder _recordingSignalEventDecoder = new RecordingSignalEventDecoder();
 
-        private readonly long controlSessionId;
-        private readonly int fragmentLimit;
-        private readonly Subscription subscription;
-        private readonly ControlledFragmentAssembler fragmentAssembler;
-        private readonly IErrorHandler errorHandler;
-        private readonly IRecordingSignalConsumer recordingSignalConsumer;
+        private readonly long _controlSessionId;
+        private readonly int _fragmentLimit;
+        private readonly Subscription _subscription;
+        private readonly ControlledFragmentAssembler _fragmentAssembler;
+        private readonly IErrorHandler _errorHandler;
+        private readonly IRecordingSignalConsumer _recordingSignalConsumer;
 
-        private long correlationId;
-        private int remainingSubscriptionCount;
-        private bool isDispatchComplete = false;
-        private IRecordingSubscriptionDescriptorConsumer subscriptionDescriptorConsumer;
+        private long _correlationId;
+        private int _remainingSubscriptionCount;
+        private bool _isDispatchComplete = false;
+        private IRecordingSubscriptionDescriptorConsumer _subscriptionDescriptorConsumer;
 
         /// <summary>
         /// Create a poller for a given subscription to an archive for control response messages.
@@ -45,23 +64,23 @@ namespace Adaptive.Archiver
             Subscription subscription,
             IErrorHandler errorHandler,
             long controlSessionId,
-            int fragmentLimit) :
-            this(
+            int fragmentLimit
+        )
+            : this(
                 subscription,
                 errorHandler,
                 AeronArchive.Configuration.NO_OP_RECORDING_SIGNAL_CONSUMER,
                 controlSessionId,
-                fragmentLimit)
-        {
-        }
-
+                fragmentLimit
+            ) { }
 
         /// <summary>
         /// Create a poller for a given subscription to an archive for control response messages.
         /// </summary>
         /// <param name="subscription">     to poll for new events. </param>
         /// <param name="errorHandler">     to call for asynchronous errors. </param>
-        /// <param name="recordingSignalConsumer">  for consuming interleaved recording signals on the control session.</param>
+        /// <param name="recordingSignalConsumer"> for consuming interleaved recording signals on the control
+        /// session.</param>
         /// <param name="controlSessionId"> to filter the responses. </param>
         /// <param name="fragmentLimit">    to apply for each polling operation. </param>
         public RecordingSubscriptionDescriptorPoller(
@@ -69,14 +88,15 @@ namespace Adaptive.Archiver
             IErrorHandler errorHandler,
             IRecordingSignalConsumer recordingSignalConsumer,
             long controlSessionId,
-            int fragmentLimit)
+            int fragmentLimit
+        )
         {
-            this.fragmentAssembler = new ControlledFragmentAssembler(this);
-            this.subscription = subscription;
-            this.errorHandler = errorHandler;
-            this.recordingSignalConsumer = recordingSignalConsumer;
-            this.fragmentLimit = fragmentLimit;
-            this.controlSessionId = controlSessionId;
+            this._fragmentAssembler = new ControlledFragmentAssembler(this);
+            this._subscription = subscription;
+            this._errorHandler = errorHandler;
+            this._recordingSignalConsumer = recordingSignalConsumer;
+            this._fragmentLimit = fragmentLimit;
+            this._controlSessionId = controlSessionId;
         }
 
         /// <summary>
@@ -85,21 +105,22 @@ namespace Adaptive.Archiver
         /// <returns> the <seealso cref="Subscription"/> used for polling responses. </returns>
         public Subscription Subscription()
         {
-            return subscription;
+            return _subscription;
         }
 
         /// <summary>
-        /// Poll for recording subscriptions and delegate to the <seealso cref="IRecordingSubscriptionDescriptorConsumer"/>.
+        /// Poll for recording subscriptions and delegate to the
+        /// <seealso cref="IRecordingSubscriptionDescriptorConsumer"/>.
         /// </summary>
         /// <returns> the number of fragments read during the operation. Zero if no events are available. </returns>
         public int Poll()
         {
-            if (isDispatchComplete)
+            if (_isDispatchComplete)
             {
-                isDispatchComplete = false;
+                _isDispatchComplete = false;
             }
 
-            return subscription.ControlledPoll(fragmentAssembler, fragmentLimit);
+            return _subscription.ControlledPoll(_fragmentAssembler, _fragmentLimit);
         }
 
         /// <summary>
@@ -108,7 +129,7 @@ namespace Adaptive.Archiver
         /// <returns> control session id for filtering responses. </returns>
         public long ControlSessionId()
         {
-            return controlSessionId;
+            return _controlSessionId;
         }
 
         /// <summary>
@@ -117,7 +138,7 @@ namespace Adaptive.Archiver
         /// <returns> true if the dispatch of descriptors complete? </returns>
         public bool DispatchComplete
         {
-            get { return isDispatchComplete; }
+            get { return _isDispatchComplete; }
         }
 
         /// <summary>
@@ -126,7 +147,7 @@ namespace Adaptive.Archiver
         /// <returns> the number of remaining subscriptions expected. </returns>
         public int RemainingSubscriptionCount()
         {
-            return remainingSubscriptionCount;
+            return _remainingSubscriptionCount;
         }
 
         /// <summary>
@@ -134,117 +155,139 @@ namespace Adaptive.Archiver
         /// </summary>
         /// <param name="correlationId">     for the response. </param>
         /// <param name="subscriptionCount"> of descriptors to expect. </param>
-        /// <param name="consumer">          to which the recording subscription descriptors are to be dispatched. </param>
+        /// <param name="consumer"> to which the recording subscription descriptors are to be dispatched. </param>
         public void Reset(long correlationId, int subscriptionCount, IRecordingSubscriptionDescriptorConsumer consumer)
         {
-            this.correlationId = correlationId;
-            this.subscriptionDescriptorConsumer = consumer;
-            this.remainingSubscriptionCount = subscriptionCount;
-            isDispatchComplete = false;
+            this._correlationId = correlationId;
+            this._subscriptionDescriptorConsumer = consumer;
+            this._remainingSubscriptionCount = subscriptionCount;
+            _isDispatchComplete = false;
         }
 
+        // Upstream: io.aeron.archive.client.RecordingSubscriptionDescriptorPoller#onFragment
+        // is @SuppressWarnings("MethodLength").
+        [System.Diagnostics.CodeAnalysis.SuppressMessage(
+            "Major Code Smell",
+            "S138:Functions should not have too many lines",
+            Justification = "Upstream Java parity; method is itself @SuppressWarnings(\"MethodLength\")."
+        )]
         public ControlledFragmentHandlerAction OnFragment(IDirectBuffer buffer, int offset, int length, Header header)
         {
-            if (isDispatchComplete)
+            if (_isDispatchComplete)
             {
                 return ABORT;
             }
 
-            messageHeaderDecoder.Wrap(buffer, offset);
+            _messageHeaderDecoder.Wrap(buffer, offset);
 
-            int schemaId = messageHeaderDecoder.SchemaId();
+            int schemaId = _messageHeaderDecoder.SchemaId();
             if (schemaId != MessageHeaderDecoder.SCHEMA_ID)
             {
-                throw new ArchiveException("expected schemaId=" + MessageHeaderDecoder.SCHEMA_ID + ", actual=" +
-                                           schemaId);
+                throw new ArchiveException(
+                    "expected schemaId=" + MessageHeaderDecoder.SCHEMA_ID + ", actual=" + schemaId
+                );
             }
 
-            int templateId = messageHeaderDecoder.TemplateId();
+            int templateId = _messageHeaderDecoder.TemplateId();
             switch (templateId)
             {
                 case ControlResponseDecoder.TEMPLATE_ID:
-                {
-                    controlResponseDecoder
-                        .Wrap(buffer,
-                            offset + MessageHeaderEncoder.ENCODED_LENGTH,
-                            messageHeaderDecoder.BlockLength(),
-                            messageHeaderDecoder.Version());
-
-                    if (controlResponseDecoder.ControlSessionId() == controlSessionId)
                     {
-                        ControlResponseCode code = controlResponseDecoder.Code();
-                        long responseCorrelationId = controlResponseDecoder.CorrelationId();
+                        _controlResponseDecoder.Wrap(
+                            buffer,
+                            offset + MessageHeaderEncoder.ENCODED_LENGTH,
+                            _messageHeaderDecoder.BlockLength(),
+                            _messageHeaderDecoder.Version()
+                        );
 
-                        if (ControlResponseCode.SUBSCRIPTION_UNKNOWN == code && responseCorrelationId == this.correlationId)
+                        if (_controlResponseDecoder.ControlSessionId() == _controlSessionId)
                         {
-                            isDispatchComplete = true;
-                            return BREAK;
-                        }
+                            ControlResponseCode code = _controlResponseDecoder.Code();
+                            long responseCorrelationId = _controlResponseDecoder.CorrelationId();
 
-                        if (ControlResponseCode.ERROR == code)
-                        {
-                            ArchiveException ex = new ArchiveException(
-                                "response for correlationId=" + this.correlationId + ", error: " +
-                                controlResponseDecoder.ErrorMessage(), (int)controlResponseDecoder.RelevantId(),
-                                responseCorrelationId);
-
-                            if (responseCorrelationId == this.correlationId)
+                            if (
+                                ControlResponseCode.SUBSCRIPTION_UNKNOWN == code
+                                && responseCorrelationId == this._correlationId
+                            )
                             {
-                                throw ex;
+                                _isDispatchComplete = true;
+                                return BREAK;
                             }
-                            else
+
+                            if (ControlResponseCode.ERROR == code)
                             {
-                                errorHandler?.OnError(ex);
+                                ArchiveException ex = new ArchiveException(
+                                    "response for correlationId="
+                                        + this._correlationId
+                                        + ", error: "
+                                        + _controlResponseDecoder.ErrorMessage(),
+                                    (int)_controlResponseDecoder.RelevantId(),
+                                    responseCorrelationId
+                                );
+
+                                if (responseCorrelationId == this._correlationId)
+                                {
+                                    throw ex;
+                                }
+                                else
+                                {
+                                    _errorHandler?.OnError(ex);
+                                }
                             }
                         }
                     }
-                }
 
                     break;
 
                 case RecordingSubscriptionDescriptorDecoder.TEMPLATE_ID:
-                {
-                    recordingSubscriptionDescriptorDecoder.Wrap(
-                        buffer,
-                        offset + MessageHeaderEncoder.ENCODED_LENGTH,
-                        messageHeaderDecoder.BlockLength(),
-                        messageHeaderDecoder.Version());
-
-                    if (recordingSubscriptionDescriptorDecoder.ControlSessionId() == controlSessionId &&
-                        recordingSubscriptionDescriptorDecoder.CorrelationId() == this.correlationId)
                     {
-                        subscriptionDescriptorConsumer.OnSubscriptionDescriptor(
-                            controlSessionId,
-                            recordingSubscriptionDescriptorDecoder.CorrelationId(),
-                            recordingSubscriptionDescriptorDecoder.SubscriptionId(),
-                            recordingSubscriptionDescriptorDecoder.StreamId(),
-                            recordingSubscriptionDescriptorDecoder.StrippedChannel());
+                        _recordingSubscriptionDescriptorDecoder.Wrap(
+                            buffer,
+                            offset + MessageHeaderEncoder.ENCODED_LENGTH,
+                            _messageHeaderDecoder.BlockLength(),
+                            _messageHeaderDecoder.Version()
+                        );
 
-                        if (0 == --remainingSubscriptionCount)
+                        if (
+                            _recordingSubscriptionDescriptorDecoder.ControlSessionId() == _controlSessionId
+                            && _recordingSubscriptionDescriptorDecoder.CorrelationId() == this._correlationId
+                        )
                         {
-                            isDispatchComplete = true;
-                            return BREAK;
+                            _subscriptionDescriptorConsumer.OnSubscriptionDescriptor(
+                                _controlSessionId,
+                                _recordingSubscriptionDescriptorDecoder.CorrelationId(),
+                                _recordingSubscriptionDescriptorDecoder.SubscriptionId(),
+                                _recordingSubscriptionDescriptorDecoder.StreamId(),
+                                _recordingSubscriptionDescriptorDecoder.StrippedChannel()
+                            );
+
+                            if (0 == --_remainingSubscriptionCount)
+                            {
+                                _isDispatchComplete = true;
+                                return BREAK;
+                            }
                         }
                     }
-                }
                     break;
 
                 case RecordingSignalEventDecoder.TEMPLATE_ID:
-                    recordingSignalEventDecoder.Wrap(
+                    _recordingSignalEventDecoder.Wrap(
                         buffer,
                         offset + MessageHeaderDecoder.ENCODED_LENGTH,
-                        messageHeaderDecoder.BlockLength(),
-                        messageHeaderDecoder.Version());
+                        _messageHeaderDecoder.BlockLength(),
+                        _messageHeaderDecoder.Version()
+                    );
 
-                    if (controlSessionId == recordingSignalEventDecoder.ControlSessionId())
+                    if (_controlSessionId == _recordingSignalEventDecoder.ControlSessionId())
                     {
-                        recordingSignalConsumer.OnSignal(
-                            recordingSignalEventDecoder.ControlSessionId(),
-                            recordingSignalEventDecoder.CorrelationId(),
-                            recordingSignalEventDecoder.RecordingId(),
-                            recordingSignalEventDecoder.SubscriptionId(),
-                            recordingSignalEventDecoder.Position(),
-                            recordingSignalEventDecoder.Signal());
+                        _recordingSignalConsumer.OnSignal(
+                            _recordingSignalEventDecoder.ControlSessionId(),
+                            _recordingSignalEventDecoder.CorrelationId(),
+                            _recordingSignalEventDecoder.RecordingId(),
+                            _recordingSignalEventDecoder.SubscriptionId(),
+                            _recordingSignalEventDecoder.Position(),
+                            _recordingSignalEventDecoder.Signal()
+                        );
                     }
 
                     break;

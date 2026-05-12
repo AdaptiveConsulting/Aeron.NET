@@ -53,8 +53,7 @@ namespace Adaptive.Aeron.Tests.LogBuffer
             const int messageLength = 50;
             int alignedMessageLength = BitUtil.Align(messageLength, FrameDescriptor.FRAME_ALIGNMENT);
 
-            A.CallTo(() => _termBuffer.GetIntVolatile(FrameDescriptor.LengthOffset(offset)))
-                .Returns(messageLength);
+            A.CallTo(() => _termBuffer.GetIntVolatile(FrameDescriptor.LengthOffset(offset))).Returns(messageLength);
             A.CallTo(() => _termBuffer.GetShort(FrameDescriptor.TypeOffset(offset)))
                 .Returns((short)HeaderFlyweight.HDR_TYPE_DATA);
 
@@ -70,8 +69,7 @@ namespace Adaptive.Aeron.Tests.LogBuffer
             const int messageLength = 50;
             int alignedMessageLength = BitUtil.Align(messageLength, FrameDescriptor.FRAME_ALIGNMENT);
 
-            A.CallTo(() => _termBuffer.GetIntVolatile(FrameDescriptor.LengthOffset(offset)))
-                .Returns(messageLength);
+            A.CallTo(() => _termBuffer.GetIntVolatile(FrameDescriptor.LengthOffset(offset))).Returns(messageLength);
             A.CallTo(() => _termBuffer.GetShort(FrameDescriptor.TypeOffset(offset)))
                 .Returns((short)HeaderFlyweight.HDR_TYPE_DATA);
             A.CallTo(() => _termBuffer.GetIntVolatile(FrameDescriptor.LengthOffset(alignedMessageLength)))
@@ -93,8 +91,7 @@ namespace Adaptive.Aeron.Tests.LogBuffer
             int alignedMessageLength = BitUtil.Align(messageLength, FrameDescriptor.FRAME_ALIGNMENT);
             int thirdMessageLength = limit - (alignedMessageLength * 2);
 
-            A.CallTo(() => _termBuffer.GetIntVolatile(FrameDescriptor.LengthOffset(offset)))
-                .Returns(messageLength);
+            A.CallTo(() => _termBuffer.GetIntVolatile(FrameDescriptor.LengthOffset(offset))).Returns(messageLength);
             A.CallTo(() => _termBuffer.GetShort(FrameDescriptor.TypeOffset(offset)))
                 .Returns((short)HeaderFlyweight.HDR_TYPE_DATA);
             A.CallTo(() => _termBuffer.GetIntVolatile(FrameDescriptor.LengthOffset(alignedMessageLength)))
@@ -105,7 +102,7 @@ namespace Adaptive.Aeron.Tests.LogBuffer
                 .Returns(thirdMessageLength);
             A.CallTo(() => _termBuffer.GetShort(FrameDescriptor.TypeOffset(alignedMessageLength * 2)))
                 .Returns((short)HeaderFlyweight.HDR_TYPE_DATA);
-         
+
             int newOffset = TermBlockScanner.Scan(_termBuffer, offset, limit);
 
             Assert.AreEqual(limit, newOffset);
@@ -119,8 +116,7 @@ namespace Adaptive.Aeron.Tests.LogBuffer
             int alignedMessageLength = BitUtil.Align(messageLength, FrameDescriptor.FRAME_ALIGNMENT);
             int limit = (alignedMessageLength * 2) + 1;
 
-            A.CallTo(() => _termBuffer.GetIntVolatile(FrameDescriptor.LengthOffset(offset)))
-                .Returns(messageLength);
+            A.CallTo(() => _termBuffer.GetIntVolatile(FrameDescriptor.LengthOffset(offset))).Returns(messageLength);
             A.CallTo(() => _termBuffer.GetShort(FrameDescriptor.TypeOffset(offset)))
                 .Returns((short)HeaderFlyweight.HDR_TYPE_DATA);
             A.CallTo(() => _termBuffer.GetIntVolatile(FrameDescriptor.LengthOffset(alignedMessageLength)))
@@ -131,7 +127,7 @@ namespace Adaptive.Aeron.Tests.LogBuffer
                 .Returns(messageLength);
             A.CallTo(() => _termBuffer.GetShort(FrameDescriptor.TypeOffset(alignedMessageLength * 2)))
                 .Returns((short)HeaderFlyweight.HDR_TYPE_DATA);
-            
+
             int newOffset = TermBlockScanner.Scan(_termBuffer, offset, limit);
 
             Assert.AreEqual(alignedMessageLength * 2, newOffset);
@@ -145,8 +141,7 @@ namespace Adaptive.Aeron.Tests.LogBuffer
             int alignedMessageLength = BitUtil.Align(messageLength, FrameDescriptor.FRAME_ALIGNMENT);
             int limit = alignedMessageLength - 1;
 
-            A.CallTo(() => _termBuffer.GetIntVolatile(FrameDescriptor.LengthOffset(offset)))
-                .Returns(messageLength);
+            A.CallTo(() => _termBuffer.GetIntVolatile(FrameDescriptor.LengthOffset(offset))).Returns(messageLength);
             A.CallTo(() => _termBuffer.GetShort(FrameDescriptor.TypeOffset(offset)))
                 .Returns((short)HeaderFlyweight.HDR_TYPE_DATA);
 
@@ -163,8 +158,7 @@ namespace Adaptive.Aeron.Tests.LogBuffer
             int alignedMessageLength = BitUtil.Align(messageLength, FrameDescriptor.FRAME_ALIGNMENT);
             int limit = alignedMessageLength;
 
-            A.CallTo(() => _termBuffer.GetIntVolatile(FrameDescriptor.LengthOffset(offset)))
-                .Returns(messageLength);
+            A.CallTo(() => _termBuffer.GetIntVolatile(FrameDescriptor.LengthOffset(offset))).Returns(messageLength);
 
             int newOffset = TermBlockScanner.Scan(_termBuffer, offset, limit);
 
@@ -178,12 +172,15 @@ namespace Adaptive.Aeron.Tests.LogBuffer
             int limit = _termBuffer.Capacity;
             int messageLength = 50;
             int alignedMessageLength = BitUtil.Align(messageLength, FrameDescriptor.FRAME_ALIGNMENT);
-            
+
             A.CallTo(() => _termBuffer.GetIntVolatile(FrameDescriptor.LengthOffset(offset))).Returns(messageLength);
-            A.CallTo(() => _termBuffer.GetShort(FrameDescriptor.TypeOffset(offset))).Returns((short)HeaderFlyweight.HDR_TYPE_DATA);
-            A.CallTo(() => _termBuffer.GetIntVolatile(FrameDescriptor.LengthOffset(alignedMessageLength))).Returns(messageLength);
-            A.CallTo(() => _termBuffer.GetShort(FrameDescriptor.TypeOffset(alignedMessageLength))).Returns((short)HeaderFlyweight.HDR_TYPE_PAD);
-            
+            A.CallTo(() => _termBuffer.GetShort(FrameDescriptor.TypeOffset(offset)))
+                .Returns((short)HeaderFlyweight.HDR_TYPE_DATA);
+            A.CallTo(() => _termBuffer.GetIntVolatile(FrameDescriptor.LengthOffset(alignedMessageLength)))
+                .Returns(messageLength);
+            A.CallTo(() => _termBuffer.GetShort(FrameDescriptor.TypeOffset(alignedMessageLength)))
+                .Returns((short)HeaderFlyweight.HDR_TYPE_PAD);
+
             int firstOffset = TermBlockScanner.Scan(_termBuffer, offset, limit);
             Assert.AreEqual(alignedMessageLength, firstOffset);
 

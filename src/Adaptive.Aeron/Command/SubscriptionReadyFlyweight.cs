@@ -1,4 +1,20 @@
-﻿using Adaptive.Agrona;
+﻿/*
+ * Copyright 2014 - 2026 Adaptive Financial Consulting Ltd
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+using Adaptive.Agrona;
 
 namespace Adaptive.Aeron.Command
 {
@@ -23,11 +39,11 @@ namespace Adaptive.Aeron.Command
         /// Length of the header.
         /// </summary>
         public static readonly int LENGTH = BitUtil.SIZE_OF_LONG + BitUtil.SIZE_OF_INT;
-        private const int CORRELATION_ID_OFFSET = 0;
-        private static readonly int CHANNEL_STATUS_INDICATOR_ID_OFFSET = CORRELATION_ID_OFFSET + BitUtil.SIZE_OF_LONG;
+        private const int CorrelationIdOffset = 0;
+        private static readonly int ChannelStatusIndicatorIdOffset = CorrelationIdOffset + BitUtil.SIZE_OF_LONG;
 
-        private IMutableDirectBuffer buffer;
-        private int offset;
+        private IMutableDirectBuffer _buffer;
+        private int _offset;
 
         /// <summary>
         /// Wrap the buffer at a given offset for updates.
@@ -37,8 +53,8 @@ namespace Adaptive.Aeron.Command
         /// <returns> this for a fluent API. </returns>
         public SubscriptionReadyFlyweight Wrap(IMutableDirectBuffer buffer, int offset)
         {
-            this.buffer = buffer;
-            this.offset = offset;
+            _buffer = buffer;
+            _offset = offset;
 
             return this;
         }
@@ -49,7 +65,7 @@ namespace Adaptive.Aeron.Command
         /// <returns> correlation id field. </returns>
         public long CorrelationId()
         {
-            return buffer.GetLong(offset + CORRELATION_ID_OFFSET);
+            return _buffer.GetLong(_offset + CorrelationIdOffset);
         }
 
         /// <summary>
@@ -59,7 +75,7 @@ namespace Adaptive.Aeron.Command
         /// <returns> this for a fluent API. </returns>
         public SubscriptionReadyFlyweight CorrelationId(long correlationId)
         {
-            buffer.PutLong(offset + CORRELATION_ID_OFFSET, correlationId);
+            _buffer.PutLong(_offset + CorrelationIdOffset, correlationId);
 
             return this;
         }
@@ -70,7 +86,7 @@ namespace Adaptive.Aeron.Command
         /// <returns> channel status counter id </returns>
         public int ChannelStatusCounterId()
         {
-            return buffer.GetInt(offset + CHANNEL_STATUS_INDICATOR_ID_OFFSET);
+            return _buffer.GetInt(_offset + ChannelStatusIndicatorIdOffset);
         }
 
         /// <summary>
@@ -80,7 +96,7 @@ namespace Adaptive.Aeron.Command
         /// <returns> this for a fluent API. </returns>
         public SubscriptionReadyFlyweight ChannelStatusCounterId(int counterId)
         {
-            buffer.PutInt(offset + CHANNEL_STATUS_INDICATOR_ID_OFFSET, counterId);
+            _buffer.PutInt(_offset + ChannelStatusIndicatorIdOffset, counterId);
 
             return this;
         }

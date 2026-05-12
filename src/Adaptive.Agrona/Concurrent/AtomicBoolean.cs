@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-using System;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using Adaptive.Agrona.Util;
@@ -25,12 +24,12 @@ namespace Adaptive.Agrona.Concurrent
     {
         private int _value;
 
-        private const int TRUE = 1;
-        private const int FALSE = 0;
+        private const int True = 1;
+        private const int False = 0;
 
         public AtomicBoolean(bool initialValue)
         {
-            Interlocked.Exchange(ref _value, initialValue ? TRUE : FALSE);
+            Interlocked.Exchange(ref _value, initialValue ? True : False);
         }
 
         /// <summary>
@@ -63,18 +62,18 @@ namespace Adaptive.Agrona.Concurrent
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static bool ToBool(int value)
         {
-            if (value != FALSE && value != TRUE)
+            if (value != False && value != True)
             {
                 ThrowHelper.ThrowArgumentOutOfRangeException(nameof(value));
             }
 
-            return value == TRUE;
+            return value == True;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static int ToInt(bool value)
         {
-            return value ? TRUE : FALSE;
+            return value ? True : False;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

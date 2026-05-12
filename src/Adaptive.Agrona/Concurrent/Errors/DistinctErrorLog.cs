@@ -23,14 +23,15 @@ namespace Adaptive.Agrona.Concurrent.Errors
     /// Distinct record of error observations. Rather than grow a record indefinitely when many errors of the same type
     /// are logged, this log takes the approach of only recording distinct errors of the same type type and stack trace
     /// and keeping a count and time of observation so that the record only grows with new distinct observations.
-    /// 
-    /// The provided <seealso cref="IAtomicBuffer"/> can wrap a memory-mapped file so logging can be out of process. This provides
-    /// the benefit that if a crash or lockup occurs then the log can be read externally without loss of data.
-    /// 
+    ///
+    /// The provided <seealso cref="IAtomicBuffer"/> can wrap a memory-mapped file so logging can be out of process.
+    /// This provides the benefit that if a crash or lockup occurs then the log can be read externally without loss of
+    /// data.
+    ///
     /// This class is threadsafe to be used from multiple logging threads.
-    /// 
+    ///
     /// The error records are recorded to the memory mapped buffer in the following format.
-    /// 
+    ///
     /// <pre>
     ///   0                   1                   2                   3
     ///   0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
@@ -70,7 +71,8 @@ namespace Adaptive.Agrona.Concurrent.Errors
         /// <summary>
         /// Offset within a record at which the first observation timestamp field begins.
         /// </summary>
-        public static readonly int FirstObservationTimestampOffset = LastObservationTimestampOffset + BitUtil.SIZE_OF_LONG;
+        public static readonly int FirstObservationTimestampOffset =
+            LastObservationTimestampOffset + BitUtil.SIZE_OF_LONG;
 
         /// <summary>
         /// Offset within a record at which the encoded exception field begins.
@@ -87,7 +89,7 @@ namespace Adaptive.Agrona.Concurrent.Errors
         private int _nextOffset = 0;
         private readonly IEpochClock _clock;
         private readonly IAtomicBuffer _buffer;
-        private volatile DistinctObservation[] _distinctObservations = new DistinctObservation[0];
+        private volatile DistinctObservation[] _distinctObservations = Array.Empty<DistinctObservation>();
         private readonly object _newObservationLock = new object();
 
         /// <summary>
@@ -103,9 +105,9 @@ namespace Adaptive.Agrona.Concurrent.Errors
         }
 
         /// <summary>
-        /// Record an observation of an error. If it is the first observation of this error type for a stack trace
-        /// then a new entry will be created. For subsequent observations of the same error type and stack trace a
-        /// counter and time of last observation will be updated.
+        /// Record an observation of an error. If it is the first observation of this error type for a stack trace then
+        /// a new entry will be created. For subsequent observations of the same error type and stack trace a counter
+        /// and time of last observation will be updated.
         /// </summary>
         /// <param name="observation"> to be logged as an error observation. </param>
         /// <returns> true if successfully logged otherwise false if insufficient space remaining in the log. </returns>
@@ -159,9 +161,7 @@ namespace Adaptive.Agrona.Concurrent.Errors
                     return true;
                 }
 
-                if (lhs.Message != rhs.Message 
-                    || lhs.GetType() != rhs.GetType()
-                    || lhs.StackTrace != rhs.StackTrace)
+                if (lhs.Message != rhs.Message || lhs.GetType() != rhs.GetType() || lhs.StackTrace != rhs.StackTrace)
                 {
                     return false;
                 }
@@ -182,7 +182,11 @@ namespace Adaptive.Agrona.Concurrent.Errors
             }
         }
 
-        private DistinctObservation NewObservation(long timestamp, DistinctObservation[] existingObservations, Exception observation)
+        private DistinctObservation NewObservation(
+            long timestamp,
+            DistinctObservation[] existingObservations,
+            Exception observation
+        )
         {
             DistinctObservation existingObservation = null;
 
@@ -216,7 +220,10 @@ namespace Adaptive.Agrona.Concurrent.Errors
             return existingObservation;
         }
 
-        private static DistinctObservation[] Prepend(DistinctObservation[] observations, DistinctObservation observation)
+        private static DistinctObservation[] Prepend(
+            DistinctObservation[] observations,
+            DistinctObservation observation
+        )
         {
             int length = observations.Length;
             var newObservations = new DistinctObservation[length + 1];
@@ -238,6 +245,5 @@ namespace Adaptive.Agrona.Concurrent.Errors
                 Offset = offset;
             }
         }
-
     }
 }

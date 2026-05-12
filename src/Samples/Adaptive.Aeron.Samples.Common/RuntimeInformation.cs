@@ -28,10 +28,14 @@ namespace Adaptive.Aeron.Samples.Common
             if (IsMono())
             {
                 var monoRuntimeType = Type.GetType("Mono.Runtime");
-                var monoDisplayName =
-                    monoRuntimeType?.GetMethod("GetDisplayName", BindingFlags.NonPublic | BindingFlags.Static);
+                var monoDisplayName = monoRuntimeType?.GetMethod(
+                    "GetDisplayName",
+                    BindingFlags.NonPublic | BindingFlags.Static
+                );
                 if (monoDisplayName != null)
+                {
                     return "Mono " + monoDisplayName.Invoke(null, null);
+                }
             }
 
             return "MS.NET " + Environment.Version;
@@ -39,10 +43,7 @@ namespace Adaptive.Aeron.Samples.Common
 
         internal static bool HasRyuJit()
         {
-            return !IsMono()
-                   && IntPtr.Size == 8
-                   && GetConfiguration() != "DEBUG"
-                   && !new JitHelper().IsMsX64();
+            return !IsMono() && IntPtr.Size == 8 && GetConfiguration() != "DEBUG" && !new JitHelper().IsMsX64();
         }
 
 #pragma warning disable 162
@@ -59,16 +60,18 @@ namespace Adaptive.Aeron.Samples.Common
         private class JitHelper
         {
             // ReSharper disable once NotAccessedField.Local
-            private int bar;
+            private int _bar;
 
             public bool IsMsX64(int step = 1)
             {
                 var value = 0;
                 for (var i = 0; i < step; i++)
                 {
-                    bar = i + 10;
+                    _bar = i + 10;
                     for (var j = 0; j < 2 * step; j += step)
+                    {
                         value = j + 10;
+                    }
                 }
 
                 return value == 20 + step;

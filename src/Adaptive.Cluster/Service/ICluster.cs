@@ -1,4 +1,20 @@
-﻿using System;
+﻿/*
+ * Copyright 2014 - 2026 Adaptive Financial Consulting Ltd
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+using System;
 using System.Collections.Generic;
 using Adaptive.Aeron;
 using Adaptive.Aeron.LogBuffer;
@@ -14,13 +30,15 @@ namespace Adaptive.Cluster.Service
     /// <para>
     /// This object should only be used to send messages to the cluster or schedule timers in response to other messages
     /// and timers. Sending messages and timers should not happen from cluster lifecycle methods like
-    /// <seealso cref="IClusteredService.OnStart(ICluster, Image)"/>, <seealso cref="IClusteredService.OnRoleChange(ClusterRole)"/> or
-    /// <seealso cref="IClusteredService.OnTakeSnapshot(ExclusivePublication)"/>, or <seealso cref="IClusteredService.OnTerminate(ICluster)"/>,
+    /// <seealso cref="IClusteredService.OnStart(ICluster, Image)"/>,
+    /// <seealso cref="IClusteredService.OnRoleChange(ClusterRole)"/> or
+    /// <seealso cref="IClusteredService.OnTakeSnapshot(ExclusivePublication)"/>, or
+    /// <seealso cref="IClusteredService.OnTerminate(ICluster)"/>,
     /// except the session lifecycle methods <seealso cref="IClusteredService.OnSessionOpen(IClientSession, long)"/> and
-    /// <seealso cref="IClusteredService.OnSessionClose(IClientSession, long, CloseReason)"/> and <seealso cref="IClusteredService.OnNewLeadershipTermEvent"/>.
+    /// <seealso cref="IClusteredService.OnSessionClose(IClientSession, long, CloseReason)"/> and
+    /// <seealso cref="IClusteredService.OnNewLeadershipTermEvent"/>.
     /// </para>
     /// </summary>
-
     public interface ICluster
     {
         /// <summary>
@@ -34,7 +52,7 @@ namespace Adaptive.Cluster.Service
         /// </summary>
         /// <returns> position the log has reached in bytes as of the current message. </returns>
         long LogPosition();
-        
+
         /// <summary>
         /// The role the cluster node is playing.
         /// </summary>
@@ -50,7 +68,8 @@ namespace Adaptive.Cluster.Service
         /// <summary>
         /// Get the <seealso cref="ClusteredServiceContainer.Context"/> under which the container is running.
         /// </summary>
-        /// <returns> the <seealso cref="ClusteredServiceContainer.Context"/> under which the container is running. </returns>
+        /// <returns> the <seealso cref="ClusteredServiceContainer.Context"/> under which the container is running.
+        /// </returns>
         ClusteredServiceContainer.Context Context { get; }
 
         /// <summary>
@@ -61,13 +80,13 @@ namespace Adaptive.Cluster.Service
         IClientSession GetClientSession(long clusterSessionId);
 
         /// <summary>
-        /// Get all <seealso cref="IClientSession"/>s.
+        /// Get all <seealso cref="IClientSession"/> s.
         /// </summary>
         /// <returns> the <seealso cref="IClientSession"/>s. </returns>
         ICollection<IClientSession> ClientSessions { get; }
-        
+
         /// <summary>
-        /// For each iterator over <seealso cref="IClientSession"/>s using the most efficient method possible.
+        /// For each iterator over <seealso cref="IClientSession"/> s using the most efficient method possible.
         /// </summary>
         /// <param name="action"> to be taken for each <seealso cref="IClientSession"/> in turn. </param>
         void ForEachClientSession(Action<IClientSession> action);
@@ -81,10 +100,9 @@ namespace Adaptive.Cluster.Service
         bool CloseClientSession(long clusterSessionId);
 
         /// <summary>
-        /// Cluster time as <seealso cref="TimeUnit()"/>s since 1 Jan 1970 UTC.
+        /// Cluster time as <seealso cref="TimeUnit()"/> s since 1 Jan 1970 UTC.
         /// </summary>
         /// <returns> time as <seealso cref="TimeUnit()"/>s since 1 Jan 1970 UTC. </returns>
-
         long Time { get; }
 
         /// <summary>
@@ -97,9 +115,10 @@ namespace Adaptive.Cluster.Service
         /// Schedule a timer for a given deadline and provide a correlation id to identify the timer when it expires or
         /// for cancellation. This action is asynchronous, when rescheduling it will race with the timer expiring.
         /// <para>
-        /// If the correlationId is for an existing scheduled timer then it will be rescheduled to the new deadline. However
-        /// it is best to generate correlationIds in a monotonic fashion and be aware of potential clashes with other
-        /// services in the same cluster. Service isolation can be achieved by using the upper bits for service id.
+        /// If the correlationId is for an existing scheduled timer then it will be rescheduled to the new deadline.
+        /// However it is best to generate correlationIds in a monotonic fashion and be aware of potential clashes with
+        /// other services in the same cluster. Service isolation can be achieved by using the upper bits for service
+        /// id.
         /// </para>
         /// <para>
         /// Timers should only be scheduled or cancelled in the context of processing a
@@ -122,18 +141,21 @@ namespace Adaptive.Cluster.Service
         ///
         /// The cluster's idle strategy must be used in the body of the loop to allow for the clustered service to be
         /// shutdown if required.
-        ///   
+        ///
         /// </para>
         /// </summary>
-        /// <param name="correlationId"> to identify the timer when it expires. <seealso cref="long.MaxValue"/> not supported. </param>
-        /// <param name="deadline">      time after which the timer will fire. <seealso cref="long.MaxValue"/> not supported. </param>
-        /// <returns> <code>true</code> if the request to schedule a timer has been sent or <code>false</code> in case of
+        /// <param name="correlationId"> to identify the timer when it expires. <seealso cref="long.MaxValue"/> not
+        /// supported. </param>
+        /// <param name="deadline"> time after which the timer will fire. <seealso cref="long.MaxValue"/> not supported.
+        /// </param>
+        /// <returns> <code>true</code> if the request to schedule a timer has been sent or <code>false</code> in case
+        /// of
         /// <seealso cref="Publication.ADMIN_ACTION"/> or <seealso cref="Publication.BACK_PRESSURED"/>.
         /// </returns>
         /// <seealso cref="CancelTimer(long)"/>
         /// <remarks>throws <seealso cref="ClusterException"/> if request fails with an error.</remarks>
         bool ScheduleTimer(long correlationId, long deadline);
-        
+
         /// <summary>
         /// Cancel a previously scheduled timer. This action is asynchronous and will race with the timer expiring.
         /// <para>
@@ -146,21 +168,16 @@ namespace Adaptive.Cluster.Service
         /// </para>
         /// <para>
         /// Callers of this method must loop until the method succeeds.
-        ///     
-        /// <pre>{@code
-        /// private Cluster cluster;
-        /// // Lines omitted...
-        ///     
-        /// cluster.idleStrategy().reset();
-        /// while (!cluster.cancelTimer(correlationId))
-        /// {
-        ///     cluster.idleStrategy().idle();
-        /// }
-        /// }</pre>
-        ///     
+        ///
+        /// <pre>{@code private Cluster cluster; // Lines omitted...
+        ///
+        /// cluster.idleStrategy().reset(); while (!cluster.cancelTimer(correlationId)) { cluster.idleStrategy().idle();
+        /// } }</pre>
+        ///
         /// </para>
         /// </summary>
-        /// <param name="correlationId"> for the timer provided when it was scheduled. <seealso cref="long.MaxValue"/> not supported. </param>
+        /// <param name="correlationId"> for the timer provided when it was scheduled. <seealso cref="long.MaxValue"/>
+        /// not supported. </param>
         /// <returns> {@code true} if the request to cancel a timer has been sent or {@code false} in case of
         /// <seealso cref="Publication.ADMIN_ACTION"/> or <seealso cref="Publication.BACK_PRESSURED"/>. </returns>
         /// <exception cref="ClusterException"> if request fails with an error. </exception>
@@ -214,7 +231,7 @@ namespace Adaptive.Cluster.Service
         ///
         /// Callers of this method should loop until the method succeeds, see
         /// <seealso cref="Offer(Adaptive.Agrona.IDirectBuffer,int,int)"/> for an example.
-        /// 
+        ///
         /// </para>
         /// </summary>
         /// <param name="vectors"> containing the message parts with the first left to be filled. </param>
@@ -223,58 +240,47 @@ namespace Adaptive.Cluster.Service
 
         /// <summary>
         /// Try to claim a range in the publication log into which a message can be written with zero copy semantics.
-        /// Once the message has been written then <seealso cref="BufferClaim.Commit()"/> should be called thus making it available.
+        /// Once the message has been written then <seealso cref="BufferClaim.Commit()"/> should be called thus making
+        /// it available.
         /// <para>
         /// On successful claim, the Cluster egress header will be written to the start of the claimed buffer section.
-        /// Clients <b>MUST</b> write into the claimed buffer region at offset + <seealso cref="AeronCluster.SESSION_HEADER_LENGTH"/>.
+        /// Clients <b>MUST</b> write into the claimed buffer region at offset +
+        /// <seealso cref="AeronCluster.SESSION_HEADER_LENGTH"/>.
         ///
         /// Callers of this method must loop until the method succeeds.
-        /// 
-        /// <pre>{@code
-        ///     private readonly BufferClaim bufferClaim = new BufferClaim();
-        ///     private ICluster cluster;
-        ///     Lines omitted...
         ///
-        ///    IDirectBuffer srcBuffer = acquireMessage()
-        ///    cluster.IdleStrategy().Reset()
+        /// <pre>{@code private readonly BufferClaim bufferClaim = new BufferClaim(); private ICluster cluster; Lines
+        /// omitted...
         ///
-        ///     while(true)
-        ///     {
-        ///         long position = cluster.TryClaim(length, bufferClaim);
-        ///         if (position > 0)
-        ///         {
-        ///              IMutableDirectBuffer buffer = bufferClaim.Buffer;
-        ///              int offset = bufferClaim.Offset;
+        /// IDirectBuffer srcBuffer = acquireMessage() cluster.IdleStrategy().Reset()
         ///
-        ///              buffer.putBytes(offset + AeronCluster.SESSION_HEADER_LENGTH, srcBuffer, 0, length);
-        ///              bufferClaim.Commit();
-        ///              break;
-        ///          }
-        ///          else if (Publication.ADMIN_ACTION != position &amp;&amp; Publication.BACK_PRESSURED != position)
-        ///          {
-        ///              throw new ClusterException("Internal tryClaim failed: " + position);
-        ///          }
+        /// while(true) { long position = cluster.TryClaim(length, bufferClaim); if (position > 0) {
+        /// IMutableDirectBuffer buffer = bufferClaim.Buffer; int offset = bufferClaim.Offset;
         ///
-        ///          cluster.idleStrategy.idle();
-        ///     }
-        ///     </pre>
+        /// buffer.putBytes(offset + AeronCluster.SESSION_HEADER_LENGTH, srcBuffer, 0, length); bufferClaim.Commit();
+        /// break; } else if (Publication.ADMIN_ACTION != position &amp;&amp; Publication.BACK_PRESSURED != position) {
+        /// throw new ClusterException("Internal tryClaim failed: " + position); }
+        ///
+        /// cluster.idleStrategy.idle(); } </pre>
         /// </para>
         /// </summary>
         /// <param name="length">      of the range to claim, in bytes. </param>
         /// <param name="bufferClaim"> to be populated if the claim succeeds. </param>
         /// <returns> The new stream position, otherwise a negative error value as specified in
         ///         <seealso cref="Publication.TryClaim(int, BufferClaim)"/>. </returns>
-        /// <exception cref="ArgumentException"> if the length is greater than <seealso cref="Publication.MaxPayloadLength"/>. </exception>
+        /// <exception cref="ArgumentException"> if the length is greater than
+        /// <seealso cref="Publication.MaxPayloadLength"/>. </exception>
         /// <seealso cref="Publication.TryClaim(int, BufferClaim)"/>
         /// <seealso cref="BufferClaim.Commit()"/>
         /// <seealso cref="BufferClaim.Abort()"/>
         long TryClaim(int length, BufferClaim bufferClaim);
 
         /// <summary>
-        /// <seealso cref="IdleStrategy"/> which should be used by the service when it experiences back-pressure on egress,
-        /// closing sessions, making timer requests, or any long-running actions.
+        /// <seealso cref="IdleStrategy"/> which should be used by the service when it experiences back-pressure on
+        /// egress, closing sessions, making timer requests, or any long-running actions.
         /// </summary>
-        /// <returns> the <seealso cref="IdleStrategy"/> which should be used by the service when it experiences back-pressure. </returns>
+        /// <returns> the <seealso cref="IdleStrategy"/> which should be used by the service when it experiences
+        /// back-pressure. </returns>
         IIdleStrategy IdleStrategy();
     }
 }

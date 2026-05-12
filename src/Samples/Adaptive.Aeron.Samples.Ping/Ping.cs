@@ -26,12 +26,12 @@ using HdrHistogram;
 
 namespace Adaptive.Aeron.Samples.Ping
 {
-    public class Ping
+    public static class Ping
     {
         private static readonly string PingChannel = SampleConfiguration.PING_CHANNEL;
         private static readonly string PongChannel = SampleConfiguration.PONG_CHANNEL;
-        private static readonly int PingStreamID = SampleConfiguration.PING_STREAM_ID;
-        private static readonly int PongStreamID = SampleConfiguration.PONG_STREAM_ID;
+        private static readonly int PingStreamId = SampleConfiguration.PING_STREAM_ID;
+        private static readonly int PongStreamId = SampleConfiguration.PONG_STREAM_ID;
         private static readonly int NumberOfMessages = SampleConfiguration.NUMBER_OF_MESSAGES;
         private static readonly int WarmupNumberOfMessages = SampleConfiguration.WARMUP_NUMBER_OF_MESSAGES;
         private static readonly int WarmupNumberOfIterations = SampleConfiguration.WARMUP_NUMBER_OF_ITERATIONS;
@@ -44,21 +44,26 @@ namespace Adaptive.Aeron.Samples.Ping
 
         public static void Main()
         {
-            var ctx = new Aeron.Context()
-                .AvailableImageHandler(AvailablePongImageHandler);
+            var ctx = new Aeron.Context().AvailableImageHandler(AvailablePongImageHandler);
 
             var fragmentAssembler = new FragmentAssembler(HandlerHelper.ToFragmentHandler(PongHandler));
 
-            Console.WriteLine("Publishing Ping at " + PingChannel + " on stream Id " + PingStreamID);
-            Console.WriteLine("Subscribing Pong at " + PongChannel + " on stream Id " + PongStreamID);
+            Console.WriteLine("Publishing Ping at " + PingChannel + " on stream Id " + PingStreamId);
+            Console.WriteLine("Subscribing Pong at " + PongChannel + " on stream Id " + PongStreamId);
             Console.WriteLine("Message length of " + MessageLength + " bytes");
 
             using (var aeron = Aeron.Connect(ctx))
             {
-                Console.WriteLine("Warming up... " + WarmupNumberOfIterations + " iterations of " + WarmupNumberOfMessages + " messages");
+                Console.WriteLine(
+                    "Warming up... "
+                        + WarmupNumberOfIterations
+                        + " iterations of "
+                        + WarmupNumberOfMessages
+                        + " messages"
+                );
 
-                using (var publication = aeron.AddPublication(PingChannel, PingStreamID))
-                using (var subscription = aeron.AddSubscription(PongChannel, PongStreamID))
+                using (var publication = aeron.AddPublication(PingChannel, PingStreamId))
+                using (var subscription = aeron.AddSubscription(PongChannel, PongStreamId))
                 using (var byteBuffer = BufferUtil.AllocateDirectAligned(MessageLength, BitUtil.CACHE_LINE_LENGTH))
                 using (var atomicBuffer = new UnsafeBuffer(byteBuffer))
                 {
@@ -66,7 +71,13 @@ namespace Adaptive.Aeron.Samples.Ping
 
                     for (var i = 0; i < WarmupNumberOfIterations; i++)
                     {
-                        RoundTripMessages(atomicBuffer, fragmentAssembler, publication, subscription, WarmupNumberOfMessages);
+                        RoundTripMessages(
+                            atomicBuffer,
+                            fragmentAssembler,
+                            publication,
+                            subscription,
+                            WarmupNumberOfMessages
+                        );
                     }
 
                     Thread.Sleep(100);
@@ -85,9 +96,13 @@ namespace Adaptive.Aeron.Samples.Ping
             }
         }
 
-
-        private static void RoundTripMessages(UnsafeBuffer buffer,
-            IFragmentHandler fragmentHandler, Publication publication, Subscription subscription, int count)
+        private static void RoundTripMessages(
+            UnsafeBuffer buffer,
+            IFragmentHandler fragmentHandler,
+            Publication publication,
+            Subscription subscription,
+            int count
+        )
         {
             for (var i = 0; i < count; i++)
             {
@@ -109,17 +124,19 @@ namespace Adaptive.Aeron.Samples.Ping
             var pingTimestamp = buffer.GetLong(offset);
             var rttNs = Stopwatch.GetTimestamp() - pingTimestamp;
 
-            var b = rttNs*1000*1000*1000d/Stopwatch.Frequency;
+            var b = rttNs * 1000 * 1000 * 1000d / Stopwatch.Frequency;
 
-            Histogram.RecordValue((long) b);
+            Histogram.RecordValue((long)b);
         }
 
         private static void AvailablePongImageHandler(Image image)
         {
             var subscription = image.Subscription;
-            Console.WriteLine($"Available image: channel={subscription.Channel} streamId={subscription.StreamId} session={image.SessionId}");
+            Console.WriteLine(
+                $"Available image: channel={subscription.Channel} streamId={subscription.StreamId} session={image.SessionId}"
+            );
 
-            if (PongStreamID == subscription.StreamId && PongChannel.Equals(subscription.Channel))
+            if (PongStreamId == subscription.StreamId && PongChannel.Equals(subscription.Channel))
             {
                 Latch.Signal();
             }

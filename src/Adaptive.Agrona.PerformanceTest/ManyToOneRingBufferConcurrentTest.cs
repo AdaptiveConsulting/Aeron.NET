@@ -36,11 +36,16 @@ namespace Adaptive.Agrona.PerformanceTest
 
         private void InitializeInstanceFields()
         {
-            _unsafeBuffer = new UnsafeBuffer(BufferUtil.AllocateDirectAligned(16 * 1024 + RingBufferDescriptor.TrailerLength, BitUtil.CACHE_LINE_LENGTH));
+            _unsafeBuffer = new UnsafeBuffer(
+                BufferUtil.AllocateDirectAligned(
+                    16 * 1024 + RingBufferDescriptor.TrailerLength,
+                    BitUtil.CACHE_LINE_LENGTH
+                )
+            );
             _ringBuffer = new ManyToOneRingBuffer(_unsafeBuffer);
         }
 
-        private const int MsgTypeID = 7;
+        private const int MsgTypeId = 7;
 
         private UnsafeBuffer _unsafeBuffer;
         private IRingBuffer _ringBuffer;
@@ -78,9 +83,13 @@ namespace Adaptive.Agrona.PerformanceTest
             }
 
             var nextCorrelationId = _ringBuffer.NextCorrelationId();
-            if (nextCorrelationId != reps*numThreads)
+            if (nextCorrelationId != reps * numThreads)
             {
-                Console.WriteLine("error - ProvideCorrelationIds - _ringBuffer.NextCorrelationId()={0}, reps*numThreads={1}", nextCorrelationId, reps * numThreads);
+                Console.WriteLine(
+                    "error - ProvideCorrelationIds - _ringBuffer.NextCorrelationId()={0}, reps*numThreads={1}",
+                    nextCorrelationId,
+                    reps * numThreads
+                );
             }
         }
 
@@ -117,7 +126,7 @@ namespace Adaptive.Agrona.PerformanceTest
             };
 
             var msgCount = 0;
-            while (msgCount < reps*numProducers)
+            while (msgCount < reps * numProducers)
             {
                 var readCount = _ringBuffer.Read(handler);
                 if (0 == readCount)
@@ -130,7 +139,11 @@ namespace Adaptive.Agrona.PerformanceTest
 
             if (msgCount != reps * numProducers)
             {
-                Console.WriteLine("error - msgCount != reps * numProducers. msgCount={0}, reps * numProducers={1}", msgCount, reps * numProducers);
+                Console.WriteLine(
+                    "error - msgCount != reps * numProducers. msgCount={0}, reps * numProducers={1}",
+                    msgCount,
+                    reps * numProducers
+                );
                 return;
             }
         }
@@ -139,40 +152,45 @@ namespace Adaptive.Agrona.PerformanceTest
         {
             private readonly ManyToOneRingBufferConcurrentTest _outerInstance;
 
-            internal readonly int ProducerId;
-            internal readonly Barrier Barrier;
-            internal readonly int Reps;
+            internal readonly int _producerId;
+            internal readonly Barrier _barrier;
+            internal readonly int _reps;
 
-            internal Producer(ManyToOneRingBufferConcurrentTest outerInstance, int producerId, Barrier barrier, int reps)
+            internal Producer(
+                ManyToOneRingBufferConcurrentTest outerInstance,
+                int producerId,
+                Barrier barrier,
+                int reps
+            )
             {
                 _outerInstance = outerInstance;
-                ProducerId = producerId;
-                Barrier = barrier;
-                Reps = reps;
+                _producerId = producerId;
+                _barrier = barrier;
+                _reps = reps;
             }
 
             public void Run()
             {
                 try
                 {
-                    Barrier.SignalAndWait();
+                    _barrier.SignalAndWait();
                 }
                 catch (Exception)
                 {
                     // ignored
                 }
 
-                const int length = BitUtil.SIZE_OF_INT*2;
+                const int length = BitUtil.SIZE_OF_INT * 2;
                 const int repsValueOffset = BitUtil.SIZE_OF_INT;
                 var srcBuffer = new UnsafeBuffer(new byte[1024]);
 
-                srcBuffer.PutInt(0, ProducerId);
+                srcBuffer.PutInt(0, _producerId);
 
-                for (var i = 0; i < Reps; i++)
+                for (var i = 0; i < _reps; i++)
                 {
                     srcBuffer.PutInt(repsValueOffset, i);
 
-                    while (!_outerInstance._ringBuffer.Write(MsgTypeID, srcBuffer, 0, length))
+                    while (!_outerInstance._ringBuffer.Write(MsgTypeId, srcBuffer, 0, length))
                     {
                         Thread.Yield();
                     }

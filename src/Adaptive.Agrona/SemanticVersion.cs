@@ -1,3 +1,19 @@
+﻿/*
+ * Copyright 2014 - 2026 Adaptive Financial Consulting Ltd
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 using System;
 
 namespace Adaptive.Agrona
@@ -5,11 +21,16 @@ namespace Adaptive.Agrona
     /// <summary>
     /// Store and extract a semantic version in a 4 byte integer.
     /// </summary>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage(
+        "Major Code Smell",
+        "S1118:Utility classes should not have public constructors",
+        Justification = "Public ctor in shipped API surface; marking static would break consumers."
+    )]
     public class SemanticVersion
     {
         /// <summary>
-        /// Compose a 4-byte integer with major, minor, and patch version stored in the least significant 3 bytes.
-        /// The sum of the components must be greater than zero.
+        /// Compose a 4-byte integer with major, minor, and patch version stored in the least significant 3 bytes. The
+        /// sum of the components must be greater than zero.
         /// </summary>
         /// <param name="major"> version in the range 0-255. </param>
         /// <param name="minor"> version in the range 0-255 </param>
@@ -72,10 +93,12 @@ namespace Adaptive.Agrona
         }
 
         /// <summary>
-        /// Generate a <seealso cref="string"/> representation of the semantic version in the format {@code major.minor.patch}.
+        /// Generate a <seealso cref="string"/> representation of the semantic version in the format
+        /// {@code major.minor.patch}.
         /// </summary>
         /// <param name="version"> to be converted to a string. </param>
-        /// <returns> the <seealso cref="string"/> representation of the semantic version in the format {@code major.minor.patch}. </returns>
+        /// <returns> the <seealso cref="string"/> representation of the semantic version in the format {@code
+        /// major.minor.patch}. </returns>
         public static string ToString(int version)
         {
             return Major(version) + "." + Minor(version) + "." + Patch(version);

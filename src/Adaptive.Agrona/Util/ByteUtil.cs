@@ -16,13 +16,14 @@
 
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-namespace Adaptive.Agrona.Util {
 
+namespace Adaptive.Agrona.Util
+{
     /// <summary>
     /// Utility to copy blocks of memory
     /// </summary>
-    public unsafe class ByteUtil {
-
+    public unsafe class ByteUtil
+    {
         // frames are 32-bytes aligned, without CopyChunk64 throughput is better
 
         //[StructLayout(LayoutKind.Sequential, Pack = 64, Size = 64)]
@@ -40,7 +41,8 @@ namespace Adaptive.Agrona.Util {
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void MemoryCopy(byte* destination, byte* source, uint length) {
+        public static void MemoryCopy(byte* destination, byte* source, uint length)
+        {
             var pos = 0;
             int nextPos;
             // whithout this perf is better
@@ -51,13 +53,15 @@ namespace Adaptive.Agrona.Util {
             //    nextPos += 64;
             //}
             nextPos = pos + 32;
-            while (nextPos <= length) {
+            while (nextPos <= length)
+            {
                 *(CopyChunk32*)(destination + pos) = *(CopyChunk32*)(source + pos);
                 pos = nextPos;
                 nextPos += 32;
             }
             nextPos = pos + 8;
-            while (nextPos <= length) {
+            while (nextPos <= length)
+            {
                 *(long*)(destination + pos) = *(long*)(source + pos);
                 pos = nextPos;
                 nextPos += 8;
@@ -69,11 +73,11 @@ namespace Adaptive.Agrona.Util {
             //    pos = nextPos;
             //    nextPos += 4;
             //}
-            while (pos < length) {
+            while (pos < length)
+            {
                 *(byte*)(destination + pos) = *(byte*)(source + pos);
                 pos++;
             }
         }
-
     }
 }

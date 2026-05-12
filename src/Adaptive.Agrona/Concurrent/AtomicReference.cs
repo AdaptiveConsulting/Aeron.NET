@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Copyright 2014 - 2017 Adaptive Financial Consulting Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,7 +18,8 @@ using System.Threading;
 
 namespace Adaptive.Agrona.Concurrent
 {
-    public class AtomicReference<T> where T : class
+    public class AtomicReference<T>
+        where T : class
     {
         private T _value;
 

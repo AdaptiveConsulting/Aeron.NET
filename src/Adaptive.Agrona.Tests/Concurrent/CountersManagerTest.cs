@@ -37,7 +37,7 @@ namespace Adaptive.Agrona.Tests.Concurrent
         }
 
         private const int NumberOfCounters = 4;
-        private const long FREE_TO_REUSE_TIMEOUT = 1000;
+        private const long FreeToReuseTimeout = 1000;
 
         private TestEpochClock _testClock;
 
@@ -58,15 +58,22 @@ namespace Adaptive.Agrona.Tests.Concurrent
             _consumer = A.Fake<IntObjConsumer<string>>();
             _metaData = A.Fake<CountersReader.MetaData>();
 
-            _labelsBuffer =
-                new UnsafeBuffer(BufferUtil.AllocateDirect(NumberOfCounters * CountersReader.METADATA_LENGTH));
-            _counterBuffer =
-                new UnsafeBuffer(BufferUtil.AllocateDirect(NumberOfCounters * CountersReader.COUNTER_LENGTH));
+            _labelsBuffer = new UnsafeBuffer(
+                BufferUtil.AllocateDirect(NumberOfCounters * CountersReader.METADATA_LENGTH)
+            );
+            _counterBuffer = new UnsafeBuffer(
+                BufferUtil.AllocateDirect(NumberOfCounters * CountersReader.COUNTER_LENGTH)
+            );
 
             _manager = new CountersManager(_labelsBuffer, _counterBuffer, Encoding.ASCII);
             _reader = new CountersManager(_labelsBuffer, _counterBuffer, Encoding.ASCII);
-            _managerWithCooldown = new CountersManager(_labelsBuffer, _counterBuffer, Encoding.ASCII, _testClock,
-                FREE_TO_REUSE_TIMEOUT);
+            _managerWithCooldown = new CountersManager(
+                _labelsBuffer,
+                _counterBuffer,
+                Encoding.ASCII,
+                _testClock,
+                FreeToReuseTimeout
+            );
         }
 
         [Test]
@@ -95,7 +102,14 @@ namespace Adaptive.Agrona.Tests.Concurrent
 
             try
             {
-                _manager.Allocate("label", CountersManager.DEFAULT_TYPE_ID, _ => { throw ex; });
+                _manager.Allocate(
+                    "label",
+                    CountersManager.DEFAULT_TYPE_ID,
+                    _ =>
+                    {
+                        throw ex;
+                    }
+                );
             }
             catch (Exception caught)
             {
@@ -128,7 +142,8 @@ namespace Adaptive.Agrona.Tests.Concurrent
 
             _reader.ForEach(_consumer);
 
-            A.CallTo(() => _consumer(abc, "abc")).MustHaveHappened()
+            A.CallTo(() => _consumer(abc, "abc"))
+                .MustHaveHappened()
                 .Then(A.CallTo(() => _consumer(def, "def")).MustHaveHappened())
                 .Then(A.CallTo(() => _consumer(ghi, "ghi")).MustHaveHappened());
 
@@ -145,7 +160,8 @@ namespace Adaptive.Agrona.Tests.Concurrent
             _manager.Free(def);
             _reader.ForEach(_consumer);
 
-            A.CallTo(() => _consumer(abc, "abc")).MustHaveHappened()
+            A.CallTo(() => _consumer(abc, "abc"))
+                .MustHaveHappened()
                 .Then(A.CallTo(() => _consumer(ghi, "ghi")).MustHaveHappened());
 
             A.CallTo(() => _consumer(A<int>._, A<string>._)).MustHaveHappened(2, Times.Exactly);
@@ -156,26 +172,26 @@ namespace Adaptive.Agrona.Tests.Concurrent
         [Test]
         public void ShouldFreeAndNotReuseCountersThatHaveCooldown()
         {
-            int abc = _managerWithCooldown.Allocate("abc");
+            _managerWithCooldown.Allocate("abc");
             int def = _managerWithCooldown.Allocate("def");
             int ghi = _managerWithCooldown.Allocate("ghi");
 
             _managerWithCooldown.Free(def);
 
-            _testClock.CurrentTimestamp += FREE_TO_REUSE_TIMEOUT - 1;
+            _testClock.CurrentTimestamp += FreeToReuseTimeout - 1;
             Assert.That(_managerWithCooldown.Allocate("the next label"), Is.GreaterThan(ghi));
         }
 
         [Test]
         public void ShouldFreeAndReuseCountersAfterCooldown()
         {
-            int abc = _managerWithCooldown.Allocate("abc");
+            _managerWithCooldown.Allocate("abc");
             int def = _managerWithCooldown.Allocate("def");
-            int ghi = _managerWithCooldown.Allocate("ghi");
+            _managerWithCooldown.Allocate("ghi");
 
             _managerWithCooldown.Free(def);
 
-            _testClock.CurrentTimestamp += FREE_TO_REUSE_TIMEOUT;
+            _testClock.CurrentTimestamp += FreeToReuseTimeout;
             Assert.That(_managerWithCooldown.Allocate("the next label"), Is.EqualTo(def));
         }
 
@@ -219,10 +235,26 @@ namespace Adaptive.Agrona.Tests.Concurrent
 
             _manager.ForEach(_metaData);
 
-            A.CallTo(() => _metaData(counterIdOne, typeIdOne,
-                    A<IDirectBuffer>.That.Matches(d => d.GetLong(0) == keyOne), "Test Label One")).MustHaveHappened()
-                .Then(A.CallTo(() => _metaData(counterIdTwo, typeIdTwo,
-                    A<IDirectBuffer>.That.Matches(d => d.GetLong(0) == keyTwo), "Test Label Two")).MustHaveHappened());
+            A.CallTo(() =>
+                    _metaData(
+                        counterIdOne,
+                        typeIdOne,
+                        A<IDirectBuffer>.That.Matches(d => d.GetLong(0) == keyOne),
+                        "Test Label One"
+                    )
+                )
+                .MustHaveHappened()
+                .Then(
+                    A.CallTo(() =>
+                            _metaData(
+                                counterIdTwo,
+                                typeIdTwo,
+                                A<IDirectBuffer>.That.Matches(d => d.GetLong(0) == keyTwo),
+                                "Test Label Two"
+                            )
+                        )
+                        .MustHaveHappened()
+                );
 
             A.CallTo(() => _metaData(A<int>._, A<int>._, A<IDirectBuffer>._, A<string>._))
                 .MustHaveHappened(2, Times.Exactly);
@@ -245,17 +277,47 @@ namespace Adaptive.Agrona.Tests.Concurrent
             var labelTwoBuffer = new UnsafeBuffer(Encoding.ASCII.GetBytes("Test Label Two"));
 
             int counterIdOne = _manager.Allocate(
-                typeIdOne, keyOneBuffer, 0, keyOneBuffer.Capacity, labelOneBuffer, 0, labelOneBuffer.Capacity);
+                typeIdOne,
+                keyOneBuffer,
+                0,
+                keyOneBuffer.Capacity,
+                labelOneBuffer,
+                0,
+                labelOneBuffer.Capacity
+            );
 
             int counterIdTwo = _manager.Allocate(
-                typeIdTwo, keyTwoBuffer, 0, keyTwoBuffer.Capacity, labelTwoBuffer, 0, labelTwoBuffer.Capacity);
+                typeIdTwo,
+                keyTwoBuffer,
+                0,
+                keyTwoBuffer.Capacity,
+                labelTwoBuffer,
+                0,
+                labelTwoBuffer.Capacity
+            );
 
             _manager.ForEach(_metaData);
 
-            A.CallTo(() => _metaData(counterIdOne, typeIdOne,
-                    A<IDirectBuffer>.That.Matches(d => d.GetLong(0) == keyOne), "Test Label One")).MustHaveHappened()
-                .Then(A.CallTo(() => _metaData(counterIdTwo, typeIdTwo,
-                    A<IDirectBuffer>.That.Matches(d => d.GetLong(0) == keyTwo), "Test Label Two")).MustHaveHappened());
+            A.CallTo(() =>
+                    _metaData(
+                        counterIdOne,
+                        typeIdOne,
+                        A<IDirectBuffer>.That.Matches(d => d.GetLong(0) == keyOne),
+                        "Test Label One"
+                    )
+                )
+                .MustHaveHappened()
+                .Then(
+                    A.CallTo(() =>
+                            _metaData(
+                                counterIdTwo,
+                                typeIdTwo,
+                                A<IDirectBuffer>.That.Matches(d => d.GetLong(0) == keyTwo),
+                                "Test Label Two"
+                            )
+                        )
+                        .MustHaveHappened()
+                );
         }
 
         [Test]

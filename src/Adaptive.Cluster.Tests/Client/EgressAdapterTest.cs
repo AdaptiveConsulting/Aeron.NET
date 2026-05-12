@@ -1,6 +1,21 @@
+/*
+ * Copyright 2014 - 2026 Adaptive Financial Consulting Ltd
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 using Adaptive.Aeron;
 using Adaptive.Aeron.LogBuffer;
-using Adaptive.Agrona;
 using Adaptive.Agrona.Concurrent;
 using Adaptive.Cluster.Client;
 using Adaptive.Cluster.Codecs;
@@ -34,26 +49,25 @@ namespace Adaptive.Cluster.Tests.Client
         {
             const ushort schemaId = 17;
             const ushort templateId = 19;
-            _messageHeaderEncoder
-                .Wrap(_buffer, 0)
-                .SchemaId(schemaId)
-                .TemplateId(templateId);
+            _messageHeaderEncoder.Wrap(_buffer, 0).SchemaId(schemaId).TemplateId(templateId);
 
             var listenerExtension = A.Fake<IEgressListenerExtension>();
             var header = new Header(0, 0);
-            var adapter = new EgressAdapter(
-                A.Fake<IEgressListener>(), listenerExtension, 0, A.Fake<Subscription>(), 3);
+            var adapter = new EgressAdapter(A.Fake<IEgressListener>(), listenerExtension, 0, A.Fake<Subscription>(), 3);
 
             adapter.OnFragment(_buffer, 0, MessageHeaderDecoder.ENCODED_LENGTH * 2, header);
 
-            A.CallTo(() => listenerExtension.OnExtensionMessage(
-                    A<int>._,
-                    templateId,
-                    schemaId,
-                    0,
-                    _buffer,
-                    MessageHeaderDecoder.ENCODED_LENGTH,
-                    MessageHeaderDecoder.ENCODED_LENGTH))
+            A.CallTo(() =>
+                    listenerExtension.OnExtensionMessage(
+                        A<int>._,
+                        templateId,
+                        schemaId,
+                        0,
+                        _buffer,
+                        MessageHeaderDecoder.ENCODED_LENGTH,
+                        MessageHeaderDecoder.ENCODED_LENGTH
+                    )
+                )
                 .MustHaveHappenedOnceExactly();
             A.CallTo(listenerExtension).MustHaveHappenedOnceExactly();
         }
@@ -63,11 +77,8 @@ namespace Adaptive.Cluster.Tests.Client
         {
             var listener = A.Fake<IEgressListener>();
             var adapter = new EgressAdapter(listener, 42, A.Fake<Subscription>(), 5);
-            var exception = Assert.Throws<ClusterException>(
-                () => adapter.OnFragment(_buffer, 0, 64, new Header(0, 0)));
-            Assert.AreEqual(
-                "expected schemaId=" + MessageHeaderDecoder.SCHEMA_ID + ", actual=0",
-                exception.Message);
+            var exception = Assert.Throws<ClusterException>(() => adapter.OnFragment(_buffer, 0, 64, new Header(0, 0)));
+            Assert.AreEqual("expected schemaId=" + MessageHeaderDecoder.SCHEMA_ID + ", actual=0", exception.Message);
         }
 
         [Test]
@@ -87,13 +98,16 @@ namespace Adaptive.Cluster.Tests.Client
 
             adapter.OnFragment(_buffer, offset, _sessionMessageHeaderEncoder.EncodedLength(), header);
 
-            A.CallTo(() => egressListener.OnMessage(
-                    sessionId,
-                    timestamp,
-                    _buffer,
-                    offset + AeronCluster.SESSION_HEADER_LENGTH,
-                    _sessionMessageHeaderEncoder.EncodedLength() - AeronCluster.SESSION_HEADER_LENGTH,
-                    header))
+            A.CallTo(() =>
+                    egressListener.OnMessage(
+                        sessionId,
+                        timestamp,
+                        _buffer,
+                        offset + AeronCluster.SESSION_HEADER_LENGTH,
+                        _sessionMessageHeaderEncoder.EncodedLength() - AeronCluster.SESSION_HEADER_LENGTH,
+                        header
+                    )
+                )
                 .MustHaveHappenedOnceExactly();
             A.CallTo(egressListener).MustHaveHappenedOnceExactly();
         }
@@ -145,8 +159,16 @@ namespace Adaptive.Cluster.Tests.Client
 
             adapter.OnFragment(_buffer, offset, _sessionEventEncoder.EncodedLength(), header);
 
-            A.CallTo(() => egressListener.OnSessionEvent(
-                    correlationId, clusterSessionId, leadershipTermId, leaderMemberId, eventCode, eventDetail))
+            A.CallTo(() =>
+                    egressListener.OnSessionEvent(
+                        correlationId,
+                        clusterSessionId,
+                        leadershipTermId,
+                        leaderMemberId,
+                        eventCode,
+                        eventDetail
+                    )
+                )
                 .MustHaveHappenedOnceExactly();
             A.CallTo(egressListener).MustHaveHappenedOnceExactly();
         }
@@ -174,8 +196,7 @@ namespace Adaptive.Cluster.Tests.Client
 
             var egressListener = A.Fake<IEgressListener>();
             var header = new Header(0, 0);
-            var adapter = new EgressAdapter(
-                egressListener, clusterSessionId + 1, A.Fake<Subscription>(), 3);
+            var adapter = new EgressAdapter(egressListener, clusterSessionId + 1, A.Fake<Subscription>(), 3);
 
             adapter.OnFragment(_buffer, offset, _sessionEventEncoder.EncodedLength(), header);
 
@@ -203,8 +224,9 @@ namespace Adaptive.Cluster.Tests.Client
 
             adapter.OnFragment(_buffer, offset, _newLeaderEventEncoder.EncodedLength(), header);
 
-            A.CallTo(() => egressListener.OnNewLeader(
-                    clusterSessionId, leadershipTermId, leaderMemberId, ingressEndpoints))
+            A.CallTo(() =>
+                    egressListener.OnNewLeader(clusterSessionId, leadershipTermId, leaderMemberId, ingressEndpoints)
+                )
                 .MustHaveHappenedOnceExactly();
             A.CallTo(egressListener).MustHaveHappenedOnceExactly();
         }
@@ -258,15 +280,21 @@ namespace Adaptive.Cluster.Tests.Client
 
             adapter.OnFragment(_buffer, offset, _adminResponseEncoder.EncodedLength(), header);
 
-            A.CallTo(() => egressListener.OnAdminResponse(
-                    clusterSessionId,
-                    correlationId,
-                    type,
-                    responseCode,
-                    message,
-                    _buffer,
-                    offset + MessageHeaderEncoder.ENCODED_LENGTH + _adminResponseEncoder.EncodedLength() - payload.Length,
-                    payload.Length))
+            A.CallTo(() =>
+                    egressListener.OnAdminResponse(
+                        clusterSessionId,
+                        correlationId,
+                        type,
+                        responseCode,
+                        message,
+                        _buffer,
+                        offset
+                            + MessageHeaderEncoder.ENCODED_LENGTH
+                            + _adminResponseEncoder.EncodedLength()
+                            - payload.Length,
+                        payload.Length
+                    )
+                )
                 .MustHaveHappenedOnceExactly();
             A.CallTo(egressListener).MustHaveHappenedOnceExactly();
         }
@@ -292,8 +320,7 @@ namespace Adaptive.Cluster.Tests.Client
 
             var egressListener = A.Fake<IEgressListener>();
             var header = new Header(1, 3);
-            var adapter = new EgressAdapter(
-                egressListener, -clusterSessionId, A.Fake<Subscription>(), 10);
+            var adapter = new EgressAdapter(egressListener, -clusterSessionId, A.Fake<Subscription>(), 10);
 
             adapter.OnFragment(_buffer, offset, _adminResponseEncoder.EncodedLength(), header);
 

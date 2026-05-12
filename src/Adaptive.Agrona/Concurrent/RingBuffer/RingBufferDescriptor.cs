@@ -20,66 +20,71 @@ using Adaptive.Agrona.Util;
 namespace Adaptive.Agrona.Concurrent.RingBuffer
 {
     /// <summary>
-    /// Layout description for the underlying buffer used by a <seealso cref="RingBuffer"/>. The buffer consists
-    /// of a ring of messages which is a power of 2 in size, followed by a trailer section containing state
-    /// information for the producers and consumers of the ring.
+    /// Layout description for the underlying buffer used by a <seealso cref="RingBuffer"/> . The buffer consists of a
+    /// ring of messages which is a power of 2 in size, followed by a trailer section containing state information for
+    /// the producers and consumers of the ring.
     /// </summary>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage(
+        "Major Code Smell",
+        "S1118:Utility classes should not have public constructors",
+        Justification = "Public ctor in shipped API surface; marking static would break consumers."
+    )]
     public class RingBufferDescriptor
     {
         /// <summary>
-        /// Offset within the trailer for where the tail value is stored. 
+        /// Offset within the trailer for where the tail value is stored.
         /// </summary>
         public static readonly int TailPositionOffset;
 
         /// <summary>
-        /// Offset within the trailer for where the head cache value is stored. 
+        /// Offset within the trailer for where the head cache value is stored.
         /// </summary>
         public static readonly int HeadCachePositionOffset;
 
         /// <summary>
-        /// Offset within the trailer for where the head value is stored. 
+        /// Offset within the trailer for where the head value is stored.
         /// </summary>
         public static readonly int HeadPositionOffset;
 
         /// <summary>
-        /// Offset within the trailer for where the correlation counter value is stored. 
+        /// Offset within the trailer for where the correlation counter value is stored.
         /// </summary>
         public static readonly int CorrelationCounterOffset;
 
         /// <summary>
-        /// Offset within the trailer for where the consumer heartbeat time value is stored. 
+        /// Offset within the trailer for where the consumer heartbeat time value is stored.
         /// </summary>
         public static readonly int ConsumerHeartbeatOffset;
 
         /// <summary>
-        /// Total length of the trailer in bytes. 
+        /// Total length of the trailer in bytes.
         /// </summary>
         public static readonly int TrailerLength;
 
         static RingBufferDescriptor()
         {
             var offset = 0;
-            offset += BitUtil.CACHE_LINE_LENGTH*2;
+            offset += BitUtil.CACHE_LINE_LENGTH * 2;
             TailPositionOffset = offset;
 
-            offset += BitUtil.CACHE_LINE_LENGTH*2;
+            offset += BitUtil.CACHE_LINE_LENGTH * 2;
             HeadCachePositionOffset = offset;
 
-            offset += BitUtil.CACHE_LINE_LENGTH*2;
+            offset += BitUtil.CACHE_LINE_LENGTH * 2;
             HeadPositionOffset = offset;
 
-            offset += BitUtil.CACHE_LINE_LENGTH*2;
+            offset += BitUtil.CACHE_LINE_LENGTH * 2;
             CorrelationCounterOffset = offset;
 
-            offset += BitUtil.CACHE_LINE_LENGTH*2;
+            offset += BitUtil.CACHE_LINE_LENGTH * 2;
             ConsumerHeartbeatOffset = offset;
 
-            offset += BitUtil.CACHE_LINE_LENGTH*2;
+            offset += BitUtil.CACHE_LINE_LENGTH * 2;
             TrailerLength = offset;
         }
 
         /// <summary>
-        /// Check the the buffer capacity is the correct size (a power of 2 + <seealso cref="TrailerLength"/>).
+        /// Check the the buffer capacity is the correct size (a power of 2 + <seealso cref="TrailerLength"/> ).
         /// </summary>
         /// <param name="capacity"> to be checked. </param>
         /// <exception cref="InvalidOperationException"> if the buffer capacity is incorrect. </exception>

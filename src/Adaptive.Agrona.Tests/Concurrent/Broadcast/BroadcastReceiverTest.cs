@@ -25,10 +25,11 @@ namespace Adaptive.Agrona.Tests.Concurrent.Broadcast
     [TestFixture]
     public class BroadcastReceiverTest
     {
-        private const int MsgTypeID = 7;
+        private const int MsgTypeId = 7;
         private const int Capacity = 1024;
         private static readonly int TotalBufferLength = Capacity + BroadcastBufferDescriptor.TrailerLength;
-        private static readonly int TailIntentCounterOffset = Capacity + BroadcastBufferDescriptor.TailIntentCounterOffset;
+        private static readonly int TailIntentCounterOffset =
+            Capacity + BroadcastBufferDescriptor.TailIntentCounterOffset;
         private static readonly int TailCounterIndex = Capacity + BroadcastBufferDescriptor.TailCounterOffset;
         private static readonly int LatestCounterIndex = Capacity + BroadcastBufferDescriptor.LatestCounterOffset;
 
@@ -81,15 +82,15 @@ namespace Adaptive.Agrona.Tests.Concurrent.Broadcast
             var recordLengthAligned = BitUtil.Align(recordLength, RecordDescriptor.RecordAlignment);
             long tail = recordLengthAligned;
             var latestRecord = tail - recordLengthAligned;
-            var recordOffset = (int) latestRecord;
+            var recordOffset = (int)latestRecord;
 
             A.CallTo(() => _buffer.GetLongVolatile(TailIntentCounterOffset)).Returns(tail);
             A.CallTo(() => _buffer.GetLongVolatile(TailCounterIndex)).Returns(tail);
             A.CallTo(() => _buffer.GetInt(RecordDescriptor.GetLengthOffset(recordOffset))).Returns(recordLength);
-            A.CallTo(() => _buffer.GetInt(RecordDescriptor.GetTypeOffset(recordOffset))).Returns(MsgTypeID);
+            A.CallTo(() => _buffer.GetInt(RecordDescriptor.GetTypeOffset(recordOffset))).Returns(MsgTypeId);
 
             Assert.True(_broadcastReceiver.ReceiveNext());
-            Assert.AreEqual(MsgTypeID, _broadcastReceiver.TypeId());
+            Assert.AreEqual(MsgTypeId, _broadcastReceiver.TypeId());
             Assert.AreEqual(_buffer, _broadcastReceiver.Buffer());
             Assert.AreEqual(RecordDescriptor.GetMsgOffset(recordOffset), _broadcastReceiver.Offset());
             Assert.AreEqual(length, _broadcastReceiver.Length());
@@ -106,35 +107,35 @@ namespace Adaptive.Agrona.Tests.Concurrent.Broadcast
             const int length = 8;
             var recordLength = length + RecordDescriptor.HeaderLength;
             var recordLengthAligned = BitUtil.Align(recordLength, RecordDescriptor.RecordAlignment);
-            long tail = recordLengthAligned*2;
+            long tail = recordLengthAligned * 2;
             var latestRecord = tail - recordLengthAligned;
             const int recordOffsetOne = 0;
-            var recordOffsetTwo = (int) latestRecord;
+            var recordOffsetTwo = (int)latestRecord;
 
             A.CallTo(() => _buffer.GetLongVolatile(TailIntentCounterOffset)).Returns(tail);
             A.CallTo(() => _buffer.GetLongVolatile(TailCounterIndex)).Returns(tail);
 
             A.CallTo(() => _buffer.GetInt(RecordDescriptor.GetLengthOffset(recordOffsetOne))).Returns(recordLength);
-            A.CallTo(() => _buffer.GetInt(RecordDescriptor.GetTypeOffset(recordOffsetOne))).Returns(MsgTypeID);
+            A.CallTo(() => _buffer.GetInt(RecordDescriptor.GetTypeOffset(recordOffsetOne))).Returns(MsgTypeId);
             A.CallTo(() => _buffer.GetInt(RecordDescriptor.GetLengthOffset(recordOffsetTwo))).Returns(recordLength);
-            A.CallTo(() => _buffer.GetInt(RecordDescriptor.GetTypeOffset(recordOffsetTwo))).Returns(MsgTypeID);
-
+            A.CallTo(() => _buffer.GetInt(RecordDescriptor.GetTypeOffset(recordOffsetTwo))).Returns(MsgTypeId);
 
             Assert.IsTrue(_broadcastReceiver.ReceiveNext());
-            Assert.AreEqual(MsgTypeID, _broadcastReceiver.TypeId());
+            Assert.AreEqual(MsgTypeId, _broadcastReceiver.TypeId());
             Assert.AreEqual(_buffer, _broadcastReceiver.Buffer());
             Assert.AreEqual(RecordDescriptor.GetMsgOffset(recordOffsetOne), _broadcastReceiver.Offset());
             Assert.AreEqual(length, _broadcastReceiver.Length());
             Assert.True(_broadcastReceiver.Validate());
 
             Assert.IsTrue(_broadcastReceiver.ReceiveNext());
-            Assert.AreEqual(MsgTypeID, _broadcastReceiver.TypeId());
+            Assert.AreEqual(MsgTypeId, _broadcastReceiver.TypeId());
             Assert.AreEqual(_buffer, _broadcastReceiver.Buffer());
             Assert.AreEqual(RecordDescriptor.GetMsgOffset(recordOffsetTwo), _broadcastReceiver.Offset());
             Assert.AreEqual(length, _broadcastReceiver.Length());
             Assert.True(_broadcastReceiver.Validate());
 
-            A.CallTo(() => _buffer.GetLongVolatile(TailCounterIndex)).MustHaveHappened()
+            A.CallTo(() => _buffer.GetLongVolatile(TailCounterIndex))
+                .MustHaveHappened()
                 .Then(A.CallTo(() => _buffer.GetLongVolatile(TailIntentCounterOffset)).MustHaveHappened())
                 .Then(A.CallTo(() => _buffer.GetLongVolatile(TailIntentCounterOffset)).MustHaveHappened())
                 .Then(A.CallTo(() => _buffer.GetLongVolatile(TailCounterIndex)).MustHaveHappened())
@@ -148,19 +149,19 @@ namespace Adaptive.Agrona.Tests.Concurrent.Broadcast
             const int length = 8;
             var recordLength = length + RecordDescriptor.HeaderLength;
             var recordLengthAligned = BitUtil.Align(recordLength, RecordDescriptor.RecordAlignment);
-            var tail = Capacity*3L + RecordDescriptor.HeaderLength + recordLengthAligned;
+            var tail = Capacity * 3L + RecordDescriptor.HeaderLength + recordLengthAligned;
             var latestRecord = tail - recordLengthAligned;
-            var recordOffset = (int) latestRecord & (Capacity - 1);
+            var recordOffset = (int)latestRecord & (Capacity - 1);
 
             A.CallTo(() => _buffer.GetLongVolatile(TailIntentCounterOffset)).Returns(tail);
             A.CallTo(() => _buffer.GetLongVolatile(TailCounterIndex)).Returns(tail);
             A.CallTo(() => _buffer.GetLong(LatestCounterIndex)).Returns(latestRecord);
 
             A.CallTo(() => _buffer.GetInt(RecordDescriptor.GetLengthOffset(recordOffset))).Returns(recordLength);
-            A.CallTo(() => _buffer.GetInt(RecordDescriptor.GetTypeOffset(recordOffset))).Returns(MsgTypeID);
+            A.CallTo(() => _buffer.GetInt(RecordDescriptor.GetTypeOffset(recordOffset))).Returns(MsgTypeId);
 
             Assert.IsTrue(_broadcastReceiver.ReceiveNext());
-            Assert.AreEqual(MsgTypeID, _broadcastReceiver.TypeId());
+            Assert.AreEqual(MsgTypeId, _broadcastReceiver.TypeId());
             Assert.AreEqual(_buffer, _broadcastReceiver.Buffer());
             Assert.AreEqual(RecordDescriptor.GetMsgOffset(recordOffset), _broadcastReceiver.Offset());
             Assert.AreEqual(length, _broadcastReceiver.Length());
@@ -169,35 +170,37 @@ namespace Adaptive.Agrona.Tests.Concurrent.Broadcast
             Assert.Greater(_broadcastReceiver.LappedCount(), 0);
         }
 
-
         [Test]
         public void ShouldCopeWithPaddingRecordAndWrapOfBufferForNextRecord()
         {
             const int length = 120;
             var recordLength = length + RecordDescriptor.HeaderLength;
             var recordLengthAligned = BitUtil.Align(recordLength, RecordDescriptor.RecordAlignment);
-            var catchupTail = (Capacity*2L) - RecordDescriptor.HeaderLength;
+            var catchupTail = (Capacity * 2L) - RecordDescriptor.HeaderLength;
             var postPaddingTail = catchupTail + RecordDescriptor.HeaderLength + recordLengthAligned;
             var latestRecord = catchupTail - recordLengthAligned;
-            var catchupOffset = (int) latestRecord & (Capacity - 1);
+            var catchupOffset = (int)latestRecord & (Capacity - 1);
 
-            A.CallTo(() => _buffer.GetLongVolatile(TailIntentCounterOffset)).ReturnsNextFromSequence(catchupTail, postPaddingTail);
-            A.CallTo(() => _buffer.GetLongVolatile(TailCounterIndex)).ReturnsNextFromSequence(catchupTail, postPaddingTail);
+            A.CallTo(() => _buffer.GetLongVolatile(TailIntentCounterOffset))
+                .ReturnsNextFromSequence(catchupTail, postPaddingTail);
+            A.CallTo(() => _buffer.GetLongVolatile(TailCounterIndex))
+                .ReturnsNextFromSequence(catchupTail, postPaddingTail);
             A.CallTo(() => _buffer.GetLong(LatestCounterIndex)).Returns(latestRecord);
 
             A.CallTo(() => _buffer.GetInt(RecordDescriptor.GetLengthOffset(catchupOffset))).Returns(recordLength);
-            A.CallTo(() => _buffer.GetInt(RecordDescriptor.GetTypeOffset(catchupOffset))).Returns(MsgTypeID);
+            A.CallTo(() => _buffer.GetInt(RecordDescriptor.GetTypeOffset(catchupOffset))).Returns(MsgTypeId);
 
-            var paddingOffset = (int) catchupTail & (Capacity - 1);
-            var recordOffset = (int) (postPaddingTail - recordLengthAligned) & (Capacity - 1);
+            var paddingOffset = (int)catchupTail & (Capacity - 1);
+            var recordOffset = (int)(postPaddingTail - recordLengthAligned) & (Capacity - 1);
 
-            A.CallTo(() => _buffer.GetInt(RecordDescriptor.GetTypeOffset(paddingOffset))).Returns(RecordDescriptor.PaddingMsgTypeID);
+            A.CallTo(() => _buffer.GetInt(RecordDescriptor.GetTypeOffset(paddingOffset)))
+                .Returns(RecordDescriptor.PaddingMsgTypeID);
             A.CallTo(() => _buffer.GetInt(RecordDescriptor.GetLengthOffset(recordOffset))).Returns(recordLength);
-            A.CallTo(() => _buffer.GetInt(RecordDescriptor.GetTypeOffset(recordOffset))).Returns(MsgTypeID);
+            A.CallTo(() => _buffer.GetInt(RecordDescriptor.GetTypeOffset(recordOffset))).Returns(MsgTypeId);
 
             Assert.IsTrue(_broadcastReceiver.ReceiveNext()); // To catch up to record before padding.
             Assert.IsTrue(_broadcastReceiver.ReceiveNext()); // no skip over the padding and read next record.
-            Assert.AreEqual(MsgTypeID, _broadcastReceiver.TypeId());
+            Assert.AreEqual(MsgTypeId, _broadcastReceiver.TypeId());
             Assert.AreEqual(_buffer, _broadcastReceiver.Buffer());
             Assert.AreEqual(RecordDescriptor.GetMsgOffset(recordOffset), _broadcastReceiver.Offset());
             Assert.AreEqual(length, _broadcastReceiver.Length());
@@ -212,17 +215,17 @@ namespace Adaptive.Agrona.Tests.Concurrent.Broadcast
             var recordLengthAligned = BitUtil.Align(recordLength, RecordDescriptor.RecordAlignment);
             long tail = recordLengthAligned;
             var latestRecord = tail - recordLengthAligned;
-            var recordOffset = (int) latestRecord;
+            var recordOffset = (int)latestRecord;
 
-
-            A.CallTo(() => _buffer.GetLongVolatile(TailIntentCounterOffset)).ReturnsNextFromSequence(tail, tail + (Capacity - recordLengthAligned));
+            A.CallTo(() => _buffer.GetLongVolatile(TailIntentCounterOffset))
+                .ReturnsNextFromSequence(tail, tail + (Capacity - recordLengthAligned));
             A.CallTo(() => _buffer.GetLongVolatile(TailCounterIndex)).Returns(tail);
 
             A.CallTo(() => _buffer.GetInt(RecordDescriptor.GetLengthOffset(recordOffset))).Returns(recordLength);
-            A.CallTo(() => _buffer.GetInt(RecordDescriptor.GetTypeOffset(recordOffset))).Returns(MsgTypeID);
+            A.CallTo(() => _buffer.GetInt(RecordDescriptor.GetTypeOffset(recordOffset))).Returns(MsgTypeId);
 
             Assert.IsTrue(_broadcastReceiver.ReceiveNext());
-            Assert.AreEqual(MsgTypeID, _broadcastReceiver.TypeId());
+            Assert.AreEqual(MsgTypeId, _broadcastReceiver.TypeId());
             Assert.AreEqual(_buffer, _broadcastReceiver.Buffer());
             Assert.AreEqual(RecordDescriptor.GetMsgOffset(recordOffset), _broadcastReceiver.Offset());
             Assert.AreEqual(length, _broadcastReceiver.Length());

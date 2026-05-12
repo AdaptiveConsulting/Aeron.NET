@@ -1,6 +1,21 @@
-﻿using System;
+﻿/*
+ * Copyright 2014 - 2026 Adaptive Financial Consulting Ltd
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+using System;
 using Adaptive.Aeron;
-using Adaptive.Aeron.Exceptions;
 using Adaptive.Aeron.LogBuffer;
 using Adaptive.Agrona;
 using Adaptive.Cluster.Client;
@@ -26,7 +41,8 @@ namespace Adaptive.Cluster.Service
         private readonly Publication _publication;
 
         /// <summary>
-        /// Construct a proxy to the consensus module that will send messages over a provided <seealso cref="Publication"/>.
+        /// Construct a proxy to the consensus module that will send messages over a provided
+        /// <seealso cref="Publication"/>.
         /// </summary>
         /// <param name="publication"> for sending messages to the consensus module. </param>
         public ConsensusModuleProxy(Publication publication)
@@ -87,10 +103,17 @@ namespace Adaptive.Cluster.Service
             int headerLength,
             IDirectBuffer messageBuffer,
             int messageOffset,
-            int messageLength)
+            int messageLength
+        )
         {
             long position = _publication.Offer(
-                headerBuffer, headerOffset, headerLength, messageBuffer, messageOffset, messageLength);
+                headerBuffer,
+                headerOffset,
+                headerLength,
+                messageBuffer,
+                messageOffset,
+                messageLength
+            );
             if (position < 0)
             {
                 CheckResult(position, _publication);
@@ -167,7 +190,6 @@ namespace Adaptive.Cluster.Service
             CheckResult(position, _publication);
 
             return false;
-
         }
 
         /// <summary>

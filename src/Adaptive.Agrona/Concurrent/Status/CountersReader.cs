@@ -21,9 +21,9 @@ namespace Adaptive.Agrona.Concurrent.Status
 {
     /// <summary>
     /// Reads the counters metadata and values buffers.
-    /// 
+    ///
     /// This class is threadsafe and can be used across threads.
-    /// 
+    ///
     /// <b>Values Buffer</b>
     /// <pre>
     ///   0                   1                   2                   3
@@ -40,7 +40,7 @@ namespace Adaptive.Agrona.Concurrent.Status
     /// ...                                                              |
     ///  +---------------------------------------------------------------+
     /// </pre>
-    /// 
+    ///
     /// <b>Meta Data Buffer</b>
     /// <pre>
     ///   0                   1                   2                   3
@@ -77,7 +77,7 @@ namespace Adaptive.Agrona.Concurrent.Status
         /// <param name="keyBuffer"> for the counter.</param>
         /// <param name="label"> for the counter.</param>
         public delegate void MetaData(int counterId, int typeId, IDirectBuffer keyBuffer, string label);
-        
+
         /// <summary>
         /// Callback function for consuming basic counter details and value.
         /// </summary>
@@ -100,12 +100,12 @@ namespace Adaptive.Agrona.Concurrent.Status
         /// Default owner id of a counter when none is set.
         /// </summary>
         public const long DEFAULT_OWNER_ID = 0;
-        
+
         /// <summary>
         /// Can be used to representing a null counter id when passed as a argument.
         /// </summary>
         public const int NULL_COUNTER_ID = -1;
-        
+
         /// <summary>
         /// Record has not been used.
         /// </summary>
@@ -125,7 +125,7 @@ namespace Adaptive.Agrona.Concurrent.Status
         /// Deadline to indicate counter is not free to be reused.
         /// </summary>
         public static readonly long NOT_FREE_TO_REUSE = long.MaxValue;
-        
+
         /// <summary>
         /// Offset in the record at which the registration id field is stored. When a counter is allocated the action
         /// can be given a registration id to indicate a specific term of use. This can be useful to differentiate the
@@ -178,7 +178,8 @@ namespace Adaptive.Agrona.Concurrent.Status
         /// <summary>
         /// Maximum length a key can be.
         /// </summary>
-        public static readonly int MAX_KEY_LENGTH = (BitUtil.CACHE_LINE_LENGTH * 2) - (BitUtil.SIZE_OF_INT * 2) - BitUtil.SIZE_OF_LONG;
+        public static readonly int MAX_KEY_LENGTH =
+            (BitUtil.CACHE_LINE_LENGTH * 2) - (BitUtil.SIZE_OF_INT * 2) - BitUtil.SIZE_OF_LONG;
 
         /// <summary>
         /// Length of a meta data record in bytes.
@@ -192,20 +193,18 @@ namespace Adaptive.Agrona.Concurrent.Status
 
         /// <summary>
         /// Construct a reader over buffers containing the values and associated metadata.
-        /// 
+        ///
         /// Counter labels default to <see cref="Encoding.UTF8"/>
-        /// 
+        ///
         /// </summary>
         /// <param name="metaDataBuffer"> containing the counter metadata. </param>
         /// <param name="valuesBuffer">   containing the counter values. </param>
         public CountersReader(IAtomicBuffer metaDataBuffer, IAtomicBuffer valuesBuffer)
-            : this(metaDataBuffer, valuesBuffer, Encoding.UTF8)
-        {
-        }
+            : this(metaDataBuffer, valuesBuffer, Encoding.UTF8) { }
 
         /// <summary>
         /// Construct a reader over buffers containing the values and associated metadata.
-        /// 
+        ///
         /// </summary>
         /// <param name="metaDataBuffer"> containing the counter metadata. </param>
         /// <param name="valuesBuffer">   containing the counter values. </param>
@@ -223,7 +222,7 @@ namespace Adaptive.Agrona.Concurrent.Status
         /// </summary>
         /// <returns> the maximum counter id which can be supported given the length of the values buffer. </returns>
         public int MaxCounterId { get; protected set; }
-        
+
         /// <summary>
         /// Get the buffer containing the metadata for the counters.
         /// </summary>
@@ -286,7 +285,7 @@ namespace Adaptive.Agrona.Concurrent.Status
                 counterId++;
             }
         }
-        
+
         /// <summary>
         /// Iterate over the counters and provide the value and basic metadata.
         /// </summary>
@@ -357,8 +356,10 @@ namespace Adaptive.Agrona.Concurrent.Status
                 int recordStatus = metaDataBuffer.GetIntVolatile(offset);
                 if (RECORD_ALLOCATED == recordStatus)
                 {
-                    if (typeId == metaDataBuffer.GetInt(offset + TYPE_ID_OFFSET) && registrationId ==
-                        ValuesBuffer.GetLongVolatile(CounterOffset(i) + REGISTRATION_ID_OFFSET))
+                    if (
+                        typeId == metaDataBuffer.GetInt(offset + TYPE_ID_OFFSET)
+                        && registrationId == ValuesBuffer.GetLongVolatile(CounterOffset(i) + REGISTRATION_ID_OFFSET)
+                    )
                     {
                         counterId = i;
                         break;
@@ -381,10 +382,10 @@ namespace Adaptive.Agrona.Concurrent.Status
         public long GetCounterValue(int counterId)
         {
             ValidateCounterId(counterId);
-            
+
             return ValuesBuffer.GetLongVolatile(CounterOffset(counterId));
         }
-        
+
         /// <summary>
         /// Get the registration id for a given counter id as a volatile read. The registration identity may be assigned
         /// when the counter is allocated to help avoid ABA issues if the counter id is reused.
@@ -398,7 +399,6 @@ namespace Adaptive.Agrona.Concurrent.Status
             return ValuesBuffer.GetLongVolatile(CounterOffset(counterId) + REGISTRATION_ID_OFFSET);
         }
 
-        
         /// <summary>
         /// Get the state for a given counter id as a volatile read.
         /// </summary>
@@ -413,7 +413,7 @@ namespace Adaptive.Agrona.Concurrent.Status
 
             return MetaDataBuffer.GetIntVolatile(MetaDataOffset(counterId));
         }
-        
+
         /// <summary>
         /// Get the type id for a given counter id.
         /// </summary>
@@ -430,7 +430,8 @@ namespace Adaptive.Agrona.Concurrent.Status
         /// Get the deadline (in milliseconds) for when a given counter id may be reused.
         /// </summary>
         /// <param name="counterId"> to be read. </param>
-        /// <returns> deadline (in milliseconds) for when a given counter id may be reused or <seealso cref="NOT_FREE_TO_REUSE"/> if
+        /// <returns> deadline (in milliseconds) for when a given counter id may be reused or
+        /// <seealso cref="NOT_FREE_TO_REUSE"/> if
         /// currently in use. </returns>
         public long GetFreeForReuseDeadline(int counterId)
         {
@@ -455,7 +456,9 @@ namespace Adaptive.Agrona.Concurrent.Status
         {
             if (counterId < 0 || counterId > MaxCounterId)
             {
-                throw new System.ArgumentException("Counter id " + counterId + " out of range: maxCounterId=" + MaxCounterId);
+                throw new System.ArgumentException(
+                    "Counter id " + counterId + " out of range: maxCounterId=" + MaxCounterId
+                );
             }
         }
 

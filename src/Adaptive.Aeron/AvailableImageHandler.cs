@@ -17,12 +17,12 @@
 namespace Adaptive.Aeron
 {
     /// <summary>
-    /// Interface for notification of new <see cref="Image"/>s becoming available under a <see cref="Subscription"/>
-    /// 
+    /// Interface for notification of new <see cref="Image"/> s becoming available under a <see cref="Subscription"/>
+    ///
     /// Method called by Aeron to deliver notification of a new <see cref="Image"/> being available for polling.
-    /// 
-    /// Within this callback reentrant calls to the <see cref="Aeron"/> client are not permitted and
-    /// will result in undefined behaviour.
+    ///
+    /// Within this callback reentrant calls to the <see cref="Aeron"/> client are not permitted and will result in
+    /// undefined behaviour.
     /// </summary>
     /// <param name="image"> that is now available.</param>
     public delegate void AvailableImageHandler(Image image);

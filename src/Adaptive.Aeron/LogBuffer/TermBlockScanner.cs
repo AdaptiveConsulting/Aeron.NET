@@ -21,8 +21,14 @@ using Adaptive.Agrona.Concurrent;
 namespace Adaptive.Aeron.LogBuffer
 {
     /// <summary>
-    /// Scan a term buffer for a block of message fragments including padding. The block must include complete fragments.
+    /// Scan a term buffer for a block of message fragments including padding. The block must include complete
+    /// fragments.
     /// </summary>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage(
+        "Major Code Smell",
+        "S1118:Utility classes should not have public constructors",
+        Justification = "Public ctor in shipped API surface; marking static would break consumers."
+    )]
     public class TermBlockScanner
     {
         /// <summary>
@@ -70,9 +76,7 @@ namespace Adaptive.Aeron.LogBuffer
                 offset += alignedFrameLength;
             }
 
-
             return offset;
         }
     }
-
 }

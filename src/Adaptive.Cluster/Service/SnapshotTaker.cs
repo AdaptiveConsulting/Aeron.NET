@@ -1,4 +1,20 @@
-﻿using System.Threading;
+﻿/*
+ * Copyright 2014 - 2026 Adaptive Financial Consulting Ltd
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+using System.Threading;
 using Adaptive.Aeron;
 using Adaptive.Aeron.LogBuffer;
 using Adaptive.Agrona;
@@ -29,14 +45,15 @@ namespace Adaptive.Cluster.Service
         protected readonly ExclusivePublication publication;
 
         /// <summary>
-        /// <seealso cref="IIdleStrategy"/> to be called when back pressure is propagated from the <seealso cref="publication"/>.
+        /// <seealso cref="IIdleStrategy"/> to be called when back pressure is propagated from the
+        /// <seealso cref="publication"/>.
         /// </summary>
         protected readonly IIdleStrategy idleStrategy;
 
-        private static readonly int ENCODED_MARKER_LENGTH =
+        private static readonly int EncodedMarkerLength =
             MessageHeaderEncoder.ENCODED_LENGTH + SnapshotMarkerEncoder.BLOCK_LENGTH;
-        private readonly AgentInvoker aeronAgentInvoker;
-        private readonly SnapshotMarkerEncoder snapshotMarkerEncoder = new SnapshotMarkerEncoder();
+        private readonly AgentInvoker _aeronAgentInvoker;
+        private readonly SnapshotMarkerEncoder _snapshotMarkerEncoder = new SnapshotMarkerEncoder();
 
         /// <summary>
         /// Construct a <seealso cref="SnapshotTaker"/> which will encode the snapshot to a publication.
@@ -44,11 +61,15 @@ namespace Adaptive.Cluster.Service
         /// <param name="publication">       into which the snapshot will be encoded. </param>
         /// <param name="idleStrategy">      to call when the publication is back pressured. </param>
         /// <param name="aeronAgentInvoker"> to call when idling so it stays active. </param>
-        public SnapshotTaker(ExclusivePublication publication, IIdleStrategy idleStrategy, AgentInvoker aeronAgentInvoker)
+        public SnapshotTaker(
+            ExclusivePublication publication,
+            IIdleStrategy idleStrategy,
+            AgentInvoker aeronAgentInvoker
+        )
         {
             this.publication = publication;
             this.idleStrategy = idleStrategy;
-            this.aeronAgentInvoker = aeronAgentInvoker;
+            this._aeronAgentInvoker = aeronAgentInvoker;
         }
 
         /// <summary>
@@ -59,17 +80,26 @@ namespace Adaptive.Cluster.Service
         /// <param name="leadershipTermId"> at which the snapshot was taken. </param>
         /// <param name="snapshotIndex">    so the snapshot can be sectioned. </param>
         /// <param name="timeUnit">         of the cluster timestamps stored in the snapshot. </param>
-        /// <param name="appVersion">       associated with the snapshot from <seealso cref="ClusteredServiceContainer.Context.AppVersion()"/>. </param>
+        /// <param name="appVersion"> associated with the snapshot from
+        /// <seealso cref="ClusteredServiceContainer.Context.AppVersion()"/>. </param>
         public void MarkBegin(
             long snapshotTypeId,
             long logPosition,
             long leadershipTermId,
             int snapshotIndex,
             ClusterTimeUnit timeUnit,
-            int appVersion)
+            int appVersion
+        )
         {
             MarkSnapshot(
-                snapshotTypeId, logPosition, leadershipTermId, snapshotIndex, SnapshotMark.BEGIN, timeUnit, appVersion);
+                snapshotTypeId,
+                logPosition,
+                leadershipTermId,
+                snapshotIndex,
+                SnapshotMark.BEGIN,
+                timeUnit,
+                appVersion
+            );
         }
 
         /// <summary>
@@ -80,17 +110,26 @@ namespace Adaptive.Cluster.Service
         /// <param name="leadershipTermId"> at which the snapshot was taken. </param>
         /// <param name="snapshotIndex">    so the snapshot can be sectioned. </param>
         /// <param name="timeUnit">         of the cluster timestamps stored in the snapshot. </param>
-        /// <param name="appVersion">       associated with the snapshot from <seealso cref="ClusteredServiceContainer.Context.AppVersion()"/>. </param>
+        /// <param name="appVersion"> associated with the snapshot from
+        /// <seealso cref="ClusteredServiceContainer.Context.AppVersion()"/>. </param>
         public void MarkEnd(
             long snapshotTypeId,
             long logPosition,
             long leadershipTermId,
             int snapshotIndex,
             ClusterTimeUnit timeUnit,
-            int appVersion)
+            int appVersion
+        )
         {
             MarkSnapshot(
-                snapshotTypeId, logPosition, leadershipTermId, snapshotIndex, SnapshotMark.END, timeUnit, appVersion);
+                snapshotTypeId,
+                logPosition,
+                leadershipTermId,
+                snapshotIndex,
+                SnapshotMark.END,
+                timeUnit,
+                appVersion
+            );
         }
 
         /// <summary>
@@ -102,7 +141,8 @@ namespace Adaptive.Cluster.Service
         /// <param name="snapshotIndex">    so the snapshot can be sectioned. </param>
         /// <param name="snapshotMark">     which specifies the type of snapshot mark. </param>
         /// <param name="timeUnit">         of the cluster timestamps stored in the snapshot. </param>
-        /// <param name="appVersion">       associated with the snapshot from <seealso cref="ClusteredServiceContainer.Context.AppVersion()"/>. </param>
+        /// <param name="appVersion"> associated with the snapshot from
+        /// <seealso cref="ClusteredServiceContainer.Context.AppVersion()"/>. </param>
         public void MarkSnapshot(
             long snapshotTypeId,
             long logPosition,
@@ -110,15 +150,16 @@ namespace Adaptive.Cluster.Service
             int snapshotIndex,
             SnapshotMark snapshotMark,
             ClusterTimeUnit timeUnit,
-            int appVersion)
+            int appVersion
+        )
         {
             idleStrategy.Reset();
             while (true)
             {
-                long result = publication.TryClaim(ENCODED_MARKER_LENGTH, bufferClaim);
+                long result = publication.TryClaim(EncodedMarkerLength, bufferClaim);
                 if (result > 0)
                 {
-                    snapshotMarkerEncoder
+                    _snapshotMarkerEncoder
                         .WrapAndApplyHeader(bufferClaim.Buffer, bufferClaim.Offset, messageHeaderEncoder)
                         .TypeId(snapshotTypeId)
                         .LogPosition(logPosition)
@@ -175,8 +216,8 @@ namespace Adaptive.Cluster.Service
         }
 
         /// <summary>
-        /// Check the result of offering to a publication when writing a snapshot and then idle after invoking the client
-        /// agent if necessary.
+        /// Check the result of offering to a publication when writing a snapshot and then idle after invoking the
+        /// client agent if necessary.
         /// </summary>
         /// <param name="position"> of an offer or try claim to a publication. </param>
         protected internal void CheckResultAndIdle(long position)
@@ -192,9 +233,9 @@ namespace Adaptive.Cluster.Service
         /// </summary>
         private void InvokeAgentClient()
         {
-            aeronAgentInvoker?.Invoke();
+            _aeronAgentInvoker?.Invoke();
         }
-        
+
         /// <summary>
         /// Helper method to offer a message into the snapshot publication.
         /// </summary>

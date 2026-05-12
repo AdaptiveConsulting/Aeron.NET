@@ -15,21 +15,20 @@
  */
 
 using Adaptive.Aeron.LogBuffer;
-using Adaptive.Aeron.Protocol;
 using Adaptive.Agrona;
 
 namespace Adaptive.Aeron
 {
     /// <summary>
-    /// A <seealso cref="IFragmentHandler"/> that sits in a chain-of-responsibility pattern that reassembles fragmented messages
-    /// so that the next handler in the chain only sees whole messages. This is for a single session on an {@link Image}
-    /// and not for multiple session <see cref="Image"/>s in a <see cref="Subscription"/>.
-    /// 
-    /// Unfragmented messages are delegated without copy. Fragmented messages are copied to a temporary
-    /// buffer for reassembly before delegation.
-    /// 
+    /// A <seealso cref="IFragmentHandler"/> that sits in a chain-of-responsibility pattern that reassembles fragmented
+    /// messages so that the next handler in the chain only sees whole messages. This is for a single session on an
+    /// {@link Image} and not for multiple session <see cref="Image"/> s in a <see cref="Subscription"/> .
+    ///
+    /// Unfragmented messages are delegated without copy. Fragmented messages are copied to a temporary buffer for
+    /// reassembly before delegation.
+    ///
     /// The <seealso cref="Header"/> passed to the _delegate on assembling a message will be that of the last fragment.
-    /// 
+    ///
     /// </summary>
     public class ImageFragmentAssembler : IFragmentHandler
     {
@@ -101,7 +100,8 @@ namespace Adaptive.Aeron
         {
             if ((flags & FrameDescriptor.BEGIN_FRAG_FLAG) == FrameDescriptor.BEGIN_FRAG_FLAG)
             {
-                _builder.Reset()
+                _builder
+                    .Reset()
                     .CaptureHeader(header)
                     .Append(buffer, offset, length)
                     .NextTermOffset(header.NextTermOffset);
@@ -124,7 +124,6 @@ namespace Adaptive.Aeron
             {
                 _builder.Reset();
             }
-
         }
     }
 }

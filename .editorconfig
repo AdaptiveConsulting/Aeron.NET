@@ -1,0 +1,371 @@
+# Aeron.NET naming and style rules.
+# Scope: enforces .NET-style naming on NON-API internals only. Public and
+# protected (on non-sealed) members are intentionally NOT constrained, to
+# preserve upstream Java Aeron parity for merges.
+
+root = true
+
+[*]
+charset = utf-8-bom
+end_of_line = lf
+indent_style = space
+indent_size = 4
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+# RS0016/RS0017 emit diagnostics against PublicAPI.{Shipped,Unshipped}.txt,
+# so the severity override MUST live in [*]; a [*.cs]-scoped override
+# silently downgrades to default severity.
+dotnet_diagnostic.RS0016.severity = error
+dotnet_diagnostic.RS0017.severity = error
+
+[*.cs]
+
+# IDE1006 is the umbrella naming diagnostic. Per-rule severities below control
+# whether each rule fires; this controls the severity Roslyn reports under.
+# Both are required.
+dotnet_diagnostic.IDE1006.severity = error
+
+# Constants (any access)
+dotnet_naming_symbols.constants.applicable_kinds           = field
+dotnet_naming_symbols.constants.applicable_accessibilities = private, internal, protected_internal, private_protected
+dotnet_naming_symbols.constants.required_modifiers         = const
+
+# Static readonly (treat const-like)
+dotnet_naming_symbols.static_readonly.applicable_kinds           = field
+dotnet_naming_symbols.static_readonly.applicable_accessibilities = private, internal, protected_internal, private_protected
+dotnet_naming_symbols.static_readonly.required_modifiers         = static, readonly
+
+# Internal mutable statics share private convention (s_camelCase) — matches
+# dotnet/runtime and dotnet/roslyn practice of treating any non-public-API
+# field uniformly. Must be matched BEFORE the instance-field rule.
+dotnet_naming_symbols.private_static_fields.applicable_kinds           = field
+dotnet_naming_symbols.private_static_fields.applicable_accessibilities = private, private_protected, internal
+dotnet_naming_symbols.private_static_fields.required_modifiers         = static
+
+# Internal instance fields share private convention (_camelCase). Java-parity
+# policy applies only to public/protected.
+dotnet_naming_symbols.private_instance_fields.applicable_kinds           = field
+dotnet_naming_symbols.private_instance_fields.applicable_accessibilities = private, private_protected, internal
+
+dotnet_naming_symbols.non_api_methods.applicable_kinds           = method
+dotnet_naming_symbols.non_api_methods.applicable_accessibilities = private, internal, private_protected
+
+dotnet_naming_symbols.non_api_properties.applicable_kinds           = property
+dotnet_naming_symbols.non_api_properties.applicable_accessibilities = private, internal, private_protected
+
+dotnet_naming_symbols.non_api_events.applicable_kinds           = event
+dotnet_naming_symbols.non_api_events.applicable_accessibilities = private, internal, private_protected
+
+dotnet_naming_symbols.non_api_types.applicable_kinds           = class, struct, interface, enum, delegate
+dotnet_naming_symbols.non_api_types.applicable_accessibilities = internal, private, private_protected
+
+dotnet_naming_symbols.parameters.applicable_kinds = parameter
+dotnet_naming_symbols.locals.applicable_kinds     = local
+
+dotnet_naming_symbols.type_parameters.applicable_kinds = type_parameter
+
+dotnet_naming_style.pascal_case.capitalization                                = pascal_case
+
+dotnet_naming_style.camel_case.capitalization                                 = camel_case
+
+dotnet_naming_style.underscore_camel_case.capitalization                      = camel_case
+dotnet_naming_style.underscore_camel_case.required_prefix                     = _
+
+dotnet_naming_style.s_underscore_camel_case.capitalization                    = camel_case
+dotnet_naming_style.s_underscore_camel_case.required_prefix                   = s_
+
+dotnet_naming_style.t_underscore_camel_case.capitalization                    = camel_case
+dotnet_naming_style.t_underscore_camel_case.required_prefix                   = t_
+
+dotnet_naming_style.t_pascal_case.capitalization                              = pascal_case
+dotnet_naming_style.t_pascal_case.required_prefix                             = T
+
+# More-specific rules first. Roslyn picks the first matching rule per symbol.
+
+dotnet_naming_rule.constants_must_be_pascal.severity = error
+dotnet_naming_rule.constants_must_be_pascal.symbols  = constants
+dotnet_naming_rule.constants_must_be_pascal.style    = pascal_case
+
+dotnet_naming_rule.static_readonly_must_be_pascal.severity = error
+dotnet_naming_rule.static_readonly_must_be_pascal.symbols  = static_readonly
+dotnet_naming_rule.static_readonly_must_be_pascal.style    = pascal_case
+
+dotnet_naming_rule.private_static_fields_must_have_s_prefix.severity = error
+dotnet_naming_rule.private_static_fields_must_have_s_prefix.symbols  = private_static_fields
+dotnet_naming_rule.private_static_fields_must_have_s_prefix.style    = s_underscore_camel_case
+
+dotnet_naming_rule.private_instance_fields_must_have_underscore.severity = error
+dotnet_naming_rule.private_instance_fields_must_have_underscore.symbols  = private_instance_fields
+dotnet_naming_rule.private_instance_fields_must_have_underscore.style    = underscore_camel_case
+
+dotnet_naming_rule.non_api_methods_must_be_pascal.severity = error
+dotnet_naming_rule.non_api_methods_must_be_pascal.symbols  = non_api_methods
+dotnet_naming_rule.non_api_methods_must_be_pascal.style    = pascal_case
+
+dotnet_naming_rule.non_api_properties_must_be_pascal.severity = error
+dotnet_naming_rule.non_api_properties_must_be_pascal.symbols  = non_api_properties
+dotnet_naming_rule.non_api_properties_must_be_pascal.style    = pascal_case
+
+dotnet_naming_rule.non_api_events_must_be_pascal.severity = error
+dotnet_naming_rule.non_api_events_must_be_pascal.symbols  = non_api_events
+dotnet_naming_rule.non_api_events_must_be_pascal.style    = pascal_case
+
+dotnet_naming_rule.non_api_types_must_be_pascal.severity = error
+dotnet_naming_rule.non_api_types_must_be_pascal.symbols  = non_api_types
+dotnet_naming_rule.non_api_types_must_be_pascal.style    = pascal_case
+
+dotnet_naming_rule.parameters_must_be_camel.severity = error
+dotnet_naming_rule.parameters_must_be_camel.symbols  = parameters
+dotnet_naming_rule.parameters_must_be_camel.style    = camel_case
+
+dotnet_naming_rule.locals_must_be_camel.severity = error
+dotnet_naming_rule.locals_must_be_camel.symbols  = locals
+dotnet_naming_rule.locals_must_be_camel.style    = camel_case
+
+dotnet_naming_rule.type_parameters_must_have_t_prefix.severity = error
+dotnet_naming_rule.type_parameters_must_have_t_prefix.symbols  = type_parameters
+dotnet_naming_rule.type_parameters_must_have_t_prefix.style    = t_pascal_case
+
+# ReSharper's inspection engine has its OWN naming-rule DSL parallel to
+# Roslyn's dotnet_naming_rule.* — it does NOT read those keys. Without this
+# block, Rider applies its default PascalCase-across-the-board and flags
+# every Java-parity public ALL_CAPS / camelCase symbol as a red error. Mirror
+# the Roslyn carve-out so the two engines agree. Prefix syntax uses ` + `:
+# `I + AaBb` means literal `I` followed by PascalCase.
+resharper_csharp_naming_rule.constants                 = AaBb, AA_BB
+resharper_csharp_naming_rule.static_readonly           = AaBb, AA_BB
+resharper_csharp_naming_rule.public_fields             = AaBb, AA_BB, aaBb, _ + aaBb, s_ + aaBb
+
+# Methods: PascalCase or camelCase (Java-parity public methods may retain
+# camelCase). Non-public methods are still strict via the Roslyn rule above.
+resharper_csharp_naming_rule.method                    = AaBb, aaBb
+
+# Enum members: PascalCase or SCREAMING_SNAKE_CASE (upstream-mirrored enums
+# such as ErrorCode, AsyncConnectState, ArchiveState).
+resharper_csharp_naming_rule.enum_member               = AaBb, AA_BB
+
+resharper_csharp_naming_rule.interfaces                = I + AaBb
+
+resharper_csharp_naming_rule.private_constants         = AaBb
+resharper_csharp_naming_rule.private_static_readonly   = AaBb
+resharper_csharp_naming_rule.private_instance_fields   = _ + aaBb
+resharper_csharp_naming_rule.private_static_fields     = s_ + aaBb
+
+resharper_csharp_naming_rule.local_constants           = aaBb
+
+resharper_csharp_naming_rule.types_and_namespaces      = AaBb
+resharper_csharp_naming_rule.property                  = AaBb
+resharper_csharp_naming_rule.event                     = AaBb
+
+# ReSharper's "user abbreviations" list (keeps 2-letter acronyms like IO/DB/UI
+# uppercase against its default IoException-suggesting behaviour) is NOT
+# exposed via editorconfig — only via .DotSettings. See
+# Adaptive.Aeron.sln.DotSettings for the IO/DB/UI/OK/ID entries.
+
+[*.cs]
+
+# Allman braces (Java Checkstyle: LeftCurly nl). Not compiler-enforced; this
+# block plus EnforceCodeStyleInBuild makes csc surface violations.
+csharp_new_line_before_open_brace                                  = all
+csharp_new_line_before_else                                        = true
+csharp_new_line_before_catch                                       = true
+csharp_new_line_before_finally                                     = true
+csharp_new_line_before_members_in_object_initializers              = true
+csharp_new_line_before_members_in_anonymous_types                  = true
+csharp_new_line_between_query_expression_clauses                   = true
+
+csharp_indent_case_contents                                        = true
+csharp_indent_switch_labels                                        = true
+csharp_indent_labels                                               = one_less_than_current
+
+csharp_space_after_cast                                            = false
+csharp_space_after_keywords_in_control_flow_statements             = true
+csharp_space_between_method_call_parameter_list_parentheses        = false
+csharp_space_between_method_declaration_parameter_list_parentheses = false
+csharp_space_between_parentheses                                   = false
+
+csharp_preserve_single_line_blocks                                 = true
+csharp_preserve_single_line_statements                             = false
+
+# IDE0055 demoted because CSharpier (/.csharpierrc.json) is the formatting
+# authority for this repo and its opinionated style does not always agree
+# with Roslyn's interpretation of these editorconfig settings (notably
+# switch-case explicit blocks and chopped argument lists). The Checkstyle
+# whitespace-cluster parity is preserved by `csharpier check` in CI.
+dotnet_diagnostic.IDE0055.severity = suggestion
+
+# IDE0011 — always-braces (Checkstyle NeedBraces parity).
+csharp_prefer_braces                                               = true
+dotnet_diagnostic.IDE0011.severity = error
+
+# IDE0036 — modifier order (Checkstyle ModifierOrder parity).
+csharp_preferred_modifier_order                                    = public, private, protected, internal, file, static, extern, new, virtual, abstract, sealed, override, readonly, unsafe, required, volatile, async
+dotnet_diagnostic.IDE0036.severity = error
+
+# IDE0075 — simplify boolean expressions (Checkstyle SimplifyBoolean parity).
+dotnet_style_prefer_simplified_boolean_expressions                 = true
+dotnet_diagnostic.IDE0075.severity = warning
+
+# IDE0005 (unused usings) requires GenerateDocumentationFile=true to fire at
+# build (set in Directory.Build.props). Auto-fixable via `dotnet format`.
+dotnet_diagnostic.IDE0005.severity = error
+
+# IDE0130 off: this codebase has Java-style namespaces that intentionally
+# do not mirror folders.
+dotnet_diagnostic.IDE0130.severity = none
+
+# Analyzer-pack allowlist. NetAnalyzers and SonarAnalyzer.CSharp ship hundreds
+# of rules between them; everything defaults OFF, then we light up exactly the
+# parity-with-Checkstyle rules we want. Per-rule severity overrides the
+# global default.
+dotnet_analyzer_diagnostic.severity = none
+
+# CA1502 cyclomatic complexity, CA1505 maintainability index, CA1506 class
+# coupling. `dotnet_code_quality.CAxxxx.threshold` is documented but not
+# honored by the current analyzer pack — defaults are used.
+dotnet_diagnostic.CA1502.severity = error
+dotnet_diagnostic.CA1505.severity = error
+dotnet_diagnostic.CA1506.severity = error
+
+dotnet_diagnostic.CA1827.severity = error  # Don't use Count()/LongCount() when Any() works
+dotnet_diagnostic.CA1829.severity = error  # Use Length/Count property over Enumerable.Count
+dotnet_diagnostic.CA1854.severity = error  # TryGetValue over ContainsKey + indexer
+dotnet_diagnostic.CA2200.severity = error  # Rethrow to preserve stack (throw; not throw ex;)
+dotnet_diagnostic.CA2241.severity = error  # Provide correct arguments to formatting methods
+dotnet_diagnostic.S1854.severity  = error  # Dead stores
+# S2589 (gratuitous boolean) overlaps with IDE0075 above; IDE0075 is canonical.
+dotnet_diagnostic.S2589.severity  = none
+dotnet_diagnostic.IDE0029.severity = error # Use null coalescing
+dotnet_diagnostic.IDE0074.severity = error # Use compound assignment
+
+dotnet_diagnostic.CA1825.severity = error  # Array.Empty<T>() over new T[0]
+dotnet_diagnostic.CA1834.severity = error  # StringBuilder.Append(char) for single chars
+dotnet_diagnostic.CA1845.severity = error  # Span-based string.Concat
+dotnet_diagnostic.CA1860.severity = error  # Avoid .Count() == 0
+dotnet_diagnostic.CA2208.severity = error  # Instantiate exceptions correctly
+dotnet_diagnostic.IDE0034.severity = error # default literal
+dotnet_diagnostic.IDE0041.severity = error # is null pattern
+dotnet_diagnostic.IDE0054.severity = error # Compound assignment
+
+dotnet_diagnostic.CA2007.severity = error  # ConfigureAwait on await in library code
+dotnet_diagnostic.CA2016.severity = error  # Forward CancellationToken on async calls
+dotnet_diagnostic.IDE0019.severity = error # Use pattern matching with `is X x`
+dotnet_diagnostic.IDE0049.severity = error # Language keywords (string) over framework types (String)
+dotnet_diagnostic.IDE0150.severity = error # Prefer null check over type check
+dotnet_diagnostic.S3236.severity  = error  # [CallerMemberName] with default arg
+
+# CA1810 (initialize static fields inline) intentionally not enabled: would
+# force divergence from upstream Java's static initializer block pattern,
+# which the descriptor classes mirror for merge parity.
+dotnet_diagnostic.CA1815.severity = error  # Override Equals on value types
+dotnet_diagnostic.IDE0017.severity = error # Use object initializer
+dotnet_diagnostic.IDE0018.severity = error # Inline out variable
+dotnet_diagnostic.IDE0059.severity = error # Unnecessary value assignment
+dotnet_diagnostic.S1066.severity  = error  # Collapsible if
+dotnet_diagnostic.S1481.severity  = error  # Unused local variable
+
+# S138 method length. Threshold wired from /SonarLint.xml at 100 lines for
+# parity with upstream Java Aeron's Checkstyle MethodLength rule. Parameter
+# values for parameterised rules live in /SonarLint.xml, not here.
+dotnet_diagnostic.S138.severity = error
+
+# S103  line length          (Checkstyle LineLength, max=120)
+# S1451 copyright header     (Checkstyle RegexpHeader)
+# S1118 utility class ctor   (Checkstyle FinalClass)
+# S1116 empty statements     (Checkstyle EmptyStatement)
+# S1126 simplify boolean ret (Checkstyle SimplifyBooleanReturn)
+# S1141 nested try blocks    (Checkstyle NestedTryDepth)
+# S2333 redundant modifiers  (Checkstyle RedundantModifier)
+# S4524 default comes last   (Checkstyle DefaultComesLast)
+dotnet_diagnostic.S103.severity  = error
+dotnet_diagnostic.S1451.severity = error
+dotnet_diagnostic.S1118.severity = error
+dotnet_diagnostic.S1116.severity = error
+dotnet_diagnostic.S2333.severity = error
+dotnet_diagnostic.S1126.severity = error
+dotnet_diagnostic.S1141.severity = error
+dotnet_diagnostic.S4524.severity = error
+
+# CA1067 IEquatable / Equals (Checkstyle CovariantEquals partial parity)
+# CA2231 == on overridden ValueType.Equals (other half of CovariantEquals)
+dotnet_diagnostic.CA1067.severity = error
+dotnet_diagnostic.CA2231.severity = error
+
+# CS0659 (compiler diagnostic) — override Object.Equals without overriding
+# Object.GetHashCode (Checkstyle EqualsHashCode parity). The Roslyn analyzer
+# CA2218 was deprecated because the C# compiler covers this case directly.
+# Default severity is warning; promoted to error to match Java enforcement.
+dotnet_diagnostic.CS0659.severity = error
+
+# Checkstyle FinalParameters has no Roslyn or SonarAnalyzer.CSharp equivalent
+# (Sonar S1226 exists for Java but isn't shipped in SonarAnalyzer.CSharp 10.4;
+# deliberate `x = x + 1` on a parameter does not fire any analyzer warning).
+# The codebase already follows the convention by defensively copying
+# parameters to locals before mutation. No enforcement available; relying on
+# convention plus review.
+
+# AERON0002 — MS PascalCase acronym detector. Per the .NET capitalization
+# conventions (https://learn.microsoft.com/dotnet/standard/design-guidelines/
+# capitalization-conventions): 3+ letter acronyms must be PascalCase
+# (XmlParser, not XMLParser), 2-letter acronyms stay all-caps (IOException),
+# and "ID" is a special-cased word ("StreamId", not "StreamID"). Roslyn's
+# pascal_case style is first-char-only so doesn't enforce these. Also catches
+# SCREAMING_SNAKE_CASE field names like CORRELATION_ID_FIELD_OFFSET, since
+# each underscore-separated token is a run of 3+ uppercase letters.
+dotnet_diagnostic.AERON0002.severity = error
+
+[**/Codecs/**.cs]
+generated_code = true
+# Sonar's IsGenerated heuristic does not match the `/* Generated SBE */`
+# comment our codecs ship with, and `sonar.cs.analyzeGeneratedCode = false`
+# in SonarLint.xml only suppresses files Sonar already considers generated.
+# So suppress per-rule for everything we light up above.
+dotnet_diagnostic.S103.severity  = none
+dotnet_diagnostic.S138.severity  = none
+dotnet_diagnostic.S1116.severity = none
+dotnet_diagnostic.S1118.severity = none
+dotnet_diagnostic.S1126.severity = none
+dotnet_diagnostic.S1141.severity = none
+dotnet_diagnostic.S1451.severity = none
+dotnet_diagnostic.S2333.severity = none
+dotnet_diagnostic.S4524.severity = none
+dotnet_diagnostic.CA1067.severity = none
+dotnet_diagnostic.CA1502.severity = none
+dotnet_diagnostic.CA1505.severity = none
+dotnet_diagnostic.CA1506.severity = none
+dotnet_diagnostic.CA2231.severity = none
+dotnet_diagnostic.CS0659.severity = none
+# ReSharper does NOT honour generated_code=true — it has its own detection
+# (auto-generated comment / *.designer.cs etc.) which our SBE codecs don't
+# match. Mirror the Roslyn suppression for ReSharper's parallel inspections.
+resharper_enforce_if_statement_braces_highlighting = none
+resharper_inconsistent_naming_highlighting        = none
+
+[**/{bin,obj}/**.cs]
+generated_code = true
+
+[src/Weavers/**.cs]
+generated_code = true
+# ReSharper ignores generated_code=true (see Codecs section); mirror for Fody.
+resharper_enforce_if_statement_braces_highlighting = none
+
+# Samples are illustrative programs (console diagnostics, banners, demo flows).
+# Wrapping interpolated diagnostic strings hurts readability without benefit;
+# samples are not part of the shipped API surface or upstream parity contract.
+[src/Samples/**.cs]
+dotnet_diagnostic.S103.severity = none
+
+# Public / protected symbols in test projects are not part of the consumer-
+# facing API surface and are not subject to Java-upstream parity, so apply
+# PascalCase to them too. Per-section overrides of
+# `dotnet_naming_symbols.<group>.applicable_accessibilities` work for type
+# kinds but are silently ignored for method/property groups, so this defines
+# a dedicated symbol group + rule scoped to this section instead.
+[**/{*Tests,*Test}/**.cs]
+dotnet_naming_symbols.test_public_members.applicable_kinds           = method, property, event, class, struct, interface, enum, delegate, field
+dotnet_naming_symbols.test_public_members.applicable_accessibilities = public, protected, protected_internal
+
+dotnet_naming_rule.test_public_members_must_be_pascal.severity = error
+dotnet_naming_rule.test_public_members_must_be_pascal.symbols  = test_public_members
+dotnet_naming_rule.test_public_members_must_be_pascal.style    = pascal_case

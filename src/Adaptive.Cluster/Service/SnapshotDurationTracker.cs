@@ -1,17 +1,33 @@
-﻿using Adaptive.Agrona.Concurrent.Status;
+﻿/*
+ * Copyright 2014 - 2026 Adaptive Financial Consulting Ltd
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+using Adaptive.Agrona.Concurrent.Status;
 
 namespace Adaptive.Cluster.Service
 {
     /// <summary>
-    /// Snapshot duration tracker that tracks maximum snapshot duration and also keeps count of how many times a predefined
-    /// duration threshold is breached.
+    /// Snapshot duration tracker that tracks maximum snapshot duration and also keeps count of how many times a
+    /// predefined duration threshold is breached.
     /// </summary>
     public class SnapshotDurationTracker
     {
-        private readonly AtomicCounter maxSnapshotDuration;
-        private readonly AtomicCounter snapshotDurationThresholdExceededCount;
-        private readonly long durationThresholdNs;
-        private long snapshotStartTimeNs = long.MinValue;
+        private readonly AtomicCounter _maxSnapshotDuration;
+        private readonly AtomicCounter _snapshotDurationThresholdExceededCount;
+        private readonly long _durationThresholdNs;
+        private long _snapshotStartTimeNs = long.MinValue;
 
         /// <summary>
         /// Create a tracker to track max snapshot duration and breaches of a threshold.
@@ -19,12 +35,15 @@ namespace Adaptive.Cluster.Service
         /// <param name="maxSnapshotDuration">                    counter for tracking. </param>
         /// <param name="snapshotDurationThresholdExceededCount"> counter for tracking. </param>
         /// <param name="durationThresholdNs">                    to use for tracking breaches. </param>
-        public SnapshotDurationTracker(AtomicCounter maxSnapshotDuration,
-            AtomicCounter snapshotDurationThresholdExceededCount, long durationThresholdNs)
+        public SnapshotDurationTracker(
+            AtomicCounter maxSnapshotDuration,
+            AtomicCounter snapshotDurationThresholdExceededCount,
+            long durationThresholdNs
+        )
         {
-            this.maxSnapshotDuration = maxSnapshotDuration;
-            this.snapshotDurationThresholdExceededCount = snapshotDurationThresholdExceededCount;
-            this.durationThresholdNs = durationThresholdNs;
+            this._maxSnapshotDuration = maxSnapshotDuration;
+            this._snapshotDurationThresholdExceededCount = snapshotDurationThresholdExceededCount;
+            this._durationThresholdNs = durationThresholdNs;
         }
 
         /// <summary>
@@ -33,16 +52,17 @@ namespace Adaptive.Cluster.Service
         /// <returns> max snapshot duration counter. </returns>
         public AtomicCounter MaxSnapshotDuration()
         {
-            return maxSnapshotDuration;
+            return _maxSnapshotDuration;
         }
 
         /// <summary>
-        /// Get counter tracking number of times <seealso cref="SnapshotDurationTracker.durationThresholdNs"/> was exceeded.
+        /// Get counter tracking number of times <seealso cref="SnapshotDurationTracker._durationThresholdNs"/> was
+        /// exceeded.
         /// </summary>
         /// <returns> duration threshold exceeded counter. </returns>
         public AtomicCounter SnapshotDurationThresholdExceededCount()
         {
-            return snapshotDurationThresholdExceededCount;
+            return _snapshotDurationThresholdExceededCount;
         }
 
         /// <summary>
@@ -51,7 +71,7 @@ namespace Adaptive.Cluster.Service
         /// <param name="timeNanos"> snapshot start time in nanoseconds. </param>
         public void OnSnapshotBegin(long timeNanos)
         {
-            snapshotStartTimeNs = timeNanos;
+            _snapshotStartTimeNs = timeNanos;
         }
 
         /// <summary>
@@ -60,16 +80,16 @@ namespace Adaptive.Cluster.Service
         /// <param name="timeNanos"> snapshot end time in nanoseconds. </param>
         public void OnSnapshotEnd(long timeNanos)
         {
-            if (snapshotStartTimeNs != long.MinValue)
+            if (_snapshotStartTimeNs != long.MinValue)
             {
-                long snapshotDurationNs = timeNanos - snapshotStartTimeNs;
+                long snapshotDurationNs = timeNanos - _snapshotStartTimeNs;
 
-                if (snapshotDurationNs > durationThresholdNs)
+                if (snapshotDurationNs > _durationThresholdNs)
                 {
-                    snapshotDurationThresholdExceededCount.Increment();
+                    _snapshotDurationThresholdExceededCount.Increment();
                 }
 
-                maxSnapshotDuration.ProposeMax(snapshotDurationNs);
+                _maxSnapshotDuration.ProposeMax(snapshotDurationNs);
             }
         }
 
@@ -78,9 +98,14 @@ namespace Adaptive.Cluster.Service
         /// </summary>
         public override string ToString()
         {
-            return "SnapshotDurationTracker{" + "maxSnapshotDuration=" + maxSnapshotDuration +
-                   ", snapshotDurationThresholdExceededCount=" + snapshotDurationThresholdExceededCount +
-                   ", durationThresholdNs=" + durationThresholdNs + '}';
+            return "SnapshotDurationTracker{"
+                + "maxSnapshotDuration="
+                + _maxSnapshotDuration
+                + ", snapshotDurationThresholdExceededCount="
+                + _snapshotDurationThresholdExceededCount
+                + ", durationThresholdNs="
+                + _durationThresholdNs
+                + '}';
         }
     }
 }

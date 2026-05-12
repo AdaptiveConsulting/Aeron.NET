@@ -20,7 +20,7 @@ namespace Adaptive.Agrona.Util
     {
         public static long FromSeconds(long seconds)
         {
-            return seconds*1000*1000*1000;
+            return seconds * 1000 * 1000 * 1000;
         }
 
         public static long FromMilliseconds(long milliseconds)
