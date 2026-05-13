@@ -36,7 +36,9 @@ namespace Adaptive.Aeron.LogBuffer
         /// <param name="positionBitsToShift"> for calculating positions. </param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Header(int initialTermId, int positionBitsToShift)
-            : this(initialTermId, positionBitsToShift, null) { }
+            : this(initialTermId, positionBitsToShift, null)
+        {
+        }
 
         /// <summary>
         /// Construct a header that references a buffer for the log.

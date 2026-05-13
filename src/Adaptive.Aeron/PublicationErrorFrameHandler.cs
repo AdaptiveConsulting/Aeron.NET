@@ -45,6 +45,8 @@ namespace Adaptive.Aeron
 
     public class NoOpPublicationErrorFrameHandler : IPublicationErrorFrameHandler
     {
-        public void OnPublicationError(PublicationErrorFrame errorFrame) { }
+        public void OnPublicationError(PublicationErrorFrame errorFrame)
+        {
+        }
     }
 }

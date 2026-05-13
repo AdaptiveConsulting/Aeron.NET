@@ -62,7 +62,9 @@ namespace Adaptive.Aeron
         private readonly IErrorHandler _errorHandler;
         private readonly LogBuffers _logBuffers;
 
-        internal Image() { }
+        internal Image()
+        {
+        }
 
         /// <summary>
         /// Construct a new image over a log to represent a stream of messages from a <seealso cref="Publication"/> .

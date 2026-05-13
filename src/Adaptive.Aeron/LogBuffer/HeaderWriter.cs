@@ -34,7 +34,9 @@ namespace Adaptive.Aeron.LogBuffer
         protected readonly long _sessionId;
         protected readonly long _streamId;
 
-        public HeaderWriter() { }
+        public HeaderWriter()
+        {
+        }
 
         protected HeaderWriter(long versionFlagsType, long sessionId, long streamId)
         {
@@ -100,7 +102,9 @@ namespace Adaptive.Aeron.LogBuffer
                 defaultHeader.GetInt(HeaderFlyweight.VERSION_FIELD_OFFSET) & 0xFFFFFFFFL,
                 defaultHeader.GetInt(DataHeaderFlyweight.SESSION_ID_FIELD_OFFSET) & 0xFFFFFFFFL,
                 (long)defaultHeader.GetInt(DataHeaderFlyweight.STREAM_ID_FIELD_OFFSET) << 32
-            ) { }
+            )
+        {
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override void Write(UnsafeBuffer termBuffer, int offset, int length, int termId)

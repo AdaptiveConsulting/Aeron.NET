@@ -47,11 +47,11 @@ namespace Adaptive.Aeron.Exceptions
             Category = category;
         }
 
-        public AeronException(Exception cause)
-            : base(cause?.ToString(), cause) { }
+        public AeronException(Exception cause) : base(cause?.ToString(), cause)
+        {
+        }
 
-        protected AeronException(SerializationInfo info, StreamingContext context)
-            : base(info, context)
+        protected AeronException(SerializationInfo info, StreamingContext context) : base(info, context)
         {
             Category = Category.ERROR;
         }

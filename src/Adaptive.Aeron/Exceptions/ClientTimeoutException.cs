@@ -22,6 +22,8 @@ namespace Adaptive.Aeron.Exceptions
     public class ClientTimeoutException : AeronTimeoutException
     {
         public ClientTimeoutException(string message)
-            : base(message, Category.FATAL) { }
+            : base(message, Category.FATAL)
+        {
+        }
     }
 }

@@ -31,7 +31,9 @@ namespace Adaptive.Aeron
         /// <summary>
         /// Default constructor so the fluent API can be used.
         /// </summary>
-        public DirectBufferVector() { }
+        public DirectBufferVector()
+        {
+        }
 
         /// <summary>
         /// Construct a new vector as a subset of a buffer.

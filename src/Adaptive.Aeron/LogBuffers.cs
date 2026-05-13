@@ -45,7 +45,9 @@ namespace Adaptive.Aeron
         // ReSharper disable once UnusedMember.Global
         //
         // Necessary for testing
-        internal LogBuffers() { }
+        internal LogBuffers()
+        {
+        }
 
         /// <summary>
         /// Construct the log buffers for a given log file.

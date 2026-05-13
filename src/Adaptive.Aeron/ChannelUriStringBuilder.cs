@@ -88,7 +88,9 @@ namespace Adaptive.Aeron
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public ChannelUriStringBuilder() { }
+        public ChannelUriStringBuilder()
+        {
+        }
 
         /// <summary>
         /// Constructs the ChannelUriStringBuilder with the initial values derived from the supplied URI. Will parse the
@@ -96,7 +98,9 @@ namespace Adaptive.Aeron
         /// </summary>
         /// <param name="initialUri"> initial values for the builder. </param>
         public ChannelUriStringBuilder(string initialUri)
-            : this(ChannelUri.Parse(initialUri)) { }
+            : this(ChannelUri.Parse(initialUri))
+        {
+        }
 
         /// <summary>
         /// Constructs the ChannelUriStringBuilder with the initial values derived from the supplied ChannelUri.

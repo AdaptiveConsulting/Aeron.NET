@@ -98,7 +98,9 @@ namespace Adaptive.Aeron
         private long _lastResponseValue;
 
         // For testing purposes only
-        internal ClientConductor() { }
+        internal ClientConductor()
+        {
+        }
 
         internal ClientConductor(Context ctx, Aeron aeron)
         {

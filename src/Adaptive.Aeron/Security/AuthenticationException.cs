@@ -28,6 +28,8 @@ namespace Adaptive.Aeron.Security
         /// </summary>
         /// <param name="message"> to detail the exception. </param>
         public AuthenticationException(string message)
-            : base(message) { }
+            : base(message)
+        {
+        }
     }
 }

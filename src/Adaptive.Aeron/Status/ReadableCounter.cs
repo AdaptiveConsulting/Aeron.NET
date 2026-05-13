@@ -75,7 +75,9 @@ namespace Adaptive.Aeron.Status
         /// <exception cref="InvalidOperationException"> if the id has for the counter has not been allocated.
         /// </exception>
         public ReadableCounter(CountersReader countersReader, int counterId)
-            : this(countersReader, Aeron.NULL_VALUE, counterId) { }
+            : this(countersReader, Aeron.NULL_VALUE, counterId)
+        {
+        }
 
         /// <summary>
         /// Return the registration id for the counter.

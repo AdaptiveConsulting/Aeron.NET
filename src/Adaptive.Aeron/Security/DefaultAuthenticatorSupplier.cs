@@ -51,9 +51,13 @@ namespace Adaptive.Aeron.Security
 
         sealed class DefaultAuthenticator : IAuthenticator
         {
-            public void OnConnectRequest(long sessionId, byte[] encodedCredentials, long nowMs) { }
+            public void OnConnectRequest(long sessionId, byte[] encodedCredentials, long nowMs)
+            {
+            }
 
-            public void OnChallengeResponse(long sessionId, byte[] encodedCredentials, long nowMs) { }
+            public void OnChallengeResponse(long sessionId, byte[] encodedCredentials, long nowMs)
+            {
+            }
 
             public void OnConnectedSession(ISessionProxy sessionProxy, long nowMs)
             {

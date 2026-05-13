@@ -25,9 +25,13 @@ namespace Adaptive.Aeron.Exceptions
     public class AeronEvent : AeronException
     {
         public AeronEvent(string message)
-            : base(message) { }
+            : base(message)
+        {
+        }
 
         public AeronEvent(string message, Category category)
-            : base(message, category) { }
+            : base(message, category)
+        {
+        }
     }
 }

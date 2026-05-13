@@ -48,6 +48,8 @@ namespace Adaptive.Aeron
         /// Callback called to report duration of cycle.
         /// </summary>
         /// <param name="durationNs"> of the duty cycle. </param>
-        public virtual void ReportMeasurement(long durationNs) { }
+        public virtual void ReportMeasurement(long durationNs)
+        {
+        }
     }
 }

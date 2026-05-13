@@ -30,7 +30,9 @@ namespace Adaptive.Aeron.Exceptions
         /// </summary>
         /// <param name="message"> detail for the exception. </param>
         public StorageSpaceException(string message)
-            : base(message) { }
+            : base(message)
+        {
+        }
 
         /// <summary>
         /// Check if given exception denotes an out of disc space error, i.e. which on Linux is represented by error

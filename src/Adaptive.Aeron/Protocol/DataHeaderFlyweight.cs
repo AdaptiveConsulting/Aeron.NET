@@ -107,14 +107,18 @@ namespace Adaptive.Aeron.Protocol
         /// <summary>
         /// Default constructor which can later be used to wrap a frame.
         /// </summary>
-        public DataHeaderFlyweight() { }
+        public DataHeaderFlyweight()
+        {
+        }
 
         /// <summary>
         /// Construct the flyweight over a frame.
         /// </summary>
         /// <param name="buffer"> containing the frame. </param>
         public DataHeaderFlyweight(UnsafeBuffer buffer)
-            : base(buffer) { }
+            : base(buffer)
+        {
+        }
 
         /// <summary>
         /// Get the fragment length field from the header.

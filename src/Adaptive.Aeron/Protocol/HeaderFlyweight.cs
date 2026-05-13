@@ -137,14 +137,18 @@ namespace Adaptive.Aeron.Protocol
         /// <summary>
         /// Default constructor which can later be used to wrap a frame.
         /// </summary>
-        public HeaderFlyweight() { }
+        public HeaderFlyweight()
+        {
+        }
 
         /// <summary>
         /// Construct a flyweight which wraps a <seealso cref="UnsafeBuffer"/> over the frame.
         /// </summary>
         /// <param name="buffer"> to wrap for the flyweight. </param>
         public HeaderFlyweight(UnsafeBuffer buffer)
-            : base(buffer) { }
+            : base(buffer)
+        {
+        }
 
         /// <summary>
         /// The version field value.

@@ -47,7 +47,9 @@ namespace Adaptive.Aeron
     public sealed class ConcurrentPublication : Publication
     {
         // For testing purposes only
-        internal ConcurrentPublication() { }
+        internal ConcurrentPublication()
+        {
+        }
 
         internal ConcurrentPublication(
             ClientConductor clientConductor,
@@ -70,7 +72,9 @@ namespace Adaptive.Aeron
                 logBuffers,
                 originalRegistrationId,
                 registrationId
-            ) { }
+            )
+        {
+        }
 
         /// <inheritdoc />
         public override long AvailableWindow

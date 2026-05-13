@@ -33,5 +33,7 @@ namespace Adaptive.Aeron.Command
     ///  +---------------------------------------------------------------+
     /// </pre>
     /// </summary>
-    public class RemoveSubscriptionFlyweight : RemoveMessageFlyweight { }
+    public class RemoveSubscriptionFlyweight : RemoveMessageFlyweight
+    {
+    }
 }

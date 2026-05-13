@@ -60,7 +60,9 @@ namespace Adaptive.Aeron
         private readonly Context _ctx;
 
         // For testing purposes only
-        internal Aeron() { }
+        internal Aeron()
+        {
+        }
 
         internal Aeron(Context ctx)
         {
@@ -1687,12 +1689,16 @@ namespace Adaptive.Aeron
 
                 if (null == _availableImageHandler)
                 {
-                    _availableImageHandler = image => { };
+                    _availableImageHandler = image =>
+                    {
+                    };
                 }
 
                 if (null == _unavailableImageHandler)
                 {
-                    _unavailableImageHandler = image => { };
+                    _unavailableImageHandler = image =>
+                    {
+                    };
                 }
 
                 if (_driverProxy == null)
@@ -2732,8 +2738,12 @@ namespace Adaptive.Aeron
 
                         return IoUtil.MapExistingFile(fileStream);
                     }
-                    catch (FileNotFoundException) { }
-                    catch (IOException) { }
+                    catch (FileNotFoundException)
+                    {
+                    }
+                    catch (IOException)
+                    {
+                    }
                     catch (Exception ex)
                     {
                         throw new AeronException("cannot open CnC file", ex);

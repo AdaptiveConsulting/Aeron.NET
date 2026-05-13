@@ -100,7 +100,9 @@ namespace Adaptive.Aeron
         internal readonly ClientConductor _conductor;
 
         // For testing purposes only
-        internal Publication() { }
+        internal Publication()
+        {
+        }
 
         internal Publication(
             ClientConductor clientConductor,

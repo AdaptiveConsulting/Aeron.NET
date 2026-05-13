@@ -48,7 +48,9 @@ namespace Adaptive.Aeron
         /// Construct a buffer builder with an initial capacity of zero and isDirect false.
         /// </summary>
         public BufferBuilder()
-            : this(0) { }
+            : this(0)
+        {
+        }
 
         /// <summary>
         /// Construct a buffer builder with an initial capacity that will be rounded up to the nearest power of 2.
