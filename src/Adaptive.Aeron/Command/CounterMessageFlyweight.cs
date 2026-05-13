@@ -210,26 +210,18 @@ namespace Adaptive.Aeron.Command
         /// </summary>
         public override string ToString()
         {
-            return "CounterMessageFlyweight{"
-                + "clientId="
-                + ClientId()
-                + ", correlationId="
-                + CorrelationId()
-                + ", typeId="
-                + TypeId()
-                + ", keyBufferOffset="
-                + KeyBufferOffset()
-                + ", keyBufferLength="
-                + KeyBufferLength()
-                + ", labelLengthOffset="
-                + LabelLengthOffset()
-                + ", labelBufferOffset="
-                + LabelBufferOffset()
-                + ", labelBufferLength="
-                + LabelBufferLength()
-                + ", length="
-                + Length()
-                + "}";
+            return
+                "CounterMessageFlyweight{" +
+                "clientId=" + ClientId() +
+                ", correlationId=" + CorrelationId() +
+                ", typeId=" + TypeId() +
+                ", keyBufferOffset=" + KeyBufferOffset() +
+                ", keyBufferLength=" + KeyBufferLength() +
+                ", labelLengthOffset=" + LabelLengthOffset() +
+                ", labelBufferOffset=" + LabelBufferOffset() +
+                ", labelBufferLength=" + LabelBufferLength() +
+                ", length=" + Length() +
+                "}";
         }
 
         private int LabelLengthOffset()

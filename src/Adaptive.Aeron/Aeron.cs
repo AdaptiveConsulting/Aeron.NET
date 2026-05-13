@@ -1656,46 +1656,46 @@ namespace Adaptive.Aeron
                     );
                 }
 
-                if (CountersMetaDataBuffer() == null)
+                if (null == CountersMetaDataBuffer())
                 {
                     CountersMetaDataBuffer(
                         CncFileDescriptor.CreateCountersMetaDataBuffer(_cncByteBuffer, _cncMetaDataBuffer)
                     );
                 }
 
-                if (CountersValuesBuffer() == null)
+                if (null == CountersValuesBuffer())
                 {
                     CountersValuesBuffer(
                         CncFileDescriptor.CreateCountersValuesBuffer(_cncByteBuffer, _cncMetaDataBuffer)
                     );
                 }
 
-                if (_logBuffersFactory == null)
+                if (null == _logBuffersFactory)
                 {
                     _logBuffersFactory = new MappedLogBuffersFactory();
                 }
 
-                if (_errorHandler == null)
+                if (null == _errorHandler)
                 {
                     _errorHandler = Configuration.DEFAULT_ERROR_HANDLER;
                 }
 
-                if (_subscriberErrorHandler == null)
+                if (null == _subscriberErrorHandler)
                 {
                     _subscriberErrorHandler = _errorHandler;
                 }
 
-                if (_availableImageHandler == null)
+                if (null == _availableImageHandler)
                 {
                     _availableImageHandler = image => { };
                 }
 
-                if (_unavailableImageHandler == null)
+                if (null == _unavailableImageHandler)
                 {
                     _unavailableImageHandler = image => { };
                 }
 
-                if (null == _driverProxy)
+                if (_driverProxy == null)
                 {
                     _clientId = _toDriverBuffer.NextCorrelationId();
                     _driverProxy = new DriverProxy(ToDriverBuffer(), _clientId);
@@ -2571,80 +2571,45 @@ namespace Adaptive.Aeron
             /// </summary>
             public override string ToString()
             {
-                return "Aeron.Context"
-                    + "\n{"
-                    + "\n    isConcluded="
-                    + _isConcluded
-                    + "\n    aeronDirectory="
-                    + AeronDirectory()
-                    + "\n    aeronDirectoryName='"
-                    + AeronDirectoryName()
-                    + '\''
-                    + "\n    cncFile="
-                    + CncFile()
-                    + "\n    countersMetaDataBuffer="
-                    + CountersMetaDataBuffer()
-                    + "\n    countersValuesBuffer="
-                    + CountersValuesBuffer()
-                    + "\n    driverTimeoutMs="
-                    + DriverTimeoutMs()
-                    + "\n    clientId="
-                    + _clientId
-                    + "\n    clientName="
-                    + _clientName
-                    + "\n    useConductorAgentInvoker="
-                    + _useConductorAgentInvoker
-                    + "\n    preTouchMappedMemory="
-                    + _preTouchMappedMemory
-                    + "\n    driverAgentInvoker="
-                    + _driverAgentInvoker
-                    + "\n    clientLock="
-                    + _clientLock
-                    + "\n    epochClock="
-                    + _epochClock
-                    + "\n    nanoClock="
-                    + _nanoClock
-                    + "\n    idleStrategy="
-                    + _idleStrategy
-                    + "\n    awaitingIdleStrategy="
-                    + _awaitingIdleStrategy
-                    + "\n    toClientBuffer="
-                    + _toClientBuffer
-                    + "\n    toDriverBuffer="
-                    + _toDriverBuffer
-                    + "\n    driverProxy="
-                    + _driverProxy
-                    + "\n    cncByteBuffer="
-                    + _cncByteBuffer
-                    + "\n    cncMetaDataBuffer="
-                    + _cncMetaDataBuffer
-                    + "\n    logBuffersFactory="
-                    + _logBuffersFactory
-                    + "\n    errorHandler="
-                    + _errorHandler
-                    + "\n    subscriberErrorHandler="
-                    + _subscriberErrorHandler
-                    + "\n    availableImageHandler="
-                    + _availableImageHandler
-                    + "\n    unavailableImageHandler="
-                    + _unavailableImageHandler
-                    + "\n    availableCounterHandler="
-                    + _availableCounterHandler
-                    + "\n    unavailableCounterHandler="
-                    + _unavailableCounterHandler
-                    + "\n    closeHandler="
-                    + _closeHandler
-                    + "\n    keepAliveIntervalNs="
-                    + _keepAliveIntervalNs
-                    + "\n    interServiceTimeoutNs="
-                    + _interServiceTimeoutNs
-                    + "\n    resourceLingerDurationNs="
-                    + _resourceLingerDurationNs
-                    + "\n    closeLingerDurationNs="
-                    + _closeLingerDurationNs
-                    + "\n    threadFactory="
-                    + _threadFactory
-                    + "\n}";
+                return
+                    "Aeron.Context" +
+                    "\n{" +
+                    "\n    isConcluded=" + _isConcluded +
+                    "\n    aeronDirectory=" + AeronDirectory() +
+                    "\n    aeronDirectoryName='" + AeronDirectoryName() + '\'' +
+                    "\n    cncFile=" + CncFile() +
+                    "\n    countersMetaDataBuffer=" + CountersMetaDataBuffer() +
+                    "\n    countersValuesBuffer=" + CountersValuesBuffer() +
+                    "\n    driverTimeoutMs=" + DriverTimeoutMs() +
+                    "\n    clientId=" + _clientId +
+                    "\n    clientName=" + _clientName +
+                    "\n    useConductorAgentInvoker=" + _useConductorAgentInvoker +
+                    "\n    preTouchMappedMemory=" + _preTouchMappedMemory +
+                    "\n    driverAgentInvoker=" + _driverAgentInvoker +
+                    "\n    clientLock=" + _clientLock +
+                    "\n    epochClock=" + _epochClock +
+                    "\n    nanoClock=" + _nanoClock +
+                    "\n    idleStrategy=" + _idleStrategy +
+                    "\n    awaitingIdleStrategy=" + _awaitingIdleStrategy +
+                    "\n    toClientBuffer=" + _toClientBuffer +
+                    "\n    toDriverBuffer=" + _toDriverBuffer +
+                    "\n    driverProxy=" + _driverProxy +
+                    "\n    cncByteBuffer=" + _cncByteBuffer +
+                    "\n    cncMetaDataBuffer=" + _cncMetaDataBuffer +
+                    "\n    logBuffersFactory=" + _logBuffersFactory +
+                    "\n    errorHandler=" + _errorHandler +
+                    "\n    subscriberErrorHandler=" + _subscriberErrorHandler +
+                    "\n    availableImageHandler=" + _availableImageHandler +
+                    "\n    unavailableImageHandler=" + _unavailableImageHandler +
+                    "\n    availableCounterHandler=" + _availableCounterHandler +
+                    "\n    unavailableCounterHandler=" + _unavailableCounterHandler +
+                    "\n    closeHandler=" + _closeHandler +
+                    "\n    keepAliveIntervalNs=" + _keepAliveIntervalNs +
+                    "\n    interServiceTimeoutNs=" + _interServiceTimeoutNs +
+                    "\n    resourceLingerDurationNs=" + _resourceLingerDurationNs +
+                    "\n    closeLingerDurationNs=" + _closeLingerDurationNs +
+                    "\n    threadFactory=" + _threadFactory +
+                    "\n}";
             }
 
             private void ConnectToDriver()
@@ -2678,10 +2643,8 @@ namespace Adaptive.Aeron
                     if (SemanticVersion.Minor(cncVersion) < SemanticVersion.Minor(CncFileDescriptor.CNC_VERSION))
                     {
                         throw new AeronException(
-                            "driverVersion="
-                                + SemanticVersion.ToString(cncVersion)
-                                + " insufficient for clientVersion="
-                                + SemanticVersion.ToString(CncFileDescriptor.CNC_VERSION)
+                            "driverVersion=" + SemanticVersion.ToString(cncVersion) +
+                            " insufficient for clientVersion=" + SemanticVersion.ToString(CncFileDescriptor.CNC_VERSION)
                         );
                     }
 

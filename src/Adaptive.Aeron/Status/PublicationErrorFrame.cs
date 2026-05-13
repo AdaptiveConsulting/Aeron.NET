@@ -154,26 +154,18 @@ namespace Adaptive.Aeron.Status
         /// <returns> a String representation of the error frame. </returns>
         public override string ToString()
         {
-            return "CounterMessageFlyweight{"
-                + "registrationId="
-                + _registrationId
-                + ", sessionId="
-                + _sessionId
-                + ", streamId="
-                + _streamId
-                + ", receiverId="
-                + _receiverId
-                + ", destinationRegistrationId="
-                + _destinationRegistrationId
-                + ", groupTag="
-                + _groupTag
-                + ", errorCode="
-                + _errorCode
-                + ", errorMessage="
-                + _errorMessage
-                + ", sourceAddress="
-                + _sourceAddress
-                + "}";
+            return
+                "CounterMessageFlyweight{" +
+                "registrationId=" + _registrationId +
+                ", sessionId=" + _sessionId +
+                ", streamId=" + _streamId +
+                ", receiverId=" + _receiverId +
+                ", destinationRegistrationId=" + _destinationRegistrationId +
+                ", groupTag=" + _groupTag +
+                ", errorCode=" + _errorCode +
+                ", errorMessage=" + _errorMessage +
+                ", sourceAddress=" + _sourceAddress +
+                "}";
         }
     }
 }

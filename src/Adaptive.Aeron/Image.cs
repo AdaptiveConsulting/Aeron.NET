@@ -973,20 +973,21 @@ namespace Adaptive.Aeron
 
         public override string ToString()
         {
-            return "Image{"
-                + $"correlationId={CorrelationId}, "
-                + $"sessionId={SessionId}, "
-                + $"isClosed={_isClosed}, "
-                + $"isEos={IsEndOfStream}, "
-                + $"initialTermId={InitialTermId}, "
-                + $"termLength={TermBufferLength}, "
-                + $"joinPosition={JoinPosition}, "
-                + $"position={Position}, "
-                + $"endOfStreamPosition={EndOfStreamPosition}, "
-                + $"activeTransportCount={ActiveTransportCount()}, "
-                + $"sourceIdentity='{SourceIdentity}', "
-                + $"subscription={Subscription}"
-                + '}';
+            return
+                "Image{" +
+                $"correlationId={CorrelationId}, " +
+                $"sessionId={SessionId}, " +
+                $"isClosed={_isClosed}, " +
+                $"isEos={IsEndOfStream}, " +
+                $"initialTermId={InitialTermId}, " +
+                $"termLength={TermBufferLength}, " +
+                $"joinPosition={JoinPosition}, " +
+                $"position={Position}, " +
+                $"endOfStreamPosition={EndOfStreamPosition}, " +
+                $"activeTransportCount={ActiveTransportCount()}, " +
+                $"sourceIdentity='{SourceIdentity}', " +
+                $"subscription={Subscription}" +
+                '}';
         }
     }
 }

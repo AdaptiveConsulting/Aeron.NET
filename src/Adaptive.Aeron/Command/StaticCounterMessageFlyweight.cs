@@ -268,34 +268,25 @@ namespace Adaptive.Aeron.Command
             return MinimumLength + BitUtil.Align(keyLength, BitUtil.SIZE_OF_INT) + BitUtil.SIZE_OF_INT + labelLength;
         }
 
-        /// <summary>
-        /// {@inheritDoc}
-        /// </summary>
-        public override string ToString()
-        {
-            return "StaticCounterMessageFlyweight{"
-                + "clientId="
-                + ClientId()
-                + ", correlationId="
-                + CorrelationId()
-                + ", registrationId="
-                + RegistrationId()
-                + ", typeId="
-                + TypeId()
-                + ", keyBufferOffset="
-                + KeyBufferOffset()
-                + ", keyBufferLength="
-                + KeyBufferLength()
-                + ", labelLengthOffset="
-                + LabelLengthOffset()
-                + ", labelBufferOffset="
-                + LabelBufferOffset()
-                + ", labelBufferLength="
-                + LabelBufferLength()
-                + ", length="
-                + Length()
+		/// <summary>
+		/// {@inheritDoc}
+		/// </summary>
+		public override string ToString()
+		{
+			return
+                "StaticCounterMessageFlyweight{"
+                + "clientId=" + ClientId()
+                + ", correlationId=" + CorrelationId()
+                + ", registrationId=" + RegistrationId()
+                + ", typeId=" + TypeId()
+                + ", keyBufferOffset=" + KeyBufferOffset()
+                + ", keyBufferLength=" + KeyBufferLength()
+                + ", labelLengthOffset=" + LabelLengthOffset()
+                + ", labelBufferOffset=" + LabelBufferOffset()
+                + ", labelBufferLength=" + LabelBufferLength()
+                + ", length=" + Length()
                 + "}";
-        }
+		}
 
         private int LabelLengthOffset()
         {

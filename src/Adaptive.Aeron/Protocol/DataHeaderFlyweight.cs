@@ -351,26 +351,18 @@ namespace Adaptive.Aeron.Protocol
 
         public override string ToString()
         {
-            return "DATA Header{"
-                + "frame-length="
-                + FrameLength()
-                + " version="
-                + Version()
-                + " flags="
-                + new String(HeaderFlyweight.FlagsToChars(Flags()))
-                + " type="
-                + HeaderType()
-                + " term-offset="
-                + TermOffset()
-                + " session-id="
-                + SessionId()
-                + " stream-id="
-                + StreamId()
-                + " term-id="
-                + TermId()
-                + " reserved-value="
-                + ReservedValue()
-                + "}";
+            return
+                "DATA Header{" +
+                "frame-length=" + FrameLength() +
+                " version=" + Version() +
+                " flags=" + new String(HeaderFlyweight.FlagsToChars(Flags())) +
+                " type=" + HeaderType() +
+                " term-offset=" + TermOffset() +
+                " session-id=" + SessionId() +
+                " stream-id=" + StreamId() +
+                " term-id=" + TermId() +
+                " reserved-value=" + ReservedValue() +
+                "}";
         }
     }
 }

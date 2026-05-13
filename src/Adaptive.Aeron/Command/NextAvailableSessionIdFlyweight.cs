@@ -104,17 +104,16 @@ namespace Adaptive.Aeron.Command
             return this;
         }
 
-        /// <summary>
-        /// {@inheritDoc}
-        /// </summary>
-        public override string ToString()
-        {
-            return "NextSessionIdFlyweight{"
-                + "correlationId="
-                + CorrelationId()
-                + ", sessionId="
-                + NextSessionId()
-                + "}";
-        }
-    }
+		/// <summary>
+		/// {@inheritDoc}
+		/// </summary>
+		public override string ToString()
+		{
+			return
+                "NextSessionIdFlyweight{" +
+                "correlationId=" + CorrelationId() +
+                ", sessionId=" + NextSessionId() +
+                "}";
+		}
+	}
 }

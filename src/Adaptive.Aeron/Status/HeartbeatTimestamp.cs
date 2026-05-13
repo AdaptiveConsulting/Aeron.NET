@@ -61,11 +61,11 @@ namespace Adaptive.Aeron.Status
                 {
                     if (
                         countersReader.GetCounterTypeId(counterId) == counterTypeId
-                        && buffer.GetLong(
+                        && registrationId == buffer.GetLong(
                             CountersReader.MetaDataOffset(counterId)
-                                + CountersReader.KEY_OFFSET
-                                + REGISTRATION_ID_OFFSET
-                        ) == registrationId
+                            + CountersReader.KEY_OFFSET
+                            + REGISTRATION_ID_OFFSET
+                        )
                     )
                     {
                         return counterId;

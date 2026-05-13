@@ -429,11 +429,9 @@ namespace Adaptive.Aeron
             if (SemanticVersion.Major(CNC_VERSION) != SemanticVersion.Major(cncVersion))
             {
                 throw new AeronException(
-                    "CnC version not compatible:"
-                        + " app="
-                        + SemanticVersion.ToString(CNC_VERSION)
-                        + " file="
-                        + SemanticVersion.ToString(cncVersion)
+                    "CnC version not compatible:" +
+                    " app=" + SemanticVersion.ToString(CNC_VERSION) +
+                    " file=" + SemanticVersion.ToString(cncVersion)
                 );
             }
         }
