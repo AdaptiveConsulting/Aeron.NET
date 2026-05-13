@@ -1250,10 +1250,9 @@ namespace Adaptive.Cluster.Service
         {
             if (LifecycleCallbackNone != _activeLifecycleCallback)
             {
+                var lifecycleName = LifecycleName(_activeLifecycleCallback);
                 throw new ClusterException(
-                    "sending messages or scheduling timers is not allowed from "
-                        + LifecycleName(_activeLifecycleCallback)
-                );
+                    "sending messages or scheduling timers is not allowed from " + lifecycleName);
             }
         }
 

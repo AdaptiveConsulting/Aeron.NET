@@ -1926,89 +1926,47 @@ namespace Adaptive.Cluster.Service
             /// </summary>
             public override string ToString()
             {
-                return "ClusteredServiceContainer.Context"
-                    + "\n{"
-                    + "\n    isConcluded="
-                    + Concluded
-                    + "\n    ownsAeronClient="
-                    + _ownsAeronClient
-                    + "\n    aeronDirectoryName='"
-                    + _aeronDirectoryName
-                    + '\''
-                    + "\n    aeron="
-                    + _aeron
-                    + "\n    archiveContext="
-                    + _archiveContext
-                    + "\n    clusterDirectoryName='"
-                    + _clusterDirectoryName
-                    + '\''
-                    + "\n    clusterDir="
-                    + _clusterDir
-                    + "\n    appVersion="
-                    + _appVersion
-                    + "\n    clusterId="
-                    + _clusterId
-                    + "\n    serviceId="
-                    + _serviceId
-                    + "\n    serviceName='"
-                    + _serviceName
-                    + '\''
-                    + "\n    replayChannel='"
-                    + _replayChannel
-                    + '\''
-                    + "\n    replayStreamId="
-                    + _replayStreamId
-                    + "\n    controlChannel='"
-                    + _controlChannel
-                    + '\''
-                    + "\n    consensusModuleStreamId="
-                    + _consensusModuleStreamId
-                    + "\n    serviceStreamId="
-                    + _serviceStreamId
-                    + "\n    snapshotChannel='"
-                    + _snapshotChannel
-                    + '\''
-                    + "\n    snapshotStreamId="
-                    + _snapshotStreamId
-                    + "\n    errorBufferLength="
-                    + _errorBufferLength
-                    + "\n    isRespondingService="
-                    + _isRespondingService
-                    + "\n    logFragmentLimit="
-                    + _logFragmentLimit
-                    + "\n    abortLatch="
-                    + _abortLatch
-                    + "\n    threadFactory="
-                    + _threadFactory
-                    + "\n    idleStrategySupplier="
-                    + _idleStrategySupplier
-                    + "\n    epochClock="
-                    + _epochClock
-                    + "\n    errorLog="
-                    + _errorLog
-                    + "\n    errorHandler="
-                    + _errorHandler
-                    + "\n    delegatingErrorHandler="
-                    + _delegatingErrorHandler
-                    + "\n    errorCounter="
-                    + _errorCounter
-                    + "\n    countedErrorHandler="
-                    + _countedErrorHandler
-                    + "\n    clusteredService="
-                    + _clusteredService
-                    + "\n    terminationHook="
-                    + _terminationHook
-                    + "\n    cycleThresholdNs="
-                    + _cycleThresholdNs
-                    + "\n    dutyCycleTracker="
-                    + _dutyCycleTracker
-                    + "\n    snapshotDurationThresholdNs="
-                    + _snapshotDurationThresholdNs
-                    + "\n    snapshotDurationTracker="
-                    + _snapshotDurationTracker
-                    + "\n    markFile="
-                    + _markFile
-                    + "\n}";
+                return
+                    "ClusteredServiceContainer.Context" +
+                    "\n{" +
+                    "\n    isConcluded=" + Concluded +
+                    "\n    ownsAeronClient=" + _ownsAeronClient +
+                    "\n    aeronDirectoryName='" + _aeronDirectoryName + '\'' +
+                    "\n    aeron=" + _aeron +
+                    "\n    archiveContext=" + _archiveContext +
+                    "\n    clusterDirectoryName='" + _clusterDirectoryName + '\'' +
+                    "\n    clusterDir=" + _clusterDir +
+                    "\n    appVersion=" + _appVersion +
+                    "\n    clusterId=" + _clusterId +
+                    "\n    serviceId=" + _serviceId +
+                    "\n    serviceName='" + _serviceName + '\'' +
+                    "\n    replayChannel='" + _replayChannel + '\'' +
+                    "\n    replayStreamId=" + _replayStreamId +
+                    "\n    controlChannel='" + _controlChannel + '\'' +
+                    "\n    consensusModuleStreamId=" + _consensusModuleStreamId +
+                    "\n    serviceStreamId=" + _serviceStreamId +
+                    "\n    snapshotChannel='" + _snapshotChannel + '\'' +
+                    "\n    snapshotStreamId=" + _snapshotStreamId +
+                    "\n    errorBufferLength=" + _errorBufferLength +
+                    "\n    isRespondingService=" + _isRespondingService +
+                    "\n    logFragmentLimit=" + _logFragmentLimit +
+                    "\n    abortLatch=" + _abortLatch +
+                    "\n    threadFactory=" + _threadFactory +
+                    "\n    idleStrategySupplier=" + _idleStrategySupplier +
+                    "\n    epochClock=" + _epochClock +
+                    "\n    errorLog=" + _errorLog +
+                    "\n    errorHandler=" + _errorHandler +
+                    "\n    delegatingErrorHandler=" + _delegatingErrorHandler +
+                    "\n    errorCounter=" + _errorCounter +
+                    "\n    countedErrorHandler=" + _countedErrorHandler +
+                    "\n    clusteredService=" + _clusteredService +
+                    "\n    terminationHook=" + _terminationHook +
+                    "\n    cycleThresholdNs=" + _cycleThresholdNs +
+                    "\n    dutyCycleTracker=" + _dutyCycleTracker +
+                    "\n    snapshotDurationThresholdNs=" + _snapshotDurationThresholdNs +
+                    "\n    snapshotDurationTracker=" + _snapshotDurationTracker +
+                    "\n    markFile=" + _markFile +
+                    "\n}";
             }
         }
     }

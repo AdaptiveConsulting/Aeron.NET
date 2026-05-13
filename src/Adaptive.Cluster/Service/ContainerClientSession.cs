@@ -119,21 +119,15 @@ namespace Adaptive.Cluster.Service
         /// </summary>
         public override string ToString()
         {
-            return "ClientSession{"
-                + "id="
-                + _id
-                + ", responseStreamId="
-                + _responseStreamId
-                + ", responseChannel='"
-                + _responseChannel
-                + '\''
-                + ", encodedPrincipal="
-                + _encodedPrincipal
-                + ", responsePublication="
-                + _responsePublication
-                + ", isClosing="
-                + _isClosing
-                + '}';
+            return
+                "ClientSession{" +
+                "id=" + _id +
+                ", responseStreamId=" + _responseStreamId +
+                ", responseChannel='" + _responseChannel + '\'' +
+                ", encodedPrincipal=" + _encodedPrincipal +
+                ", responsePublication=" + _responsePublication +
+                ", isClosing=" + _isClosing +
+                '}';
         }
     }
 }
