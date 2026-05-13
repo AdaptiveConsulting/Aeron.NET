@@ -693,29 +693,19 @@ namespace Adaptive.Aeron
 
         public override string ToString()
         {
-            return "Publication{"
-                + "originalRegistrationId="
-                + OriginalRegistrationId
-                + ", registrationId="
-                + RegistrationId
-                + ", isClosed="
-                + _isClosed
-                + ", isConnected="
-                + IsConnected
-                + ", initialTermId="
-                + InitialTermId
-                + ", termBufferLength="
-                + TermBufferLength
-                + ", sessionId="
-                + SessionId
-                + ", streamId="
-                + StreamId
-                + ", channel='"
-                + Channel
-                + '\''
-                + ", position="
-                + Position
-                + '}';
+            return
+                "Publication{" +
+                "originalRegistrationId=" + OriginalRegistrationId +
+                ", registrationId=" + RegistrationId +
+                ", isClosed=" + _isClosed +
+                ", isConnected=" + IsConnected +
+                ", initialTermId=" + InitialTermId +
+                ", termBufferLength=" + TermBufferLength +
+                ", sessionId=" + SessionId +
+                ", streamId=" + StreamId +
+                ", channel='" + Channel + '\'' +
+                ", position=" + Position +
+                '}';
         }
     }
 }
