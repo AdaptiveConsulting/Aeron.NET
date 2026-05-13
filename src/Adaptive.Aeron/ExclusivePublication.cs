@@ -497,32 +497,12 @@ namespace Adaptive.Aeron
             )
             {
                 throw new ArgumentException(
-                    "improperly formatted block:"
-                        + " termOffset="
-                        + blockTermOffset
-                        + " (expected="
-                        + _termOffset
-                        + "),"
-                        + " sessionId="
-                        + blockSessionId
-                        + " (expected="
-                        + SessionId
-                        + "),"
-                        + " streamId="
-                        + blockStreamId
-                        + " (expected="
-                        + StreamId
-                        + "),"
-                        + " termId="
-                        + blockTermId
-                        + " (expected="
-                        + _termId
-                        + "),"
-                        + " frameType="
-                        + blockFrameType
-                        + " (expected="
-                        + frameType
-                        + ")"
+                    "improperly formatted block:" +
+                    " termOffset=" + blockTermOffset + " (expected=" + _termOffset + ")," +
+                    " sessionId=" + blockSessionId + " (expected=" + SessionId + ")," +
+                    " streamId=" + blockStreamId + " (expected=" + StreamId + ")," +
+                    " termId=" + blockTermId + " (expected=" + _termId + ")," +
+                    " frameType=" + blockFrameType + " (expected=" + frameType + ")"
                 );
             }
         }
@@ -670,7 +650,8 @@ namespace Adaptive.Aeron
                     flags = 0;
                     frameOffset += alignedLength;
                     remaining -= bytesToWrite;
-                } while (remaining > 0);
+                }
+                while (remaining > 0);
             }
 
             return resultingOffset;
@@ -780,7 +761,8 @@ namespace Adaptive.Aeron
                             payloadOffset += numBytes;
                             positionTwo += numBytes;
                         }
-                    } while (bytesWritten < bytesToWrite);
+                    }
+                    while (bytesWritten < bytesToWrite);
 
                     if (remaining <= maxPayloadLength)
                     {
@@ -800,7 +782,8 @@ namespace Adaptive.Aeron
                     flags = 0;
                     frameOffset += alignedLength;
                     remaining -= bytesToWrite;
-                } while (remaining > 0);
+                }
+                while (remaining > 0);
             }
 
             return resultingOffset;
@@ -901,7 +884,8 @@ namespace Adaptive.Aeron
                             vectorIndex++;
                             vectorOffset = 0;
                         }
-                    } while (bytesWritten < bytesToWrite);
+                    }
+                    while (bytesWritten < bytesToWrite);
 
                     if (remaining <= MaxPayloadLength)
                     {
@@ -921,7 +905,8 @@ namespace Adaptive.Aeron
                     flags = 0;
                     frameOffset += alignedLength;
                     remaining -= bytesToWrite;
-                } while (remaining > 0);
+                }
+                while (remaining > 0);
             }
 
             return resultingOffset;
