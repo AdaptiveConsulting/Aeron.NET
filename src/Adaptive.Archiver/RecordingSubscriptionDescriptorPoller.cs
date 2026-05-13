@@ -72,7 +72,9 @@ namespace Adaptive.Archiver
                 AeronArchive.Configuration.NO_OP_RECORDING_SIGNAL_CONSUMER,
                 controlSessionId,
                 fragmentLimit
-            ) { }
+            )
+        {
+        }
 
         /// <summary>
         /// Create a poller for a given subscription to an archive for control response messages.

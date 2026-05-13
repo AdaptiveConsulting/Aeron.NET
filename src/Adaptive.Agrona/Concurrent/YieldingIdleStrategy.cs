@@ -40,6 +40,8 @@ namespace Adaptive.Agrona.Concurrent
             Thread.Yield();
         }
 
-        public void Reset() { }
+        public void Reset()
+        {
+        }
     }
 }

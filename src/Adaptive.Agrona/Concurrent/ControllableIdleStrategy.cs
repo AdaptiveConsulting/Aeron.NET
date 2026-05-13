@@ -80,7 +80,9 @@ namespace Adaptive.Agrona.Concurrent
         /// <summary>
         /// {@inheritDoc}
         /// </summary>
-        public void Reset() { }
+        public void Reset()
+        {
+        }
 
         public override string ToString()
         {

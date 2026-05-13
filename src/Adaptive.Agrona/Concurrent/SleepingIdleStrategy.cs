@@ -50,6 +50,8 @@ namespace Adaptive.Agrona.Concurrent
             Thread.Sleep(_sleepPeriodMs);
         }
 
-        public void Reset() { }
+        public void Reset()
+        {
+        }
     }
 }

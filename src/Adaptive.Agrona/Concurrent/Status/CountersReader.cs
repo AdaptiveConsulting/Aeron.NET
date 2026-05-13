@@ -200,7 +200,9 @@ namespace Adaptive.Agrona.Concurrent.Status
         /// <param name="metaDataBuffer"> containing the counter metadata. </param>
         /// <param name="valuesBuffer">   containing the counter values. </param>
         public CountersReader(IAtomicBuffer metaDataBuffer, IAtomicBuffer valuesBuffer)
-            : this(metaDataBuffer, valuesBuffer, Encoding.UTF8) { }
+            : this(metaDataBuffer, valuesBuffer, Encoding.UTF8)
+        {
+        }
 
         /// <summary>
         /// Construct a reader over buffers containing the values and associated metadata.

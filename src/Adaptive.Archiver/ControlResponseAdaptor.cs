@@ -53,7 +53,9 @@ namespace Adaptive.Archiver
                 AeronArchive.Configuration.NO_OP_RECORDING_SIGNAL_CONSUMER,
                 subscription,
                 fragmentLimit
-            ) { }
+            )
+        {
+        }
 
         /// <summary>
         /// Create an adapter for a given subscription to an archive for control response messages.

@@ -20,9 +20,13 @@ namespace Adaptive.Agrona.Concurrent
     {
         public static readonly NoOpLock Instance = new NoOpLock();
 
-        public void Lock() { }
+        public void Lock()
+        {
+        }
 
-        public void Unlock() { }
+        public void Unlock()
+        {
+        }
 
         public bool TryLock()
         {

@@ -332,8 +332,7 @@ namespace Adaptive.Agrona
 
                     try
                     {
-                        if (
-                            IsActive(
+                        if (IsActive(
                                 cncByteBuffer,
                                 epochClock,
                                 timeoutMs,
@@ -341,10 +340,9 @@ namespace Adaptive.Agrona
                                 timestampFieldOffset,
                                 versionCheck,
                                 logger
-                            )
-                        )
+                            ))
                         {
-                            throw new System.InvalidOperationException("active mark file detected");
+                            throw new InvalidOperationException("active mark file detected");
                         }
                     }
                     finally

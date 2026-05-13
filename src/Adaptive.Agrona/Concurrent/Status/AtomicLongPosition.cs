@@ -22,7 +22,9 @@ namespace Adaptive.Agrona.Concurrent.Status
     {
         private readonly AtomicLong _value = new AtomicLong();
 
-        public void Dispose() { }
+        public void Dispose()
+        {
+        }
 
         public int Id => 0;
 

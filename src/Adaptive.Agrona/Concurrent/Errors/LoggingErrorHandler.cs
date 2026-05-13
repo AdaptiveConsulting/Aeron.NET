@@ -35,7 +35,9 @@ namespace Adaptive.Agrona.Concurrent.Errors
         /// </summary>
         /// <param name="log"> to wrap. </param>
         public LoggingErrorHandler(DistinctErrorLog log)
-            : this(log, Console.Error) { }
+            : this(log, Console.Error)
+        {
+        }
 
         /// <summary>
         /// Construct error handler wrapping a <seealso cref="DistinctErrorLog"/> and <seealso cref="TextWriter"/> for

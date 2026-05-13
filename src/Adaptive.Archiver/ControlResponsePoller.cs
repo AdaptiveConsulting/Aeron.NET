@@ -61,7 +61,9 @@ namespace Adaptive.Archiver
         /// </summary>
         /// <param name="subscription">  to poll for new events. </param>
         public ControlResponsePoller(Subscription subscription)
-            : this(subscription, FRAGMENT_LIMIT) { }
+            : this(subscription, FRAGMENT_LIMIT)
+        {
+        }
 
         /// <summary>
         /// Create a poller for a given subscription to an archive for control response messages.
@@ -341,33 +343,21 @@ namespace Adaptive.Archiver
 
         public override string ToString()
         {
-            return "ControlResponsePoller{"
-                + "templateId="
-                + _templateId
-                + ", controlSessionId="
-                + _controlSessionId
-                + ", correlationId="
-                + _correlationId
-                + ", relevantId="
-                + _relevantId
-                + ", recordingId="
-                + _recordingId
-                + ", subscriptionId="
-                + _subscriptionId
-                + ", position="
-                + _position
-                + ", recordingSignal="
-                + _recordingSignal
-                + ", code="
-                + _code
-                + ", version="
-                + SemanticVersion.ToString(_version)
-                + ", errorMessage='"
-                + _errorMessage
-                + '\''
-                + ", isPollComplete="
-                + _isPollComplete
-                + '}';
+            return
+                "ControlResponsePoller{" +
+                "templateId=" + _templateId +
+                ", controlSessionId=" + _controlSessionId +
+                ", correlationId=" + _correlationId +
+                ", relevantId=" + _relevantId +
+                ", recordingId=" + _recordingId +
+                ", subscriptionId=" + _subscriptionId +
+                ", position=" + _position +
+                ", recordingSignal=" + _recordingSignal +
+                ", code=" + _code +
+                ", version=" + SemanticVersion.ToString(_version) +
+                ", errorMessage='" + _errorMessage + '\'' +
+                ", isPollComplete=" + _isPollComplete +
+                '}';
         }
     }
 }

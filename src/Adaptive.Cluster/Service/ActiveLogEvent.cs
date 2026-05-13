@@ -53,25 +53,16 @@ namespace Adaptive.Cluster.Service
 
         public override string ToString()
         {
-            return "NewActiveLogEvent{"
-                + "logPosition="
-                + logPosition
-                + ", maxLogPosition="
-                + maxLogPosition
-                + ", memberId="
-                + memberId
-                + ", sessionId="
-                + sessionId
-                + ", streamId="
-                + streamId
-                + ", isStartup="
-                + isStartup
-                + ", role="
-                + role
-                + ", channel='"
-                + channel
-                + "'"
-                + '}';
+            return "NewActiveLogEvent{" +
+                "logPosition=" + logPosition +
+                ", maxLogPosition=" + maxLogPosition +
+                ", memberId=" + memberId +
+                ", sessionId=" + sessionId +
+                ", streamId=" + streamId +
+                ", isStartup=" + isStartup +
+                ", role=" + role +
+                ", channel='" + channel + "'" +
+                '}';
         }
     }
 }

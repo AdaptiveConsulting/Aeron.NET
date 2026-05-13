@@ -76,7 +76,9 @@ namespace Adaptive.Archiver
         /// </param>
         /// <param name="subscription"> to poll for new events. </param>
         public RecordingSignalPoller(long controlSessionId, Subscription subscription)
-            : this(controlSessionId, subscription, FRAGMENT_LIMIT) { }
+            : this(controlSessionId, subscription, FRAGMENT_LIMIT)
+        {
+        }
 
         /// <summary>
         /// Get the <seealso cref="Subscription"/> used for polling messages.
@@ -294,33 +296,21 @@ namespace Adaptive.Archiver
         /// </summary>
         public override string ToString()
         {
-            return "RecordingSignalPoller{"
-                + "controlSessionId="
-                + _controlSessionId
-                + ", correlationId="
-                + _correlationId
-                + ", relevantId="
-                + _relevantId
-                + ", code="
-                + _code
-                + ", templateId="
-                + _templateId
-                + ", version="
-                + SemanticVersion.ToString(_version)
-                + ", errorMessage='"
-                + _errorMessage
-                + '\''
-                + ", recordingId="
-                + _recordingId
-                + ", recordingSubscriptionId="
-                + _recordingSubscriptionId
-                + ", recordingPosition="
-                + _recordingPosition
-                + ", recordingSignal="
-                + _recordingSignal
-                + ", isPollComplete="
-                + _isPollComplete
-                + '}';
+            return
+                "RecordingSignalPoller{" +
+                "controlSessionId=" + _controlSessionId +
+                ", correlationId=" + _correlationId +
+                ", relevantId=" + _relevantId +
+                ", code=" + _code +
+                ", templateId=" + _templateId +
+                ", version=" + SemanticVersion.ToString(_version) +
+                ", errorMessage='" + _errorMessage + '\'' +
+                ", recordingId=" + _recordingId +
+                ", recordingSubscriptionId=" + _recordingSubscriptionId +
+                ", recordingPosition=" + _recordingPosition +
+                ", recordingSignal=" + _recordingSignal +
+                ", isPollComplete=" + _isPollComplete +
+                '}';
         }
     }
 }

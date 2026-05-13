@@ -1111,17 +1111,12 @@ namespace Adaptive.Cluster.Client
             } while (_nanoClock.NanoTime() < deadlineNs);
 
             throw new AeronTimeoutException(
-                "failed to add new leader ingress publication (leaderMemberId="
-                    + _leaderMemberId
-                    + ", leadershipTermId="
-                    + _leadershipTermId
-                    + ", channel="
-                    + channel
-                    + ", streamId="
-                    + streamId
-                    + ") within "
-                    + ctx.MessageTimeoutNs()
-                    + "ns"
+                "failed to add new leader ingress publication " +
+                "(leaderMemberId=" + _leaderMemberId +
+                ", leadershipTermId=" + _leadershipTermId +
+                ", channel=" + channel +
+                ", streamId=" + streamId +
+                ") within " + ctx.MessageTimeoutNs() + "ns"
             );
         }
 
@@ -1265,7 +1260,9 @@ namespace Adaptive.Cluster.Client
         /// </summary>
         public class Configuration
         {
-            private Configuration() { }
+            private Configuration()
+            {
+            }
 
             /// <summary>
             /// Major version of the network protocol from client to consensus module. If these don't match then client
@@ -1504,14 +1501,18 @@ namespace Adaptive.Cluster.Client
                     int leaderMemberId,
                     EventCode code,
                     string detail
-                ) { }
+                )
+                {
+                }
 
                 public void OnNewLeader(
                     long clusterSessionId,
                     long leadershipTermId,
                     int leaderMemberId,
                     string memberEndpoints
-                ) { }
+                )
+                {
+                }
 
                 void IControlledEgressListener.OnAdminResponse(
                     long clusterSessionId,
@@ -1522,7 +1523,9 @@ namespace Adaptive.Cluster.Client
                     IDirectBuffer payload,
                     int payloadOffset,
                     int payloadLength
-                ) { }
+                )
+                {
+                }
 
                 void IEgressListener.OnAdminResponse(
                     long clusterSessionId,
@@ -1533,7 +1536,9 @@ namespace Adaptive.Cluster.Client
                     IDirectBuffer payload,
                     int payloadOffset,
                     int payloadLength
-                ) { }
+                )
+                {
+                }
             }
 
             private int _isConcluded = 0;
@@ -2149,49 +2154,28 @@ namespace Adaptive.Cluster.Client
 
             public override string ToString()
             {
-                return "AeronCluster.Context"
-                    + "\n{"
-                    + "\n    isConcluded="
-                    + Concluded
-                    + "\n    ownsAeronClient="
-                    + _ownsAeronClient
-                    + "\n    aeronDirectoryName='"
-                    + _aeronDirectoryName
-                    + '\''
-                    + "\n    aeron="
-                    + _aeron
-                    + "\n    messageTimeoutNs="
-                    + _messageTimeoutNs
-                    + "\n    newLeaderTimeoutNs="
-                    + _newLeaderTimeoutNs
-                    + "\n    ingressEndpoints='"
-                    + _ingressEndpoints
-                    + '\''
-                    + "\n    ingressChannel='"
-                    + _ingressChannel
-                    + '\''
-                    + "\n    ingressStreamId="
-                    + _ingressStreamId
-                    + "\n    egressChannel='"
-                    + _egressChannel
-                    + '\''
-                    + "\n    egressStreamId="
-                    + _egressStreamId
-                    + "\n    idleStrategy="
-                    + _idleStrategy
-                    + "\n    credentialsSupplier="
-                    + _credentialsSupplier
-                    + "\n    isIngressExclusive="
-                    + _isIngressExclusive
-                    + "\n    errorHandler="
-                    + _errorHandler
-                    + "\n    isDirectAssemblers="
-                    + _isDirectAssemblers
-                    + "\n    egressListener="
-                    + _egressListener
-                    + "\n    controlledEgressListener="
-                    + _controlledEgressListener
-                    + "\n}";
+                return
+                    "AeronCluster.Context" +
+                    "\n{" +
+                    "\n    isConcluded=" + Concluded +
+                    "\n    ownsAeronClient=" + _ownsAeronClient +
+                    "\n    aeronDirectoryName='" + _aeronDirectoryName + '\'' +
+                    "\n    aeron=" + _aeron +
+                    "\n    messageTimeoutNs=" + _messageTimeoutNs +
+                    "\n    newLeaderTimeoutNs=" + _newLeaderTimeoutNs +
+                    "\n    ingressEndpoints='" + _ingressEndpoints + '\'' +
+                    "\n    ingressChannel='" + _ingressChannel + '\'' +
+                    "\n    ingressStreamId=" + _ingressStreamId +
+                    "\n    egressChannel='" + _egressChannel + '\'' +
+                    "\n    egressStreamId=" + _egressStreamId +
+                    "\n    idleStrategy=" + _idleStrategy +
+                    "\n    credentialsSupplier=" + _credentialsSupplier +
+                    "\n    isIngressExclusive=" + _isIngressExclusive +
+                    "\n    errorHandler=" + _errorHandler +
+                    "\n    isDirectAssemblers=" + _isDirectAssemblers +
+                    "\n    egressListener=" + _egressListener +
+                    "\n    controlledEgressListener=" + _controlledEgressListener +
+                    "\n}";
             }
         }
 
@@ -2394,22 +2378,13 @@ namespace Adaptive.Cluster.Client
                         null != _egressSubscription ? _egressSubscription.TryResolveChannelEndpointPort() : "<unknown>";
 
                     AeronTimeoutException ex = new AeronTimeoutException(
-                        "cluster connect timeout: state="
-                            + _state
-                            + " messageTimeout="
-                            + _ctx.MessageTimeoutNs()
-                            + "ns"
-                            + " ingressChannel="
-                            + _ctx.IngressChannel()
-                            + " ingressEndpoints="
-                            + _ctx.IngressEndpoints()
-                            + " ingressPublication="
-                            + _ingressPublication
-                            + " egress.isConnected="
-                            + isConnected
-                            + " responseChannel="
-                            + endpointPort
-                    );
+                        "cluster connect timeout: state=" + _state +
+                        " messageTimeout=" + _ctx.MessageTimeoutNs() + "ns" +
+                        " ingressChannel=" + _ctx.IngressChannel() +
+                        " ingressEndpoints=" + _ctx.IngressEndpoints() +
+                        " ingressPublication=" + _ingressPublication +
+                        " egress.isConnected=" + isConnected +
+                        " responseChannel=" + endpointPort);
 
                     foreach (MemberIngress member in _memberByIdMap.Values)
                     {

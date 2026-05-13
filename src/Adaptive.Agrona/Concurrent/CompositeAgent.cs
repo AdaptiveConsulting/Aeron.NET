@@ -33,7 +33,9 @@ namespace Adaptive.Agrona.Concurrent
         /// <exception cref="ArgumentException"> if an empty array of agents is provided</exception>
         /// <exception cref="NullReferenceException"> if the array or any element is null</exception>
         public CompositeAgent(List<IAgent> agents)
-            : this(agents.ToArray()) { }
+            : this(agents.ToArray())
+        {
+        }
 
         /// <param name="agents"> the parts of this composite, at least one agent and no null agents allowed</param>
         /// <exception cref="ArgumentException"> if an empty array of agents is provided</exception>

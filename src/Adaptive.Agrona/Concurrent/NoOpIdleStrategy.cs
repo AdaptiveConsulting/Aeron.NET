@@ -26,14 +26,20 @@ namespace Adaptive.Agrona.Concurrent
         /// <b>Note</b> : this implementation will result in no safepoint poll once inlined.
         /// </summary>
         /// <seealso cref="IIdleStrategy" />
-        public void Idle(int workCount) { }
+        public void Idle(int workCount)
+        {
+        }
 
         /// <summary>
         /// <b>Note</b> : this implementation will result in no safepoint poll once inlined.
         /// </summary>
         /// <seealso cref="IIdleStrategy" />
-        public void Idle() { }
+        public void Idle()
+        {
+        }
 
-        public void Reset() { }
+        public void Reset()
+        {
+        }
     }
 }

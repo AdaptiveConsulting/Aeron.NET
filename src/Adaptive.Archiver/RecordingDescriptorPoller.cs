@@ -62,7 +62,9 @@ namespace Adaptive.Archiver
                 AeronArchive.Configuration.NO_OP_RECORDING_SIGNAL_CONSUMER,
                 controlSessionId,
                 fragmentLimit
-            ) { }
+            )
+        {
+        }
 
         /// <summary>
         /// Create a poller for a given subscription to an archive for control response messages.
@@ -300,16 +302,13 @@ namespace Adaptive.Archiver
         /// <inheritdoc />
         public override string ToString()
         {
-            return "RecordingDescriptorPoller{"
-                + "controlSessionId="
-                + _controlSessionId
-                + ", correlationId="
-                + _correlationId
-                + ", remainingRecordCount="
-                + _remainingRecordCount
-                + ", isDispatchComplete="
-                + _isDispatchComplete
-                + '}';
+            return
+                "RecordingDescriptorPoller{" +
+                "controlSessionId=" + _controlSessionId +
+                ", correlationId=" + _correlationId +
+                ", remainingRecordCount=" + _remainingRecordCount +
+                ", isDispatchComplete=" + _isDispatchComplete +
+                '}';
         }
     }
 }

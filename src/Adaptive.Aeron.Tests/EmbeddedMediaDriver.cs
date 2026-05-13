@@ -40,7 +40,9 @@ namespace Adaptive.Aeron.Tests
                 {
                     Directory.Delete(_aeronDir, recursive: true);
                 }
-                catch { }
+                catch
+                {
+                }
             }
 
             var rootDir =
@@ -96,7 +98,9 @@ namespace Adaptive.Aeron.Tests
                 {
                     _driver.Kill(entireProcessTree: true);
                 }
-                catch { }
+                catch
+                {
+                }
                 _driver.WaitForExit(ShutdownTimeoutMs);
             }
             _driver.Dispose();

@@ -2964,7 +2964,9 @@ namespace Adaptive.Archiver
                     long subscriptionId,
                     long position,
                     RecordingSignal signal
-                ) { }
+                )
+                {
+                }
             }
 
             /// <summary>
@@ -3785,49 +3787,28 @@ namespace Adaptive.Archiver
             /// </summary>
             public override string ToString()
             {
-                return "AeronArchive.Context"
-                    + "\n{"
-                    + "\n    isConcluded="
-                    + (1 == _isConcluded)
-                    + "\n    ownsAeronClient="
-                    + _ownsAeronClient
-                    + "\n    aeronDirectoryName='"
-                    + _aeronDirectoryName
-                    + '\''
-                    + "\n    aeron="
-                    + _aeron
-                    + "\n    messageTimeoutNs="
-                    + _messageTimeoutNs
-                    + "\n    recordingEventsChannel='"
-                    + _recordingEventsChannel
-                    + '\''
-                    + "\n    recordingEventsStreamId="
-                    + _recordingEventsStreamId
-                    + "\n    controlRequestChannel='"
-                    + _controlRequestChannel
-                    + '\''
-                    + "\n    controlRequestStreamId="
-                    + _controlRequestStreamId
-                    + "\n    controlResponseChannel='"
-                    + _controlResponseChannel
-                    + '\''
-                    + "\n    controlResponseStreamId="
-                    + _controlResponseStreamId
-                    + "\n    controlTermBufferSparse="
-                    + _controlTermBufferSparse
-                    + "\n    controlTermBufferLength="
-                    + _controlTermBufferLength
-                    + "\n    controlMtuLength="
-                    + _controlMtuLength
-                    + "\n    idleStrategy="
-                    + _idleStrategy
-                    + "\n    lock="
-                    + _lock
-                    + "\n    errorHandler="
-                    + _errorHandler
-                    + "\n    credentialsSupplier="
-                    + _credentialsSupplier
-                    + "\n}";
+                return
+                    "AeronArchive.Context" +
+                    "\n{" +
+                    "\n    isConcluded=" + (1 == _isConcluded) +
+                    "\n    ownsAeronClient=" + _ownsAeronClient +
+                    "\n    aeronDirectoryName='" + _aeronDirectoryName + '\'' +
+                    "\n    aeron=" + _aeron +
+                    "\n    messageTimeoutNs=" + _messageTimeoutNs +
+                    "\n    recordingEventsChannel='" + _recordingEventsChannel + '\'' +
+                    "\n    recordingEventsStreamId=" + _recordingEventsStreamId +
+                    "\n    controlRequestChannel='" + _controlRequestChannel + '\'' +
+                    "\n    controlRequestStreamId=" + _controlRequestStreamId +
+                    "\n    controlResponseChannel='" + _controlResponseChannel + '\'' +
+                    "\n    controlResponseStreamId=" + _controlResponseStreamId +
+                    "\n    controlTermBufferSparse=" + _controlTermBufferSparse +
+                    "\n    controlTermBufferLength=" + _controlTermBufferLength +
+                    "\n    controlMtuLength=" + _controlMtuLength +
+                    "\n    idleStrategy=" + _idleStrategy +
+                    "\n    lock=" + _lock +
+                    "\n    errorHandler=" + _errorHandler +
+                    "\n    credentialsSupplier=" + _credentialsSupplier +
+                    "\n}";
             }
 
             private ChannelUri ApplyDefaultParams(string channel)

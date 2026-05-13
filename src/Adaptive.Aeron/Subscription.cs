@@ -663,23 +663,16 @@ namespace Adaptive.Aeron
         /// <inheritdoc />
         public override string ToString()
         {
-            return "Subscription{"
-                + "registrationId="
-                + RegistrationId
-                + ", isClosed="
-                + IsClosed
-                + ", isConnected="
-                + IsConnected
-                + ", streamId="
-                + StreamId
-                + ", channel='"
-                + Channel
-                + '\''
-                + ", localSocketAddresses='"
-                + LocalSocketAddresses
-                + ", imageCount="
-                + ImageCount
-                + '}';
+            return
+                "Subscription{" +
+                "registrationId=" + RegistrationId +
+                ", isClosed=" + IsClosed +
+                ", isConnected=" + IsConnected +
+                ", streamId=" + StreamId +
+                ", channel='" + Channel + '\'' +
+                ", localSocketAddresses='" + LocalSocketAddresses +
+                ", imageCount=" + ImageCount +
+                '}';
         }
     }
 }

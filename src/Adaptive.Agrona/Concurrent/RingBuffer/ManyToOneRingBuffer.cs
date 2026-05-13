@@ -468,14 +468,8 @@ namespace Adaptive.Agrona.Concurrent.RingBuffer
                 return recordLength;
             }
 
-            throw new InvalidOperationException(
-                "claimed space previously "
-                    + (
-                        PaddingMsgTypeId == buffer.GetInt(RecordDescriptor.TypeOffset(recordIndex))
-                            ? "aborted"
-                            : "committed"
-                    )
-            );
+            var isPending = PaddingMsgTypeId == buffer.GetInt(RecordDescriptor.TypeOffset(recordIndex));
+            throw new InvalidOperationException("claimed space previously " + (isPending ? "aborted" : "committed"));
         }
     }
 }

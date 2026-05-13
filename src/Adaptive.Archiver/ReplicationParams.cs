@@ -275,26 +275,17 @@ namespace Adaptive.Archiver
 
         public override string ToString()
         {
-            return "ReplicationParams{"
-                + "stopPosition="
-                + _stopPosition
-                + ", dstRecordingId="
-                + _dstRecordingId
-                + ", liveDestination='"
-                + _liveDestination
-                + '\''
-                + ", replicationChannel='"
-                + _replicationChannel
-                + '\''
-                + ", channelTagId="
-                + _channelTagId
-                + ", subscriptionTagId="
-                + _subscriptionTagId
-                + ", fileIoMaxLength="
-                + _fileIoMaxLength
-                + ", replicationSessionId="
-                + _replicationSessionId
-                + '}';
+            return
+                "ReplicationParams{" +
+                "stopPosition=" + _stopPosition +
+                ", dstRecordingId=" + _dstRecordingId +
+                ", liveDestination='" + _liveDestination + '\'' +
+                ", replicationChannel='" + _replicationChannel + '\'' +
+                ", channelTagId=" + _channelTagId +
+                ", subscriptionTagId=" + _subscriptionTagId +
+                ", fileIoMaxLength=" + _fileIoMaxLength +
+                ", replicationSessionId=" + _replicationSessionId +
+                '}';
         }
 
         private bool Equals(ReplicationParams other)

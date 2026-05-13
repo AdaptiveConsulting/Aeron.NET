@@ -121,7 +121,9 @@ namespace Adaptive.Archiver
                 DEFAULT_RETRY_ATTEMPTS,
                 new NullCredentialsSupplier(),
                 null
-            ) { }
+            )
+        {
+        }
 
         /// <summary>
         /// Create a proxy with a <seealso cref="Pub"/> for sending control message requests.

@@ -65,7 +65,9 @@ namespace Adaptive.Agrona.Concurrent
 
         /// <summary>Construct and register the barrier ready for use.</summary>
         public ShutdownSignalBarrier()
-            : this(NoOpSignalHandler) { }
+            : this(NoOpSignalHandler)
+        {
+        }
 
         /// <summary>Construct and register the barrier with a signal handler.</summary>
         public ShutdownSignalBarrier(SignalHandler signalHandler)
@@ -144,14 +146,12 @@ namespace Adaptive.Agrona.Concurrent
 
         public override string ToString()
         {
-            return "ShutdownSignalBarrier{"
-                + "waitEvent="
-                + _waitEvent.IsSet
-                + ", closeEvent="
-                + _closeEvent.IsSet
-                + ", signaled="
-                + (_signaled == 1)
-                + "}";
+            return
+                "ShutdownSignalBarrier{" +
+                "waitEvent=" + _waitEvent.IsSet +
+                ", closeEvent=" + _closeEvent.IsSet +
+                ", signaled=" + (_signaled == 1) +
+                "}";
         }
 
         // --------- Static helpers (Java's private static methods) ---------

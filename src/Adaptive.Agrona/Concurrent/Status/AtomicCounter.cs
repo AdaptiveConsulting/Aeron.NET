@@ -34,7 +34,9 @@ namespace Adaptive.Agrona.Concurrent.Status
         /// <param name="buffer">    containing the counter. </param>
         /// <param name="counterId"> identifier of the counter. </param>
         public AtomicCounter(IAtomicBuffer buffer, int counterId)
-            : this(buffer, counterId, null) { }
+            : this(buffer, counterId, null)
+        {
+        }
 
         /// <summary>
         /// Map a counter over a buffer. This version will free the counter on close.

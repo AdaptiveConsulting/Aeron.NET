@@ -200,7 +200,9 @@ namespace Adaptive.Archiver
                 startPosition,
                 archive.Ctx().AeronClient().Ctx.EpochClock(),
                 MergeProgressTimeoutDefaultMs
-            ) { }
+            )
+        {
+        }
 
         /// <summary>
         /// Close and stop any active replay. Will remove the replay destination from the subscription. This operation
@@ -645,24 +647,17 @@ namespace Adaptive.Archiver
         /// </summary>
         public override string ToString()
         {
-            return "ReplayMerge{"
-                + "state="
-                + _state
-                + ", nextTargetPosition="
-                + _nextTargetPosition
-                + ", timeOfLastProgressMs="
-                + _timeOfLastProgressMs
-                + ", positionOfLastProgress="
-                + _positionOfLastProgress
-                + ", isLiveAdded="
-                + _isLiveAdded
-                + ", isReplayActive="
-                + _isReplayActive
-                + ", replayChannelUri="
-                + _replayChannelUri
-                + ", image="
-                + _image
-                + '}';
+            return
+                "ReplayMerge{" +
+                "state=" + _state +
+                ", nextTargetPosition=" + _nextTargetPosition +
+                ", timeOfLastProgressMs=" + _timeOfLastProgressMs +
+                ", positionOfLastProgress=" + _positionOfLastProgress +
+                ", isLiveAdded=" + _isLiveAdded +
+                ", isReplayActive=" + _isReplayActive +
+                ", replayChannelUri=" + _replayChannelUri +
+                ", image=" + _image +
+                '}';
         }
     }
 }

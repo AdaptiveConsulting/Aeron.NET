@@ -26,27 +26,14 @@ namespace Adaptive.Agrona
     public struct CacheLinePadding
     {
 #pragma warning disable 649
-        private long _p1,
-            _p2,
-            _p3,
-            _p4,
-            _p5,
-            _p6,
-            _p7,
-            _p8,
-            _p9,
-            _p10,
-            _p11,
-            _p12,
-            _p13,
-            _p14,
-            _p15;
+        private long _p1, _p2, _p3, _p4, _p5, _p6, _p7, _p8, _p9, _p10, _p11, _p12, _p13, _p14, _p15;
 #pragma warning restore 649
 
         // To prevent compiler removing unused padding fields
         public override string ToString()
         {
-            return $"{nameof(_p1)}: {_p1}, {nameof(_p2)}: {_p2}, {nameof(_p3)}: {_p3}, "
+            return
+                $"{nameof(_p1)}: {_p1}, {nameof(_p2)}: {_p2}, {nameof(_p3)}: {_p3}, "
                 + $"{nameof(_p4)}: {_p4}, {nameof(_p5)}: {_p5}, {nameof(_p6)}: {_p6}, "
                 + $"{nameof(_p7)}: {_p7}, {nameof(_p8)}: {_p8}, {nameof(_p9)}: {_p9}, "
                 + $"{nameof(_p10)}: {_p10}, {nameof(_p11)}: {_p11}, {nameof(_p12)}: {_p12}, "
