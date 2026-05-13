@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright 2014 - 2017 Adaptive Financial Consulting Ltd
+ * Copyright 2014 - 2026 Adaptive Financial Consulting Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,14 +32,17 @@ using Adaptive.Agrona.Util;
 namespace Adaptive.Aeron
 {
     /// <summary>
-    /// Aeron entry point for communicating to the Media Driver for creating <seealso cref="Publication"/>s and <seealso cref="Subscription"/>s.
+    /// Aeron entry point for communicating to the Media Driver for creating <seealso cref="Publication"/>s and
+    /// <seealso cref="Subscription"/>s.
     /// Use an <seealso cref="Context"/> to configure the Aeron object.
-    /// 
+    ///
     /// A client application requires only one Aeron object per Media Driver.
-    /// 
-    /// <b>Note:</b> If <seealso cref="Context.ErrorHandler(IErrorHandler)"/> is not set and a <seealso cref="DriverTimeoutException"/>
-    /// occurs then the process will face the wrath of <seealso cref="Environment.Exit"/>. See <seealso cref="Configuration.DEFAULT_ERROR_HANDLER"/>.
-    /// 
+    ///
+    /// <b>Note:</b> If <seealso cref="Context.ErrorHandler(IErrorHandler)"/> is not set and a
+    /// <seealso cref="DriverTimeoutException"/>
+    /// occurs then the process will face the wrath of <seealso cref="Environment.Exit"/>. See
+    /// <seealso cref="Configuration.DEFAULT_ERROR_HANDLER"/>.
+    ///
     /// </summary>
     public class Aeron : IDisposable
     {
@@ -59,9 +62,8 @@ namespace Adaptive.Aeron
         // For testing purposes only
         internal Aeron()
         {
-            
         }
-        
+
         internal Aeron(Context ctx)
         {
             try
@@ -97,9 +99,9 @@ namespace Adaptive.Aeron
 
         /// <summary>
         /// Create an Aeron instance and connect to the media driver with a default <seealso cref="Context"/>.
-        /// 
+        ///
         /// Threads required for interacting with the media driver are created and managed within the Aeron instance.
-        /// 
+        ///
         /// </summary>
         /// <returns> the new <seealso cref="Aeron"/> instance connected to the Media Driver. </returns>
         public static Aeron Connect()
@@ -111,7 +113,7 @@ namespace Adaptive.Aeron
         /// Create an Aeron instance and connect to the media driver.
         /// <para>
         /// Threads required for interacting with the media driver are created and managed within the Aeron instance.
-        /// 
+        ///
         /// </para>
         /// </summary>
         /// <param name="ctx"> for configuration of the client. </param>
@@ -153,7 +155,6 @@ namespace Adaptive.Aeron
             counters.ForEach((value, id, label) => @out.WriteLine("{0,3}: {1:} - {2}", id, value, label));
         }
 
-
         /// <summary>
         /// Has the client been closed? If not then the CnC file may not be unmapped.
         /// </summary>
@@ -182,7 +183,8 @@ namespace Adaptive.Aeron
         /// Is the command still active for a given correlation id.
         /// </summary>
         /// <param name="correlationId"> to check if it is still active. </param>
-        /// <returns> true in the command is still in active processing or false if completed successfully or errored. </returns>
+        /// <returns> true in the command is still in active processing or false if completed successfully or errored.
+        /// </returns>
         /// <seealso cref="Publication.AsyncAddDestination(String)"></seealso>
         /// <seealso cref="Subscription.AsyncAddDestination(String)"></seealso>
         /// <seealso cref="HasActiveCommands"/>
@@ -194,10 +196,12 @@ namespace Adaptive.Aeron
         /// <summary>
         /// Does the client have any active asynchronous commands?
         /// <para>
-        /// When close operations are performed on <seealso cref="Publication"/>s, <seealso cref="Subscription"/>s, and <seealso cref="Counter"/>s the
+        /// When close operations are performed on <seealso cref="Publication"/>s, <seealso cref="Subscription"/>s, and
+        /// <seealso cref="Counter"/>s the
         /// commands are sent asynchronously to the driver. The client tracks active commands in case errors need to be
-        /// reported. If you wish to wait for acknowledgement of close operations then wait for this method to return false.
-        /// 
+        /// reported. If you wish to wait for acknowledgement of close operations then wait for this method to return
+        /// false.
+        ///
         /// </para>
         /// </summary>
         /// <returns> true if any commands are currently active otherwise false. </returns>
@@ -209,9 +213,9 @@ namespace Adaptive.Aeron
         /// <summary>
         /// Clean up and release all Aeron client resources and shutdown conducator thread if not using
         /// <see cref="Context.UseConductorAgentInvoker(bool)"/>.
-        /// 
-        /// This will close all currently open <see cref="Publication"/>s, <see cref="Subscription"/>s and <see cref="Counter"/>s created
-        /// from this client. To check for the command being acknowledged by the driver.
+        ///
+        /// This will close all currently open <see cref="Publication"/>s, <see cref="Subscription"/>s and
+        /// <see cref="Counter"/>s created from this client. To check for the command being acknowledged by the driver.
         /// </summary>
         public void Dispose()
         {
@@ -230,7 +234,8 @@ namespace Adaptive.Aeron
         }
 
         /// <summary>
-        /// Add a <seealso cref="Publication"/> for publishing messages to subscribers. The publication returned is threadsafe.
+        /// Add a <seealso cref="Publication"/> for publishing messages to subscribers. The publication returned is
+        /// threadsafe.
         /// </summary>
         /// <param name="channel">  for sending the messages known to the media layer. </param>
         /// <param name="streamId"> within the channel scope. </param>
@@ -252,8 +257,8 @@ namespace Adaptive.Aeron
         }
 
         /// <summary>
-        /// Asynchronously add a <seealso cref="Publication"/> for publishing messages to subscribers. The added publication returned
-        /// is threadsafe.
+        /// Asynchronously add a <seealso cref="Publication"/> for publishing messages to subscribers. The added
+        /// publication returned is threadsafe.
         /// </summary>
         /// <param name="channel">  for sending the messages known to the media layer. </param>
         /// <param name="streamId"> within the channel scope. </param>
@@ -276,11 +281,13 @@ namespace Adaptive.Aeron
         }
 
         /// <summary>
-        /// Asynchronously add a <seealso cref="Publication"/> for publishing messages to subscribers from a single thread.
+        /// Asynchronously add a <seealso cref="Publication"/> for publishing messages to subscribers from a single
+        /// thread.
         /// </summary>
         /// <param name="channel">  for sending the messages known to the media layer. </param>
         /// <param name="streamId"> within the channel scope. </param>
-        /// <returns> the registration id of the publication which can be used to get the added exclusive publication. </returns>
+        /// <returns> the registration id of the publication which can be used to get the added exclusive publication.
+        /// </returns>
         /// <seealso cref="GetExclusivePublication"/>
         public long AsyncAddExclusivePublication(string channel, int streamId)
         {
@@ -288,7 +295,8 @@ namespace Adaptive.Aeron
         }
 
         /// <summary>
-        /// Get a <seealso cref="Publication"/> for publishing messages to subscribers. The publication returned is threadsafe.
+        /// Get a <seealso cref="Publication"/> for publishing messages to subscribers. The publication returned is
+        /// threadsafe.
         /// </summary>
         /// <param name="registrationId"> returned from <seealso cref="AsyncAddPublication"/>. </param>
         /// <returns> a new <seealso cref="ConcurrentPublication"/> when available otherwise null. </returns>
@@ -322,7 +330,7 @@ namespace Adaptive.Aeron
 
         /// <summary>
         /// Add a new <seealso cref="Subscription"/> for subscribing to messages from publishers.
-        ///   
+        ///
         /// This method will override the default handlers from the <seealso cref="Context"/>, i.e.
         /// <seealso cref="Context.AvailableImageHandler(AvailableImageHandler)"/> and
         /// <seealso cref="Context.UnavailableImageHandler(UnavailableImageHandler)"/>. Null values are valid and will
@@ -330,30 +338,40 @@ namespace Adaptive.Aeron
         /// </summary>
         /// <param name="channel">                 for receiving the messages known to the media layer. </param>
         /// <param name="streamId">                within the channel scope. </param>
-        /// <param name="availableImageHandler">   called when <seealso cref="Image"/>s become available for consumption. Null is valid if no action is to be taken.</param>
-        /// <param name="unavailableImageHandler"> called when <seealso cref="Image"/>s go unavailable for consumption. Null is valid if no action is to be taken.</param>
+        /// <param name="availableImageHandler"> called when <seealso cref="Image"/>s become available for consumption.
+        /// Null is valid if no action is to be taken.</param>
+        /// <param name="unavailableImageHandler"> called when <seealso cref="Image"/>s go unavailable for consumption.
+        /// Null is valid if no action is to be taken.</param>
         /// <returns> the <seealso cref="Subscription"/> for the channel and streamId pair. </returns>
-        public Subscription AddSubscription(string channel, int streamId, AvailableImageHandler availableImageHandler,
-            UnavailableImageHandler unavailableImageHandler)
+        public Subscription AddSubscription(
+            string channel,
+            int streamId,
+            AvailableImageHandler availableImageHandler,
+            UnavailableImageHandler unavailableImageHandler
+        )
         {
             return _conductor.AddSubscription(channel, streamId, availableImageHandler, unavailableImageHandler);
         }
-
 
         /// <summary>
         /// Add a new <seealso cref="Subscription"/> for subscribing to messages from publishers.
         /// </summary>
         /// <param name="channel">                 for receiving the messages known to the media layer. </param>
         /// <param name="streamId">                within the channel scope. </param>
-        /// <param name="availableImageHandler">   called when <seealso cref="Image"/>s become available for consumption. Null is valid if no
-        ///                                action is to be taken. </param>
-        /// <param name="unavailableImageHandler"> called when <seealso cref="Image"/>s go unavailable for consumption. Null is valid if no
-        ///                                action is to be taken. </param>
-        /// <returns> the registration id of the subscription which can be used to get the added subscription. </returns>
+        /// <param name="availableImageHandler"> called when <seealso cref="Image"/>s become available for consumption.
+        /// Null is valid if no action is to be taken. </param>
+        /// <param name="unavailableImageHandler"> called when <seealso cref="Image"/>s go unavailable for consumption.
+        /// Null is valid if no action is to be taken. </param>
+        /// <returns> the registration id of the subscription which can be used to get the added subscription.
+        /// </returns>
         /// <seealso cref="Aeron.AddSubscription(String, int, AvailableImageHandler, UnavailableImageHandler)"/>
         /// <seealso cref="Aeron.GetSubscription(long)"/>
-        public long AsyncAddSubscription(string channel, int streamId, AvailableImageHandler availableImageHandler,
-            UnavailableImageHandler unavailableImageHandler)
+        public long AsyncAddSubscription(
+            string channel,
+            int streamId,
+            AvailableImageHandler availableImageHandler,
+            UnavailableImageHandler unavailableImageHandler
+        )
         {
             return _conductor.AsyncAddSubscription(channel, streamId, availableImageHandler, unavailableImageHandler);
         }
@@ -363,7 +381,8 @@ namespace Adaptive.Aeron
         /// </summary>
         /// <param name="channel">  for receiving the messages known to the media layer. </param>
         /// <param name="streamId"> within the channel scope. </param>
-        /// <returns> the registration id of the subscription which can be used to get the added subscription. </returns>
+        /// <returns> the registration id of the subscription which can be used to get the added subscription.
+        /// </returns>
         /// <seealso cref="Aeron.AddSubscription(String, int)"/>
         /// <seealso cref="Aeron.GetSubscription(long)"/>
         public long AsyncAddSubscription(string channel, int streamId)
@@ -386,8 +405,8 @@ namespace Adaptive.Aeron
         /// Get a <seealso cref="Subscription"/> for subscribing to messages from publishers.
         /// </summary>
         /// <param name="registrationId"> returned from
-        ///                       <seealso cref="AsyncAddSubscription(String, int, AvailableImageHandler, UnavailableImageHandler)"/>
-        ///                       or <seealso cref="AsyncAddSubscription(String, int)"/> </param>
+        /// <seealso cref="AsyncAddSubscription(String, int, AvailableImageHandler, UnavailableImageHandler)"/>
+        /// or <seealso cref="AsyncAddSubscription(String, int)"/> </param>
         /// <returns> a new <seealso cref="Subscription"/> when available otherwise null. </returns>
         /// <seealso cref="AsyncAddSubscription(String, int)"/>
         /// <seealso cref="AsyncAddSubscription(String, int, AvailableImageHandler, UnavailableImageHandler)"/>
@@ -398,10 +417,10 @@ namespace Adaptive.Aeron
 
         /// <summary>
         /// Generate the next correlation id that is unique for the connected media driver.
-        /// 
+        ///
         /// This is useful generating correlation identifiers for pairing requests with responses in a clients own
         /// application protocol.
-        /// 
+        ///
         /// This method is thread safe and will work across processes that all use the same media driver.
         /// </summary>
         /// <returns> next correlation id that is unique for the media driver. </returns>
@@ -419,13 +438,13 @@ namespace Adaptive.Aeron
         /// Get next available session id from the media driver. The session id will be unique for the connected media
         /// driver and given {@code streamId}.
         /// <para>
-        /// If media driver's version is 1.49.0 or higher, then the session id is returned by the media driver. Otherwise,
-        /// a random session id is generated.
-        ///    
+        /// If media driver's version is 1.49.0 or higher, then the session id is returned by the media driver.
+        /// Otherwise, a random session id is generated.
+        ///
         /// </para>
         /// </summary>
-        /// <param name="streamId"> for which a new session id is requested. Media driver only checks for session clashes at the
-        ///                 stream level. </param>
+        /// <param name="streamId"> for which a new session id is requested. Media driver only checks for session
+        /// clashes at the stream level. </param>
         /// <returns> next available session id that is unique for the media driver and given {@code streamId}.
         /// @since 1.49.0 </returns>
         public int NextSessionId(int streamId)
@@ -461,22 +480,37 @@ namespace Adaptive.Aeron
         /// The counter should be freed by calling <seealso cref="Counter.Dispose()"/>.
         ///
         /// The typeId should be 1000 or greater. Values lower than that are reserved for use by Aeron.
-        ///   
+        ///
         /// </para>
         /// </summary>
         /// <param name="typeId">      for the counter. </param>
         /// <param name="keyBuffer">   containing the optional key for the counter. </param>
         /// <param name="keyOffset">   within the keyBuffer at which the key begins. </param>
         /// <param name="keyLength">   of the key in the keyBuffer. </param>
-        /// <param name="labelBuffer"> containing the mandatory label for the counter. The label should not be length prefixed. </param>
+        /// <param name="labelBuffer"> containing the mandatory label for the counter. The label should not be length
+        /// prefixed. </param>
         /// <param name="labelOffset"> within the labelBuffer at which the label begins. </param>
         /// <param name="labelLength"> of the label in the labelBuffer. </param>
         /// <returns> the newly allocated counter. </returns>
-        public Counter AddCounter(int typeId, IDirectBuffer keyBuffer, int keyOffset, int keyLength,
-            IDirectBuffer labelBuffer, int labelOffset, int labelLength)
+        public Counter AddCounter(
+            int typeId,
+            IDirectBuffer keyBuffer,
+            int keyOffset,
+            int keyLength,
+            IDirectBuffer labelBuffer,
+            int labelOffset,
+            int labelLength
+        )
         {
-            return _conductor.AddCounter(typeId, keyBuffer, keyOffset, keyLength, labelBuffer, labelOffset,
-                labelLength);
+            return _conductor.AddCounter(
+                typeId,
+                keyBuffer,
+                keyOffset,
+                keyLength,
+                labelBuffer,
+                labelOffset,
+                labelLength
+            );
         }
 
         /// <summary>
@@ -485,7 +519,7 @@ namespace Adaptive.Aeron
         /// The counter should be freed by calling <seealso cref="Counter.Dispose()"/>.
         ///
         /// The typeId should be 1000 or greater. Values lower than that are reserved for use by Aeron.
-        /// 
+        ///
         /// </para>
         /// </summary>
         /// <param name="typeId"> for the counter. </param>
@@ -502,29 +536,47 @@ namespace Adaptive.Aeron
         /// {@code registrationId} pair. Such a counter cannot be deleted and its lifecycle is decoupled from this
         /// <seealso cref="Aeron"/> instance, i.e. won't be closed when this instance is closed or times out.
         /// <para>
-        /// <em><strong>Note:</strong> calling <seealso cref="Counter.Dispose()"/> will only close the counter instance itself but will
-        /// not free the counter in the CnC file.</em>
+        /// <em><strong>Note:</strong> calling <seealso cref="Counter.Dispose()"/> will only close the counter instance
+        /// itself but will not free the counter in the CnC file.</em>
         ///
         /// The typeId should be 1000 or greater. Values lower than that are reserved for use by Aeron.
-        /// 
+        ///
         /// </para>
         /// </summary>
         /// <param name="typeId">         for the counter. </param>
         /// <param name="keyBuffer">      containing the optional key for the counter. </param>
         /// <param name="keyOffset">      within the keyBuffer at which the key begins. </param>
         /// <param name="keyLength">      of the key in the keyBuffer. </param>
-        /// <param name="labelBuffer">    containing the mandatory label for the counter. The label should not be length prefixed. </param>
+        /// <param name="labelBuffer"> containing the mandatory label for the counter. The label should not be length
+        /// prefixed. </param>
         /// <param name="labelOffset">    within the labelBuffer at which the label begins. </param>
         /// <param name="labelLength">    of the label in the labelBuffer. </param>
-        /// <param name="registrationId"> that uniquely identifies the static counter for a given {@code typeId}. </param>
+        /// <param name="registrationId"> that uniquely identifies the static counter for a given {@code typeId}.
+        /// </param>
         /// <returns> the static counter instance. </returns>
         /// <seealso cref="CountersManager.Allocate(int, IDirectBuffer, int, int, IDirectBuffer, int, int)"/>
         /// <remarks>Since 1.45.0</remarks>
-        public Counter AddStaticCounter(int typeId, IDirectBuffer keyBuffer, int keyOffset, int keyLength,
-            IDirectBuffer labelBuffer, int labelOffset, int labelLength, long registrationId)
+        public Counter AddStaticCounter(
+            int typeId,
+            IDirectBuffer keyBuffer,
+            int keyOffset,
+            int keyLength,
+            IDirectBuffer labelBuffer,
+            int labelOffset,
+            int labelLength,
+            long registrationId
+        )
         {
-            return _conductor.AddStaticCounter(typeId, keyBuffer, keyOffset, keyLength, labelBuffer, labelOffset,
-                labelLength, registrationId);
+            return _conductor.AddStaticCounter(
+                typeId,
+                keyBuffer,
+                keyOffset,
+                keyLength,
+                labelBuffer,
+                labelOffset,
+                labelLength,
+                registrationId
+            );
         }
 
         /// <summary>
@@ -532,16 +584,17 @@ namespace Adaptive.Aeron
         /// {@code registrationId} pair. Such a counter cannot be deleted and its lifecycle is decoupled from this
         /// <seealso cref="Aeron"/> instance, i.e. won't be closed when this instance is closed or times out.
         /// <para>
-        /// <em><strong>Note:</strong> calling <seealso cref="Counter.Dispose()"/> will only close the counter instance itself but will
-        /// not free the counter in the CnC file.</em>
+        /// <em><strong>Note:</strong> calling <seealso cref="Counter.Dispose()"/> will only close the counter instance
+        /// itself but will not free the counter in the CnC file.</em>
         ///
         /// The typeId should be 1000 or greater. Values lower than that are reserved for use by Aeron.
-        /// 
+        ///
         /// </para>
         /// </summary>
         /// <param name="typeId">         for the counter. </param>
         /// <param name="label">          for the counter. It should be US-ASCII. </param>
-        /// <param name="registrationId"> that uniquely identifies the static counter for a given {@code typeId}. </param>
+        /// <param name="registrationId"> that uniquely identifies the static counter for a given {@code typeId}.
+        /// </param>
         /// <returns> the static counter. </returns>
         /// <seealso cref="CountersManager.Allocate(string, int)"/>
         /// <remarks>Since 1.45.0</remarks>
@@ -554,12 +607,13 @@ namespace Adaptive.Aeron
         /// Asynchronously allocate a counter on the media driver.
         /// <para>
         /// The typeId should be 1000 or greater. Values lower than that are reserved for use by Aeron.
-        ///    
+        ///
         /// </para>
         /// </summary>
         /// <param name="typeId"> for the counter. </param>
         /// <param name="label">  for the counter. It should be US-ASCII. </param>
-        /// <returns> the registration id of the counter which can be used to get it by calling <seealso cref="GetCounter(long)"/>
+        /// <returns> the registration id of the counter which can be used to get it by calling
+        /// <seealso cref="GetCounter(long)"/>
         /// method. </returns>
         /// <seealso cref="GetCounter(long)"/>
         /// <remarks>Since 1.49.0</remarks>
@@ -572,25 +626,41 @@ namespace Adaptive.Aeron
         /// Asynchronously allocate a counter on the media driver.
         /// <para>
         /// The typeId should be 1000 or greater. Values lower than that are reserved for use by Aeron.
-        /// 
+        ///
         /// </para>
         /// </summary>
         /// <param name="typeId">      for the counter. </param>
         /// <param name="keyBuffer">   containing the optional key for the counter. </param>
         /// <param name="keyOffset">   within the keyBuffer at which the key begins. </param>
         /// <param name="keyLength">   of the key in the keyBuffer. </param>
-        /// <param name="labelBuffer"> containing the mandatory label for the counter. The label should not be length prefixed. </param>
+        /// <param name="labelBuffer"> containing the mandatory label for the counter. The label should not be length
+        /// prefixed. </param>
         /// <param name="labelOffset"> within the labelBuffer at which the label begins. </param>
         /// <param name="labelLength"> of the label in the labelBuffer. </param>
-        /// <returns> the registration id of the counter which can be used to get it by calling <seealso cref="GetCounter(long)"/>
+        /// <returns> the registration id of the counter which can be used to get it by calling
+        /// <seealso cref="GetCounter(long)"/>
         /// method. </returns>
         /// <seealso cref="GetCounter(long)"/>
         /// <remarks>Since 1.49.0</remarks>
-        public long AsyncAddCounter(int typeId, IDirectBuffer keyBuffer, int keyOffset, int keyLength,
-            IDirectBuffer labelBuffer, int labelOffset, int labelLength)
+        public long AsyncAddCounter(
+            int typeId,
+            IDirectBuffer keyBuffer,
+            int keyOffset,
+            int keyLength,
+            IDirectBuffer labelBuffer,
+            int labelOffset,
+            int labelLength
+        )
         {
-            return _conductor.AsyncAddCounter(typeId, keyBuffer, keyOffset, keyLength, labelBuffer, labelOffset,
-                labelLength);
+            return _conductor.AsyncAddCounter(
+                typeId,
+                keyBuffer,
+                keyOffset,
+                keyLength,
+                labelBuffer,
+                labelOffset,
+                labelLength
+            );
         }
 
         /// <summary>
@@ -598,17 +668,18 @@ namespace Adaptive.Aeron
         /// {@code registrationId} pair. Such a counter cannot be deleted and its lifecycle is decoupled from this
         /// <seealso cref="Aeron"/> instance, i.e. won't be closed when this instance is closed or times out.
         /// <para>
-        /// <em><strong>Note:</strong> calling <seealso cref="Counter.Dispose()"/> will only close the counter instance itself but will
-        /// not free the counter in the CnC file.</em>
+        /// <em><strong>Note:</strong> calling <seealso cref="Counter.Dispose()"/> will only close the counter instance
+        /// itself but will not free the counter in the CnC file.</em>
         /// </para>
         /// <para>
         /// The typeId should be 1000 or greater. Values lower than that are reserved for use by Aeron.
-        /// 
+        ///
         /// </para>
         /// </summary>
         /// <param name="typeId">         for the counter. </param>
         /// <param name="label">          for the counter. It should be US-ASCII. </param>
-        /// <param name="registrationId"> that uniquely identifies the static counter for a given {@code typeId}. </param>
+        /// <param name="registrationId"> that uniquely identifies the static counter for a given {@code typeId}.
+        /// </param>
         /// <returns> the correlation id of the command which can be used to get the counter by calling
         /// <seealso cref="GetCounter(long)"/> method. </returns>
         /// <seealso cref="GetCounter(long)"/>
@@ -623,31 +694,49 @@ namespace Adaptive.Aeron
         /// {@code registrationId} pair. Such a counter cannot be deleted and its lifecycle is decoupled from this
         /// <seealso cref="Aeron"/> instance, i.e. won't be closed when this instance is closed or times out.
         /// <para>
-        /// <em><strong>Note:</strong> calling <seealso cref="Counter.Dispose()"/> will only close the counter instance itself but will
-        /// not free the counter in the CnC file.</em>
+        /// <em><strong>Note:</strong> calling <seealso cref="Counter.Dispose()"/> will only close the counter instance
+        /// itself but will not free the counter in the CnC file.</em>
         /// </para>
         /// <para>
         /// The typeId should be 1000 or greater. Values lower than that are reserved for use by Aeron.
-        /// 
+        ///
         /// </para>
         /// </summary>
         /// <param name="typeId">         for the counter. </param>
         /// <param name="keyBuffer">      containing the optional key for the counter. </param>
         /// <param name="keyOffset">      within the keyBuffer at which the key begins. </param>
         /// <param name="keyLength">      of the key in the keyBuffer. </param>
-        /// <param name="labelBuffer">    containing the mandatory label for the counter. The label should not be length prefixed. </param>
+        /// <param name="labelBuffer"> containing the mandatory label for the counter. The label should not be length
+        /// prefixed. </param>
         /// <param name="labelOffset">    within the labelBuffer at which the label begins. </param>
         /// <param name="labelLength">    of the label in the labelBuffer. </param>
-        /// <param name="registrationId"> that uniquely identifies the static counter for a given {@code typeId}. </param>
+        /// <param name="registrationId"> that uniquely identifies the static counter for a given {@code typeId}.
+        /// </param>
         /// <returns> the correlation id of the command which can be used to get the counter by calling
         /// <seealso cref="GetCounter(long)"/> method. </returns>
         /// <seealso cref="GetCounter(long)"/>
         /// <remarks>Since 1.49.0</remarks>
-        public long AsyncAddStaticCounter(int typeId, IDirectBuffer keyBuffer, int keyOffset, int keyLength,
-            IDirectBuffer labelBuffer, int labelOffset, int labelLength, long registrationId)
+        public long AsyncAddStaticCounter(
+            int typeId,
+            IDirectBuffer keyBuffer,
+            int keyOffset,
+            int keyLength,
+            IDirectBuffer labelBuffer,
+            int labelOffset,
+            int labelLength,
+            long registrationId
+        )
         {
-            return _conductor.AsyncAddStaticCounter(typeId, keyBuffer, keyOffset, keyLength, labelBuffer, labelOffset,
-                labelLength, registrationId);
+            return _conductor.AsyncAddStaticCounter(
+                typeId,
+                keyBuffer,
+                keyOffset,
+                keyLength,
+                labelBuffer,
+                labelOffset,
+                labelLength,
+                registrationId
+            );
         }
 
         /// <summary>
@@ -655,9 +744,10 @@ namespace Adaptive.Aeron
         /// </summary>
         /// <param name="correlationId"> returned from one of the async methods:
         ///                      <seealso cref="AsyncAddCounter(int, String)"/>,
-        ///                      <seealso cref="AsyncAddCounter(int, IDirectBuffer, int, int, IDirectBuffer, int, int)"/>,
+        /// <seealso cref="AsyncAddCounter(int, IDirectBuffer, int, int, IDirectBuffer, int, int)"/>,
         ///                      <seealso cref="AsyncAddStaticCounter(int, String, long)"/> or
-        ///                      <seealso cref="AsyncAddStaticCounter(int, IDirectBuffer, int, int, IDirectBuffer, int, int, long)"/>. </param>
+        /// <seealso cref="AsyncAddStaticCounter(int, IDirectBuffer, int, int, IDirectBuffer, int, int, long)"/>.
+        /// </param>
         /// <returns> a new <seealso cref="Counter"/> when available, otherwise {@code null}. </returns>
         /// <seealso cref="AsyncAddCounter(int, String)"/>
         /// <seealso cref="AsyncAddCounter(int, IDirectBuffer, int, int, IDirectBuffer, int, int)"/>
@@ -793,7 +883,7 @@ namespace Adaptive.Aeron
         public static class Configuration
         {
             /// <summary>
-            /// Duration in milliseconds for which the client conductor will sleep between duty cycles. 
+            /// Duration in milliseconds for which the client conductor will sleep between duty cycles.
             /// </summary>
             public static readonly int IDLE_SLEEP_DEFAULT_MS = 16;
 
@@ -818,8 +908,8 @@ namespace Adaptive.Aeron
             public static readonly long KeepaliveIntervalNs = NanoUtil.FromMilliseconds(500);
 
             /// <summary>
-            /// Duration to wait while lingering an entity such as an <seealso cref="Image"/> before deleting underlying resources
-            /// such as memory mapped files.
+            /// Duration to wait while lingering an entity such as an <seealso cref="Image"/> before deleting underlying
+            /// resources such as memory mapped files.
             /// </summary>
             public const string RESOURCE_LINGER_DURATION_PROP_NAME = "aeron.client.resource.linger.duration";
 
@@ -829,9 +919,9 @@ namespace Adaptive.Aeron
             public static readonly long RESOURCE_LINGER_DURATION_DEFAULT_NS = NanoUtil.FromSeconds(3);
 
             /// <summary>
-            /// Duration to linger on close so that publishers subscribers have time to notice closed resources.
-            /// This value can be set to a few seconds if the application is likely to experience CPU starvation or
-            /// long GC pauses.
+            /// Duration to linger on close so that publishers subscribers have time to notice closed resources. This
+            /// value can be set to a few seconds if the application is likely to experience CPU starvation or long GC
+            /// pauses.
             /// </summary>
             public const string CLOSE_LINGER_DURATION_PROP_NAME = "aeron.client.close.linger.duration";
 
@@ -843,8 +933,8 @@ namespace Adaptive.Aeron
             /// <summary>
             /// Should memory-mapped files be pre-touched so that they are already faulted into a process.
             /// <para>
-            /// Pre-touching files can result in it taking taking longer for resources to become available in
-            /// return for avoiding later pauses due to page faults.
+            /// Pre-touching files can result in it taking taking longer for resources to become available in return for
+            /// avoiding later pauses due to page faults.
             /// </para>
             /// </summary>
             public const string PRE_TOUCH_MAPPED_MEMORY_PROP_NAME = "aeron.pre.touch.mapped.memory";
@@ -861,11 +951,11 @@ namespace Adaptive.Aeron
             public static readonly string CLIENT_NAME_PROP_NAME = "aeron.client.name";
 
             /// <summary>
-            /// The Default handler for Aeron runtime exceptions.
-            /// When a <seealso cref="DriverTimeoutException"/> is encountered, this handler will exit the program.
+            /// The Default handler for Aeron runtime exceptions. When a <seealso cref="DriverTimeoutException"/> is
+            /// encountered, this handler will exit the program.
             /// <para>
             /// The error handler can be overridden by supplying an <seealso cref="Context"/> with a custom handler.
-            /// 
+            ///
             /// </para>
             /// </summary>
             /// <seealso cref="Context.ErrorHandler(IErrorHandler)" />
@@ -902,20 +992,22 @@ namespace Adaptive.Aeron
             }
 
             /// <summary>
-            /// Duration to wait while lingering an entity such as an <seealso cref="Image"/> before deleting underlying resources
-            /// such as memory mapped files.
+            /// Duration to wait while lingering an entity such as an <seealso cref="Image"/> before deleting underlying
+            /// resources such as memory mapped files.
             /// </summary>
             /// <returns> duration in nanoseconds to wait before deleting an expired resource. </returns>
             /// <seealso cref="RESOURCE_LINGER_DURATION_PROP_NAME"/>
             public static long ResourceLingerDurationNs()
             {
-                return Config.GetDurationInNanos(RESOURCE_LINGER_DURATION_PROP_NAME,
-                    RESOURCE_LINGER_DURATION_DEFAULT_NS);
+                return Config.GetDurationInNanos(
+                    RESOURCE_LINGER_DURATION_PROP_NAME,
+                    RESOURCE_LINGER_DURATION_DEFAULT_NS
+                );
             }
 
             /// <summary>
-            /// Duration to wait while lingering an entity such as an <seealso cref="Image"/> before deleting underlying resources
-            /// such as memory mapped files.
+            /// Duration to wait while lingering an entity such as an <seealso cref="Image"/> before deleting underlying
+            /// resources such as memory mapped files.
             /// </summary>
             /// <returns> duration in nanoseconds to wait before deleting an expired resource. </returns>
             /// <seealso cref="RESOURCE_LINGER_DURATION_PROP_NAME"/>
@@ -957,12 +1049,14 @@ namespace Adaptive.Aeron
         }
 
         /// <summary>
-        /// Provides a means to override configuration for an <seealso cref="Aeron"/> class via the <seealso cref="Aeron.Connect(Aeron.Context)"/>
-        /// method and its overloads. It gives applications some control over the interactions with the Aeron Media Driver.
-        /// It can also set up error handling as well as application callbacks for image information from the Media Driver.
-        /// 
+        /// Provides a means to override configuration for an <seealso cref="Aeron"/> class via the
+        /// <seealso cref="Aeron.Connect(Aeron.Context)"/>
+        /// method and its overloads. It gives applications some control over the interactions with the Aeron Media
+        /// Driver. It can also set up error handling as well as application callbacks for image information from the
+        /// Media Driver.
+        ///
         /// A number of the properties are for testing and should not be set by end users.
-        /// 
+        ///
         /// <b>Note:</b> Do not reuse instances of the context across different <seealso cref="Aeron"/> clients.
         ///
         /// The context will be owned be <see cref="ClientConductor"/> after a successful
@@ -971,7 +1065,7 @@ namespace Adaptive.Aeron
         public class Context : IDisposable
         {
             private long _clientId;
-            private string clientName = Configuration.ClientName();
+            private string _clientName = Configuration.ClientName();
             private bool _useConductorAgentInvoker = false;
             private bool _preTouchMappedMemory = Configuration.PreTouchMappedMemory();
             private AgentInvoker _driverAgentInvoker;
@@ -990,21 +1084,22 @@ namespace Adaptive.Aeron
             private UnavailableImageHandler _unavailableImageHandler;
             private AvailableCounterHandler _availableCounterHandler;
             private UnavailableCounterHandler _unavailableCounterHandler;
-            private IPublicationErrorFrameHandler publicationErrorFrameHandler = new NoOpPublicationErrorFrameHandler();
+            private IPublicationErrorFrameHandler _publicationErrorFrameHandler =
+                new NoOpPublicationErrorFrameHandler();
             private Action _closeHandler;
             private long _keepAliveIntervalNs = Configuration.KeepaliveIntervalNs;
             private long _interServiceTimeoutNs;
-            private long idleSleepDurationNs = Configuration.IdleSleepDurationNs();
+            private long _idleSleepDurationNs = Configuration.IdleSleepDurationNs();
             private long _resourceLingerDurationNs = Configuration.ResourceLingerDurationNs();
             private long _closeLingerDurationNs = Configuration.CloseLingerDurationNs();
-            private int filePageSize;
+            private int _filePageSize;
 
             private int _isConcluded = 0;
             private long _driverTimeoutMs = DRIVER_TIMEOUT_MS;
             private string _aeronDirectoryName = GetAeronDirectoryName();
             private DirectoryInfo _aeronDirectory;
             private FileInfo _cncFile;
-            private bool enableExperimentalFeatures = Config.GetBoolean(ENABLE_EXPERIMENTAL_FEATURES_PROP_NAME);
+            private bool _enableExperimentalFeatures = Config.GetBoolean(ENABLE_EXPERIMENTAL_FEATURES_PROP_NAME);
 
             private MappedByteBuffer _cncByteBuffer;
             private UnsafeBuffer _cncMetaDataBuffer;
@@ -1016,12 +1111,9 @@ namespace Adaptive.Aeron
             {
                 string baseDirName = null;
 
-                if (Environment.OSVersion.Platform == PlatformID.Unix)
+                if (Environment.OSVersion.Platform == PlatformID.Unix && Directory.Exists(@"/dev/shm"))
                 {
-                    if (Directory.Exists(@"/dev/shm"))
-                    {
-                        baseDirName = "/dev/shm/aeron";
-                    }
+                    baseDirName = "/dev/shm/aeron";
                 }
 
                 if (null == baseDirName)
@@ -1049,18 +1141,20 @@ namespace Adaptive.Aeron
             public const string ENABLE_EXPERIMENTAL_FEATURES_PROP_NAME = "aeron.enable.experimental.features";
 
             /// <summary>
-            /// Property name for a fallback <seealso cref="StreamWriter"/> based logger when it is not possible to use the error logging
-            /// callback. Supported values are stdout, stderr, no_op (stderr is the default).
+            /// Property name for a fallback <seealso cref="StreamWriter"/> based logger when it is not possible to use
+            /// the error logging callback. Supported values are stdout, stderr, no_op (stderr is the default).
             /// </summary>
             public const string FALLBACK_LOGGER_PROP_NAME = "aeron.fallback.logger";
 
             /// <summary>
-            /// Media type used for IPC shared memory from <seealso cref="Publication"/> to <seealso cref="Subscription"/> channels.
+            /// Media type used for IPC shared memory from <seealso cref="Publication"/> to
+            /// <seealso cref="Subscription"/> channels.
             /// </summary>
             public const string IPC_MEDIA = "ipc";
 
             /// <summary>
-            /// Media type used for UDP sockets from <seealso cref="Publication"/> to <seealso cref="Subscription"/> channels.
+            /// Media type used for UDP sockets from <seealso cref="Publication"/> to <seealso cref="Subscription"/>
+            /// channels.
             /// </summary>
             public const string UDP_MEDIA = "udp";
 
@@ -1075,14 +1169,14 @@ namespace Adaptive.Aeron
             public const string UDP_CHANNEL = "aeron:udp";
 
             /// <summary>
-            /// URI used for Spy <see cref="Subscription"/>s whereby an outgoing unicast or multicast publication can be spied on
-            /// by IPC without receiving it again via the network.
+            /// URI used for Spy <see cref="Subscription"/>s whereby an outgoing unicast or multicast publication can be
+            /// spied on by IPC without receiving it again via the network.
             /// </summary>
             public const string SPY_PREFIX = "aeron-spy:";
 
             /// <summary>
-            /// The address and port used for a UDP channel. For the publisher it is the socket to send to,
-            /// for the subscriber it is the socket to receive from.
+            /// The address and port used for a UDP channel. For the publisher it is the socket to send to, for the
+            /// subscriber it is the socket to receive from.
             /// </summary>
             public const string ENDPOINT_PARAM_NAME = "endpoint";
 
@@ -1133,8 +1227,8 @@ namespace Adaptive.Aeron
             public const string TERM_LENGTH_PARAM_NAME = "term-length";
 
             /// <summary>
-            /// MTU length parameter name for using as a channel URI param. If this is greater than the network MTU for UDP
-            /// then the packet will be fragmented and can amplify the impact of loss.
+            /// MTU length parameter name for using as a channel URI param. If this is greater than the network MTU for
+            /// UDP then the packet will be fragmented and can amplify the impact of loss.
             /// </summary>
             public const string MTU_LENGTH_PARAM_NAME = "mtu";
 
@@ -1169,7 +1263,8 @@ namespace Adaptive.Aeron
             public const string MDC_CONTROL_MODE_MANUAL = "manual";
 
             /// <summary>
-            /// Valid value for <seealso cref="MDC_CONTROL_MODE_PARAM_NAME"/> when dynamic control is desired. Default value.
+            /// Valid value for <seealso cref="MDC_CONTROL_MODE_PARAM_NAME"/> when dynamic control is desired. Default
+            /// value.
             /// </summary>
             public const string MDC_CONTROL_MODE_DYNAMIC = "dynamic";
 
@@ -1189,8 +1284,8 @@ namespace Adaptive.Aeron
             public const string LINGER_PARAM_NAME = "linger";
 
             /// <summary>
-            /// Parameter name for channel URI param to indicate if a subscribed stream must be reliable or not.
-            /// Value is boolean with true to recover loss and false to gap fill.
+            /// Parameter name for channel URI param to indicate if a subscribed stream must be reliable or not. Value
+            /// is boolean with true to recover loss and false to gap fill.
             /// </summary>
             public const string RELIABLE_STREAM_PARAM_NAME = "reliable";
 
@@ -1210,30 +1305,36 @@ namespace Adaptive.Aeron
             public const string SPARSE_PARAM_NAME = "sparse";
 
             /// <summary>
-            /// Parameter name for channel URI param to indicate an alias for the given URI. Value not interpreted by Aeron.
+            /// Parameter name for channel URI param to indicate an alias for the given URI. Value not interpreted by
+            /// Aeron.
             ///
-            /// This is a reserved application level param used to identify a particular channel for application purposes.
+            /// This is a reserved application level param used to identify a particular channel for application
+            /// purposes.
             /// </summary>
             public const string ALIAS_PARAM_NAME = "alias";
 
             /// <summary>
-            /// Parameter name for channel URI param to indicate if End of Stream (EOS) should be sent or not. Value is boolean.
+            /// Parameter name for channel URI param to indicate if End of Stream (EOS) should be sent or not. Value is
+            /// boolean.
             /// </summary>
             public const string EOS_PARAM_NAME = "eos";
 
             /// <summary>
             /// Parameter name for channel URI param to indicate if a subscription should tether for local flow control.
-            /// Value is boolean. A tether only applies when there is more than one matching active subscription. If tether is
-            /// true then that subscription is included in flow control. If only one subscription then it tethers pace.
+            /// Value is boolean. A tether only applies when there is more than one matching active subscription. If
+            /// tether is true then that subscription is included in flow control. If only one subscription then it
+            /// tethers pace.
             /// </summary>
             public const string TETHER_PARAM_NAME = "tether";
 
             /// <summary>
-            /// Parameter name for channel URI param to indicate if a Subscription represents a group member or individual
-            /// from the perspective of message reception. This can inform loss handling and similar semantics.
+            /// Parameter name for channel URI param to indicate if a Subscription represents a group member or
+            /// individual from the perspective of message reception. This can inform loss handling and similar
+            /// semantics.
             /// <para>
-            /// When configuring a subscription for an MDC publication then should be added as this is effective multicast.
-            ///    
+            /// When configuring a subscription for an MDC publication then should be added as this is effective
+            /// multicast.
+            ///
             /// </para>
             /// </summary>
             /// <seealso cref="MDC_CONTROL_MODE_PARAM_NAME"></seealso>
@@ -1253,8 +1354,8 @@ namespace Adaptive.Aeron
             public const string CONGESTION_CONTROL_PARAM_NAME = "cc";
 
             /// <summary>
-            /// Parameter name for Publication URI param to indicate the flow control strategy to be used.
-            /// Options include {@code min}, {@code max}, and {@code pref}.
+            /// Parameter name for Publication URI param to indicate the flow control strategy to be used. Options
+            /// include {@code min}, {@code max}, and {@code pref}.
             /// </summary>
             public const string FLOW_CONTROL_PARAM_NAME = "fc";
 
@@ -1264,7 +1365,8 @@ namespace Adaptive.Aeron
             public const string GROUP_TAG_PARAM_NAME = "gtag";
 
             /// <summary>
-            /// Parameter name for Publication URI param to indicate whether spy subscriptions should simulate a connection.
+            /// Parameter name for Publication URI param to indicate whether spy subscriptions should simulate a
+            /// connection.
             /// </summary>
             public const string SPIES_SIMULATE_CONNECTION_PARAM_NAME = "ssc";
 
@@ -1284,54 +1386,56 @@ namespace Adaptive.Aeron
             public const string RECEIVER_WINDOW_LENGTH_PARAM_NAME = "rcv-wnd";
 
             /// <summary>
-            /// Parameter name of the offset for the media receive timestamp to be inserted into the incoming message on a
-            /// subscription. The special value of 'reserved' can be used to insert into the reserved value field. Media
-            /// receive timestamp is taken as the earliest possible point after the packet is received from the network. This
-            /// is only supported in the C media driver, the Java Media Driver will generate an error if used.
+            /// Parameter name of the offset for the media receive timestamp to be inserted into the incoming message on
+            /// a subscription. The special value of 'reserved' can be used to insert into the reserved value field.
+            /// Media receive timestamp is taken as the earliest possible point after the packet is received from the
+            /// network. This is only supported in the C media driver, the Java Media Driver will generate an error if
+            /// used.
             /// </summary>
             public const string MEDIA_RCV_TIMESTAMP_OFFSET_PARAM_NAME = "media-rcv-ts-offset";
 
             /// <summary>
-            /// Parameter name of the offset for the channel receive timestamp to be inserted into the incoming message on a
-            /// subscription. The special value of 'reserved' can be used to insert into the reserved value field. Channel
-            /// receive timestamp is taken as soon a possible after the packet is received by Aeron receiver from the transport
-            /// bindings.
+            /// Parameter name of the offset for the channel receive timestamp to be inserted into the incoming message
+            /// on a subscription. The special value of 'reserved' can be used to insert into the reserved value field.
+            /// Channel receive timestamp is taken as soon a possible after the packet is received by Aeron receiver
+            /// from the transport bindings.
             /// </summary>
             public const string CHANNEL_RECEIVE_TIMESTAMP_OFFSET_PARAM_NAME = "channel-rcv-ts-offset";
 
             /// <summary>
-            /// Parameter name of the offset for the channel send timestamp to be inserted into the outgoing message
-            /// on a publication. The special value of 'reserved' can be used to insert into the reserved value
-            /// field. Channel send timestamp is taken shortly before passing the message over to the configured transport
+            /// Parameter name of the offset for the channel send timestamp to be inserted into the outgoing message on
+            /// a publication. The special value of 'reserved' can be used to insert into the reserved value field.
+            /// Channel send timestamp is taken shortly before passing the message over to the configured transport
             /// bindings.
             /// </summary>
             public const string CHANNEL_SEND_TIMESTAMP_OFFSET_PARAM_NAME = "channel-snd-ts-offset";
 
             /// <summary>
-            /// Placeholder value to use in URIs to specify that a timestamp should be stored in the reserved value field.
+            /// Placeholder value to use in URIs to specify that a timestamp should be stored in the reserved value
+            /// field.
             /// </summary>
             public const string RESERVED_OFFSET = "reserved";
 
             /// <summary>
-            /// Parameter name for the field that will be used to specify the response endpoint on a subscription and publication
-            /// used in a response "server".
+            /// Parameter name for the field that will be used to specify the response endpoint on a subscription and
+            /// publication used in a response "server".
             /// </summary>
             /// <remarks>Since 1.44.0</remarks>
             public const string RESPONSE_ENDPOINT_PARAM_NAME = "response-endpoint";
 
             /// <summary>
-            /// Parameter name for the field that will be used to specify the correlation id used on a publication to connect it
-            /// to a subscription's image in order to set up a response stream.
+            /// Parameter name for the field that will be used to specify the correlation id used on a publication to
+            /// connect it to a subscription's image in order to set up a response stream.
             /// </summary>
             /// <remarks>Since 1.44.0</remarks>
             public const string RESPONSE_CORRELATION_ID_PARAM_NAME = "response-correlation-id";
 
             /// <summary>
-            /// Placeholder value to use in response channels where the publication is to be pre-created to reserve and hold
-            /// onto the local port.
+            /// Placeholder value to use in response channels where the publication is to be pre-created to reserve and
+            /// hold onto the local port.
             /// </summary>
             public const string PROTOTYPE_CORRELATION_ID = "prototype";
-            
+
             /// <summary>
             /// Parameter name to set explicit NAK delay (e.g. {@code nak-delay=200ms}).
             /// </summary>
@@ -1339,14 +1443,15 @@ namespace Adaptive.Aeron
             public const string NAK_DELAY_PARAM_NAME = "nak-delay";
 
             /// <summary>
-            /// Parameter name to set explicit untethered window limit timeout, e.g. {@code untethered-window-limit-timeout=10s}.
+            /// Parameter name to set explicit untethered window limit timeout, e.g.
+            /// {@code untethered-window-limit-timeout=10s}.
             /// </summary>
             /// <remarks>Since 1.45.0</remarks>
             public const string UNTETHERED_WINDOW_LIMIT_TIMEOUT_PARAM_NAME = "untethered-window-limit-timeout";
 
             /// <summary>
             /// Parameter name to set explicit untethered linger timeout, e.g. {@code untethered-linger-timeout=10s}.
-            ///     
+            ///
             /// <remarks>Since 1.48.0</remarks>
             /// </summary>
             public const string UNTETHERED_LINGER_TIMEOUT_PARAM_NAME = "untethered-linger-timeout";
@@ -1370,7 +1475,7 @@ namespace Adaptive.Aeron
             public const string STREAM_ID_PARAM_NAME = "stream-id";
 
             /// <summary>
-            ///  Parameter name for the publication window length, i.e. how far ahead can publication accept offers.
+            /// Parameter name for the publication window length, i.e. how far ahead can publication accept offers.
             /// </summary>
             /// <remarks>Since 1.47.0</remarks>
             public const string PUBLICATION_WINDOW_LENGTH_PARAM_NAME = "pub-wnd";
@@ -1407,10 +1512,12 @@ namespace Adaptive.Aeron
             }
 
             /// <summary>
-            /// Get the default directory name to be used if <seealso cref="AeronDirectoryName(String)"/> is not set. This will take
-            /// the <seealso cref="AERON_DIR_PROP_NAME"/> if set and if not then <seealso cref="AERON_DIR_PROP_DEFAULT"/>.
+            /// Get the default directory name to be used if <seealso cref="AeronDirectoryName(String)"/> is not set.
+            /// This will take the <seealso cref="AERON_DIR_PROP_NAME"/> if set and if not then
+            /// <seealso cref="AERON_DIR_PROP_DEFAULT"/>.
             /// </summary>
-            /// <returns> the default directory name to be used if <seealso cref="AeronDirectoryName(String)"/> is not set. </returns>
+            /// <returns> the default directory name to be used if <seealso cref="AeronDirectoryName(String)"/> is not
+            /// set. </returns>
             public static string GetAeronDirectoryName()
             {
                 return Config.GetProperty(AERON_DIR_PROP_NAME, AERON_DIR_PROP_DEFAULT);
@@ -1446,11 +1553,17 @@ namespace Adaptive.Aeron
             }
 
             /// <summary>
-            /// This is called automatically by <seealso cref="Connect()"/> and its overloads.
-            /// There is no need to call it from a client application. It is responsible for providing default
-            /// values for options that are not individually changed through field setters.
+            /// This is called automatically by <seealso cref="Connect()"/> and its overloads. There is no need to call
+            /// it from a client application. It is responsible for providing default values for options that are not
+            /// individually changed through field setters.
             /// </summary>
             /// <returns> this for a fluent API. </returns>
+            [System.Diagnostics.CodeAnalysis.SuppressMessage(
+                "Major Code Smell",
+                "S138:Functions should not have too many lines",
+                // Upstream: io.aeron.Aeron.Context#conclude is @SuppressWarnings("checkstyle:methodlength").
+                Justification = "Upstream Java parity; method is itself @SuppressWarnings(\"MethodLength\")."
+            )]
             public Context Conclude()
             {
                 if (0 != Interlocked.Exchange(ref _isConcluded, 1))
@@ -1469,21 +1582,24 @@ namespace Adaptive.Aeron
                 else if (_clientLock is NoOpLock && !_useConductorAgentInvoker)
                 {
                     throw new ConfigurationException(
-                        "Must use Aeron.Context.UseConductorAgentInvoker(true) when Aeron.Context.ClientLock(...) " +
-                        "is using a NoOpLock");
+                        "Must use Aeron.Context.UseConductorAgentInvoker(true) when Aeron.Context.ClientLock(...) "
+                            + "is using a NoOpLock"
+                    );
                 }
 
                 if (null != _driverAgentInvoker && !_useConductorAgentInvoker)
                 {
                     throw new ConfigurationException(
-                        "Must use Aeron.Context.useConductorAgentInvoker(true) when Aeron.Context.driverAgentInvoker() " +
-                        "is set");
+                        "Must use Aeron.Context.useConductorAgentInvoker(true) when Aeron.Context.driverAgentInvoker() "
+                            + "is set"
+                    );
                 }
 
-                if (clientName.Length > Configuration.MAX_CLIENT_NAME_LENGTH)
+                if (_clientName.Length > Configuration.MAX_CLIENT_NAME_LENGTH)
                 {
                     throw new ConfigurationException(
-                        "clientName length must <= " + Configuration.MAX_CLIENT_NAME_LENGTH);
+                        "clientName length must <= " + Configuration.MAX_CLIENT_NAME_LENGTH
+                    );
                 }
 
                 if (_epochClock == null)
@@ -1496,15 +1612,14 @@ namespace Adaptive.Aeron
                     _nanoClock = SystemNanoClock.INSTANCE;
                 }
 
-
-                if (idleSleepDurationNs < 0 || idleSleepDurationNs > 1_000_000_000)
+                if (_idleSleepDurationNs < 0 || _idleSleepDurationNs > 1_000_000_000)
                 {
-                    throw new ConfigurationException("Invalid idle sleep duration: " + idleSleepDurationNs + "ns");
+                    throw new ConfigurationException("Invalid idle sleep duration: " + _idleSleepDurationNs + "ns");
                 }
 
                 if (_idleStrategy == null)
                 {
-                    _idleStrategy = new SleepingIdleStrategy((int)TimeUnit.NANOSECONDS.ToMillis(idleSleepDurationNs));
+                    _idleStrategy = new SleepingIdleStrategy((int)TimeUnit.NANOSECONDS.ToMillis(_idleSleepDurationNs));
                 }
 
                 if (null == _awaitingIdleStrategy)
@@ -1513,67 +1628,80 @@ namespace Adaptive.Aeron
                 }
 
                 ConnectToDriver();
-                filePageSize = DriverFilePageSize(_cncMetaDataBuffer);
+                _filePageSize = DriverFilePageSize(_cncMetaDataBuffer);
 
                 _interServiceTimeoutNs = CncFileDescriptor.ClientLivenessTimeoutNs(_cncMetaDataBuffer);
                 if (_interServiceTimeoutNs <= _keepAliveIntervalNs)
                 {
-                    throw new ConfigurationException("interServiceTimeoutNs=" + _interServiceTimeoutNs +
-                                                     " <= keepAliveIntervalNs=" + _keepAliveIntervalNs);
+                    throw new ConfigurationException(
+                        "interServiceTimeoutNs="
+                            + _interServiceTimeoutNs
+                            + " <= keepAliveIntervalNs="
+                            + _keepAliveIntervalNs
+                    );
                 }
 
                 if (_toDriverBuffer == null)
                 {
-                    _toDriverBuffer =
-                        new ManyToOneRingBuffer(CncFileDescriptor.CreateToDriverBuffer(_cncByteBuffer,
-                            _cncMetaDataBuffer));
+                    _toDriverBuffer = new ManyToOneRingBuffer(
+                        CncFileDescriptor.CreateToDriverBuffer(_cncByteBuffer, _cncMetaDataBuffer)
+                    );
                 }
 
                 if (_toClientBuffer == null)
                 {
-                    _toClientBuffer = new CopyBroadcastReceiver(new BroadcastReceiver(
-                            CncFileDescriptor.CreateToClientsBuffer(_cncByteBuffer, _cncMetaDataBuffer)),
-                        new ExpandableArrayBuffer(CopyBroadcastReceiver.ScratchBufferSize));
+                    _toClientBuffer = new CopyBroadcastReceiver(
+                        new BroadcastReceiver(
+                            CncFileDescriptor.CreateToClientsBuffer(_cncByteBuffer, _cncMetaDataBuffer)
+                        ),
+                        new ExpandableArrayBuffer(CopyBroadcastReceiver.ScratchBufferSize)
+                    );
                 }
 
-                if (CountersMetaDataBuffer() == null)
+                if (null == CountersMetaDataBuffer())
                 {
-                    CountersMetaDataBuffer(CncFileDescriptor.CreateCountersMetaDataBuffer(_cncByteBuffer,
-                        _cncMetaDataBuffer));
+                    CountersMetaDataBuffer(
+                        CncFileDescriptor.CreateCountersMetaDataBuffer(_cncByteBuffer, _cncMetaDataBuffer)
+                    );
                 }
 
-                if (CountersValuesBuffer() == null)
+                if (null == CountersValuesBuffer())
                 {
-                    CountersValuesBuffer(CncFileDescriptor.CreateCountersValuesBuffer(_cncByteBuffer,
-                        _cncMetaDataBuffer));
+                    CountersValuesBuffer(
+                        CncFileDescriptor.CreateCountersValuesBuffer(_cncByteBuffer, _cncMetaDataBuffer)
+                    );
                 }
 
-                if (_logBuffersFactory == null)
+                if (null == _logBuffersFactory)
                 {
                     _logBuffersFactory = new MappedLogBuffersFactory();
                 }
 
-                if (_errorHandler == null)
+                if (null == _errorHandler)
                 {
                     _errorHandler = Configuration.DEFAULT_ERROR_HANDLER;
                 }
 
-                if (_subscriberErrorHandler == null)
+                if (null == _subscriberErrorHandler)
                 {
                     _subscriberErrorHandler = _errorHandler;
                 }
 
-                if (_availableImageHandler == null)
+                if (null == _availableImageHandler)
                 {
-                    _availableImageHandler = image => { };
+                    _availableImageHandler = image =>
+                    {
+                    };
                 }
 
-                if (_unavailableImageHandler == null)
+                if (null == _unavailableImageHandler)
                 {
-                    _unavailableImageHandler = image => { };
+                    _unavailableImageHandler = image =>
+                    {
+                    };
                 }
 
-                if (null == _driverProxy)
+                if (_driverProxy == null)
                 {
                     _clientId = _toDriverBuffer.NextCorrelationId();
                     _driverProxy = new DriverProxy(ToDriverBuffer(), _clientId);
@@ -1600,7 +1728,7 @@ namespace Adaptive.Aeron
             /// <remarks>Since 1.44.0</remarks>
             public Context ClientName(string clientName)
             {
-                this.clientName = string.IsNullOrEmpty(clientName) ? "" : clientName;
+                _clientName = string.IsNullOrEmpty(clientName) ? "" : clientName;
                 return this;
             }
 
@@ -1612,9 +1740,8 @@ namespace Adaptive.Aeron
             /// <remarks>Since 1.44.0</remarks>
             public string ClientName()
             {
-                return clientName;
+                return _clientName;
             }
-
 
             /// <summary>
             /// Get the command and control file.
@@ -1626,10 +1753,11 @@ namespace Adaptive.Aeron
             }
 
             /// <summary>
-            /// Should an <see cref="AgentInvoker"/> be used for running the <see cref="ClientConductor"/> rather than run it on
-            /// a thread with an <see cref="AgentRunner"/>
+            /// Should an <see cref="AgentInvoker"/> be used for running the <see cref="ClientConductor"/> rather than
+            /// run it on a thread with an <see cref="AgentRunner"/>
             /// </summary>
-            /// <param name="useConductorAgentInvoker"> use <see cref="AgentInvoker"/> for running the <see cref="ClientConductor"/></param>
+            /// <param name="useConductorAgentInvoker"> use <see cref="AgentInvoker"/> for running the
+            /// <see cref="ClientConductor"/></param>
             /// <returns> this for a fluent API. </returns>
             public Context UseConductorAgentInvoker(bool useConductorAgentInvoker)
             {
@@ -1638,10 +1766,11 @@ namespace Adaptive.Aeron
             }
 
             /// <summary>
-            /// Should an <see cref="AgentInvoker"/> be used for running the <see cref="ClientConductor"/> rather than run it on
-            /// a thread with an <see cref="AgentRunner"/>
+            /// Should an <see cref="AgentInvoker"/> be used for running the <see cref="ClientConductor"/> rather than
+            /// run it on a thread with an <see cref="AgentRunner"/>
             /// </summary>
-            /// <returns> true if the <see cref="ClientConductor"/> will be run with an <see cref="AgentInvoker"/> otherwise false.</returns>
+            /// <returns> true if the <see cref="ClientConductor"/> will be run with an <see cref="AgentInvoker"/>
+            /// otherwise false.</returns>
             public bool UseConductorAgentInvoker()
             {
                 return _useConductorAgentInvoker;
@@ -1650,7 +1779,8 @@ namespace Adaptive.Aeron
             /// <summary>
             /// Should mapped-memory be pre-touched to avoid soft page faults.
             /// </summary>
-            /// <param name="preTouchMappedMemory"> true if mapped-memory should be pre-touched otherwise false. </param>
+            /// <param name="preTouchMappedMemory"> true if mapped-memory should be pre-touched otherwise false.
+            /// </param>
             /// <returns> this for a fluent API. </returns>
             /// <seealso cref="Configuration.PRE_TOUCH_MAPPED_MEMORY_PROP_NAME"/>
             public Context PreTouchMappedMemory(bool preTouchMappedMemory)
@@ -1670,10 +1800,11 @@ namespace Adaptive.Aeron
             }
 
             /// <summary>
-            /// Set the <seealso cref="AgentInvoker"/> for the Media Driver to be used while awaiting a synchronous response.
+            /// Set the <seealso cref="AgentInvoker"/> for the Media Driver to be used while awaiting a synchronous
+            /// response.
             /// <para>
             /// Useful for when running on a low thread count scenario.
-            /// 
+            ///
             /// </para>
             /// </summary>
             /// <param name="driverAgentInvoker"> to be invoked while awaiting a response in the client. </param>
@@ -1685,7 +1816,8 @@ namespace Adaptive.Aeron
             }
 
             /// <summary>
-            /// Get the <seealso cref="AgentInvoker"/> that is used to run the Media Driver while awaiting a synchronous response.
+            /// Get the <seealso cref="AgentInvoker"/> that is used to run the Media Driver while awaiting a synchronous
+            /// response.
             /// </summary>
             /// <returns> the <seealso cref="AgentInvoker"/> that is used for running the Media Driver. </returns>
             public AgentInvoker DriverAgentInvoker()
@@ -1695,10 +1827,10 @@ namespace Adaptive.Aeron
 
             /// <summary>
             /// The <see cref="ILock"/> that is used to provide mutual exclusion in the Aeron client.
-            /// 
-            /// If the <see cref="UseConductorAgentInvoker(bool)"/> is set and only one thread accesses the client
-            /// then the lock can be set to <see cref="NoOpLock"/> to elide the lock overhead.
-            /// 
+            ///
+            /// If the <see cref="UseConductorAgentInvoker(bool)"/> is set and only one thread accesses the client then
+            /// the lock can be set to <see cref="NoOpLock"/> to elide the lock overhead.
+            ///
             /// </summary>
             /// <param name="lock"> that is used to provide mutual exclusion in the Aeron client.</param>
             /// <returns> this for a fluent API. </returns>
@@ -1711,16 +1843,19 @@ namespace Adaptive.Aeron
             /// <summary>
             /// Get the <see cref="ILock"/> that is used to provide mutual exclusion in the Aeron client.
             /// </summary>
-            /// <returns> the <see cref="ILock"/> that is used to provide mutual exclusion in the Aeron client.</returns>
+            /// <returns> the <see cref="ILock"/> that is used to provide mutual exclusion in the Aeron
+            /// client.</returns>
             public ILock ClientLock()
             {
                 return _clientLock;
             }
 
             /// <summary>
-            /// Set the <seealso cref="IEpochClock"/> to be used for tracking wall clock time when interacting with the driver.
+            /// Set the <seealso cref="IEpochClock"/> to be used for tracking wall clock time when interacting with the
+            /// driver.
             /// </summary>
-            /// <param name="clock"> <seealso cref="IEpochClock"/> to be used for tracking wall clock time when interacting with the driver. </param>
+            /// <param name="clock"> <seealso cref="IEpochClock"/> to be used for tracking wall clock time when
+            /// interacting with the driver. </param>
             /// <returns>this for a fluent API.</returns>
             public Context EpochClock(IEpochClock clock)
             {
@@ -1731,12 +1866,12 @@ namespace Adaptive.Aeron
             /// <summary>
             /// Get the <seealso cref="IEpochClock"/> used by the client for the epoch time in milliseconds.
             /// </summary>
-            /// <returns> the <seealso cref="IEpochClock"/> used by the client for the epoch time in milliseconds. </returns>
+            /// <returns> the <seealso cref="IEpochClock"/> used by the client for the epoch time in milliseconds.
+            /// </returns>
             public IEpochClock EpochClock()
             {
                 return _epochClock;
             }
-
 
             /// <summary>
             /// Set the <seealso cref="INanoClock"/> to be used for tracking high resolution time.
@@ -1772,7 +1907,8 @@ namespace Adaptive.Aeron
             /// <summary>
             /// Get the <seealso cref="IIdleStrategy"/> employed by the client for the client duty cycle.
             /// </summary>
-            /// <returns> the <seealso cref="IIdleStrategy"/> employed by the client for the client duty cycle. </returns>
+            /// <returns> the <seealso cref="IIdleStrategy"/> employed by the client for the client duty cycle.
+            /// </returns>
             public IIdleStrategy IdleStrategy()
             {
                 return _idleStrategy;
@@ -1792,12 +1928,14 @@ namespace Adaptive.Aeron
             /// <summary>
             /// The <seealso cref="IIdleStrategy"/> to be used when awaiting a response from the Media Driver.
             /// <para>
-            /// This can be changed to a <seealso cref="BusySpinIdleStrategy"/> or <seealso cref="YieldingIdleStrategy"/> for lower response
+            /// This can be changed to a <seealso cref="BusySpinIdleStrategy"/> or
+            /// <seealso cref="YieldingIdleStrategy"/> for lower response
             /// time, especially for adding counters or releasing resources, at the expense of CPU usage.
-            /// 
+            ///
             /// </para>
             /// </summary>
-            /// <returns> the <seealso cref="IIdleStrategy"/> to be used when awaiting a response from the Media Driver. </returns>
+            /// <returns> the <seealso cref="IIdleStrategy"/> to be used when awaiting a response from the Media Driver.
+            /// </returns>
             public IIdleStrategy AwaitingIdleStrategy()
             {
                 return _awaitingIdleStrategy;
@@ -1852,7 +1990,6 @@ namespace Adaptive.Aeron
                 return _driverProxy;
             }
 
-
             /// <summary>
             /// This method is used for testing and debugging.
             /// </summary>
@@ -1873,14 +2010,15 @@ namespace Adaptive.Aeron
                 return _logBuffersFactory;
             }
 
-
             /// <summary>
             /// Handle Aeron exceptions in a callback method. The default behavior is defined by
-            /// <seealso cref="Configuration.DEFAULT_ERROR_HANDLER"/>. This is the error handler which will be used if an error occurs
-            /// during the callback for poll operations such as <seealso cref="Subscription.Poll(FragmentHandler, int)"/>.
-            /// 
-            /// The error handler can be reset after <seealso cref="Aeron.Connect()"/> and the latest version will always be used
-            /// so that the bootstrapping process can be performed such as replacing the default one with a
+            /// <seealso cref="Configuration.DEFAULT_ERROR_HANDLER"/>. This is the error handler which will be used if
+            /// an error occurs during the callback for poll operations such as
+            /// <seealso cref="Subscription.Poll(FragmentHandler, int)"/>.
+            ///
+            /// The error handler can be reset after <seealso cref="Aeron.Connect()"/> and the latest version will
+            /// always be used so that the bootstrapping process can be performed such as replacing the default one with
+            /// a
             /// <seealso cref="CountedErrorHandler"/>.
             /// </summary>
             /// <param name="errorHandler"> Method to handle objects of type Throwable. </param>
@@ -1894,9 +2032,11 @@ namespace Adaptive.Aeron
             }
 
             /// <summary>
-            /// Get the error handler that will be called for errors reported back from the media driver or during poll operations.
+            /// Get the error handler that will be called for errors reported back from the media driver or during poll
+            /// operations.
             /// </summary>
-            /// <returns> the error handler that will be called for errors reported back from the media driver or during poll operations. </returns>
+            /// <returns> the error handler that will be called for errors reported back from the media driver or during
+            /// poll operations. </returns>
             public IErrorHandler ErrorHandler()
             {
                 return _errorHandler;
@@ -1904,7 +2044,8 @@ namespace Adaptive.Aeron
 
             /// <summary>
             /// The error handler which will be used if an error occurs during the callback for poll operations such as
-            /// <seealso cref="Subscription.Poll(FragmentHandler, int)"/>. The default will be <seealso cref="ErrorHandler()"/> if not set.
+            /// <seealso cref="Subscription.Poll(FragmentHandler, int)"/>. The default will be
+            /// <seealso cref="ErrorHandler()"/> if not set.
             /// </summary>
             /// <param name="errorHandler"> Method to handle objects of type Throwable. </param>
             /// <returns> this for a fluent API. </returns>
@@ -1918,11 +2059,13 @@ namespace Adaptive.Aeron
 
             /// <summary>
             /// This is the error handler which will be used if an error occurs during the callback for poll operations
-            /// such as <seealso cref="Subscription.Poll(FragmentHandler, int)"/>. The default will be <seealso cref="ErrorHandler()"/> if not
+            /// such as <seealso cref="Subscription.Poll(FragmentHandler, int)"/>. The default will be
+            /// <seealso cref="ErrorHandler()"/> if not
             /// set. To have <seealso cref="Subscription.Poll(FragmentHandler, int)"/> not delegate then set with
             /// <seealso cref="RethrowingErrorHandler"/>.
             /// </summary>
-            /// <returns> the error handler that will be called for errors reported back from the media driver. </returns>
+            /// <returns> the error handler that will be called for errors reported back from the media driver.
+            /// </returns>
             public IErrorHandler SubscriberErrorHandler()
             {
                 return _subscriberErrorHandler;
@@ -2012,10 +2155,10 @@ namespace Adaptive.Aeron
 
             /// <summary>
             /// Set a <seealso cref="Action"/> that is called when the client is closed by timeout or normal means.
-            ///        
-            /// It is not safe to call any API functions from any threads after this hook is called. In addition, any
-            /// in flight calls may still cause faults. Thus treating this as a hard error and
-            /// terminate the process in this hook as soon as possible is recommended.
+            ///
+            /// It is not safe to call any API functions from any threads after this hook is called. In addition, any in
+            /// flight calls may still cause faults. Thus treating this as a hard error and terminate the process in
+            /// this hook as soon as possible is recommended.
             /// </summary>
             /// <param name="handler"> that is called when the client is closed. </param>
             /// <returns> this for a fluent API. </returns>
@@ -2055,9 +2198,9 @@ namespace Adaptive.Aeron
                 return this;
             }
 
-
             /// <summary>
-            /// Get the buffer containing the counters. These counters are R/W for the driver, read only for all other users.
+            /// Get the buffer containing the counters. These counters are R/W for the driver, read only for all other
+            /// users.
             /// </summary>
             /// <returns> The buffer storing the counters. </returns>
             public UnsafeBuffer CountersValuesBuffer()
@@ -2076,11 +2219,11 @@ namespace Adaptive.Aeron
                 return this;
             }
 
-
             /// <summary>
             /// Set the interval in nanoseconds for which the client will perform keep-alive operations.
             /// </summary>
-            /// <param name="value"> the interval in nanoseconds for which the client will perform keep-alive operations. </param>
+            /// <param name="value"> the interval in nanoseconds for which the client will perform keep-alive
+            /// operations. </param>
             /// <returns> this Aeron.Context for method chaining. </returns>
             public Context KeepAliveIntervalNs(long value)
             {
@@ -2091,7 +2234,8 @@ namespace Adaptive.Aeron
             /// <summary>
             /// Get the interval in nanoseconds for which the client will perform keep-alive operations.
             /// </summary>
-            /// <returns> the interval in nanoseconds for which the client will perform keep-alive operations. </returns>
+            /// <returns> the interval in nanoseconds for which the client will perform keep-alive operations.
+            /// </returns>
             public long KeepAliveIntervalNs()
             {
                 return _keepAliveIntervalNs;
@@ -2127,23 +2271,23 @@ namespace Adaptive.Aeron
             /// <remarks>Since 1.44.0</remarks>
             public bool EnableExperimentalFeatures()
             {
-                return enableExperimentalFeatures;
+                return _enableExperimentalFeatures;
             }
 
             /// <summary>
             /// Should experimental features for the driver be enabled.
             /// </summary>
-            /// <param name="enableExperimentalFeatures"> indicate whether experimental features for the driver should be enabled. </param>
+            /// <param name="enableExperimentalFeatures"> indicate whether experimental features for the driver should
+            /// be enabled. </param>
             /// <returns> this for a fluent API </returns>
             /// <seealso cref="ENABLE_EXPERIMENTAL_FEATURES_PROP_NAME"/>
             /// <seealso cref="EnableExperimentalFeatures()"/>
             /// <remarks>Since 1.44.0</remarks>
             public Context EnableExperimentalFeatures(bool enableExperimentalFeatures)
             {
-                this.enableExperimentalFeatures = enableExperimentalFeatures;
+                _enableExperimentalFeatures = enableExperimentalFeatures;
                 return this;
             }
-
 
             private static readonly ConcurrentDictionary<string, bool> DebugFieldsSeen =
                 new ConcurrentDictionary<string, bool>();
@@ -2152,28 +2296,27 @@ namespace Adaptive.Aeron
             /// Override the supplied timeout with the debug value if it has been set, and we are in debug mode.
             /// </summary>
             /// <param name="timeout">  The timeout value currently in use. </param>
-            /// <param name="timeUnit"> The units of the timeout value. Debug timeout is specified in ns, so will be converted to this
-            ///                 unit. </param>
+            /// <param name="timeUnit"> The units of the timeout value. Debug timeout is specified in ns, so will be
+            /// converted to this unit. </param>
             /// <param name="debugFieldName"> The field name to be added to the map.</param>
-            /// <returns> The debug timeout if specified, and we are being debugged or the supplied value if not. Will be in
-            /// timeUnit units. </returns>
+            /// <returns> The debug timeout if specified, and we are being debugged or the supplied value if not. Will
+            /// be in timeUnit units. </returns>
             public static long CheckDebugTimeout(long timeout, TimeUnit timeUnit, string debugFieldName)
             {
                 return CheckDebugTimeout(timeout, timeUnit, 1.0, debugFieldName);
             }
 
-
             /// <summary>
             /// Override the supplied timeout with the debug value if it has been set, and we are in debug mode.
             /// </summary>
             /// <param name="timeout">  The timeout value currently in use. </param>
-            /// <param name="timeUnit"> The units of the timeout value. Debug timeout is specified in ns, so will be converted to this
-            ///                 unit. </param>
-            /// <param name="factor" >  to multiply the debug timeout by. Required when some timeouts need to be larger than others in
-            ///                 order to pass validation. E.g. clientLiveness and publicationUnblock.</param>
+            /// <param name="timeUnit"> The units of the timeout value. Debug timeout is specified in ns, so will be
+            /// converted to this unit. </param>
+            /// <param name="factor" > to multiply the debug timeout by. Required when some timeouts need to be larger
+            /// than others in order to pass validation. E.g. clientLiveness and publicationUnblock.</param>
             /// <param name="debugFieldName"> The field name to be added to the map.</param>
-            /// <returns> The debug timeout if specified, and we are being debugged or the supplied value if not. Will be in
-            /// timeUnit units. </returns>
+            /// <returns> The debug timeout if specified, and we are being debugged or the supplied value if not. Will
+            /// be in timeUnit units. </returns>
             public static long CheckDebugTimeout(long timeout, TimeUnit timeUnit, double factor, string debugFieldName)
             {
                 string debugTimeoutString = Config.GetProperty(DEBUG_TIMEOUT_PROP_NAME);
@@ -2184,13 +2327,20 @@ namespace Adaptive.Aeron
 
                 try
                 {
-                    long debugTimeoutNs =
-                        (long)(factor * SystemUtil.ParseDuration(DEBUG_TIMEOUT_PROP_NAME, debugTimeoutString));
+                    long debugTimeoutNs = (long)(
+                        factor * SystemUtil.ParseDuration(DEBUG_TIMEOUT_PROP_NAME, debugTimeoutString)
+                    );
                     long debugTimeout = timeUnit.Convert(debugTimeoutNs, TimeUnit.NANOSECONDS);
                     if (DebugFieldsSeen.TryAdd(debugFieldName, true))
                     {
-                        string message = "Using debug timeout [" + debugTimeout + "] for " + debugFieldName +
-                                         " replacing [" + timeout + "]";
+                        string message =
+                            "Using debug timeout ["
+                            + debugTimeout
+                            + "] for "
+                            + debugFieldName
+                            + " replacing ["
+                            + timeout
+                            + "]";
                         Console.WriteLine(message);
                     }
 
@@ -2203,11 +2353,13 @@ namespace Adaptive.Aeron
             }
 
             /// <summary>
-            /// Set the timeout between service calls the to <seealso cref="ClientConductor"/> duty cycles in nanoseconds.
+            /// Set the timeout between service calls the to <seealso cref="ClientConductor"/> duty cycles in
+            /// nanoseconds.
             ///
             /// Note: this method is used for testing only.
             /// </summary>
-            /// <param name="interServiceTimeout"> the timeout (ns) between service calls the to <seealso cref="ClientConductor"/> duty cycle. </param>
+            /// <param name="interServiceTimeout"> the timeout (ns) between service calls the to
+            /// <seealso cref="ClientConductor"/> duty cycle. </param>
             /// <returns> this Aeron.Context for method chaining. </returns>
             internal Context InterServiceTimeoutNs(long interServiceTimeout)
             {
@@ -2218,7 +2370,8 @@ namespace Adaptive.Aeron
             /// <summary>
             /// Return the timeout between service calls to the duty cycle for the client.
             /// <para>
-            /// When exceeded, <seealso cref="Agrona.ErrorHandler"/> will be called and the active <seealso cref="Publication"/>s, <seealso cref="Image"/>s,
+            /// When exceeded, <seealso cref="Agrona.ErrorHandler"/> will be called and the active
+            /// <seealso cref="Publication"/>s, <seealso cref="Image"/>s,
             /// and <seealso cref="Counter"/>s will be closed.
             /// </para>
             /// <para>
@@ -2240,7 +2393,7 @@ namespace Adaptive.Aeron
             /// <seealso cref="Configuration.IDLE_SLEEP_DURATION_PROP_NAME"/>
             public Context IdleSleepDurationNs(long idleSleepDurationNs)
             {
-                this.idleSleepDurationNs = idleSleepDurationNs;
+                _idleSleepDurationNs = idleSleepDurationNs;
                 return this;
             }
 
@@ -2251,12 +2404,12 @@ namespace Adaptive.Aeron
             /// <seealso cref="Configuration.IDLE_SLEEP_DURATION_PROP_NAME"/>
             public long IdleSleepDurationNs()
             {
-                return idleSleepDurationNs;
+                return _idleSleepDurationNs;
             }
 
             /// <summary>
-            /// Duration to wait while lingering an entity such as an <seealso cref="Image"/> before deleting underlying resources
-            /// such as memory mapped files.
+            /// Duration to wait while lingering an entity such as an <seealso cref="Image"/> before deleting underlying
+            /// resources such as memory mapped files.
             /// </summary>
             /// <param name="resourceLingerDurationNs"> to wait before deleting an expired resource. </param>
             /// <returns> this for a fluent API. </returns>
@@ -2268,8 +2421,8 @@ namespace Adaptive.Aeron
             }
 
             /// <summary>
-            /// Duration to wait while lingering an entity such as an <seealso cref="Image"/> before deleting underlying resources
-            /// such as memory mapped files.
+            /// Duration to wait while lingering an entity such as an <seealso cref="Image"/> before deleting underlying
+            /// resources such as memory mapped files.
             /// </summary>
             /// <returns> duration in nanoseconds to wait before deleting an expired resource. </returns>
             /// <seealso cref="Configuration.RESOURCE_LINGER_DURATION_PROP_NAME"></seealso>
@@ -2281,10 +2434,10 @@ namespace Adaptive.Aeron
             /// <summary>
             /// Duration to linger on closing to allow publishers and subscribers time to notice closed resources.
             /// <para>
-            /// This value can be increased from the default to a few seconds to better cope with long GC pauses
-            /// or resource starved environments. Issues could manifest as seg faults using files after they have
-            /// been unmapped from publishers or subscribers not noticing the close in a timely fashion.
-            ///        
+            /// This value can be increased from the default to a few seconds to better cope with long GC pauses or
+            /// resource starved environments. Issues could manifest as seg faults using files after they have been
+            /// unmapped from publishers or subscribers not noticing the close in a timely fashion.
+            ///
             /// </para>
             /// </summary>
             /// <param name="closeLingerDurationNs"> to wait before deleting resources when closing. </param>
@@ -2299,10 +2452,10 @@ namespace Adaptive.Aeron
             /// <summary>
             /// Duration to linger on closing to allow publishers and subscribers time to notice closed resources.
             /// <para>
-            /// This value can be increased from the default to a few seconds to better cope with long GC pauses
-            /// or resource starved environments. Issues could manifest as seg faults using files after they have
-            /// been unmapped from publishers or subscribers not noticing the close in a timely fashion.
-            /// 
+            /// This value can be increased from the default to a few seconds to better cope with long GC pauses or
+            /// resource starved environments. Issues could manifest as seg faults using files after they have been
+            /// unmapped from publishers or subscribers not noticing the close in a timely fashion.
+            ///
             /// </para>
             /// </summary>
             /// <returns> duration in nanoseconds to wait before deleting resources when closing. </returns>
@@ -2313,8 +2466,8 @@ namespace Adaptive.Aeron
             }
 
             /// <summary>
-            /// Get the top level Aeron directory used for communication between the client and Media Driver, and
-            /// the location of the data buffers.
+            /// Get the top level Aeron directory used for communication between the client and Media Driver, and the
+            /// location of the data buffers.
             /// </summary>
             /// <returns> The top level Aeron directory. </returns>
             public string AeronDirectoryName()
@@ -2324,12 +2477,12 @@ namespace Adaptive.Aeron
 
             /// <summary>
             /// Get the directory in which the aeron config files are stored.
-            ///    
+            ///
             /// This is valid after a call to <seealso cref="Conclude()"/> or <see cref="ConcludeAeronDirectory()"/>.
             /// </summary>
             /// <returns> the directory in which the aeron config files are stored.
             /// </returns>
-            /// 
+            ///
             /// <seealso cref="AeronDirectoryName()"></seealso>
             public DirectoryInfo AeronDirectory()
             {
@@ -2337,10 +2490,10 @@ namespace Adaptive.Aeron
             }
 
             /// <summary>
-            /// Set the top level Aeron directory used for communication between the client and Media Driver, and the location
-            /// of the data buffers.
-            /// Check this setting if there is a DriverTimeoutException
-            /// The default path for communicating between the driver and client is based on the process owner's temp directory. %localappdata%\temp\aeron-[username]
+            /// Set the top level Aeron directory used for communication between the client and Media Driver, and the
+            /// location of the data buffers. Check this setting if there is a DriverTimeoutException The default path
+            /// for communicating between the driver and client is based on the process owner's temp directory.
+            /// %localappdata%\temp\aeron-[username]
             /// </summary>
             /// <param name="dirName"> New top level Aeron directory. </param>
             /// <returns> this Object for method chaining. </returns>
@@ -2364,34 +2517,35 @@ namespace Adaptive.Aeron
             /// <summary>
             /// The thread factory to be used to construct the conductor thread
             /// </summary>
-            /// <returns>the specified thread factory of <see cref="DefaultThreadFactory"/> if none is provided. </returns>
+            /// <returns>the specified thread factory of <see cref="DefaultThreadFactory"/> if none is provided.
+            /// </returns>
             public IThreadFactory ThreadFactory()
             {
                 return _threadFactory;
             }
 
             /// <summary>
-            /// Set the handler to receive error frames that have been received by the local driver for publications added by
-            /// this client.
+            /// Set the handler to receive error frames that have been received by the local driver for publications
+            /// added by this client.
             /// </summary>
             /// <param name="publicationErrorFrameHandler"> to be called back when an error frame is received. </param>
             /// <returns> this for a fluent API. </returns>
-            /// <remarks>Since 1.47.0</remarks> 
+            /// <remarks>Since 1.47.0</remarks>
             public Context PublicationErrorFrameHandler(IPublicationErrorFrameHandler publicationErrorFrameHandler)
             {
-                this.publicationErrorFrameHandler = Objects.RequireNonNull(publicationErrorFrameHandler);
+                _publicationErrorFrameHandler = Objects.RequireNonNull(publicationErrorFrameHandler);
                 return this;
             }
 
             /// <summary>
-            /// Get the handler to receive error frames that have been received by the local driver for publications added by
-            /// this client.
+            /// Get the handler to receive error frames that have been received by the local driver for publications
+            /// added by this client.
             /// </summary>
             /// <returns> the <seealso cref="IPublicationErrorFrameHandler"/> to call back on to.</returns>
             /// <remarks>Since 1.47.0</remarks>
             public IPublicationErrorFrameHandler PublicationErrorFrameHandler()
             {
-                return this.publicationErrorFrameHandler;
+                return _publicationErrorFrameHandler;
             }
 
             /// <summary>
@@ -2401,9 +2555,8 @@ namespace Adaptive.Aeron
             /// <remarks>Since 1.48.0</remarks>
             public int FilePageSize()
             {
-                return filePageSize;
+                return _filePageSize;
             }
-
 
             /// <summary>
             /// Clean up all resources that the client uses to communicate with the Media Driver.
@@ -2424,44 +2577,45 @@ namespace Adaptive.Aeron
             /// </summary>
             public override string ToString()
             {
-                return "Aeron.Context" +
-                       "\n{" +
-                       "\n    isConcluded=" + _isConcluded +
-                       "\n    aeronDirectory=" + AeronDirectory() +
-                       "\n    aeronDirectoryName='" + AeronDirectoryName() + '\'' +
-                       "\n    cncFile=" + CncFile() +
-                       "\n    countersMetaDataBuffer=" + CountersMetaDataBuffer() +
-                       "\n    countersValuesBuffer=" + CountersValuesBuffer() +
-                       "\n    driverTimeoutMs=" + DriverTimeoutMs() +
-                       "\n    clientId=" + _clientId +
-                       "\n    clientName=" + clientName +
-                       "\n    useConductorAgentInvoker=" + _useConductorAgentInvoker +
-                       "\n    preTouchMappedMemory=" + _preTouchMappedMemory +
-                       "\n    driverAgentInvoker=" + _driverAgentInvoker +
-                       "\n    clientLock=" + _clientLock +
-                       "\n    epochClock=" + _epochClock +
-                       "\n    nanoClock=" + _nanoClock +
-                       "\n    idleStrategy=" + _idleStrategy +
-                       "\n    awaitingIdleStrategy=" + _awaitingIdleStrategy +
-                       "\n    toClientBuffer=" + _toClientBuffer +
-                       "\n    toDriverBuffer=" + _toDriverBuffer +
-                       "\n    driverProxy=" + _driverProxy +
-                       "\n    cncByteBuffer=" + _cncByteBuffer +
-                       "\n    cncMetaDataBuffer=" + _cncMetaDataBuffer +
-                       "\n    logBuffersFactory=" + _logBuffersFactory +
-                       "\n    errorHandler=" + _errorHandler +
-                       "\n    subscriberErrorHandler=" + _subscriberErrorHandler +
-                       "\n    availableImageHandler=" + _availableImageHandler +
-                       "\n    unavailableImageHandler=" + _unavailableImageHandler +
-                       "\n    availableCounterHandler=" + _availableCounterHandler +
-                       "\n    unavailableCounterHandler=" + _unavailableCounterHandler +
-                       "\n    closeHandler=" + _closeHandler +
-                       "\n    keepAliveIntervalNs=" + _keepAliveIntervalNs +
-                       "\n    interServiceTimeoutNs=" + _interServiceTimeoutNs +
-                       "\n    resourceLingerDurationNs=" + _resourceLingerDurationNs +
-                       "\n    closeLingerDurationNs=" + _closeLingerDurationNs +
-                       "\n    threadFactory=" + _threadFactory +
-                       "\n}";
+                return
+                    "Aeron.Context" +
+                    "\n{" +
+                    "\n    isConcluded=" + _isConcluded +
+                    "\n    aeronDirectory=" + AeronDirectory() +
+                    "\n    aeronDirectoryName='" + AeronDirectoryName() + '\'' +
+                    "\n    cncFile=" + CncFile() +
+                    "\n    countersMetaDataBuffer=" + CountersMetaDataBuffer() +
+                    "\n    countersValuesBuffer=" + CountersValuesBuffer() +
+                    "\n    driverTimeoutMs=" + DriverTimeoutMs() +
+                    "\n    clientId=" + _clientId +
+                    "\n    clientName=" + _clientName +
+                    "\n    useConductorAgentInvoker=" + _useConductorAgentInvoker +
+                    "\n    preTouchMappedMemory=" + _preTouchMappedMemory +
+                    "\n    driverAgentInvoker=" + _driverAgentInvoker +
+                    "\n    clientLock=" + _clientLock +
+                    "\n    epochClock=" + _epochClock +
+                    "\n    nanoClock=" + _nanoClock +
+                    "\n    idleStrategy=" + _idleStrategy +
+                    "\n    awaitingIdleStrategy=" + _awaitingIdleStrategy +
+                    "\n    toClientBuffer=" + _toClientBuffer +
+                    "\n    toDriverBuffer=" + _toDriverBuffer +
+                    "\n    driverProxy=" + _driverProxy +
+                    "\n    cncByteBuffer=" + _cncByteBuffer +
+                    "\n    cncMetaDataBuffer=" + _cncMetaDataBuffer +
+                    "\n    logBuffersFactory=" + _logBuffersFactory +
+                    "\n    errorHandler=" + _errorHandler +
+                    "\n    subscriberErrorHandler=" + _subscriberErrorHandler +
+                    "\n    availableImageHandler=" + _availableImageHandler +
+                    "\n    unavailableImageHandler=" + _unavailableImageHandler +
+                    "\n    availableCounterHandler=" + _availableCounterHandler +
+                    "\n    unavailableCounterHandler=" + _unavailableCounterHandler +
+                    "\n    closeHandler=" + _closeHandler +
+                    "\n    keepAliveIntervalNs=" + _keepAliveIntervalNs +
+                    "\n    interServiceTimeoutNs=" + _interServiceTimeoutNs +
+                    "\n    resourceLingerDurationNs=" + _resourceLingerDurationNs +
+                    "\n    closeLingerDurationNs=" + _closeLingerDurationNs +
+                    "\n    threadFactory=" + _threadFactory +
+                    "\n}";
             }
 
             private void ConnectToDriver()
@@ -2482,8 +2636,9 @@ namespace Adaptive.Aeron
                     {
                         if (clock.Time() > deadlineMs)
                         {
-                            throw new DriverTimeoutException("CnC file is created but not initialised: " +
-                                                             cncFile.FullName);
+                            throw new DriverTimeoutException(
+                                "CnC file is created but not initialised: " + cncFile.FullName
+                            );
                         }
 
                         Sleep(Configuration.AWAITING_IDLE_SLEEP_MS);
@@ -2493,9 +2648,10 @@ namespace Adaptive.Aeron
 
                     if (SemanticVersion.Minor(cncVersion) < SemanticVersion.Minor(CncFileDescriptor.CNC_VERSION))
                     {
-                        throw new AeronException("driverVersion=" + SemanticVersion.ToString(cncVersion) +
-                                                 " insufficient for clientVersion=" +
-                                                 SemanticVersion.ToString(CncFileDescriptor.CNC_VERSION));
+                        throw new AeronException(
+                            "driverVersion=" + SemanticVersion.ToString(cncVersion) +
+                            " insufficient for clientVersion=" + SemanticVersion.ToString(CncFileDescriptor.CNC_VERSION)
+                        );
                     }
 
                     if (!CncFileDescriptor.IsCncFileLengthSufficient(_cncMetaDataBuffer, _cncByteBuffer.Capacity))
@@ -2508,9 +2664,9 @@ namespace Adaptive.Aeron
                         continue;
                     }
 
-                    ManyToOneRingBuffer ringBuffer =
-                        new ManyToOneRingBuffer(
-                            CncFileDescriptor.CreateToDriverBuffer(_cncByteBuffer, _cncMetaDataBuffer));
+                    ManyToOneRingBuffer ringBuffer = new ManyToOneRingBuffer(
+                        CncFileDescriptor.CreateToDriverBuffer(_cncByteBuffer, _cncMetaDataBuffer)
+                    );
 
                     while (0 == ringBuffer.ConsumerHeartbeatTime())
                     {
@@ -2542,8 +2698,7 @@ namespace Adaptive.Aeron
                 }
             }
 
-            private static MappedByteBuffer WaitForFileMapping(FileInfo cncFile,
-                IEpochClock clock, long deadLineMs)
+            private static MappedByteBuffer WaitForFileMapping(FileInfo cncFile, IEpochClock clock, long deadLineMs)
             {
                 while (true)
                 {
@@ -2572,7 +2727,8 @@ namespace Adaptive.Aeron
                             if (clock.Time() > deadLineMs)
                             {
                                 throw new DriverTimeoutException(
-                                    "CnC file is created but not populated: " + cncFile.FullName);
+                                    "CnC file is created but not populated: " + cncFile.FullName
+                                );
                             }
 
                             fileStream.Dispose();
@@ -2671,15 +2827,18 @@ namespace Adaptive.Aeron
             }
 
             /// <summary>
-            /// Is a media driver active in the current mapped CnC buffer? If the driver is starting then it will wait for
-            /// up to the driverTimeoutMs by checking for the cncVersion being set.
+            /// Is a media driver active in the current mapped CnC buffer? If the driver is starting then it will wait
+            /// for up to the driverTimeoutMs by checking for the cncVersion being set.
             /// </summary>
             /// <param name="driverTimeoutMs"> for the driver liveness check. </param>
             /// <param name="logger">          for feedback as liveness checked. </param>
             /// <param name="cncByteBuffer">   for the existing CnC file. </param>
             /// <returns> true if a driver is active or false if not. </returns>
-            public static bool IsDriverActive(long driverTimeoutMs, Action<string> logger,
-                MappedByteBuffer cncByteBuffer)
+            public static bool IsDriverActive(
+                long driverTimeoutMs,
+                Action<string> logger,
+                MappedByteBuffer cncByteBuffer
+            )
             {
                 if (null == cncByteBuffer)
                 {
@@ -2702,8 +2861,9 @@ namespace Adaptive.Aeron
 
                 CncFileDescriptor.CheckVersion(cncVersion);
 
-                ManyToOneRingBuffer toDriverBuffer =
-                    new ManyToOneRingBuffer(CncFileDescriptor.CreateToDriverBuffer(cncByteBuffer, cncMetaDataBuffer));
+                ManyToOneRingBuffer toDriverBuffer = new ManyToOneRingBuffer(
+                    CncFileDescriptor.CreateToDriverBuffer(cncByteBuffer, cncMetaDataBuffer)
+                );
 
                 long timestampMs = toDriverBuffer.ConsumerHeartbeatTime();
                 long nowMs = DateTime.Now.ToFileTimeUtc();
@@ -2726,7 +2886,8 @@ namespace Adaptive.Aeron
                 DirectoryInfo directory,
                 IDirectBuffer tokenBuffer,
                 int tokenOffset,
-                int tokenLength)
+                int tokenLength
+            )
             {
                 FileInfo cncFile = new FileInfo(Path.Combine(directory.FullName, CncFileDescriptor.CNC_FILE));
 
@@ -2742,9 +2903,9 @@ namespace Adaptive.Aeron
                         {
                             CncFileDescriptor.CheckVersion(cncVersion);
 
-                            ManyToOneRingBuffer toDriverBuffer =
-                                new ManyToOneRingBuffer(
-                                    CncFileDescriptor.CreateToDriverBuffer(cncByteBuffer, cncMetaDataBuffer));
+                            ManyToOneRingBuffer toDriverBuffer = new ManyToOneRingBuffer(
+                                CncFileDescriptor.CreateToDriverBuffer(cncByteBuffer, cncMetaDataBuffer)
+                            );
                             long clientId = toDriverBuffer.NextCorrelationId();
                             DriverProxy driverProxy = new DriverProxy(toDriverBuffer, clientId);
 
@@ -2865,7 +3026,8 @@ namespace Adaptive.Aeron
             /// <param name="aeronDirectory"> where driver is running. </param>
             /// <param name="clock">          to use. </param>
             /// <param name="timeoutMs">      for awaiting connection. </param>
-            /// <returns> file page size from running media driver or <seealso cref="LogBufferDescriptor.PAGE_MIN_SIZE"/> if driver is old.
+            /// <returns> file page size from running media driver or
+            /// <seealso cref="LogBufferDescriptor.PAGE_MIN_SIZE"/> if driver is old.
             /// @since 1.48.0 </returns>
             public static int DriverFilePageSize(DirectoryInfo aeronDirectory, IEpochClock clock, long timeoutMs)
             {
@@ -2886,7 +3048,6 @@ namespace Adaptive.Aeron
                     cncByteBuffer?.Dispose();
                 }
             }
-
 
             internal static int DriverFilePageSize(IDirectBuffer metadata)
             {

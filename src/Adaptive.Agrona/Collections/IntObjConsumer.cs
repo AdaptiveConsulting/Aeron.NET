@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright 2014 - 2017 Adaptive Financial Consulting Ltd
+ * Copyright 2014 - 2026 Adaptive Financial Consulting Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,9 +16,8 @@
 
 namespace Adaptive.Agrona.Collections
 {
-	/// <summary>
-	/// This is an (int, Object) primitive specialisation of a BiConsumer.
-	/// </summary>
-	public delegate void IntObjConsumer<in T>(int i, T v);
-
+    /// <summary>
+    /// This is an (int, Object) primitive specialisation of a BiConsumer.
+    /// </summary>
+    public delegate void IntObjConsumer<in T>(int i, T v);
 }

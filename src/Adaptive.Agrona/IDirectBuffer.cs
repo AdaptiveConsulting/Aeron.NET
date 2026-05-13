@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright 2014 - 2017 Adaptive Financial Consulting Ltd
+ * Copyright 2014 - 2026 Adaptive Financial Consulting Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -81,7 +81,7 @@ namespace Adaptive.Agrona
         /// Get the underlying <see cref="ByteBuffer"/> if one exists
         /// </summary>
         ByteBuffer ByteBuffer { get; }
-        
+
         /// <summary>
         /// Get the capacity of the underlying buffer.
         /// </summary>
@@ -92,7 +92,7 @@ namespace Adaptive.Agrona
         /// Check that a given limit is not greater than the capacity of a buffer from a given offset.
         /// <para>
         /// Can be overridden in a DirectBuffer subclass to enable an extensible buffer or handle retry after a flush.
-        /// 
+        ///
         /// </para>
         /// </summary>
         /// <param name="limit"> up to which access is required. </param>
@@ -157,7 +157,7 @@ namespace Adaptive.Agrona
         /// <param name="index"> in bytes from which to get. </param>
         /// <returns> the value at a given index. </returns>
         short GetShort(int index);
-        
+
         /// <summary>
         /// Get the value at a given index.
         /// </summary>
@@ -173,8 +173,8 @@ namespace Adaptive.Agrona
         byte GetByte(int index);
 
         /// <summary>
-        /// Get from the underlying buffer into a supplied byte array.
-        /// This method will try to fill the supplied byte array.
+        /// Get from the underlying buffer into a supplied byte array. This method will try to fill the supplied byte
+        /// array.
         /// </summary>
         /// <param name="index"> in the underlying buffer to start from. </param>
         /// <param name="dst">   into which the dst will be copied. </param>
@@ -190,7 +190,8 @@ namespace Adaptive.Agrona
         void GetBytes(int index, byte[] dst, int offset, int length);
 
         /// <summary>
-        /// Get bytes from this <seealso cref="IDirectBuffer"/> into the provided <seealso cref="IMutableDirectBuffer"/> at given indices. </summary>
+        /// Get bytes from this <seealso cref="IDirectBuffer"/> into the provided <seealso cref="IMutableDirectBuffer"/>
+        /// at given indices. </summary>
         /// <param name="index">     in this buffer to begin getting the bytes. </param>
         /// <param name="dstBuffer"> to which the bytes will be copied. </param>
         /// <param name="dstIndex">  in the channel buffer to which the byte copy will begin. </param>
@@ -212,13 +213,14 @@ namespace Adaptive.Agrona
         string GetStringAscii(int index);
 
         /// <summary>
-        /// Get a String from bytes encoded in ASCII format that is length prefixed and append to an <seealso cref="StringBuilder"/>.
+        /// Get a String from bytes encoded in ASCII format that is length prefixed and append to an
+        /// <seealso cref="StringBuilder"/>.
         /// </summary>
         /// <param name="index">      at which the String begins. </param>
         /// <param name="appendable"> to append the chars to. </param>
         /// <returns> the number of bytes copied. </returns>
         int GetStringAscii(int index, StringBuilder appendable);
-        
+
         /// <summary>
         /// Get part of a String from bytes encoded in ASCII format that is length prefixed and append to an
         /// <seealso cref="StringBuilder"/>.
@@ -252,7 +254,7 @@ namespace Adaptive.Agrona
         /// <param name="length"> of the String in bytes to decode. </param>
         /// <returns> the String as represented by the UTF-8 encoded bytes. </returns>
         string GetStringWithoutLengthUtf8(int index, int length);
-        
+
         /// <summary>
         /// Get an encoded ASCII String from the buffer that does not have a length prefix.
         /// </summary>
@@ -260,7 +262,7 @@ namespace Adaptive.Agrona
         /// <param name="length"> of the String in bytes to decode. </param>
         /// <returns> the String as represented by the Ascii encoded bytes. </returns>
         string GetStringWithoutLengthAscii(int index, int length);
-        
+
         /// <summary>
         /// Check that a given length of bytes is within the bounds from a given index.
         /// </summary>

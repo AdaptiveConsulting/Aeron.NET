@@ -1,3 +1,19 @@
+﻿/*
+ * Copyright 2014 - 2026 Adaptive Financial Consulting Ltd
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 using Adaptive.Aeron.Exceptions;
 using Adaptive.Agrona;
 
@@ -26,9 +42,9 @@ namespace Adaptive.Aeron.Command
     /// <see cref="ControlProtocolEvents"/>
     public class TerminateDriverFlyweight : CorrelatedMessageFlyweight
     {
-        private static readonly int TOKEN_LENGTH_OFFSET = CORRELATION_ID_FIELD_OFFSET + BitUtil.SIZE_OF_LONG;
-        internal static readonly int TOKEN_BUFFER_OFFSET = TOKEN_LENGTH_OFFSET + BitUtil.SIZE_OF_INT;
-        private static readonly int MINIMUM_LENGTH = TOKEN_LENGTH_OFFSET + BitUtil.SIZE_OF_INT;
+        private static readonly int TokenLengthOffset = CorrelationIdFieldOffset + BitUtil.SIZE_OF_LONG;
+        internal static readonly int TokenBufferFieldOffset = TokenLengthOffset + BitUtil.SIZE_OF_INT;
+        private static readonly int MinimumLength = TokenLengthOffset + BitUtil.SIZE_OF_INT;
 
         /// <summary>
         /// Wrap the buffer at a given offset for updates.
@@ -41,27 +57,27 @@ namespace Adaptive.Aeron.Command
             base.Wrap(buffer, offset);
             return this;
         }
-        
+
         /// <summary>
-        /// Relative offset of the token buffer.
+        /// Relative _offset of the token _buffer.
         /// </summary>
-        /// <returns> relative offset of the token buffer. </returns>
+        /// <returns> relative _offset of the token _buffer. </returns>
         public int TokenBufferOffset()
         {
-            return TOKEN_BUFFER_OFFSET;
+            return TokenBufferFieldOffset;
         }
 
         /// <summary>
-        /// Length of the token buffer in bytes.
+        /// Length of the token _buffer in bytes.
         /// </summary>
-        /// <returns> length of token buffer in bytes. </returns>
+        /// <returns> length of token _buffer in bytes. </returns>
         public int TokenBufferLength()
         {
-            return buffer.GetInt(offset + TOKEN_LENGTH_OFFSET);
+            return _buffer.GetInt(_offset + TokenLengthOffset);
         }
 
         /// <summary>
-        /// Fill the token buffer.
+        /// Fill the token _buffer.
         /// </summary>
         /// <param name="tokenBuffer"> containing the optional token for the request. </param>
         /// <param name="tokenOffset"> within the tokenBuffer at which the token begins. </param>
@@ -69,10 +85,10 @@ namespace Adaptive.Aeron.Command
         /// <returns> this for a fluent API. </returns>
         public TerminateDriverFlyweight TokenBuffer(IDirectBuffer tokenBuffer, int tokenOffset, int tokenLength)
         {
-            buffer.PutInt(offset + TOKEN_LENGTH_OFFSET, tokenLength);
+            _buffer.PutInt(_offset + TokenLengthOffset, tokenLength);
             if (null != tokenBuffer && tokenLength > 0)
             {
-                buffer.PutBytes(offset + TokenBufferOffset(), tokenBuffer, tokenOffset, tokenLength);
+                _buffer.PutBytes(_offset + TokenBufferOffset(), tokenBuffer, tokenOffset, tokenLength);
             }
 
             return this;
@@ -82,7 +98,7 @@ namespace Adaptive.Aeron.Command
         /// Get the length of the current message.
         /// <para>
         /// NB: must be called after the data is written in order to be correct.
-        /// 
+        ///
         /// </para>
         /// </summary>
         /// <returns> the length of the current message </returns>

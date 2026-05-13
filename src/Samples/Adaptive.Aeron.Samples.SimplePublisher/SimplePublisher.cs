@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright 2014 - 2017 Adaptive Financial Consulting Ltd
+ * Copyright 2014 - 2026 Adaptive Financial Consulting Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,16 +19,14 @@ using System.Text;
 using System.Threading;
 using Adaptive.Agrona;
 using Adaptive.Agrona.Concurrent;
-using Adaptive.Agrona.Util;
 
 namespace Adaptive.Aeron.Samples.SimplePublisher
 {
     /// <summary>
-    /// A very simple Aeron publisher application
-    /// Publishes a fixed size message on a fixed channel and stream. Upon completion
-    /// of message send, it lingers for 5 seconds before exiting.
+    /// A very simple Aeron publisher application Publishes a fixed size message on a fixed channel and stream. Upon
+    /// completion of message send, it lingers for 5 seconds before exiting.
     /// </summary>
-    public class SimplePublisher
+    public static class SimplePublisher
     {
         public static void Main()
         {

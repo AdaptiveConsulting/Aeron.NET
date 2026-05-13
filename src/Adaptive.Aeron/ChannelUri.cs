@@ -1,4 +1,20 @@
-﻿using System;
+﻿/*
+ * Copyright 2014 - 2026 Adaptive Financial Consulting Ltd
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+using System;
 using System.Collections.Generic;
 using System.Text;
 using Adaptive.Aeron.LogBuffer;
@@ -27,7 +43,7 @@ namespace Adaptive.Aeron
         {
             MEDIA,
             PARAMS_KEY,
-            PARAMS_VALUE
+            PARAMS_VALUE,
         }
 
         /// <summary>
@@ -44,16 +60,16 @@ namespace Adaptive.Aeron
         /// Invalid tag value returned when calling <seealso cref="GetTag(string)"/> and the channel is not tagged.
         /// </summary>
         public const long INVALID_TAG = Aeron.NULL_VALUE;
-        
+
         /// <summary>
         /// Max length in characters for the URI string.
         /// </summary>
         public const int MAX_URI_LENGTH = 4095;
 
-        private const int CHANNEL_TAG_INDEX = 0;
-        private const int ENTITY_TAG_INDEX = 1;
+        private const int ChannelTagIndex = 0;
+        private const int EntityTagIndex = 1;
 
-        private static readonly string AERON_PREFIX = AERON_SCHEME + ":";
+        private static readonly string AeronPrefix = AERON_SCHEME + ":";
 
         private string _prefix;
         private string _media;
@@ -118,13 +134,15 @@ namespace Adaptive.Aeron
         /// <summary>
         /// Is the channel <seealso cref="Media()"/> equal to <seealso cref="Aeron.Context.UDP_MEDIA"/>.
         /// </summary>
-        /// <returns> true the channel <seealso cref="Media()"/> equals <seealso cref="Aeron.Context.UDP_MEDIA"/>. </returns>
+        /// <returns> true the channel <seealso cref="Media()"/> equals <seealso cref="Aeron.Context.UDP_MEDIA"/>.
+        /// </returns>
         public bool IsUdp => UDP_MEDIA.Equals(_media);
 
         /// <summary>
         /// Is the channel <seealso cref="Media()"/> equal to <seealso cref="Aeron.Context.IPC_MEDIA"/>.
         /// </summary>
-        /// <returns> true the channel <seealso cref="Media()"/> equals <seealso cref="Aeron.Context.IPC_MEDIA"/>. </returns>
+        /// <returns> true the channel <seealso cref="Media()"/> equals <seealso cref="Aeron.Context.IPC_MEDIA"/>.
+        /// </returns>
         public bool IsIpc => IPC_MEDIA.Equals(_media);
 
         /// <summary>
@@ -189,8 +207,7 @@ namespace Adaptive.Aeron
         /// </summary>
         /// <param name="key"> to be lookup. </param>
         /// <returns> true if the key has a value otherwise false. </returns>
-        /// <see cref="Aeron.Context.TAGS_PARAM_NAME"/>
-        /// <see cref="Aeron.Context.TAG_PREFIX"/>
+        /// <see cref="Aeron.Context.TAGS_PARAM_NAME"/> <see cref="Aeron.Context.TAG_PREFIX"/>
         public bool ContainsKey(string key)
         {
             return _params.ContainsKey(key);
@@ -202,24 +219,25 @@ namespace Adaptive.Aeron
         /// <returns> channel tag if it exists or null if not in this URI. </returns>
         public string ChannelTag()
         {
-            return (null != _tags && _tags.Length > CHANNEL_TAG_INDEX) ? _tags[CHANNEL_TAG_INDEX] : null;
+            return (null != _tags && _tags.Length > ChannelTagIndex) ? _tags[ChannelTagIndex] : null;
         }
 
         /// <summary>
         /// Get the entity tag, if it exists, that refers to an entity such as subscription or publication.
         /// </summary>
         /// <returns> entity tag if it exists or null if not in this URI. </returns>
-        /// <see cref="Aeron.Context.TAGS_PARAM_NAME"/>
-        /// <see cref="Aeron.Context.TAG_PREFIX"/>
+        /// <see cref="Aeron.Context.TAGS_PARAM_NAME"/> <see cref="Aeron.Context.TAG_PREFIX"/>
         public string EntityTag()
         {
-            return _tags.Length > ENTITY_TAG_INDEX ? _tags[ENTITY_TAG_INDEX] : null;
+            return _tags.Length > EntityTagIndex ? _tags[EntityTagIndex] : null;
         }
 
         private bool Equals(ChannelUri other)
         {
-            return _prefix == other._prefix && _media == other._media && Equals(_params, other._params) &&
-                   Equals(_tags, other._tags);
+            return _prefix == other._prefix
+                && _media == other._media
+                && Equals(_params, other._params)
+                && Equals(_tags, other._tags);
         }
 
         public override bool Equals(object obj)
@@ -234,10 +252,10 @@ namespace Adaptive.Aeron
                 return false;
             }
 
-            return Equals(_prefix, other._prefix) &&
-                   Equals(_media, other._media) &&
-                   Equals(_params, other._params) &&
-                   Equals(_tags, other._tags);
+            return Equals(_prefix, other._prefix)
+                && Equals(_media, other._media)
+                && Equals(_params, other._params)
+                && Equals(_tags, other._tags);
         }
 
         public override int GetHashCode()
@@ -259,7 +277,7 @@ namespace Adaptive.Aeron
         public override string ToString()
         {
             StringBuilder sb;
-            if (ReferenceEquals(_prefix, null) || string.IsNullOrEmpty(_prefix))
+            if (_prefix is null || string.IsNullOrEmpty(_prefix))
             {
                 sb = new StringBuilder((_params.Count * 20) + 10);
             }
@@ -270,11 +288,11 @@ namespace Adaptive.Aeron
 
                 if (!_prefix.EndsWith(":"))
                 {
-                    sb.Append(":");
+                    sb.Append(':');
                 }
             }
 
-            sb.Append(AERON_PREFIX).Append(_media);
+            sb.Append(AeronPrefix).Append(_media);
 
             if (_params.Count > 0)
             {
@@ -285,7 +303,7 @@ namespace Adaptive.Aeron
                     sb.Append(entry.Key).Append('=').Append(entry.Value).Append('|');
                 }
 
-                sb.Length = sb.Length - 1;
+                sb.Length--;
             }
 
             return sb.ToString();
@@ -314,22 +332,32 @@ namespace Adaptive.Aeron
             Put(TERM_LENGTH_PARAM_NAME, Convert.ToString(termLength));
         }
 
-
         /// <summary>
         /// Parse a <seealso cref="string"/> which contains an Aeron URI.
         /// </summary>
         /// <param name="uri"> to be parsed. </param>
         /// <returns> a new <seealso cref="ChannelUri"/> representing the URI string. </returns>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage(
+            "Major Code Smell",
+            "S138:Functions should not have too many lines",
+            // Upstream: io.aeron.ChannelUri#parse is @SuppressWarnings("MethodLength").
+            Justification = "Upstream Java parity; method is itself @SuppressWarnings(\"MethodLength\")."
+        )]
         public static ChannelUri Parse(string uri)
         {
             int length = uri.Length;
             if (length > MAX_URI_LENGTH)
             {
-                throw new ArgumentException("URI length (" + length + ") exceeds max supported length (" +
-                                            MAX_URI_LENGTH + "): " + uri.Substring(0, MAX_URI_LENGTH));
+                throw new ArgumentException(
+                    "URI length ("
+                        + length
+                        + ") exceeds max supported length ("
+                        + MAX_URI_LENGTH
+                        + "): "
+                        + uri.Substring(0, MAX_URI_LENGTH)
+                );
             }
 
-            
             int position = 0;
             string prefix;
             if (StartsWith(uri, 0, SPY_PREFIX))
@@ -342,13 +370,13 @@ namespace Adaptive.Aeron
                 prefix = "";
             }
 
-            if (!StartsWith(uri, position, AERON_PREFIX))
+            if (!StartsWith(uri, position, AeronPrefix))
             {
                 throw new ArgumentException("Aeron URIs must start with 'aeron:', found: " + uri);
             }
             else
             {
-                position += AERON_PREFIX.Length;
+                position += AeronPrefix.Length;
             }
 
             var builder = new StringBuilder();
@@ -374,8 +402,9 @@ namespace Adaptive.Aeron
                             case ':':
                             case '|':
                             case '=':
-                                throw new ArgumentException("encountered '" + c +
-                                                            "' within media definition at index " + i + " in " + uri);
+                                throw new ArgumentException(
+                                    "encountered '" + c + "' within media definition at index " + i + " in " + uri
+                                );
 
                             default:
                                 builder.Append(c);
@@ -458,13 +487,14 @@ namespace Adaptive.Aeron
 
             return channelUri.ToString();
         }
-        
+
         /// <summary>
         /// Add alias to the uri if none exists.
         /// </summary>
         /// <param name="uri">   to add alias to. </param>
         /// <param name="alias"> to add to the uri. </param>
-        /// <returns> original uri if alias is empty or one is already defined, otherwise new uri with an alias. </returns>
+        /// <returns> original uri if alias is empty or one is already defined, otherwise new uri with an alias.
+        /// </returns>
         public static string AddAliasIfAbsent(string uri, string alias)
         {
             if (!string.IsNullOrEmpty(alias))
@@ -484,8 +514,7 @@ namespace Adaptive.Aeron
         /// </summary>
         /// <param name="paramValue"> to check if tagged. </param>
         /// <returns> true if tagged or false if not. </returns>
-        /// <see cref="Aeron.Context.TAGS_PARAM_NAME"/>
-        /// <see cref="Aeron.Context.TAG_PREFIX"/>
+        /// <see cref="Aeron.Context.TAGS_PARAM_NAME"/> <see cref="Aeron.Context.TAG_PREFIX"/>
         public static bool IsTagged(string paramValue)
         {
             return StartsWith(paramValue, 0, TAG_PREFIX);
@@ -496,18 +525,18 @@ namespace Adaptive.Aeron
         /// </summary>
         /// <param name="paramValue"> to extract the tag value from. </param>
         /// <returns> the value of the tag or <seealso cref="INVALID_TAG"/> if not tagged. </returns>
-        /// <see cref="Aeron.Context.TAGS_PARAM_NAME"/>
-        /// <see cref="Aeron.Context.TAG_PREFIX"/>
+        /// <see cref="Aeron.Context.TAGS_PARAM_NAME"/> <see cref="Aeron.Context.TAG_PREFIX"/>
         public static long GetTag(string paramValue)
         {
             return IsTagged(paramValue) ? long.Parse(paramValue.Substring(4, paramValue.Length - 4)) : INVALID_TAG;
         }
 
         /// <summary>
-        /// Create a channel URI for a destination, i.e. a channel that uses {@code media} and {@code interface} parameters
-        /// of the original channel and adds specified {@code endpoint} to it. For example given the input channel is
-        /// {@code aeron:udp?mtu=1440|ttl=0|endpoint=localhost:8090|term-length=128k|interface=eth0} and the endpoint is
-        /// {@code 192.168.0.14} the output of this method will be {@code aeron:udp?endpoint=192.168.0.14|interface=eth0}.
+        /// Create a channel URI for a destination, i.e. a channel that uses {@code media} and {@code interface}
+        /// parameters of the original channel and adds specified {@code endpoint} to it. For example given the input
+        /// channel is {@code aeron:udp?mtu=1440|ttl=0|endpoint=localhost:8090|term-length=128k|interface=eth0} and the
+        /// endpoint is {@code 192.168.0.14} the output of this method will be
+        /// {@code aeron:udp?endpoint=192.168.0.14|interface=eth0}.
         /// </summary>
         /// <param name="channel">  for which the destination is being added. </param>
         /// <param name="endpoint"> for the target destination. </param>
@@ -515,7 +544,7 @@ namespace Adaptive.Aeron
         public static string CreateDestinationUri(string channel, string endpoint)
         {
             ChannelUri channelUri = ChannelUri.Parse(channel);
-            string uri = AERON_PREFIX + channelUri.Media() + "?" + ENDPOINT_PARAM_NAME + "=" + endpoint;
+            string uri = AeronPrefix + channelUri.Media() + "?" + ENDPOINT_PARAM_NAME + "=" + endpoint;
             string networkInterface = channelUri.Get(INTERFACE_PARAM_NAME);
 
             if (null != networkInterface)
@@ -527,13 +556,14 @@ namespace Adaptive.Aeron
         }
 
         /// <summary>
-        /// Uses the supplied endpoint to resolve any wildcard ports. If the existing endpoint has a value of "0" for then
-        /// the port of this endpoint will be used instead. If the endpoint is not specified in this uri, then the whole
-        /// supplied endpoint is used. If the endpoint exists and has a non-wildcard port, then the existing endpoint is
-        /// retained.
+        /// Uses the supplied endpoint to resolve any wildcard ports. If the existing endpoint has a value of "0" for
+        /// then the port of this endpoint will be used instead. If the endpoint is not specified in this uri, then the
+        /// whole supplied endpoint is used. If the endpoint exists and has a non-wildcard port, then the existing
+        /// endpoint is retained.
         /// </summary>
         /// <param name="resolvedEndpoint"> The endpoint to supply a resolved endpoint port. </param>
-        /// <exception cref="ArgumentException"> if the supplied resolvedEndpoint does not have a port or the port is zero. </exception>
+        /// <exception cref="ArgumentException"> if the supplied resolvedEndpoint does not have a port or the port is
+        /// zero. </exception>
         /// <exception cref="ArgumentNullException"> if the supplied resolvedEndpoint is null </exception>
         public void ReplaceEndpointWildcardPort(string resolvedEndpoint)
         {
@@ -560,12 +590,13 @@ namespace Adaptive.Aeron
             }
             else if (existingEndpoint.EndsWith(":0", StringComparison.Ordinal))
             {
-                string endpoint = existingEndpoint.Substring(0, existingEndpoint.Length - 2) +
-                                  resolvedEndpoint.Substring(resolvedEndpoint.LastIndexOf(':'));
+                string endpoint =
+                    existingEndpoint.Substring(0, existingEndpoint.Length - 2)
+                    + resolvedEndpoint.Substring(resolvedEndpoint.LastIndexOf(':'));
                 Put(ENDPOINT_PARAM_NAME, endpoint);
             }
         }
-        
+
         /// <summary>
         /// Call consumer for each parameter defined in the URI.
         /// </summary>
@@ -576,8 +607,8 @@ namespace Adaptive.Aeron
         }
 
         /// <summary>
-        /// Compute a map of differences between this <see cref="ChannelUri"/> and another. Each entry's value
-        /// is a "this != that" string describing the divergence.
+        /// Compute a map of differences between this <see cref="ChannelUri"/> and another. Each entry's value is a
+        /// "this != that" string describing the divergence.
         /// </summary>
         /// <param name="that"> to compare against. </param>
         /// <returns> a map of differences, empty if the two URIs are equivalent. </returns>
@@ -595,14 +626,16 @@ namespace Adaptive.Aeron
                 differingValues["media"] = _media + " != " + that._media;
             }
 
-            _params.ForEach((key, value) =>
-            {
-                string thatValue = that._params.Get(key);
-                if (!string.Equals(value, thatValue))
+            _params.ForEach(
+                (key, value) =>
                 {
-                    differingValues[key] = value + " != " + thatValue;
+                    string thatValue = that._params.Get(key);
+                    if (!string.Equals(value, thatValue))
+                    {
+                        differingValues[key] = value + " != " + thatValue;
+                    }
                 }
-            });
+            );
 
             if (!TagsEqual(_tags, that._tags))
             {
@@ -614,19 +647,39 @@ namespace Adaptive.Aeron
 
         private static bool TagsEqual(string[] a, string[] b)
         {
-            if (ReferenceEquals(a, b)) return true;
-            if (a == null || b == null) return false;
-            if (a.Length != b.Length) return false;
+            if (ReferenceEquals(a, b))
+            {
+                return true;
+            }
+
+            if (a == null || b == null)
+            {
+                return false;
+            }
+
+            if (a.Length != b.Length)
+            {
+                return false;
+            }
+
             for (int i = 0; i < a.Length; i++)
             {
-                if (!string.Equals(a[i], b[i])) return false;
+                if (!string.Equals(a[i], b[i]))
+                {
+                    return false;
+                }
             }
+
             return true;
         }
 
         private static string TagsToString(string[] tags)
         {
-            if (tags == null) return "null";
+            if (tags == null)
+            {
+                return "null";
+            }
+
             return "[" + string.Join(", ", tags) + "]";
         }
 
@@ -649,7 +702,6 @@ namespace Adaptive.Aeron
             return Parse(channelUri).HasControlModeResponse();
         }
 
-
         private static void ValidateMedia(string media)
         {
             if (IPC_MEDIA.Equals(media) || UDP_MEDIA.Equals(media))
@@ -659,7 +711,6 @@ namespace Adaptive.Aeron
 
             throw new ArgumentException("unknown media: " + media);
         }
-
 
         private static bool StartsWith(string input, int position, string prefix)
         {

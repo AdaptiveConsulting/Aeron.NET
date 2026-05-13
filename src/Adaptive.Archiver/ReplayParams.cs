@@ -1,19 +1,35 @@
+﻿/*
+ * Copyright 2014 - 2026 Adaptive Financial Consulting Ltd
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 namespace Adaptive.Archiver
 {
     /// <summary>
-    /// Fluent API for setting optional replay parameters. Allows the user to configure starting position,
-    /// replay length, bounding counter (for a bounded replay) and the max length for file I/O operations.
+    /// Fluent API for setting optional replay parameters. Allows the user to configure starting position, replay
+    /// length, bounding counter (for a bounded replay) and the max length for file I/O operations.
     ///
-    /// Not threadsafe. 
+    /// Not threadsafe.
     /// </summary>
     public class ReplayParams
     {
-        private int boundingLimitCounterId;
-        private int fileIoMaxLength;
-        private long position;
-        private long length;
-        private long replayToken;
-        private long subscriptionRegistrationId;
+        private int _boundingLimitCounterId;
+        private int _fileIoMaxLength;
+        private long _position;
+        private long _length;
+        private long _replayToken;
+        private long _subscriptionRegistrationId;
 
         /// <summary>
         /// Default, initialise all values to "null".
@@ -29,24 +45,24 @@ namespace Adaptive.Archiver
         /// <returns> this for a fluent API </returns>
         public ReplayParams Reset()
         {
-            boundingLimitCounterId = Aeron.Aeron.NULL_VALUE;
-            fileIoMaxLength = Aeron.Aeron.NULL_VALUE;
-            position = AeronArchive.NULL_POSITION;
-            length = AeronArchive.REPLAY_ALL_AND_FOLLOW;
-            replayToken = Aeron.Aeron.NULL_VALUE;
-            subscriptionRegistrationId = Aeron.Aeron.NULL_VALUE;
+            _boundingLimitCounterId = Aeron.Aeron.NULL_VALUE;
+            _fileIoMaxLength = Aeron.Aeron.NULL_VALUE;
+            _position = AeronArchive.NULL_POSITION;
+            _length = AeronArchive.REPLAY_ALL_AND_FOLLOW;
+            _replayToken = Aeron.Aeron.NULL_VALUE;
+            _subscriptionRegistrationId = Aeron.Aeron.NULL_VALUE;
             return this;
         }
 
         /// <summary>
-        /// Set the position to start the replay. If set to <seealso cref="AeronArchive.NULL_POSITION"/> (which is the default) then
-        /// the stream will be replayed from the start.
+        /// Set the position to start the replay. If set to <seealso cref="AeronArchive.NULL_POSITION"/> (which is the
+        /// default) then the stream will be replayed from the start.
         /// </summary>
         /// <param name="position"> to start the replay from. </param>
         /// <returns> this for a fluent API. </returns>
         public ReplayParams Position(long position)
         {
-            this.position = position;
+            this._position = position;
             return this;
         }
 
@@ -57,25 +73,27 @@ namespace Adaptive.Archiver
         /// <seealso cref="ReplayParams.Position(long)"/>
         public long Position()
         {
-            return position;
+            return _position;
         }
 
         /// <summary>
-        /// The length of the recorded stream to replay. If set to <seealso cref="AeronArchive.REPLAY_ALL_AND_FOLLOW"/> (the default)
-        /// it will replay a whole stream of unknown length and then continue to follow the replay if it is live. If set to
-        /// <seealso cref="AeronArchive.REPLAY_ALL_AND_STOP"/> it will replay up the limit calculated when the replay request is
-        /// received then stop the replay, thereby ending the stream.
+        /// The length of the recorded stream to replay. If set to <seealso cref="AeronArchive.REPLAY_ALL_AND_FOLLOW"/>
+        /// (the default) it will replay a whole stream of unknown length and then continue to follow the replay if it
+        /// is live. If set to
+        /// <seealso cref="AeronArchive.REPLAY_ALL_AND_STOP"/> it will replay up the limit calculated when the replay
+        /// request is received then stop the replay, thereby ending the stream.
         /// <para>
-        /// <seealso cref="AeronArchive.REPLAY_ALL_AND_FOLLOW"/> retains the same behaviour as using <seealso cref="AeronArchive.NULL_LENGTH"/>
-        /// or <seealso cref="long.MaxValue"/>.
-        ///     
+        /// <seealso cref="AeronArchive.REPLAY_ALL_AND_FOLLOW"/> retains the same behaviour as using
+        /// <seealso cref="AeronArchive.NULL_LENGTH"/>
+        /// or <seealso cref="long.MaxValue"/> .
+        ///
         /// </para>
         /// </summary>
         /// <param name="length"> of the recording to be replayed. </param>
         /// <returns> this for a fluent API. </returns>
         public ReplayParams Length(long length)
         {
-            this.length = length;
+            this._length = length;
             return this;
         }
 
@@ -86,7 +104,7 @@ namespace Adaptive.Archiver
         /// <seealso cref="ReplayParams.Length(long)"/>
         public long Length()
         {
-            return length;
+            return _length;
         }
 
         /// <summary>
@@ -97,17 +115,18 @@ namespace Adaptive.Archiver
         /// <returns> this for a fluent API </returns>
         public ReplayParams BoundingLimitCounterId(int boundingLimitCounterId)
         {
-            this.boundingLimitCounterId = boundingLimitCounterId;
+            this._boundingLimitCounterId = boundingLimitCounterId;
             return this;
         }
 
         /// <summary>
-        /// Gets the counterId specified for the bounding the replay. Returns <seealso cref="Aeron.Aeron.NULL_VALUE"/> if unspecified.
+        /// Gets the counterId specified for the bounding the replay. Returns <seealso cref="Aeron.Aeron.NULL_VALUE"/>
+        /// if unspecified.
         /// </summary>
         /// <returns> the counter id to bound the replay. </returns>
         public int BoundingLimitCounterId()
         {
-            return this.boundingLimitCounterId;
+            return this._boundingLimitCounterId;
         }
 
         /// <summary>
@@ -119,18 +138,19 @@ namespace Adaptive.Archiver
         /// <returns> this for a fluent API </returns>
         public ReplayParams FileIoMaxLength(int fileIoMaxLength)
         {
-            this.fileIoMaxLength = fileIoMaxLength;
+            this._fileIoMaxLength = fileIoMaxLength;
             return this;
         }
 
         /// <summary>
-        /// Gets the maximum length for file IO operations in the replay. Defaults to <seealso cref="Aeron.Aeron.NULL_VALUE"/> if not
+        /// Gets the maximum length for file IO operations in the replay. Defaults to
+        /// <seealso cref="Aeron.Aeron.NULL_VALUE"/> if not
         /// set, which will trigger the use of the Archive.Context default.
         /// </summary>
         /// <returns> maximum file length for IO operations during replay. </returns>
         public int FileIoMaxLength()
         {
-            return this.fileIoMaxLength;
+            return this._fileIoMaxLength;
         }
 
         /// <summary>
@@ -139,9 +159,9 @@ namespace Adaptive.Archiver
         /// <returns> true if the replay should be bounded, false otherwise. </returns>
         public bool IsBounded()
         {
-            return Aeron.Aeron.NULL_VALUE != boundingLimitCounterId;
+            return Aeron.Aeron.NULL_VALUE != _boundingLimitCounterId;
         }
-        
+
         /// <summary>
         /// Set a token used for replays when the initiating image is not the one used to create the archive
         /// connection/session.
@@ -150,7 +170,7 @@ namespace Adaptive.Archiver
         /// <returns> this for a fluent API. </returns>
         public ReplayParams ReplayToken(long replayToken)
         {
-            this.replayToken = replayToken;
+            this._replayToken = replayToken;
             return this;
         }
 
@@ -161,27 +181,29 @@ namespace Adaptive.Archiver
         /// <returns> the replay token </returns>
         public long ReplayToken()
         {
-            return replayToken;
+            return _replayToken;
         }
 
         /// <summary>
         /// Set the subscription registration id to be used when doing a start replay using response channels and the
         /// response subscription is already created.
         /// </summary>
-        /// <param name="registrationId"> of the subscription to receive the replay (should be set up with control-mode=response). </param>
+        /// <param name="registrationId"> of the subscription to receive the replay (should be set up with
+        /// control-mode=response). </param>
         public void SubscriptionRegistrationId(long registrationId)
         {
-            this.subscriptionRegistrationId = registrationId;
+            this._subscriptionRegistrationId = registrationId;
         }
 
         /// <summary>
         /// Get the subscription registration id to be used when doing a start replay using response channels and the
         /// response subscription is already created.
         /// </summary>
-        /// <returns> registrationId of the subscription to receive the replay (should be set up with control-mode=response). </returns>
+        /// <returns> registrationId of the subscription to receive the replay (should be set up with
+        /// control-mode=response). </returns>
         public long SubscriptionRegistrationId()
         {
-            return subscriptionRegistrationId;
+            return _subscriptionRegistrationId;
         }
     }
 }

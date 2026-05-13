@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright 2014 - 2017 Adaptive Financial Consulting Ltd
+ * Copyright 2014 - 2026 Adaptive Financial Consulting Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@ using System.Threading;
 namespace Adaptive.Agrona.Concurrent
 {
     /// <summary>
-    /// <see cref="IIdleStrategy"/> which uses a <see cref="SpinWait"/>.
+    /// <see cref="IIdleStrategy"/> which uses a <see cref="SpinWait"/> .
     /// </summary>
     public class SpinWaitIdleStrategy : IIdleStrategy
     {

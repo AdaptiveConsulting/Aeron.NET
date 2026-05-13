@@ -1,5 +1,5 @@
-/*
- * Copyright 2014 - 2017 Adaptive Financial Consulting Ltd
+﻿/*
+ * Copyright 2014 - 2026 Adaptive Financial Consulting Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,7 +25,7 @@ namespace Adaptive.Aeron.Samples.Common
     /// <summary>
     /// Utility functions for samples
     /// </summary>
-    public class SamplesUtil
+    public static class SamplesUtil
     {
         /// <summary>
         /// Return a reusable, parameterised event loop that calls a default idler when no messages are received
@@ -34,7 +34,11 @@ namespace Adaptive.Aeron.Samples.Common
         /// <param name="limit">           passed to <seealso cref="Subscription#poll(FragmentHandler, int)"/> </param>
         /// <param name="running">         indication for loop </param>
         /// <returns> loop function </returns>
-        public static Action<Subscription> SubscriberLoop(IFragmentHandler fragmentHandler, int limit, AtomicBoolean running)
+        public static Action<Subscription> SubscriberLoop(
+            IFragmentHandler fragmentHandler,
+            int limit,
+            AtomicBoolean running
+        )
         {
             IIdleStrategy idleStrategy = new BusySpinIdleStrategy();
 
@@ -49,7 +53,12 @@ namespace Adaptive.Aeron.Samples.Common
         /// <param name="running">         indication for loop </param>
         /// <param name="idleStrategy">    to use for loop </param>
         /// <returns> loop function </returns>
-        public static Action<Subscription> SubscriberLoop(IFragmentHandler fragmentHandler, int limit, AtomicBoolean running, IIdleStrategy idleStrategy)
+        public static Action<Subscription> SubscriberLoop(
+            IFragmentHandler fragmentHandler,
+            int limit,
+            AtomicBoolean running,
+            IIdleStrategy idleStrategy
+        )
         {
             return subscription =>
             {
@@ -67,13 +76,17 @@ namespace Adaptive.Aeron.Samples.Common
         /// <returns> subscription data handler function that prints the message contents </returns>
         public static IFragmentHandler PrintStringMessage(int streamId)
         {
-            return HandlerHelper.ToFragmentHandler((buffer, offset, length, header) =>
-            {
-                var data = new byte[length];
-                buffer.GetBytes(offset, data);
+            return HandlerHelper.ToFragmentHandler(
+                (buffer, offset, length, header) =>
+                {
+                    var data = new byte[length];
+                    buffer.GetBytes(offset, data);
 
-                Console.WriteLine($"Message to stream {streamId:D} from session {header.SessionId:D} ({length:D}@{offset:D}) <<{Encoding.UTF8.GetString(data)}>>");
-            });
+                    Console.WriteLine(
+                        $"Message to stream {streamId:D} from session {header.SessionId:D} ({length:D}@{offset:D}) <<{Encoding.UTF8.GetString(data)}>>"
+                    );
+                }
+            );
         }
 
         /// <summary>
@@ -95,7 +108,13 @@ namespace Adaptive.Aeron.Samples.Common
         /// <param name="sessionId"> for the error, if source </param>
         /// <param name="message">   indicating what the error was </param>
         /// <param name="cause">     of the error </param>
-        public static void PrintError(string channel, int streamId, int sessionId, string message, HeaderFlyweight cause)
+        public static void PrintError(
+            string channel,
+            int streamId,
+            int sessionId,
+            string message,
+            HeaderFlyweight cause
+        )
         {
             Console.WriteLine(message);
         }
@@ -109,7 +128,9 @@ namespace Adaptive.Aeron.Samples.Common
         /// <param name="totalBytes">     being reported </param>
         public static void PrintRate(double messagesPerSec, double bytesPerSec, long totalMessages, long totalBytes)
         {
-            Console.WriteLine($"{messagesPerSec:g02} msgs/sec, {bytesPerSec:g02} bytes/sec, totals {totalMessages:D} messages {totalBytes/(1024*1024):D} MB, GC0 {GC.CollectionCount(0)}, GC1 {GC.CollectionCount(1)}, GC2 {GC.CollectionCount(2)}");
+            Console.WriteLine(
+                $"{messagesPerSec:g02} msgs/sec, {bytesPerSec:g02} bytes/sec, totals {totalMessages:D} messages {totalBytes / (1024 * 1024):D} MB, GC0 {GC.CollectionCount(0)}, GC1 {GC.CollectionCount(1)}, GC2 {GC.CollectionCount(2)}"
+            );
         }
 
         /// <summary>
@@ -119,7 +140,9 @@ namespace Adaptive.Aeron.Samples.Common
         public static void PrintAvailableImage(Image image)
         {
             var subscription = image.Subscription;
-            Console.WriteLine($"Available image on {subscription.Channel} streamId={subscription.StreamId:D} sessionId={image.SessionId:D} from {image.SourceIdentity}");
+            Console.WriteLine(
+                $"Available image on {subscription.Channel} streamId={subscription.StreamId:D} sessionId={image.SessionId:D} from {image.SourceIdentity}"
+            );
         }
 
         /// <summary>
@@ -129,7 +152,9 @@ namespace Adaptive.Aeron.Samples.Common
         public static void PrintUnavailableImage(Image image)
         {
             var subscription = image.Subscription;
-            Console.WriteLine($"Unavailable image on {subscription.Channel} streamId={subscription.StreamId:D} sessionId={image.SessionId:D}");
+            Console.WriteLine(
+                $"Unavailable image on {subscription.Channel} streamId={subscription.StreamId:D} sessionId={image.SessionId:D}"
+            );
         }
     }
 }

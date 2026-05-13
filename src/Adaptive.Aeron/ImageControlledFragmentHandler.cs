@@ -1,18 +1,34 @@
-﻿using System;
+﻿/*
+ * Copyright 2014 - 2026 Adaptive Financial Consulting Ltd
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 using Adaptive.Aeron.LogBuffer;
-using Adaptive.Aeron.Protocol;
 using Adaptive.Agrona;
 
 namespace Adaptive.Aeron
 {
     /// <summary>
-    /// A <seealso cref="IControlledFragmentHandler"/> that sits in a chain-of-responsibility pattern that reassembles fragmented
-    /// messages so that the next handler in the chain only sees whole messages. This is for a single session on an
-    /// <seealso cref="Image"/> and not for multiple session <seealso cref="Image"/>s in a <seealso cref="Subscription"/>.
-    /// 
-    /// Unfragmented messages are delegated without copy. Fragmented messages are copied to a temporary
-    /// buffer for reassembly before delegation.
-    /// 
+    /// A <seealso cref="IControlledFragmentHandler"/> that sits in a chain-of-responsibility pattern that reassembles
+    /// fragmented messages so that the next handler in the chain only sees whole messages. This is for a single session
+    /// on an
+    /// <seealso cref="Image"/> and not for multiple session <seealso cref="Image"/>s in a
+    /// <seealso cref="Subscription"/>.
+    ///
+    /// Unfragmented messages are delegated without copy. Fragmented messages are copied to a temporary buffer for
+    /// reassembly before delegation.
+    ///
     /// The <seealso cref="Header"/> passed to the delegate on assembling a message will be that of the last fragment.
     /// </summary>
     /// <see cref="Image.ControlledPoll(IControlledFragmentHandler, int)"/>
@@ -52,7 +68,8 @@ namespace Adaptive.Aeron
         }
 
         /// <summary>
-        /// The implementation of <seealso cref="IControlledFragmentHandler"/> that reassembles and forwards whole messages.
+        /// The implementation of <seealso cref="IControlledFragmentHandler"/> that reassembles and forwards whole
+        /// messages.
         /// </summary>
         /// <param name="buffer"> containing the data. </param>
         /// <param name="offset"> at which the data begins. </param>
@@ -70,7 +87,8 @@ namespace Adaptive.Aeron
             }
             else if ((flags & FrameDescriptor.BEGIN_FRAG_FLAG) == FrameDescriptor.BEGIN_FRAG_FLAG)
             {
-                _builder.Reset()
+                _builder
+                    .Reset()
                     .CaptureHeader(header)
                     .Append(buffer, offset, length)
                     .NextTermOffset(header.NextTermOffset);
@@ -83,7 +101,12 @@ namespace Adaptive.Aeron
 
                 if ((flags & FrameDescriptor.END_FRAG_FLAG) == FrameDescriptor.END_FRAG_FLAG)
                 {
-                    action = _delegate.OnFragment(_builder.Buffer(), 0, _builder.Limit(), _builder.CompleteHeader(header));
+                    action = _delegate.OnFragment(
+                        _builder.Buffer(),
+                        0,
+                        _builder.Limit(),
+                        _builder.CompleteHeader(header)
+                    );
 
                     if (ControlledFragmentHandlerAction.ABORT == action)
                     {

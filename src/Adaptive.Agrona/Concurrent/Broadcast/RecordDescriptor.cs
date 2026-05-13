@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright 2014 - 2017 Adaptive Financial Consulting Ltd
+ * Copyright 2014 - 2026 Adaptive Financial Consulting Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,9 +19,9 @@ using System;
 namespace Adaptive.Agrona.Concurrent.Broadcast
 {
     /// <summary>
-    /// Description of the structure for a record in the broadcast buffer.
-    /// All messages are stored in records with the following format.
-    /// 
+    /// Description of the structure for a record in the broadcast buffer. All messages are stored in records with the
+    /// following format.
+    ///
     /// <pre>
     ///   0                   1                   2                   3
     ///   0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
@@ -34,9 +34,14 @@ namespace Adaptive.Agrona.Concurrent.Broadcast
     /// ...                                                              |
     ///  +---------------------------------------------------------------+
     /// </pre>
-    /// 
+    ///
     /// (R) bits are reserved.
     /// </summary>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage(
+        "Major Code Smell",
+        "S1118:Utility classes should not have public constructors",
+        Justification = "Public ctor in shipped API surface; marking static would break consumers."
+    )]
     public class RecordDescriptor
     {
         /// <summary>
@@ -53,7 +58,7 @@ namespace Adaptive.Agrona.Concurrent.Broadcast
 
         /// <summary>
         /// Length of the record header in bytes. </summary>
-        public const int HeaderLength = BitUtil.SIZE_OF_INT*2;
+        public const int HeaderLength = BitUtil.SIZE_OF_INT * 2;
 
         /// <summary>
         /// Alignment as a multiple of bytes for each record. </summary>
@@ -66,7 +71,7 @@ namespace Adaptive.Agrona.Concurrent.Broadcast
         /// <returns> the maximum supported size for a message. </returns>
         public static int CalculateMaxMessageLength(int capacity)
         {
-            return capacity/8;
+            return capacity / 8;
         }
 
         /// <summary>

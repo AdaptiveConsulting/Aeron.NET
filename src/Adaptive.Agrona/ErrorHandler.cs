@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright 2014 - 2017 Adaptive Financial Consulting Ltd
+ * Copyright 2014 - 2026 Adaptive Financial Consulting Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,9 +20,10 @@ namespace Adaptive.Agrona
 {
     /// <summary>
     /// Callback to notify of an error that has occurred when processing an operation or event.
-    /// 
-    /// This method is assumed non-throwing, so rethrowing the exception or triggering further exceptions would be a bug.
-    /// 
+    ///
+    /// This method is assumed non-throwing, so rethrowing the exception or triggering further exceptions would be a
+    /// bug.
+    ///
     /// <param name="exception"> exception that occurred while processing an operation or event.</param>
     /// </summary>
     public delegate void ErrorHandler(Exception exception);

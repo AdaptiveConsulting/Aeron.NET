@@ -1,4 +1,20 @@
-﻿using System;
+﻿/*
+ * Copyright 2014 - 2026 Adaptive Financial Consulting Ltd
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+using System;
 using System.Net;
 using Adaptive.Aeron.Command;
 
@@ -9,15 +25,15 @@ namespace Adaptive.Aeron.Status
     /// </summary>
     public class PublicationErrorFrame : ICloneable
     {
-        private long registrationId;
-        private int sessionId;
-        private int streamId;
-        private long receiverId;
-        private long destinationRegistrationId;
-        private long groupTag;
-        private ErrorCode errorCode;
-        private string errorMessage;
-        private IPEndPoint sourceAddress;
+        private long _registrationId;
+        private int _sessionId;
+        private int _streamId;
+        private long _receiverId;
+        private long _destinationRegistrationId;
+        private long _groupTag;
+        private ErrorCode _errorCode;
+        private string _errorMessage;
+        private IPEndPoint _sourceAddress;
 
         /// <summary>
         /// Registration id of the publication that received the error frame.
@@ -25,7 +41,7 @@ namespace Adaptive.Aeron.Status
         /// <returns> registration id of the publication. </returns>
         public long RegistrationId()
         {
-            return registrationId;
+            return _registrationId;
         }
 
         /// <summary>
@@ -34,7 +50,7 @@ namespace Adaptive.Aeron.Status
         /// <returns> session id of the publication. </returns>
         public int SessionId()
         {
-            return sessionId;
+            return _sessionId;
         }
 
         /// <summary>
@@ -43,7 +59,7 @@ namespace Adaptive.Aeron.Status
         /// <returns> stream id of the publication. </returns>
         public int StreamId()
         {
-            return streamId;
+            return _streamId;
         }
 
         /// <summary>
@@ -52,17 +68,17 @@ namespace Adaptive.Aeron.Status
         /// <returns> receiver id of the source that send the error frame. </returns>
         public long ReceiverId()
         {
-            return receiverId;
+            return _receiverId;
         }
 
         /// <summary>
         /// Group tag of the source that sent the error frame.
         /// </summary>
-        /// <returns> group tag of the source that sent the error frame or <seealso cref="Aeron.NULL_VALUE"/> if the source did not have a group
-        /// tag set. </returns>
+        /// <returns> group tag of the source that sent the error frame or <seealso cref="Aeron.NULL_VALUE"/> if the
+        /// source did not have a group tag set. </returns>
         public long GroupTag()
         {
-            return groupTag;
+            return _groupTag;
         }
 
         /// <summary>
@@ -71,7 +87,7 @@ namespace Adaptive.Aeron.Status
         /// <returns> the error code. </returns>
         public ErrorCode ErrorCode()
         {
-            return errorCode;
+            return _errorCode;
         }
 
         /// <summary>
@@ -80,7 +96,7 @@ namespace Adaptive.Aeron.Status
         /// <returns> the error message. </returns>
         public string ErrorMessage()
         {
-            return errorMessage;
+            return _errorMessage;
         }
 
         /// <summary>
@@ -89,7 +105,7 @@ namespace Adaptive.Aeron.Status
         /// <returns> address of the remote source. </returns>
         public IPEndPoint SourceAddress()
         {
-            return sourceAddress;
+            return _sourceAddress;
         }
 
         /// <summary>
@@ -99,7 +115,7 @@ namespace Adaptive.Aeron.Status
         /// <returns> registrationId of the destination or <seealso cref="Aeron.NULL_VALUE"/>. </returns>
         public long DestinationRegistrationId()
         {
-            return destinationRegistrationId;
+            return _destinationRegistrationId;
         }
 
         /// <summary>
@@ -109,47 +125,47 @@ namespace Adaptive.Aeron.Status
         /// <returns> this for fluent API. </returns>
         public PublicationErrorFrame Set(PublicationErrorFrameFlyweight frameFlyweight)
         {
-            registrationId = frameFlyweight.RegistrationId();
-            sessionId = frameFlyweight.SessionId();
-            streamId = frameFlyweight.StreamId();
-            receiverId = frameFlyweight.ReceiverId();
-            groupTag = frameFlyweight.GroupTag();
-            sourceAddress = frameFlyweight.SourceAddress();
-            errorCode = frameFlyweight.ErrorCode();
-            errorMessage = frameFlyweight.ErrorMessage();
-            destinationRegistrationId = frameFlyweight.DestinationRegistrationId();
+            _registrationId = frameFlyweight.RegistrationId();
+            _sessionId = frameFlyweight.SessionId();
+            _streamId = frameFlyweight.StreamId();
+            _receiverId = frameFlyweight.ReceiverId();
+            _groupTag = frameFlyweight.GroupTag();
+            _sourceAddress = frameFlyweight.SourceAddress();
+            _errorCode = frameFlyweight.ErrorCode();
+            _errorMessage = frameFlyweight.ErrorMessage();
+            _destinationRegistrationId = frameFlyweight.DestinationRegistrationId();
 
             return this;
         }
 
         /// <summary>
-        /// Return a copy of this message. Useful if a callback is reusing an instance of this class to avoid unnecessary
-        /// allocation.
+        /// Return a copy of this message. Useful if a callback is reusing an instance of this class to avoid
+        /// unnecessary allocation.
         /// </summary>
         /// <returns> a copy of this instance's data. </returns>
         public object Clone()
         {
             return MemberwiseClone();
         }
-        
+
         /// <summary>
         /// Build a String representation of the error frame.
         /// </summary>
         /// <returns> a String representation of the error frame. </returns>
         public override string ToString()
         {
-            return "CounterMessageFlyweight{" +
-                   "registrationId=" + registrationId +
-                   ", sessionId=" + sessionId +
-                   ", streamId=" + streamId +
-                   ", receiverId=" + receiverId +
-                   ", destinationRegistrationId=" + destinationRegistrationId +
-                   ", groupTag=" + groupTag +
-                   ", errorCode=" + errorCode +
-                   ", errorMessage=" + errorMessage +
-                   ", sourceAddress=" + sourceAddress +
-                   "}";
+            return
+                "CounterMessageFlyweight{" +
+                "registrationId=" + _registrationId +
+                ", sessionId=" + _sessionId +
+                ", streamId=" + _streamId +
+                ", receiverId=" + _receiverId +
+                ", destinationRegistrationId=" + _destinationRegistrationId +
+                ", groupTag=" + _groupTag +
+                ", errorCode=" + _errorCode +
+                ", errorMessage=" + _errorMessage +
+                ", sourceAddress=" + _sourceAddress +
+                "}";
         }
-
     }
 }

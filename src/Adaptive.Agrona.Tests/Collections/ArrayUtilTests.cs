@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright 2014 - 2017 Adaptive Financial Consulting Ltd
+ * Copyright 2014 - 2026 Adaptive Financial Consulting Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -50,7 +50,7 @@ namespace Adaptive.Agrona.Tests.Collections
         {
             var result = ArrayUtil.Remove(_values, One);
 
-            Assert.That(new [] { Two }, Is.EqualTo(result));
+            Assert.That(new[] { Two }, Is.EqualTo(result));
         }
 
         [Test]
@@ -58,8 +58,7 @@ namespace Adaptive.Agrona.Tests.Collections
         {
             var result = ArrayUtil.Remove(_values, 0);
 
-            Assert.That(new [] { Two }, Is.EqualTo(result));
+            Assert.That(new[] { Two }, Is.EqualTo(result));
         }
     }
-
 }

@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright 2014 - 2017 Adaptive Financial Consulting Ltd
+ * Copyright 2014 - 2026 Adaptive Financial Consulting Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,19 +19,24 @@ namespace Adaptive.Agrona.Collections
     using System;
 
     /// <summary>
-    /// Utility class for operating on arrays as if they were collections. This is useful for
-    /// critical paths where operations like add and remove are seldom used, but iterating
-    /// is common and checkcast and indirection are comparatively expensive.
-    /// 
+    /// Utility class for operating on arrays as if they were collections. This is useful for critical paths where
+    /// operations like add and remove are seldom used, but iterating is common and checkcast and indirection are
+    /// comparatively expensive.
+    ///
     /// In all cases the array being mutated is assumed to be full.
-    /// 
+    ///
     /// In all cases reference equality is used.
     /// </summary>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage(
+        "Major Code Smell",
+        "S1118:Utility classes should not have public constructors",
+        Justification = "Public ctor in shipped API surface; marking static would break consumers."
+    )]
     public sealed class ArrayUtil
     {
         public const int UNKNOWN_INDEX = -1;
-        
-        public static readonly string[] EMPTY_STRING_ARRAY = new string[0];
+
+        public static readonly string[] EMPTY_STRING_ARRAY = Array.Empty<string>();
 
         /// <summary>
         /// Add an element to an array resulting in a new array.
@@ -50,7 +55,7 @@ namespace Adaptive.Agrona.Collections
 
         /// <summary>
         /// Remove an element from an array resulting in a new array if the element was found otherwise the old array.
-        /// 
+        ///
         /// Returns its input parameter if the element to remove isn't a member.
         /// </summary>
         /// <param name="oldElements">     to have the element removed from. </param>

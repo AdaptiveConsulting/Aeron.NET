@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright 2014 - 2017 Adaptive Financial Consulting Ltd
+ * Copyright 2014 - 2026 Adaptive Financial Consulting Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,7 +26,7 @@ namespace Adaptive.Aeron.Tests.LogBuffer
     [TestFixture]
     public class TermRebuilderTest
     {
-        private static readonly int TERM_BUFFER_CAPACITY = LogBufferDescriptor.TERM_MIN_LENGTH;
+        private static readonly int TermBufferCapacity = LogBufferDescriptor.TERM_MIN_LENGTH;
 
         private IAtomicBuffer _termBuffer;
 
@@ -34,7 +34,7 @@ namespace Adaptive.Aeron.Tests.LogBuffer
         public void SetUp()
         {
             _termBuffer = A.Fake<IAtomicBuffer>();
-            A.CallTo(() => _termBuffer.Capacity).Returns(TERM_BUFFER_CAPACITY);
+            A.CallTo(() => _termBuffer.Capacity).Returns(TermBufferCapacity);
         }
 
         [Test]
@@ -47,21 +47,28 @@ namespace Adaptive.Aeron.Tests.LogBuffer
             packet.PutInt(srcOffset, length);
 
             TermRebuilder.Insert(_termBuffer, termOffset, packet, length);
-            
-            A.CallTo(() => _termBuffer.PutBytes(termOffset + DataHeaderFlyweight.HEADER_LENGTH, packet, srcOffset + DataHeaderFlyweight.HEADER_LENGTH, length - DataHeaderFlyweight.HEADER_LENGTH)).MustHaveHappened()
+
+            A.CallTo(() =>
+                    _termBuffer.PutBytes(
+                        termOffset + DataHeaderFlyweight.HEADER_LENGTH,
+                        packet,
+                        srcOffset + DataHeaderFlyweight.HEADER_LENGTH,
+                        length - DataHeaderFlyweight.HEADER_LENGTH
+                    )
+                )
+                .MustHaveHappened()
                 .Then(A.CallTo(() => _termBuffer.PutLong(termOffset + 24, packet.GetLong(24))).MustHaveHappened())
                 .Then(A.CallTo(() => _termBuffer.PutLong(termOffset + 16, packet.GetLong(16))).MustHaveHappened())
                 .Then(A.CallTo(() => _termBuffer.PutLong(termOffset + 8, packet.GetLong(8))).MustHaveHappened())
                 .Then(A.CallTo(() => _termBuffer.PutLongRelease(termOffset, packet.GetLong(0))).MustHaveHappened());
         }
 
-
         [Test]
         public void ShouldInsertLastFrameIntoBuffer()
         {
             int frameLength = BitUtil.Align(256, FrameDescriptor.FRAME_ALIGNMENT);
             const int srcOffset = 0;
-            int tail = TERM_BUFFER_CAPACITY - frameLength;
+            int tail = TermBufferCapacity - frameLength;
             int termOffset = tail;
             UnsafeBuffer packet = new UnsafeBuffer(BufferUtil.Allocate(frameLength));
             packet.PutShort(FrameDescriptor.TypeOffset(srcOffset), (short)FrameDescriptor.PADDING_FRAME_TYPE);
@@ -69,7 +76,15 @@ namespace Adaptive.Aeron.Tests.LogBuffer
 
             TermRebuilder.Insert(_termBuffer, termOffset, packet, frameLength);
 
-            A.CallTo(() => _termBuffer.PutBytes(tail + DataHeaderFlyweight.HEADER_LENGTH, packet, srcOffset + DataHeaderFlyweight.HEADER_LENGTH, frameLength - DataHeaderFlyweight.HEADER_LENGTH)).MustHaveHappened();
+            A.CallTo(() =>
+                    _termBuffer.PutBytes(
+                        tail + DataHeaderFlyweight.HEADER_LENGTH,
+                        packet,
+                        srcOffset + DataHeaderFlyweight.HEADER_LENGTH,
+                        frameLength - DataHeaderFlyweight.HEADER_LENGTH
+                    )
+                )
+                .MustHaveHappened();
         }
 
         [Test]
@@ -84,7 +99,15 @@ namespace Adaptive.Aeron.Tests.LogBuffer
 
             TermRebuilder.Insert(_termBuffer, termOffset, packet, alignedFrameLength);
 
-            A.CallTo(() => _termBuffer.PutBytes(tail + DataHeaderFlyweight.HEADER_LENGTH, packet, srcOffset + DataHeaderFlyweight.HEADER_LENGTH, alignedFrameLength - DataHeaderFlyweight.HEADER_LENGTH)).MustHaveHappened();
+            A.CallTo(() =>
+                    _termBuffer.PutBytes(
+                        tail + DataHeaderFlyweight.HEADER_LENGTH,
+                        packet,
+                        srcOffset + DataHeaderFlyweight.HEADER_LENGTH,
+                        alignedFrameLength - DataHeaderFlyweight.HEADER_LENGTH
+                    )
+                )
+                .MustHaveHappened();
         }
 
         [Test]
@@ -98,7 +121,15 @@ namespace Adaptive.Aeron.Tests.LogBuffer
 
             TermRebuilder.Insert(_termBuffer, termOffset, packet, alignedFrameLength);
 
-            A.CallTo(() => _termBuffer.PutBytes((alignedFrameLength * 2) + DataHeaderFlyweight.HEADER_LENGTH, packet, srcOffset + DataHeaderFlyweight.HEADER_LENGTH, alignedFrameLength - DataHeaderFlyweight.HEADER_LENGTH)).MustHaveHappened();
+            A.CallTo(() =>
+                    _termBuffer.PutBytes(
+                        (alignedFrameLength * 2) + DataHeaderFlyweight.HEADER_LENGTH,
+                        packet,
+                        srcOffset + DataHeaderFlyweight.HEADER_LENGTH,
+                        alignedFrameLength - DataHeaderFlyweight.HEADER_LENGTH
+                    )
+                )
+                .MustHaveHappened();
         }
 
         [Test]
@@ -109,10 +140,18 @@ namespace Adaptive.Aeron.Tests.LogBuffer
             const int srcOffset = 0;
             UnsafeBuffer packet = new UnsafeBuffer(BufferUtil.Allocate(alignedFrameLength));
             int termOffset = alignedFrameLength * 2;
-            
+
             TermRebuilder.Insert(_termBuffer, termOffset, packet, alignedFrameLength);
 
-            A.CallTo(() => _termBuffer.PutBytes((alignedFrameLength * 2) + DataHeaderFlyweight.HEADER_LENGTH, packet, srcOffset + DataHeaderFlyweight.HEADER_LENGTH, alignedFrameLength - DataHeaderFlyweight.HEADER_LENGTH)).MustHaveHappened();
+            A.CallTo(() =>
+                    _termBuffer.PutBytes(
+                        (alignedFrameLength * 2) + DataHeaderFlyweight.HEADER_LENGTH,
+                        packet,
+                        srcOffset + DataHeaderFlyweight.HEADER_LENGTH,
+                        alignedFrameLength - DataHeaderFlyweight.HEADER_LENGTH
+                    )
+                )
+                .MustHaveHappened();
         }
     }
 }

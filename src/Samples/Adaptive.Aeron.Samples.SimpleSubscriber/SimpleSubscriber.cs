@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright 2014 - 2017 Adaptive Financial Consulting Ltd
+ * Copyright 2014 - 2026 Adaptive Financial Consulting Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,12 +22,11 @@ using Adaptive.Agrona.Concurrent;
 namespace Adaptive.Aeron.Samples.SimpleSubscriber
 {
     /// <summary>
-    /// A very simple Aeron subscriber application which can receive small non-fragmented messages
-    /// on a fixed channel and stream ID. The DataHandler method 'printStringMessage' is called when data
-    /// is received. This application doesn't handle large fragmented messages. For an example of
-    /// fragmented message reception.
+    /// A very simple Aeron subscriber application which can receive small non-fragmented messages on a fixed channel
+    /// and stream ID. The DataHandler method 'printStringMessage' is called when data is received. This application
+    /// doesn't handle large fragmented messages. For an example of fragmented message reception.
     /// </summary>
-    public class SimpleSubscriber
+    public static class SimpleSubscriber
     {
         public static void Main()
         {
@@ -48,16 +47,20 @@ namespace Adaptive.Aeron.Samples.SimpleSubscriber
             Console.CancelKeyPress += (s, e) => running.Set(false);
 
             // dataHandler method is called for every new datagram received
-            var fragmentHandler = HandlerHelper.ToFragmentHandler((buffer, offset, length, header) =>
-            {
-                var data = new byte[length];
-                buffer.GetBytes(offset, data);
+            var fragmentHandler = HandlerHelper.ToFragmentHandler(
+                (buffer, offset, length, header) =>
+                {
+                    var data = new byte[length];
+                    buffer.GetBytes(offset, data);
 
-                Console.WriteLine($"Received message ({Encoding.UTF8.GetString(data)}) to stream {streamId:D} from session {header.SessionId:x} term id {header.TermId:x} term offset {header.TermOffset:D} ({length:D}@{offset:D})");
+                    Console.WriteLine(
+                        $"Received message ({Encoding.UTF8.GetString(data)}) to stream {streamId:D} from session {header.SessionId:x} term id {header.TermId:x} term offset {header.TermOffset:D} ({length:D}@{offset:D})"
+                    );
 
-                // Received the intended message, time to exit the program
-                running.Set(false);
-            });
+                    // Received the intended message, time to exit the program
+                    running.Set(false);
+                }
+            );
 
             // Create a context, needed for client connection to media driver
             // A separate media driver process need to run prior to running this application

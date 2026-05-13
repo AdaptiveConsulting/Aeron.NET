@@ -1,3 +1,19 @@
+﻿/*
+ * Copyright 2014 - 2026 Adaptive Financial Consulting Ltd
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 using Adaptive.Agrona;
 
 namespace Adaptive.Aeron.Command
@@ -20,8 +36,8 @@ namespace Adaptive.Aeron.Command
         /// Length of the header
         /// </summary>
         public static readonly int LENGTH = BitUtil.SIZE_OF_LONG;
-        private const int CLIENT_ID_FIELD_OFFSET = 0;
-        
+        private const int ClientIdFieldOffset = 0;
+
         private IMutableDirectBuffer _buffer;
         private int _offset;
 
@@ -45,7 +61,7 @@ namespace Adaptive.Aeron.Command
         /// <returns> client id field. </returns>
         public long ClientId()
         {
-            return _buffer.GetLong(_offset + CLIENT_ID_FIELD_OFFSET);
+            return _buffer.GetLong(_offset + ClientIdFieldOffset);
         }
 
         /// <summary>
@@ -55,7 +71,7 @@ namespace Adaptive.Aeron.Command
         /// <returns> this for a fluent API. </returns>
         public ClientTimeoutFlyweight ClientId(long clientId)
         {
-            _buffer.PutLong(_offset + CLIENT_ID_FIELD_OFFSET, clientId);
+            _buffer.PutLong(_offset + ClientIdFieldOffset, clientId);
 
             return this;
         }

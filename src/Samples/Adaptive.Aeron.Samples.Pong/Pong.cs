@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright 2014 - 2017 Adaptive Financial Consulting Ltd
+ * Copyright 2014 - 2026 Adaptive Financial Consulting Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,10 +28,10 @@ namespace Adaptive.Aeron.Samples.Pong
     /// Echoes back messages
     /// </para>
     /// </summary>
-    public class Pong
+    public static class Pong
     {
-        private static readonly int PingStreamID = SampleConfiguration.PING_STREAM_ID;
-        private static readonly int PongStreamID = SampleConfiguration.PONG_STREAM_ID;
+        private static readonly int PingStreamId = SampleConfiguration.PING_STREAM_ID;
+        private static readonly int PongStreamId = SampleConfiguration.PONG_STREAM_ID;
         private static readonly string PingChannel = SampleConfiguration.PING_CHANNEL;
         private static readonly string PongChannel = SampleConfiguration.PONG_CHANNEL;
         private static readonly int FrameCountLimit = SampleConfiguration.FRAGMENT_COUNT_LIMIT;
@@ -46,15 +46,15 @@ namespace Adaptive.Aeron.Samples.Pong
 
             IIdleStrategy idleStrategy = new BusySpinIdleStrategy();
 
-            Console.WriteLine("Subscribing Ping at " + PingChannel + " on stream Id " + PingStreamID);
-            Console.WriteLine("Publishing Pong at " + PongChannel + " on stream Id " + PongStreamID);
+            Console.WriteLine("Subscribing Ping at " + PingChannel + " on stream Id " + PingStreamId);
+            Console.WriteLine("Publishing Pong at " + PongChannel + " on stream Id " + PongStreamId);
 
             var running = new AtomicBoolean(true);
             Console.CancelKeyPress += (_, e) => running.Set(false);
 
             using (var aeron = Aeron.Connect(ctx))
-            using (var pongPublication = aeron.AddPublication(PongChannel, PongStreamID))
-            using (var pingSubscription = aeron.AddSubscription(PingChannel, PingStreamID))
+            using (var pongPublication = aeron.AddPublication(PongChannel, PongStreamId))
+            using (var pingSubscription = aeron.AddSubscription(PingChannel, PingStreamId))
             {
                 var dataHandler = HandlerHelper.ToFragmentHandler(
                     (buffer, offset, length, header) => PingHandler(pongPublication, buffer, offset, length)

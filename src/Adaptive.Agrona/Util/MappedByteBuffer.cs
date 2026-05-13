@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright 2014 - 2017 Adaptive Financial Consulting Ltd
+ * Copyright 2014 - 2026 Adaptive Financial Consulting Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,7 +28,7 @@ namespace Adaptive.Agrona.Util
         public MappedByteBuffer(MemoryMappedFile memoryMappedFile)
         {
             _memoryMappedFile = memoryMappedFile;
-            byte* ptr = (byte*) 0;
+            byte* ptr = (byte*)0;
             _view = memoryMappedFile.CreateViewAccessor();
             _view.SafeMemoryMappedViewHandle.AcquirePointer(ref ptr);
 
@@ -39,7 +39,7 @@ namespace Adaptive.Agrona.Util
         public MappedByteBuffer(MemoryMappedFile memoryMappedFile, long offset, long length)
         {
             _memoryMappedFile = memoryMappedFile;
-            byte* ptr = (byte*) 0;
+            byte* ptr = (byte*)0;
             _view = memoryMappedFile.CreateViewAccessor(offset, length);
             _view.SafeMemoryMappedViewHandle.AcquirePointer(ref ptr);
 
@@ -51,7 +51,7 @@ namespace Adaptive.Agrona.Util
         {
             for (int i = 0; i < Capacity; i++)
             {
-                _view.Write(i, (byte) 0);
+                _view.Write(i, (byte)0);
             }
         }
 
@@ -63,7 +63,7 @@ namespace Adaptive.Agrona.Util
         {
             _view.Flush();
         }
-        
+
         public void Dispose()
         {
             Dispose(true);
@@ -78,7 +78,10 @@ namespace Adaptive.Agrona.Util
         private void Dispose(bool disposing)
         {
             if (_disposed)
+            {
                 return;
+            }
+
             if (_view != null)
             {
                 _view.SafeMemoryMappedViewHandle.ReleasePointer();

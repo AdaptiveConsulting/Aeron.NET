@@ -1,5 +1,5 @@
-/*
- * Copyright 2014 - 2017 Adaptive Financial Consulting Ltd
+﻿/*
+ * Copyright 2014 - 2026 Adaptive Financial Consulting Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,15 +19,15 @@ namespace Adaptive.Aeron.Samples.Common
     /// <summary>
     /// Configuration used for samples all in one place.
     /// </summary>
-    public class SampleConfiguration
+    public static class SampleConfiguration
     {
         private const string ChannelProp = "aeron.sample.channel";
-        private const string StreamIDProp = "aeron.sample.streamId";
+        private const string StreamIdProp = "aeron.sample.streamId";
 
         private const string PingChannelProp = "aeron.sample.ping.channel";
         private const string PongChannelProp = "aeron.sample.pong.channel";
-        private const string PingStreamIDProp = "aeron.sample.ping.streamId";
-        private const string PongStreamIDProp = "aeron.sample.pong.streamId";
+        private const string PingStreamIdProp = "aeron.sample.ping.streamId";
+        private const string PongStreamIdProp = "aeron.sample.pong.streamId";
         private const string WarmupNumberOfMessagesProp = "aeron.sample.warmup.messages";
         private const string WarmupNumberOfIterationsProp = "aeron.sample.warmup.iterations";
         private const string RandomMessageLengthProp = "aeron.sample.randomMessageLength";
@@ -36,7 +36,7 @@ namespace Adaptive.Aeron.Samples.Common
         private const string MessageLengthProp = "aeron.sample.messageLength";
         private const string NumberOfMessagesProp = "aeron.sample.messages";
         private const string LingerTimeoutMsProp = "aeron.sample.lingerTimeout";
-        
+
         public static readonly string CHANNEL;
         public static readonly string PING_CHANNEL;
         public static readonly string PONG_CHANNEL;
@@ -54,11 +54,11 @@ namespace Adaptive.Aeron.Samples.Common
         static SampleConfiguration()
         {
             CHANNEL = Config.GetProperty(ChannelProp, "aeron:udp?endpoint=localhost:40123");
-            STREAM_ID = Config.GetInteger(StreamIDProp, 10);
+            STREAM_ID = Config.GetInteger(StreamIdProp, 10);
             PING_CHANNEL = Config.GetProperty(PingChannelProp, "aeron:udp?endpoint=localhost:40123");
             PONG_CHANNEL = Config.GetProperty(PongChannelProp, "aeron:udp?endpoint=localhost:40124");
-            PING_STREAM_ID = Config.GetInteger(PingStreamIDProp, 10);
-            PONG_STREAM_ID = Config.GetInteger(PongStreamIDProp, 10);
+            PING_STREAM_ID = Config.GetInteger(PingStreamIdProp, 10);
+            PONG_STREAM_ID = Config.GetInteger(PongStreamIdProp, 10);
             FRAGMENT_COUNT_LIMIT = Config.GetInteger(FrameCountLimitProp, 256);
             MESSAGE_LENGTH = Config.GetInteger(MessageLengthProp, 32);
             RANDOM_MESSAGE_LENGTH = Config.GetBoolean(RandomMessageLengthProp);

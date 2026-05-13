@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright 2014 - 2017 Adaptive Financial Consulting Ltd
+ * Copyright 2014 - 2026 Adaptive Financial Consulting Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -42,14 +42,14 @@ namespace Adaptive.Aeron.Command
     /// </summary>
     public class ImageMessageFlyweight
     {
-        private const int CORRELATION_ID_OFFSET = 0;
-        private const int SUBSCRIPTION_REGISTRATION_ID_OFFSET = CORRELATION_ID_OFFSET + BitUtil.SIZE_OF_LONG;
-        private const int STREAM_ID_FIELD_OFFSET = SUBSCRIPTION_REGISTRATION_ID_OFFSET + BitUtil.SIZE_OF_LONG;
-        private const int CHANNEL_OFFSET = STREAM_ID_FIELD_OFFSET + BitUtil.SIZE_OF_INT;
+        private const int CorrelationIdOffset = 0;
+        private const int SubscriptionRegistrationIdOffset = CorrelationIdOffset + BitUtil.SIZE_OF_LONG;
+        private const int StreamIdFieldOffset = SubscriptionRegistrationIdOffset + BitUtil.SIZE_OF_LONG;
+        private const int ChannelOffset = StreamIdFieldOffset + BitUtil.SIZE_OF_INT;
 
-        private IMutableDirectBuffer buffer;
-        private int offset;
-        private int lengthOfChannel;
+        private IMutableDirectBuffer _buffer;
+        private int _offset;
+        private int _lengthOfChannel;
 
         /// <summary>
         /// Wrap the buffer at a given offset for updates.
@@ -59,8 +59,8 @@ namespace Adaptive.Aeron.Command
         /// <returns> this for fluent API. </returns>
         public ImageMessageFlyweight Wrap(IMutableDirectBuffer buffer, int offset)
         {
-            this.buffer = buffer;
-            this.offset = offset;
+            _buffer = buffer;
+            _offset = offset;
 
             return this;
         }
@@ -70,7 +70,7 @@ namespace Adaptive.Aeron.Command
         /// <returns> correlation id field. </returns>
         public long CorrelationId()
         {
-            return buffer.GetLong(offset + CORRELATION_ID_OFFSET);
+            return _buffer.GetLong(_offset + CorrelationIdOffset);
         }
 
         /// <summary>
@@ -79,7 +79,7 @@ namespace Adaptive.Aeron.Command
         /// <returns> this for a fluent API. </returns>
         public ImageMessageFlyweight CorrelationId(long correlationId)
         {
-            buffer.PutLong(offset + CORRELATION_ID_OFFSET, correlationId);
+            _buffer.PutLong(_offset + CorrelationIdOffset, correlationId);
 
             return this;
         }
@@ -90,7 +90,7 @@ namespace Adaptive.Aeron.Command
         /// <returns> registration ID for the subscription. </returns>
         public long SubscriptionRegistrationId()
         {
-            return buffer.GetLong(offset + SUBSCRIPTION_REGISTRATION_ID_OFFSET);
+            return _buffer.GetLong(_offset + SubscriptionRegistrationIdOffset);
         }
 
         /// <summary>
@@ -100,7 +100,7 @@ namespace Adaptive.Aeron.Command
         /// <returns> this for a fluent API. </returns>
         public ImageMessageFlyweight SubscriptionRegistrationId(long registrationId)
         {
-            buffer.PutLong(offset + SUBSCRIPTION_REGISTRATION_ID_OFFSET, registrationId);
+            _buffer.PutLong(_offset + SubscriptionRegistrationIdOffset, registrationId);
 
             return this;
         }
@@ -111,7 +111,7 @@ namespace Adaptive.Aeron.Command
         /// <returns> stream id field. </returns>
         public int StreamId()
         {
-            return buffer.GetInt(offset + STREAM_ID_FIELD_OFFSET);
+            return _buffer.GetInt(_offset + StreamIdFieldOffset);
         }
 
         /// <summary>
@@ -121,7 +121,7 @@ namespace Adaptive.Aeron.Command
         /// <returns> this for a fluent API. </returns>
         public ImageMessageFlyweight StreamId(int streamId)
         {
-            buffer.PutInt(offset + STREAM_ID_FIELD_OFFSET, streamId);
+            _buffer.PutInt(_offset + StreamIdFieldOffset, streamId);
 
             return this;
         }
@@ -132,22 +132,22 @@ namespace Adaptive.Aeron.Command
         /// <returns> channel field. </returns>
         public string Channel()
         {
-            int length = buffer.GetInt(offset + CHANNEL_OFFSET);
-            lengthOfChannel = BitUtil.SIZE_OF_INT + length;
+            int length = _buffer.GetInt(_offset + ChannelOffset);
+            _lengthOfChannel = BitUtil.SIZE_OF_INT + length;
 
-            return buffer.GetStringAscii(offset + CHANNEL_OFFSET, length);
+            return _buffer.GetStringAscii(_offset + ChannelOffset, length);
         }
 
         /// <summary>
-        /// Append the channel value to a <seealso cref="StringBuilder"/>.
+        /// Append the channel value to a <seealso cref="StringBuilder"/> .
         /// </summary>
         /// <param name="stringBuilder"> to append channel to. </param>
         public void AppendChannel(StringBuilder stringBuilder)
         {
-            int length = buffer.GetInt(offset + CHANNEL_OFFSET);
-            lengthOfChannel = BitUtil.SIZE_OF_INT + length;
+            int length = _buffer.GetInt(_offset + ChannelOffset);
+            _lengthOfChannel = BitUtil.SIZE_OF_INT + length;
 
-            buffer.GetStringAscii(offset + CHANNEL_OFFSET, stringBuilder);
+            _buffer.GetStringAscii(_offset + ChannelOffset, stringBuilder);
         }
 
         /// <summary>
@@ -157,20 +157,20 @@ namespace Adaptive.Aeron.Command
         /// <returns> this for a fluent API. </returns>
         public ImageMessageFlyweight Channel(string channel)
         {
-            lengthOfChannel = buffer.PutStringAscii(offset + CHANNEL_OFFSET, channel);
+            _lengthOfChannel = _buffer.PutStringAscii(_offset + ChannelOffset, channel);
 
             return this;
         }
 
         /// <summary>
         /// Get the length of the current message.
-        /// 
+        ///
         /// NB: must be called after the data is written in order to be accurate.
         /// </summary>
         /// <returns> the length of the current message. </returns>
         public int Length()
         {
-            return CHANNEL_OFFSET + lengthOfChannel;
+            return ChannelOffset + _lengthOfChannel;
         }
     }
 }

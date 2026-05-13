@@ -1,3 +1,19 @@
+﻿/*
+ * Copyright 2014 - 2026 Adaptive Financial Consulting Ltd
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -7,15 +23,15 @@ using Adaptive.Agrona.Util;
 namespace Adaptive.Agrona
 {
     /// <summary>
-    /// Expandable <seealso cref="IMutableDirectBuffer"/> that is backed by an array. When values are put into the buffer beyond its
-    /// current length, then it will be expanded to accommodate the resulting position for the value.
+    /// Expandable <seealso cref="IMutableDirectBuffer"/> that is backed by an array. When values are put into the
+    /// buffer beyond its current length, then it will be expanded to accommodate the resulting position for the value.
     /// <para>
-    /// Put operations will expand the capacity as necessary up to <seealso cref="MAX_ARRAY_LENGTH"/>. Get operations will throw
-    /// a <seealso cref="System.IndexOutOfRangeException"/> if past current capacity.
+    /// Put operations will expand the capacity as necessary up to <seealso cref="MAX_ARRAY_LENGTH"/> . Get operations
+    /// will throw a <seealso cref="System.IndexOutOfRangeException"/> if past current capacity.
     /// </para>
     /// <para>
-    /// <b>Note:</b> this class has a natural ordering that is inconsistent with equals.
-    /// Types may be different but equal on buffer contents.
+    /// <b>Note:</b> this class has a natural ordering that is inconsistent with equals. Types may be different but
+    /// equal on buffer contents.
     /// </para>
     /// </summary>
     public unsafe class ExpandableArrayBuffer : IMutableDirectBuffer
@@ -35,11 +51,11 @@ namespace Adaptive.Agrona
         private byte* _pBuffer;
 
         /// <summary>
-        /// Create an <seealso cref="ExpandableArrayBuffer"/> with an initial length of <seealso cref="INITIAL_CAPACITY"/>.
+        /// Create an <seealso cref="ExpandableArrayBuffer"/> with an initial length of
+        /// <seealso cref="INITIAL_CAPACITY"/>.
         /// </summary>
-        public ExpandableArrayBuffer() : this(INITIAL_CAPACITY)
-        {
-        }
+        public ExpandableArrayBuffer()
+            : this(INITIAL_CAPACITY) { }
 
         /// <summary>
         /// Create an <seealso cref="ExpandableArrayBuffer"/> with a provided initial length.
@@ -427,9 +443,7 @@ namespace Adaptive.Agrona
 
         public int PutStringAscii(int index, string value, int maxEncodedSize)
         {
-            var bytes = value == null
-                ? BufferUtil.NullBytes
-                : Encoding.ASCII.GetBytes(value);
+            var bytes = value == null ? BufferUtil.NullBytes : Encoding.ASCII.GetBytes(value);
             if (bytes.Length > maxEncodedSize)
             {
                 ThrowHelper.ThrowArgumentException("Encoded string larger than maximum size: " + maxEncodedSize);
@@ -442,7 +456,6 @@ namespace Adaptive.Agrona
 
             return BitUtil.SIZE_OF_INT + bytes.Length;
         }
-
 
         /// <inheritdoc />
         public int PutStringWithoutLengthAscii(int index, string value)
@@ -489,9 +502,7 @@ namespace Adaptive.Agrona
         /// <inheritdoc />
         public int PutStringUtf8(int index, string value, int maxEncodedSize)
         {
-            var bytes = value == null
-                ? BufferUtil.NullBytes
-                : Encoding.UTF8.GetBytes(value);
+            var bytes = value == null ? BufferUtil.NullBytes : Encoding.UTF8.GetBytes(value);
             if (bytes.Length > maxEncodedSize)
             {
                 ThrowHelper.ThrowArgumentException("Encoded string larger than maximum size: " + maxEncodedSize);
@@ -508,9 +519,7 @@ namespace Adaptive.Agrona
         /// <inheritdoc />
         public int PutStringWithoutLengthUtf8(int index, string value)
         {
-            var bytes = value == null
-                ? BufferUtil.NullBytes
-                : Encoding.UTF8.GetBytes(value);
+            var bytes = value == null ? BufferUtil.NullBytes : Encoding.UTF8.GetBytes(value);
 
             EnsureCapacity(index, bytes.Length);
             PutBytes(index, bytes);
@@ -531,8 +540,9 @@ namespace Adaptive.Agrona
             {
                 if (resultingPosition > MAX_ARRAY_LENGTH)
                 {
-                    throw new IndexOutOfRangeException("index=" + index + " length=" + length + " maxCapacity=" +
-                                                       MAX_ARRAY_LENGTH);
+                    throw new IndexOutOfRangeException(
+                        "index=" + index + " length=" + length + " maxCapacity=" + MAX_ARRAY_LENGTH
+                    );
                 }
 
                 int newLength = CalculateExpansion(currentArrayLength, resultingPosition);
@@ -567,8 +577,7 @@ namespace Adaptive.Agrona
             long resultingPosition = index + (long)length;
             if (index < 0 || length < 0 || resultingPosition > currentArrayLength)
             {
-                ThrowHelper.ThrowIndexOutOfRangeException(
-                    $"index={index:D}, length={length:D}, capacity={Capacity:D}");
+                ThrowHelper.ThrowIndexOutOfRangeException($"index={index:D}, length={length:D}, capacity={Capacity:D}");
             }
         }
     }

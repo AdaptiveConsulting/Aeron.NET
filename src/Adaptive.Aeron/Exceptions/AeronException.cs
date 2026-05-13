@@ -1,4 +1,20 @@
-﻿using System;
+﻿/*
+ * Copyright 2014 - 2026 Adaptive Financial Consulting Ltd
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
 
@@ -40,29 +56,33 @@ namespace Adaptive.Aeron.Exceptions
             Category = Category.ERROR;
         }
 
-        public AeronException(string message) : base(message)
+        public AeronException(string message)
+            : base(message)
         {
             Category = Category.ERROR;
         }
 
-        public AeronException(string message, Category category) : base(message)
+        public AeronException(string message, Category category)
+            : base(message)
         {
             Category = category;
         }
 
-        public AeronException(string message, Exception innerException) : base(message, innerException)
+        public AeronException(string message, Exception innerException)
+            : base(message, innerException)
         {
             Category = Category.ERROR;
         }
 
-        public AeronException(string message, Exception innerException, Category category) : base(message,
-            innerException)
+        public AeronException(string message, Exception innerException, Category category)
+            : base(message, innerException)
         {
             Category = category;
         }
 
         /// <summary>
-        /// Determines if a <seealso cref="System.Exception"/> is a <seealso cref="Category.FATAL"/> if an <seealso cref="AeronException"/>.
+        /// Determines if a <seealso cref="System.Exception"/> is a <seealso cref="Category.FATAL"/> if an
+        /// <seealso cref="AeronException"/>.
         /// </summary>
         /// <param name="t"> throwable to check if fatal. </param>
         /// <returns> true if this is an AeronException with a category set to <seealso cref="Category.FATAL"/>,

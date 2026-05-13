@@ -1,0 +1,6 @@
+Adaptive.Agrona.SuppressedExceptions
+static Adaptive.Agrona.SuppressedExceptions.AddSuppressed(this System.Exception primary, System.Exception suppressed) -> void
+static Adaptive.Agrona.SuppressedExceptions.GetSuppressed(this System.Exception primary) -> System.Collections.Generic.IReadOnlyList<System.Exception>
+static Adaptive.Agrona.SystemUtil.FormatDuration(long durationNs) -> string
+static Adaptive.Agrona.SystemUtil.FormatSize(long size) -> string
+static readonly Adaptive.Agrona.Concurrent.Status.CountersReader.REFERENCE_ID_OFFSET -> int

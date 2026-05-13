@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright 2014 - 2017 Adaptive Financial Consulting Ltd
+ * Copyright 2014 - 2026 Adaptive Financial Consulting Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@ namespace Adaptive.Agrona.Util
 {
     public static class UnixTimeConverter
     {
+        // ReSharper disable once InconsistentNaming -- "1st" is the correct English ordinal
         private static readonly DateTime Jan1st1970 = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

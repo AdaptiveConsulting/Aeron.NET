@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright 2014 - 2017 Adaptive Financial Consulting Ltd
+ * Copyright 2014 - 2026 Adaptive Financial Consulting Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,8 +28,8 @@ namespace Adaptive.Agrona.Concurrent
         /// <summary>
         /// Constructed a new strategy that will sleep for a given period when idle.
         /// </summary>
-        /// <param name="sleepPeriodMs"> period in millisecond for which the strategy will sleep when work count is 0. </param>
-
+        /// <param name="sleepPeriodMs"> period in millisecond for which the strategy will sleep when work count is 0.
+        /// </param>
         public SleepingIdleStrategy(int sleepPeriodMs)
         {
             _sleepPeriodMs = sleepPeriodMs;
@@ -54,5 +54,4 @@ namespace Adaptive.Agrona.Concurrent
         {
         }
     }
-
 }

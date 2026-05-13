@@ -1,4 +1,20 @@
-﻿using Adaptive.Aeron;
+﻿/*
+ * Copyright 2014 - 2026 Adaptive Financial Consulting Ltd
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+using Adaptive.Aeron;
 using Adaptive.Agrona;
 using Adaptive.Agrona.Concurrent;
 using Adaptive.Cluster.Codecs;
@@ -7,21 +23,27 @@ namespace Adaptive.Cluster.Service
 {
     internal class ServiceSnapshotTaker : SnapshotTaker
     {
-        private readonly ExpandableArrayBuffer offerBuffer = new ExpandableArrayBuffer(1024);
+        private readonly ExpandableArrayBuffer _offerBuffer = new ExpandableArrayBuffer(1024);
         private readonly ClientSessionEncoder _clientSessionEncoder = new ClientSessionEncoder();
 
-        internal ServiceSnapshotTaker(ExclusivePublication publication, IIdleStrategy idleStrategy, AgentInvoker aeronClientInvoker) 
-            : base(publication, idleStrategy, aeronClientInvoker)
-        {
-        }
+        internal ServiceSnapshotTaker(
+            ExclusivePublication publication,
+            IIdleStrategy idleStrategy,
+            AgentInvoker aeronClientInvoker
+        )
+            : base(publication, idleStrategy, aeronClientInvoker) { }
 
         internal void SnapshotSession(IClientSession session)
         {
             string responseChannel = session.ResponseChannel;
             byte[] encodedPrincipal = session.EncodedPrincipal;
-            int length = MessageHeaderEncoder.ENCODED_LENGTH + ClientSessionEncoder.BLOCK_LENGTH + 
-                         ClientSessionEncoder.ResponseChannelHeaderLength() + responseChannel.Length + 
-                         ClientSessionEncoder.EncodedPrincipalHeaderLength() + encodedPrincipal.Length;
+            int length =
+                MessageHeaderEncoder.ENCODED_LENGTH
+                + ClientSessionEncoder.BLOCK_LENGTH
+                + ClientSessionEncoder.ResponseChannelHeaderLength()
+                + responseChannel.Length
+                + ClientSessionEncoder.EncodedPrincipalHeaderLength()
+                + encodedPrincipal.Length;
 
             if (length <= publication.MaxPayloadLength)
             {
@@ -45,13 +67,18 @@ namespace Adaptive.Cluster.Service
             else
             {
                 const int offset = 0;
-                EncodeSession(session, responseChannel, encodedPrincipal, offerBuffer, offset);
-                Offer(offerBuffer, offset, length);
+                EncodeSession(session, responseChannel, encodedPrincipal, _offerBuffer, offset);
+                Offer(_offerBuffer, offset, length);
             }
-
         }
-        
-        private void EncodeSession(IClientSession session, string responseChannel, byte[] encodedPrincipal, IMutableDirectBuffer buffer, int offset)
+
+        private void EncodeSession(
+            IClientSession session,
+            string responseChannel,
+            byte[] encodedPrincipal,
+            IMutableDirectBuffer buffer,
+            int offset
+        )
         {
             _clientSessionEncoder
                 .WrapAndApplyHeader(buffer, offset, messageHeaderEncoder)
@@ -60,6 +87,5 @@ namespace Adaptive.Cluster.Service
                 .ResponseChannel(responseChannel)
                 .PutEncodedPrincipal(encodedPrincipal, 0, encodedPrincipal.Length);
         }
-
     }
 }

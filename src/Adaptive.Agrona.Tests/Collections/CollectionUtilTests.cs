@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright 2014 - 2017 Adaptive Financial Consulting Ltd
+ * Copyright 2014 - 2026 Adaptive Financial Consulting Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,12 +35,16 @@ namespace Adaptive.Agrona.Tests.Collections
         [Test]
         public void GetOrDefaultDoesNotCreateNewValueWhenOneExists()
         {
-            var ints = new Dictionary<int?, int?> {[0] = 0};
-            var result = CollectionUtil.GetOrDefault(ints, 0, (x) =>
-            {
-                Assert.Fail("Shouldn't be called");
-                return x + 1;
-            });
+            var ints = new Dictionary<int?, int?> { [0] = 0 };
+            var result = CollectionUtil.GetOrDefault(
+                ints,
+                0,
+                (x) =>
+                {
+                    Assert.Fail("Shouldn't be called");
+                    return x + 1;
+                }
+            );
 
             Assert.That(result, Is.EqualTo(0));
         }

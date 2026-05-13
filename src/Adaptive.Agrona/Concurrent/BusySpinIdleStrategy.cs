@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright 2014 - 2017 Adaptive Financial Consulting Ltd
+ * Copyright 2014 - 2026 Adaptive Financial Consulting Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,14 +19,14 @@ using System.Threading;
 namespace Adaptive.Agrona.Concurrent
 {
     /// <summary>
-    /// Busy spin strategy targeted at lowest possible latency. This strategy will monopolise a thread to achieve the lowest
-    /// possible latency. Useful for creating bubbles in the execution pipeline of tight busy spin loops with no other logic 
-    /// than status checks on progress.
+    /// Busy spin strategy targeted at lowest possible latency. This strategy will monopolise a thread to achieve the
+    /// lowest possible latency. Useful for creating bubbles in the execution pipeline of tight busy spin loops with no
+    /// other logic than status checks on progress.
     /// </summary>
     public sealed class BusySpinIdleStrategy : IIdleStrategy
     {
         /// <summary>
-        /// <b>Note</b>: this implementation will result in no safepoint poll once inlined.
+        /// <b>Note</b> : this implementation will result in no safepoint poll once inlined.
         /// </summary>
         public void Idle(int workCount)
         {
@@ -43,8 +43,6 @@ namespace Adaptive.Agrona.Concurrent
             Thread.SpinWait(0);
         }
 
-        public void Reset()
-        {
-        }
+        public void Reset() { }
     }
 }

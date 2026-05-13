@@ -1,3 +1,19 @@
+﻿/*
+ * Copyright 2014 - 2026 Adaptive Financial Consulting Ltd
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 using System;
 using Adaptive.Aeron.Exceptions;
 using Adaptive.Aeron.Status;
@@ -13,12 +29,8 @@ namespace Adaptive.Aeron
     /// This class serves as a registry for all counter type IDs used by Aeron.
     /// <para>
     /// Type IDs less than 1000 are reserved for Aeron use. Any custom counters should use a typeId of 1000 or higher.
-    /// Aeron uses the following specific ranges:
-    /// <ul>
-    ///     <li>{@code 0 - 99}: for client/driver counters.</li>
-    ///     <li>{@code 100 - 199}: for archive counters.</li>
-    ///     <li>{@code 200 - 299}: for cluster counters.</li>
-    /// </ul>
+    /// Aeron uses the following specific ranges: <ul> <li>{@code 0 - 99}: for client/driver counters.</li>
+    /// <li>{@code 100 - 199}: for archive counters.</li> <li>{@code 200 - 299}: for cluster counters.</li> </ul>
     /// </para>
     /// </summary>
     public static class AeronCounters
@@ -115,13 +127,14 @@ namespace Adaptive.Aeron
         public const int SYSTEM_COUNTER_ID_FREE_FAILS = 17;
 
         /// <summary>
-        /// Counter id for the times a sender has entered the state of being back-pressured when it could have sent faster.
+        /// Counter id for the times a sender has entered the state of being back-pressured when it could have sent
+        /// faster.
         /// </summary>
         public const int SYSTEM_COUNTER_ID_SENDER_FLOW_CONTROL_LIMITS = 18;
 
         /// <summary>
-        /// Counter id for the times a publication has been unblocked after a client failed to complete an offer within a
-        /// timeout.
+        /// Counter id for the times a publication has been unblocked after a client failed to complete an offer within
+        /// a timeout.
         /// </summary>
         public const int SYSTEM_COUNTER_ID_UNBLOCKED_PUBLICATIONS = 19;
 
@@ -163,7 +176,8 @@ namespace Adaptive.Aeron
         public const int SYSTEM_COUNTER_ID_CONDUCTOR_MAX_CYCLE_TIME = 26;
 
         /// <summary>
-        /// Counter id for the number of times the cycle time threshold has been exceeded by the conductor in its work cycle.
+        /// Counter id for the number of times the cycle time threshold has been exceeded by the conductor in its work
+        /// cycle.
         /// </summary>
         public const int SYSTEM_COUNTER_ID_CONDUCTOR_CYCLE_TIME_THRESHOLD_EXCEEDED = 27;
 
@@ -173,7 +187,8 @@ namespace Adaptive.Aeron
         public const int SYSTEM_COUNTER_ID_SENDER_MAX_CYCLE_TIME = 28;
 
         /// <summary>
-        /// Counter id for the number of times the cycle time threshold has been exceeded by the sender in its work cycle.
+        /// Counter id for the number of times the cycle time threshold has been exceeded by the sender in its work
+        /// cycle.
         /// </summary>
         public const int SYSTEM_COUNTER_ID_SENDER_CYCLE_TIME_THRESHOLD_EXCEEDED = 29;
 
@@ -183,7 +198,8 @@ namespace Adaptive.Aeron
         public const int SYSTEM_COUNTER_ID_RECEIVER_MAX_CYCLE_TIME = 30;
 
         /// <summary>
-        /// Counter id for the number of times the cycle time threshold has been exceeded by the receiver in its work cycle.
+        /// Counter id for the number of times the cycle time threshold has been exceeded by the receiver in its work
+        /// cycle.
         /// </summary>
         public const int SYSTEM_COUNTER_ID_RECEIVER_CYCLE_TIME_THRESHOLD_EXCEEDED = 31;
 
@@ -245,7 +261,7 @@ namespace Adaptive.Aeron
         /// <summary>
         /// Counter id for the control protocol between clients and media driver.
         /// </summary>
-        /// <remarks>Since 1.49.0</remarks> 
+        /// <remarks>Since 1.49.0</remarks>
         public const int SYSTEM_COUNTER_ID_CONTROL_PROTOCOL_VERSION = 43;
 
         // Client/driver counters
@@ -267,8 +283,8 @@ namespace Adaptive.Aeron
         public const int DRIVER_SENDER_POSITION_TYPE_ID = 2;
 
         /// <summary>
-        /// The highest position the Receiver has observed on a session-channel-stream tuple while rebuilding the stream.
-        /// It is possible the stream is not complete to this point if the stream has experienced loss.
+        /// The highest position the Receiver has observed on a session-channel-stream tuple while rebuilding the
+        /// stream. It is possible the stream is not complete to this point if the stream has experienced loss.
         /// </summary>
         public const int DRIVER_RECEIVER_HWM_TYPE_ID = 3;
 
@@ -336,8 +352,8 @@ namespace Adaptive.Aeron
         /// <summary>
         /// Counter used to store the status of a bind address and port for the local end of a channel.
         /// <para>
-        /// When the value is <seealso cref="ChannelEndpointStatus.ACTIVE"/> then the key value and label will be updated with the
-        /// socket address and port which is bound.
+        /// When the value is <seealso cref="ChannelEndpointStatus.ACTIVE"/> then the key value and label will be
+        /// updated with the socket address and port which is bound.
         /// </para>
         /// </summary>
         public const int DRIVER_LOCAL_SOCKET_ADDRESS_STATUS_TYPE_ID = 14;
@@ -348,7 +364,7 @@ namespace Adaptive.Aeron
         public const int FLOW_CONTROL_RECEIVERS_COUNTER_TYPE_ID = 17;
 
         /// <summary>
-        /// Count of number of destinations for multi-destination cast channels. 
+        /// Count of number of destinations for multi-destination cast channels.
         /// </summary>
         public const int MDC_DESTINATIONS_COUNTER_TYPE_ID = 18;
 
@@ -369,59 +385,62 @@ namespace Adaptive.Aeron
         public const int ARCHIVE_RECORDING_POSITION_TYPE_ID = 100;
 
         /// <summary>
-        /// The type id of the <seealso cref="Counter"/> used for keeping track of the number of errors that have occurred.
+        /// The type id of the <seealso cref="Counter"/> used for keeping track of the number of errors that have
+        /// occurred.
         /// </summary>
         public const int ARCHIVE_ERROR_COUNT_TYPE_ID = 101;
 
         /// <summary>
-        /// The type id of the <seealso cref="Counter"/> used for keeping track of the count of concurrent control sessions.
+        /// The type id of the <seealso cref="Counter"/> used for keeping track of the count of concurrent control
+        /// sessions.
         /// </summary>
         public const int ARCHIVE_CONTROL_SESSIONS_TYPE_ID = 102;
 
         /// <summary>
-        /// The type id of the <seealso cref="Counter"/> used for keeping track of the max duty cycle time of an archive agent.
+        /// The type id of the <seealso cref="Counter"/> used for keeping track of the max duty cycle time of an archive
+        /// agent.
         /// </summary>
         public const int ARCHIVE_MAX_CYCLE_TIME_TYPE_ID = 103;
 
         /// <summary>
-        /// The type id of the <seealso cref="Counter"/> used for keeping track of the count of cycle time threshold exceeded of
-        /// an archive agent.
+        /// The type id of the <seealso cref="Counter"/> used for keeping track of the count of cycle time threshold
+        /// exceeded of an archive agent.
         /// </summary>
         public const int ARCHIVE_CYCLE_TIME_THRESHOLD_EXCEEDED_TYPE_ID = 104;
 
         /// <summary>
-        /// The type id of the <seealso cref="Counter"/> used for keeping track of the max time it took recorder to write a block of
-        /// data to the storage.
+        /// The type id of the <seealso cref="Counter"/> used for keeping track of the max time it took recorder to
+        /// write a block of data to the storage.
         /// </summary>
         public const int ARCHIVE_RECORDER_MAX_WRITE_TIME_TYPE_ID = 105;
 
         /// <summary>
-        /// The type id of the <seealso cref="Counter"/> used for keeping track of the total number of bytes written by the recorder
-        /// to the storage.
+        /// The type id of the <seealso cref="Counter"/> used for keeping track of the total number of bytes written by
+        /// the recorder to the storage.
         /// </summary>
         public const int ARCHIVE_RECORDER_TOTAL_WRITE_BYTES_TYPE_ID = 106;
 
         /// <summary>
-        /// The type id of the <seealso cref="Counter"/> used for keeping track of the total time the recorder spent writing data to
-        /// the storage.
+        /// The type id of the <seealso cref="Counter"/> used for keeping track of the total time the recorder spent
+        /// writing data to the storage.
         /// </summary>
         public const int ARCHIVE_RECORDER_TOTAL_WRITE_TIME_TYPE_ID = 107;
 
         /// <summary>
-        /// The type id of the <seealso cref="Counter"/> used for keeping track of the max time it took replayer to read a block from
-        /// the storage.
+        /// The type id of the <seealso cref="Counter"/> used for keeping track of the max time it took replayer to read
+        /// a block from the storage.
         /// </summary>
         public const int ARCHIVE_REPLAYER_MAX_READ_TIME_TYPE_ID = 108;
 
         /// <summary>
-        /// The type id of the <seealso cref="Counter"/> used for keeping track of the total number of bytes read by the replayer from
-        /// the storage.
+        /// The type id of the <seealso cref="Counter"/> used for keeping track of the total number of bytes read by the
+        /// replayer from the storage.
         /// </summary>
         public const int ARCHIVE_REPLAYER_TOTAL_READ_BYTES_TYPE_ID = 109;
 
         /// <summary>
-        /// The type id of the <seealso cref="Counter"/> used for keeping track of the total time the replayer spent reading data from
-        /// the storage.
+        /// The type id of the <seealso cref="Counter"/> used for keeping track of the total time the replayer spent
+        /// reading data from the storage.
         /// </summary>
         public const int ARCHIVE_REPLAYER_TOTAL_READ_TIME_TYPE_ID = 110;
 
@@ -494,7 +513,8 @@ namespace Adaptive.Aeron
         public const int CLUSTER_BACKUP_QUERY_DEADLINE_TYPE_ID = 210;
 
         /// <summary>
-        /// The type id of the <seealso cref="Counter"/> used for keeping track of the number of errors that have occurred.
+        /// The type id of the <seealso cref="Counter"/> used for keeping track of the number of errors that have
+        /// occurred.
         /// </summary>
         public const int CLUSTER_BACKUP_ERROR_COUNT_TYPE_ID = 211;
 
@@ -519,24 +539,26 @@ namespace Adaptive.Aeron
         public const int CLUSTER_CLUSTERED_SERVICE_ERROR_COUNT_TYPE_ID = 215;
 
         /// <summary>
-        /// The type id of the <seealso cref="Counter"/> used for keeping track of the max duty cycle time of the consensus module.
+        /// The type id of the <seealso cref="Counter"/> used for keeping track of the max duty cycle time of the
+        /// consensus module.
         /// </summary>
         public const int CLUSTER_MAX_CYCLE_TIME_TYPE_ID = 216;
 
         /// <summary>
-        /// The type id of the <seealso cref="Counter"/> used for keeping track of the count of cycle time threshold exceeded of
-        /// the consensus module.
+        /// The type id of the <seealso cref="Counter"/> used for keeping track of the count of cycle time threshold
+        /// exceeded of the consensus module.
         /// </summary>
         public const int CLUSTER_CYCLE_TIME_THRESHOLD_EXCEEDED_TYPE_ID = 217;
 
         /// <summary>
-        /// The type id of the <seealso cref="Counter"/> used for keeping track of the max duty cycle time of the service container.
+        /// The type id of the <seealso cref="Counter"/> used for keeping track of the max duty cycle time of the
+        /// service container.
         /// </summary>
         public const int CLUSTER_CLUSTERED_SERVICE_MAX_CYCLE_TIME_TYPE_ID = 218;
 
         /// <summary>
-        /// The type id of the <seealso cref="Counter"/> used for keeping track of the count of cycle time threshold exceeded of
-        /// the service container.
+        /// The type id of the <seealso cref="Counter"/> used for keeping track of the count of cycle time threshold
+        /// exceeded of the service container.
         /// </summary>
         public const int CLUSTER_CLUSTERED_SERVICE_CYCLE_TIME_THRESHOLD_EXCEEDED_TYPE_ID = 219;
 
@@ -576,30 +598,32 @@ namespace Adaptive.Aeron
         public const int TRANSITION_MODULE_ERROR_COUNT_TYPE_ID = 226;
 
         /// <summary>
-        /// The type id of the <seealso cref="Counter"/> used for keeping track of the max duty cycle time of the cluster standby.
+        /// The type id of the <seealso cref="Counter"/> used for keeping track of the max duty cycle time of the
+        /// cluster standby.
         /// </summary>
         public const int CLUSTER_STANDBY_MAX_CYCLE_TIME_TYPE_ID = 227;
 
         /// <summary>
-        /// The type id of the <seealso cref="Counter"/> used for keeping track of the count of cycle time threshold exceeded of
-        /// the cluster standby.
+        /// The type id of the <seealso cref="Counter"/> used for keeping track of the count of cycle time threshold
+        /// exceeded of the cluster standby.
         /// </summary>
         public const int CLUSTER_STANDBY_CYCLE_TIME_THRESHOLD_EXCEEDED_TYPE_ID = 228;
 
         /// <summary>
-        /// The type id of the <seealso cref="Counter"/> used for keeping track of the max duty cycle time of the transition module.
+        /// The type id of the <seealso cref="Counter"/> used for keeping track of the max duty cycle time of the
+        /// transition module.
         /// </summary>
         public const int TRANSITION_MODULE_MAX_CYCLE_TIME_TYPE_ID = 229;
 
         /// <summary>
-        /// The type id of the <seealso cref="Counter"/> used for keeping track of the count of cycle time threshold exceeded of
-        /// the transition module.
+        /// The type id of the <seealso cref="Counter"/> used for keeping track of the count of cycle time threshold
+        /// exceeded of the transition module.
         /// </summary>
         public const int TRANSITION_MODULE_CYCLE_TIME_THRESHOLD_EXCEEDED_TYPE_ID = 230;
 
         /// <summary>
-        /// The type id of the <seealso cref="Counter"/> to make visible the memberId that the cluster standby is currently using to
-        /// as a source for the cluster log.
+        /// The type id of the <seealso cref="Counter"/> to make visible the memberId that the cluster standby is
+        /// currently using to as a source for the cluster log.
         /// </summary>
         public const int CLUSTER_STANDBY_SOURCE_MEMBER_ID_TYPE_ID = 231;
 
@@ -619,25 +643,26 @@ namespace Adaptive.Aeron
         public const int CLUSTER_TOTAL_MAX_SNAPSHOT_DURATION_TYPE_ID = 234;
 
         /// <summary>
-        /// The type id of the <seealso cref="Counter"/> used for keeping track of the count total snapshot duration
-        /// has exceeded the threshold.
+        /// The type id of the <seealso cref="Counter"/> used for keeping track of the count total snapshot duration has
+        /// exceeded the threshold.
         /// </summary>
         public const int CLUSTER_TOTAL_SNAPSHOT_DURATION_THRESHOLD_EXCEEDED_TYPE_ID = 235;
 
         /// <summary>
-        /// The type id of the <seealso cref="Counter"/> used for keeping track of the maximum snapshot duration
-        /// for a given clustered service.
+        /// The type id of the <seealso cref="Counter"/> used for keeping track of the maximum snapshot duration for a
+        /// given clustered service.
         /// </summary>
         public const int CLUSTERED_SERVICE_MAX_SNAPSHOT_DURATION_TYPE_ID = 236;
 
         /// <summary>
-        /// The type id of the <seealso cref="Counter"/> used for keeping track of the count snapshot duration
-        /// has exceeded the threshold for a given clustered service.
+        /// The type id of the <seealso cref="Counter"/> used for keeping track of the count snapshot duration has
+        /// exceeded the threshold for a given clustered service.
         /// </summary>
         public const int CLUSTERED_SERVICE_SNAPSHOT_DURATION_THRESHOLD_EXCEEDED_TYPE_ID = 237;
 
         /// <summary>
-        /// The type id of the <seealso cref="Counter"/> used for keeping track of the number of elections that have occurred.
+        /// The type id of the <seealso cref="Counter"/> used for keeping track of the number of elections that have
+        /// occurred.
         /// </summary>
         public const int CLUSTER_ELECTION_COUNT_TYPE_ID = 238;
 
@@ -787,28 +812,36 @@ namespace Adaptive.Aeron
         public const int SEQUENCER_REPLAY_INDEX_INITIAL_SEQUENCE_LOG_POSITION_COUNTER_TYPE_ID = 525;
 
         /// <summary>
-        /// Checks that the counter specified by {@code counterId} has the counterTypeId that matches the specified value.
-        /// If not it will throw a <seealso cref="ConfigurationException"/>.
+        /// Checks that the counter specified by {@code counterId} has the counterTypeId that matches the specified
+        /// value. If not it will throw a <seealso cref="ConfigurationException"/> .
         /// </summary>
         /// <param name="countersReader"> to look up the counter type id. </param>
         /// <param name="counterId"> counter to reference. </param>
         /// <param name="expectedCounterTypeId"> the expected type id for the counter. </param>
         /// <exception cref="ConfigurationException"> if the type id does not match. </exception>
         /// <exception cref="ArgumentException"> if the counterId is not valid. </exception>
-        public static void ValidateCounterTypeId(CountersReader countersReader, int counterId,
-            int expectedCounterTypeId)
+        public static void ValidateCounterTypeId(
+            CountersReader countersReader,
+            int counterId,
+            int expectedCounterTypeId
+        )
         {
             int counterTypeId = countersReader.GetCounterTypeId(counterId);
             if (expectedCounterTypeId != counterTypeId)
             {
-                throw new ConfigurationException("The type for counterId=" + counterId +
-                                                 ", typeId=" + counterTypeId +
-                                                 " does not match the expected=" + expectedCounterTypeId);
+                throw new ConfigurationException(
+                    "The type for counterId="
+                        + counterId
+                        + ", typeId="
+                        + counterTypeId
+                        + " does not match the expected="
+                        + expectedCounterTypeId
+                );
             }
         }
 
         /// <summary>
-        /// Convenience overload for <seealso cref="AeronCounters.ValidateCounterTypeId(CountersReader, int, int)"/>.
+        /// Convenience overload for <seealso cref="AeronCounters.ValidateCounterTypeId(CountersReader, int, int)"/> .
         /// </summary>
         /// <param name="aeron"> to resolve a counters' reader. </param>
         /// <param name="counter"> to be checked for the appropriate counterTypeId. </param>
@@ -831,8 +864,7 @@ namespace Adaptive.Aeron
         public static int AppendVersionInfo(IMutableDirectBuffer tempBuffer, int offset, string fullVersion)
         {
             int length = tempBuffer.PutStringWithoutLengthAscii(offset, " ");
-            length += tempBuffer.PutStringWithoutLengthAscii(
-                offset + length, FormatVersionInfo(fullVersion));
+            length += tempBuffer.PutStringWithoutLengthAscii(offset + length, FormatVersionInfo(fullVersion));
             return length;
         }
 
@@ -845,11 +877,17 @@ namespace Adaptive.Aeron
         /// <param name="commitHashCode"> identifying the commit. </param>
         /// <returns> length of the suffix appended. </returns>
         public static int AppendVersionInfo(
-            IMutableDirectBuffer tempBuffer, int offset, string fullVersion, string commitHashCode)
+            IMutableDirectBuffer tempBuffer,
+            int offset,
+            string fullVersion,
+            string commitHashCode
+        )
         {
             int length = tempBuffer.PutStringWithoutLengthAscii(offset, " ");
             length += tempBuffer.PutStringWithoutLengthAscii(
-                offset + length, FormatVersionInfo(fullVersion, commitHashCode));
+                offset + length,
+                FormatVersionInfo(fullVersion, commitHashCode)
+            );
             return length;
         }
 
@@ -861,10 +899,15 @@ namespace Adaptive.Aeron
         /// <param name="counterId">      to append version info to. </param>
         /// <param name="value">          to be appended to the label. </param>
         /// <returns> number of bytes that got appended. </returns>
-        /// <exception cref="ArgumentException"> if {@code counterId} is invalid or points to non-allocated counter. </exception>
+        /// <exception cref="ArgumentException"> if {@code counterId} is invalid or points to non-allocated counter.
+        /// </exception>
         public static int AppendToLabel(IAtomicBuffer metaDataBuffer, int counterId, string value)
         {
-            if (null == metaDataBuffer) throw new ArgumentNullException(nameof(metaDataBuffer));
+            if (null == metaDataBuffer)
+            {
+                throw new ArgumentNullException(nameof(metaDataBuffer));
+            }
+
             ValidateCounterId(metaDataBuffer, counterId);
 
             int counterMetaDataOffset = MetaDataOffset(counterId);
@@ -881,11 +924,11 @@ namespace Adaptive.Aeron
                 counterMetaDataOffset + LABEL_OFFSET + SIZE_OF_INT + existingLabelLength,
                 value,
                 0,
-                remainingLabelLength);
+                remainingLabelLength
+            );
             if (writtenLength > 0)
             {
-                metaDataBuffer.PutIntRelease(
-                    counterMetaDataOffset + LABEL_OFFSET, existingLabelLength + writtenLength);
+                metaDataBuffer.PutIntRelease(counterMetaDataOffset + LABEL_OFFSET, existingLabelLength + writtenLength);
             }
 
             return writtenLength;
@@ -920,10 +963,22 @@ namespace Adaptive.Aeron
         /// <param name="counterId">      to be set. </param>
         /// <param name="referenceId">    to set for the counter. </param>
         public static void SetReferenceId(
-            IAtomicBuffer metaDataBuffer, IAtomicBuffer valuesBuffer, int counterId, long referenceId)
+            IAtomicBuffer metaDataBuffer,
+            IAtomicBuffer valuesBuffer,
+            int counterId,
+            long referenceId
+        )
         {
-            if (null == metaDataBuffer) throw new ArgumentNullException(nameof(metaDataBuffer));
-            if (null == valuesBuffer) throw new ArgumentNullException(nameof(valuesBuffer));
+            if (null == metaDataBuffer)
+            {
+                throw new ArgumentNullException(nameof(metaDataBuffer));
+            }
+
+            if (null == valuesBuffer)
+            {
+                throw new ArgumentNullException(nameof(valuesBuffer));
+            }
+
             ValidateCounterId(metaDataBuffer, counterId);
 
             valuesBuffer.PutLongRelease(CounterOffset(counterId) + REFERENCE_ID_OFFSET, referenceId);
@@ -940,7 +995,8 @@ namespace Adaptive.Aeron
             if (counterId > maxCounterId)
             {
                 throw new ArgumentException(
-                    "counter id " + counterId + " out of range: 0 - maxCounterId=" + maxCounterId);
+                    "counter id " + counterId + " out of range: 0 - maxCounterId=" + maxCounterId
+                );
             }
         }
     }

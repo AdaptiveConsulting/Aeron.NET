@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright 2014 - 2017 Adaptive Financial Consulting Ltd
+ * Copyright 2014 - 2026 Adaptive Financial Consulting Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,21 +26,24 @@ namespace Adaptive.Aeron.Exceptions
         private readonly int _errorCodeValue;
         private readonly ErrorCode _code;
 
-        public RegistrationException(long correlationId, int errorCodeValue, ErrorCode code, string msg) :
-            base(msg,
-                Adaptive.Aeron.ErrorCode.RESOURCE_TEMPORARILY_UNAVAILABLE == code ? Category.WARN : Category.ERROR)
+        public RegistrationException(long correlationId, int errorCodeValue, ErrorCode code, string msg)
+            : base(
+                msg,
+                Adaptive.Aeron.ErrorCode.RESOURCE_TEMPORARILY_UNAVAILABLE == code ? Category.WARN : Category.ERROR
+            )
         {
             _correlationId = correlationId;
             _errorCodeValue = errorCodeValue;
             _code = code;
         }
-        
+
         /// <summary>
         /// Construct a from another to be nested, useful when exceptions are reported asynchronously and need to be
         /// rethrown from other places in the code.
         /// </summary>
         /// <param name="cause"> original RegistrationException to be stored as the exception cause. </param>
-        public RegistrationException(RegistrationException cause) : base(StripCategoryName(cause.Message), cause, cause.Category)
+        public RegistrationException(RegistrationException cause)
+            : base(StripCategoryName(cause.Message), cause, cause.Category)
         {
             _correlationId = cause.CorrelationId();
             _code = cause.ErrorCode();
@@ -92,7 +95,7 @@ namespace Adaptive.Aeron.Exceptions
 
             return msg;
         }
-        
+
         public override string Message =>
             "correlationId=" + _correlationId + ", errorCodeValue=" + _errorCodeValue + ", " + base.Message;
     }

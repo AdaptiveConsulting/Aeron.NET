@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright 2014 - 2017 Adaptive Financial Consulting Ltd
+ * Copyright 2014 - 2026 Adaptive Financial Consulting Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,27 +33,27 @@ namespace Adaptive.Aeron.Tests
 {
     public class PublicationTest
     {
-        private const string CHANNEL = "aeron:udp?endpoint=localhost:40124";
-        private const int STREAM_ID1 = 1002;
-        private const int SESSION_ID1 = 13;
-        private const int TERM_ID_1 = 1;
-        private const int CORRELATION_ID = 2000;
-        private const int SEND_BUFFER_CAPACITY = 1024;
-        private const int PARTITION_INDEX = 0;
-        private const int MTU_LENGTH = 4096;
-        private const int PAGE_SIZE = 4 * 1024;
-        private const int TERM_LENGTH = TERM_MIN_LENGTH * 4;
-        private const int MAX_PAYLOAD_SIZE = MTU_LENGTH - HEADER_LENGTH;
-        private static readonly int MAX_MESSAGE_SIZE = ComputeMaxMessageLength(TERM_LENGTH);
+        private const string Channel = "aeron:udp?endpoint=localhost:40124";
+        private const int StreamId1 = 1002;
+        private const int SessionId1 = 13;
+        private const int TermId1 = 1;
+        private const int CorrelationId = 2000;
+        private const int SendBufferCapacity = 1024;
+        private const int PartitionIndex = 0;
+        private const int MtuLength = 4096;
+        private const int PageSize = 4 * 1024;
+        private const int TermLength = TERM_MIN_LENGTH * 4;
+        private const int MaxPayloadSize = MtuLength - HEADER_LENGTH;
+        private static readonly int MaxMessageSize = ComputeMaxMessageLength(TermLength);
 
-        private static readonly int TOTAL_ALIGNED_MAX_MESSAGE_SIZE =
-            (MAX_MESSAGE_SIZE / MAX_PAYLOAD_SIZE) * MTU_LENGTH +
-            BitUtil.Align(MAX_MESSAGE_SIZE % MAX_PAYLOAD_SIZE + HEADER_LENGTH, FRAME_ALIGNMENT);
+        private static readonly int TotalAlignedMaxMessageSize =
+            (MaxMessageSize / MaxPayloadSize) * MtuLength
+            + BitUtil.Align(MaxMessageSize % MaxPayloadSize + HEADER_LENGTH, FRAME_ALIGNMENT);
 
-        private static readonly int POSITION_BITS_TO_SHIFT = PositionBitsToShift(TERM_LENGTH);
-        private static readonly int DEFAULT_FRAME_TYPE = HeaderFlyweight.HDR_TYPE_RTTM;
-        private const int SESSION_ID = 42;
-        private const int STREAM_ID = 111;
+        private static readonly int PositionBitsToShift = PositionBitsToShift(TermLength);
+        private static readonly int DefaultFrameType = HeaderFlyweight.HDR_TYPE_RTTM;
+        private const int SessionId = 42;
+        private const int StreamId = 111;
 
         private UnsafeBuffer _logMetaDataBuffer;
         private UnsafeBuffer[] _termBuffers;
@@ -65,49 +65,52 @@ namespace Adaptive.Aeron.Tests
         [SetUp]
         public void SetUp()
         {
-            _logMetaDataBuffer =
-                A.Fake<UnsafeBuffer>(x => x.Wrapping(new UnsafeBuffer()));
+            _logMetaDataBuffer = A.Fake<UnsafeBuffer>(x => x.Wrapping(new UnsafeBuffer()));
             _logMetaDataBuffer.Wrap(new byte[LOG_META_DATA_LENGTH]);
-            
+
             _termBuffers = new UnsafeBuffer[PARTITION_COUNT];
-            
+
             _conductor = A.Fake<ClientConductor>();
             _logBuffers = A.Fake<LogBuffers>();
             _publicationLimit = A.Fake<IReadablePosition>();
 
-            A.CallTo(() => _publicationLimit.GetVolatile()).Returns(2 * SEND_BUFFER_CAPACITY);
+            A.CallTo(() => _publicationLimit.GetVolatile()).Returns(2 * SendBufferCapacity);
             A.CallTo(() => _logBuffers.DuplicateTermBuffers()).Returns(_termBuffers);
-            A.CallTo(() => _logBuffers.TermLength()).Returns(TERM_LENGTH);
+            A.CallTo(() => _logBuffers.TermLength()).Returns(TermLength);
             A.CallTo(() => _logBuffers.MetaDataBuffer()).Returns(_logMetaDataBuffer);
 
-            var defaultHeader = CreateDefaultHeader(SESSION_ID, STREAM_ID, TERM_ID_1);
-            defaultHeader.PutShort(DataHeaderFlyweight.TYPE_FIELD_OFFSET, (short)DEFAULT_FRAME_TYPE,
-                ByteOrder.LittleEndian);
+            var defaultHeader = CreateDefaultHeader(SessionId, StreamId, TermId1);
+            defaultHeader.PutShort(
+                DataHeaderFlyweight.TYPE_FIELD_OFFSET,
+                (short)DefaultFrameType,
+                ByteOrder.LittleEndian
+            );
             StoreDefaultFrameHeader(_logMetaDataBuffer, defaultHeader);
 
-            InitialTermId(_logMetaDataBuffer, TERM_ID_1);
-            MtuLength(_logMetaDataBuffer, MTU_LENGTH);
-            TermLength(_logMetaDataBuffer, TERM_LENGTH);
-            PageSize(_logMetaDataBuffer, PAGE_SIZE);
+            InitialTermId(_logMetaDataBuffer, TermId1);
+            MtuLength(_logMetaDataBuffer, MtuLength);
+            TermLength(_logMetaDataBuffer, TermLength);
+            PageSize(_logMetaDataBuffer, PageSize);
             IsConnected(_logMetaDataBuffer, false);
 
             for (var i = 0; i < PARTITION_COUNT; i++)
             {
-                _termBuffers[i] = new UnsafeBuffer(BufferUtil.AllocateDirect(TERM_LENGTH));
+                _termBuffers[i] = new UnsafeBuffer(BufferUtil.AllocateDirect(TermLength));
             }
 
             _publication = new ConcurrentPublication(
                 _conductor,
-                CHANNEL,
-                STREAM_ID1,
-                SESSION_ID1,
+                Channel,
+                StreamId1,
+                SessionId1,
                 _publicationLimit,
                 ChannelEndpointStatus.NO_ID_ALLOCATED,
                 _logBuffers,
-                CORRELATION_ID,
-                CORRELATION_ID);
+                CorrelationId,
+                CorrelationId
+            );
 
-            InitialiseTailWithTermId(_logMetaDataBuffer, PARTITION_INDEX, TERM_ID_1);
+            InitialiseTailWithTermId(_logMetaDataBuffer, PartitionIndex, TermId1);
 
             A.CallTo(() => _conductor.RemovePublication(_publication)).Invokes(() => _publication.InternalClose());
         }
@@ -148,7 +151,7 @@ namespace Adaptive.Aeron.Tests
             [Test]
             public void ShouldReportMaxMessageLength()
             {
-                Assert.AreEqual(ComputeMaxMessageLength(TERM_LENGTH), _publication.MaxMessageLength);
+                Assert.AreEqual(ComputeMaxMessageLength(TermLength), _publication.MaxMessageLength);
             }
 
             [Test]
@@ -191,9 +194,9 @@ namespace Adaptive.Aeron.Tests
 
                 Assert.AreEqual(CLOSED, Invoke(length, null));
 
-                OnError(_termBuffers[PARTITION_INDEX], termOffset, length);
-                AssertFrameType(PARTITION_INDEX, termOffset, PADDING_FRAME_TYPE);
-                AssertFrameLength(PARTITION_INDEX, termOffset, 0);
+                OnError(_termBuffers[PartitionIndex], termOffset, length);
+                AssertFrameType(PartitionIndex, termOffset, PADDING_FRAME_TYPE);
+                AssertFrameLength(PartitionIndex, termOffset, 0);
             }
 
             [Test]
@@ -202,21 +205,21 @@ namespace Adaptive.Aeron.Tests
                 const int termCount = 9;
                 const int termOffset = 0;
                 const int length = 10;
-                Assert.AreEqual(IndexByTermCount(termCount), PARTITION_INDEX);
-                InitialiseTailWithTermId(_logMetaDataBuffer, PARTITION_INDEX, TERM_ID_1 + 5);
+                Assert.AreEqual(IndexByTermCount(termCount), PartitionIndex);
+                InitialiseTailWithTermId(_logMetaDataBuffer, PartitionIndex, TermId1 + 5);
 
                 Assert.AreEqual(ADMIN_ACTION, Invoke(length, null));
 
-                OnError(_termBuffers[PARTITION_INDEX], termOffset, length);
-                AssertFrameType(PARTITION_INDEX, termOffset, PADDING_FRAME_TYPE);
-                AssertFrameLength(PARTITION_INDEX, termOffset, 0);
+                OnError(_termBuffers[PartitionIndex], termOffset, length);
+                AssertFrameType(PartitionIndex, termOffset, PADDING_FRAME_TYPE);
+                AssertFrameLength(PartitionIndex, termOffset, 0);
             }
 
             [Test]
             public void ReturnsMaxPositionExceededIfPublicationLimitReached()
             {
                 const int partitionIndex = 1;
-                int termOffset = TERM_LENGTH - 140;
+                int termOffset = TermLength - 140;
                 const int length = 100;
 
                 A.CallTo(() => _publicationLimit.GetVolatile()).Returns(16L);
@@ -238,12 +241,14 @@ namespace Adaptive.Aeron.Tests
                 const int termOffset = 64;
                 const int length = 11;
                 A.CallTo(() => _publicationLimit.GetVolatile()).Returns(16L);
-                RawTail(_logMetaDataBuffer, partitionIndex, PackTail(TERM_ID_1 + 1, termOffset));
+                RawTail(_logMetaDataBuffer, partitionIndex, PackTail(TermId1 + 1, termOffset));
                 ActiveTermCount(_logMetaDataBuffer, 1);
                 IsConnected(_logMetaDataBuffer, true);
 
-                Assert.AreEqual(BACK_PRESSURED,
-                    Invoke(length, (termBuffer, termOffset1, frameLength) => long.MaxValue));
+                Assert.AreEqual(
+                    BACK_PRESSURED,
+                    Invoke(length, (termBuffer, termOffset1, frameLength) => long.MaxValue)
+                );
 
                 UnsafeBuffer termBuffer = _termBuffers[partitionIndex];
                 OnError(termBuffer, termOffset, length);
@@ -259,7 +264,7 @@ namespace Adaptive.Aeron.Tests
                 const int termOffset = 0;
                 const int length = 10;
                 A.CallTo(() => _publicationLimit.GetVolatile()).Returns(16L);
-                InitialiseTailWithTermId(_logMetaDataBuffer, partitionIndex, TERM_ID_1 + 1);
+                InitialiseTailWithTermId(_logMetaDataBuffer, partitionIndex, TermId1 + 1);
                 ActiveTermCount(_logMetaDataBuffer, 1);
 
                 Assert.AreEqual(NOT_CONNECTED, Invoke(length, null));
@@ -272,28 +277,28 @@ namespace Adaptive.Aeron.Tests
             [Test]
             public void ReturnsAdminActionIfTermWasRotated()
             {
-                int termOffset = TERM_LENGTH - 64;
+                int termOffset = TermLength - 64;
                 const int length = 60;
                 A.CallTo(() => _publicationLimit.GetVolatile()).Returns(1L + int.MaxValue);
-                RawTailVolatile(_logMetaDataBuffer, 0, PackTail(TERM_ID_1, termOffset));
-                RawTailVolatile(_logMetaDataBuffer, 1, PackTail(TERM_ID_1 + 1 - PARTITION_COUNT, 555));
-                RawTailVolatile(_logMetaDataBuffer, 2, PackTail(STREAM_ID, 777));
+                RawTailVolatile(_logMetaDataBuffer, 0, PackTail(TermId1, termOffset));
+                RawTailVolatile(_logMetaDataBuffer, 1, PackTail(TermId1 + 1 - PARTITION_COUNT, 555));
+                RawTailVolatile(_logMetaDataBuffer, 2, PackTail(StreamId, 777));
 
                 Assert.AreEqual(ADMIN_ACTION, Invoke(length, null));
 
                 OnError(_termBuffers[0], termOffset, length);
                 AssertFrameType(0, termOffset, PADDING_FRAME_TYPE);
                 AssertFrameLength(0, termOffset, 64);
-                Assert.AreEqual(PackTail(TERM_ID_1, termOffset + 96), RawTail(_logMetaDataBuffer, 0));
-                Assert.AreEqual(PackTail(TERM_ID_1 + 1, 0), RawTail(_logMetaDataBuffer, 1));
-                Assert.AreEqual(PackTail(STREAM_ID, 777), RawTail(_logMetaDataBuffer, 2));
+                Assert.AreEqual(PackTail(TermId1, termOffset + 96), RawTail(_logMetaDataBuffer, 0));
+                Assert.AreEqual(PackTail(TermId1 + 1, 0), RawTail(_logMetaDataBuffer, 1));
+                Assert.AreEqual(PackTail(StreamId, 777), RawTail(_logMetaDataBuffer, 2));
             }
 
             [Test]
             public void ReturnsMaxPositionExceededIfThereIsNotEnoughSpaceLeft()
             {
                 const int partitionIndex = 1;
-                int termOffset = TERM_LENGTH - 128;
+                int termOffset = TermLength - 128;
                 const int length = 96;
                 A.CallTo(() => _publicationLimit.GetVolatile()).Returns(1L + int.MaxValue);
                 RawTail(_logMetaDataBuffer, partitionIndex, PackTail(int.MinValue, termOffset));
@@ -312,8 +317,13 @@ namespace Adaptive.Aeron.Tests
                 Assert.AreEqual(PackTail(222, 222), RawTail(_logMetaDataBuffer, 2));
             }
 
-            protected void TestPositionUponSuccess(int length, int termId, int termCount, long tailAfterUpdate,
-                long expectedPosition)
+            protected void TestPositionUponSuccess(
+                int length,
+                int termId,
+                int termCount,
+                long tailAfterUpdate,
+                long expectedPosition
+            )
             {
                 A.CallTo(() => _publicationLimit.GetVolatile()).Returns(int.MaxValue);
                 IsConnected(_logMetaDataBuffer, true);
@@ -329,9 +339,9 @@ namespace Adaptive.Aeron.Tests
                 Assert.AreEqual(expectedPosition, position);
                 UnsafeBuffer buffer = _termBuffers[partitionIndex];
                 int termOffset = TermOffset(tailAfterUpdate);
-                AssertFrameType(partitionIndex, termOffset, DEFAULT_FRAME_TYPE);
-                Assert.AreEqual(SESSION_ID, FrameSessionId(buffer, termOffset));
-                Assert.AreEqual(STREAM_ID, StreamId(buffer, termOffset));
+                AssertFrameType(partitionIndex, termOffset, DefaultFrameType);
+                Assert.AreEqual(SessionId, FrameSessionId(buffer, termOffset));
+                Assert.AreEqual(StreamId, StreamId(buffer, termOffset));
                 Assert.AreEqual(TermId(tailAfterUpdate), TermId(buffer, termOffset));
                 OnSuccess(buffer, termOffset, length);
             }
@@ -340,16 +350,16 @@ namespace Adaptive.Aeron.Tests
         [TestFixture]
         public class TryClaim : BaseTests
         {
-            private readonly BufferClaim bufferClaim = new BufferClaim();
+            private readonly BufferClaim _bufferClaim = new BufferClaim();
 
             protected override long Invoke(int length, ReservedValueSupplier reservedValueSupplier)
             {
-                return _publication.TryClaim(length, bufferClaim);
+                return _publication.TryClaim(length, _bufferClaim);
             }
 
             protected override void OnError(UnsafeBuffer termBuffer, int termOffset, int length)
             {
-                IMutableDirectBuffer buffer = bufferClaim.Buffer;
+                IMutableDirectBuffer buffer = _bufferClaim.Buffer;
                 Assert.AreEqual(0, buffer.Capacity);
             }
 
@@ -357,12 +367,17 @@ namespace Adaptive.Aeron.Tests
             {
                 Assert.AreEqual(-(length + HEADER_LENGTH), FragmentLength(termBuffer, termOffset));
                 Assert.AreEqual(0, ReservedValue(termBuffer, termOffset));
-                Assert.AreEqual(length, bufferClaim.Length);
+                Assert.AreEqual(length, _bufferClaim.Length);
             }
 
             [Test, TestCaseSource(nameof(TryClaimPositions))]
-            public void TryClaimShouldReturnPositionAtWhichTheClaimedSpaceEnds(int length, int termId, int termCount,
-                long tailAfterUpdate, long expectedPosition)
+            public void TryClaimShouldReturnPositionAtWhichTheClaimedSpaceEnds(
+                int length,
+                int termId,
+                int termCount,
+                long tailAfterUpdate,
+                long expectedPosition
+            )
             {
                 TestPositionUponSuccess(length, termId, termCount, tailAfterUpdate, expectedPosition);
             }
@@ -385,7 +400,8 @@ namespace Adaptive.Aeron.Tests
 
             protected override void OnSuccess(UnsafeBuffer termBuffer, int termOffset, int length)
             {
-                int index = 0, processedBytes = 0;
+                int index = 0;
+                int processedBytes = 0;
                 int offset = termOffset;
                 UnsafeBuffer dataBuffer = Buffer(0);
                 while (processedBytes < length)
@@ -426,8 +442,13 @@ namespace Adaptive.Aeron.Tests
             }
 
             [Test, TestCaseSource(nameof(OfferPositions))]
-            public void ReturnsPositionAfterDataIsCopied(int length, int termId, int termCount, long tailAfterUpdate,
-                long expectedPosition)
+            public void ReturnsPositionAfterDataIsCopied(
+                int length,
+                int termId,
+                int termCount,
+                long tailAfterUpdate,
+                long expectedPosition
+            )
             {
                 TestPositionUponSuccess(length, termId, termCount, tailAfterUpdate, expectedPosition);
             }
@@ -436,31 +457,31 @@ namespace Adaptive.Aeron.Tests
         [TestFixture]
         public class Offer : OfferBase
         {
-            private UnsafeBuffer sendBuffer;
+            private UnsafeBuffer _sendBuffer;
 
             [SetUp]
             public void Before()
             {
-                byte[] bytes = new byte[MAX_MESSAGE_SIZE];
+                byte[] bytes = new byte[MaxMessageSize];
                 Random.NextBytes(bytes);
-                sendBuffer = new UnsafeBuffer(bytes);
+                _sendBuffer = new UnsafeBuffer(bytes);
             }
 
             protected override UnsafeBuffer Buffer(int length)
             {
-                return sendBuffer;
+                return _sendBuffer;
             }
 
             protected override long Invoke(int length, ReservedValueSupplier reservedValueSupplier)
             {
-                return _publication.Offer(sendBuffer, 0, length, reservedValueSupplier);
+                return _publication.Offer(_sendBuffer, 0, length, reservedValueSupplier);
             }
 
             [Test]
             public void OfferWithAnOffset()
             {
                 const int partitionIndex = 2;
-                int termId = TERM_ID_1 + 2;
+                int termId = TermId1 + 2;
                 const int termOffset = 992;
                 const int offset = 11;
                 const int length = 23;
@@ -469,15 +490,22 @@ namespace Adaptive.Aeron.Tests
                 RawTail(_logMetaDataBuffer, partitionIndex, PackTail(termId, termOffset));
                 ActiveTermCount(_logMetaDataBuffer, 2);
 
-                long position = _publication.Offer(sendBuffer, offset, length,
-                    (termBuffer, frameOffset, frameLength) => long.MinValue);
+                long position = _publication.Offer(
+                    _sendBuffer,
+                    offset,
+                    length,
+                    (termBuffer, frameOffset, frameLength) => long.MinValue
+                );
 
                 Assert.AreEqual(525344, position);
                 UnsafeBuffer termBuffer = _termBuffers[partitionIndex];
                 Assert.AreEqual(long.MinValue, ReservedValue(termBuffer, termOffset));
                 for (int i = 0; i < length; i++)
                 {
-                    Assert.AreEqual(sendBuffer.GetByte(offset + i), termBuffer.GetByte(termOffset + HEADER_LENGTH + i));
+                    Assert.AreEqual(
+                        _sendBuffer.GetByte(offset + i),
+                        termBuffer.GetByte(termOffset + HEADER_LENGTH + i)
+                    );
                 }
             }
         }
@@ -485,12 +513,12 @@ namespace Adaptive.Aeron.Tests
         [TestFixture]
         public class OfferWithTwoBuffers : OfferBase
         {
-            private UnsafeBuffer buffer1;
-            private UnsafeBuffer buffer2;
+            private UnsafeBuffer _buffer1;
+            private UnsafeBuffer _buffer2;
 
             protected override UnsafeBuffer Buffer(int processedBytes)
             {
-                return processedBytes < buffer1.Capacity ? buffer1 : buffer2;
+                return processedBytes < _buffer1.Capacity ? _buffer1 : _buffer2;
             }
 
             protected override long Invoke(int length, ReservedValueSupplier reservedValueSupplier)
@@ -499,17 +527,17 @@ namespace Adaptive.Aeron.Tests
                 Random.NextBytes(bytes);
                 int chunk1Length = (int)(length * 0.25);
                 int chunk2Length = length - chunk1Length;
-                buffer1 = new UnsafeBuffer(bytes, 0, chunk1Length);
-                buffer2 = new UnsafeBuffer(bytes, chunk1Length, chunk2Length);
+                _buffer1 = new UnsafeBuffer(bytes, 0, chunk1Length);
+                _buffer2 = new UnsafeBuffer(bytes, chunk1Length, chunk2Length);
 
-                return _publication.Offer(buffer1, 0, chunk1Length, buffer2, 0, chunk2Length, reservedValueSupplier);
+                return _publication.Offer(_buffer1, 0, chunk1Length, _buffer2, 0, chunk2Length, reservedValueSupplier);
             }
 
             [Test]
             public void OfferWithOffsets()
             {
                 const int partitionIndex = 1;
-                int termId = TERM_ID_1 + 1;
+                int termId = TermId1 + 1;
                 const int termOffset = 64;
                 A.CallTo(() => _publicationLimit.GetVolatile()).Returns(int.MaxValue);
                 IsConnected(_logMetaDataBuffer, true);
@@ -525,8 +553,15 @@ namespace Adaptive.Aeron.Tests
                 const int offsetOne = 2;
                 const int lengthTwo = 3;
                 const int offsetTwo = 4;
-                long position = _publication.Offer(buffer1, offsetOne, lengthOne, buffer2, offsetTwo, lengthTwo,
-                    (termBuffer, frameOffset, frameLength) => -1);
+                long position = _publication.Offer(
+                    buffer1,
+                    offsetOne,
+                    lengthOne,
+                    buffer2,
+                    offsetTwo,
+                    lengthTwo,
+                    (termBuffer, frameOffset, frameLength) => -1
+                );
 
                 Assert.AreEqual(262272, position);
                 UnsafeBuffer termBuffer = _termBuffers[partitionIndex];
@@ -538,8 +573,10 @@ namespace Adaptive.Aeron.Tests
 
                 for (int i = 0; i < lengthTwo; i++)
                 {
-                    Assert.AreEqual(buffer2.GetByte(offsetTwo + i),
-                        termBuffer.GetByte(termOffset + HEADER_LENGTH + lengthOne + i));
+                    Assert.AreEqual(
+                        buffer2.GetByte(offsetTwo + i),
+                        termBuffer.GetByte(termOffset + HEADER_LENGTH + lengthOne + i)
+                    );
                 }
             }
         }
@@ -547,28 +584,28 @@ namespace Adaptive.Aeron.Tests
         [TestFixture]
         public class VectorOffer : OfferBase
         {
-            private readonly DirectBufferVector[] vectors = new DirectBufferVector[3];
+            private readonly DirectBufferVector[] _vectors = new DirectBufferVector[3];
 
             protected override UnsafeBuffer Buffer(int processedBytes)
             {
-                return (UnsafeBuffer)vectors[0].Buffer();
+                return (UnsafeBuffer)_vectors[0].Buffer();
             }
 
             protected override long Invoke(int length, ReservedValueSupplier reservedValueSupplier)
             {
                 byte[] bytes = new byte[length];
                 Random.NextBytes(bytes);
-                int numVectors = vectors.Length;
+                int numVectors = _vectors.Length;
                 int chunkSize = length / numVectors;
                 UnsafeBuffer buffer = new UnsafeBuffer(bytes);
                 for (int i = 0, offset = 0; i < numVectors; i++)
                 {
                     int size = numVectors - 1 == i ? (length - offset) : chunkSize;
-                    vectors[i] = new DirectBufferVector(buffer, offset, size);
+                    _vectors[i] = new DirectBufferVector(buffer, offset, size);
                     offset += size;
                 }
 
-                return _publication.Offer(vectors, reservedValueSupplier);
+                return _publication.Offer(_vectors, reservedValueSupplier);
             }
         }
 
@@ -584,18 +621,38 @@ namespace Adaptive.Aeron.Tests
 
         protected static IEnumerable<TestCaseData> TryClaimPositions()
         {
-            yield return new TestCaseData(100, 31, 30, PackTail(31, 16 * 1024),
-                ComputePosition(31, 16 * 1024 + 160, POSITION_BITS_TO_SHIFT, TERM_ID_1));
-            yield return new TestCaseData(999, 7, 6, PackTail(212, 8192),
-                ComputePosition(212, 8192 + 1056, POSITION_BITS_TO_SHIFT, TERM_ID_1));
+            yield return new TestCaseData(
+                100,
+                31,
+                30,
+                PackTail(31, 16 * 1024),
+                ComputePosition(31, 16 * 1024 + 160, PositionBitsToShift, TermId1)
+            );
+            yield return new TestCaseData(
+                999,
+                7,
+                6,
+                PackTail(212, 8192),
+                ComputePosition(212, 8192 + 1056, PositionBitsToShift, TermId1)
+            );
         }
 
         protected static IEnumerable<TestCaseData> OfferPositions()
         {
-            yield return new TestCaseData(124, 5, 4, PackTail(11, 3072),
-                ComputePosition(11, 3072 + 160, POSITION_BITS_TO_SHIFT, TERM_ID_1));
-            yield return new TestCaseData(MAX_MESSAGE_SIZE, 77, 76, PackTail(77, 1024),
-                ComputePosition(77, 1024 + TOTAL_ALIGNED_MAX_MESSAGE_SIZE, POSITION_BITS_TO_SHIFT, TERM_ID_1));
+            yield return new TestCaseData(
+                124,
+                5,
+                4,
+                PackTail(11, 3072),
+                ComputePosition(11, 3072 + 160, PositionBitsToShift, TermId1)
+            );
+            yield return new TestCaseData(
+                MaxMessageSize,
+                77,
+                76,
+                PackTail(77, 1024),
+                ComputePosition(77, 1024 + TotalAlignedMaxMessageSize, PositionBitsToShift, TermId1)
+            );
         }
     }
 }

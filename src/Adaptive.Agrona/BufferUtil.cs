@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright 2014 - 2017 Adaptive Financial Consulting Ltd
+ * Copyright 2014 - 2026 Adaptive Financial Consulting Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,15 +14,20 @@
  * limitations under the License.
  */
 
-using Adaptive.Agrona.Util;
 using System;
 using System.Text;
+using Adaptive.Agrona.Util;
 
 namespace Adaptive.Agrona
 {
     /// <summary>
     /// Common functions for buffer implementations.
     /// </summary>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage(
+        "Major Code Smell",
+        "S1118:Utility classes should not have public constructors",
+        Justification = "Public ctor in shipped API surface; marking static would break consumers."
+    )]
     public class BufferUtil
     {
         public static readonly byte[] NullBytes = Encoding.UTF8.GetBytes("null");
@@ -42,7 +47,7 @@ namespace Adaptive.Agrona
                 ThrowHelper.ThrowIndexOutOfRangeException($"index={index:D}, length={length:D}, capacity={capacity:D}");
             }
         }
-        
+
         public static ByteBuffer AllocateDirectAligned(int capacity, int alignment)
         {
             return new ByteBuffer(capacity, alignment);
@@ -52,7 +57,7 @@ namespace Adaptive.Agrona
         {
             return new ByteBuffer(capacity, BitUtil.SIZE_OF_LONG);
         }
-        
+
         public static ByteBuffer Allocate(int capacity)
         {
             return new ByteBuffer(capacity, BitUtil.SIZE_OF_LONG);

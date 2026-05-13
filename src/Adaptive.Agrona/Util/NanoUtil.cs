@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright 2014 - 2017 Adaptive Financial Consulting Ltd
+ * Copyright 2014 - 2026 Adaptive Financial Consulting Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@ namespace Adaptive.Agrona.Util
     {
         public static long FromSeconds(long seconds)
         {
-            return seconds*1000*1000*1000;
+            return seconds * 1000 * 1000 * 1000;
         }
 
         public static long FromMilliseconds(long milliseconds)

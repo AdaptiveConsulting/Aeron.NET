@@ -27,12 +27,13 @@ using Adaptive.Agrona.Util;
 namespace Adaptive.Aeron
 {
     /// <summary>
-    /// Takes a log file name and maps the file into memory and wraps it with <seealso cref="UnsafeBuffer"/>s as appropriate.
+    /// Takes a log file name and maps the file into memory and wraps it with <seealso cref="UnsafeBuffer"/> s as
+    /// appropriate.
     /// </summary>
     /// <seealso cref="LogBufferDescriptor" />
     public class LogBuffers : IDisposable
     {
-        private long lingerDeadlineNs = long.MaxValue;
+        private long _lingerDeadlineNs = long.MaxValue;
         private int _refCount;
 
         private readonly int _termLength;
@@ -46,16 +47,15 @@ namespace Adaptive.Aeron
         // Necessary for testing
         internal LogBuffers()
         {
-            
         }
-        
+
         /// <summary>
         /// Construct the log buffers for a given log file.
         /// </summary>
         /// <param name="logFileName"></param>
         public LogBuffers(string logFileName)
         {
-            int termLength = 0;
+            int termLength;
             UnsafeBuffer logMetaDataBuffer = null;
             MappedByteBuffer[] mappedByteBuffers = null;
             FileStream fileStream = null;
@@ -70,25 +70,31 @@ namespace Adaptive.Aeron
                     logFileName,
                     FileMode.Open,
                     FileAccess.Read,
-                    FileShare.ReadWrite | FileShare.Delete);
-                
+                    FileShare.ReadWrite | FileShare.Delete
+                );
+
                 if (logLength < LogBufferDescriptor.LOG_META_DATA_LENGTH)
                 {
                     throw new InvalidOperationException(
-                        "Log file length less than min length of " + LogBufferDescriptor.LOG_META_DATA_LENGTH + ": length=" + logLength);
+                        "Log file length less than min length of "
+                            + LogBufferDescriptor.LOG_META_DATA_LENGTH
+                            + ": length="
+                            + logLength
+                    );
                 }
 
                 // if log length exceeds MAX_INT we need multiple mapped buffers, (see FileChannel.map doc).
                 if (logLength < int.MaxValue)
                 {
-                    var mappedBuffer =
-                        IoUtil.MapExistingFile(logFileName,
-                            MapMode.ReadWrite); // TODO Java has sparse hint & Little Endian
-                    mappedByteBuffers = new[] {mappedBuffer};
+                    // TODO Java has sparse hint & Little Endian
+                    var mappedBuffer = IoUtil.MapExistingFile(logFileName, MapMode.ReadWrite);
+                    mappedByteBuffers = new[] { mappedBuffer };
 
-                    logMetaDataBuffer = new UnsafeBuffer(mappedBuffer.Pointer,
-                        (int) (logLength - LogBufferDescriptor.LOG_META_DATA_LENGTH),
-                        LogBufferDescriptor.LOG_META_DATA_LENGTH);
+                    logMetaDataBuffer = new UnsafeBuffer(
+                        mappedBuffer.Pointer,
+                        (int)(logLength - LogBufferDescriptor.LOG_META_DATA_LENGTH),
+                        LogBufferDescriptor.LOG_META_DATA_LENGTH
+                    );
 
                     termLength = LogBufferDescriptor.TermLength(logMetaDataBuffer);
                     int pageSize = LogBufferDescriptor.PageSize(logMetaDataBuffer);
@@ -106,20 +112,23 @@ namespace Adaptive.Aeron
                     mappedByteBuffers = new MappedByteBuffer[LogBufferDescriptor.PARTITION_COUNT + 1];
 
                     int assumedTermLength = LogBufferDescriptor.TERM_MAX_LENGTH;
-                    long metaDataSectionOffset = assumedTermLength * (long) LogBufferDescriptor.PARTITION_COUNT;
+                    long metaDataSectionOffset = assumedTermLength * (long)LogBufferDescriptor.PARTITION_COUNT;
                     long metaDataMappingLength = logLength - metaDataSectionOffset;
 
                     var memoryMappedFile = IoUtil.OpenMemoryMappedFile(logFileName);
 
-                    var metaDataMappedBuffer =
-                        new MappedByteBuffer(memoryMappedFile, metaDataSectionOffset,
-                            metaDataMappingLength); // Little Endian
+                    var metaDataMappedBuffer = new MappedByteBuffer(
+                        memoryMappedFile,
+                        metaDataSectionOffset,
+                        metaDataMappingLength
+                    ); // Little Endian
 
                     mappedByteBuffers[LogBufferDescriptor.LOG_META_DATA_SECTION_INDEX] = metaDataMappedBuffer;
                     logMetaDataBuffer = new UnsafeBuffer(
                         metaDataMappedBuffer.Pointer,
-                        (int) metaDataMappingLength - LogBufferDescriptor.LOG_META_DATA_LENGTH,
-                        LogBufferDescriptor.LOG_META_DATA_LENGTH);
+                        (int)metaDataMappingLength - LogBufferDescriptor.LOG_META_DATA_LENGTH,
+                        LogBufferDescriptor.LOG_META_DATA_LENGTH
+                    );
 
                     int metaDataTermLength = LogBufferDescriptor.TermLength(logMetaDataBuffer);
                     int pageSize = LogBufferDescriptor.PageSize(logMetaDataBuffer);
@@ -128,17 +137,19 @@ namespace Adaptive.Aeron
                     if (metaDataTermLength != assumedTermLength)
                     {
                         throw new InvalidOperationException(
-                            $"assumed term length {assumedTermLength} does not match metadta: termLength = {metaDataTermLength}");
+                            $"assumed term length {assumedTermLength} does not match metadta: "
+                                + $"termLength = {metaDataTermLength}"
+                        );
                     }
 
                     termLength = assumedTermLength;
 
                     for (var i = 0; i < LogBufferDescriptor.PARTITION_COUNT; i++)
                     {
-                        long position = assumedTermLength * (long) i;
+                        long position = assumedTermLength * (long)i;
 
-                        mappedByteBuffers[i] =
-                            new MappedByteBuffer(memoryMappedFile, position, assumedTermLength); // Little Endian
+                        // Little Endian
+                        mappedByteBuffers[i] = new MappedByteBuffer(memoryMappedFile, position, assumedTermLength);
                         _termBuffers[i] = new UnsafeBuffer(mappedByteBuffers[i].Pointer, 0, assumedTermLength);
                     }
                 }
@@ -156,9 +167,9 @@ namespace Adaptive.Aeron
         }
 
         /// <summary>
-        /// Read-only stream over the log file. Shares the underlying file with the memory mapping;
-        /// callers must not write to it. Useful for raw-block consumers that want positioned reads
-        /// or zero-copy hand-off to a socket via <c>Socket.SendFile</c>.
+        /// Read-only stream over the log file. Shares the underlying file with the memory mapping; callers must not
+        /// write to it. Useful for raw-block consumers that want positioned reads or zero-copy hand-off to a socket via
+        /// <c>Socket.SendFile</c> .
         /// </summary>
         public FileStream FileStream => _fileStream;
 
@@ -187,7 +198,7 @@ namespace Adaptive.Aeron
 
             foreach (MappedByteBuffer buffer in _mappedByteBuffers)
             {
-                atomicBuffer.Wrap(buffer.Pointer, 0, (int) buffer.Capacity);
+                atomicBuffer.Wrap(buffer.Pointer, 0, (int)buffer.Capacity);
 
                 for (int i = 0, length = atomicBuffer.Capacity; i < length; i += pageSize)
                 {
@@ -202,7 +213,7 @@ namespace Adaptive.Aeron
         }
 
         /// <summary>
-        ///  The length of the term buffer in each log partition.
+        /// The length of the term buffer in each log partition.
         /// </summary>
         /// <returns> length of the term buffer in each log partition. </returns>
         public int TermLength()
@@ -234,7 +245,7 @@ namespace Adaptive.Aeron
         /// <param name="timeNs"> the deadline for how long to linger around once unreferenced. </param>
         public void LingerDeadlineNs(long timeNs)
         {
-            lingerDeadlineNs = timeNs;
+            _lingerDeadlineNs = timeNs;
         }
 
         /// <summary>
@@ -243,11 +254,14 @@ namespace Adaptive.Aeron
         /// <returns> the deadline for how long to linger around once unreferenced. </returns>
         public long LingerDeadlineNs()
         {
-            return lingerDeadlineNs;
+            return _lingerDeadlineNs;
         }
 
         private static void Dispose(
-            UnsafeBuffer logMetaDataBuffer, MappedByteBuffer[] mappedByteBuffers, FileStream fileStream)
+            UnsafeBuffer logMetaDataBuffer,
+            MappedByteBuffer[] mappedByteBuffers,
+            FileStream fileStream
+        )
         {
             if (null != logMetaDataBuffer)
             {

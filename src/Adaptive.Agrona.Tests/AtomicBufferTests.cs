@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright 2014 - 2017 Adaptive Financial Consulting Ltd
+ * Copyright 2014 - 2026 Adaptive Financial Consulting Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -40,46 +40,52 @@ namespace Adaptive.Agrona.Tests
         private const long LongValue = int.MaxValue + 5L;
         private const double DoubleValue = int.MaxValue + 7.0d;
 
-        private string TempFileName;
-        private MappedByteBuffer MappedByteBuffer;
+        private string _tempFileName;
+        private MappedByteBuffer _mappedByteBuffer;
 
-        private IAtomicBuffer ByteArrayBacked;
-        private IAtomicBuffer AlignedByteArrayBacked;
+        private IAtomicBuffer _byteArrayBacked;
+        private IAtomicBuffer _alignedByteArrayBacked;
 
-        private IAtomicBuffer UnmanagedBacked;
+        private IAtomicBuffer _unmanagedBacked;
 
-        private IAtomicBuffer MemoryMappedFileBacked;
-        private bool Initialized;
+        private IAtomicBuffer _memoryMappedFileBacked;
+        private bool _initialized;
 
         public void Initialize()
         {
-            if (Initialized)
+            if (_initialized)
+            {
                 return;
+            }
 
-            ByteArrayBacked = new UnsafeBuffer(new byte[BufferCapacity], 0, BufferCapacity);
-            AlignedByteArrayBacked =
-                new UnsafeBuffer(BufferUtil.AllocateDirectAligned(BufferCapacity, BitUtil.CACHE_LINE_LENGTH));
+            _byteArrayBacked = new UnsafeBuffer(new byte[BufferCapacity], 0, BufferCapacity);
+            _alignedByteArrayBacked = new UnsafeBuffer(
+                BufferUtil.AllocateDirectAligned(BufferCapacity, BitUtil.CACHE_LINE_LENGTH)
+            );
 
-            UnmanagedBacked = new UnsafeBuffer(Marshal.AllocHGlobal(BufferCapacity), BufferCapacity);
+            _unmanagedBacked = new UnsafeBuffer(Marshal.AllocHGlobal(BufferCapacity), BufferCapacity);
 
-            TempFileName = Path.GetTempFileName();
-            MappedByteBuffer = new MappedByteBuffer(MemoryMappedFile.CreateFromFile(TempFileName,
-                FileMode.OpenOrCreate, null, BufferCapacity));
+            _tempFileName = Path.GetTempFileName();
+            _mappedByteBuffer = new MappedByteBuffer(
+                MemoryMappedFile.CreateFromFile(_tempFileName, FileMode.OpenOrCreate, null, BufferCapacity)
+            );
 
-            MemoryMappedFileBacked = new UnsafeBuffer(MappedByteBuffer.Pointer, BufferCapacity);
+            _memoryMappedFileBacked = new UnsafeBuffer(_mappedByteBuffer.Pointer, BufferCapacity);
 
-            Initialized = true;
+            _initialized = true;
         }
 
         [OneTimeTearDown]
         public void Destroy()
         {
-            if (!Initialized)
+            if (!_initialized)
+            {
                 return;
+            }
 
-            MappedByteBuffer?.Dispose();
+            _mappedByteBuffer?.Dispose();
 
-            File.Delete(TempFileName);
+            File.Delete(_tempFileName);
         }
 
         [DatapointSource]
@@ -87,10 +93,10 @@ namespace Adaptive.Agrona.Tests
         {
             Initialize();
 
-            yield return ByteArrayBacked;
-            yield return AlignedByteArrayBacked;
-            yield return UnmanagedBacked;
-            yield return MemoryMappedFileBacked;
+            yield return _byteArrayBacked;
+            yield return _alignedByteArrayBacked;
+            yield return _unmanagedBacked;
+            yield return _memoryMappedFileBacked;
         }
 
         [Theory]

@@ -1,3 +1,19 @@
+/*
+ * Copyright 2014 - 2026 Adaptive Financial Consulting Ltd
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -19,7 +35,8 @@ namespace Adaptive.Aeron.Tests
             var fieldByTypeId = new Dictionary<int, FieldInfo>();
             var duplicates = new Dictionary<int, List<FieldInfo>>();
 
-            var typeIdFields = typeof(AeronCounters).GetFields(BindingFlags.Public | BindingFlags.Static)
+            var typeIdFields = typeof(AeronCounters)
+                .GetFields(BindingFlags.Public | BindingFlags.Static)
                 .Where(f => f.IsLiteral || f.IsInitOnly)
                 .Where(f => f.Name.EndsWith("_TYPE_ID"))
                 .Where(f => f.FieldType == typeof(int));
@@ -34,7 +51,11 @@ namespace Adaptive.Aeron.Tests
                         list = new List<FieldInfo>();
                         duplicates[typeId] = list;
                     }
-                    if (!list.Contains(f)) list.Add(f);
+                    if (!list.Contains(f))
+                    {
+                        list.Add(f);
+                    }
+
                     list.Add(existing);
                 }
                 else
@@ -45,8 +66,9 @@ namespace Adaptive.Aeron.Tests
 
             if (duplicates.Count > 0)
             {
-                var lines = duplicates.Select(kv => kv.Key + " -> " +
-                    string.Join(", ", kv.Value.Select(f => f.DeclaringType?.Name + "." + f.Name)));
+                var lines = duplicates.Select(kv =>
+                    kv.Key + " -> " + string.Join(", ", kv.Value.Select(f => f.DeclaringType?.Name + "." + f.Name))
+                );
                 Assert.Fail("Duplicate typeIds: " + string.Join("; ", lines));
             }
         }
@@ -54,7 +76,8 @@ namespace Adaptive.Aeron.Tests
         [TestCase(
             "1.42.1",
             "8165495befc07e997a7f2f7743beab9d3846b0a5",
-            "version=1.42.1 commit=8165495befc07e997a7f2f7743beab9d3846b0a5")]
+            "version=1.42.1 commit=8165495befc07e997a7f2f7743beab9d3846b0a5"
+        )]
         [TestCase("1.43.0-SNAPSHOT", "abc", "version=1.43.0-SNAPSHOT commit=abc")]
         [TestCase("NIL", "12345678", "version=NIL commit=12345678")]
         public void ShouldFormatVersionInfo(string fullVersion, string commitHash, string expected)
@@ -81,16 +104,16 @@ namespace Adaptive.Aeron.Tests
         [TestCase(-1)]
         public void AppendToLabelThrowsArgumentExceptionIfCounterIsNegative(int counterId)
         {
-            var exception = Assert.Throws<ArgumentException>(
-                () => AeronCounters.AppendToLabel(new UnsafeBuffer([]), counterId, "test"));
+            var exception = Assert.Throws<ArgumentException>(() =>
+                AeronCounters.AppendToLabel(new UnsafeBuffer([]), counterId, "test")
+            );
             Assert.AreEqual("counter id " + counterId + " is negative", exception.Message);
         }
 
         [Test]
         public void AppendToLabelThrowsArgumentNullExceptionIfBufferIsNull()
         {
-            Assert.Throws<ArgumentNullException>(
-                () => AeronCounters.AppendToLabel(null, 5, "test"));
+            Assert.Throws<ArgumentNullException>(() => AeronCounters.AppendToLabel(null, 5, "test"));
         }
 
         [TestCase(1_000_000)]
@@ -99,8 +122,9 @@ namespace Adaptive.Aeron.Tests
         {
             var metaDataBuffer = new UnsafeBuffer(new byte[METADATA_LENGTH * 3]);
 
-            var exception = Assert.Throws<ArgumentException>(
-                () => AeronCounters.AppendToLabel(metaDataBuffer, counterId, "test"));
+            var exception = Assert.Throws<ArgumentException>(() =>
+                AeronCounters.AppendToLabel(metaDataBuffer, counterId, "test")
+            );
             Assert.AreEqual("counter id " + counterId + " out of range: 0 - maxCounterId=2", exception.Message);
         }
 
@@ -113,8 +137,9 @@ namespace Adaptive.Aeron.Tests
             int metaDataOffset = MetaDataOffset(counterId);
             metaDataBuffer.PutInt(metaDataOffset, state);
 
-            var exception = Assert.Throws<ArgumentException>(
-                () => AeronCounters.AppendToLabel(metaDataBuffer, counterId, "test"));
+            var exception = Assert.Throws<ArgumentException>(() =>
+                AeronCounters.AppendToLabel(metaDataBuffer, counterId, "test")
+            );
             Assert.AreEqual("counter id 1 is not allocated, state: " + state, exception.Message);
         }
 
@@ -124,7 +149,8 @@ namespace Adaptive.Aeron.Tests
             var countersManager = new CountersManager(
                 new UnsafeBuffer(new byte[METADATA_LENGTH]),
                 new UnsafeBuffer(new byte[COUNTER_LENGTH]),
-                Encoding.ASCII);
+                Encoding.ASCII
+            );
             int counterId = countersManager.Allocate("initial value: ");
 
             int length = AeronCounters.AppendToLabel(countersManager.MetaDataBuffer, counterId, "test");
@@ -139,7 +165,8 @@ namespace Adaptive.Aeron.Tests
             var countersManager = new CountersManager(
                 new UnsafeBuffer(new byte[METADATA_LENGTH]),
                 new UnsafeBuffer(new byte[COUNTER_LENGTH]),
-                Encoding.ASCII);
+                Encoding.ASCII
+            );
             const string initialLabel = "this is a test counter";
             int counterId = countersManager.Allocate(initialLabel);
             string hugeSuffix = " - 42" + new string('x', MAX_LABEL_LENGTH);
@@ -148,7 +175,10 @@ namespace Adaptive.Aeron.Tests
 
             Assert.AreNotEqual(hugeSuffix.Length, length);
             Assert.AreEqual(MAX_LABEL_LENGTH - initialLabel.Length, length);
-            Assert.AreEqual(initialLabel + hugeSuffix.Substring(0, length), countersManager.GetCounterLabel(counterId));
+            Assert.AreEqual(
+                string.Concat(initialLabel, hugeSuffix.AsSpan(0, length)),
+                countersManager.GetCounterLabel(counterId)
+            );
         }
 
         [Test]
@@ -157,7 +187,8 @@ namespace Adaptive.Aeron.Tests
             var countersManager = new CountersManager(
                 new UnsafeBuffer(new byte[METADATA_LENGTH]),
                 new UnsafeBuffer(new byte[COUNTER_LENGTH]),
-                Encoding.ASCII);
+                Encoding.ASCII
+            );
             string label = new string('a', MAX_LABEL_LENGTH);
             int counterId = countersManager.Allocate(label);
 
@@ -170,35 +201,44 @@ namespace Adaptive.Aeron.Tests
         [Test]
         public void SetReferenceIdShouldThrowArgumentNullExceptionIfMetadataBufferIsNull()
         {
-            Assert.Throws<ArgumentNullException>(
-                () => AeronCounters.SetReferenceId(null, new UnsafeBuffer(new byte[0]), 1, 123));
+            Assert.Throws<ArgumentNullException>(() =>
+                AeronCounters.SetReferenceId(null, new UnsafeBuffer(Array.Empty<byte>()), 1, 123)
+            );
         }
 
         [Test]
         public void SetReferenceIdShouldThrowArgumentNullExceptionIfValuesBufferIsNull()
         {
-            Assert.Throws<ArgumentNullException>(
-                () => AeronCounters.SetReferenceId(new UnsafeBuffer(new byte[0]), null, 1, 123));
+            Assert.Throws<ArgumentNullException>(() =>
+                AeronCounters.SetReferenceId(new UnsafeBuffer(Array.Empty<byte>()), null, 1, 123)
+            );
         }
 
         [Test]
         public void SetReferenceIdShouldRejectNegativeCounterId()
         {
-            var exception = Assert.Throws<ArgumentException>(
-                () => AeronCounters.SetReferenceId(
-                    new UnsafeBuffer(new byte[0]), new UnsafeBuffer(new byte[0]), -4, 123));
+            var exception = Assert.Throws<ArgumentException>(() =>
+                AeronCounters.SetReferenceId(
+                    new UnsafeBuffer(Array.Empty<byte>()),
+                    new UnsafeBuffer(Array.Empty<byte>()),
+                    -4,
+                    123
+                )
+            );
             Assert.AreEqual("counter id -4 is negative", exception.Message);
         }
 
         [Test]
         public void SetReferenceIdShouldRejectCounterIdWhichIsOutOfRange()
         {
-            var exception = Assert.Throws<ArgumentException>(
-                () => AeronCounters.SetReferenceId(
+            var exception = Assert.Throws<ArgumentException>(() =>
+                AeronCounters.SetReferenceId(
                     new UnsafeBuffer(new byte[2 * METADATA_LENGTH]),
-                    new UnsafeBuffer(new byte[0]),
+                    new UnsafeBuffer(Array.Empty<byte>()),
                     42,
-                    777));
+                    777
+                )
+            );
             Assert.AreEqual("counter id 42 out of range: 0 - maxCounterId=1", exception.Message);
         }
 

@@ -1,0 +1,1637 @@
+abstract Adaptive.Aeron.Publication.AvailableWindow.get -> long
+abstract Adaptive.Aeron.Publication.Offer(Adaptive.Aeron.DirectBufferVector[] vectors, Adaptive.Aeron.ReservedValueSupplier reservedValueSupplier = null) -> long
+abstract Adaptive.Aeron.Publication.Offer(Adaptive.Agrona.IDirectBuffer buffer, int offset, int length, Adaptive.Aeron.ReservedValueSupplier reservedValueSupplier = null) -> long
+abstract Adaptive.Aeron.Publication.Offer(Adaptive.Agrona.IDirectBuffer bufferOne, int offsetOne, int lengthOne, Adaptive.Agrona.IDirectBuffer bufferTwo, int offsetTwo, int lengthTwo, Adaptive.Aeron.ReservedValueSupplier reservedValueSupplier = null) -> long
+abstract Adaptive.Aeron.Publication.TryClaim(int length, Adaptive.Aeron.LogBuffer.BufferClaim bufferClaim) -> long
+Adaptive.Aeron.Aeron
+Adaptive.Aeron.Aeron.AddAvailableCounterHandler(Adaptive.Aeron.AvailableCounterHandler handler) -> long
+Adaptive.Aeron.Aeron.AddCloseHandler(System.Action handler) -> long
+Adaptive.Aeron.Aeron.AddCounter(int typeId, Adaptive.Agrona.IDirectBuffer keyBuffer, int keyOffset, int keyLength, Adaptive.Agrona.IDirectBuffer labelBuffer, int labelOffset, int labelLength) -> Adaptive.Aeron.Counter
+Adaptive.Aeron.Aeron.AddCounter(int typeId, string label) -> Adaptive.Aeron.Counter
+Adaptive.Aeron.Aeron.AddExclusivePublication(string channel, int streamId) -> Adaptive.Aeron.ExclusivePublication
+Adaptive.Aeron.Aeron.AddPublication(string channel, int streamId) -> Adaptive.Aeron.Publication
+Adaptive.Aeron.Aeron.AddStaticCounter(int typeId, Adaptive.Agrona.IDirectBuffer keyBuffer, int keyOffset, int keyLength, Adaptive.Agrona.IDirectBuffer labelBuffer, int labelOffset, int labelLength, long registrationId) -> Adaptive.Aeron.Counter
+Adaptive.Aeron.Aeron.AddStaticCounter(int typeId, string label, long registrationId) -> Adaptive.Aeron.Counter
+Adaptive.Aeron.Aeron.AddSubscription(string channel, int streamId, Adaptive.Aeron.AvailableImageHandler availableImageHandler, Adaptive.Aeron.UnavailableImageHandler unavailableImageHandler) -> Adaptive.Aeron.Subscription
+Adaptive.Aeron.Aeron.AddSubscription(string channel, int streamId) -> Adaptive.Aeron.Subscription
+Adaptive.Aeron.Aeron.AddUnavailableCounterHandler(Adaptive.Aeron.UnavailableCounterHandler handler) -> long
+Adaptive.Aeron.Aeron.AsyncAddCounter(int typeId, Adaptive.Agrona.IDirectBuffer keyBuffer, int keyOffset, int keyLength, Adaptive.Agrona.IDirectBuffer labelBuffer, int labelOffset, int labelLength) -> long
+Adaptive.Aeron.Aeron.AsyncAddCounter(int typeId, string label) -> long
+Adaptive.Aeron.Aeron.AsyncAddExclusivePublication(string channel, int streamId) -> long
+Adaptive.Aeron.Aeron.AsyncAddPublication(string channel, int streamId) -> long
+Adaptive.Aeron.Aeron.AsyncAddStaticCounter(int typeId, Adaptive.Agrona.IDirectBuffer keyBuffer, int keyOffset, int keyLength, Adaptive.Agrona.IDirectBuffer labelBuffer, int labelOffset, int labelLength, long registrationId) -> long
+Adaptive.Aeron.Aeron.AsyncAddStaticCounter(int typeId, string label, long registrationId) -> long
+Adaptive.Aeron.Aeron.AsyncAddSubscription(string channel, int streamId, Adaptive.Aeron.AvailableImageHandler availableImageHandler, Adaptive.Aeron.UnavailableImageHandler unavailableImageHandler) -> long
+Adaptive.Aeron.Aeron.AsyncAddSubscription(string channel, int streamId) -> long
+Adaptive.Aeron.Aeron.AsyncRemoveCounter(long registrationId) -> void
+Adaptive.Aeron.Aeron.AsyncRemovePublication(long registrationId) -> void
+Adaptive.Aeron.Aeron.AsyncRemoveSubscription(long registrationId) -> void
+Adaptive.Aeron.Aeron.ClientId.get -> long
+Adaptive.Aeron.Aeron.ConductorAgentInvoker.get -> Adaptive.Agrona.Concurrent.AgentInvoker
+Adaptive.Aeron.Aeron.Configuration
+Adaptive.Aeron.Aeron.Context
+Adaptive.Aeron.Aeron.Context.AeronDirectory() -> System.IO.DirectoryInfo
+Adaptive.Aeron.Aeron.Context.AeronDirectoryName() -> string
+Adaptive.Aeron.Aeron.Context.AeronDirectoryName(string dirName) -> Adaptive.Aeron.Aeron.Context
+Adaptive.Aeron.Aeron.Context.AvailableCounterHandler() -> Adaptive.Aeron.AvailableCounterHandler
+Adaptive.Aeron.Aeron.Context.AvailableCounterHandler(Adaptive.Aeron.AvailableCounterHandler handler) -> Adaptive.Aeron.Aeron.Context
+Adaptive.Aeron.Aeron.Context.AvailableImageHandler() -> Adaptive.Aeron.AvailableImageHandler
+Adaptive.Aeron.Aeron.Context.AvailableImageHandler(Adaptive.Aeron.AvailableImageHandler handler) -> Adaptive.Aeron.Aeron.Context
+Adaptive.Aeron.Aeron.Context.AwaitingIdleStrategy() -> Adaptive.Agrona.Concurrent.IIdleStrategy
+Adaptive.Aeron.Aeron.Context.AwaitingIdleStrategy(Adaptive.Agrona.Concurrent.IIdleStrategy idleStrategy) -> Adaptive.Aeron.Aeron.Context
+Adaptive.Aeron.Aeron.Context.ClientId() -> long
+Adaptive.Aeron.Aeron.Context.ClientLock() -> Adaptive.Agrona.Concurrent.ILock
+Adaptive.Aeron.Aeron.Context.ClientLock(Adaptive.Agrona.Concurrent.ILock lock) -> Adaptive.Aeron.Aeron.Context
+Adaptive.Aeron.Aeron.Context.ClientName() -> string
+Adaptive.Aeron.Aeron.Context.ClientName(string clientName) -> Adaptive.Aeron.Aeron.Context
+Adaptive.Aeron.Aeron.Context.Clone() -> Adaptive.Aeron.Aeron.Context
+Adaptive.Aeron.Aeron.Context.CloseHandler() -> System.Action
+Adaptive.Aeron.Aeron.Context.CloseHandler(System.Action handler) -> Adaptive.Aeron.Aeron.Context
+Adaptive.Aeron.Aeron.Context.CloseLingerDurationNs() -> long
+Adaptive.Aeron.Aeron.Context.CloseLingerDurationNs(long closeLingerDurationNs) -> Adaptive.Aeron.Aeron.Context
+Adaptive.Aeron.Aeron.Context.CncFile() -> System.IO.FileInfo
+Adaptive.Aeron.Aeron.Context.Conclude() -> Adaptive.Aeron.Aeron.Context
+Adaptive.Aeron.Aeron.Context.ConcludeAeronDirectory() -> Adaptive.Aeron.Aeron.Context
+Adaptive.Aeron.Aeron.Context.Context() -> void
+Adaptive.Aeron.Aeron.Context.CountersMetaDataBuffer() -> Adaptive.Agrona.Concurrent.UnsafeBuffer
+Adaptive.Aeron.Aeron.Context.CountersMetaDataBuffer(Adaptive.Agrona.Concurrent.UnsafeBuffer countersMetaDataBuffer) -> Adaptive.Aeron.Aeron.Context
+Adaptive.Aeron.Aeron.Context.CountersValuesBuffer() -> Adaptive.Agrona.Concurrent.UnsafeBuffer
+Adaptive.Aeron.Aeron.Context.CountersValuesBuffer(Adaptive.Agrona.Concurrent.UnsafeBuffer countersValuesBuffer) -> Adaptive.Aeron.Aeron.Context
+Adaptive.Aeron.Aeron.Context.DeleteAeronDirectory() -> void
+Adaptive.Aeron.Aeron.Context.Dispose() -> void
+Adaptive.Aeron.Aeron.Context.DriverAgentInvoker() -> Adaptive.Agrona.Concurrent.AgentInvoker
+Adaptive.Aeron.Aeron.Context.DriverAgentInvoker(Adaptive.Agrona.Concurrent.AgentInvoker driverAgentInvoker) -> Adaptive.Aeron.Aeron.Context
+Adaptive.Aeron.Aeron.Context.DriverProxy() -> Adaptive.Aeron.DriverProxy
+Adaptive.Aeron.Aeron.Context.DriverTimeoutMs() -> long
+Adaptive.Aeron.Aeron.Context.DriverTimeoutMs(long driverTimeoutMs) -> Adaptive.Aeron.Aeron.Context
+Adaptive.Aeron.Aeron.Context.EnableExperimentalFeatures() -> bool
+Adaptive.Aeron.Aeron.Context.EnableExperimentalFeatures(bool enableExperimentalFeatures) -> Adaptive.Aeron.Aeron.Context
+Adaptive.Aeron.Aeron.Context.EpochClock() -> Adaptive.Agrona.Concurrent.IEpochClock
+Adaptive.Aeron.Aeron.Context.EpochClock(Adaptive.Agrona.Concurrent.IEpochClock clock) -> Adaptive.Aeron.Aeron.Context
+Adaptive.Aeron.Aeron.Context.ErrorHandler() -> Adaptive.Agrona.IErrorHandler
+Adaptive.Aeron.Aeron.Context.ErrorHandler(Adaptive.Agrona.IErrorHandler errorHandler) -> Adaptive.Aeron.Aeron.Context
+Adaptive.Aeron.Aeron.Context.FilePageSize() -> int
+Adaptive.Aeron.Aeron.Context.IdleSleepDurationNs() -> long
+Adaptive.Aeron.Aeron.Context.IdleSleepDurationNs(long idleSleepDurationNs) -> Adaptive.Aeron.Aeron.Context
+Adaptive.Aeron.Aeron.Context.IdleStrategy() -> Adaptive.Agrona.Concurrent.IIdleStrategy
+Adaptive.Aeron.Aeron.Context.IdleStrategy(Adaptive.Agrona.Concurrent.IIdleStrategy idleStrategy) -> Adaptive.Aeron.Aeron.Context
+Adaptive.Aeron.Aeron.Context.InterServiceTimeoutNs() -> long
+Adaptive.Aeron.Aeron.Context.IsConcluded.get -> bool
+Adaptive.Aeron.Aeron.Context.IsDriverActive(long driverTimeoutMs, System.Action<string> logger) -> bool
+Adaptive.Aeron.Aeron.Context.KeepAliveIntervalNs() -> long
+Adaptive.Aeron.Aeron.Context.KeepAliveIntervalNs(long value) -> Adaptive.Aeron.Aeron.Context
+Adaptive.Aeron.Aeron.Context.MapExistingCncFile(System.Action<string> logProgress) -> Adaptive.Agrona.Util.MappedByteBuffer
+Adaptive.Aeron.Aeron.Context.NanoClock() -> Adaptive.Agrona.Concurrent.INanoClock
+Adaptive.Aeron.Aeron.Context.NanoClock(Adaptive.Agrona.Concurrent.INanoClock clock) -> Adaptive.Aeron.Aeron.Context
+Adaptive.Aeron.Aeron.Context.PreTouchMappedMemory() -> bool
+Adaptive.Aeron.Aeron.Context.PreTouchMappedMemory(bool preTouchMappedMemory) -> Adaptive.Aeron.Aeron.Context
+Adaptive.Aeron.Aeron.Context.PublicationErrorFrameHandler() -> Adaptive.Aeron.IPublicationErrorFrameHandler
+Adaptive.Aeron.Aeron.Context.PublicationErrorFrameHandler(Adaptive.Aeron.IPublicationErrorFrameHandler publicationErrorFrameHandler) -> Adaptive.Aeron.Aeron.Context
+Adaptive.Aeron.Aeron.Context.ResourceLingerDurationNs() -> long
+Adaptive.Aeron.Aeron.Context.ResourceLingerDurationNs(long resourceLingerDurationNs) -> Adaptive.Aeron.Aeron.Context
+Adaptive.Aeron.Aeron.Context.SaveErrorLog(System.IO.StreamWriter writer, Adaptive.Agrona.Util.MappedByteBuffer cncByteBuffer) -> int
+Adaptive.Aeron.Aeron.Context.SaveErrorLog(System.IO.StreamWriter writer) -> int
+Adaptive.Aeron.Aeron.Context.SubscriberErrorHandler() -> Adaptive.Agrona.IErrorHandler
+Adaptive.Aeron.Aeron.Context.SubscriberErrorHandler(Adaptive.Agrona.IErrorHandler errorHandler) -> Adaptive.Aeron.Aeron.Context
+Adaptive.Aeron.Aeron.Context.ThreadFactory() -> Adaptive.Agrona.Concurrent.IThreadFactory
+Adaptive.Aeron.Aeron.Context.ThreadFactory(Adaptive.Agrona.Concurrent.IThreadFactory threadFactory) -> Adaptive.Aeron.Aeron.Context
+Adaptive.Aeron.Aeron.Context.ToClientBuffer() -> Adaptive.Agrona.Concurrent.Broadcast.CopyBroadcastReceiver
+Adaptive.Aeron.Aeron.Context.ToDriverBuffer() -> Adaptive.Agrona.Concurrent.RingBuffer.IRingBuffer
+Adaptive.Aeron.Aeron.Context.UnavailableCounterHandler() -> Adaptive.Aeron.UnavailableCounterHandler
+Adaptive.Aeron.Aeron.Context.UnavailableCounterHandler(Adaptive.Aeron.UnavailableCounterHandler handler) -> Adaptive.Aeron.Aeron.Context
+Adaptive.Aeron.Aeron.Context.UnavailableImageHandler() -> Adaptive.Aeron.UnavailableImageHandler
+Adaptive.Aeron.Aeron.Context.UnavailableImageHandler(Adaptive.Aeron.UnavailableImageHandler handler) -> Adaptive.Aeron.Aeron.Context
+Adaptive.Aeron.Aeron.Context.UseConductorAgentInvoker() -> bool
+Adaptive.Aeron.Aeron.Context.UseConductorAgentInvoker(bool useConductorAgentInvoker) -> Adaptive.Aeron.Aeron.Context
+Adaptive.Aeron.Aeron.CountersReader.get -> Adaptive.Agrona.Concurrent.Status.CountersReader
+Adaptive.Aeron.Aeron.Ctx.get -> Adaptive.Aeron.Aeron.Context
+Adaptive.Aeron.Aeron.Dispose() -> void
+Adaptive.Aeron.Aeron.GetCounter(long correlationId) -> Adaptive.Aeron.Counter
+Adaptive.Aeron.Aeron.GetExclusivePublication(long registrationId) -> Adaptive.Aeron.ExclusivePublication
+Adaptive.Aeron.Aeron.GetPublication(long registrationId) -> Adaptive.Aeron.ConcurrentPublication
+Adaptive.Aeron.Aeron.GetSubscription(long registrationId) -> Adaptive.Aeron.Subscription
+Adaptive.Aeron.Aeron.HasActiveCommands() -> bool
+Adaptive.Aeron.Aeron.IsClosed.get -> bool
+Adaptive.Aeron.Aeron.IsCommandActive(long correlationId) -> bool
+Adaptive.Aeron.Aeron.NextCorrelationId() -> long
+Adaptive.Aeron.Aeron.NextSessionId(int streamId) -> int
+Adaptive.Aeron.Aeron.PrintCounters(System.IO.StreamWriter out) -> void
+Adaptive.Aeron.Aeron.RemoveAvailableCounterHandler(Adaptive.Aeron.AvailableCounterHandler handler) -> bool
+Adaptive.Aeron.Aeron.RemoveAvailableCounterHandler(long registrationId) -> bool
+Adaptive.Aeron.Aeron.RemoveCloseHandler(long registrationId) -> bool
+Adaptive.Aeron.Aeron.RemoveCloseHandler(System.Action handler) -> bool
+Adaptive.Aeron.Aeron.RemoveUnavailableCounterHandler(Adaptive.Aeron.UnavailableCounterHandler handler) -> bool
+Adaptive.Aeron.Aeron.RemoveUnavailableCounterHandler(long registrationId) -> bool
+Adaptive.Aeron.AeronCounters
+Adaptive.Aeron.AeronThrowHelper
+Adaptive.Aeron.AeronThrowHelper.AeronThrowHelper() -> void
+Adaptive.Aeron.AeronVersion
+Adaptive.Aeron.AeronVersion.AeronVersion() -> void
+Adaptive.Aeron.AvailableCounterHandler
+Adaptive.Aeron.AvailableImageHandler
+Adaptive.Aeron.BufferBuilder
+Adaptive.Aeron.BufferBuilder.Append(Adaptive.Agrona.IDirectBuffer srcBuffer, int srcOffset, int length) -> Adaptive.Aeron.BufferBuilder
+Adaptive.Aeron.BufferBuilder.Buffer() -> Adaptive.Agrona.IMutableDirectBuffer
+Adaptive.Aeron.BufferBuilder.BufferBuilder() -> void
+Adaptive.Aeron.BufferBuilder.BufferBuilder(int initialCapacity) -> void
+Adaptive.Aeron.BufferBuilder.Capacity() -> int
+Adaptive.Aeron.BufferBuilder.CaptureHeader(Adaptive.Aeron.LogBuffer.Header header) -> Adaptive.Aeron.BufferBuilder
+Adaptive.Aeron.BufferBuilder.Compact() -> Adaptive.Aeron.BufferBuilder
+Adaptive.Aeron.BufferBuilder.CompleteHeader(Adaptive.Aeron.LogBuffer.Header header) -> Adaptive.Aeron.LogBuffer.Header
+Adaptive.Aeron.BufferBuilder.Limit() -> int
+Adaptive.Aeron.BufferBuilder.Limit(int limit) -> void
+Adaptive.Aeron.BufferBuilder.NextTermOffset() -> int
+Adaptive.Aeron.BufferBuilder.NextTermOffset(int offset) -> void
+Adaptive.Aeron.BufferBuilder.Reset() -> Adaptive.Aeron.BufferBuilder
+Adaptive.Aeron.ChannelUri
+Adaptive.Aeron.ChannelUri.ChannelTag() -> string
+Adaptive.Aeron.ChannelUri.ChannelUri(string prefix, string media, Adaptive.Agrona.Collections.Map<string, string> params) -> void
+Adaptive.Aeron.ChannelUri.ContainsKey(string key) -> bool
+Adaptive.Aeron.ChannelUri.EntityTag() -> string
+Adaptive.Aeron.ChannelUri.ForEachParameter(System.Action<string, string> consumer) -> void
+Adaptive.Aeron.ChannelUri.Get(string key, string defaultValue) -> string
+Adaptive.Aeron.ChannelUri.Get(string key) -> string
+Adaptive.Aeron.ChannelUri.HasControlModeResponse() -> bool
+Adaptive.Aeron.ChannelUri.InitialPosition(long position, int initialTermId, int termLength) -> void
+Adaptive.Aeron.ChannelUri.IsIpc.get -> bool
+Adaptive.Aeron.ChannelUri.IsUdp.get -> bool
+Adaptive.Aeron.ChannelUri.Media() -> string
+Adaptive.Aeron.ChannelUri.Media(string media) -> Adaptive.Aeron.ChannelUri
+Adaptive.Aeron.ChannelUri.Prefix() -> string
+Adaptive.Aeron.ChannelUri.Prefix(string prefix) -> Adaptive.Aeron.ChannelUri
+Adaptive.Aeron.ChannelUri.Put(string key, string value) -> string
+Adaptive.Aeron.ChannelUri.Remove(string key) -> string
+Adaptive.Aeron.ChannelUri.ReplaceEndpointWildcardPort(string resolvedEndpoint) -> void
+Adaptive.Aeron.ChannelUri.Scheme() -> string
+Adaptive.Aeron.ChannelUriStringBuilder
+Adaptive.Aeron.ChannelUriStringBuilder.Alias() -> string
+Adaptive.Aeron.ChannelUriStringBuilder.Alias(Adaptive.Aeron.ChannelUri channelUri) -> Adaptive.Aeron.ChannelUriStringBuilder
+Adaptive.Aeron.ChannelUriStringBuilder.Alias(string alias) -> Adaptive.Aeron.ChannelUriStringBuilder
+Adaptive.Aeron.ChannelUriStringBuilder.Build() -> string
+Adaptive.Aeron.ChannelUriStringBuilder.ChannelReceiveTimestampOffset() -> string
+Adaptive.Aeron.ChannelUriStringBuilder.ChannelReceiveTimestampOffset(Adaptive.Aeron.ChannelUri channelUri) -> Adaptive.Aeron.ChannelUriStringBuilder
+Adaptive.Aeron.ChannelUriStringBuilder.ChannelReceiveTimestampOffset(string timestampOffset) -> Adaptive.Aeron.ChannelUriStringBuilder
+Adaptive.Aeron.ChannelUriStringBuilder.ChannelSendTimestampOffset() -> string
+Adaptive.Aeron.ChannelUriStringBuilder.ChannelSendTimestampOffset(Adaptive.Aeron.ChannelUri channelUri) -> Adaptive.Aeron.ChannelUriStringBuilder
+Adaptive.Aeron.ChannelUriStringBuilder.ChannelSendTimestampOffset(string timestampOffset) -> Adaptive.Aeron.ChannelUriStringBuilder
+Adaptive.Aeron.ChannelUriStringBuilder.ChannelUriStringBuilder() -> void
+Adaptive.Aeron.ChannelUriStringBuilder.ChannelUriStringBuilder(Adaptive.Aeron.ChannelUri channelUri) -> void
+Adaptive.Aeron.ChannelUriStringBuilder.ChannelUriStringBuilder(string initialUri) -> void
+Adaptive.Aeron.ChannelUriStringBuilder.Clear() -> Adaptive.Aeron.ChannelUriStringBuilder
+Adaptive.Aeron.ChannelUriStringBuilder.CongestionControl() -> string
+Adaptive.Aeron.ChannelUriStringBuilder.CongestionControl(Adaptive.Aeron.ChannelUri channelUri) -> Adaptive.Aeron.ChannelUriStringBuilder
+Adaptive.Aeron.ChannelUriStringBuilder.CongestionControl(string congestionControl) -> Adaptive.Aeron.ChannelUriStringBuilder
+Adaptive.Aeron.ChannelUriStringBuilder.ControlEndpoint() -> string
+Adaptive.Aeron.ChannelUriStringBuilder.ControlEndpoint(Adaptive.Aeron.ChannelUri channelUri) -> Adaptive.Aeron.ChannelUriStringBuilder
+Adaptive.Aeron.ChannelUriStringBuilder.ControlEndpoint(string controlEndpoint) -> Adaptive.Aeron.ChannelUriStringBuilder
+Adaptive.Aeron.ChannelUriStringBuilder.ControlMode() -> string
+Adaptive.Aeron.ChannelUriStringBuilder.ControlMode(Adaptive.Aeron.ChannelUri channelUri) -> Adaptive.Aeron.ChannelUriStringBuilder
+Adaptive.Aeron.ChannelUriStringBuilder.ControlMode(string controlMode) -> Adaptive.Aeron.ChannelUriStringBuilder
+Adaptive.Aeron.ChannelUriStringBuilder.Endpoint() -> string
+Adaptive.Aeron.ChannelUriStringBuilder.Endpoint(Adaptive.Aeron.ChannelUri channelUri) -> Adaptive.Aeron.ChannelUriStringBuilder
+Adaptive.Aeron.ChannelUriStringBuilder.Endpoint(string endpoint) -> Adaptive.Aeron.ChannelUriStringBuilder
+Adaptive.Aeron.ChannelUriStringBuilder.Eos() -> bool?
+Adaptive.Aeron.ChannelUriStringBuilder.Eos(Adaptive.Aeron.ChannelUri channelUri) -> Adaptive.Aeron.ChannelUriStringBuilder
+Adaptive.Aeron.ChannelUriStringBuilder.Eos(bool? eos) -> Adaptive.Aeron.ChannelUriStringBuilder
+Adaptive.Aeron.ChannelUriStringBuilder.FlowControl() -> string
+Adaptive.Aeron.ChannelUriStringBuilder.FlowControl(Adaptive.Aeron.ChannelUri channelUri) -> Adaptive.Aeron.ChannelUriStringBuilder
+Adaptive.Aeron.ChannelUriStringBuilder.FlowControl(string flowControl) -> Adaptive.Aeron.ChannelUriStringBuilder
+Adaptive.Aeron.ChannelUriStringBuilder.Group() -> bool?
+Adaptive.Aeron.ChannelUriStringBuilder.Group(Adaptive.Aeron.ChannelUri channelUri) -> Adaptive.Aeron.ChannelUriStringBuilder
+Adaptive.Aeron.ChannelUriStringBuilder.Group(bool? group) -> Adaptive.Aeron.ChannelUriStringBuilder
+Adaptive.Aeron.ChannelUriStringBuilder.GroupTag() -> long?
+Adaptive.Aeron.ChannelUriStringBuilder.GroupTag(Adaptive.Aeron.ChannelUri channelUri) -> Adaptive.Aeron.ChannelUriStringBuilder
+Adaptive.Aeron.ChannelUriStringBuilder.GroupTag(long? groupTag) -> Adaptive.Aeron.ChannelUriStringBuilder
+Adaptive.Aeron.ChannelUriStringBuilder.InitialPosition(long position, int initialTermId, int termLength) -> Adaptive.Aeron.ChannelUriStringBuilder
+Adaptive.Aeron.ChannelUriStringBuilder.InitialTermId() -> int?
+Adaptive.Aeron.ChannelUriStringBuilder.InitialTermId(Adaptive.Aeron.ChannelUri channelUri) -> Adaptive.Aeron.ChannelUriStringBuilder
+Adaptive.Aeron.ChannelUriStringBuilder.InitialTermId(int? initialTermId) -> Adaptive.Aeron.ChannelUriStringBuilder
+Adaptive.Aeron.ChannelUriStringBuilder.IsSessionIdTagged() -> bool
+Adaptive.Aeron.ChannelUriStringBuilder.IsSessionIdTagged(bool isSessionIdTagged) -> Adaptive.Aeron.ChannelUriStringBuilder
+Adaptive.Aeron.ChannelUriStringBuilder.Linger() -> long?
+Adaptive.Aeron.ChannelUriStringBuilder.Linger(Adaptive.Aeron.ChannelUri channelUri) -> Adaptive.Aeron.ChannelUriStringBuilder
+Adaptive.Aeron.ChannelUriStringBuilder.Linger(long? lingerNs) -> Adaptive.Aeron.ChannelUriStringBuilder
+Adaptive.Aeron.ChannelUriStringBuilder.MaxResend() -> int?
+Adaptive.Aeron.ChannelUriStringBuilder.MaxResend(Adaptive.Aeron.ChannelUri channelUri) -> Adaptive.Aeron.ChannelUriStringBuilder
+Adaptive.Aeron.ChannelUriStringBuilder.MaxResend(int? maxResend) -> Adaptive.Aeron.ChannelUriStringBuilder
+Adaptive.Aeron.ChannelUriStringBuilder.Media() -> string
+Adaptive.Aeron.ChannelUriStringBuilder.Media(Adaptive.Aeron.ChannelUri channelUri) -> Adaptive.Aeron.ChannelUriStringBuilder
+Adaptive.Aeron.ChannelUriStringBuilder.Media(string media) -> Adaptive.Aeron.ChannelUriStringBuilder
+Adaptive.Aeron.ChannelUriStringBuilder.MediaReceiveTimestampOffset() -> string
+Adaptive.Aeron.ChannelUriStringBuilder.MediaReceiveTimestampOffset(Adaptive.Aeron.ChannelUri channelUri) -> Adaptive.Aeron.ChannelUriStringBuilder
+Adaptive.Aeron.ChannelUriStringBuilder.MediaReceiveTimestampOffset(string timestampOffset) -> Adaptive.Aeron.ChannelUriStringBuilder
+Adaptive.Aeron.ChannelUriStringBuilder.MinFlowControl(int? minGroupSize, string timeout) -> Adaptive.Aeron.ChannelUriStringBuilder
+Adaptive.Aeron.ChannelUriStringBuilder.Mtu() -> int?
+Adaptive.Aeron.ChannelUriStringBuilder.Mtu(Adaptive.Aeron.ChannelUri channelUri) -> Adaptive.Aeron.ChannelUriStringBuilder
+Adaptive.Aeron.ChannelUriStringBuilder.Mtu(int? mtu) -> Adaptive.Aeron.ChannelUriStringBuilder
+Adaptive.Aeron.ChannelUriStringBuilder.NakDelay() -> long?
+Adaptive.Aeron.ChannelUriStringBuilder.NakDelay(Adaptive.Aeron.ChannelUri channelUri) -> Adaptive.Aeron.ChannelUriStringBuilder
+Adaptive.Aeron.ChannelUriStringBuilder.NakDelay(string nakDelay) -> Adaptive.Aeron.ChannelUriStringBuilder
+Adaptive.Aeron.ChannelUriStringBuilder.NetworkInterface() -> string
+Adaptive.Aeron.ChannelUriStringBuilder.NetworkInterface(Adaptive.Aeron.ChannelUri channelUri) -> Adaptive.Aeron.ChannelUriStringBuilder
+Adaptive.Aeron.ChannelUriStringBuilder.NetworkInterface(string networkInterface) -> Adaptive.Aeron.ChannelUriStringBuilder
+Adaptive.Aeron.ChannelUriStringBuilder.Prefix() -> string
+Adaptive.Aeron.ChannelUriStringBuilder.Prefix(Adaptive.Aeron.ChannelUri channelUri) -> Adaptive.Aeron.ChannelUriStringBuilder
+Adaptive.Aeron.ChannelUriStringBuilder.Prefix(string prefix) -> Adaptive.Aeron.ChannelUriStringBuilder
+Adaptive.Aeron.ChannelUriStringBuilder.PublicationWindowLength() -> int?
+Adaptive.Aeron.ChannelUriStringBuilder.PublicationWindowLength(Adaptive.Aeron.ChannelUri channelUri) -> Adaptive.Aeron.ChannelUriStringBuilder
+Adaptive.Aeron.ChannelUriStringBuilder.PublicationWindowLength(int? publicationWindowLength) -> Adaptive.Aeron.ChannelUriStringBuilder
+Adaptive.Aeron.ChannelUriStringBuilder.ReceiverWindowLength() -> int?
+Adaptive.Aeron.ChannelUriStringBuilder.ReceiverWindowLength(Adaptive.Aeron.ChannelUri channelUri) -> Adaptive.Aeron.ChannelUriStringBuilder
+Adaptive.Aeron.ChannelUriStringBuilder.ReceiverWindowLength(int? receiverWindowLength) -> Adaptive.Aeron.ChannelUriStringBuilder
+Adaptive.Aeron.ChannelUriStringBuilder.Rejoin() -> bool?
+Adaptive.Aeron.ChannelUriStringBuilder.Rejoin(Adaptive.Aeron.ChannelUri channelUri) -> Adaptive.Aeron.ChannelUriStringBuilder
+Adaptive.Aeron.ChannelUriStringBuilder.Rejoin(bool? rejoin) -> Adaptive.Aeron.ChannelUriStringBuilder
+Adaptive.Aeron.ChannelUriStringBuilder.Reliable() -> bool?
+Adaptive.Aeron.ChannelUriStringBuilder.Reliable(Adaptive.Aeron.ChannelUri channelUri) -> Adaptive.Aeron.ChannelUriStringBuilder
+Adaptive.Aeron.ChannelUriStringBuilder.Reliable(bool? isReliable) -> Adaptive.Aeron.ChannelUriStringBuilder
+Adaptive.Aeron.ChannelUriStringBuilder.ResponseCorrelationId() -> string
+Adaptive.Aeron.ChannelUriStringBuilder.ResponseCorrelationId(Adaptive.Aeron.ChannelUri channelUri) -> Adaptive.Aeron.ChannelUriStringBuilder
+Adaptive.Aeron.ChannelUriStringBuilder.ResponseCorrelationId(long? responseCorrelationId) -> Adaptive.Aeron.ChannelUriStringBuilder
+Adaptive.Aeron.ChannelUriStringBuilder.ResponseCorrelationId(string responseCorrelationId) -> Adaptive.Aeron.ChannelUriStringBuilder
+Adaptive.Aeron.ChannelUriStringBuilder.ResponseEndpoint() -> string
+Adaptive.Aeron.ChannelUriStringBuilder.ResponseEndpoint(Adaptive.Aeron.ChannelUri channelUri) -> Adaptive.Aeron.ChannelUriStringBuilder
+Adaptive.Aeron.ChannelUriStringBuilder.ResponseEndpoint(string responseEndpoint) -> Adaptive.Aeron.ChannelUriStringBuilder
+Adaptive.Aeron.ChannelUriStringBuilder.SessionId() -> int?
+Adaptive.Aeron.ChannelUriStringBuilder.SessionId(Adaptive.Aeron.ChannelUri channelUri) -> Adaptive.Aeron.ChannelUriStringBuilder
+Adaptive.Aeron.ChannelUriStringBuilder.SessionId(int? sessionId) -> Adaptive.Aeron.ChannelUriStringBuilder
+Adaptive.Aeron.ChannelUriStringBuilder.SessionId(string sessionIdStr) -> Adaptive.Aeron.ChannelUriStringBuilder
+Adaptive.Aeron.ChannelUriStringBuilder.SocketRcvbufLength() -> int?
+Adaptive.Aeron.ChannelUriStringBuilder.SocketRcvbufLength(Adaptive.Aeron.ChannelUri channelUri) -> Adaptive.Aeron.ChannelUriStringBuilder
+Adaptive.Aeron.ChannelUriStringBuilder.SocketRcvbufLength(int? socketRcvbufLength) -> Adaptive.Aeron.ChannelUriStringBuilder
+Adaptive.Aeron.ChannelUriStringBuilder.SocketSndbufLength() -> int?
+Adaptive.Aeron.ChannelUriStringBuilder.SocketSndbufLength(Adaptive.Aeron.ChannelUri channelUri) -> Adaptive.Aeron.ChannelUriStringBuilder
+Adaptive.Aeron.ChannelUriStringBuilder.SocketSndbufLength(int? socketSndbufLength) -> Adaptive.Aeron.ChannelUriStringBuilder
+Adaptive.Aeron.ChannelUriStringBuilder.Sparse() -> bool?
+Adaptive.Aeron.ChannelUriStringBuilder.Sparse(Adaptive.Aeron.ChannelUri channelUri) -> Adaptive.Aeron.ChannelUriStringBuilder
+Adaptive.Aeron.ChannelUriStringBuilder.Sparse(bool? isSparse) -> Adaptive.Aeron.ChannelUriStringBuilder
+Adaptive.Aeron.ChannelUriStringBuilder.SpiesSimulateConnection() -> bool?
+Adaptive.Aeron.ChannelUriStringBuilder.SpiesSimulateConnection(Adaptive.Aeron.ChannelUri channelUri) -> Adaptive.Aeron.ChannelUriStringBuilder
+Adaptive.Aeron.ChannelUriStringBuilder.SpiesSimulateConnection(bool? spiesSimulateConnection) -> Adaptive.Aeron.ChannelUriStringBuilder
+Adaptive.Aeron.ChannelUriStringBuilder.StreamId() -> int?
+Adaptive.Aeron.ChannelUriStringBuilder.StreamId(Adaptive.Aeron.ChannelUri channelUri) -> Adaptive.Aeron.ChannelUriStringBuilder
+Adaptive.Aeron.ChannelUriStringBuilder.StreamId(int? streamId) -> Adaptive.Aeron.ChannelUriStringBuilder
+Adaptive.Aeron.ChannelUriStringBuilder.TaggedFlowControl(long? groupTag, int? minGroupSize, string timeout) -> Adaptive.Aeron.ChannelUriStringBuilder
+Adaptive.Aeron.ChannelUriStringBuilder.TaggedSessionId(long? sessionId) -> Adaptive.Aeron.ChannelUriStringBuilder
+Adaptive.Aeron.ChannelUriStringBuilder.Tags() -> string
+Adaptive.Aeron.ChannelUriStringBuilder.Tags(Adaptive.Aeron.ChannelUri channelUri) -> Adaptive.Aeron.ChannelUriStringBuilder
+Adaptive.Aeron.ChannelUriStringBuilder.Tags(long? channelTag, long? pubSubTag) -> Adaptive.Aeron.ChannelUriStringBuilder
+Adaptive.Aeron.ChannelUriStringBuilder.Tags(string tags) -> Adaptive.Aeron.ChannelUriStringBuilder
+Adaptive.Aeron.ChannelUriStringBuilder.TermId() -> int?
+Adaptive.Aeron.ChannelUriStringBuilder.TermId(Adaptive.Aeron.ChannelUri channelUri) -> Adaptive.Aeron.ChannelUriStringBuilder
+Adaptive.Aeron.ChannelUriStringBuilder.TermId(int? termId) -> Adaptive.Aeron.ChannelUriStringBuilder
+Adaptive.Aeron.ChannelUriStringBuilder.TermLength() -> int?
+Adaptive.Aeron.ChannelUriStringBuilder.TermLength(Adaptive.Aeron.ChannelUri channelUri) -> Adaptive.Aeron.ChannelUriStringBuilder
+Adaptive.Aeron.ChannelUriStringBuilder.TermLength(int? termLength) -> Adaptive.Aeron.ChannelUriStringBuilder
+Adaptive.Aeron.ChannelUriStringBuilder.TermOffset() -> int?
+Adaptive.Aeron.ChannelUriStringBuilder.TermOffset(Adaptive.Aeron.ChannelUri channelUri) -> Adaptive.Aeron.ChannelUriStringBuilder
+Adaptive.Aeron.ChannelUriStringBuilder.TermOffset(int? termOffset) -> Adaptive.Aeron.ChannelUriStringBuilder
+Adaptive.Aeron.ChannelUriStringBuilder.Tether() -> bool?
+Adaptive.Aeron.ChannelUriStringBuilder.Tether(Adaptive.Aeron.ChannelUri channelUri) -> Adaptive.Aeron.ChannelUriStringBuilder
+Adaptive.Aeron.ChannelUriStringBuilder.Tether(bool? tether) -> Adaptive.Aeron.ChannelUriStringBuilder
+Adaptive.Aeron.ChannelUriStringBuilder.Ttl() -> int?
+Adaptive.Aeron.ChannelUriStringBuilder.Ttl(Adaptive.Aeron.ChannelUri channelUri) -> Adaptive.Aeron.ChannelUriStringBuilder
+Adaptive.Aeron.ChannelUriStringBuilder.Ttl(int? ttl) -> Adaptive.Aeron.ChannelUriStringBuilder
+Adaptive.Aeron.ChannelUriStringBuilder.UntetheredLingerTimeout(Adaptive.Aeron.ChannelUri channelUri) -> Adaptive.Aeron.ChannelUriStringBuilder
+Adaptive.Aeron.ChannelUriStringBuilder.UntetheredLingerTimeout(string timeout) -> Adaptive.Aeron.ChannelUriStringBuilder
+Adaptive.Aeron.ChannelUriStringBuilder.UntetheredLingerTimeoutNs() -> long?
+Adaptive.Aeron.ChannelUriStringBuilder.UntetheredLingerTimeoutNs(long? timeout) -> Adaptive.Aeron.ChannelUriStringBuilder
+Adaptive.Aeron.ChannelUriStringBuilder.UntetheredRestingTimeout(Adaptive.Aeron.ChannelUri channelUri) -> Adaptive.Aeron.ChannelUriStringBuilder
+Adaptive.Aeron.ChannelUriStringBuilder.UntetheredRestingTimeout(string timeout) -> Adaptive.Aeron.ChannelUriStringBuilder
+Adaptive.Aeron.ChannelUriStringBuilder.UntetheredRestingTimeoutNs() -> long?
+Adaptive.Aeron.ChannelUriStringBuilder.UntetheredRestingTimeoutNs(long? timeout) -> Adaptive.Aeron.ChannelUriStringBuilder
+Adaptive.Aeron.ChannelUriStringBuilder.UntetheredWindowLimitTimeout(Adaptive.Aeron.ChannelUri channelUri) -> Adaptive.Aeron.ChannelUriStringBuilder
+Adaptive.Aeron.ChannelUriStringBuilder.UntetheredWindowLimitTimeout(string timeout) -> Adaptive.Aeron.ChannelUriStringBuilder
+Adaptive.Aeron.ChannelUriStringBuilder.UntetheredWindowLimitTimeoutNs() -> long?
+Adaptive.Aeron.ChannelUriStringBuilder.UntetheredWindowLimitTimeoutNs(long? timeout) -> Adaptive.Aeron.ChannelUriStringBuilder
+Adaptive.Aeron.ChannelUriStringBuilder.Validate() -> Adaptive.Aeron.ChannelUriStringBuilder
+Adaptive.Aeron.CncFileDescriptor
+Adaptive.Aeron.CncFileDescriptor.CncFileDescriptor() -> void
+Adaptive.Aeron.Command.ClientTimeoutFlyweight
+Adaptive.Aeron.Command.ClientTimeoutFlyweight.ClientId() -> long
+Adaptive.Aeron.Command.ClientTimeoutFlyweight.ClientId(long clientId) -> Adaptive.Aeron.Command.ClientTimeoutFlyweight
+Adaptive.Aeron.Command.ClientTimeoutFlyweight.ClientTimeoutFlyweight() -> void
+Adaptive.Aeron.Command.ClientTimeoutFlyweight.Wrap(Adaptive.Agrona.IMutableDirectBuffer buffer, int offset) -> Adaptive.Aeron.Command.ClientTimeoutFlyweight
+Adaptive.Aeron.Command.ControlProtocolEvents
+Adaptive.Aeron.Command.ControlProtocolEvents.ControlProtocolEvents() -> void
+Adaptive.Aeron.Command.CorrelatedMessageFlyweight
+Adaptive.Aeron.Command.CorrelatedMessageFlyweight.ClientId() -> long
+Adaptive.Aeron.Command.CorrelatedMessageFlyweight.ClientId(long clientId) -> Adaptive.Aeron.Command.CorrelatedMessageFlyweight
+Adaptive.Aeron.Command.CorrelatedMessageFlyweight.CorrelatedMessageFlyweight() -> void
+Adaptive.Aeron.Command.CorrelatedMessageFlyweight.CorrelationId() -> long
+Adaptive.Aeron.Command.CorrelatedMessageFlyweight.CorrelationId(long correlationId) -> Adaptive.Aeron.Command.CorrelatedMessageFlyweight
+Adaptive.Aeron.Command.CorrelatedMessageFlyweight.ValidateLength(int msgTypeId, int length) -> void
+Adaptive.Aeron.Command.CorrelatedMessageFlyweight.Wrap(Adaptive.Agrona.IMutableDirectBuffer buffer, int offset) -> Adaptive.Aeron.Command.CorrelatedMessageFlyweight
+Adaptive.Aeron.Command.CounterMessageFlyweight
+Adaptive.Aeron.Command.CounterMessageFlyweight.CounterMessageFlyweight() -> void
+Adaptive.Aeron.Command.CounterMessageFlyweight.KeyBuffer(Adaptive.Agrona.IDirectBuffer keyBuffer, int keyOffset, int keyLength) -> Adaptive.Aeron.Command.CounterMessageFlyweight
+Adaptive.Aeron.Command.CounterMessageFlyweight.KeyBufferLength() -> int
+Adaptive.Aeron.Command.CounterMessageFlyweight.KeyBufferOffset() -> int
+Adaptive.Aeron.Command.CounterMessageFlyweight.Label(string label) -> Adaptive.Aeron.Command.CounterMessageFlyweight
+Adaptive.Aeron.Command.CounterMessageFlyweight.LabelBuffer(Adaptive.Agrona.IDirectBuffer labelBuffer, int labelOffset, int labelLength) -> Adaptive.Aeron.Command.CounterMessageFlyweight
+Adaptive.Aeron.Command.CounterMessageFlyweight.LabelBufferLength() -> int
+Adaptive.Aeron.Command.CounterMessageFlyweight.LabelBufferOffset() -> int
+Adaptive.Aeron.Command.CounterMessageFlyweight.Length() -> int
+Adaptive.Aeron.Command.CounterMessageFlyweight.TypeId() -> int
+Adaptive.Aeron.Command.CounterMessageFlyweight.TypeId(int typeId) -> Adaptive.Aeron.Command.CounterMessageFlyweight
+Adaptive.Aeron.Command.CounterMessageFlyweight.Wrap(Adaptive.Agrona.IMutableDirectBuffer buffer, int offset) -> Adaptive.Aeron.Command.CounterMessageFlyweight
+Adaptive.Aeron.Command.CounterUpdateFlyweight
+Adaptive.Aeron.Command.CounterUpdateFlyweight.CorrelationId() -> long
+Adaptive.Aeron.Command.CounterUpdateFlyweight.CorrelationId(long correlationId) -> Adaptive.Aeron.Command.CounterUpdateFlyweight
+Adaptive.Aeron.Command.CounterUpdateFlyweight.CounterId() -> int
+Adaptive.Aeron.Command.CounterUpdateFlyweight.CounterId(int counterId) -> Adaptive.Aeron.Command.CounterUpdateFlyweight
+Adaptive.Aeron.Command.CounterUpdateFlyweight.CounterUpdateFlyweight() -> void
+Adaptive.Aeron.Command.CounterUpdateFlyweight.Wrap(Adaptive.Agrona.IMutableDirectBuffer buffer, int offset) -> Adaptive.Aeron.Command.CounterUpdateFlyweight
+Adaptive.Aeron.Command.DestinationByIdMessageFlyweight
+Adaptive.Aeron.Command.DestinationByIdMessageFlyweight.DestinationByIdMessageFlyweight() -> void
+Adaptive.Aeron.Command.DestinationByIdMessageFlyweight.DestinationRegistrationId() -> long
+Adaptive.Aeron.Command.DestinationByIdMessageFlyweight.DestinationRegistrationId(long destinationRegistrationId) -> Adaptive.Aeron.Command.DestinationByIdMessageFlyweight
+Adaptive.Aeron.Command.DestinationByIdMessageFlyweight.ResourceRegistrationId() -> long
+Adaptive.Aeron.Command.DestinationByIdMessageFlyweight.ResourceRegistrationId(long registrationId) -> Adaptive.Aeron.Command.DestinationByIdMessageFlyweight
+Adaptive.Aeron.Command.DestinationByIdMessageFlyweight.ValidateLength(int msgTypeId, int length) -> void
+Adaptive.Aeron.Command.DestinationByIdMessageFlyweight.Wrap(Adaptive.Agrona.IMutableDirectBuffer buffer, int offset) -> Adaptive.Aeron.Command.DestinationByIdMessageFlyweight
+Adaptive.Aeron.Command.DestinationMessageFlyweight
+Adaptive.Aeron.Command.DestinationMessageFlyweight.AppendChannel(System.Text.StringBuilder stringBuilder) -> void
+Adaptive.Aeron.Command.DestinationMessageFlyweight.Channel() -> string
+Adaptive.Aeron.Command.DestinationMessageFlyweight.Channel(string channel) -> Adaptive.Aeron.Command.DestinationMessageFlyweight
+Adaptive.Aeron.Command.DestinationMessageFlyweight.DestinationMessageFlyweight() -> void
+Adaptive.Aeron.Command.DestinationMessageFlyweight.Length() -> int
+Adaptive.Aeron.Command.DestinationMessageFlyweight.RegistrationCorrelationId() -> long
+Adaptive.Aeron.Command.DestinationMessageFlyweight.RegistrationCorrelationId(long correlationId) -> Adaptive.Aeron.Command.DestinationMessageFlyweight
+Adaptive.Aeron.Command.DestinationMessageFlyweight.Wrap(Adaptive.Agrona.IMutableDirectBuffer buffer, int offset) -> Adaptive.Aeron.Command.DestinationMessageFlyweight
+Adaptive.Aeron.Command.ErrorResponseFlyweight
+Adaptive.Aeron.Command.ErrorResponseFlyweight.AppendMessage(System.Text.StringBuilder stringBuilder) -> int
+Adaptive.Aeron.Command.ErrorResponseFlyweight.ErrorCode() -> Adaptive.Aeron.ErrorCode
+Adaptive.Aeron.Command.ErrorResponseFlyweight.ErrorCode(Adaptive.Aeron.ErrorCode code) -> Adaptive.Aeron.Command.ErrorResponseFlyweight
+Adaptive.Aeron.Command.ErrorResponseFlyweight.ErrorCodeValue() -> int
+Adaptive.Aeron.Command.ErrorResponseFlyweight.ErrorMessage() -> string
+Adaptive.Aeron.Command.ErrorResponseFlyweight.ErrorMessage(string message) -> Adaptive.Aeron.Command.ErrorResponseFlyweight
+Adaptive.Aeron.Command.ErrorResponseFlyweight.ErrorResponseFlyweight() -> void
+Adaptive.Aeron.Command.ErrorResponseFlyweight.Length() -> int
+Adaptive.Aeron.Command.ErrorResponseFlyweight.OffendingCommandCorrelationId() -> long
+Adaptive.Aeron.Command.ErrorResponseFlyweight.OffendingCommandCorrelationId(long correlationId) -> Adaptive.Aeron.Command.ErrorResponseFlyweight
+Adaptive.Aeron.Command.ErrorResponseFlyweight.Wrap(Adaptive.Agrona.IMutableDirectBuffer buffer, int offset) -> Adaptive.Aeron.Command.ErrorResponseFlyweight
+Adaptive.Aeron.Command.GetNextAvailableSessionIdMessageFlyweight
+Adaptive.Aeron.Command.GetNextAvailableSessionIdMessageFlyweight.GetNextAvailableSessionIdMessageFlyweight() -> void
+Adaptive.Aeron.Command.GetNextAvailableSessionIdMessageFlyweight.Length() -> int
+Adaptive.Aeron.Command.GetNextAvailableSessionIdMessageFlyweight.StreamId() -> int
+Adaptive.Aeron.Command.GetNextAvailableSessionIdMessageFlyweight.StreamId(int streamId) -> Adaptive.Aeron.Command.GetNextAvailableSessionIdMessageFlyweight
+Adaptive.Aeron.Command.GetNextAvailableSessionIdMessageFlyweight.ValidateLength(int msgTypeId, int length) -> void
+Adaptive.Aeron.Command.GetNextAvailableSessionIdMessageFlyweight.Wrap(Adaptive.Agrona.IMutableDirectBuffer buffer, int offset) -> Adaptive.Aeron.Command.GetNextAvailableSessionIdMessageFlyweight
+Adaptive.Aeron.Command.ImageBuffersReadyFlyweight
+Adaptive.Aeron.Command.ImageBuffersReadyFlyweight.AppendLogFileName(System.Text.StringBuilder stringBuilder) -> void
+Adaptive.Aeron.Command.ImageBuffersReadyFlyweight.AppendSourceIdentity(System.Text.StringBuilder stringBuilder) -> void
+Adaptive.Aeron.Command.ImageBuffersReadyFlyweight.CorrelationId() -> long
+Adaptive.Aeron.Command.ImageBuffersReadyFlyweight.CorrelationId(long correlationId) -> Adaptive.Aeron.Command.ImageBuffersReadyFlyweight
+Adaptive.Aeron.Command.ImageBuffersReadyFlyweight.ImageBuffersReadyFlyweight() -> void
+Adaptive.Aeron.Command.ImageBuffersReadyFlyweight.Length() -> int
+Adaptive.Aeron.Command.ImageBuffersReadyFlyweight.LogFileName() -> string
+Adaptive.Aeron.Command.ImageBuffersReadyFlyweight.LogFileName(string logFileName) -> Adaptive.Aeron.Command.ImageBuffersReadyFlyweight
+Adaptive.Aeron.Command.ImageBuffersReadyFlyweight.SessionId() -> int
+Adaptive.Aeron.Command.ImageBuffersReadyFlyweight.SessionId(int sessionId) -> Adaptive.Aeron.Command.ImageBuffersReadyFlyweight
+Adaptive.Aeron.Command.ImageBuffersReadyFlyweight.SourceIdentity() -> string
+Adaptive.Aeron.Command.ImageBuffersReadyFlyweight.SourceIdentity(string value) -> Adaptive.Aeron.Command.ImageBuffersReadyFlyweight
+Adaptive.Aeron.Command.ImageBuffersReadyFlyweight.StreamId() -> int
+Adaptive.Aeron.Command.ImageBuffersReadyFlyweight.StreamId(int streamId) -> Adaptive.Aeron.Command.ImageBuffersReadyFlyweight
+Adaptive.Aeron.Command.ImageBuffersReadyFlyweight.SubscriberPositionId() -> int
+Adaptive.Aeron.Command.ImageBuffersReadyFlyweight.SubscriberPositionId(int id) -> Adaptive.Aeron.Command.ImageBuffersReadyFlyweight
+Adaptive.Aeron.Command.ImageBuffersReadyFlyweight.SubscriptionRegistrationId() -> long
+Adaptive.Aeron.Command.ImageBuffersReadyFlyweight.SubscriptionRegistrationId(long id) -> Adaptive.Aeron.Command.ImageBuffersReadyFlyweight
+Adaptive.Aeron.Command.ImageBuffersReadyFlyweight.Wrap(Adaptive.Agrona.IMutableDirectBuffer buffer, int offset) -> Adaptive.Aeron.Command.ImageBuffersReadyFlyweight
+Adaptive.Aeron.Command.ImageMessageFlyweight
+Adaptive.Aeron.Command.ImageMessageFlyweight.AppendChannel(System.Text.StringBuilder stringBuilder) -> void
+Adaptive.Aeron.Command.ImageMessageFlyweight.Channel() -> string
+Adaptive.Aeron.Command.ImageMessageFlyweight.Channel(string channel) -> Adaptive.Aeron.Command.ImageMessageFlyweight
+Adaptive.Aeron.Command.ImageMessageFlyweight.CorrelationId() -> long
+Adaptive.Aeron.Command.ImageMessageFlyweight.CorrelationId(long correlationId) -> Adaptive.Aeron.Command.ImageMessageFlyweight
+Adaptive.Aeron.Command.ImageMessageFlyweight.ImageMessageFlyweight() -> void
+Adaptive.Aeron.Command.ImageMessageFlyweight.Length() -> int
+Adaptive.Aeron.Command.ImageMessageFlyweight.StreamId() -> int
+Adaptive.Aeron.Command.ImageMessageFlyweight.StreamId(int streamId) -> Adaptive.Aeron.Command.ImageMessageFlyweight
+Adaptive.Aeron.Command.ImageMessageFlyweight.SubscriptionRegistrationId() -> long
+Adaptive.Aeron.Command.ImageMessageFlyweight.SubscriptionRegistrationId(long registrationId) -> Adaptive.Aeron.Command.ImageMessageFlyweight
+Adaptive.Aeron.Command.ImageMessageFlyweight.Wrap(Adaptive.Agrona.IMutableDirectBuffer buffer, int offset) -> Adaptive.Aeron.Command.ImageMessageFlyweight
+Adaptive.Aeron.Command.NextAvailableSessionIdFlyweight
+Adaptive.Aeron.Command.NextAvailableSessionIdFlyweight.CorrelationId() -> long
+Adaptive.Aeron.Command.NextAvailableSessionIdFlyweight.CorrelationId(long correlationId) -> Adaptive.Aeron.Command.NextAvailableSessionIdFlyweight
+Adaptive.Aeron.Command.NextAvailableSessionIdFlyweight.NextAvailableSessionIdFlyweight() -> void
+Adaptive.Aeron.Command.NextAvailableSessionIdFlyweight.NextSessionId() -> int
+Adaptive.Aeron.Command.NextAvailableSessionIdFlyweight.NextSessionId(int sessionId) -> Adaptive.Aeron.Command.NextAvailableSessionIdFlyweight
+Adaptive.Aeron.Command.NextAvailableSessionIdFlyweight.Wrap(Adaptive.Agrona.IMutableDirectBuffer buffer, int offset) -> Adaptive.Aeron.Command.NextAvailableSessionIdFlyweight
+Adaptive.Aeron.Command.OperationSucceededFlyweight
+Adaptive.Aeron.Command.OperationSucceededFlyweight.CorrelationId() -> long
+Adaptive.Aeron.Command.OperationSucceededFlyweight.CorrelationId(long correlationId) -> Adaptive.Aeron.Command.OperationSucceededFlyweight
+Adaptive.Aeron.Command.OperationSucceededFlyweight.OperationSucceededFlyweight() -> void
+Adaptive.Aeron.Command.OperationSucceededFlyweight.Wrap(Adaptive.Agrona.IMutableDirectBuffer buffer, int offset) -> Adaptive.Aeron.Command.OperationSucceededFlyweight
+Adaptive.Aeron.Command.PublicationBuffersReadyFlyweight
+Adaptive.Aeron.Command.PublicationBuffersReadyFlyweight.AppendLogFileName(System.Text.StringBuilder stringBuilder) -> void
+Adaptive.Aeron.Command.PublicationBuffersReadyFlyweight.ChannelStatusCounterId() -> int
+Adaptive.Aeron.Command.PublicationBuffersReadyFlyweight.ChannelStatusCounterId(int counterId) -> Adaptive.Aeron.Command.PublicationBuffersReadyFlyweight
+Adaptive.Aeron.Command.PublicationBuffersReadyFlyweight.CorrelationId() -> long
+Adaptive.Aeron.Command.PublicationBuffersReadyFlyweight.CorrelationId(long correlationId) -> Adaptive.Aeron.Command.PublicationBuffersReadyFlyweight
+Adaptive.Aeron.Command.PublicationBuffersReadyFlyweight.Length() -> int
+Adaptive.Aeron.Command.PublicationBuffersReadyFlyweight.LogFileName() -> string
+Adaptive.Aeron.Command.PublicationBuffersReadyFlyweight.LogFileName(string logFileName) -> Adaptive.Aeron.Command.PublicationBuffersReadyFlyweight
+Adaptive.Aeron.Command.PublicationBuffersReadyFlyweight.PublicationBuffersReadyFlyweight() -> void
+Adaptive.Aeron.Command.PublicationBuffersReadyFlyweight.PublicationLimitCounterId() -> int
+Adaptive.Aeron.Command.PublicationBuffersReadyFlyweight.PublicationLimitCounterId(int positionCounterId) -> Adaptive.Aeron.Command.PublicationBuffersReadyFlyweight
+Adaptive.Aeron.Command.PublicationBuffersReadyFlyweight.RegistrationId() -> long
+Adaptive.Aeron.Command.PublicationBuffersReadyFlyweight.RegistrationId(long registrationId) -> Adaptive.Aeron.Command.PublicationBuffersReadyFlyweight
+Adaptive.Aeron.Command.PublicationBuffersReadyFlyweight.SessionId() -> int
+Adaptive.Aeron.Command.PublicationBuffersReadyFlyweight.SessionId(int sessionId) -> Adaptive.Aeron.Command.PublicationBuffersReadyFlyweight
+Adaptive.Aeron.Command.PublicationBuffersReadyFlyweight.StreamId() -> int
+Adaptive.Aeron.Command.PublicationBuffersReadyFlyweight.StreamId(int streamId) -> Adaptive.Aeron.Command.PublicationBuffersReadyFlyweight
+Adaptive.Aeron.Command.PublicationBuffersReadyFlyweight.Wrap(Adaptive.Agrona.IMutableDirectBuffer buffer, int offset) -> Adaptive.Aeron.Command.PublicationBuffersReadyFlyweight
+Adaptive.Aeron.Command.PublicationErrorFrameFlyweight
+Adaptive.Aeron.Command.PublicationErrorFrameFlyweight.DestinationRegistrationId() -> long
+Adaptive.Aeron.Command.PublicationErrorFrameFlyweight.DestinationRegistrationId(long registrationId) -> Adaptive.Aeron.Command.PublicationErrorFrameFlyweight
+Adaptive.Aeron.Command.PublicationErrorFrameFlyweight.ErrorCode() -> Adaptive.Aeron.ErrorCode
+Adaptive.Aeron.Command.PublicationErrorFrameFlyweight.ErrorCode(Adaptive.Aeron.ErrorCode code) -> Adaptive.Aeron.Command.PublicationErrorFrameFlyweight
+Adaptive.Aeron.Command.PublicationErrorFrameFlyweight.ErrorCodeValue() -> int
+Adaptive.Aeron.Command.PublicationErrorFrameFlyweight.ErrorMessage() -> string
+Adaptive.Aeron.Command.PublicationErrorFrameFlyweight.ErrorMessage(string message) -> Adaptive.Aeron.Command.PublicationErrorFrameFlyweight
+Adaptive.Aeron.Command.PublicationErrorFrameFlyweight.GroupTag() -> long
+Adaptive.Aeron.Command.PublicationErrorFrameFlyweight.GroupTag(long groupTag) -> Adaptive.Aeron.Command.PublicationErrorFrameFlyweight
+Adaptive.Aeron.Command.PublicationErrorFrameFlyweight.Length() -> int
+Adaptive.Aeron.Command.PublicationErrorFrameFlyweight.PublicationErrorFrameFlyweight() -> void
+Adaptive.Aeron.Command.PublicationErrorFrameFlyweight.ReceiverId() -> long
+Adaptive.Aeron.Command.PublicationErrorFrameFlyweight.ReceiverId(long receiverId) -> Adaptive.Aeron.Command.PublicationErrorFrameFlyweight
+Adaptive.Aeron.Command.PublicationErrorFrameFlyweight.RegistrationId() -> long
+Adaptive.Aeron.Command.PublicationErrorFrameFlyweight.RegistrationId(long registrationId) -> Adaptive.Aeron.Command.PublicationErrorFrameFlyweight
+Adaptive.Aeron.Command.PublicationErrorFrameFlyweight.SessionId() -> int
+Adaptive.Aeron.Command.PublicationErrorFrameFlyweight.SessionId(int sessionId) -> Adaptive.Aeron.Command.PublicationErrorFrameFlyweight
+Adaptive.Aeron.Command.PublicationErrorFrameFlyweight.SourceAddress() -> System.Net.IPEndPoint
+Adaptive.Aeron.Command.PublicationErrorFrameFlyweight.StreamId() -> int
+Adaptive.Aeron.Command.PublicationErrorFrameFlyweight.StreamId(int streamId) -> Adaptive.Aeron.Command.PublicationErrorFrameFlyweight
+Adaptive.Aeron.Command.PublicationErrorFrameFlyweight.Wrap(Adaptive.Agrona.IMutableDirectBuffer buffer, int offset) -> Adaptive.Aeron.Command.PublicationErrorFrameFlyweight
+Adaptive.Aeron.Command.PublicationMessageFlyweight
+Adaptive.Aeron.Command.PublicationMessageFlyweight.AppendChannel(System.Text.StringBuilder stringBuilder) -> void
+Adaptive.Aeron.Command.PublicationMessageFlyweight.Channel() -> string
+Adaptive.Aeron.Command.PublicationMessageFlyweight.Channel(string channel) -> Adaptive.Aeron.Command.PublicationMessageFlyweight
+Adaptive.Aeron.Command.PublicationMessageFlyweight.Length() -> int
+Adaptive.Aeron.Command.PublicationMessageFlyweight.PublicationMessageFlyweight() -> void
+Adaptive.Aeron.Command.PublicationMessageFlyweight.StreamId() -> int
+Adaptive.Aeron.Command.PublicationMessageFlyweight.StreamId(int streamId) -> Adaptive.Aeron.Command.PublicationMessageFlyweight
+Adaptive.Aeron.Command.PublicationMessageFlyweight.Wrap(Adaptive.Agrona.IMutableDirectBuffer buffer, int offset) -> Adaptive.Aeron.Command.PublicationMessageFlyweight
+Adaptive.Aeron.Command.RejectImageFlyweight
+Adaptive.Aeron.Command.RejectImageFlyweight.ClientId(long clientId) -> Adaptive.Aeron.Command.RejectImageFlyweight
+Adaptive.Aeron.Command.RejectImageFlyweight.CorrelationId(long correlationId) -> Adaptive.Aeron.Command.RejectImageFlyweight
+Adaptive.Aeron.Command.RejectImageFlyweight.ImageCorrelationId() -> long
+Adaptive.Aeron.Command.RejectImageFlyweight.ImageCorrelationId(long position) -> Adaptive.Aeron.Command.RejectImageFlyweight
+Adaptive.Aeron.Command.RejectImageFlyweight.Position() -> long
+Adaptive.Aeron.Command.RejectImageFlyweight.Position(long position) -> Adaptive.Aeron.Command.RejectImageFlyweight
+Adaptive.Aeron.Command.RejectImageFlyweight.Reason() -> string
+Adaptive.Aeron.Command.RejectImageFlyweight.Reason(string reason) -> Adaptive.Aeron.Command.RejectImageFlyweight
+Adaptive.Aeron.Command.RejectImageFlyweight.ReasonBufferLength() -> int
+Adaptive.Aeron.Command.RejectImageFlyweight.RejectImageFlyweight() -> void
+Adaptive.Aeron.Command.RejectImageFlyweight.ValidateLength(int msgTypeId, int length) -> void
+Adaptive.Aeron.Command.RejectImageFlyweight.Wrap(Adaptive.Agrona.IMutableDirectBuffer buffer, int offset) -> Adaptive.Aeron.Command.RejectImageFlyweight
+Adaptive.Aeron.Command.RemoveCounterFlyweight
+Adaptive.Aeron.Command.RemoveCounterFlyweight.RemoveCounterFlyweight() -> void
+Adaptive.Aeron.Command.RemoveMessageFlyweight
+Adaptive.Aeron.Command.RemoveMessageFlyweight.RegistrationId() -> long
+Adaptive.Aeron.Command.RemoveMessageFlyweight.RegistrationId(long registrationId) -> Adaptive.Aeron.Command.RemoveMessageFlyweight
+Adaptive.Aeron.Command.RemoveMessageFlyweight.RemoveMessageFlyweight() -> void
+Adaptive.Aeron.Command.RemoveMessageFlyweight.ValidateLength(int msgTypeId, int length) -> void
+Adaptive.Aeron.Command.RemoveMessageFlyweight.Wrap(Adaptive.Agrona.IMutableDirectBuffer buffer, int offset) -> Adaptive.Aeron.Command.RemoveMessageFlyweight
+Adaptive.Aeron.Command.RemovePublicationFlyweight
+Adaptive.Aeron.Command.RemovePublicationFlyweight.FlagsFieldIsValid(int messageLength) -> bool
+Adaptive.Aeron.Command.RemovePublicationFlyweight.RemovePublicationFlyweight() -> void
+Adaptive.Aeron.Command.RemovePublicationFlyweight.Revoke() -> bool
+Adaptive.Aeron.Command.RemovePublicationFlyweight.Revoke(bool revoke) -> Adaptive.Aeron.Command.RemovePublicationFlyweight
+Adaptive.Aeron.Command.RemovePublicationFlyweight.Revoke(int messageLength) -> bool
+Adaptive.Aeron.Command.RemovePublicationFlyweight.Wrap(Adaptive.Agrona.IMutableDirectBuffer buffer, int offset) -> Adaptive.Aeron.Command.RemovePublicationFlyweight
+Adaptive.Aeron.Command.RemoveSubscriptionFlyweight
+Adaptive.Aeron.Command.RemoveSubscriptionFlyweight.RemoveSubscriptionFlyweight() -> void
+Adaptive.Aeron.Command.StaticCounterFlyweight
+Adaptive.Aeron.Command.StaticCounterFlyweight.CorrelationId() -> long
+Adaptive.Aeron.Command.StaticCounterFlyweight.CorrelationId(long correlationId) -> Adaptive.Aeron.Command.StaticCounterFlyweight
+Adaptive.Aeron.Command.StaticCounterFlyweight.CounterId() -> int
+Adaptive.Aeron.Command.StaticCounterFlyweight.CounterId(int counterId) -> Adaptive.Aeron.Command.StaticCounterFlyweight
+Adaptive.Aeron.Command.StaticCounterFlyweight.StaticCounterFlyweight() -> void
+Adaptive.Aeron.Command.StaticCounterFlyweight.Wrap(Adaptive.Agrona.IMutableDirectBuffer buffer, int offset) -> Adaptive.Aeron.Command.StaticCounterFlyweight
+Adaptive.Aeron.Command.StaticCounterMessageFlyweight
+Adaptive.Aeron.Command.StaticCounterMessageFlyweight.KeyBuffer(Adaptive.Agrona.IDirectBuffer keyBuffer, int keyOffset, int keyLength) -> Adaptive.Aeron.Command.StaticCounterMessageFlyweight
+Adaptive.Aeron.Command.StaticCounterMessageFlyweight.KeyBufferLength() -> int
+Adaptive.Aeron.Command.StaticCounterMessageFlyweight.KeyBufferOffset() -> int
+Adaptive.Aeron.Command.StaticCounterMessageFlyweight.Label(string label) -> Adaptive.Aeron.Command.StaticCounterMessageFlyweight
+Adaptive.Aeron.Command.StaticCounterMessageFlyweight.LabelBuffer(Adaptive.Agrona.IDirectBuffer labelBuffer, int labelOffset, int labelLength) -> Adaptive.Aeron.Command.StaticCounterMessageFlyweight
+Adaptive.Aeron.Command.StaticCounterMessageFlyweight.LabelBufferLength() -> int
+Adaptive.Aeron.Command.StaticCounterMessageFlyweight.LabelBufferOffset() -> int
+Adaptive.Aeron.Command.StaticCounterMessageFlyweight.Length() -> int
+Adaptive.Aeron.Command.StaticCounterMessageFlyweight.RegistrationId() -> long
+Adaptive.Aeron.Command.StaticCounterMessageFlyweight.RegistrationId(long registrationId) -> Adaptive.Aeron.Command.StaticCounterMessageFlyweight
+Adaptive.Aeron.Command.StaticCounterMessageFlyweight.StaticCounterMessageFlyweight() -> void
+Adaptive.Aeron.Command.StaticCounterMessageFlyweight.TypeId() -> int
+Adaptive.Aeron.Command.StaticCounterMessageFlyweight.TypeId(int typeId) -> Adaptive.Aeron.Command.StaticCounterMessageFlyweight
+Adaptive.Aeron.Command.StaticCounterMessageFlyweight.ValidateLength(int msgTypeId, int length) -> void
+Adaptive.Aeron.Command.StaticCounterMessageFlyweight.Wrap(Adaptive.Agrona.IMutableDirectBuffer buffer, int offset) -> Adaptive.Aeron.Command.StaticCounterMessageFlyweight
+Adaptive.Aeron.Command.SubscriptionMessageFlyweight
+Adaptive.Aeron.Command.SubscriptionMessageFlyweight.AppendChannel(System.Text.StringBuilder stringBuilder) -> void
+Adaptive.Aeron.Command.SubscriptionMessageFlyweight.Channel() -> string
+Adaptive.Aeron.Command.SubscriptionMessageFlyweight.Channel(string channel) -> Adaptive.Aeron.Command.SubscriptionMessageFlyweight
+Adaptive.Aeron.Command.SubscriptionMessageFlyweight.Length() -> int
+Adaptive.Aeron.Command.SubscriptionMessageFlyweight.RegistrationCorrelationId() -> long
+Adaptive.Aeron.Command.SubscriptionMessageFlyweight.RegistrationCorrelationId(long correlationId) -> Adaptive.Aeron.Command.SubscriptionMessageFlyweight
+Adaptive.Aeron.Command.SubscriptionMessageFlyweight.StreamId() -> int
+Adaptive.Aeron.Command.SubscriptionMessageFlyweight.StreamId(int streamId) -> Adaptive.Aeron.Command.SubscriptionMessageFlyweight
+Adaptive.Aeron.Command.SubscriptionMessageFlyweight.SubscriptionMessageFlyweight() -> void
+Adaptive.Aeron.Command.SubscriptionMessageFlyweight.Wrap(Adaptive.Agrona.IMutableDirectBuffer buffer, int offset) -> Adaptive.Aeron.Command.SubscriptionMessageFlyweight
+Adaptive.Aeron.Command.SubscriptionReadyFlyweight
+Adaptive.Aeron.Command.SubscriptionReadyFlyweight.ChannelStatusCounterId() -> int
+Adaptive.Aeron.Command.SubscriptionReadyFlyweight.ChannelStatusCounterId(int counterId) -> Adaptive.Aeron.Command.SubscriptionReadyFlyweight
+Adaptive.Aeron.Command.SubscriptionReadyFlyweight.CorrelationId() -> long
+Adaptive.Aeron.Command.SubscriptionReadyFlyweight.CorrelationId(long correlationId) -> Adaptive.Aeron.Command.SubscriptionReadyFlyweight
+Adaptive.Aeron.Command.SubscriptionReadyFlyweight.SubscriptionReadyFlyweight() -> void
+Adaptive.Aeron.Command.SubscriptionReadyFlyweight.Wrap(Adaptive.Agrona.IMutableDirectBuffer buffer, int offset) -> Adaptive.Aeron.Command.SubscriptionReadyFlyweight
+Adaptive.Aeron.Command.TerminateDriverFlyweight
+Adaptive.Aeron.Command.TerminateDriverFlyweight.Length() -> int
+Adaptive.Aeron.Command.TerminateDriverFlyweight.TerminateDriverFlyweight() -> void
+Adaptive.Aeron.Command.TerminateDriverFlyweight.TokenBuffer(Adaptive.Agrona.IDirectBuffer tokenBuffer, int tokenOffset, int tokenLength) -> Adaptive.Aeron.Command.TerminateDriverFlyweight
+Adaptive.Aeron.Command.TerminateDriverFlyweight.TokenBufferLength() -> int
+Adaptive.Aeron.Command.TerminateDriverFlyweight.TokenBufferOffset() -> int
+Adaptive.Aeron.Command.TerminateDriverFlyweight.Wrap(Adaptive.Agrona.IMutableDirectBuffer buffer, int offset) -> Adaptive.Aeron.Command.TerminateDriverFlyweight
+Adaptive.Aeron.ConcurrentPublication
+Adaptive.Aeron.Config
+Adaptive.Aeron.ControlledFragmentAssembler
+Adaptive.Aeron.ControlledFragmentAssembler.Clear() -> void
+Adaptive.Aeron.ControlledFragmentAssembler.ControlledFragmentAssembler(Adaptive.Aeron.LogBuffer.IControlledFragmentHandler delegate, int initialBufferLength = 0) -> void
+Adaptive.Aeron.ControlledFragmentAssembler.Delegate() -> Adaptive.Aeron.LogBuffer.IControlledFragmentHandler
+Adaptive.Aeron.ControlledFragmentAssembler.FreeSessionBuffer(int sessionId) -> bool
+Adaptive.Aeron.ControlledFragmentAssembler.OnFragment(Adaptive.Agrona.IDirectBuffer buffer, int offset, int length, Adaptive.Aeron.LogBuffer.Header header) -> Adaptive.Aeron.LogBuffer.ControlledFragmentHandlerAction
+Adaptive.Aeron.Counter
+Adaptive.Aeron.Counter.Counter(Adaptive.Agrona.Concurrent.Status.CountersReader countersReader, long registrationId, int counterId) -> void
+Adaptive.Aeron.Counter.RegistrationId.get -> long
+Adaptive.Aeron.DirectBufferVector
+Adaptive.Aeron.DirectBufferVector.Buffer() -> Adaptive.Agrona.IDirectBuffer
+Adaptive.Aeron.DirectBufferVector.Buffer(Adaptive.Agrona.IDirectBuffer buffer) -> Adaptive.Aeron.DirectBufferVector
+Adaptive.Aeron.DirectBufferVector.DirectBufferVector() -> void
+Adaptive.Aeron.DirectBufferVector.DirectBufferVector(Adaptive.Agrona.IDirectBuffer buffer, int offset, int length) -> void
+Adaptive.Aeron.DirectBufferVector.Length() -> int
+Adaptive.Aeron.DirectBufferVector.Length(int length) -> Adaptive.Aeron.DirectBufferVector
+Adaptive.Aeron.DirectBufferVector.Offset() -> int
+Adaptive.Aeron.DirectBufferVector.Offset(int offset) -> Adaptive.Aeron.DirectBufferVector
+Adaptive.Aeron.DirectBufferVector.Reset(Adaptive.Agrona.IDirectBuffer buffer, int offset, int length) -> Adaptive.Aeron.DirectBufferVector
+Adaptive.Aeron.DirectBufferVector.Validate() -> Adaptive.Aeron.DirectBufferVector
+Adaptive.Aeron.DriverProxy
+Adaptive.Aeron.DriverProxy.AddCounter(int typeId, Adaptive.Agrona.IDirectBuffer keyBuffer, int keyOffset, int keyLength, Adaptive.Agrona.IDirectBuffer labelBuffer, int labelOffset, int labelLength) -> long
+Adaptive.Aeron.DriverProxy.AddCounter(int typeId, string label) -> long
+Adaptive.Aeron.DriverProxy.AddDestination(long registrationId, string endpointChannel) -> long
+Adaptive.Aeron.DriverProxy.AddExclusivePublication(string channel, int streamId) -> long
+Adaptive.Aeron.DriverProxy.AddPublication(string channel, int streamId) -> long
+Adaptive.Aeron.DriverProxy.AddRcvDestination(long registrationId, string endpointChannel) -> long
+Adaptive.Aeron.DriverProxy.AddSubscription(string channel, int streamId) -> long
+Adaptive.Aeron.DriverProxy.ClientClose() -> void
+Adaptive.Aeron.DriverProxy.DriverProxy(Adaptive.Agrona.Concurrent.RingBuffer.IRingBuffer toDriverCommandBuffer, long clientId) -> void
+Adaptive.Aeron.DriverProxy.RejectImage(long imageCorrelationId, long position, string reason) -> long
+Adaptive.Aeron.DriverProxy.RemoveCounter(long registrationId) -> long
+Adaptive.Aeron.DriverProxy.RemoveDestination(long publicationRegistrationId, long destinationRegistrationId) -> long
+Adaptive.Aeron.DriverProxy.RemoveDestination(long registrationId, string endpointChannel) -> long
+Adaptive.Aeron.DriverProxy.RemovePublication(long registrationId, bool revoke) -> long
+Adaptive.Aeron.DriverProxy.RemoveRcvDestination(long registrationId, string endpointChannel) -> long
+Adaptive.Aeron.DriverProxy.RemoveSubscription(long registrationId) -> long
+Adaptive.Aeron.DriverProxy.TerminateDriver(Adaptive.Agrona.IDirectBuffer tokenBuffer, int tokenOffset, int tokenLength) -> bool
+Adaptive.Aeron.DriverProxy.TimeOfLastDriverKeepaliveMs() -> long
+Adaptive.Aeron.DutyCycleStallTracker
+Adaptive.Aeron.DutyCycleStallTracker.CycleTimeThresholdExceededCount() -> Adaptive.Agrona.Concurrent.Status.AtomicCounter
+Adaptive.Aeron.DutyCycleStallTracker.CycleTimeThresholdNs() -> long
+Adaptive.Aeron.DutyCycleStallTracker.DutyCycleStallTracker(Adaptive.Agrona.Concurrent.Status.AtomicCounter maxCycleTime, Adaptive.Agrona.Concurrent.Status.AtomicCounter cycleTimeThresholdExceededCount, long cycleTimeThresholdNs) -> void
+Adaptive.Aeron.DutyCycleStallTracker.MaxCycleTime() -> Adaptive.Agrona.Concurrent.Status.AtomicCounter
+Adaptive.Aeron.DutyCycleTracker
+Adaptive.Aeron.DutyCycleTracker.DutyCycleTracker() -> void
+Adaptive.Aeron.DutyCycleTracker.MeasureAndUpdate(long nowNs) -> void
+Adaptive.Aeron.DutyCycleTracker.Update(long nowNs) -> void
+Adaptive.Aeron.EndOfStreamHandler
+Adaptive.Aeron.ErrorCode
+Adaptive.Aeron.ErrorCode.CHANNEL_ENDPOINT_ERROR = 4 -> Adaptive.Aeron.ErrorCode
+Adaptive.Aeron.ErrorCode.GENERIC_ERROR = 11 -> Adaptive.Aeron.ErrorCode
+Adaptive.Aeron.ErrorCode.IMAGE_REJECTED = 13 -> Adaptive.Aeron.ErrorCode
+Adaptive.Aeron.ErrorCode.INVALID_CHANNEL = 1 -> Adaptive.Aeron.ErrorCode
+Adaptive.Aeron.ErrorCode.MALFORMED_COMMAND = 7 -> Adaptive.Aeron.ErrorCode
+Adaptive.Aeron.ErrorCode.NOT_SUPPORTED = 8 -> Adaptive.Aeron.ErrorCode
+Adaptive.Aeron.ErrorCode.PUBLICATION_REVOKED = 14 -> Adaptive.Aeron.ErrorCode
+Adaptive.Aeron.ErrorCode.RESOURCE_TEMPORARILY_UNAVAILABLE = 10 -> Adaptive.Aeron.ErrorCode
+Adaptive.Aeron.ErrorCode.STORAGE_SPACE = 12 -> Adaptive.Aeron.ErrorCode
+Adaptive.Aeron.ErrorCode.UNKNOWN_CODE_VALUE = -1 -> Adaptive.Aeron.ErrorCode
+Adaptive.Aeron.ErrorCode.UNKNOWN_COMMAND_TYPE_ID = 6 -> Adaptive.Aeron.ErrorCode
+Adaptive.Aeron.ErrorCode.UNKNOWN_COUNTER = 5 -> Adaptive.Aeron.ErrorCode
+Adaptive.Aeron.ErrorCode.UNKNOWN_HOST = 9 -> Adaptive.Aeron.ErrorCode
+Adaptive.Aeron.ErrorCode.UNKNOWN_PUBLICATION = 3 -> Adaptive.Aeron.ErrorCode
+Adaptive.Aeron.ErrorCode.UNKNOWN_SUBSCRIPTION = 2 -> Adaptive.Aeron.ErrorCode
+Adaptive.Aeron.ErrorCode.UNUSED = 0 -> Adaptive.Aeron.ErrorCode
+Adaptive.Aeron.Exceptions.AeronEvent
+Adaptive.Aeron.Exceptions.AeronEvent.AeronEvent(string message, Adaptive.Aeron.Exceptions.Category category) -> void
+Adaptive.Aeron.Exceptions.AeronEvent.AeronEvent(string message) -> void
+Adaptive.Aeron.Exceptions.AeronException
+Adaptive.Aeron.Exceptions.AeronException.AddSuppressed(System.Exception exception) -> void
+Adaptive.Aeron.Exceptions.AeronException.AeronException() -> void
+Adaptive.Aeron.Exceptions.AeronException.AeronException(Adaptive.Aeron.Exceptions.Category category) -> void
+Adaptive.Aeron.Exceptions.AeronException.AeronException(string message, Adaptive.Aeron.Exceptions.Category category) -> void
+Adaptive.Aeron.Exceptions.AeronException.AeronException(string message, System.Exception innerException, Adaptive.Aeron.Exceptions.Category category) -> void
+Adaptive.Aeron.Exceptions.AeronException.AeronException(string message, System.Exception innerException) -> void
+Adaptive.Aeron.Exceptions.AeronException.AeronException(string message) -> void
+Adaptive.Aeron.Exceptions.AeronException.AeronException(System.Exception cause) -> void
+Adaptive.Aeron.Exceptions.AeronException.AeronException(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context) -> void
+Adaptive.Aeron.Exceptions.AeronException.Category.get -> Adaptive.Aeron.Exceptions.Category
+Adaptive.Aeron.Exceptions.AeronException.SuppressedExceptions.get -> System.Collections.Generic.List<System.Exception>
+Adaptive.Aeron.Exceptions.AeronTimeoutException
+Adaptive.Aeron.Exceptions.AeronTimeoutException.AeronTimeoutException() -> void
+Adaptive.Aeron.Exceptions.AeronTimeoutException.AeronTimeoutException(string message, Adaptive.Aeron.Exceptions.Category category) -> void
+Adaptive.Aeron.Exceptions.AeronTimeoutException.AeronTimeoutException(string message, System.Exception innerException, Adaptive.Aeron.Exceptions.Category category) -> void
+Adaptive.Aeron.Exceptions.AeronTimeoutException.AeronTimeoutException(string message, System.Exception innerException) -> void
+Adaptive.Aeron.Exceptions.AeronTimeoutException.AeronTimeoutException(string message) -> void
+Adaptive.Aeron.Exceptions.Category
+Adaptive.Aeron.Exceptions.Category.ERROR = 1 -> Adaptive.Aeron.Exceptions.Category
+Adaptive.Aeron.Exceptions.Category.FATAL = 0 -> Adaptive.Aeron.Exceptions.Category
+Adaptive.Aeron.Exceptions.Category.WARN = 2 -> Adaptive.Aeron.Exceptions.Category
+Adaptive.Aeron.Exceptions.ChannelEndpointException
+Adaptive.Aeron.Exceptions.ChannelEndpointException.ChannelEndpointException(int statusIndicatorId, string message) -> void
+Adaptive.Aeron.Exceptions.ChannelEndpointException.StatusIndicatorId.get -> int
+Adaptive.Aeron.Exceptions.ClientTimeoutException
+Adaptive.Aeron.Exceptions.ClientTimeoutException.ClientTimeoutException(string message) -> void
+Adaptive.Aeron.Exceptions.ConcurrentConcludeException
+Adaptive.Aeron.Exceptions.ConcurrentConcludeException.ConcurrentConcludeException() -> void
+Adaptive.Aeron.Exceptions.ConductorServiceTimeoutException
+Adaptive.Aeron.Exceptions.ConductorServiceTimeoutException.ConductorServiceTimeoutException(string message) -> void
+Adaptive.Aeron.Exceptions.ConfigurationException
+Adaptive.Aeron.Exceptions.ConfigurationException.ConfigurationException(string message) -> void
+Adaptive.Aeron.Exceptions.ControlProtocolException
+Adaptive.Aeron.Exceptions.ControlProtocolException.ControlProtocolException(Adaptive.Aeron.ErrorCode code, string msg, System.Exception rootCause) -> void
+Adaptive.Aeron.Exceptions.ControlProtocolException.ControlProtocolException(Adaptive.Aeron.ErrorCode code, string msg) -> void
+Adaptive.Aeron.Exceptions.ControlProtocolException.ControlProtocolException(Adaptive.Aeron.ErrorCode code, System.Exception rootCause) -> void
+Adaptive.Aeron.Exceptions.ControlProtocolException.ErrorCode() -> Adaptive.Aeron.ErrorCode
+Adaptive.Aeron.Exceptions.DriverTimeoutException
+Adaptive.Aeron.Exceptions.DriverTimeoutException.DriverTimeoutException(string message) -> void
+Adaptive.Aeron.Exceptions.RegistrationException
+Adaptive.Aeron.Exceptions.RegistrationException.CorrelationId() -> long
+Adaptive.Aeron.Exceptions.RegistrationException.ErrorCode() -> Adaptive.Aeron.ErrorCode
+Adaptive.Aeron.Exceptions.RegistrationException.ErrorCodeValue() -> int
+Adaptive.Aeron.Exceptions.RegistrationException.RegistrationException(Adaptive.Aeron.Exceptions.RegistrationException cause) -> void
+Adaptive.Aeron.Exceptions.RegistrationException.RegistrationException(long correlationId, int errorCodeValue, Adaptive.Aeron.ErrorCode code, string msg) -> void
+Adaptive.Aeron.Exceptions.StorageSpaceException
+Adaptive.Aeron.Exceptions.StorageSpaceException.StorageSpaceException(string message) -> void
+Adaptive.Aeron.ExclusivePublication
+Adaptive.Aeron.ExclusivePublication.AppendPadding(int length) -> long
+Adaptive.Aeron.ExclusivePublication.OfferBlock(Adaptive.Agrona.IMutableDirectBuffer buffer, int offset, int length) -> long
+Adaptive.Aeron.ExclusivePublication.Revoke() -> void
+Adaptive.Aeron.ExclusivePublication.RevokeOnClose() -> void
+Adaptive.Aeron.ExclusivePublication.TermId() -> int
+Adaptive.Aeron.ExclusivePublication.TermOffset() -> int
+Adaptive.Aeron.FragmentAssembler
+Adaptive.Aeron.FragmentAssembler.Clear() -> void
+Adaptive.Aeron.FragmentAssembler.Delegate() -> Adaptive.Aeron.LogBuffer.IFragmentHandler
+Adaptive.Aeron.FragmentAssembler.FragmentAssembler(Adaptive.Aeron.LogBuffer.FragmentHandler fragmentHandler, int initialBufferLength = 0) -> void
+Adaptive.Aeron.FragmentAssembler.FragmentAssembler(Adaptive.Aeron.LogBuffer.IFragmentHandler fragmentHandler, int initialBufferLength = 0) -> void
+Adaptive.Aeron.FragmentAssembler.FreeSessionBuffer(int sessionId) -> bool
+Adaptive.Aeron.FragmentAssembler.OnFragment(Adaptive.Agrona.IDirectBuffer buffer, int offset, int length, Adaptive.Aeron.LogBuffer.Header header) -> void
+Adaptive.Aeron.ILogBuffersFactory
+Adaptive.Aeron.ILogBuffersFactory.Map(string logFileName) -> Adaptive.Aeron.LogBuffers
+Adaptive.Aeron.Image
+Adaptive.Aeron.Image.ActiveTransportCount() -> int
+Adaptive.Aeron.Image.BlockPoll(Adaptive.Aeron.LogBuffer.BlockHandler handler, int blockLengthLimit) -> int
+Adaptive.Aeron.Image.BoundedControlledPoll(Adaptive.Aeron.LogBuffer.ControlledFragmentHandler handler, long limitPosition, int fragmentLimit) -> int
+Adaptive.Aeron.Image.BoundedControlledPoll(Adaptive.Aeron.LogBuffer.IControlledFragmentHandler handler, long limitPosition, int fragmentLimit) -> int
+Adaptive.Aeron.Image.BoundedPoll(Adaptive.Aeron.LogBuffer.FragmentHandler handler, long limitPosition, int fragmentLimit) -> int
+Adaptive.Aeron.Image.BoundedPoll(Adaptive.Aeron.LogBuffer.IFragmentHandler handler, long limitPosition, int fragmentLimit) -> int
+Adaptive.Aeron.Image.Closed.get -> bool
+Adaptive.Aeron.Image.ControlledPeek(long initialPosition, Adaptive.Aeron.LogBuffer.ControlledFragmentHandler handler, long limitPosition) -> long
+Adaptive.Aeron.Image.ControlledPeek(long initialPosition, Adaptive.Aeron.LogBuffer.IControlledFragmentHandler handler, long limitPosition) -> long
+Adaptive.Aeron.Image.ControlledPoll(Adaptive.Aeron.LogBuffer.ControlledFragmentHandler handler, int fragmentLimit) -> int
+Adaptive.Aeron.Image.ControlledPoll(Adaptive.Aeron.LogBuffer.IControlledFragmentHandler handler, int fragmentLimit) -> int
+Adaptive.Aeron.Image.CorrelationId.get -> long
+Adaptive.Aeron.Image.EndOfStreamPosition.get -> long
+Adaptive.Aeron.Image.FileStream.get -> System.IO.FileStream
+Adaptive.Aeron.Image.Image(Adaptive.Aeron.Subscription subscription, int sessionId, Adaptive.Agrona.Concurrent.Status.IPosition subscriberPosition, Adaptive.Aeron.LogBuffers logBuffers, Adaptive.Agrona.IErrorHandler errorHandler, string sourceIdentity, long correlationId) -> void
+Adaptive.Aeron.Image.InitialTermId.get -> int
+Adaptive.Aeron.Image.IsEndOfStream.get -> bool
+Adaptive.Aeron.Image.JoinPosition.get -> long
+Adaptive.Aeron.Image.MtuLength.get -> int
+Adaptive.Aeron.Image.Poll(Adaptive.Aeron.LogBuffer.FragmentHandler fragmentHandler, int fragmentLimit) -> int
+Adaptive.Aeron.Image.Poll(Adaptive.Aeron.LogBuffer.IFragmentHandler fragmentHandler, int fragmentLimit) -> int
+Adaptive.Aeron.Image.Position.get -> long
+Adaptive.Aeron.Image.Position.set -> void
+Adaptive.Aeron.Image.PositionBitsToShift.get -> int
+Adaptive.Aeron.Image.PublicationRevoked.get -> bool
+Adaptive.Aeron.Image.RawPoll(Adaptive.Aeron.LogBuffer.RawBlockHandler handler, int blockLengthLimit) -> int
+Adaptive.Aeron.Image.Reject(string reason) -> void
+Adaptive.Aeron.Image.SessionId.get -> int
+Adaptive.Aeron.Image.SourceIdentity.get -> string
+Adaptive.Aeron.Image.SubscriberPositionId.get -> int
+Adaptive.Aeron.Image.Subscription.get -> Adaptive.Aeron.Subscription
+Adaptive.Aeron.Image.TermBufferLength.get -> int
+Adaptive.Aeron.ImageControlledFragmentAssembler
+Adaptive.Aeron.ImageControlledFragmentAssembler.Builder() -> Adaptive.Aeron.BufferBuilder
+Adaptive.Aeron.ImageControlledFragmentAssembler.Delegate() -> Adaptive.Aeron.LogBuffer.IControlledFragmentHandler
+Adaptive.Aeron.ImageControlledFragmentAssembler.ImageControlledFragmentAssembler(Adaptive.Aeron.LogBuffer.IControlledFragmentHandler delegate, int initialBufferLength = 0) -> void
+Adaptive.Aeron.ImageControlledFragmentAssembler.OnFragment(Adaptive.Agrona.IDirectBuffer buffer, int offset, int length, Adaptive.Aeron.LogBuffer.Header header) -> Adaptive.Aeron.LogBuffer.ControlledFragmentHandlerAction
+Adaptive.Aeron.ImageFragmentAssembler
+Adaptive.Aeron.ImageFragmentAssembler.Delegate() -> Adaptive.Aeron.LogBuffer.IFragmentHandler
+Adaptive.Aeron.ImageFragmentAssembler.ImageFragmentAssembler(Adaptive.Aeron.LogBuffer.FragmentHandler fragmentHandler, int initialBufferLength = 0) -> void
+Adaptive.Aeron.ImageFragmentAssembler.ImageFragmentAssembler(Adaptive.Aeron.LogBuffer.IFragmentHandler fragmentHandler, int initialBufferLength = 0) -> void
+Adaptive.Aeron.ImageFragmentAssembler.OnFragment(Adaptive.Agrona.IDirectBuffer buffer, int offset, int length, Adaptive.Aeron.LogBuffer.Header header) -> void
+Adaptive.Aeron.IPublicationErrorFrameHandler
+Adaptive.Aeron.IPublicationErrorFrameHandler.OnPublicationError(Adaptive.Aeron.Status.PublicationErrorFrame errorFrame) -> void
+Adaptive.Aeron.LogBuffer.BlockHandler
+Adaptive.Aeron.LogBuffer.BufferClaim
+Adaptive.Aeron.LogBuffer.BufferClaim.Abort() -> void
+Adaptive.Aeron.LogBuffer.BufferClaim.Buffer.get -> Adaptive.Agrona.IMutableDirectBuffer
+Adaptive.Aeron.LogBuffer.BufferClaim.BufferClaim() -> void
+Adaptive.Aeron.LogBuffer.BufferClaim.Commit() -> void
+Adaptive.Aeron.LogBuffer.BufferClaim.Flags() -> byte
+Adaptive.Aeron.LogBuffer.BufferClaim.Flags(byte flags) -> Adaptive.Aeron.LogBuffer.BufferClaim
+Adaptive.Aeron.LogBuffer.BufferClaim.HeaderType() -> int
+Adaptive.Aeron.LogBuffer.BufferClaim.HeaderType(int type) -> Adaptive.Aeron.LogBuffer.BufferClaim
+Adaptive.Aeron.LogBuffer.BufferClaim.Length.get -> int
+Adaptive.Aeron.LogBuffer.BufferClaim.Offset.get -> int
+Adaptive.Aeron.LogBuffer.BufferClaim.PutBytes(Adaptive.Agrona.IDirectBuffer srcBuffer, int srcIndex, int length) -> Adaptive.Aeron.LogBuffer.BufferClaim
+Adaptive.Aeron.LogBuffer.BufferClaim.ReservedValue() -> long
+Adaptive.Aeron.LogBuffer.BufferClaim.ReservedValue(long value) -> Adaptive.Aeron.LogBuffer.BufferClaim
+Adaptive.Aeron.LogBuffer.BufferClaim.Wrap(Adaptive.Agrona.Concurrent.IAtomicBuffer buffer, int offset, int length) -> void
+Adaptive.Aeron.LogBuffer.ControlledFragmentHandler
+Adaptive.Aeron.LogBuffer.ControlledFragmentHandlerAction
+Adaptive.Aeron.LogBuffer.ControlledFragmentHandlerAction.ABORT = 0 -> Adaptive.Aeron.LogBuffer.ControlledFragmentHandlerAction
+Adaptive.Aeron.LogBuffer.ControlledFragmentHandlerAction.BREAK = 1 -> Adaptive.Aeron.LogBuffer.ControlledFragmentHandlerAction
+Adaptive.Aeron.LogBuffer.ControlledFragmentHandlerAction.COMMIT = 2 -> Adaptive.Aeron.LogBuffer.ControlledFragmentHandlerAction
+Adaptive.Aeron.LogBuffer.ControlledFragmentHandlerAction.CONTINUE = 3 -> Adaptive.Aeron.LogBuffer.ControlledFragmentHandlerAction
+Adaptive.Aeron.LogBuffer.FragmentHandler
+Adaptive.Aeron.LogBuffer.FrameDescriptor
+Adaptive.Aeron.LogBuffer.FrameDescriptor.FrameDescriptor() -> void
+Adaptive.Aeron.LogBuffer.HandlerHelper
+Adaptive.Aeron.LogBuffer.Header
+Adaptive.Aeron.LogBuffer.Header.Buffer.get -> Adaptive.Agrona.IDirectBuffer
+Adaptive.Aeron.LogBuffer.Header.Buffer.set -> void
+Adaptive.Aeron.LogBuffer.Header.Context.get -> object
+Adaptive.Aeron.LogBuffer.Header.Context.set -> void
+Adaptive.Aeron.LogBuffer.Header.Flags.get -> byte
+Adaptive.Aeron.LogBuffer.Header.FragmentedFrameLength.get -> int
+Adaptive.Aeron.LogBuffer.Header.FragmentedFrameLength.set -> void
+Adaptive.Aeron.LogBuffer.Header.FrameLength.get -> int
+Adaptive.Aeron.LogBuffer.Header.Header(int initialTermId, int positionBitsToShift, object context) -> void
+Adaptive.Aeron.LogBuffer.Header.Header(int initialTermId, int positionBitsToShift) -> void
+Adaptive.Aeron.LogBuffer.Header.InitialTermId.get -> int
+Adaptive.Aeron.LogBuffer.Header.InitialTermId.set -> void
+Adaptive.Aeron.LogBuffer.Header.NextTermOffset.get -> int
+Adaptive.Aeron.LogBuffer.Header.Offset.get -> int
+Adaptive.Aeron.LogBuffer.Header.Offset.set -> void
+Adaptive.Aeron.LogBuffer.Header.Position.get -> long
+Adaptive.Aeron.LogBuffer.Header.PositionBitsToShift.get -> int
+Adaptive.Aeron.LogBuffer.Header.PositionBitsToShift.set -> void
+Adaptive.Aeron.LogBuffer.Header.ReservedValue.get -> long
+Adaptive.Aeron.LogBuffer.Header.SessionId.get -> int
+Adaptive.Aeron.LogBuffer.Header.SetBuffer(Adaptive.Agrona.IDirectBuffer buffer, int offset) -> void
+Adaptive.Aeron.LogBuffer.Header.StreamId.get -> int
+Adaptive.Aeron.LogBuffer.Header.TermId.get -> int
+Adaptive.Aeron.LogBuffer.Header.TermOffset.get -> int
+Adaptive.Aeron.LogBuffer.Header.Type.get -> int
+Adaptive.Aeron.LogBuffer.HeaderWriter
+Adaptive.Aeron.LogBuffer.HeaderWriter.HeaderWriter() -> void
+Adaptive.Aeron.LogBuffer.HeaderWriter.HeaderWriter(Adaptive.Agrona.Concurrent.UnsafeBuffer defaultHeader) -> void
+Adaptive.Aeron.LogBuffer.HeaderWriter.Write(Adaptive.Agrona.Concurrent.UnsafeBuffer termBuffer, int offset, int length, int termId) -> void
+Adaptive.Aeron.LogBuffer.IBlockHandler
+Adaptive.Aeron.LogBuffer.IBlockHandler.OnBlock(Adaptive.Agrona.IDirectBuffer buffer, int offset, int length, int sessionId, int termId) -> void
+Adaptive.Aeron.LogBuffer.IControlledFragmentHandler
+Adaptive.Aeron.LogBuffer.IControlledFragmentHandler.OnFragment(Adaptive.Agrona.IDirectBuffer buffer, int offset, int length, Adaptive.Aeron.LogBuffer.Header header) -> Adaptive.Aeron.LogBuffer.ControlledFragmentHandlerAction
+Adaptive.Aeron.LogBuffer.IFragmentHandler
+Adaptive.Aeron.LogBuffer.IFragmentHandler.OnFragment(Adaptive.Agrona.IDirectBuffer buffer, int offset, int length, Adaptive.Aeron.LogBuffer.Header header) -> void
+Adaptive.Aeron.LogBuffer.LogBufferDescriptor
+Adaptive.Aeron.LogBuffer.LogBufferDescriptor.LogBufferDescriptor() -> void
+Adaptive.Aeron.LogBuffer.RawBlockHandler
+Adaptive.Aeron.LogBuffer.TermBlockScanner
+Adaptive.Aeron.LogBuffer.TermBlockScanner.TermBlockScanner() -> void
+Adaptive.Aeron.LogBuffer.TermReader
+Adaptive.Aeron.LogBuffer.TermReader.TermReader() -> void
+Adaptive.Aeron.LogBuffer.TermRebuilder
+Adaptive.Aeron.LogBuffer.TermRebuilder.TermRebuilder() -> void
+Adaptive.Aeron.LogBuffers
+Adaptive.Aeron.LogBuffers.DecRef() -> int
+Adaptive.Aeron.LogBuffers.Dispose() -> void
+Adaptive.Aeron.LogBuffers.DuplicateTermBuffers() -> Adaptive.Agrona.Concurrent.UnsafeBuffer[]
+Adaptive.Aeron.LogBuffers.FileStream.get -> System.IO.FileStream
+Adaptive.Aeron.LogBuffers.IncRef() -> int
+Adaptive.Aeron.LogBuffers.LingerDeadlineNs() -> long
+Adaptive.Aeron.LogBuffers.LingerDeadlineNs(long timeNs) -> void
+Adaptive.Aeron.LogBuffers.LogBuffers(string logFileName) -> void
+Adaptive.Aeron.LogBuffers.MetaDataBuffer() -> Adaptive.Agrona.Concurrent.UnsafeBuffer
+Adaptive.Aeron.LogBuffers.PreTouch() -> void
+Adaptive.Aeron.LogBuffers.TermLength() -> int
+Adaptive.Aeron.NoOpPublicationErrorFrameHandler
+Adaptive.Aeron.NoOpPublicationErrorFrameHandler.NoOpPublicationErrorFrameHandler() -> void
+Adaptive.Aeron.NoOpPublicationErrorFrameHandler.OnPublicationError(Adaptive.Aeron.Status.PublicationErrorFrame errorFrame) -> void
+Adaptive.Aeron.Protocol.DataHeaderFlyweight
+Adaptive.Aeron.Protocol.DataHeaderFlyweight.DataHeaderFlyweight() -> void
+Adaptive.Aeron.Protocol.DataHeaderFlyweight.DataHeaderFlyweight(Adaptive.Agrona.Concurrent.UnsafeBuffer buffer) -> void
+Adaptive.Aeron.Protocol.DataHeaderFlyweight.DataOffset() -> int
+Adaptive.Aeron.Protocol.DataHeaderFlyweight.ReservedValue() -> long
+Adaptive.Aeron.Protocol.DataHeaderFlyweight.ReservedValue(long reservedValue) -> Adaptive.Aeron.Protocol.DataHeaderFlyweight
+Adaptive.Aeron.Protocol.DataHeaderFlyweight.SessionId() -> int
+Adaptive.Aeron.Protocol.DataHeaderFlyweight.SessionId(int sessionId) -> Adaptive.Aeron.Protocol.DataHeaderFlyweight
+Adaptive.Aeron.Protocol.DataHeaderFlyweight.StreamId() -> int
+Adaptive.Aeron.Protocol.DataHeaderFlyweight.StreamId(int streamId) -> Adaptive.Aeron.Protocol.DataHeaderFlyweight
+Adaptive.Aeron.Protocol.DataHeaderFlyweight.TermId() -> int
+Adaptive.Aeron.Protocol.DataHeaderFlyweight.TermId(int termId) -> Adaptive.Aeron.Protocol.DataHeaderFlyweight
+Adaptive.Aeron.Protocol.DataHeaderFlyweight.TermOffset() -> int
+Adaptive.Aeron.Protocol.DataHeaderFlyweight.TermOffset(int termOffset) -> Adaptive.Aeron.Protocol.DataHeaderFlyweight
+Adaptive.Aeron.Protocol.HeaderFlyweight
+Adaptive.Aeron.Protocol.HeaderFlyweight.Flags() -> short
+Adaptive.Aeron.Protocol.HeaderFlyweight.Flags(short flags) -> Adaptive.Aeron.Protocol.HeaderFlyweight
+Adaptive.Aeron.Protocol.HeaderFlyweight.FrameLength() -> int
+Adaptive.Aeron.Protocol.HeaderFlyweight.FrameLength(int length) -> Adaptive.Aeron.Protocol.HeaderFlyweight
+Adaptive.Aeron.Protocol.HeaderFlyweight.HeaderFlyweight() -> void
+Adaptive.Aeron.Protocol.HeaderFlyweight.HeaderFlyweight(Adaptive.Agrona.Concurrent.UnsafeBuffer buffer) -> void
+Adaptive.Aeron.Protocol.HeaderFlyweight.HeaderType() -> int
+Adaptive.Aeron.Protocol.HeaderFlyweight.HeaderType(int type) -> Adaptive.Aeron.Protocol.HeaderFlyweight
+Adaptive.Aeron.Protocol.HeaderFlyweight.Version() -> short
+Adaptive.Aeron.Protocol.HeaderFlyweight.Version(short version) -> Adaptive.Aeron.Protocol.HeaderFlyweight
+Adaptive.Aeron.Publication
+Adaptive.Aeron.Publication.AddDestination(string endpointChannel) -> void
+Adaptive.Aeron.Publication.AsyncAddDestination(string endpointChannel) -> long
+Adaptive.Aeron.Publication.AsyncRemoveDestination(long destinationRegistrationId) -> long
+Adaptive.Aeron.Publication.AsyncRemoveDestination(string endpointChannel) -> long
+Adaptive.Aeron.Publication.Channel.get -> string
+Adaptive.Aeron.Publication.ChannelStatus.get -> long
+Adaptive.Aeron.Publication.ChannelStatusId.get -> int
+Adaptive.Aeron.Publication.Dispose() -> void
+Adaptive.Aeron.Publication.InitialTermId.get -> int
+Adaptive.Aeron.Publication.IsClosed.get -> bool
+Adaptive.Aeron.Publication.IsConnected.get -> bool
+Adaptive.Aeron.Publication.IsOriginal.get -> bool
+Adaptive.Aeron.Publication.LocalSocketAddresses() -> System.Collections.Generic.List<string>
+Adaptive.Aeron.Publication.MaxMessageLength.get -> int
+Adaptive.Aeron.Publication.MaxPayloadLength.get -> int
+Adaptive.Aeron.Publication.MaxPossiblePosition.get -> long
+Adaptive.Aeron.Publication.Offer(Adaptive.Agrona.Concurrent.UnsafeBuffer buffer) -> long
+Adaptive.Aeron.Publication.OriginalRegistrationId.get -> long
+Adaptive.Aeron.Publication.PositionBitsToShift.get -> int
+Adaptive.Aeron.Publication.PositionLimit.get -> long
+Adaptive.Aeron.Publication.PositionLimitId.get -> int
+Adaptive.Aeron.Publication.RegistrationId.get -> long
+Adaptive.Aeron.Publication.RemoveDestination(long registrationId) -> void
+Adaptive.Aeron.Publication.RemoveDestination(string endpointChannel) -> void
+Adaptive.Aeron.Publication.SessionId.get -> int
+Adaptive.Aeron.Publication.StreamId.get -> int
+Adaptive.Aeron.Publication.TermBufferLength.get -> int
+Adaptive.Aeron.ReservedValueSupplier
+Adaptive.Aeron.RethrowingErrorHandler
+Adaptive.Aeron.RethrowingErrorHandler.OnError(System.Exception exception) -> void
+Adaptive.Aeron.RethrowingErrorHandler.RethrowingErrorHandler() -> void
+Adaptive.Aeron.Security.AllowAllAuthorisationService
+Adaptive.Aeron.Security.AllowAllAuthorisationService.AllowAllAuthorisationService() -> void
+Adaptive.Aeron.Security.AllowAllAuthorisationService.IsAuthorised(int protocolId, int actionId, object type, byte[] encodedPrincipal) -> bool
+Adaptive.Aeron.Security.AuthenticationException
+Adaptive.Aeron.Security.AuthenticationException.AuthenticationException(string message) -> void
+Adaptive.Aeron.Security.DefaultAuthenticatorSupplier
+Adaptive.Aeron.Security.DefaultAuthenticatorSupplier.DefaultAuthenticatorSupplier() -> void
+Adaptive.Aeron.Security.DefaultAuthenticatorSupplier.Get() -> Adaptive.Aeron.Security.IAuthenticator
+Adaptive.Aeron.Security.DenyAllAuthorisationService
+Adaptive.Aeron.Security.DenyAllAuthorisationService.DenyAllAuthorisationService() -> void
+Adaptive.Aeron.Security.DenyAllAuthorisationService.IsAuthorised(int protocolId, int actionId, object type, byte[] encodedPrincipal) -> bool
+Adaptive.Aeron.Security.IAuthenticator
+Adaptive.Aeron.Security.IAuthenticator.OnChallengedSession(Adaptive.Aeron.Security.ISessionProxy sessionProxy, long nowMs) -> void
+Adaptive.Aeron.Security.IAuthenticator.OnChallengeResponse(long sessionId, byte[] encodedCredentials, long nowMs) -> void
+Adaptive.Aeron.Security.IAuthenticator.OnConnectedSession(Adaptive.Aeron.Security.ISessionProxy sessionProxy, long nowMs) -> void
+Adaptive.Aeron.Security.IAuthenticator.OnConnectRequest(long sessionId, byte[] encodedCredentials, long nowMs) -> void
+Adaptive.Aeron.Security.IAuthenticatorSupplier
+Adaptive.Aeron.Security.IAuthenticatorSupplier.Get() -> Adaptive.Aeron.Security.IAuthenticator
+Adaptive.Aeron.Security.IAuthorisationService
+Adaptive.Aeron.Security.IAuthorisationService.IsAuthorised(int protocolId, int actionId, object type, byte[] encodedPrincipal) -> bool
+Adaptive.Aeron.Security.IAuthorisationServiceSupplier
+Adaptive.Aeron.Security.IAuthorisationServiceSupplier.Get() -> Adaptive.Aeron.Security.IAuthorisationService
+Adaptive.Aeron.Security.ICredentialsSupplier
+Adaptive.Aeron.Security.ICredentialsSupplier.EncodedCredentials() -> byte[]
+Adaptive.Aeron.Security.ICredentialsSupplier.OnChallenge(byte[] endcodedChallenge) -> byte[]
+Adaptive.Aeron.Security.ISessionProxy
+Adaptive.Aeron.Security.ISessionProxy.Authenticate(byte[] encodedPrincipal) -> bool
+Adaptive.Aeron.Security.ISessionProxy.Challenge(byte[] encodedChallenge) -> bool
+Adaptive.Aeron.Security.ISessionProxy.Reject() -> void
+Adaptive.Aeron.Security.ISessionProxy.SessionId() -> long
+Adaptive.Aeron.Security.NullCredentialsSupplier
+Adaptive.Aeron.Security.NullCredentialsSupplier.EncodedCredentials() -> byte[]
+Adaptive.Aeron.Security.NullCredentialsSupplier.NullCredentialsSupplier() -> void
+Adaptive.Aeron.Security.NullCredentialsSupplier.OnChallenge(byte[] endcodedChallenge) -> byte[]
+Adaptive.Aeron.Status.ChannelEndpointStatus
+Adaptive.Aeron.Status.HeartbeatTimestamp
+Adaptive.Aeron.Status.HeartbeatTimestamp.HeartbeatTimestamp() -> void
+Adaptive.Aeron.Status.LocalSocketAddressStatus
+Adaptive.Aeron.Status.LocalSocketAddressStatus.LocalSocketAddressStatus() -> void
+Adaptive.Aeron.Status.PublicationErrorFrame
+Adaptive.Aeron.Status.PublicationErrorFrame.Clone() -> object
+Adaptive.Aeron.Status.PublicationErrorFrame.DestinationRegistrationId() -> long
+Adaptive.Aeron.Status.PublicationErrorFrame.ErrorCode() -> Adaptive.Aeron.ErrorCode
+Adaptive.Aeron.Status.PublicationErrorFrame.ErrorMessage() -> string
+Adaptive.Aeron.Status.PublicationErrorFrame.GroupTag() -> long
+Adaptive.Aeron.Status.PublicationErrorFrame.PublicationErrorFrame() -> void
+Adaptive.Aeron.Status.PublicationErrorFrame.ReceiverId() -> long
+Adaptive.Aeron.Status.PublicationErrorFrame.RegistrationId() -> long
+Adaptive.Aeron.Status.PublicationErrorFrame.SessionId() -> int
+Adaptive.Aeron.Status.PublicationErrorFrame.Set(Adaptive.Aeron.Command.PublicationErrorFrameFlyweight frameFlyweight) -> Adaptive.Aeron.Status.PublicationErrorFrame
+Adaptive.Aeron.Status.PublicationErrorFrame.SourceAddress() -> System.Net.IPEndPoint
+Adaptive.Aeron.Status.PublicationErrorFrame.StreamId() -> int
+Adaptive.Aeron.Status.ReadableCounter
+Adaptive.Aeron.Status.ReadableCounter.CounterId.get -> int
+Adaptive.Aeron.Status.ReadableCounter.Dispose() -> void
+Adaptive.Aeron.Status.ReadableCounter.Get() -> long
+Adaptive.Aeron.Status.ReadableCounter.GetWeak() -> long
+Adaptive.Aeron.Status.ReadableCounter.IsClosed.get -> bool
+Adaptive.Aeron.Status.ReadableCounter.Label.get -> string
+Adaptive.Aeron.Status.ReadableCounter.ReadableCounter(Adaptive.Agrona.Concurrent.Status.CountersReader countersReader, int counterId) -> void
+Adaptive.Aeron.Status.ReadableCounter.ReadableCounter(Adaptive.Agrona.Concurrent.Status.CountersReader countersReader, long registrationId, int counterId) -> void
+Adaptive.Aeron.Status.ReadableCounter.RegistrationId.get -> long
+Adaptive.Aeron.Status.ReadableCounter.State.get -> int
+Adaptive.Aeron.Subscription
+Adaptive.Aeron.Subscription.AddDestination(string endpointChannel) -> void
+Adaptive.Aeron.Subscription.AsyncAddDestination(string endpointChannel) -> long
+Adaptive.Aeron.Subscription.AsyncRemoveDestination(string endpointChannel) -> long
+Adaptive.Aeron.Subscription.AvailableImageHandler.get -> Adaptive.Aeron.AvailableImageHandler
+Adaptive.Aeron.Subscription.BlockPoll(Adaptive.Aeron.LogBuffer.BlockHandler blockHandler, int blockLengthLimit) -> long
+Adaptive.Aeron.Subscription.Channel.get -> string
+Adaptive.Aeron.Subscription.ChannelStatus.get -> long
+Adaptive.Aeron.Subscription.ChannelStatusId.get -> int
+Adaptive.Aeron.Subscription.ControlledPoll(Adaptive.Aeron.LogBuffer.ControlledFragmentHandler fragmentHandler, int fragmentLimit) -> int
+Adaptive.Aeron.Subscription.ControlledPoll(Adaptive.Aeron.LogBuffer.IControlledFragmentHandler fragmentHandler, int fragmentLimit) -> int
+Adaptive.Aeron.Subscription.Dispose() -> void
+Adaptive.Aeron.Subscription.ForEachImage(System.Action<Adaptive.Aeron.Image> consumer) -> void
+Adaptive.Aeron.Subscription.HasNoImages.get -> bool
+Adaptive.Aeron.Subscription.ImageAtIndex(int index) -> Adaptive.Aeron.Image
+Adaptive.Aeron.Subscription.ImageBySessionId(int sessionId) -> Adaptive.Aeron.Image
+Adaptive.Aeron.Subscription.ImageCount.get -> int
+Adaptive.Aeron.Subscription.Images.get -> System.Collections.Generic.IList<Adaptive.Aeron.Image>
+Adaptive.Aeron.Subscription.IsClosed.get -> bool
+Adaptive.Aeron.Subscription.IsConnected.get -> bool
+Adaptive.Aeron.Subscription.LocalSocketAddresses.get -> System.Collections.Generic.List<string>
+Adaptive.Aeron.Subscription.Poll(Adaptive.Aeron.LogBuffer.FragmentHandler fragmentHandler, int fragmentLimit) -> int
+Adaptive.Aeron.Subscription.Poll(Adaptive.Aeron.LogBuffer.IFragmentHandler fragmentHandler, int fragmentLimit) -> int
+Adaptive.Aeron.Subscription.RawPoll(Adaptive.Aeron.LogBuffer.RawBlockHandler rawBlockHandler, int blockLengthLimit) -> long
+Adaptive.Aeron.Subscription.RegistrationId.get -> long
+Adaptive.Aeron.Subscription.RemoveDestination(string endpointChannel) -> void
+Adaptive.Aeron.Subscription.ResolvedEndpoint.get -> string
+Adaptive.Aeron.Subscription.StreamId.get -> int
+Adaptive.Aeron.Subscription.TryResolveChannelEndpointPort() -> string
+Adaptive.Aeron.Subscription.UnavailableImageHandler.get -> Adaptive.Aeron.UnavailableImageHandler
+Adaptive.Aeron.UnavailableCounterHandler
+Adaptive.Aeron.UnavailableImageHandler
+const Adaptive.Aeron.Aeron.Configuration.CLOSE_LINGER_DURATION_DEFAULT_NS = 0 -> long
+const Adaptive.Aeron.Aeron.Configuration.CLOSE_LINGER_DURATION_PROP_NAME = "aeron.client.close.linger.duration" -> string
+const Adaptive.Aeron.Aeron.Configuration.MAX_CLIENT_NAME_LENGTH = 100 -> int
+const Adaptive.Aeron.Aeron.Configuration.PRE_TOUCH_MAPPED_MEMORY_DEFAULT = false -> bool
+const Adaptive.Aeron.Aeron.Configuration.PRE_TOUCH_MAPPED_MEMORY_PROP_NAME = "aeron.pre.touch.mapped.memory" -> string
+const Adaptive.Aeron.Aeron.Configuration.RESOURCE_LINGER_DURATION_PROP_NAME = "aeron.client.resource.linger.duration" -> string
+const Adaptive.Aeron.Aeron.Context.AERON_DIR_PROP_NAME = "aeron.dir" -> string
+const Adaptive.Aeron.Aeron.Context.ALIAS_PARAM_NAME = "alias" -> string
+const Adaptive.Aeron.Aeron.Context.CHANNEL_RECEIVE_TIMESTAMP_OFFSET_PARAM_NAME = "channel-rcv-ts-offset" -> string
+const Adaptive.Aeron.Aeron.Context.CHANNEL_SEND_TIMESTAMP_OFFSET_PARAM_NAME = "channel-snd-ts-offset" -> string
+const Adaptive.Aeron.Aeron.Context.CONGESTION_CONTROL_PARAM_NAME = "cc" -> string
+const Adaptive.Aeron.Aeron.Context.CONTROL_MODE_RESPONSE = "response" -> string
+const Adaptive.Aeron.Aeron.Context.DEBUG_TIMEOUT_PROP_NAME = "aeron.debug.timeout" -> string
+const Adaptive.Aeron.Aeron.Context.DRIVER_TIMEOUT_MS = 10000 -> long
+const Adaptive.Aeron.Aeron.Context.ENABLE_EXPERIMENTAL_FEATURES_PROP_NAME = "aeron.enable.experimental.features" -> string
+const Adaptive.Aeron.Aeron.Context.ENDPOINT_PARAM_NAME = "endpoint" -> string
+const Adaptive.Aeron.Aeron.Context.EOS_PARAM_NAME = "eos" -> string
+const Adaptive.Aeron.Aeron.Context.FALLBACK_LOGGER_PROP_NAME = "aeron.fallback.logger" -> string
+const Adaptive.Aeron.Aeron.Context.FLOW_CONTROL_PARAM_NAME = "fc" -> string
+const Adaptive.Aeron.Aeron.Context.GROUP_PARAM_NAME = "group" -> string
+const Adaptive.Aeron.Aeron.Context.GROUP_TAG_PARAM_NAME = "gtag" -> string
+const Adaptive.Aeron.Aeron.Context.INITIAL_TERM_ID_PARAM_NAME = "init-term-id" -> string
+const Adaptive.Aeron.Aeron.Context.INTERFACE_PARAM_NAME = "interface" -> string
+const Adaptive.Aeron.Aeron.Context.IPC_CHANNEL = "aeron:ipc" -> string
+const Adaptive.Aeron.Aeron.Context.IPC_MEDIA = "ipc" -> string
+const Adaptive.Aeron.Aeron.Context.LINGER_PARAM_NAME = "linger" -> string
+const Adaptive.Aeron.Aeron.Context.MAX_RESEND_PARAM_NAME = "max-resend" -> string
+const Adaptive.Aeron.Aeron.Context.MDC_CONTROL_MODE = "control-mode" -> string
+const Adaptive.Aeron.Aeron.Context.MDC_CONTROL_MODE_DYNAMIC = "dynamic" -> string
+const Adaptive.Aeron.Aeron.Context.MDC_CONTROL_MODE_MANUAL = "manual" -> string
+const Adaptive.Aeron.Aeron.Context.MDC_CONTROL_MODE_PARAM_NAME = "control-mode" -> string
+const Adaptive.Aeron.Aeron.Context.MDC_CONTROL_PARAM_NAME = "control" -> string
+const Adaptive.Aeron.Aeron.Context.MEDIA_RCV_TIMESTAMP_OFFSET_PARAM_NAME = "media-rcv-ts-offset" -> string
+const Adaptive.Aeron.Aeron.Context.MTU_LENGTH_PARAM_NAME = "mtu" -> string
+const Adaptive.Aeron.Aeron.Context.MTU_LENGTH_URI_PARAM_NAME = "mtu" -> string
+const Adaptive.Aeron.Aeron.Context.NAK_DELAY_PARAM_NAME = "nak-delay" -> string
+const Adaptive.Aeron.Aeron.Context.NULL_SESSION_ID = -1 -> int
+const Adaptive.Aeron.Aeron.Context.PRINT_CONFIGURATION_ON_START_PROP_NAME = "aeron.print.configuration" -> string
+const Adaptive.Aeron.Aeron.Context.PROTOTYPE_CORRELATION_ID = "prototype" -> string
+const Adaptive.Aeron.Aeron.Context.PUBLICATION_WINDOW_LENGTH_PARAM_NAME = "pub-wnd" -> string
+const Adaptive.Aeron.Aeron.Context.RECEIVER_WINDOW_LENGTH_PARAM_NAME = "rcv-wnd" -> string
+const Adaptive.Aeron.Aeron.Context.REJOIN_PARAM_NAME = "rejoin" -> string
+const Adaptive.Aeron.Aeron.Context.RELIABLE_STREAM_PARAM_NAME = "reliable" -> string
+const Adaptive.Aeron.Aeron.Context.RESERVED_OFFSET = "reserved" -> string
+const Adaptive.Aeron.Aeron.Context.RESPONSE_CORRELATION_ID_PARAM_NAME = "response-correlation-id" -> string
+const Adaptive.Aeron.Aeron.Context.RESPONSE_ENDPOINT_PARAM_NAME = "response-endpoint" -> string
+const Adaptive.Aeron.Aeron.Context.SESSION_ID_PARAM_NAME = "session-id" -> string
+const Adaptive.Aeron.Aeron.Context.SOCKET_RCVBUF_PARAM_NAME = "so-rcvbuf" -> string
+const Adaptive.Aeron.Aeron.Context.SOCKET_SNDBUF_PARAM_NAME = "so-sndbuf" -> string
+const Adaptive.Aeron.Aeron.Context.SPARSE_PARAM_NAME = "sparse" -> string
+const Adaptive.Aeron.Aeron.Context.SPIES_SIMULATE_CONNECTION_PARAM_NAME = "ssc" -> string
+const Adaptive.Aeron.Aeron.Context.SPY_PREFIX = "aeron-spy:" -> string
+const Adaptive.Aeron.Aeron.Context.STREAM_ID_PARAM_NAME = "stream-id" -> string
+const Adaptive.Aeron.Aeron.Context.TAG_PREFIX = "tag:" -> string
+const Adaptive.Aeron.Aeron.Context.TAGS_PARAM_NAME = "tags" -> string
+const Adaptive.Aeron.Aeron.Context.TERM_ID_PARAM_NAME = "term-id" -> string
+const Adaptive.Aeron.Aeron.Context.TERM_LENGTH_PARAM_NAME = "term-length" -> string
+const Adaptive.Aeron.Aeron.Context.TERM_OFFSET_PARAM_NAME = "term-offset" -> string
+const Adaptive.Aeron.Aeron.Context.TETHER_PARAM_NAME = "tether" -> string
+const Adaptive.Aeron.Aeron.Context.TTL_PARAM_NAME = "ttl" -> string
+const Adaptive.Aeron.Aeron.Context.UDP_CHANNEL = "aeron:udp" -> string
+const Adaptive.Aeron.Aeron.Context.UDP_MEDIA = "udp" -> string
+const Adaptive.Aeron.Aeron.Context.UNTETHERED_LINGER_TIMEOUT_PARAM_NAME = "untethered-linger-timeout" -> string
+const Adaptive.Aeron.Aeron.Context.UNTETHERED_RESTING_TIMEOUT_PARAM_NAME = "untethered-resting-timeout" -> string
+const Adaptive.Aeron.Aeron.Context.UNTETHERED_WINDOW_LIMIT_TIMEOUT_PARAM_NAME = "untethered-window-limit-timeout" -> string
+const Adaptive.Aeron.Aeron.NULL_VALUE = -1 -> int
+const Adaptive.Aeron.AeronCounters.ARCHIVE_CONTROL_SESSION_TYPE_ID = 113 -> int
+const Adaptive.Aeron.AeronCounters.ARCHIVE_CONTROL_SESSIONS_TYPE_ID = 102 -> int
+const Adaptive.Aeron.AeronCounters.ARCHIVE_CYCLE_TIME_THRESHOLD_EXCEEDED_TYPE_ID = 104 -> int
+const Adaptive.Aeron.AeronCounters.ARCHIVE_ERROR_COUNT_TYPE_ID = 101 -> int
+const Adaptive.Aeron.AeronCounters.ARCHIVE_MAX_CYCLE_TIME_TYPE_ID = 103 -> int
+const Adaptive.Aeron.AeronCounters.ARCHIVE_RECORDER_MAX_WRITE_TIME_TYPE_ID = 105 -> int
+const Adaptive.Aeron.AeronCounters.ARCHIVE_RECORDER_TOTAL_WRITE_BYTES_TYPE_ID = 106 -> int
+const Adaptive.Aeron.AeronCounters.ARCHIVE_RECORDER_TOTAL_WRITE_TIME_TYPE_ID = 107 -> int
+const Adaptive.Aeron.AeronCounters.ARCHIVE_RECORDING_POSITION_TYPE_ID = 100 -> int
+const Adaptive.Aeron.AeronCounters.ARCHIVE_RECORDING_SESSION_COUNT_TYPE_ID = 111 -> int
+const Adaptive.Aeron.AeronCounters.ARCHIVE_REPLAY_SESSION_COUNT_TYPE_ID = 112 -> int
+const Adaptive.Aeron.AeronCounters.ARCHIVE_REPLAYER_MAX_READ_TIME_TYPE_ID = 108 -> int
+const Adaptive.Aeron.AeronCounters.ARCHIVE_REPLAYER_TOTAL_READ_BYTES_TYPE_ID = 109 -> int
+const Adaptive.Aeron.AeronCounters.ARCHIVE_REPLAYER_TOTAL_READ_TIME_TYPE_ID = 110 -> int
+const Adaptive.Aeron.AeronCounters.CLUSTER_BACKUP_ERROR_COUNT_TYPE_ID = 211 -> int
+const Adaptive.Aeron.AeronCounters.CLUSTER_BACKUP_LIVE_LOG_POSITION_TYPE_ID = 209 -> int
+const Adaptive.Aeron.AeronCounters.CLUSTER_BACKUP_QUERY_DEADLINE_TYPE_ID = 210 -> int
+const Adaptive.Aeron.AeronCounters.CLUSTER_BACKUP_SNAPSHOT_RETRIEVE_COUNT_TYPE_ID = 240 -> int
+const Adaptive.Aeron.AeronCounters.CLUSTER_BACKUP_STATE_TYPE_ID = 208 -> int
+const Adaptive.Aeron.AeronCounters.CLUSTER_CLIENT_TIMEOUT_COUNT_TYPE_ID = 213 -> int
+const Adaptive.Aeron.AeronCounters.CLUSTER_CLUSTERED_SERVICE_CYCLE_TIME_THRESHOLD_EXCEEDED_TYPE_ID = 219 -> int
+const Adaptive.Aeron.AeronCounters.CLUSTER_CLUSTERED_SERVICE_ERROR_COUNT_TYPE_ID = 215 -> int
+const Adaptive.Aeron.AeronCounters.CLUSTER_CLUSTERED_SERVICE_MAX_CYCLE_TIME_TYPE_ID = 218 -> int
+const Adaptive.Aeron.AeronCounters.CLUSTER_COMMIT_POSITION_TYPE_ID = 203 -> int
+const Adaptive.Aeron.AeronCounters.CLUSTER_CONSENSUS_MODULE_ERROR_COUNT_TYPE_ID = 212 -> int
+const Adaptive.Aeron.AeronCounters.CLUSTER_CONSENSUS_MODULE_STATE_TYPE_ID = 200 -> int
+const Adaptive.Aeron.AeronCounters.CLUSTER_CONTROL_TOGGLE_TYPE_ID = 202 -> int
+const Adaptive.Aeron.AeronCounters.CLUSTER_CYCLE_TIME_THRESHOLD_EXCEEDED_TYPE_ID = 217 -> int
+const Adaptive.Aeron.AeronCounters.CLUSTER_ELECTION_COUNT_TYPE_ID = 238 -> int
+const Adaptive.Aeron.AeronCounters.CLUSTER_ELECTION_STATE_TYPE_ID = 207 -> int
+const Adaptive.Aeron.AeronCounters.CLUSTER_INVALID_REQUEST_COUNT_TYPE_ID = 214 -> int
+const Adaptive.Aeron.AeronCounters.CLUSTER_LEADERSHIP_TERM_ID_TYPE_ID = 239 -> int
+const Adaptive.Aeron.AeronCounters.CLUSTER_MAX_CYCLE_TIME_TYPE_ID = 216 -> int
+const Adaptive.Aeron.AeronCounters.CLUSTER_NODE_ROLE_TYPE_ID = 201 -> int
+const Adaptive.Aeron.AeronCounters.CLUSTER_RECOVERY_STATE_TYPE_ID = 204 -> int
+const Adaptive.Aeron.AeronCounters.CLUSTER_SESSION_TYPE_ID = 241 -> int
+const Adaptive.Aeron.AeronCounters.CLUSTER_SNAPSHOT_COUNTER_TYPE_ID = 205 -> int
+const Adaptive.Aeron.AeronCounters.CLUSTER_STANDBY_CONTROL_TOGGLE_TYPE_ID = 223 -> int
+const Adaptive.Aeron.AeronCounters.CLUSTER_STANDBY_CYCLE_TIME_THRESHOLD_EXCEEDED_TYPE_ID = 228 -> int
+const Adaptive.Aeron.AeronCounters.CLUSTER_STANDBY_ERROR_COUNT_TYPE_ID = 221 -> int
+const Adaptive.Aeron.AeronCounters.CLUSTER_STANDBY_HEARTBEAT_RESPONSE_COUNT_TYPE_ID = 222 -> int
+const Adaptive.Aeron.AeronCounters.CLUSTER_STANDBY_MAX_CYCLE_TIME_TYPE_ID = 227 -> int
+const Adaptive.Aeron.AeronCounters.CLUSTER_STANDBY_SNAPSHOT_COUNTER_TYPE_ID = 232 -> int
+const Adaptive.Aeron.AeronCounters.CLUSTER_STANDBY_SOURCE_MEMBER_ID_TYPE_ID = 231 -> int
+const Adaptive.Aeron.AeronCounters.CLUSTER_STANDBY_STATE_TYPE_ID = 220 -> int
+const Adaptive.Aeron.AeronCounters.CLUSTER_TOTAL_MAX_SNAPSHOT_DURATION_TYPE_ID = 234 -> int
+const Adaptive.Aeron.AeronCounters.CLUSTER_TOTAL_SNAPSHOT_DURATION_THRESHOLD_EXCEEDED_TYPE_ID = 235 -> int
+const Adaptive.Aeron.AeronCounters.CLUSTERED_SERVICE_MAX_SNAPSHOT_DURATION_TYPE_ID = 236 -> int
+const Adaptive.Aeron.AeronCounters.CLUSTERED_SERVICE_SNAPSHOT_DURATION_THRESHOLD_EXCEEDED_TYPE_ID = 237 -> int
+const Adaptive.Aeron.AeronCounters.DRIVER_HEARTBEAT_TYPE_ID = 11 -> int
+const Adaptive.Aeron.AeronCounters.DRIVER_LOCAL_SOCKET_ADDRESS_STATUS_TYPE_ID = 14 -> int
+const Adaptive.Aeron.AeronCounters.DRIVER_PER_IMAGE_TYPE_ID = 10 -> int
+const Adaptive.Aeron.AeronCounters.DRIVER_PUBLISHER_LIMIT_TYPE_ID = 1 -> int
+const Adaptive.Aeron.AeronCounters.DRIVER_PUBLISHER_POS_TYPE_ID = 12 -> int
+const Adaptive.Aeron.AeronCounters.DRIVER_RECEIVE_CHANNEL_STATUS_TYPE_ID = 7 -> int
+const Adaptive.Aeron.AeronCounters.DRIVER_RECEIVER_HWM_TYPE_ID = 3 -> int
+const Adaptive.Aeron.AeronCounters.DRIVER_RECEIVER_NAKS_SENT_TYPE_ID = 20 -> int
+const Adaptive.Aeron.AeronCounters.DRIVER_RECEIVER_POS_TYPE_ID = 5 -> int
+const Adaptive.Aeron.AeronCounters.DRIVER_SEND_CHANNEL_STATUS_TYPE_ID = 6 -> int
+const Adaptive.Aeron.AeronCounters.DRIVER_SENDER_BPE_TYPE_ID = 13 -> int
+const Adaptive.Aeron.AeronCounters.DRIVER_SENDER_LIMIT_TYPE_ID = 9 -> int
+const Adaptive.Aeron.AeronCounters.DRIVER_SENDER_NAKS_RECEIVED_TYPE_ID = 19 -> int
+const Adaptive.Aeron.AeronCounters.DRIVER_SENDER_POSITION_TYPE_ID = 2 -> int
+const Adaptive.Aeron.AeronCounters.DRIVER_SUBSCRIBER_POSITION_TYPE_ID = 4 -> int
+const Adaptive.Aeron.AeronCounters.DRIVER_SYSTEM_COUNTER_TYPE_ID = 0 -> int
+const Adaptive.Aeron.AeronCounters.FLOW_CONTROL_RECEIVERS_COUNTER_TYPE_ID = 17 -> int
+const Adaptive.Aeron.AeronCounters.MDC_DESTINATIONS_COUNTER_TYPE_ID = 18 -> int
+const Adaptive.Aeron.AeronCounters.NAME_RESOLVER_CACHE_ENTRIES_COUNTER_TYPE_ID = 16 -> int
+const Adaptive.Aeron.AeronCounters.NAME_RESOLVER_NEIGHBORS_COUNTER_TYPE_ID = 15 -> int
+const Adaptive.Aeron.AeronCounters.NODE_CONTROL_TOGGLE_TYPE_ID = 233 -> int
+const Adaptive.Aeron.AeronCounters.SEQUENCER_APPLICATION_ERROR_COUNT_TYPE_ID = 509 -> int
+const Adaptive.Aeron.AeronCounters.SEQUENCER_APPLICATION_INTERVAL_MAX_SERVICE_TIME_TYPE_ID = 513 -> int
+const Adaptive.Aeron.AeronCounters.SEQUENCER_APPLICATION_INTERVAL_SERVICE_TIME_TYPE_ID = 512 -> int
+const Adaptive.Aeron.AeronCounters.SEQUENCER_APPLICATION_INTERVAL_TOTAL_INVOCATIONS_TYPE_ID = 514 -> int
+const Adaptive.Aeron.AeronCounters.SEQUENCER_APPLICATION_MAX_SERVICE_TIME_TYPE_ID = 510 -> int
+const Adaptive.Aeron.AeronCounters.SEQUENCER_APPLICATION_SEQUENCE_INDEX_COUNTER_TYPE_ID = 507 -> int
+const Adaptive.Aeron.AeronCounters.SEQUENCER_APPLICATION_SERVICE_TIME_THRESHOLD_EXCEEDED_COUNT_TYPE_ID = 511 -> int
+const Adaptive.Aeron.AeronCounters.SEQUENCER_APPLICATION_SESSION_ID_TYPE_ID = 519 -> int
+const Adaptive.Aeron.AeronCounters.SEQUENCER_APPLICATION_SNAPSHOT_LOAD_TIME_TYPE_ID = 515 -> int
+const Adaptive.Aeron.AeronCounters.SEQUENCER_APPLICATION_SNAPSHOT_STORE_TIME_TYPE_ID = 516 -> int
+const Adaptive.Aeron.AeronCounters.SEQUENCER_APPLICATION_STATE_COUNTER_TYPE_ID = 508 -> int
+const Adaptive.Aeron.AeronCounters.SEQUENCER_APPLICATION_TAKE_SNAPSHOT_COUNT_TYPE_ID = 518 -> int
+const Adaptive.Aeron.AeronCounters.SEQUENCER_APPLICATION_TAKE_SNAPSHOT_FAILURES_TYPE_ID = 517 -> int
+const Adaptive.Aeron.AeronCounters.SEQUENCER_CLIENT_SNAPSHOT_ID_COUNTER_TYPE_ID = 505 -> int
+const Adaptive.Aeron.AeronCounters.SEQUENCER_GROUP_HWM_COUNTER_TYPE_ID = 501 -> int
+const Adaptive.Aeron.AeronCounters.SEQUENCER_INDEX_COUNTER_TYPE_ID = 500 -> int
+const Adaptive.Aeron.AeronCounters.SEQUENCER_REPLAY_INDEX_INITIAL_SEQUENCE_INDEX_COUNTER_TYPE_ID = 524 -> int
+const Adaptive.Aeron.AeronCounters.SEQUENCER_REPLAY_INDEX_INITIAL_SEQUENCE_LOG_POSITION_COUNTER_TYPE_ID = 525 -> int
+const Adaptive.Aeron.AeronCounters.SEQUENCER_REPLAY_INDEX_MAX_SEQUENCE_INDEX_COUNTER_TYPE_ID = 522 -> int
+const Adaptive.Aeron.AeronCounters.SEQUENCER_REPLAY_INDEX_MAX_SEQUENCE_LOG_POSITION_COUNTER_TYPE_ID = 523 -> int
+const Adaptive.Aeron.AeronCounters.SEQUENCER_REPLAY_INDEX_MIN_SEQUENCE_INDEX_COUNTER_TYPE_ID = 520 -> int
+const Adaptive.Aeron.AeronCounters.SEQUENCER_REPLAY_INDEX_MIN_SEQUENCE_LOG_POSITION_COUNTER_TYPE_ID = 521 -> int
+const Adaptive.Aeron.AeronCounters.SEQUENCER_SESSION_GREATEST_MESSAGE_ID_COUNTER_TYPE_ID = 502 -> int
+const Adaptive.Aeron.AeronCounters.SEQUENCER_SESSION_GREATEST_MESSAGE_TIMESTAMP_COUNTER_TYPE_ID = 504 -> int
+const Adaptive.Aeron.AeronCounters.SEQUENCER_SESSION_MESSAGES_COUNTER_TYPE_ID = 503 -> int
+const Adaptive.Aeron.AeronCounters.SYSTEM_COUNTER_ID_AERON_VERSION = 34 -> int
+const Adaptive.Aeron.AeronCounters.SYSTEM_COUNTER_ID_BYTES_CURRENTLY_MAPPED = 35 -> int
+const Adaptive.Aeron.AeronCounters.SYSTEM_COUNTER_ID_BYTES_RECEIVED = 1 -> int
+const Adaptive.Aeron.AeronCounters.SYSTEM_COUNTER_ID_BYTES_SENT = 0 -> int
+const Adaptive.Aeron.AeronCounters.SYSTEM_COUNTER_ID_CLIENT_TIMEOUTS = 24 -> int
+const Adaptive.Aeron.AeronCounters.SYSTEM_COUNTER_ID_CONDUCTOR_CYCLE_TIME_THRESHOLD_EXCEEDED = 27 -> int
+const Adaptive.Aeron.AeronCounters.SYSTEM_COUNTER_ID_CONDUCTOR_MAX_CYCLE_TIME = 26 -> int
+const Adaptive.Aeron.AeronCounters.SYSTEM_COUNTER_ID_CONDUCTOR_PROXY_FAILS = 4 -> int
+const Adaptive.Aeron.AeronCounters.SYSTEM_COUNTER_ID_CONTROL_PROTOCOL_VERSION = 43 -> int
+const Adaptive.Aeron.AeronCounters.SYSTEM_COUNTER_ID_CONTROLLABLE_IDLE_STRATEGY = 22 -> int
+const Adaptive.Aeron.AeronCounters.SYSTEM_COUNTER_ID_ERROR_FRAMES_RECEIVED = 38 -> int
+const Adaptive.Aeron.AeronCounters.SYSTEM_COUNTER_ID_ERROR_FRAMES_SENT = 39 -> int
+const Adaptive.Aeron.AeronCounters.SYSTEM_COUNTER_ID_ERRORS = 15 -> int
+const Adaptive.Aeron.AeronCounters.SYSTEM_COUNTER_ID_FLOW_CONTROL_OVER_RUNS = 13 -> int
+const Adaptive.Aeron.AeronCounters.SYSTEM_COUNTER_ID_FLOW_CONTROL_UNDER_RUNS = 12 -> int
+const Adaptive.Aeron.AeronCounters.SYSTEM_COUNTER_ID_FREE_FAILS = 17 -> int
+const Adaptive.Aeron.AeronCounters.SYSTEM_COUNTER_ID_HEARTBEATS_RECEIVED = 10 -> int
+const Adaptive.Aeron.AeronCounters.SYSTEM_COUNTER_ID_HEARTBEATS_SENT = 9 -> int
+const Adaptive.Aeron.AeronCounters.SYSTEM_COUNTER_ID_IMAGES_REJECTED = 42 -> int
+const Adaptive.Aeron.AeronCounters.SYSTEM_COUNTER_ID_INVALID_PACKETS = 14 -> int
+const Adaptive.Aeron.AeronCounters.SYSTEM_COUNTER_ID_LOSS_GAP_FILLS = 23 -> int
+const Adaptive.Aeron.AeronCounters.SYSTEM_COUNTER_ID_NAK_MESSAGES_RECEIVED = 6 -> int
+const Adaptive.Aeron.AeronCounters.SYSTEM_COUNTER_ID_NAK_MESSAGES_SENT = 5 -> int
+const Adaptive.Aeron.AeronCounters.SYSTEM_COUNTER_ID_NAME_RESOLVER_MAX_TIME = 32 -> int
+const Adaptive.Aeron.AeronCounters.SYSTEM_COUNTER_ID_NAME_RESOLVER_TIME_THRESHOLD_EXCEEDED = 33 -> int
+const Adaptive.Aeron.AeronCounters.SYSTEM_COUNTER_ID_POSSIBLE_TTL_ASYMMETRY = 21 -> int
+const Adaptive.Aeron.AeronCounters.SYSTEM_COUNTER_ID_PUBLICATION_IMAGES_REVOKED = 41 -> int
+const Adaptive.Aeron.AeronCounters.SYSTEM_COUNTER_ID_PUBLICATIONS_REVOKED = 40 -> int
+const Adaptive.Aeron.AeronCounters.SYSTEM_COUNTER_ID_RECEIVER_CYCLE_TIME_THRESHOLD_EXCEEDED = 31 -> int
+const Adaptive.Aeron.AeronCounters.SYSTEM_COUNTER_ID_RECEIVER_MAX_CYCLE_TIME = 30 -> int
+const Adaptive.Aeron.AeronCounters.SYSTEM_COUNTER_ID_RECEIVER_PROXY_FAILS = 2 -> int
+const Adaptive.Aeron.AeronCounters.SYSTEM_COUNTER_ID_RESOLUTION_CHANGES = 25 -> int
+const Adaptive.Aeron.AeronCounters.SYSTEM_COUNTER_ID_RETRANSMIT_OVERFLOW = 37 -> int
+const Adaptive.Aeron.AeronCounters.SYSTEM_COUNTER_ID_RETRANSMITS_SENT = 11 -> int
+const Adaptive.Aeron.AeronCounters.SYSTEM_COUNTER_ID_RETRANSMITTED_BYTES = 36 -> int
+const Adaptive.Aeron.AeronCounters.SYSTEM_COUNTER_ID_SENDER_CYCLE_TIME_THRESHOLD_EXCEEDED = 29 -> int
+const Adaptive.Aeron.AeronCounters.SYSTEM_COUNTER_ID_SENDER_FLOW_CONTROL_LIMITS = 18 -> int
+const Adaptive.Aeron.AeronCounters.SYSTEM_COUNTER_ID_SENDER_MAX_CYCLE_TIME = 28 -> int
+const Adaptive.Aeron.AeronCounters.SYSTEM_COUNTER_ID_SENDER_PROXY_FAILS = 3 -> int
+const Adaptive.Aeron.AeronCounters.SYSTEM_COUNTER_ID_SHORT_SENDS = 16 -> int
+const Adaptive.Aeron.AeronCounters.SYSTEM_COUNTER_ID_STATUS_MESSAGES_RECEIVED = 8 -> int
+const Adaptive.Aeron.AeronCounters.SYSTEM_COUNTER_ID_STATUS_MESSAGES_SENT = 7 -> int
+const Adaptive.Aeron.AeronCounters.SYSTEM_COUNTER_ID_UNBLOCKED_COMMANDS = 20 -> int
+const Adaptive.Aeron.AeronCounters.SYSTEM_COUNTER_ID_UNBLOCKED_PUBLICATIONS = 19 -> int
+const Adaptive.Aeron.AeronCounters.TRANSITION_MODULE_CONTROL_TOGGLE_TYPE_ID = 225 -> int
+const Adaptive.Aeron.AeronCounters.TRANSITION_MODULE_CYCLE_TIME_THRESHOLD_EXCEEDED_TYPE_ID = 230 -> int
+const Adaptive.Aeron.AeronCounters.TRANSITION_MODULE_ERROR_COUNT_TYPE_ID = 226 -> int
+const Adaptive.Aeron.AeronCounters.TRANSITION_MODULE_MAX_CYCLE_TIME_TYPE_ID = 229 -> int
+const Adaptive.Aeron.AeronCounters.TRANSITION_MODULE_STATE_TYPE_ID = 224 -> int
+const Adaptive.Aeron.AeronVersion.MAJOR_VERSION = 1 -> int
+const Adaptive.Aeron.AeronVersion.MINOR_VERSION = 49 -> int
+const Adaptive.Aeron.AeronVersion.PATCH_VERSION = 0 -> int
+const Adaptive.Aeron.AeronVersion.VERSION = "1.49.0" -> string
+const Adaptive.Aeron.ChannelUri.AERON_SCHEME = "aeron" -> string
+const Adaptive.Aeron.ChannelUri.INVALID_TAG = -1 -> long
+const Adaptive.Aeron.ChannelUri.MAX_URI_LENGTH = 4095 -> int
+const Adaptive.Aeron.ChannelUri.SPY_QUALIFIER = "aeron-spy" -> string
+const Adaptive.Aeron.ChannelUriStringBuilder.TAG_PREFIX = "tag:" -> string
+const Adaptive.Aeron.CncFileDescriptor.CNC_FILE = "cnc.dat" -> string
+const Adaptive.Aeron.Command.ControlProtocolEvents.ADD_COUNTER = 9 -> int
+const Adaptive.Aeron.Command.ControlProtocolEvents.ADD_DESTINATION = 7 -> int
+const Adaptive.Aeron.Command.ControlProtocolEvents.ADD_EXCLUSIVE_PUBLICATION = 3 -> int
+const Adaptive.Aeron.Command.ControlProtocolEvents.ADD_PUBLICATION = 1 -> int
+const Adaptive.Aeron.Command.ControlProtocolEvents.ADD_RCV_DESTINATION = 12 -> int
+const Adaptive.Aeron.Command.ControlProtocolEvents.ADD_STATIC_COUNTER = 15 -> int
+const Adaptive.Aeron.Command.ControlProtocolEvents.ADD_SUBSCRIPTION = 4 -> int
+const Adaptive.Aeron.Command.ControlProtocolEvents.CLIENT_CLOSE = 11 -> int
+const Adaptive.Aeron.Command.ControlProtocolEvents.CLIENT_KEEPALIVE = 6 -> int
+const Adaptive.Aeron.Command.ControlProtocolEvents.CONTROL_PROTOCOL_MAJOR_VERSION = 1 -> int
+const Adaptive.Aeron.Command.ControlProtocolEvents.CONTROL_PROTOCOL_MINOR_VERSION = 0 -> int
+const Adaptive.Aeron.Command.ControlProtocolEvents.CONTROL_PROTOCOL_PATCH_VERSION = 0 -> int
+const Adaptive.Aeron.Command.ControlProtocolEvents.GET_NEXT_AVAILABLE_SESSION_ID = 18 -> int
+const Adaptive.Aeron.Command.ControlProtocolEvents.ON_AVAILABLE_IMAGE = 3842 -> int
+const Adaptive.Aeron.Command.ControlProtocolEvents.ON_CLIENT_TIMEOUT = 3850 -> int
+const Adaptive.Aeron.Command.ControlProtocolEvents.ON_COUNTER_READY = 3848 -> int
+const Adaptive.Aeron.Command.ControlProtocolEvents.ON_ERROR = 3841 -> int
+const Adaptive.Aeron.Command.ControlProtocolEvents.ON_EXCLUSIVE_PUBLICATION_READY = 3846 -> int
+const Adaptive.Aeron.Command.ControlProtocolEvents.ON_NEXT_AVAILABLE_SESSION_ID = 3853 -> int
+const Adaptive.Aeron.Command.ControlProtocolEvents.ON_OPERATION_SUCCESS = 3844 -> int
+const Adaptive.Aeron.Command.ControlProtocolEvents.ON_PUBLICATION_ERROR = 3852 -> int
+const Adaptive.Aeron.Command.ControlProtocolEvents.ON_PUBLICATION_READY = 3843 -> int
+const Adaptive.Aeron.Command.ControlProtocolEvents.ON_STATIC_COUNTER = 3851 -> int
+const Adaptive.Aeron.Command.ControlProtocolEvents.ON_SUBSCRIPTION_READY = 3847 -> int
+const Adaptive.Aeron.Command.ControlProtocolEvents.ON_UNAVAILABLE_COUNTER = 3849 -> int
+const Adaptive.Aeron.Command.ControlProtocolEvents.ON_UNAVAILABLE_IMAGE = 3845 -> int
+const Adaptive.Aeron.Command.ControlProtocolEvents.REJECT_IMAGE = 16 -> int
+const Adaptive.Aeron.Command.ControlProtocolEvents.REMOVE_COUNTER = 10 -> int
+const Adaptive.Aeron.Command.ControlProtocolEvents.REMOVE_DESTINATION = 8 -> int
+const Adaptive.Aeron.Command.ControlProtocolEvents.REMOVE_DESTINATION_BY_ID = 17 -> int
+const Adaptive.Aeron.Command.ControlProtocolEvents.REMOVE_PUBLICATION = 2 -> int
+const Adaptive.Aeron.Command.ControlProtocolEvents.REMOVE_RCV_DESTINATION = 13 -> int
+const Adaptive.Aeron.Command.ControlProtocolEvents.REMOVE_SUBSCRIPTION = 5 -> int
+const Adaptive.Aeron.Command.ControlProtocolEvents.TERMINATE_DRIVER = 14 -> int
+const Adaptive.Aeron.LogBuffer.FrameDescriptor.BEGIN_FRAG_FLAG = 128 -> byte
+const Adaptive.Aeron.LogBuffer.FrameDescriptor.END_FRAG_FLAG = 64 -> byte
+const Adaptive.Aeron.LogBuffer.FrameDescriptor.FLAGS_OFFSET = 5 -> int
+const Adaptive.Aeron.LogBuffer.FrameDescriptor.FRAME_ALIGNMENT = 32 -> int
+const Adaptive.Aeron.LogBuffer.FrameDescriptor.MAX_MESSAGE_LENGTH = 16777216 -> int
+const Adaptive.Aeron.LogBuffer.FrameDescriptor.PADDING_FRAME_TYPE = 0 -> int
+const Adaptive.Aeron.LogBuffer.FrameDescriptor.SESSION_ID_OFFSET = 12 -> int
+const Adaptive.Aeron.LogBuffer.FrameDescriptor.TERM_ID_OFFSET = 20 -> int
+const Adaptive.Aeron.LogBuffer.FrameDescriptor.TERM_OFFSET = 8 -> int
+const Adaptive.Aeron.LogBuffer.FrameDescriptor.TYPE_OFFSET = 6 -> int
+const Adaptive.Aeron.LogBuffer.FrameDescriptor.UNFRAGMENTED = 192 -> byte
+const Adaptive.Aeron.LogBuffer.FrameDescriptor.VERSION_OFFSET = 4 -> int
+const Adaptive.Aeron.LogBuffer.LogBufferDescriptor.PAGE_MAX_SIZE = 1073741824 -> int
+const Adaptive.Aeron.LogBuffer.LogBufferDescriptor.PAGE_MIN_SIZE = 4096 -> int
+const Adaptive.Aeron.LogBuffer.LogBufferDescriptor.PARTITION_COUNT = 3 -> int
+const Adaptive.Aeron.LogBuffer.LogBufferDescriptor.TERM_MAX_LENGTH = 1073741824 -> int
+const Adaptive.Aeron.LogBuffer.LogBufferDescriptor.TERM_MIN_LENGTH = 65536 -> int
+const Adaptive.Aeron.Protocol.DataHeaderFlyweight.BEGIN_FLAG = 128 -> short
+const Adaptive.Aeron.Protocol.DataHeaderFlyweight.DATA_OFFSET = 32 -> int
+const Adaptive.Aeron.Protocol.DataHeaderFlyweight.DEFAULT_RESERVE_VALUE = 0 -> long
+const Adaptive.Aeron.Protocol.DataHeaderFlyweight.END_FLAG = 64 -> short
+const Adaptive.Aeron.Protocol.DataHeaderFlyweight.EOS_FLAG = 32 -> short
+const Adaptive.Aeron.Protocol.DataHeaderFlyweight.HEADER_LENGTH = 32 -> int
+const Adaptive.Aeron.Protocol.DataHeaderFlyweight.RESERVED_VALUE_OFFSET = 24 -> int
+const Adaptive.Aeron.Protocol.DataHeaderFlyweight.REVOKED_FLAG = 16 -> short
+const Adaptive.Aeron.Protocol.DataHeaderFlyweight.SESSION_ID_FIELD_OFFSET = 12 -> int
+const Adaptive.Aeron.Protocol.DataHeaderFlyweight.STREAM_ID_FIELD_OFFSET = 16 -> int
+const Adaptive.Aeron.Protocol.DataHeaderFlyweight.TERM_ID_FIELD_OFFSET = 20 -> int
+const Adaptive.Aeron.Protocol.DataHeaderFlyweight.TERM_OFFSET_FIELD_OFFSET = 8 -> int
+const Adaptive.Aeron.Protocol.HeaderFlyweight.CURRENT_VERSION = 0 -> byte
+const Adaptive.Aeron.Protocol.HeaderFlyweight.FLAGS_FIELD_OFFSET = 5 -> int
+const Adaptive.Aeron.Protocol.HeaderFlyweight.FRAME_LENGTH_FIELD_OFFSET = 0 -> int
+const Adaptive.Aeron.Protocol.HeaderFlyweight.HDR_TYPE_ATS_DATA = 8 -> int
+const Adaptive.Aeron.Protocol.HeaderFlyweight.HDR_TYPE_ATS_SETUP = 10 -> int
+const Adaptive.Aeron.Protocol.HeaderFlyweight.HDR_TYPE_ATS_SM = 9 -> int
+const Adaptive.Aeron.Protocol.HeaderFlyweight.HDR_TYPE_DATA = 1 -> int
+const Adaptive.Aeron.Protocol.HeaderFlyweight.HDR_TYPE_ERR = 4 -> int
+const Adaptive.Aeron.Protocol.HeaderFlyweight.HDR_TYPE_EXT = 65535 -> int
+const Adaptive.Aeron.Protocol.HeaderFlyweight.HDR_TYPE_NAK = 2 -> int
+const Adaptive.Aeron.Protocol.HeaderFlyweight.HDR_TYPE_PAD = 0 -> int
+const Adaptive.Aeron.Protocol.HeaderFlyweight.HDR_TYPE_RES = 7 -> int
+const Adaptive.Aeron.Protocol.HeaderFlyweight.HDR_TYPE_RSP_SETUP = 11 -> int
+const Adaptive.Aeron.Protocol.HeaderFlyweight.HDR_TYPE_RTTM = 6 -> int
+const Adaptive.Aeron.Protocol.HeaderFlyweight.HDR_TYPE_SETUP = 5 -> int
+const Adaptive.Aeron.Protocol.HeaderFlyweight.HDR_TYPE_SM = 3 -> int
+const Adaptive.Aeron.Protocol.HeaderFlyweight.TYPE_FIELD_OFFSET = 6 -> int
+const Adaptive.Aeron.Protocol.HeaderFlyweight.VERSION_FIELD_OFFSET = 4 -> int
+const Adaptive.Aeron.Publication.ADMIN_ACTION = -3 -> long
+const Adaptive.Aeron.Publication.BACK_PRESSURED = -2 -> long
+const Adaptive.Aeron.Publication.CLOSED = -4 -> long
+const Adaptive.Aeron.Publication.MAX_POSITION_EXCEEDED = -5 -> long
+const Adaptive.Aeron.Publication.NOT_CONNECTED = -1 -> long
+const Adaptive.Aeron.Status.ChannelEndpointStatus.ACTIVE = 1 -> long
+const Adaptive.Aeron.Status.ChannelEndpointStatus.CHANNEL_OFFSET = 0 -> int
+const Adaptive.Aeron.Status.ChannelEndpointStatus.CLOSING = 2 -> long
+const Adaptive.Aeron.Status.ChannelEndpointStatus.ERRORED = -1 -> long
+const Adaptive.Aeron.Status.ChannelEndpointStatus.INITIALIZING = 0 -> long
+const Adaptive.Aeron.Status.ChannelEndpointStatus.NO_ID_ALLOCATED = -1 -> int
+const Adaptive.Aeron.Status.HeartbeatTimestamp.HEARTBEAT_TYPE_ID = 11 -> int
+const Adaptive.Aeron.Status.HeartbeatTimestamp.REGISTRATION_ID_OFFSET = 0 -> int
+const Adaptive.Aeron.Status.LocalSocketAddressStatus.LOCAL_SOCKET_ADDRESS_STATUS_TYPE_ID = 14 -> int
+override Adaptive.Aeron.Aeron.Context.ToString() -> string
+override Adaptive.Aeron.Aeron.ToString() -> string
+override Adaptive.Aeron.ChannelUri.Equals(object obj) -> bool
+override Adaptive.Aeron.ChannelUri.GetHashCode() -> int
+override Adaptive.Aeron.ChannelUri.ToString() -> string
+override Adaptive.Aeron.ChannelUriStringBuilder.ToString() -> string
+override Adaptive.Aeron.Command.CounterMessageFlyweight.ToString() -> string
+override Adaptive.Aeron.Command.NextAvailableSessionIdFlyweight.ToString() -> string
+override Adaptive.Aeron.Command.StaticCounterFlyweight.ToString() -> string
+override Adaptive.Aeron.Command.StaticCounterMessageFlyweight.ToString() -> string
+override Adaptive.Aeron.ConcurrentPublication.AvailableWindow.get -> long
+override Adaptive.Aeron.ConcurrentPublication.Offer(Adaptive.Aeron.DirectBufferVector[] vectors, Adaptive.Aeron.ReservedValueSupplier reservedValueSupplier = null) -> long
+override Adaptive.Aeron.ConcurrentPublication.Offer(Adaptive.Agrona.IDirectBuffer buffer, int offset, int length, Adaptive.Aeron.ReservedValueSupplier reservedValueSupplier = null) -> long
+override Adaptive.Aeron.ConcurrentPublication.Offer(Adaptive.Agrona.IDirectBuffer bufferOne, int offsetOne, int lengthOne, Adaptive.Agrona.IDirectBuffer bufferTwo, int offsetTwo, int lengthTwo, Adaptive.Aeron.ReservedValueSupplier reservedValueSupplier = null) -> long
+override Adaptive.Aeron.ConcurrentPublication.TryClaim(int length, Adaptive.Aeron.LogBuffer.BufferClaim bufferClaim) -> long
+override Adaptive.Aeron.Counter.Dispose() -> void
+override Adaptive.Aeron.Counter.IsClosed.get -> bool
+override Adaptive.Aeron.DirectBufferVector.ToString() -> string
+override Adaptive.Aeron.DriverProxy.ToString() -> string
+override Adaptive.Aeron.DutyCycleStallTracker.ReportMeasurement(long durationNs) -> void
+override Adaptive.Aeron.Exceptions.AeronException.ToString() -> string
+override Adaptive.Aeron.Exceptions.RegistrationException.Message.get -> string
+override Adaptive.Aeron.ExclusivePublication.AvailableWindow.get -> long
+override Adaptive.Aeron.ExclusivePublication.Offer(Adaptive.Aeron.DirectBufferVector[] vectors, Adaptive.Aeron.ReservedValueSupplier reservedValueSupplier = null) -> long
+override Adaptive.Aeron.ExclusivePublication.Offer(Adaptive.Agrona.IDirectBuffer buffer, int offset, int length, Adaptive.Aeron.ReservedValueSupplier reservedValueSupplier = null) -> long
+override Adaptive.Aeron.ExclusivePublication.Offer(Adaptive.Agrona.IDirectBuffer bufferOne, int offsetOne, int lengthOne, Adaptive.Agrona.IDirectBuffer bufferTwo, int offsetTwo, int lengthTwo, Adaptive.Aeron.ReservedValueSupplier reservedValueSupplier = null) -> long
+override Adaptive.Aeron.ExclusivePublication.Position.get -> long
+override Adaptive.Aeron.ExclusivePublication.TryClaim(int length, Adaptive.Aeron.LogBuffer.BufferClaim bufferClaim) -> long
+override Adaptive.Aeron.Image.ToString() -> string
+override Adaptive.Aeron.Protocol.DataHeaderFlyweight.ToString() -> string
+override Adaptive.Aeron.Publication.ToString() -> string
+override Adaptive.Aeron.Status.PublicationErrorFrame.ToString() -> string
+override Adaptive.Aeron.Subscription.ToString() -> string
+static Adaptive.Aeron.Aeron.Configuration.ClientName() -> string
+static Adaptive.Aeron.Aeron.Configuration.CloseLingerDurationNs() -> long
+static Adaptive.Aeron.Aeron.Configuration.IdleSleepDurationNs() -> long
+static Adaptive.Aeron.Aeron.Configuration.PreTouchMappedMemory() -> bool
+static Adaptive.Aeron.Aeron.Configuration.ResourceLingerDurationNs() -> long
+static Adaptive.Aeron.Aeron.Connect() -> Adaptive.Aeron.Aeron
+static Adaptive.Aeron.Aeron.Connect(Adaptive.Aeron.Aeron.Context ctx) -> Adaptive.Aeron.Aeron
+static Adaptive.Aeron.Aeron.Context.CheckDebugTimeout(long timeout, Adaptive.Agrona.TimeUnit timeUnit, double factor, string debugFieldName) -> long
+static Adaptive.Aeron.Aeron.Context.CheckDebugTimeout(long timeout, Adaptive.Agrona.TimeUnit timeUnit, string debugFieldName) -> long
+static Adaptive.Aeron.Aeron.Context.DriverFilePageSize(System.IO.DirectoryInfo aeronDirectory, Adaptive.Agrona.Concurrent.IEpochClock clock, long timeoutMs) -> int
+static Adaptive.Aeron.Aeron.Context.FallbackLogger() -> System.IO.TextWriter
+static Adaptive.Aeron.Aeron.Context.GetAeronDirectoryName() -> string
+static Adaptive.Aeron.Aeron.Context.IsDriverActive(long driverTimeoutMs, System.Action<string> logger, Adaptive.Agrona.Util.MappedByteBuffer cncByteBuffer) -> bool
+static Adaptive.Aeron.Aeron.Context.IsDriverActive(System.IO.DirectoryInfo directory, long driverTimeoutMs, System.Action<string> logger) -> bool
+static Adaptive.Aeron.Aeron.Context.PrintErrorLog(Adaptive.Agrona.Concurrent.IAtomicBuffer errorBuffer, System.IO.TextWriter out) -> int
+static Adaptive.Aeron.Aeron.Context.RequestDriverTermination(System.IO.DirectoryInfo directory, Adaptive.Agrona.IDirectBuffer tokenBuffer, int tokenOffset, int tokenLength) -> bool
+static Adaptive.Aeron.Aeron.Context.SetupErrorHandler(Adaptive.Agrona.IErrorHandler userErrorHandler, Adaptive.Agrona.Concurrent.Errors.DistinctErrorLog errorLog) -> Adaptive.Agrona.IErrorHandler
+static Adaptive.Aeron.Aeron.Context.ShouldPrintConfigurationOnStart() -> bool
+static Adaptive.Aeron.AeronCounters.AppendToLabel(Adaptive.Agrona.Concurrent.IAtomicBuffer metaDataBuffer, int counterId, string value) -> int
+static Adaptive.Aeron.AeronCounters.AppendVersionInfo(Adaptive.Agrona.IMutableDirectBuffer tempBuffer, int offset, string fullVersion) -> int
+static Adaptive.Aeron.AeronCounters.FormatVersionInfo(string fullVersion) -> string
+static Adaptive.Aeron.AeronCounters.ValidateCounterTypeId(Adaptive.Aeron.Aeron aeron, Adaptive.Aeron.Counter counter, int expectedCounterTypeId) -> void
+static Adaptive.Aeron.AeronCounters.ValidateCounterTypeId(Adaptive.Agrona.Concurrent.Status.CountersReader countersReader, int counterId, int expectedCounterTypeId) -> void
+static Adaptive.Aeron.AeronThrowHelper.ThrowAeronException(string message) -> void
+static Adaptive.Aeron.ChannelUri.AddAliasIfAbsent(string uri, string alias) -> string
+static Adaptive.Aeron.ChannelUri.AddSessionId(string channel, int sessionId) -> string
+static Adaptive.Aeron.ChannelUri.CreateDestinationUri(string channel, string endpoint) -> string
+static Adaptive.Aeron.ChannelUri.GetTag(string paramValue) -> long
+static Adaptive.Aeron.ChannelUri.IsControlModeResponse(string channelUri) -> bool
+static Adaptive.Aeron.ChannelUri.IsTagged(string paramValue) -> bool
+static Adaptive.Aeron.ChannelUri.Parse(string uri) -> Adaptive.Aeron.ChannelUri
+static Adaptive.Aeron.CncFileDescriptor.CheckVersion(int cncVersion) -> void
+static Adaptive.Aeron.CncFileDescriptor.ClientLivenessTimeoutNs(Adaptive.Agrona.IDirectBuffer metaDataBuffer) -> long
+static Adaptive.Aeron.CncFileDescriptor.ClientLivenessTimeoutOffset(int baseOffset) -> int
+static Adaptive.Aeron.CncFileDescriptor.CncVersionOffset(int baseOffset) -> int
+static Adaptive.Aeron.CncFileDescriptor.ComputeCncFileLength(int totalLengthOfBuffers, int alignment) -> int
+static Adaptive.Aeron.CncFileDescriptor.CountersMetaDataBufferLengthOffset(int baseOffset) -> int
+static Adaptive.Aeron.CncFileDescriptor.CountersValuesBufferLengthOffset(int baseOffset) -> int
+static Adaptive.Aeron.CncFileDescriptor.CreateCountersMetaDataBuffer(Adaptive.Agrona.Util.MappedByteBuffer buffer, Adaptive.Agrona.IDirectBuffer metaDataBuffer) -> Adaptive.Agrona.Concurrent.UnsafeBuffer
+static Adaptive.Aeron.CncFileDescriptor.CreateCountersValuesBuffer(Adaptive.Agrona.Util.MappedByteBuffer buffer, Adaptive.Agrona.IDirectBuffer metaDataBuffer) -> Adaptive.Agrona.Concurrent.UnsafeBuffer
+static Adaptive.Aeron.CncFileDescriptor.CreateErrorLogBuffer(Adaptive.Agrona.Util.MappedByteBuffer buffer, Adaptive.Agrona.IDirectBuffer metaDataBuffer) -> Adaptive.Agrona.Concurrent.UnsafeBuffer
+static Adaptive.Aeron.CncFileDescriptor.CreateMetaDataBuffer(Adaptive.Agrona.Util.MappedByteBuffer buffer) -> Adaptive.Agrona.Concurrent.UnsafeBuffer
+static Adaptive.Aeron.CncFileDescriptor.CreateToClientsBuffer(Adaptive.Agrona.Util.MappedByteBuffer buffer, Adaptive.Agrona.IDirectBuffer metaDataBuffer) -> Adaptive.Agrona.Concurrent.UnsafeBuffer
+static Adaptive.Aeron.CncFileDescriptor.CreateToDriverBuffer(Adaptive.Agrona.Util.MappedByteBuffer buffer, Adaptive.Agrona.IDirectBuffer metaDataBuffer) -> Adaptive.Agrona.Concurrent.UnsafeBuffer
+static Adaptive.Aeron.CncFileDescriptor.ErrorLogBufferLengthOffset(int baseOffset) -> int
+static Adaptive.Aeron.CncFileDescriptor.FilePageSize(Adaptive.Agrona.IDirectBuffer metaDataBuffer) -> int
+static Adaptive.Aeron.CncFileDescriptor.IsCncFile(System.IO.FileInfo path) -> bool
+static Adaptive.Aeron.CncFileDescriptor.IsCncFileLengthSufficient(Adaptive.Agrona.IDirectBuffer metaDataBuffer, long cncFileLength) -> bool
+static Adaptive.Aeron.CncFileDescriptor.Pid(Adaptive.Agrona.IDirectBuffer metaDataBuffer) -> long
+static Adaptive.Aeron.CncFileDescriptor.PidOffset(int baseOffset) -> int
+static Adaptive.Aeron.CncFileDescriptor.StartTimestamp(Adaptive.Agrona.IDirectBuffer metaDataBuffer) -> long
+static Adaptive.Aeron.CncFileDescriptor.StartTimestampOffset(int baseOffset) -> int
+static Adaptive.Aeron.CncFileDescriptor.ToClientsBufferLengthOffset(int baseOffset) -> int
+static Adaptive.Aeron.CncFileDescriptor.ToDriverBufferLengthOffset(int baseOffset) -> int
+static Adaptive.Aeron.Command.CounterMessageFlyweight.ComputeLength(int keyLength, int labelLength) -> int
+static Adaptive.Aeron.Command.DestinationMessageFlyweight.ComputeLength(int channelLength) -> int
+static Adaptive.Aeron.Command.PublicationMessageFlyweight.ComputeLength(int channelLength) -> int
+static Adaptive.Aeron.Command.RejectImageFlyweight.ComputeLength(string reason) -> int
+static Adaptive.Aeron.Command.RemoveMessageFlyweight.Length() -> int
+static Adaptive.Aeron.Command.RemovePublicationFlyweight.Length() -> int
+static Adaptive.Aeron.Command.StaticCounterMessageFlyweight.ComputeLength(int keyLength, int labelLength) -> int
+static Adaptive.Aeron.Command.SubscriptionMessageFlyweight.ComputeLength(int channelLength) -> int
+static Adaptive.Aeron.Command.TerminateDriverFlyweight.ComputeLength(int tokenLength) -> int
+static Adaptive.Aeron.Config.GetBoolean(string propertyName) -> bool
+static Adaptive.Aeron.Config.GetDurationInNanos(string propertyName, long defaultValue) -> long
+static Adaptive.Aeron.Config.GetInteger(string propertyName, int defaultValue) -> int
+static Adaptive.Aeron.Config.GetLong(string propertyName, long defaultValue) -> long
+static Adaptive.Aeron.Config.GetProperty(string propertyName, string defaultValue = null) -> string
+static Adaptive.Aeron.Config.GetSizeAsInt(string propertyName, int defaultValue) -> int
+static Adaptive.Aeron.DirectBufferVector.ValidateAndComputeLength(Adaptive.Aeron.DirectBufferVector[] vectors) -> int
+static Adaptive.Aeron.Exceptions.AeronException.IsFatal(in System.Exception t) -> bool
+static Adaptive.Aeron.Exceptions.StorageSpaceException.IsStorageSpaceError(System.Exception error) -> bool
+static Adaptive.Aeron.LogBuffer.FrameDescriptor.ComputeMaxMessageLength(int termLength) -> int
+static Adaptive.Aeron.LogBuffer.FrameDescriptor.FlagsOffset(int termOffset) -> int
+static Adaptive.Aeron.LogBuffer.FrameDescriptor.FrameFlags(Adaptive.Agrona.Concurrent.IAtomicBuffer buffer, int termOffset, byte flags) -> void
+static Adaptive.Aeron.LogBuffer.FrameDescriptor.FrameFlags(Adaptive.Agrona.Concurrent.IAtomicBuffer buffer, int termOffset) -> byte
+static Adaptive.Aeron.LogBuffer.FrameDescriptor.FrameLength(Adaptive.Agrona.Concurrent.IAtomicBuffer buffer, int termOffset) -> int
+static Adaptive.Aeron.LogBuffer.FrameDescriptor.FrameLengthOrdered(Adaptive.Agrona.Concurrent.IAtomicBuffer buffer, int termOffset, int frameLength) -> void
+static Adaptive.Aeron.LogBuffer.FrameDescriptor.FrameLengthVolatile(Adaptive.Agrona.Concurrent.IAtomicBuffer buffer, int termOffset) -> int
+static Adaptive.Aeron.LogBuffer.FrameDescriptor.FrameSessionId(Adaptive.Agrona.Concurrent.UnsafeBuffer buffer, int termOffset, int sessionId) -> void
+static Adaptive.Aeron.LogBuffer.FrameDescriptor.FrameSessionId(Adaptive.Agrona.Concurrent.UnsafeBuffer buffer, int termOffset) -> int
+static Adaptive.Aeron.LogBuffer.FrameDescriptor.FrameTermId(Adaptive.Agrona.Concurrent.UnsafeBuffer buffer, int termOffset, int termId) -> void
+static Adaptive.Aeron.LogBuffer.FrameDescriptor.FrameTermId(Adaptive.Agrona.Concurrent.UnsafeBuffer buffer, int termOffset) -> int
+static Adaptive.Aeron.LogBuffer.FrameDescriptor.FrameTermOffset(Adaptive.Agrona.Concurrent.UnsafeBuffer buffer, int termOffset) -> void
+static Adaptive.Aeron.LogBuffer.FrameDescriptor.FrameType(Adaptive.Agrona.Concurrent.IAtomicBuffer buffer, int termOffset, int type) -> void
+static Adaptive.Aeron.LogBuffer.FrameDescriptor.FrameType(Adaptive.Agrona.Concurrent.IAtomicBuffer buffer, int termOffset) -> int
+static Adaptive.Aeron.LogBuffer.FrameDescriptor.FrameVersion(Adaptive.Agrona.Concurrent.IAtomicBuffer buffer, int termOffset) -> int
+static Adaptive.Aeron.LogBuffer.FrameDescriptor.IsPaddingFrame(Adaptive.Agrona.Concurrent.IAtomicBuffer buffer, int termOffset) -> bool
+static Adaptive.Aeron.LogBuffer.FrameDescriptor.LengthOffset(int termOffset) -> int
+static Adaptive.Aeron.LogBuffer.FrameDescriptor.SessionIdOffset(int termOffset) -> int
+static Adaptive.Aeron.LogBuffer.FrameDescriptor.TermIdOffset(int termOffset) -> int
+static Adaptive.Aeron.LogBuffer.FrameDescriptor.TermOffsetOffset(int termOffset) -> int
+static Adaptive.Aeron.LogBuffer.FrameDescriptor.TypeOffset(int termOffset) -> int
+static Adaptive.Aeron.LogBuffer.FrameDescriptor.VersionOffset(int termOffset) -> int
+static Adaptive.Aeron.LogBuffer.HandlerHelper.ToBlockHandler(Adaptive.Aeron.LogBuffer.BlockHandler delegate) -> Adaptive.Aeron.LogBuffer.IBlockHandler
+static Adaptive.Aeron.LogBuffer.HandlerHelper.ToControlledFragmentHandler(Adaptive.Aeron.LogBuffer.ControlledFragmentHandler delegate) -> Adaptive.Aeron.LogBuffer.IControlledFragmentHandler
+static Adaptive.Aeron.LogBuffer.HandlerHelper.ToFragmentHandler(Adaptive.Aeron.LogBuffer.FragmentHandler delegate) -> Adaptive.Aeron.LogBuffer.IFragmentHandler
+static Adaptive.Aeron.LogBuffer.LogBufferDescriptor.ActiveTermCount(Adaptive.Agrona.Concurrent.UnsafeBuffer metaDataBuffer, int termCount) -> void
+static Adaptive.Aeron.LogBuffer.LogBufferDescriptor.ActiveTermCount(Adaptive.Agrona.Concurrent.UnsafeBuffer metaDataBuffer) -> int
+static Adaptive.Aeron.LogBuffer.LogBufferDescriptor.ActiveTermCountOrdered(Adaptive.Agrona.Concurrent.UnsafeBuffer metaDataBuffer, int termCount) -> void
+static Adaptive.Aeron.LogBuffer.LogBufferDescriptor.ActiveTransportCount(Adaptive.Agrona.Concurrent.UnsafeBuffer metadataBuffer, int numberOfActiveTransports) -> void
+static Adaptive.Aeron.LogBuffer.LogBufferDescriptor.ActiveTransportCount(Adaptive.Agrona.Concurrent.UnsafeBuffer metadataBuffer) -> int
+static Adaptive.Aeron.LogBuffer.LogBufferDescriptor.ApplyDefaultHeader(Adaptive.Agrona.Concurrent.UnsafeBuffer metaDataBuffer, Adaptive.Agrona.Concurrent.UnsafeBuffer termBuffer, int termOffset) -> void
+static Adaptive.Aeron.LogBuffer.LogBufferDescriptor.CasActiveTermCount(Adaptive.Agrona.Concurrent.UnsafeBuffer metaDataBuffer, int expectedTermCount, int updateTermCount) -> bool
+static Adaptive.Aeron.LogBuffer.LogBufferDescriptor.CasRawTail(Adaptive.Agrona.Concurrent.UnsafeBuffer metaDataBuffer, int partitionIndex, long expectedRawTail, long updateRawTail) -> bool
+static Adaptive.Aeron.LogBuffer.LogBufferDescriptor.CheckPageSize(int pageSize) -> void
+static Adaptive.Aeron.LogBuffer.LogBufferDescriptor.CheckTermLength(int termLength) -> void
+static Adaptive.Aeron.LogBuffer.LogBufferDescriptor.ComputeAssembledFrameLength(int length, int maxPayloadSize) -> int
+static Adaptive.Aeron.LogBuffer.LogBufferDescriptor.ComputeFragmentedFrameLength(int length, int maxPayloadSize) -> int
+static Adaptive.Aeron.LogBuffer.LogBufferDescriptor.ComputeLogLength(int termLength, int filePageSize) -> long
+static Adaptive.Aeron.LogBuffer.LogBufferDescriptor.ComputePosition(int activeTermId, int termOffset, int positionBitsToShift, int initialTermId) -> long
+static Adaptive.Aeron.LogBuffer.LogBufferDescriptor.ComputeTermBeginPosition(int activeTermId, int positionBitsToShift, int initialTermId) -> long
+static Adaptive.Aeron.LogBuffer.LogBufferDescriptor.ComputeTermIdFromPosition(long position, int positionBitsToShift, int initialTermId) -> int
+static Adaptive.Aeron.LogBuffer.LogBufferDescriptor.CorrelationId(Adaptive.Agrona.Concurrent.UnsafeBuffer metaDataBuffer, long id) -> void
+static Adaptive.Aeron.LogBuffer.LogBufferDescriptor.CorrelationId(Adaptive.Agrona.Concurrent.UnsafeBuffer metaDataBuffer) -> long
+static Adaptive.Aeron.LogBuffer.LogBufferDescriptor.DefaultFrameHeader(Adaptive.Agrona.Concurrent.UnsafeBuffer metaDataBuffer) -> Adaptive.Agrona.Concurrent.UnsafeBuffer
+static Adaptive.Aeron.LogBuffer.LogBufferDescriptor.EndOfStreamPosition(Adaptive.Agrona.Concurrent.UnsafeBuffer metaDataBuffer, long position) -> void
+static Adaptive.Aeron.LogBuffer.LogBufferDescriptor.EndOfStreamPosition(Adaptive.Agrona.Concurrent.UnsafeBuffer metaDataBuffer) -> long
+static Adaptive.Aeron.LogBuffer.LogBufferDescriptor.EntityTag(Adaptive.Agrona.Concurrent.UnsafeBuffer metadataBuffer, long value) -> void
+static Adaptive.Aeron.LogBuffer.LogBufferDescriptor.EntityTag(Adaptive.Agrona.Concurrent.UnsafeBuffer metadataBuffer) -> long
+static Adaptive.Aeron.LogBuffer.LogBufferDescriptor.Group(Adaptive.Agrona.Concurrent.UnsafeBuffer metadataBuffer, bool value) -> void
+static Adaptive.Aeron.LogBuffer.LogBufferDescriptor.Group(Adaptive.Agrona.Concurrent.UnsafeBuffer metadataBuffer) -> bool
+static Adaptive.Aeron.LogBuffer.LogBufferDescriptor.IndexByPosition(long position, int positionBitsToShift) -> int
+static Adaptive.Aeron.LogBuffer.LogBufferDescriptor.IndexByTerm(int initialTermId, int activeTermId) -> int
+static Adaptive.Aeron.LogBuffer.LogBufferDescriptor.IndexByTermCount(long termCount) -> int
+static Adaptive.Aeron.LogBuffer.LogBufferDescriptor.InitialiseTailWithTermId(Adaptive.Agrona.Concurrent.UnsafeBuffer logMetaData, int partitionIndex, int termId) -> void
+static Adaptive.Aeron.LogBuffer.LogBufferDescriptor.InitialTermId(Adaptive.Agrona.Concurrent.UnsafeBuffer metaDataBuffer, int initialTermId) -> void
+static Adaptive.Aeron.LogBuffer.LogBufferDescriptor.InitialTermId(Adaptive.Agrona.Concurrent.UnsafeBuffer metaDataBuffer) -> int
+static Adaptive.Aeron.LogBuffer.LogBufferDescriptor.IsConnected(Adaptive.Agrona.Concurrent.UnsafeBuffer metaDataBuffer, bool isConnected) -> void
+static Adaptive.Aeron.LogBuffer.LogBufferDescriptor.IsConnected(Adaptive.Agrona.Concurrent.UnsafeBuffer metaDataBuffer) -> bool
+static Adaptive.Aeron.LogBuffer.LogBufferDescriptor.IsPublicationRevoked(Adaptive.Agrona.Concurrent.UnsafeBuffer metadataBuffer, bool value) -> void
+static Adaptive.Aeron.LogBuffer.LogBufferDescriptor.IsPublicationRevoked(Adaptive.Agrona.Concurrent.UnsafeBuffer metadataBuffer) -> bool
+static Adaptive.Aeron.LogBuffer.LogBufferDescriptor.IsResponse(Adaptive.Agrona.Concurrent.UnsafeBuffer metadataBuffer, bool value) -> void
+static Adaptive.Aeron.LogBuffer.LogBufferDescriptor.IsResponse(Adaptive.Agrona.Concurrent.UnsafeBuffer metadataBuffer) -> bool
+static Adaptive.Aeron.LogBuffer.LogBufferDescriptor.LingerTimeoutNs(Adaptive.Agrona.Concurrent.UnsafeBuffer metadataBuffer, long value) -> void
+static Adaptive.Aeron.LogBuffer.LogBufferDescriptor.LingerTimeoutNs(Adaptive.Agrona.Concurrent.UnsafeBuffer metadataBuffer) -> long
+static Adaptive.Aeron.LogBuffer.LogBufferDescriptor.MaxResend(Adaptive.Agrona.Concurrent.UnsafeBuffer metadataBuffer, int value) -> void
+static Adaptive.Aeron.LogBuffer.LogBufferDescriptor.MaxResend(Adaptive.Agrona.Concurrent.UnsafeBuffer metadataBuffer) -> int
+static Adaptive.Aeron.LogBuffer.LogBufferDescriptor.MtuLength(Adaptive.Agrona.Concurrent.UnsafeBuffer metaDataBuffer, int mtuLength) -> void
+static Adaptive.Aeron.LogBuffer.LogBufferDescriptor.MtuLength(Adaptive.Agrona.Concurrent.UnsafeBuffer metaDataBuffer) -> int
+static Adaptive.Aeron.LogBuffer.LogBufferDescriptor.NextPartitionIndex(int currentIndex) -> int
+static Adaptive.Aeron.LogBuffer.LogBufferDescriptor.OsDefaultSocketRcvbufLength(Adaptive.Agrona.Concurrent.UnsafeBuffer metadataBuffer, int value) -> void
+static Adaptive.Aeron.LogBuffer.LogBufferDescriptor.OsDefaultSocketRcvbufLength(Adaptive.Agrona.Concurrent.UnsafeBuffer metadataBuffer) -> int
+static Adaptive.Aeron.LogBuffer.LogBufferDescriptor.OsDefaultSocketSndbufLength(Adaptive.Agrona.Concurrent.UnsafeBuffer metadataBuffer, int value) -> void
+static Adaptive.Aeron.LogBuffer.LogBufferDescriptor.OsDefaultSocketSndbufLength(Adaptive.Agrona.Concurrent.UnsafeBuffer metadataBuffer) -> int
+static Adaptive.Aeron.LogBuffer.LogBufferDescriptor.OsMaxSocketRcvbufLength(Adaptive.Agrona.Concurrent.UnsafeBuffer metadataBuffer, int value) -> void
+static Adaptive.Aeron.LogBuffer.LogBufferDescriptor.OsMaxSocketRcvbufLength(Adaptive.Agrona.Concurrent.UnsafeBuffer metadataBuffer) -> int
+static Adaptive.Aeron.LogBuffer.LogBufferDescriptor.OsMaxSocketSndbufLength(Adaptive.Agrona.Concurrent.UnsafeBuffer metadataBuffer, int value) -> void
+static Adaptive.Aeron.LogBuffer.LogBufferDescriptor.OsMaxSocketSndbufLength(Adaptive.Agrona.Concurrent.UnsafeBuffer metadataBuffer) -> int
+static Adaptive.Aeron.LogBuffer.LogBufferDescriptor.PackTail(int termId, int termOffset) -> long
+static Adaptive.Aeron.LogBuffer.LogBufferDescriptor.PageSize(Adaptive.Agrona.Concurrent.UnsafeBuffer metaDataBuffer, int pageSize) -> void
+static Adaptive.Aeron.LogBuffer.LogBufferDescriptor.PageSize(Adaptive.Agrona.Concurrent.UnsafeBuffer metaDataBuffer) -> int
+static Adaptive.Aeron.LogBuffer.LogBufferDescriptor.PositionBitsToShift(int termBufferLength) -> int
+static Adaptive.Aeron.LogBuffer.LogBufferDescriptor.PublicationWindowLength(Adaptive.Agrona.Concurrent.UnsafeBuffer metadataBuffer, int value) -> void
+static Adaptive.Aeron.LogBuffer.LogBufferDescriptor.PublicationWindowLength(Adaptive.Agrona.Concurrent.UnsafeBuffer metadataBuffer) -> int
+static Adaptive.Aeron.LogBuffer.LogBufferDescriptor.RawTail(Adaptive.Agrona.Concurrent.UnsafeBuffer metaDataBuffer, int partitionIndex, long rawTail) -> void
+static Adaptive.Aeron.LogBuffer.LogBufferDescriptor.RawTail(Adaptive.Agrona.Concurrent.UnsafeBuffer metaDataBuffer, int partitionIndex) -> long
+static Adaptive.Aeron.LogBuffer.LogBufferDescriptor.RawTailVolatile(Adaptive.Agrona.Concurrent.UnsafeBuffer metaDataBuffer, int partitionIndex, long rawTail) -> void
+static Adaptive.Aeron.LogBuffer.LogBufferDescriptor.RawTailVolatile(Adaptive.Agrona.Concurrent.UnsafeBuffer metaDataBuffer, int partitionIndex) -> long
+static Adaptive.Aeron.LogBuffer.LogBufferDescriptor.RawTailVolatile(Adaptive.Agrona.Concurrent.UnsafeBuffer metaDataBuffer) -> long
+static Adaptive.Aeron.LogBuffer.LogBufferDescriptor.ReceiverWindowLength(Adaptive.Agrona.Concurrent.UnsafeBuffer metadataBuffer, int value) -> void
+static Adaptive.Aeron.LogBuffer.LogBufferDescriptor.ReceiverWindowLength(Adaptive.Agrona.Concurrent.UnsafeBuffer metadataBuffer) -> int
+static Adaptive.Aeron.LogBuffer.LogBufferDescriptor.Rejoin(Adaptive.Agrona.Concurrent.UnsafeBuffer metadataBuffer, bool value) -> void
+static Adaptive.Aeron.LogBuffer.LogBufferDescriptor.Rejoin(Adaptive.Agrona.Concurrent.UnsafeBuffer metadataBuffer) -> bool
+static Adaptive.Aeron.LogBuffer.LogBufferDescriptor.Reliable(Adaptive.Agrona.Concurrent.UnsafeBuffer metadataBuffer, bool value) -> void
+static Adaptive.Aeron.LogBuffer.LogBufferDescriptor.Reliable(Adaptive.Agrona.Concurrent.UnsafeBuffer metadataBuffer) -> bool
+static Adaptive.Aeron.LogBuffer.LogBufferDescriptor.ResponseCorrelationId(Adaptive.Agrona.Concurrent.UnsafeBuffer metadataBuffer, long value) -> void
+static Adaptive.Aeron.LogBuffer.LogBufferDescriptor.ResponseCorrelationId(Adaptive.Agrona.Concurrent.UnsafeBuffer metadataBuffer) -> long
+static Adaptive.Aeron.LogBuffer.LogBufferDescriptor.RotateLog(Adaptive.Agrona.Concurrent.UnsafeBuffer metaDataBuffer, int currentTermCount, int currentTermId) -> bool
+static Adaptive.Aeron.LogBuffer.LogBufferDescriptor.SignalEos(Adaptive.Agrona.Concurrent.UnsafeBuffer metadataBuffer, bool value) -> void
+static Adaptive.Aeron.LogBuffer.LogBufferDescriptor.SignalEos(Adaptive.Agrona.Concurrent.UnsafeBuffer metadataBuffer) -> bool
+static Adaptive.Aeron.LogBuffer.LogBufferDescriptor.SocketRcvbufLength(Adaptive.Agrona.Concurrent.UnsafeBuffer metadataBuffer, int value) -> void
+static Adaptive.Aeron.LogBuffer.LogBufferDescriptor.SocketRcvbufLength(Adaptive.Agrona.Concurrent.UnsafeBuffer metadataBuffer) -> int
+static Adaptive.Aeron.LogBuffer.LogBufferDescriptor.SocketSndbufLength(Adaptive.Agrona.Concurrent.UnsafeBuffer metadataBuffer, int value) -> void
+static Adaptive.Aeron.LogBuffer.LogBufferDescriptor.SocketSndbufLength(Adaptive.Agrona.Concurrent.UnsafeBuffer metadataBuffer) -> int
+static Adaptive.Aeron.LogBuffer.LogBufferDescriptor.Sparse(Adaptive.Agrona.Concurrent.UnsafeBuffer metadataBuffer, bool value) -> void
+static Adaptive.Aeron.LogBuffer.LogBufferDescriptor.Sparse(Adaptive.Agrona.Concurrent.UnsafeBuffer metadataBuffer) -> bool
+static Adaptive.Aeron.LogBuffer.LogBufferDescriptor.SpiesSimulateConnection(Adaptive.Agrona.Concurrent.UnsafeBuffer metadataBuffer, bool value) -> void
+static Adaptive.Aeron.LogBuffer.LogBufferDescriptor.SpiesSimulateConnection(Adaptive.Agrona.Concurrent.UnsafeBuffer metadataBuffer) -> bool
+static Adaptive.Aeron.LogBuffer.LogBufferDescriptor.StoreDefaultFrameHeader(Adaptive.Agrona.Concurrent.UnsafeBuffer metaDataBuffer, Adaptive.Agrona.IDirectBuffer defaultHeader) -> void
+static Adaptive.Aeron.LogBuffer.LogBufferDescriptor.TermId(long rawTail) -> int
+static Adaptive.Aeron.LogBuffer.LogBufferDescriptor.TermLength(Adaptive.Agrona.Concurrent.UnsafeBuffer metaDataBuffer, int termLength) -> void
+static Adaptive.Aeron.LogBuffer.LogBufferDescriptor.TermLength(Adaptive.Agrona.Concurrent.UnsafeBuffer metaDataBuffer) -> int
+static Adaptive.Aeron.LogBuffer.LogBufferDescriptor.TermOffset(long rawTail, long termLength) -> int
+static Adaptive.Aeron.LogBuffer.LogBufferDescriptor.TermOffset(long result) -> int
+static Adaptive.Aeron.LogBuffer.LogBufferDescriptor.Tether(Adaptive.Agrona.Concurrent.UnsafeBuffer metadataBuffer, bool value) -> void
+static Adaptive.Aeron.LogBuffer.LogBufferDescriptor.Tether(Adaptive.Agrona.Concurrent.UnsafeBuffer metadataBuffer) -> bool
+static Adaptive.Aeron.LogBuffer.LogBufferDescriptor.UntetheredLingerTimeoutNs(Adaptive.Agrona.Concurrent.UnsafeBuffer metadataBuffer, long value) -> void
+static Adaptive.Aeron.LogBuffer.LogBufferDescriptor.UntetheredLingerTimeoutNs(Adaptive.Agrona.Concurrent.UnsafeBuffer metadataBuffer) -> long
+static Adaptive.Aeron.LogBuffer.LogBufferDescriptor.UntetheredRestingTimeoutNs(Adaptive.Agrona.Concurrent.UnsafeBuffer metadataBuffer, long value) -> void
+static Adaptive.Aeron.LogBuffer.LogBufferDescriptor.UntetheredRestingTimeoutNs(Adaptive.Agrona.Concurrent.UnsafeBuffer metadataBuffer) -> long
+static Adaptive.Aeron.LogBuffer.LogBufferDescriptor.UntetheredWindowLimitTimeoutNs(Adaptive.Agrona.Concurrent.UnsafeBuffer metadataBuffer, long value) -> void
+static Adaptive.Aeron.LogBuffer.LogBufferDescriptor.UntetheredWindowLimitTimeoutNs(Adaptive.Agrona.Concurrent.UnsafeBuffer metadataBuffer) -> long
+static Adaptive.Aeron.LogBuffer.TermBlockScanner.Scan(Adaptive.Agrona.Concurrent.IAtomicBuffer termBuffer, int termOffset, int limitOffset) -> int
+static Adaptive.Aeron.LogBuffer.TermReader.FragmentsRead(long readOutcome) -> int
+static Adaptive.Aeron.LogBuffer.TermReader.Offset(long readOutcome) -> int
+static Adaptive.Aeron.LogBuffer.TermReader.Pack(int offset, int fragmentsRead) -> long
+static Adaptive.Aeron.LogBuffer.TermReader.Read(Adaptive.Agrona.Concurrent.UnsafeBuffer termBuffer, int termOffset, Adaptive.Aeron.LogBuffer.IFragmentHandler handler, int fragmentsLimit, Adaptive.Aeron.LogBuffer.Header header, Adaptive.Agrona.ErrorHandler errorHandler) -> long
+static Adaptive.Aeron.LogBuffer.TermReader.Read(Adaptive.Agrona.Concurrent.UnsafeBuffer termBuffer, int termOffset, Adaptive.Aeron.LogBuffer.IFragmentHandler handler, int fragmentsLimit, Adaptive.Aeron.LogBuffer.Header header, Adaptive.Agrona.IErrorHandler errorHandler, long currentPosition, Adaptive.Agrona.Concurrent.Status.IPosition subscriberPosition) -> int
+static Adaptive.Aeron.LogBuffer.TermRebuilder.Insert(Adaptive.Agrona.Concurrent.IAtomicBuffer termBuffer, int termOffset, Adaptive.Agrona.Concurrent.UnsafeBuffer packet, int length) -> void
+static Adaptive.Aeron.Protocol.DataHeaderFlyweight.CreateDefaultHeader(int sessionId, int streamId, int termId) -> Adaptive.Agrona.Concurrent.UnsafeBuffer
+static Adaptive.Aeron.Protocol.DataHeaderFlyweight.FragmentLength(Adaptive.Agrona.Concurrent.UnsafeBuffer termBuffer, int frameOffset) -> int
+static Adaptive.Aeron.Protocol.DataHeaderFlyweight.IsEndOfStream(Adaptive.Agrona.Concurrent.UnsafeBuffer packet) -> bool
+static Adaptive.Aeron.Protocol.DataHeaderFlyweight.IsHeartbeat(Adaptive.Agrona.Concurrent.UnsafeBuffer packet, int length) -> bool
+static Adaptive.Aeron.Protocol.DataHeaderFlyweight.IsRevoked(Adaptive.Agrona.Concurrent.UnsafeBuffer packet) -> bool
+static Adaptive.Aeron.Protocol.DataHeaderFlyweight.ReservedValue(Adaptive.Agrona.Concurrent.UnsafeBuffer termBuffer, int frameOffset) -> long
+static Adaptive.Aeron.Protocol.DataHeaderFlyweight.SessionId(Adaptive.Agrona.Concurrent.UnsafeBuffer termBuffer, int frameOffset) -> int
+static Adaptive.Aeron.Protocol.DataHeaderFlyweight.StreamId(Adaptive.Agrona.Concurrent.UnsafeBuffer termBuffer, int frameOffset) -> int
+static Adaptive.Aeron.Protocol.DataHeaderFlyweight.TermId(Adaptive.Agrona.Concurrent.UnsafeBuffer termBuffer, int frameOffset) -> int
+static Adaptive.Aeron.Protocol.DataHeaderFlyweight.TermOffset(Adaptive.Agrona.Concurrent.UnsafeBuffer termBuffer, int frameOffset) -> int
+static Adaptive.Aeron.Protocol.HeaderFlyweight.AppendFlagsAsChars(short flags, System.Text.StringBuilder stringBuilder) -> void
+static Adaptive.Aeron.Protocol.HeaderFlyweight.FlagsToChars(short flags) -> char[]
+static Adaptive.Aeron.Publication.ErrorString(long position) -> string
+static Adaptive.Aeron.Status.HeartbeatTimestamp.FindCounterIdByRegistrationId(Adaptive.Agrona.Concurrent.Status.CountersReader countersReader, int counterTypeId, long registrationId) -> int
+static Adaptive.Aeron.Status.HeartbeatTimestamp.IsActive(Adaptive.Agrona.Concurrent.Status.CountersReader countersReader, int counterId, int counterTypeId, long registrationId) -> bool
+static Adaptive.Aeron.Status.LocalSocketAddressStatus.FindAddress(Adaptive.Agrona.Concurrent.Status.CountersReader countersReader, long channelStatus, int channelStatusId) -> string
+static Adaptive.Aeron.Status.LocalSocketAddressStatus.FindAddresses(Adaptive.Agrona.Concurrent.Status.CountersReader countersReader, long channelStatus, int channelStatusId) -> System.Collections.Generic.List<string>
+static Adaptive.Aeron.Status.LocalSocketAddressStatus.FindNumberOfAddressesByRegistrationId(Adaptive.Agrona.Concurrent.Status.CountersReader countersReader, long registrationId) -> int
+static Adaptive.Aeron.Status.LocalSocketAddressStatus.IsActive(in Adaptive.Agrona.Concurrent.Status.CountersReader countersReader, in int channelStatusId) -> bool
+static readonly Adaptive.Aeron.Aeron.Configuration.AWAITING_IDLE_SLEEP_MS -> int
+static readonly Adaptive.Aeron.Aeron.Configuration.CLIENT_NAME_PROP_NAME -> string
+static readonly Adaptive.Aeron.Aeron.Configuration.DEFAULT_ERROR_HANDLER -> Adaptive.Agrona.IErrorHandler
+static readonly Adaptive.Aeron.Aeron.Configuration.IDLE_SLEEP_DEFAULT_MS -> int
+static readonly Adaptive.Aeron.Aeron.Configuration.IDLE_SLEEP_DEFAULT_NS -> long
+static readonly Adaptive.Aeron.Aeron.Configuration.IDLE_SLEEP_DURATION_PROP_NAME -> string
+static readonly Adaptive.Aeron.Aeron.Configuration.KeepaliveIntervalNs -> long
+static readonly Adaptive.Aeron.Aeron.Configuration.RESOURCE_LINGER_DURATION_DEFAULT_NS -> long
+static readonly Adaptive.Aeron.Aeron.Context.AERON_DIR_PROP_DEFAULT -> string
+static readonly Adaptive.Aeron.CncFileDescriptor.CLIENT_LIVENESS_TIMEOUT_FIELD_OFFSET -> int
+static readonly Adaptive.Aeron.CncFileDescriptor.CNC_VERSION -> int
+static readonly Adaptive.Aeron.CncFileDescriptor.CNC_VERSION_FIELD_OFFSET -> int
+static readonly Adaptive.Aeron.CncFileDescriptor.COUNTERS_METADATA_BUFFER_LENGTH_FIELD_OFFSET -> int
+static readonly Adaptive.Aeron.CncFileDescriptor.COUNTERS_VALUES_BUFFER_LENGTH_FIELD_OFFSET -> int
+static readonly Adaptive.Aeron.CncFileDescriptor.END_OF_METADATA_OFFSET -> int
+static readonly Adaptive.Aeron.CncFileDescriptor.ERROR_LOG_BUFFER_LENGTH_FIELD_OFFSET -> int
+static readonly Adaptive.Aeron.CncFileDescriptor.FILE_PAGE_SIZE_FIELD_OFFSET -> int
+static readonly Adaptive.Aeron.CncFileDescriptor.META_DATA_LENGTH -> int
+static readonly Adaptive.Aeron.CncFileDescriptor.PID_FIELD_OFFSET -> int
+static readonly Adaptive.Aeron.CncFileDescriptor.START_TIMESTAMP_FIELD_OFFSET -> int
+static readonly Adaptive.Aeron.CncFileDescriptor.TO_CLIENTS_BUFFER_LENGTH_FIELD_OFFSET -> int
+static readonly Adaptive.Aeron.CncFileDescriptor.TO_DRIVER_BUFFER_LENGTH_FIELD_OFFSET -> int
+static readonly Adaptive.Aeron.Command.ClientTimeoutFlyweight.LENGTH -> int
+static readonly Adaptive.Aeron.Command.ControlProtocolEvents.ControlProtocolSemanticVersion -> int
+static readonly Adaptive.Aeron.Command.CorrelatedMessageFlyweight.LENGTH -> int
+static readonly Adaptive.Aeron.Command.CounterUpdateFlyweight.LENGTH -> int
+static readonly Adaptive.Aeron.Command.DestinationByIdMessageFlyweight.MESSAGE_LENGTH -> int
+static readonly Adaptive.Aeron.Command.GetNextAvailableSessionIdMessageFlyweight.LENGTH -> int
+static readonly Adaptive.Aeron.Command.NextAvailableSessionIdFlyweight.LENGTH -> int
+static readonly Adaptive.Aeron.Command.OperationSucceededFlyweight.LENGTH -> int
+static readonly Adaptive.Aeron.Command.StaticCounterFlyweight.LENGTH -> int
+static readonly Adaptive.Aeron.Command.SubscriptionReadyFlyweight.LENGTH -> int
+static readonly Adaptive.Aeron.Config.Params -> System.Collections.Generic.Dictionary<string, string>
+static readonly Adaptive.Aeron.LogBuffer.LogBufferDescriptor.LOG_ACTIVE_TERM_COUNT_OFFSET -> int
+static readonly Adaptive.Aeron.LogBuffer.LogBufferDescriptor.LOG_ACTIVE_TRANSPORT_COUNT -> int
+static readonly Adaptive.Aeron.LogBuffer.LogBufferDescriptor.LOG_CORRELATION_ID_OFFSET -> int
+static readonly Adaptive.Aeron.LogBuffer.LogBufferDescriptor.LOG_DEFAULT_FRAME_HEADER_LENGTH_OFFSET -> int
+static readonly Adaptive.Aeron.LogBuffer.LogBufferDescriptor.LOG_DEFAULT_FRAME_HEADER_MAX_LENGTH -> int
+static readonly Adaptive.Aeron.LogBuffer.LogBufferDescriptor.LOG_DEFAULT_FRAME_HEADER_OFFSET -> int
+static readonly Adaptive.Aeron.LogBuffer.LogBufferDescriptor.LOG_END_OF_STREAM_POSITION_OFFSET -> int
+static readonly Adaptive.Aeron.LogBuffer.LogBufferDescriptor.LOG_ENTITY_TAG_OFFSET -> int
+static readonly Adaptive.Aeron.LogBuffer.LogBufferDescriptor.LOG_GROUP_OFFSET -> int
+static readonly Adaptive.Aeron.LogBuffer.LogBufferDescriptor.LOG_INITIAL_TERM_ID_OFFSET -> int
+static readonly Adaptive.Aeron.LogBuffer.LogBufferDescriptor.LOG_IS_CONNECTED_OFFSET -> int
+static readonly Adaptive.Aeron.LogBuffer.LogBufferDescriptor.LOG_IS_PUBLICATION_REVOKED_OFFSET -> int
+static readonly Adaptive.Aeron.LogBuffer.LogBufferDescriptor.LOG_IS_RESPONSE_OFFSET -> int
+static readonly Adaptive.Aeron.LogBuffer.LogBufferDescriptor.LOG_LINGER_TIMEOUT_NS_OFFSET -> int
+static readonly Adaptive.Aeron.LogBuffer.LogBufferDescriptor.LOG_MAX_RESEND_OFFSET -> int
+static readonly Adaptive.Aeron.LogBuffer.LogBufferDescriptor.LOG_META_DATA_LENGTH -> int
+static readonly Adaptive.Aeron.LogBuffer.LogBufferDescriptor.LOG_META_DATA_SECTION_INDEX -> int
+static readonly Adaptive.Aeron.LogBuffer.LogBufferDescriptor.LOG_MTU_LENGTH_OFFSET -> int
+static readonly Adaptive.Aeron.LogBuffer.LogBufferDescriptor.LOG_OS_DEFAULT_SOCKET_RCVBUF_LENGTH_OFFSET -> int
+static readonly Adaptive.Aeron.LogBuffer.LogBufferDescriptor.LOG_OS_DEFAULT_SOCKET_SNDBUF_LENGTH_OFFSET -> int
+static readonly Adaptive.Aeron.LogBuffer.LogBufferDescriptor.LOG_OS_MAX_SOCKET_RCVBUF_LENGTH_OFFSET -> int
+static readonly Adaptive.Aeron.LogBuffer.LogBufferDescriptor.LOG_OS_MAX_SOCKET_SNDBUF_LENGTH_OFFSET -> int
+static readonly Adaptive.Aeron.LogBuffer.LogBufferDescriptor.LOG_PAGE_SIZE_OFFSET -> int
+static readonly Adaptive.Aeron.LogBuffer.LogBufferDescriptor.LOG_PUBLICATION_WINDOW_LENGTH_OFFSET -> int
+static readonly Adaptive.Aeron.LogBuffer.LogBufferDescriptor.LOG_RECEIVER_WINDOW_LENGTH_OFFSET -> int
+static readonly Adaptive.Aeron.LogBuffer.LogBufferDescriptor.LOG_REJOIN_OFFSET -> int
+static readonly Adaptive.Aeron.LogBuffer.LogBufferDescriptor.LOG_RELIABLE_OFFSET -> int
+static readonly Adaptive.Aeron.LogBuffer.LogBufferDescriptor.LOG_RESPONSE_CORRELATION_ID_OFFSET -> int
+static readonly Adaptive.Aeron.LogBuffer.LogBufferDescriptor.LOG_SIGNAL_EOS_OFFSET -> int
+static readonly Adaptive.Aeron.LogBuffer.LogBufferDescriptor.LOG_SOCKET_RCVBUF_LENGTH_OFFSET -> int
+static readonly Adaptive.Aeron.LogBuffer.LogBufferDescriptor.LOG_SOCKET_SNDBUF_LENGTH_OFFSET -> int
+static readonly Adaptive.Aeron.LogBuffer.LogBufferDescriptor.LOG_SPARSE_OFFSET -> int
+static readonly Adaptive.Aeron.LogBuffer.LogBufferDescriptor.LOG_SPIES_SIMULATE_CONNECTION_OFFSET -> int
+static readonly Adaptive.Aeron.LogBuffer.LogBufferDescriptor.LOG_TERM_LENGTH_OFFSET -> int
+static readonly Adaptive.Aeron.LogBuffer.LogBufferDescriptor.LOG_TETHER_OFFSET -> int
+static readonly Adaptive.Aeron.LogBuffer.LogBufferDescriptor.LOG_UNTETHERED_LINGER_TIMEOUT_NS_OFFSET -> int
+static readonly Adaptive.Aeron.LogBuffer.LogBufferDescriptor.LOG_UNTETHERED_RESTING_TIMEOUT_NS_OFFSET -> int
+static readonly Adaptive.Aeron.LogBuffer.LogBufferDescriptor.LOG_UNTETHERED_WINDOW_LIMIT_TIMEOUT_NS_OFFSET -> int
+static readonly Adaptive.Aeron.LogBuffer.LogBufferDescriptor.TERM_TAIL_COUNTERS_OFFSET -> int
+static readonly Adaptive.Aeron.Protocol.DataHeaderFlyweight.BEGIN_AND_END_FLAGS -> short
+static readonly Adaptive.Aeron.Protocol.DataHeaderFlyweight.BEGIN_END_AND_EOS_FLAGS -> short
+static readonly Adaptive.Aeron.Protocol.DataHeaderFlyweight.BEGIN_END_EOS_AND_REVOKED_FLAGS -> short
+static readonly Adaptive.Aeron.Protocol.HeaderFlyweight.EMPTY_BUFFER -> byte[]
+static readonly Adaptive.Aeron.Protocol.HeaderFlyweight.MIN_HEADER_LENGTH -> int
+static readonly Adaptive.Aeron.RethrowingErrorHandler.INSTANCE -> Adaptive.Agrona.IErrorHandler
+static readonly Adaptive.Aeron.Security.AllowAllAuthorisationService.ALLOW_ALL_NAME -> string
+static readonly Adaptive.Aeron.Security.AllowAllAuthorisationService.INSTANCE -> Adaptive.Aeron.Security.IAuthorisationService
+static readonly Adaptive.Aeron.Security.DefaultAuthenticatorSupplier.DEFAULT_AUTHENTICATOR -> Adaptive.Aeron.Security.IAuthenticator
+static readonly Adaptive.Aeron.Security.DefaultAuthenticatorSupplier.INSTANCE -> Adaptive.Aeron.Security.DefaultAuthenticatorSupplier
+static readonly Adaptive.Aeron.Security.DefaultAuthenticatorSupplier.NULL_ENCODED_PRINCIPAL -> byte[]
+static readonly Adaptive.Aeron.Security.DenyAllAuthorisationService.DENY_ALL_NAME -> string
+static readonly Adaptive.Aeron.Security.DenyAllAuthorisationService.INSTANCE -> Adaptive.Aeron.Security.IAuthorisationService
+static readonly Adaptive.Aeron.Security.NullCredentialsSupplier.NULL_CREDENTIAL -> byte[]
+static readonly Adaptive.Aeron.Status.LocalSocketAddressStatus.INITIAL_LENGTH -> int
+virtual Adaptive.Aeron.AvailableCounterHandler.Invoke(Adaptive.Agrona.Concurrent.Status.CountersReader countersReader, long registrationId, int counterId) -> void
+virtual Adaptive.Aeron.AvailableImageHandler.Invoke(Adaptive.Aeron.Image image) -> void
+virtual Adaptive.Aeron.DutyCycleTracker.ReportMeasurement(long durationNs) -> void
+virtual Adaptive.Aeron.EndOfStreamHandler.Invoke(Adaptive.Aeron.Image image) -> void
+virtual Adaptive.Aeron.LogBuffer.BlockHandler.Invoke(Adaptive.Agrona.IDirectBuffer buffer, int offset, int length, int sessionId, int termId) -> void
+virtual Adaptive.Aeron.LogBuffer.ControlledFragmentHandler.Invoke(Adaptive.Agrona.IDirectBuffer buffer, int offset, int length, Adaptive.Aeron.LogBuffer.Header header) -> Adaptive.Aeron.LogBuffer.ControlledFragmentHandlerAction
+virtual Adaptive.Aeron.LogBuffer.FragmentHandler.Invoke(Adaptive.Agrona.IDirectBuffer buffer, int offset, int length, Adaptive.Aeron.LogBuffer.Header header) -> void
+virtual Adaptive.Aeron.LogBuffer.RawBlockHandler.Invoke(System.IO.FileStream fileStream, long fileOffset, Adaptive.Agrona.Concurrent.UnsafeBuffer termBuffer, int termOffset, int length, int sessionId, int termId) -> void
+virtual Adaptive.Aeron.Publication.Position.get -> long
+virtual Adaptive.Aeron.ReservedValueSupplier.Invoke(Adaptive.Agrona.IDirectBuffer termBuffer, int termOffset, int frameLength) -> long
+virtual Adaptive.Aeron.UnavailableCounterHandler.Invoke(Adaptive.Agrona.Concurrent.Status.CountersReader countersReader, long registrationId, int counterId) -> void
+virtual Adaptive.Aeron.UnavailableImageHandler.Invoke(Adaptive.Aeron.Image image) -> void

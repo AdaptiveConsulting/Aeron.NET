@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright 2014 - 2017 Adaptive Financial Consulting Ltd
+ * Copyright 2014 - 2026 Adaptive Financial Consulting Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,10 +15,8 @@
  */
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using Adaptive.Agrona.Concurrent;
 
 namespace Adaptive.Agrona
 {
@@ -34,9 +32,7 @@ namespace Adaptive.Agrona
             {
                 disposable?.Dispose();
             }
-            catch
-            {
-            }
+            catch { }
         }
 
         /// <summary>
@@ -49,13 +45,11 @@ namespace Adaptive.Agrona
             {
                 disposable?.Invoke();
             }
-            catch
-            {
-            }
+            catch { }
         }
 
         /// <summary>
-        /// Dispose an <see cref="IDisposable"/> delegating exceptions to <see cref="ErrorHandler"/>.
+        /// Dispose an <see cref="IDisposable"/> delegating exceptions to <see cref="ErrorHandler"/> .
         /// </summary>
         /// <param name="errorHandler"> to delegate exceptions to.</param>
         /// <param name="disposable"> to be closed.</param>
@@ -72,7 +66,7 @@ namespace Adaptive.Agrona
         }
 
         /// <summary>
-        /// Dispose an <see cref="IDisposable"/> delegating exceptions to <see cref="ErrorHandler"/>.
+        /// Dispose an <see cref="IDisposable"/> delegating exceptions to <see cref="ErrorHandler"/> .
         /// </summary>
         /// <param name="errorHandler"> to delegate exceptions to.</param>
         /// <param name="disposable"> to be closed.</param>
@@ -89,7 +83,7 @@ namespace Adaptive.Agrona
         }
 
         /// <summary>
-        /// Dispose an <see cref="IDisposable"/> delegating exceptions to <see cref="ErrorHandler"/>.
+        /// Dispose an <see cref="IDisposable"/> delegating exceptions to <see cref="ErrorHandler"/> .
         /// </summary>
         /// <param name="errorHandler"> to delegate exceptions to.</param>
         /// <param name="disposable"> to be closed.</param>
@@ -151,19 +145,26 @@ namespace Adaptive.Agrona
         }
 
         /// <summary>
-        /// Dispose all disposables and delegate exceptions to the <see cref="IErrorHandler"/>.
-        /// If <paramref name="errorHandler"/> is null, exceptions are aggregated and thrown at the end.
+        /// Dispose all disposables and delegate exceptions to the <see cref="IErrorHandler"/> . If
+        /// <paramref name="errorHandler"/> is null, exceptions are aggregated and thrown at the end.
         /// </summary>
-        public static void CloseAll<T>(IErrorHandler errorHandler, ICollection<T> disposables) where T : IDisposable
+        public static void CloseAll<T>(IErrorHandler errorHandler, ICollection<T> disposables)
+            where T : IDisposable
         {
-            if (disposables == null) return;
+            if (disposables == null)
+            {
+                return;
+            }
 
             NullReferenceException error = null;
             List<Exception> suppressed = null;
 
             foreach (var disposable in disposables)
             {
-                if (disposable == null) continue;
+                if (disposable == null)
+                {
+                    continue;
+                }
 
                 try
                 {

@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright 2014 - 2017 Adaptive Financial Consulting Ltd
+ * Copyright 2014 - 2026 Adaptive Financial Consulting Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,12 +22,12 @@ namespace Adaptive.Aeron
     public enum ErrorCode
     {
         /// <summary>
-        /// Old generic value, no longer used (0 value clashes with success). Retained for version compatibility. 
+        /// Old generic value, no longer used (0 value clashes with success). Retained for version compatibility.
         /// </summary>
         UNUSED = 0,
 
         /// <summary>
-        /// A failure occurred creating a new channel or parsing the channel string. 
+        /// A failure occurred creating a new channel or parsing the channel string.
         /// </summary>
         INVALID_CHANNEL = 1,
 
@@ -85,12 +85,12 @@ namespace Adaptive.Aeron
         /// Aeron encountered insufficient storage space while adding a resource.
         /// </summary>
         STORAGE_SPACE = 12,
-        
+
         /// <summary>
         /// An image was rejected.
         /// </summary>
         IMAGE_REJECTED = 13,
-        
+
         /// <summary>
         /// A publication was revoked.
         /// </summary>
@@ -99,6 +99,6 @@ namespace Adaptive.Aeron
         /// <summary>
         /// A code value returned was not known.
         /// </summary>
-        UNKNOWN_CODE_VALUE = -1
+        UNKNOWN_CODE_VALUE = -1,
     }
 }

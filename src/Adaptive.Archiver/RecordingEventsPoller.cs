@@ -1,7 +1,22 @@
-﻿using Adaptive.Aeron;
+﻿/*
+ * Copyright 2014 - 2026 Adaptive Financial Consulting Ltd
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+using Adaptive.Aeron;
 using Adaptive.Aeron.LogBuffer;
 using Adaptive.Agrona;
-using Adaptive.Agrona.Concurrent;
 using Adaptive.Archiver.Codecs;
 
 namespace Adaptive.Archiver
@@ -11,19 +26,19 @@ namespace Adaptive.Archiver
     /// </summary>
     public class RecordingEventsPoller : IControlledFragmentHandler
     {
-        private readonly MessageHeaderDecoder messageHeaderDecoder = new MessageHeaderDecoder();
-        private readonly RecordingStartedDecoder recordingStartedDecoder = new RecordingStartedDecoder();
-        private readonly RecordingProgressDecoder recordingProgressDecoder = new RecordingProgressDecoder();
-        private readonly RecordingStoppedDecoder recordingStoppedDecoder = new RecordingStoppedDecoder();
+        private readonly MessageHeaderDecoder _messageHeaderDecoder = new MessageHeaderDecoder();
+        private readonly RecordingStartedDecoder _recordingStartedDecoder = new RecordingStartedDecoder();
+        private readonly RecordingProgressDecoder _recordingProgressDecoder = new RecordingProgressDecoder();
+        private readonly RecordingStoppedDecoder _recordingStoppedDecoder = new RecordingStoppedDecoder();
 
-        private readonly Subscription subscription;
-        private int templateId;
-        private bool isPollComplete;
+        private readonly Subscription _subscription;
+        private int _templateId;
+        private bool _isPollComplete;
 
-        private long recordingId;
-        private long recordingStartPosition;
-        private long recordingPosition;
-        private long recordingStopPosition;
+        private long _recordingId;
+        private long _recordingStartPosition;
+        private long _recordingPosition;
+        private long _recordingStopPosition;
 
         /// <summary>
         /// Create a poller for a given subscription to an archive for recording events.
@@ -31,7 +46,7 @@ namespace Adaptive.Archiver
         /// <param name="subscription"> to poll for new events. </param>
         public RecordingEventsPoller(Subscription subscription)
         {
-            this.subscription = subscription;
+            this._subscription = subscription;
         }
 
         /// <summary>
@@ -40,13 +55,13 @@ namespace Adaptive.Archiver
         /// <returns> the number of fragments read during the operation. Zero if no events are available. </returns>
         public int Poll()
         {
-            if (isPollComplete)
+            if (_isPollComplete)
             {
-                isPollComplete = false;
-                templateId = Aeron.Aeron.NULL_VALUE;
+                _isPollComplete = false;
+                _templateId = Aeron.Aeron.NULL_VALUE;
             }
 
-            return subscription.ControlledPoll(this, 1);
+            return _subscription.ControlledPoll(this, 1);
         }
 
         /// <summary>
@@ -55,7 +70,7 @@ namespace Adaptive.Archiver
         /// <returns> true of the last polling action received a complete message? </returns>
         public bool IsPollComplete()
         {
-            return isPollComplete;
+            return _isPollComplete;
         }
 
         /// <summary>
@@ -64,7 +79,7 @@ namespace Adaptive.Archiver
         /// <returns> the template id of the last received message. </returns>
         public int TemplateId()
         {
-            return templateId;
+            return _templateId;
         }
 
         /// <summary>
@@ -73,7 +88,7 @@ namespace Adaptive.Archiver
         /// <returns> the recording id of the last received event. </returns>
         public long RecordingId()
         {
-            return recordingId;
+            return _recordingId;
         }
 
         /// <summary>
@@ -82,7 +97,7 @@ namespace Adaptive.Archiver
         /// <returns> the position the recording started at. </returns>
         public long RecordingStartPosition()
         {
-            return recordingStartPosition;
+            return _recordingStartPosition;
         }
 
         /// <summary>
@@ -91,7 +106,7 @@ namespace Adaptive.Archiver
         /// <returns> the current recording position. </returns>
         public long RecordingPosition()
         {
-            return recordingPosition;
+            return _recordingPosition;
         }
 
         /// <summary>
@@ -100,58 +115,75 @@ namespace Adaptive.Archiver
         /// <returns> the position the recording stopped at. </returns>
         public long RecordingStopPosition()
         {
-            return recordingStopPosition;
+            return _recordingStopPosition;
         }
 
         public ControlledFragmentHandlerAction OnFragment(IDirectBuffer buffer, int offset, int length, Header header)
         {
-            if (isPollComplete)
+            if (_isPollComplete)
             {
                 return ControlledFragmentHandlerAction.ABORT;
             }
-            
-            messageHeaderDecoder.Wrap(buffer, offset);
 
-            int schemaId = messageHeaderDecoder.SchemaId();
+            _messageHeaderDecoder.Wrap(buffer, offset);
+
+            int schemaId = _messageHeaderDecoder.SchemaId();
             if (schemaId != MessageHeaderDecoder.SCHEMA_ID)
             {
-                throw new ArchiveException("expected schemaId=" + MessageHeaderDecoder.SCHEMA_ID + ", actual=" + schemaId);
+                throw new ArchiveException(
+                    "expected schemaId=" + MessageHeaderDecoder.SCHEMA_ID + ", actual=" + schemaId
+                );
             }
-            
-            templateId = messageHeaderDecoder.TemplateId();
-            switch (templateId)
+
+            _templateId = _messageHeaderDecoder.TemplateId();
+            switch (_templateId)
             {
                 case RecordingStartedDecoder.TEMPLATE_ID:
-                    recordingStartedDecoder.Wrap(buffer, offset + MessageHeaderDecoder.ENCODED_LENGTH, messageHeaderDecoder.BlockLength(), messageHeaderDecoder.Version());
+                    _recordingStartedDecoder.Wrap(
+                        buffer,
+                        offset + MessageHeaderDecoder.ENCODED_LENGTH,
+                        _messageHeaderDecoder.BlockLength(),
+                        _messageHeaderDecoder.Version()
+                    );
 
-                    recordingId = recordingStartedDecoder.RecordingId();
-                    recordingStartPosition = recordingStartedDecoder.StartPosition();
-                    recordingPosition = recordingStartPosition;
-                    recordingStopPosition = Aeron.Aeron.NULL_VALUE;
-                    isPollComplete = true;
+                    _recordingId = _recordingStartedDecoder.RecordingId();
+                    _recordingStartPosition = _recordingStartedDecoder.StartPosition();
+                    _recordingPosition = _recordingStartPosition;
+                    _recordingStopPosition = Aeron.Aeron.NULL_VALUE;
+                    _isPollComplete = true;
                     return ControlledFragmentHandlerAction.BREAK;
 
                 case RecordingProgressDecoder.TEMPLATE_ID:
-                    recordingProgressDecoder.Wrap(buffer, offset + MessageHeaderDecoder.ENCODED_LENGTH, messageHeaderDecoder.BlockLength(), messageHeaderDecoder.Version());
+                    _recordingProgressDecoder.Wrap(
+                        buffer,
+                        offset + MessageHeaderDecoder.ENCODED_LENGTH,
+                        _messageHeaderDecoder.BlockLength(),
+                        _messageHeaderDecoder.Version()
+                    );
 
-                    recordingId = recordingProgressDecoder.RecordingId();
-                    recordingStartPosition = recordingProgressDecoder.StartPosition();
-                    recordingPosition = recordingProgressDecoder.Position();
-                    recordingStopPosition = Aeron.Aeron.NULL_VALUE;
-                    isPollComplete = true;
+                    _recordingId = _recordingProgressDecoder.RecordingId();
+                    _recordingStartPosition = _recordingProgressDecoder.StartPosition();
+                    _recordingPosition = _recordingProgressDecoder.Position();
+                    _recordingStopPosition = Aeron.Aeron.NULL_VALUE;
+                    _isPollComplete = true;
                     return ControlledFragmentHandlerAction.BREAK;
 
                 case RecordingStoppedDecoder.TEMPLATE_ID:
-                    recordingStoppedDecoder.Wrap(buffer, offset + MessageHeaderDecoder.ENCODED_LENGTH, messageHeaderDecoder.BlockLength(), messageHeaderDecoder.Version());
+                    _recordingStoppedDecoder.Wrap(
+                        buffer,
+                        offset + MessageHeaderDecoder.ENCODED_LENGTH,
+                        _messageHeaderDecoder.BlockLength(),
+                        _messageHeaderDecoder.Version()
+                    );
 
-                    recordingId = recordingStoppedDecoder.RecordingId();
-                    recordingStartPosition = recordingStoppedDecoder.StartPosition();
-                    recordingStopPosition = recordingStoppedDecoder.StopPosition();
-                    recordingPosition = recordingStopPosition;
-                    isPollComplete = true;
+                    _recordingId = _recordingStoppedDecoder.RecordingId();
+                    _recordingStartPosition = _recordingStoppedDecoder.StartPosition();
+                    _recordingStopPosition = _recordingStoppedDecoder.StopPosition();
+                    _recordingPosition = _recordingStopPosition;
+                    _isPollComplete = true;
                     return ControlledFragmentHandlerAction.BREAK;
             }
-            
+
             return ControlledFragmentHandlerAction.CONTINUE;
         }
     }

@@ -1,4 +1,20 @@
-﻿using System;
+﻿/*
+ * Copyright 2014 - 2026 Adaptive Financial Consulting Ltd
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+using System;
 using System.Net;
 using Adaptive.Agrona;
 
@@ -45,10 +61,10 @@ namespace Adaptive.Aeron.Command
     /// </summary>
     public class PublicationErrorFrameFlyweight
     {
-        private const int REGISTRATION_ID_OFFSET = 0;
-        private const int IPV6_ADDRESS_LENGTH = 16;
+        private const int RegistrationIdOffset = 0;
+        private const int Ipv6AddressLength = 16;
         private static readonly int Ipv4AddressLength = BitUtil.SIZE_OF_INT;
-        private static readonly int DestinationRegistrationIdOffset = REGISTRATION_ID_OFFSET + BitUtil.SIZE_OF_LONG;
+        private static readonly int DestinationRegistrationIdOffset = RegistrationIdOffset + BitUtil.SIZE_OF_LONG;
         private static readonly int SessionIdOffset = DestinationRegistrationIdOffset + BitUtil.SIZE_OF_LONG;
         private static readonly int StreamIdOffset = SessionIdOffset + BitUtil.SIZE_OF_INT;
         private static readonly int ReceiverIdOffset = StreamIdOffset + BitUtil.SIZE_OF_INT;
@@ -56,13 +72,13 @@ namespace Adaptive.Aeron.Command
         private static readonly int AddressTypeOffset = GroupTagOffset + BitUtil.SIZE_OF_LONG;
         private static readonly int AddressPortOffset = AddressTypeOffset + BitUtil.SIZE_OF_SHORT;
         private static readonly int AddressOffset = AddressPortOffset + BitUtil.SIZE_OF_SHORT;
-        private static readonly int ErrorCodeOffset = AddressOffset + IPV6_ADDRESS_LENGTH;
+        private static readonly int ErrorCodeOffset = AddressOffset + Ipv6AddressLength;
         private static readonly int ErrorMessageOffset = ErrorCodeOffset + BitUtil.SIZE_OF_INT;
-        private const short ADDRESS_TYPE_IPV4 = 1;
-        private const short ADDRESS_TYPE_IPV6 = 2;
+        private const short AddressTypeIpv4 = 1;
+        private const short AddressTypeIpv6 = 2;
 
-        private IMutableDirectBuffer Buffer;
-        private int Offset;
+        private IMutableDirectBuffer _buffer;
+        private int _offset;
 
         /// <summary>
         /// Wrap the buffer at a given offset for updates.
@@ -72,8 +88,8 @@ namespace Adaptive.Aeron.Command
         /// <returns> this for a fluent API. </returns>
         public PublicationErrorFrameFlyweight Wrap(IMutableDirectBuffer buffer, int offset)
         {
-            this.Buffer = buffer;
-            this.Offset = offset;
+            _buffer = buffer;
+            _offset = offset;
 
             return this;
         }
@@ -84,7 +100,7 @@ namespace Adaptive.Aeron.Command
         /// <returns> registration ID of the publication. </returns>
         public long RegistrationId()
         {
-            return Buffer.GetLong(Offset + REGISTRATION_ID_OFFSET);
+            return _buffer.GetLong(_offset + RegistrationIdOffset);
         }
 
         /// <summary>
@@ -94,29 +110,30 @@ namespace Adaptive.Aeron.Command
         /// <returns> this for a fluent API. </returns>
         public PublicationErrorFrameFlyweight RegistrationId(long registrationId)
         {
-            Buffer.PutLong(Offset + REGISTRATION_ID_OFFSET, registrationId);
+            _buffer.PutLong(_offset + RegistrationIdOffset, registrationId);
             return this;
         }
 
         /// <summary>
-        /// Return registration id of the destination that received the error frame. This will only be set if the publication
-        /// is using manual MDC.
+        /// Return registration id of the destination that received the error frame. This will only be set if the
+        /// publication is using manual MDC.
         /// </summary>
         /// <returns> registration ID of the publication or <seealso cref="Aeron.NULL_VALUE"/>. </returns>
         public long DestinationRegistrationId()
         {
-            return Buffer.GetLong(Offset + DestinationRegistrationIdOffset);
+            return _buffer.GetLong(_offset + DestinationRegistrationIdOffset);
         }
 
         /// <summary>
-        /// Set the registration ID of the destination that received the error frame. Use <seealso cref="Aeron.NULL_VALUE"/>
+        /// Set the registration ID of the destination that received the error frame. Use
+        /// <seealso cref="Aeron.NULL_VALUE"/>
         /// if not set.
         /// </summary>
         /// <param name="registrationId"> of the destination. </param>
         /// <returns> this for a fluent API. </returns>
         public PublicationErrorFrameFlyweight DestinationRegistrationId(long registrationId)
         {
-            Buffer.PutLong(Offset + DestinationRegistrationIdOffset, registrationId);
+            _buffer.PutLong(_offset + DestinationRegistrationIdOffset, registrationId);
             return this;
         }
 
@@ -126,7 +143,7 @@ namespace Adaptive.Aeron.Command
         /// <returns> stream id field. </returns>
         public int StreamId()
         {
-            return Buffer.GetInt(Offset + StreamIdOffset);
+            return _buffer.GetInt(_offset + StreamIdOffset);
         }
 
         /// <summary>
@@ -136,7 +153,7 @@ namespace Adaptive.Aeron.Command
         /// <returns> this for a fluent API. </returns>
         public PublicationErrorFrameFlyweight StreamId(int streamId)
         {
-            Buffer.PutInt(Offset + StreamIdOffset, streamId);
+            _buffer.PutInt(_offset + StreamIdOffset, streamId);
 
             return this;
         }
@@ -147,7 +164,7 @@ namespace Adaptive.Aeron.Command
         /// <returns> session id field. </returns>
         public int SessionId()
         {
-            return Buffer.GetInt(Offset + SessionIdOffset);
+            return _buffer.GetInt(_offset + SessionIdOffset);
         }
 
         /// <summary>
@@ -157,7 +174,7 @@ namespace Adaptive.Aeron.Command
         /// <returns> this for a fluent API. </returns>
         public PublicationErrorFrameFlyweight SessionId(int sessionId)
         {
-            Buffer.PutInt(Offset + SessionIdOffset, sessionId);
+            _buffer.PutInt(_offset + SessionIdOffset, sessionId);
 
             return this;
         }
@@ -168,7 +185,7 @@ namespace Adaptive.Aeron.Command
         /// <returns> get the receiver id field. </returns>
         public long ReceiverId()
         {
-            return Buffer.GetLong(Offset + ReceiverIdOffset);
+            return _buffer.GetLong(_offset + ReceiverIdOffset);
         }
 
         /// <summary>
@@ -178,7 +195,7 @@ namespace Adaptive.Aeron.Command
         /// <returns> this for a fluent API. </returns>
         public PublicationErrorFrameFlyweight ReceiverId(long receiverId)
         {
-            Buffer.PutLong(Offset + ReceiverIdOffset, receiverId);
+            _buffer.PutLong(_offset + ReceiverIdOffset, receiverId);
 
             return this;
         }
@@ -189,7 +206,7 @@ namespace Adaptive.Aeron.Command
         /// <returns> the group tag field. </returns>
         public long GroupTag()
         {
-            return Buffer.GetLong(Offset + GroupTagOffset);
+            return _buffer.GetLong(_offset + GroupTagOffset);
         }
 
         /// <summary>
@@ -199,7 +216,7 @@ namespace Adaptive.Aeron.Command
         /// <returns> this for a fluent API. </returns>
         public PublicationErrorFrameFlyweight GroupTag(long groupTag)
         {
-            Buffer.PutLong(Offset + GroupTagOffset, groupTag);
+            _buffer.PutLong(_offset + GroupTagOffset, groupTag);
 
             return this;
         }
@@ -210,24 +227,24 @@ namespace Adaptive.Aeron.Command
         /// <returns> source address of the error frame. </returns>
         public IPEndPoint SourceAddress()
         {
-            short addressType = Buffer.GetShort(Offset + AddressTypeOffset);
-            int port = Buffer.GetShort(Offset + AddressPortOffset) & 0xFFFF;
+            short addressType = _buffer.GetShort(_offset + AddressTypeOffset);
+            int port = _buffer.GetShort(_offset + AddressPortOffset) & 0xFFFF;
 
             byte[] address;
-            if (ADDRESS_TYPE_IPV4 == addressType)
+            if (AddressTypeIpv4 == addressType)
             {
                 address = new byte[Ipv4AddressLength];
             }
-            else if (ADDRESS_TYPE_IPV6 == addressType)
+            else if (AddressTypeIpv6 == addressType)
             {
-                address = new byte[IPV6_ADDRESS_LENGTH];
+                address = new byte[Ipv6AddressLength];
             }
             else
             {
                 throw new ArgumentException("Unknown address type:" + addressType);
             }
 
-            Buffer.GetBytes(Offset + AddressOffset, address);
+            _buffer.GetBytes(_offset + AddressOffset, address);
             try
             {
                 return new IPEndPoint(new IPAddress(address), port);
@@ -244,7 +261,7 @@ namespace Adaptive.Aeron.Command
         /// <returns> error code for the command. </returns>
         public ErrorCode ErrorCode()
         {
-            return (ErrorCode)Buffer.GetInt(Offset + ErrorCodeOffset);
+            return (ErrorCode)_buffer.GetInt(_offset + ErrorCodeOffset);
         }
 
         /// <summary>
@@ -253,7 +270,7 @@ namespace Adaptive.Aeron.Command
         /// <returns> error code value for the command. </returns>
         public int ErrorCodeValue()
         {
-            return Buffer.GetInt(Offset + ErrorCodeOffset);
+            return _buffer.GetInt(_offset + ErrorCodeOffset);
         }
 
         /// <summary>
@@ -263,7 +280,7 @@ namespace Adaptive.Aeron.Command
         /// <returns> this for a fluent API. </returns>
         public PublicationErrorFrameFlyweight ErrorCode(ErrorCode code)
         {
-            Buffer.PutInt(Offset + ErrorCodeOffset, (int)code);
+            _buffer.PutInt(_offset + ErrorCodeOffset, (int)code);
             return this;
         }
 
@@ -273,7 +290,7 @@ namespace Adaptive.Aeron.Command
         /// <returns> error message. </returns>
         public string ErrorMessage()
         {
-            return Buffer.GetStringAscii(Offset + ErrorMessageOffset);
+            return _buffer.GetStringAscii(_offset + ErrorMessageOffset);
         }
 
         /// <summary>
@@ -283,7 +300,7 @@ namespace Adaptive.Aeron.Command
         /// <returns> this for a fluent API. </returns>
         public PublicationErrorFrameFlyweight ErrorMessage(string message)
         {
-            Buffer.PutStringAscii(Offset + ErrorMessageOffset, message);
+            _buffer.PutStringAscii(_offset + ErrorMessageOffset, message);
             return this;
         }
 
@@ -293,7 +310,7 @@ namespace Adaptive.Aeron.Command
         /// <returns> length of the error response in bytes. </returns>
         public int Length()
         {
-            return ErrorMessageOffset + BitUtil.SIZE_OF_INT + Buffer.GetInt(Offset + ErrorMessageOffset);
+            return ErrorMessageOffset + BitUtil.SIZE_OF_INT + _buffer.GetInt(_offset + ErrorMessageOffset);
         }
     }
 }

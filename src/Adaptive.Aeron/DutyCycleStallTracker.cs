@@ -1,16 +1,32 @@
+﻿/*
+ * Copyright 2014 - 2026 Adaptive Financial Consulting Ltd
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 using Adaptive.Agrona.Concurrent.Status;
 
 namespace Adaptive.Aeron
 {
     /// <summary>
-    /// Duty cycle tracker that detects when a cycle exceeds a threshold and tracks max cycle time reporting both through
-    /// counters.
+    /// Duty cycle tracker that detects when a cycle exceeds a threshold and tracks max cycle time reporting both
+    /// through counters.
     /// </summary>
     public class DutyCycleStallTracker : DutyCycleTracker
     {
-        private readonly AtomicCounter maxCycleTime;
-        private readonly AtomicCounter cycleTimeThresholdExceededCount;
-        private readonly long cycleTimeThresholdNs;
+        private readonly AtomicCounter _maxCycleTime;
+        private readonly AtomicCounter _cycleTimeThresholdExceededCount;
+        private readonly long _cycleTimeThresholdNs;
 
         /// <summary>
         /// Create a tracker to track max cycle time and excesses of a threshold.
@@ -18,11 +34,15 @@ namespace Adaptive.Aeron
         /// <param name="maxCycleTime"> counter for tracking. </param>
         /// <param name="cycleTimeThresholdExceededCount"> counter for tracking. </param>
         /// <param name="cycleTimeThresholdNs"> to use for tracking excesses. </param>
-        public DutyCycleStallTracker(AtomicCounter maxCycleTime, AtomicCounter cycleTimeThresholdExceededCount, long cycleTimeThresholdNs)
+        public DutyCycleStallTracker(
+            AtomicCounter maxCycleTime,
+            AtomicCounter cycleTimeThresholdExceededCount,
+            long cycleTimeThresholdNs
+        )
         {
-            this.maxCycleTime = maxCycleTime;
-            this.cycleTimeThresholdExceededCount = cycleTimeThresholdExceededCount;
-            this.cycleTimeThresholdNs = cycleTimeThresholdNs;
+            _maxCycleTime = maxCycleTime;
+            _cycleTimeThresholdExceededCount = cycleTimeThresholdExceededCount;
+            _cycleTimeThresholdNs = cycleTimeThresholdNs;
         }
 
         /// <summary>
@@ -31,7 +51,7 @@ namespace Adaptive.Aeron
         /// <returns> max cycle time counter. </returns>
         public AtomicCounter MaxCycleTime()
         {
-            return maxCycleTime;
+            return _maxCycleTime;
         }
 
         /// <summary>
@@ -40,7 +60,7 @@ namespace Adaptive.Aeron
         /// <returns> threshold exceeded counter. </returns>
         public AtomicCounter CycleTimeThresholdExceededCount()
         {
-            return cycleTimeThresholdExceededCount;
+            return _cycleTimeThresholdExceededCount;
         }
 
         /// <summary>
@@ -49,7 +69,7 @@ namespace Adaptive.Aeron
         /// <returns> threshold value. </returns>
         public long CycleTimeThresholdNs()
         {
-            return cycleTimeThresholdNs;
+            return _cycleTimeThresholdNs;
         }
 
         /// <summary>
@@ -57,11 +77,11 @@ namespace Adaptive.Aeron
         /// </summary>
         public override void ReportMeasurement(long durationNs)
         {
-            maxCycleTime.ProposeMaxOrdered(durationNs);
+            _maxCycleTime.ProposeMaxOrdered(durationNs);
 
-            if (durationNs > cycleTimeThresholdNs)
+            if (durationNs > _cycleTimeThresholdNs)
             {
-                cycleTimeThresholdExceededCount.IncrementOrdered();
+                _cycleTimeThresholdExceededCount.IncrementOrdered();
             }
         }
     }

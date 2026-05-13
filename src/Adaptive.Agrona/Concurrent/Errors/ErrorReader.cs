@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright 2014 - 2017 Adaptive Financial Consulting Ltd
+ * Copyright 2014 - 2026 Adaptive Financial Consulting Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,10 +17,15 @@
 namespace Adaptive.Agrona.Concurrent.Errors
 {
     /// <summary>
-    /// Reader for the log created by a <seealso cref="DistinctErrorLog"/>.
-    /// 
+    /// Reader for the log created by a <seealso cref="DistinctErrorLog"/> .
+    ///
     /// The read methods are thread safe.
     /// </summary>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage(
+        "Major Code Smell",
+        "S1118:Utility classes should not have public constructors",
+        Justification = "Public ctor in shipped API surface; marking static would break consumers."
+    )]
     public class ErrorLogReader
     {
         /// <summary>
@@ -32,7 +37,7 @@ namespace Adaptive.Agrona.Concurrent.Errors
         {
             return buffer.Capacity >= BitUtil.SIZE_OF_INT && 0 != buffer.GetIntVolatile(DistinctErrorLog.LengthOffset);
         }
-        
+
         /// <summary>
         /// Read all the errors in a log since the creation of the log.
         /// </summary>
@@ -65,7 +70,9 @@ namespace Adaptive.Agrona.Concurrent.Errors
                     break;
                 }
 
-                long lastObservationTimestamp = buffer.GetLongVolatile(offset + DistinctErrorLog.LastObservationTimestampOffset);
+                long lastObservationTimestamp = buffer.GetLongVolatile(
+                    offset + DistinctErrorLog.LastObservationTimestampOffset
+                );
                 if (lastObservationTimestamp >= sinceTimestamp)
                 {
                     ++entries;
@@ -74,7 +81,11 @@ namespace Adaptive.Agrona.Concurrent.Errors
                         buffer.GetInt(offset + DistinctErrorLog.ObservationCountOffset),
                         buffer.GetLong(offset + DistinctErrorLog.FirstObservationTimestampOffset),
                         lastObservationTimestamp,
-                        buffer.GetStringWithoutLengthUtf8(offset + DistinctErrorLog.EncodedErrorOffset, length - DistinctErrorLog.EncodedErrorOffset));
+                        buffer.GetStringWithoutLengthUtf8(
+                            offset + DistinctErrorLog.EncodedErrorOffset,
+                            length - DistinctErrorLog.EncodedErrorOffset
+                        )
+                    );
                 }
 
                 offset += BitUtil.Align(length, DistinctErrorLog.RecordAlignment);

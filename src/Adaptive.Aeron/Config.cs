@@ -1,5 +1,5 @@
-/*
- * Copyright 2014 - 2017 Adaptive Financial Consulting Ltd
+﻿/*
+ * Copyright 2014 - 2026 Adaptive Financial Consulting Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,25 +29,30 @@ namespace Adaptive.Aeron
 
             foreach (var a in args)
             {
-                if (!a.StartsWith("-D")) continue;
+                if (!a.StartsWith("-D"))
+                {
+                    continue;
+                }
+
                 var directive = a.Replace("-D", "").Split('=');
 
                 if (directive.Length == 2)
+                {
                     Params.Add(directive[0], directive[1]);
+                }
             }
         }
 
         public static string GetProperty(string propertyName, string defaultValue = null)
         {
-            string value;
-            return Params.TryGetValue(propertyName, out value) ? value : defaultValue;
+            return Params.TryGetValue(propertyName, out string value) ? value : defaultValue;
         }
 
         public static int GetInteger(string propertyName, int defaultValue)
         {
-            string strValue;
-            int value;
-            return Params.TryGetValue(propertyName, out strValue) && int.TryParse(strValue, out value) ? value : defaultValue;
+            return Params.TryGetValue(propertyName, out string strValue) && int.TryParse(strValue, out int value)
+                ? value
+                : defaultValue;
         }
 
         public static bool GetBoolean(string propertyName)
@@ -58,9 +63,9 @@ namespace Adaptive.Aeron
 
         public static long GetLong(string propertyName, long defaultValue)
         {
-            string strValue;
-            long value;
-            return Params.TryGetValue(propertyName, out strValue) && long.TryParse(strValue, out value) ? value : defaultValue;
+            return Params.TryGetValue(propertyName, out string strValue) && long.TryParse(strValue, out long value)
+                ? value
+                : defaultValue;
         }
 
         public static long GetDurationInNanos(string propertyName, long defaultValue)

@@ -1,0 +1,6 @@
+# Test method names follow the Method_Scenario_Result convention by design.
+# Disable the non-API method PascalCase rule for this project; locals/params/
+# fields still follow the root .editorconfig rules.
+
+[*.cs]
+dotnet_naming_rule.non_api_methods_must_be_pascal.severity = none

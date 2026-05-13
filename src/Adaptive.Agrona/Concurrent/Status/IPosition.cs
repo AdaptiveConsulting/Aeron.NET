@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright 2014 - 2017 Adaptive Financial Consulting Ltd
+ * Copyright 2014 - 2026 Adaptive Financial Consulting Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@ namespace Adaptive.Agrona.Concurrent.Status
 {
     /// <summary>
     /// Reports on how far through a buffer some component has progressed.
-    /// 
+    ///
     /// Threadsafe to write to from a single writer.
     /// </summary>
     public interface IPosition : IReadablePosition
@@ -40,7 +40,7 @@ namespace Adaptive.Agrona.Concurrent.Status
         /// </summary>
         /// <param name="value"> the current position of the component. </param>
         void SetOrdered(long value);
-        
+
         /// <summary>
         /// Sets the current position of the component with release memory semantics.
         /// </summary>
@@ -52,7 +52,7 @@ namespace Adaptive.Agrona.Concurrent.Status
         /// </summary>
         /// <param name="value"> the current position of the component. </param>
         void SetVolatile(long value);
-        
+
         /// <summary>
         /// Set the position to a new proposedValue if greater than the current value with memory ordering semantics.
         /// </summary>

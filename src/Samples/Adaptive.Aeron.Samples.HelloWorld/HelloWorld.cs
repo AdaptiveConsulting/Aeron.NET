@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright 2014 - 2017 Adaptive Financial Consulting Ltd
+ * Copyright 2014 - 2026 Adaptive Financial Consulting Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ using Adaptive.Agrona.Concurrent;
 
 namespace Adaptive.Aeron.Samples.HelloWorld
 {
-    public class HelloWorld
+    public static class HelloWorld
     {
         public static void Main()
         {
@@ -31,7 +31,7 @@ namespace Adaptive.Aeron.Samples.HelloWorld
 
             var buffer = new UnsafeBuffer(new byte[256]);
             var handler = HandlerHelper.ToFragmentHandler(PrintMessage);
-            
+
             try
             {
                 using (var aeron = Aeron.Connect())
@@ -64,7 +64,9 @@ namespace Adaptive.Aeron.Samples.HelloWorld
         {
             var message = buffer.GetStringWithoutLengthUtf8(offset, length);
 
-            Console.WriteLine($"Received message ({message}) to stream {header.StreamId:D} from session {header.SessionId:x} term id {header.TermId:x} term offset {header.TermOffset:D} ({length:D}@{offset:D})");
+            Console.WriteLine(
+                $"Received message ({message}) to stream {header.StreamId:D} from session {header.SessionId:x} term id {header.TermId:x} term offset {header.TermOffset:D} ({length:D}@{offset:D})"
+            );
         }
     }
 }

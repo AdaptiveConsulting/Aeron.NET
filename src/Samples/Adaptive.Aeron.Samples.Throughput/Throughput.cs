@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright 2014 - 2017 Adaptive Financial Consulting Ltd
+ * Copyright 2014 - 2026 Adaptive Financial Consulting Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,10 +22,10 @@ using Adaptive.Agrona.Concurrent;
 
 namespace Adaptive.Aeron.Samples.Throughput
 {
-    public class Throughput
+    public static class Throughput
     {
         private static readonly string Channel = SampleConfiguration.CHANNEL;
-        private static readonly int StreamID = SampleConfiguration.STREAM_ID;
+        private static readonly int StreamId = SampleConfiguration.STREAM_ID;
         private static readonly int MessageLength = SampleConfiguration.MESSAGE_LENGTH;
         private static readonly long NumberOfMessages = SampleConfiguration.NUMBER_OF_MESSAGES;
         private static readonly long LingerTimeoutMs = SampleConfiguration.LINGER_TIMEOUT_MS;
@@ -33,12 +33,11 @@ namespace Adaptive.Aeron.Samples.Throughput
 
         private static readonly BusySpinIdleStrategy OfferIdleStrategy = new BusySpinIdleStrategy();
 
-        private static volatile bool _printingActive = true;
+        private static volatile bool s_printingActive = true;
 
         public static void Main()
         {
             ComputerSpecifications.Dump();
-
 
             var reporter = new RateReporter(1000, PrintRate);
             var rateReporterHandler = SamplesUtil.RateReporterHandler(reporter);
@@ -47,11 +46,13 @@ namespace Adaptive.Aeron.Samples.Throughput
             var running = new AtomicBoolean(true);
 
             var reportThread = new Thread(reporter.Run);
-            var subscribeThread = new Thread(subscription => SamplesUtil.SubscriberLoop(rateReporterHandler, FragmentCountLimit, running)((Subscription) subscription));
+            var subscribeThread = new Thread(subscription =>
+                SamplesUtil.SubscriberLoop(rateReporterHandler, FragmentCountLimit, running)((Subscription)subscription)
+            );
 
             using (var aeron = Aeron.Connect(context))
-            using (var publication = aeron.AddPublication(Channel, StreamID))
-            using (var subscription = aeron.AddSubscription(Channel, StreamID))
+            using (var publication = aeron.AddPublication(Channel, StreamId))
+            using (var subscription = aeron.AddSubscription(Channel, StreamId))
             using (var byteBuffer = BufferUtil.AllocateDirectAligned(MessageLength, BitUtil.CACHE_LINE_LENGTH))
             using (var buffer = new UnsafeBuffer(byteBuffer))
             {
@@ -60,9 +61,15 @@ namespace Adaptive.Aeron.Samples.Throughput
 
                 do
                 {
-                    Console.WriteLine("Streaming {0:G} messages of size {1:G} bytes to {2} on stream Id {3}", NumberOfMessages, MessageLength, Channel, StreamID);
+                    Console.WriteLine(
+                        "Streaming {0:G} messages of size {1:G} bytes to {2} on stream Id {3}",
+                        NumberOfMessages,
+                        MessageLength,
+                        Channel,
+                        StreamId
+                    );
 
-                    _printingActive = true;
+                    s_printingActive = true;
 
                     long backPressureCount = 0;
                     for (long i = 0; i < NumberOfMessages; i++)
@@ -77,7 +84,9 @@ namespace Adaptive.Aeron.Samples.Throughput
                         }
                     }
 
-                    Console.WriteLine("Done streaming. backPressureRatio=" + (double)backPressureCount / NumberOfMessages);
+                    Console.WriteLine(
+                        "Done streaming. backPressureRatio=" + (double)backPressureCount / NumberOfMessages
+                    );
 
                     if (0 < LingerTimeoutMs)
                     {
@@ -85,7 +94,7 @@ namespace Adaptive.Aeron.Samples.Throughput
                         Thread.Sleep((int)LingerTimeoutMs);
                     }
 
-                    _printingActive = false;
+                    s_printingActive = false;
                 } while (Console.ReadLine() != "x");
 
                 reporter.Halt();
@@ -100,9 +109,15 @@ namespace Adaptive.Aeron.Samples.Throughput
 
         public static void PrintRate(double messagesPerSec, double bytesPerSec, long totalFragments, long totalBytes)
         {
-            if (_printingActive)
+            if (s_printingActive)
             {
-                Console.WriteLine("{0:#,0} msgs/sec, {1} bytes/sec, totals {2} messages {3} MB", messagesPerSec, bytesPerSec, totalFragments, totalBytes/(1024*1024));
+                Console.WriteLine(
+                    "{0:#,0} msgs/sec, {1} bytes/sec, totals {2} messages {3} MB",
+                    messagesPerSec,
+                    bytesPerSec,
+                    totalFragments,
+                    totalBytes / (1024 * 1024)
+                );
             }
         }
     }

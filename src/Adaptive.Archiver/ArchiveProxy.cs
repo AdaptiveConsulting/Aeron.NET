@@ -1,4 +1,20 @@
-﻿using System;
+﻿/*
+ * Copyright 2014 - 2026 Adaptive Financial Consulting Ltd
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+using System;
 using Adaptive.Aeron;
 using Adaptive.Aeron.Security;
 using Adaptive.Agrona;
@@ -14,125 +30,135 @@ namespace Adaptive.Archiver
         /// </summary>
         public const int DEFAULT_RETRY_ATTEMPTS = 3;
 
-        private readonly long connectTimeoutNs;
-        private readonly int retryAttempts;
-        private readonly IIdleStrategy retryIdleStrategy;
-        private readonly INanoClock nanoClock;
-        private readonly ICredentialsSupplier credentialsSupplier;
-        private readonly string clientInfo;
+        private readonly long _connectTimeoutNs;
+        private readonly int _retryAttempts;
+        private readonly IIdleStrategy _retryIdleStrategy;
+        private readonly INanoClock _nanoClock;
+        private readonly ICredentialsSupplier _credentialsSupplier;
+        private readonly string _clientInfo;
 
-        private readonly ExpandableArrayBuffer buffer = new ExpandableArrayBuffer(256);
-        private readonly ExclusivePublication publication;
-        private readonly MessageHeaderEncoder messageHeader = new MessageHeaderEncoder();
+        private readonly ExpandableArrayBuffer _buffer = new ExpandableArrayBuffer(256);
+        private readonly ExclusivePublication _publication;
+        private readonly MessageHeaderEncoder _messageHeader = new MessageHeaderEncoder();
 
-        private readonly AuthConnectRequestEncoder connectRequestEncoder = new AuthConnectRequestEncoder();
-        private readonly KeepAliveRequestEncoder keepAliveRequestEncoder = new KeepAliveRequestEncoder();
-        private readonly CloseSessionRequestEncoder closeSessionRequestEncoder = new CloseSessionRequestEncoder();
-        private readonly ChallengeResponseEncoder challengeResponseEncoder = new ChallengeResponseEncoder();
-        private readonly StartRecordingRequestEncoder startRecordingRequest = new StartRecordingRequestEncoder();
-        private readonly StartRecordingRequest2Encoder startRecordingRequest2 = new StartRecordingRequest2Encoder();
-        private readonly StopRecordingRequestEncoder stopRecordingRequest = new StopRecordingRequestEncoder();
+        private readonly AuthConnectRequestEncoder _connectRequestEncoder = new AuthConnectRequestEncoder();
+        private readonly KeepAliveRequestEncoder _keepAliveRequestEncoder = new KeepAliveRequestEncoder();
+        private readonly CloseSessionRequestEncoder _closeSessionRequestEncoder = new CloseSessionRequestEncoder();
+        private readonly ChallengeResponseEncoder _challengeResponseEncoder = new ChallengeResponseEncoder();
+        private readonly StartRecordingRequestEncoder _startRecordingRequest = new StartRecordingRequestEncoder();
+        private readonly StartRecordingRequest2Encoder _startRecordingRequest2 = new StartRecordingRequest2Encoder();
+        private readonly StopRecordingRequestEncoder _stopRecordingRequest = new StopRecordingRequestEncoder();
 
-        private readonly StopRecordingSubscriptionRequestEncoder stopRecordingSubscriptionRequest =
+        private readonly StopRecordingSubscriptionRequestEncoder _stopRecordingSubscriptionRequest =
             new StopRecordingSubscriptionRequestEncoder();
 
-        private readonly StopRecordingByIdentityRequestEncoder stopRecordingByIdentityRequest =
+        private readonly StopRecordingByIdentityRequestEncoder _stopRecordingByIdentityRequest =
             new StopRecordingByIdentityRequestEncoder();
 
-        private readonly ReplayRequestEncoder replayRequest = new ReplayRequestEncoder();
-        private readonly StopReplayRequestEncoder stopReplayRequest = new StopReplayRequestEncoder();
-        private readonly ListRecordingsRequestEncoder listRecordingsRequest = new ListRecordingsRequestEncoder();
+        private readonly ReplayRequestEncoder _replayRequest = new ReplayRequestEncoder();
+        private readonly StopReplayRequestEncoder _stopReplayRequest = new StopReplayRequestEncoder();
+        private readonly ListRecordingsRequestEncoder _listRecordingsRequest = new ListRecordingsRequestEncoder();
 
-        private readonly ListRecordingsForUriRequestEncoder listRecordingsForUriRequest =
+        private readonly ListRecordingsForUriRequestEncoder _listRecordingsForUriRequest =
             new ListRecordingsForUriRequestEncoder();
 
-        private readonly ListRecordingRequestEncoder listRecordingRequest = new ListRecordingRequestEncoder();
-        private readonly ExtendRecordingRequestEncoder extendRecordingRequest = new ExtendRecordingRequestEncoder();
-        private readonly ExtendRecordingRequest2Encoder extendRecordingRequest2 = new ExtendRecordingRequest2Encoder();
+        private readonly ListRecordingRequestEncoder _listRecordingRequest = new ListRecordingRequestEncoder();
+        private readonly ExtendRecordingRequestEncoder _extendRecordingRequest = new ExtendRecordingRequestEncoder();
+        private readonly ExtendRecordingRequest2Encoder _extendRecordingRequest2 = new ExtendRecordingRequest2Encoder();
 
-        private readonly RecordingPositionRequestEncoder recordingPositionRequest =
+        private readonly RecordingPositionRequestEncoder _recordingPositionRequest =
             new RecordingPositionRequestEncoder();
 
-        private readonly TruncateRecordingRequestEncoder truncateRecordingRequest =
+        private readonly TruncateRecordingRequestEncoder _truncateRecordingRequest =
             new TruncateRecordingRequestEncoder();
 
-        private readonly PurgeRecordingRequestEncoder purgeRecordingRequest = new PurgeRecordingRequestEncoder();
-        private readonly StopPositionRequestEncoder stopPositionRequest = new StopPositionRequestEncoder();
+        private readonly PurgeRecordingRequestEncoder _purgeRecordingRequest = new PurgeRecordingRequestEncoder();
+        private readonly StopPositionRequestEncoder _stopPositionRequest = new StopPositionRequestEncoder();
 
-        private readonly MaxRecordedPositionRequestEncoder maxRecordedPositionRequestEncoder =
+        private readonly MaxRecordedPositionRequestEncoder _maxRecordedPositionRequestEncoder =
             new MaxRecordedPositionRequestEncoder();
 
-        private readonly FindLastMatchingRecordingRequestEncoder findLastMatchingRecordingRequest =
+        private readonly FindLastMatchingRecordingRequestEncoder _findLastMatchingRecordingRequest =
             new FindLastMatchingRecordingRequestEncoder();
 
-        private readonly ListRecordingSubscriptionsRequestEncoder listRecordingSubscriptionsRequest =
+        private readonly ListRecordingSubscriptionsRequestEncoder _listRecordingSubscriptionsRequest =
             new ListRecordingSubscriptionsRequestEncoder();
 
-        private readonly BoundedReplayRequestEncoder boundedReplayRequest = new BoundedReplayRequestEncoder();
-        private readonly StopAllReplaysRequestEncoder stopAllReplaysRequest = new StopAllReplaysRequestEncoder();
-        private readonly ReplicateRequest2Encoder replicateRequest = new ReplicateRequest2Encoder();
-        private readonly StopReplicationRequestEncoder stopReplicationRequest = new StopReplicationRequestEncoder();
-        private readonly StartPositionRequestEncoder startPositionRequest = new StartPositionRequestEncoder();
-        private readonly DetachSegmentsRequestEncoder detachSegmentsRequest = new DetachSegmentsRequestEncoder();
+        private readonly BoundedReplayRequestEncoder _boundedReplayRequest = new BoundedReplayRequestEncoder();
+        private readonly StopAllReplaysRequestEncoder _stopAllReplaysRequest = new StopAllReplaysRequestEncoder();
+        private readonly ReplicateRequest2Encoder _replicateRequest = new ReplicateRequest2Encoder();
+        private readonly StopReplicationRequestEncoder _stopReplicationRequest = new StopReplicationRequestEncoder();
+        private readonly StartPositionRequestEncoder _startPositionRequest = new StartPositionRequestEncoder();
+        private readonly DetachSegmentsRequestEncoder _detachSegmentsRequest = new DetachSegmentsRequestEncoder();
 
-        private readonly DeleteDetachedSegmentsRequestEncoder deleteDetachedSegmentsRequest =
+        private readonly DeleteDetachedSegmentsRequestEncoder _deleteDetachedSegmentsRequest =
             new DeleteDetachedSegmentsRequestEncoder();
 
-        private readonly PurgeSegmentsRequestEncoder purgeSegmentsRequest = new PurgeSegmentsRequestEncoder();
-        private readonly AttachSegmentsRequestEncoder attachSegmentsRequest = new AttachSegmentsRequestEncoder();
-        private readonly MigrateSegmentsRequestEncoder migrateSegmentsRequest = new MigrateSegmentsRequestEncoder();
-        private readonly ArchiveIdRequestEncoder archiveIdRequestEncoder = new ArchiveIdRequestEncoder();
-        private readonly ReplayTokenRequestEncoder replayTokenRequestEncoder = new ReplayTokenRequestEncoder();
-        private readonly UpdateChannelRequestEncoder updateChannelRequestEncoder = new UpdateChannelRequestEncoder();
+        private readonly PurgeSegmentsRequestEncoder _purgeSegmentsRequest = new PurgeSegmentsRequestEncoder();
+        private readonly AttachSegmentsRequestEncoder _attachSegmentsRequest = new AttachSegmentsRequestEncoder();
+        private readonly MigrateSegmentsRequestEncoder _migrateSegmentsRequest = new MigrateSegmentsRequestEncoder();
+        private readonly ArchiveIdRequestEncoder _archiveIdRequestEncoder = new ArchiveIdRequestEncoder();
+        private readonly ReplayTokenRequestEncoder _replayTokenRequestEncoder = new ReplayTokenRequestEncoder();
+        private readonly UpdateChannelRequestEncoder _updateChannelRequestEncoder = new UpdateChannelRequestEncoder();
 
         /// <summary>
         /// Create a proxy with a <seealso cref="ExclusivePublication"/> for sending control message requests.
         /// <para>
-        /// This provides a default <seealso cref="IIdleStrategy"/> of a <seealso cref="YieldingIdleStrategy"/> when offers are back pressured
-        /// with a defaults of <seealso cref="AeronArchive.Configuration.MESSAGE_TIMEOUT_DEFAULT_NS"/> and
+        /// This provides a default <seealso cref="IIdleStrategy"/> of a <seealso cref="YieldingIdleStrategy"/> when
+        /// offers are back pressured with a defaults of
+        /// <seealso cref="AeronArchive.Configuration.MESSAGE_TIMEOUT_DEFAULT_NS"/> and
         /// <seealso cref="DEFAULT_RETRY_ATTEMPTS"/>.
-        ///    
+        ///
         /// </para>
         /// </summary>
         /// <param name="publication"> publication for sending control messages to an archive. </param>
-        public ArchiveProxy(ExclusivePublication publication) : this(
-            publication,
-            YieldingIdleStrategy.INSTANCE,
-            SystemNanoClock.INSTANCE,
-            AeronArchive.Configuration.MESSAGE_TIMEOUT_DEFAULT_NS,
-            DEFAULT_RETRY_ATTEMPTS,
-            new NullCredentialsSupplier(),
-            null)
+        public ArchiveProxy(ExclusivePublication publication)
+            : this(
+                publication,
+                YieldingIdleStrategy.INSTANCE,
+                SystemNanoClock.INSTANCE,
+                AeronArchive.Configuration.MESSAGE_TIMEOUT_DEFAULT_NS,
+                DEFAULT_RETRY_ATTEMPTS,
+                new NullCredentialsSupplier(),
+                null
+            )
         {
         }
-
 
         /// <summary>
         /// Create a proxy with a <seealso cref="Pub"/> for sending control message requests.
         /// </summary>
         /// <param name="publication">         publication for sending control messages to an archive. </param>
-        /// <param name="retryIdleStrategy">   for what should happen between retry attempts at offering messages. </param>
+        /// <param name="retryIdleStrategy"> for what should happen between retry attempts at offering messages.
+        /// </param>
         /// <param name="nanoClock">           to be used for calculating checking deadlines. </param>
         /// <param name="connectTimeoutNs">    for connection requests. </param>
         /// <param name="retryAttempts">       for offering control messages before giving up. </param>
         /// <param name="credentialsSupplier"> for the AuthConnectRequest </param>
-        public ArchiveProxy(ExclusivePublication publication, IIdleStrategy retryIdleStrategy, INanoClock nanoClock,
-            long connectTimeoutNs, int retryAttempts, ICredentialsSupplier credentialsSupplier)
+        public ArchiveProxy(
+            ExclusivePublication publication,
+            IIdleStrategy retryIdleStrategy,
+            INanoClock nanoClock,
+            long connectTimeoutNs,
+            int retryAttempts,
+            ICredentialsSupplier credentialsSupplier
+        )
         {
-            this.publication = publication;
-            this.retryIdleStrategy = retryIdleStrategy;
-            this.nanoClock = nanoClock;
-            this.connectTimeoutNs = connectTimeoutNs;
-            this.retryAttempts = retryAttempts;
-            this.credentialsSupplier = credentialsSupplier;
+            this._publication = publication;
+            this._retryIdleStrategy = retryIdleStrategy;
+            this._nanoClock = nanoClock;
+            this._connectTimeoutNs = connectTimeoutNs;
+            this._retryAttempts = retryAttempts;
+            this._credentialsSupplier = credentialsSupplier;
         }
 
         /// <summary>
-        /// Create a proxy with a <seealso cref="ExclusivePublication"/> for sending control message requests with specified
-        /// client info.
+        /// Create a proxy with a <seealso cref="ExclusivePublication"/> for sending control message requests with
+        /// specified client info.
         /// </summary>
         /// <param name="publication">         publication for sending control messages to an archive. </param>
-        /// <param name="retryIdleStrategy">   for what should happen between retry attempts at offering messages. </param>
+        /// <param name="retryIdleStrategy"> for what should happen between retry attempts at offering messages.
+        /// </param>
         /// <param name="nanoClock">           to be used for calculating checking deadlines. </param>
         /// <param name="connectTimeoutNs">    for connection requests. </param>
         /// <param name="retryAttempts">       for offering control messages before giving up. </param>
@@ -146,17 +172,17 @@ namespace Adaptive.Archiver
             long connectTimeoutNs,
             int retryAttempts,
             ICredentialsSupplier credentialsSupplier,
-            string clientInfo)
+            string clientInfo
+        )
         {
-            this.publication = publication;
-            this.retryIdleStrategy = retryIdleStrategy;
-            this.nanoClock = nanoClock;
-            this.connectTimeoutNs = connectTimeoutNs;
-            this.retryAttempts = retryAttempts;
-            this.credentialsSupplier = credentialsSupplier;
-            this.clientInfo = clientInfo;
+            this._publication = publication;
+            this._retryIdleStrategy = retryIdleStrategy;
+            this._nanoClock = nanoClock;
+            this._connectTimeoutNs = connectTimeoutNs;
+            this._retryAttempts = retryAttempts;
+            this._credentialsSupplier = credentialsSupplier;
+            this._clientInfo = clientInfo;
         }
-
 
         /// <summary>
         /// Get the <seealso cref="Publication"/> used for sending control messages.
@@ -164,7 +190,7 @@ namespace Adaptive.Archiver
         /// <returns> the <seealso cref="Publication"/> used for sending control messages. </returns>
         public Publication Pub()
         {
-            return publication;
+            return _publication;
         }
 
         /// <summary>
@@ -176,22 +202,23 @@ namespace Adaptive.Archiver
         /// <returns> <code>true</code> if successfully offered otherwise <code>false</code>. </returns>
         public bool Connect(string responseChannel, int responseStreamId, long correlationId)
         {
-            byte[] encodedCredentials = credentialsSupplier.EncodedCredentials();
+            byte[] encodedCredentials = _credentialsSupplier.EncodedCredentials();
 
-            connectRequestEncoder
-                .WrapAndApplyHeader(buffer, 0, messageHeader)
+            _connectRequestEncoder
+                .WrapAndApplyHeader(_buffer, 0, _messageHeader)
                 .CorrelationId(correlationId)
-                .ResponseStreamId(responseStreamId).Version(AeronArchive.Configuration.PROTOCOL_SEMANTIC_VERSION)
+                .ResponseStreamId(responseStreamId)
+                .Version(AeronArchive.Configuration.PROTOCOL_SEMANTIC_VERSION)
                 .ResponseChannel(responseChannel)
                 .PutEncodedCredentials(encodedCredentials, 0, encodedCredentials.Length)
-                .ClientInfo(clientInfo);
+                .ClientInfo(_clientInfo);
 
-            return OfferWithTimeout(connectRequestEncoder.EncodedLength(), null);
+            return OfferWithTimeout(_connectRequestEncoder.EncodedLength(), null);
         }
 
         /// <summary>
-        /// Try and connect to an archive on its control interface providing the response stream details. Only one attempt will
-        /// be made to offer the request.
+        /// Try and connect to an archive on its control interface providing the response stream details. Only one
+        /// attempt will be made to offer the request.
         /// </summary>
         /// <param name="responseChannel">  for the control message responses. </param>
         /// <param name="responseStreamId"> for the control message responses. </param>
@@ -199,20 +226,20 @@ namespace Adaptive.Archiver
         /// <returns> <code>true</code> if successfully offered otherwise <code>false</code>. </returns>
         public bool TryConnect(string responseChannel, int responseStreamId, long correlationId)
         {
-            byte[] encodedCredentials = credentialsSupplier.EncodedCredentials();
+            byte[] encodedCredentials = _credentialsSupplier.EncodedCredentials();
 
-            connectRequestEncoder
-                .WrapAndApplyHeader(buffer, 0, messageHeader)
+            _connectRequestEncoder
+                .WrapAndApplyHeader(_buffer, 0, _messageHeader)
                 .CorrelationId(correlationId)
                 .ResponseStreamId(responseStreamId)
                 .Version(AeronArchive.Configuration.PROTOCOL_SEMANTIC_VERSION)
                 .ResponseChannel(responseChannel)
                 .PutEncodedCredentials(encodedCredentials, 0, encodedCredentials.Length)
-                .ClientInfo(clientInfo);
+                .ClientInfo(_clientInfo);
 
-            int length = MessageHeaderEncoder.ENCODED_LENGTH + connectRequestEncoder.EncodedLength();
+            int length = MessageHeaderEncoder.ENCODED_LENGTH + _connectRequestEncoder.EncodedLength();
 
-            return publication.Offer(buffer, 0, length) > 0;
+            return _publication.Offer(_buffer, 0, length) > 0;
         }
 
         /// <summary>
@@ -223,12 +250,12 @@ namespace Adaptive.Archiver
         /// <returns> <code>true</code> if successfully offered otherwise <code>false</code>. </returns>
         public bool KeepAlive(long controlSessionId, long correlationId)
         {
-            keepAliveRequestEncoder
-                .WrapAndApplyHeader(buffer, 0, messageHeader)
+            _keepAliveRequestEncoder
+                .WrapAndApplyHeader(_buffer, 0, _messageHeader)
                 .ControlSessionId(controlSessionId)
                 .CorrelationId(correlationId);
 
-            return Offer(keepAliveRequestEncoder.EncodedLength());
+            return Offer(_keepAliveRequestEncoder.EncodedLength());
         }
 
         /// <summary>
@@ -238,11 +265,11 @@ namespace Adaptive.Archiver
         /// <returns> <code>true</code> if successfully offered otherwise <code>false</code>. </returns>
         public bool CloseSession(long controlSessionId)
         {
-            closeSessionRequestEncoder
-                .WrapAndApplyHeader(buffer, 0, messageHeader)
+            _closeSessionRequestEncoder
+                .WrapAndApplyHeader(_buffer, 0, _messageHeader)
                 .ControlSessionId(controlSessionId);
 
-            return Offer(closeSessionRequestEncoder.EncodedLength());
+            return Offer(_closeSessionRequestEncoder.EncodedLength());
         }
 
         /// <summary>
@@ -255,15 +282,15 @@ namespace Adaptive.Archiver
         /// <returns> <code>true</code> if successfully offered otherwise <code>false</code>. </returns>
         public bool TryChallengeResponse(byte[] encodedCredentials, long correlationId, long controlSessionId)
         {
-            challengeResponseEncoder
-                .WrapAndApplyHeader(buffer, 0, messageHeader)
+            _challengeResponseEncoder
+                .WrapAndApplyHeader(_buffer, 0, _messageHeader)
                 .ControlSessionId(controlSessionId)
                 .CorrelationId(correlationId)
                 .PutEncodedCredentials(encodedCredentials, 0, encodedCredentials.Length);
 
-            int length = MessageHeaderEncoder.ENCODED_LENGTH + challengeResponseEncoder.EncodedLength();
+            int length = MessageHeaderEncoder.ENCODED_LENGTH + _challengeResponseEncoder.EncodedLength();
 
-            return publication.Offer(buffer, 0, length) > 0;
+            return _publication.Offer(_buffer, 0, length) > 0;
         }
 
         /// <summary>
@@ -275,18 +302,23 @@ namespace Adaptive.Archiver
         /// <param name="correlationId">    for this request. </param>
         /// <param name="controlSessionId"> for this request. </param>
         /// <returns> <code>true</code> if successfully offered otherwise <code>false</code>. </returns>
-        public bool StartRecording(string channel, int streamId, SourceLocation sourceLocation, long correlationId,
-            long controlSessionId)
+        public bool StartRecording(
+            string channel,
+            int streamId,
+            SourceLocation sourceLocation,
+            long correlationId,
+            long controlSessionId
+        )
         {
-            startRecordingRequest
-                .WrapAndApplyHeader(buffer, 0, messageHeader)
+            _startRecordingRequest
+                .WrapAndApplyHeader(_buffer, 0, _messageHeader)
                 .ControlSessionId(controlSessionId)
                 .CorrelationId(correlationId)
                 .StreamId(streamId)
                 .SourceLocation(sourceLocation)
                 .Channel(channel);
 
-            return Offer(startRecordingRequest.EncodedLength());
+            return Offer(_startRecordingRequest.EncodedLength());
         }
 
         /// <summary>
@@ -299,11 +331,17 @@ namespace Adaptive.Archiver
         /// <param name="correlationId">    for this request. </param>
         /// <param name="controlSessionId"> for this request. </param>
         /// <returns> <code>true</code> if successfully offered otherwise <code>false</code>. </returns>
-        public bool StartRecording(string channel, int streamId, SourceLocation sourceLocation, bool autoStop,
-            long correlationId, long controlSessionId)
+        public bool StartRecording(
+            string channel,
+            int streamId,
+            SourceLocation sourceLocation,
+            bool autoStop,
+            long correlationId,
+            long controlSessionId
+        )
         {
-            startRecordingRequest2
-                .WrapAndApplyHeader(buffer, 0, messageHeader)
+            _startRecordingRequest2
+                .WrapAndApplyHeader(_buffer, 0, _messageHeader)
                 .ControlSessionId(controlSessionId)
                 .CorrelationId(correlationId)
                 .StreamId(streamId)
@@ -311,7 +349,7 @@ namespace Adaptive.Archiver
                 .AutoStop(autoStop ? BooleanType.TRUE : BooleanType.FALSE)
                 .Channel(channel);
 
-            return Offer(startRecordingRequest2.EncodedLength());
+            return Offer(_startRecordingRequest2.EncodedLength());
         }
 
         /// <summary>
@@ -324,36 +362,37 @@ namespace Adaptive.Archiver
         /// <returns> <code>true</code> if successfully offered otherwise <code>false</code>. </returns>
         public bool StopRecording(string channel, int streamId, long correlationId, long controlSessionId)
         {
-            stopRecordingRequest
-                .WrapAndApplyHeader(buffer, 0, messageHeader)
+            _stopRecordingRequest
+                .WrapAndApplyHeader(_buffer, 0, _messageHeader)
                 .ControlSessionId(controlSessionId)
                 .CorrelationId(correlationId)
                 .StreamId(streamId)
                 .Channel(channel);
 
-            return Offer(stopRecordingRequest.EncodedLength());
+            return Offer(_stopRecordingRequest.EncodedLength());
         }
 
         /// <summary>
         /// Stop a recording by the <seealso cref="Subscription.RegistrationId"/> it was registered with.
         /// </summary>
-        /// <param name="subscriptionId">   that identifies the subscription in the archive doing the recording. </param>
+        /// <param name="subscriptionId"> that identifies the subscription in the archive doing the recording. </param>
         /// <param name="correlationId">    for this request. </param>
         /// <param name="controlSessionId"> for this request. </param>
         /// <returns> <code>true</code> if successfully offered otherwise <code>false</code>. </returns>
         public bool StopRecording(long subscriptionId, long correlationId, long controlSessionId)
         {
-            stopRecordingSubscriptionRequest
-                .WrapAndApplyHeader(buffer, 0, messageHeader)
+            _stopRecordingSubscriptionRequest
+                .WrapAndApplyHeader(_buffer, 0, _messageHeader)
                 .ControlSessionId(controlSessionId)
                 .CorrelationId(correlationId)
                 .SubscriptionId(subscriptionId);
 
-            return Offer(stopRecordingSubscriptionRequest.EncodedLength());
+            return Offer(_stopRecordingSubscriptionRequest.EncodedLength());
         }
 
         /// <summary>
-        /// Stop an active recording by the recording id. This is not the <seealso cref="Subscription.RegistrationId"/>.
+        /// Stop an active recording by the recording id. This is not the <seealso cref="Subscription.RegistrationId"/>
+        /// .
         /// </summary>
         /// <param name="recordingId">      that identifies a recording in the archive. </param>
         /// <param name="correlationId">    for this request. </param>
@@ -361,19 +400,19 @@ namespace Adaptive.Archiver
         /// <returns> <code>true</code> if successfully offered otherwise <code>false</code>. </returns>
         public bool StopRecordingByIdentity(long recordingId, long correlationId, long controlSessionId)
         {
-            stopRecordingByIdentityRequest
-                .WrapAndApplyHeader(buffer, 0, messageHeader)
+            _stopRecordingByIdentityRequest
+                .WrapAndApplyHeader(_buffer, 0, _messageHeader)
                 .ControlSessionId(controlSessionId)
                 .CorrelationId(correlationId)
                 .RecordingId(recordingId);
 
-            return Offer(stopRecordingByIdentityRequest.EncodedLength());
+            return Offer(_stopRecordingByIdentityRequest.EncodedLength());
         }
 
         /// <summary>
-        /// Replay a recording from a given position. Supports specifying <seealso cref="ReplayParams"/> to change the behaviour of the
-        /// replay. For example a bounded replay can be requested by specifying the boundingLimitCounterId. The ReplayParams
-        /// is free to be reused after this call completes.
+        /// Replay a recording from a given position. Supports specifying <seealso cref="ReplayParams"/> to change the
+        /// behaviour of the replay. For example a bounded replay can be requested by specifying the
+        /// boundingLimitCounterId. The ReplayParams is free to be reused after this call completes.
         /// </summary>
         /// <param name="recordingId">      to be replayed. </param>
         /// <param name="replayChannel">    to which the replay should be sent. </param>
@@ -389,7 +428,8 @@ namespace Adaptive.Archiver
             int replayStreamId,
             ReplayParams replayParams,
             long correlationId,
-            long controlSessionId)
+            long controlSessionId
+        )
         {
             if (replayParams.IsBounded())
             {
@@ -403,7 +443,8 @@ namespace Adaptive.Archiver
                     correlationId,
                     controlSessionId,
                     replayParams.FileIoMaxLength(),
-                    replayParams.ReplayToken());
+                    replayParams.ReplayToken()
+                );
             }
             else
             {
@@ -416,7 +457,8 @@ namespace Adaptive.Archiver
                     correlationId,
                     controlSessionId,
                     replayParams.FileIoMaxLength(),
-                    replayParams.ReplayToken());
+                    replayParams.ReplayToken()
+                );
             }
         }
 
@@ -425,7 +467,8 @@ namespace Adaptive.Archiver
         /// </summary>
         /// <param name="recordingId">      to be replayed. </param>
         /// <param name="position">         from which the replay should be started. </param>
-        /// <param name="length">           of the stream to be replayed. Use <seealso cref="long.MaxValue"/> to follow a live stream. </param>
+        /// <param name="length"> of the stream to be replayed. Use <seealso cref="long.MaxValue"/> to follow a live
+        /// stream. </param>
         /// <param name="replayChannel">    to which the replay should be sent. </param>
         /// <param name="replayStreamId">   to which the replay should be sent. </param>
         /// <param name="correlationId">    for this request. </param>
@@ -438,7 +481,8 @@ namespace Adaptive.Archiver
             string replayChannel,
             int replayStreamId,
             long correlationId,
-            long controlSessionId)
+            long controlSessionId
+        )
         {
             return Replay(
                 recordingId,
@@ -449,7 +493,8 @@ namespace Adaptive.Archiver
                 correlationId,
                 controlSessionId,
                 Aeron.Aeron.NULL_VALUE,
-                Aeron.Aeron.NULL_VALUE);
+                Aeron.Aeron.NULL_VALUE
+            );
         }
 
         /// <summary>
@@ -457,7 +502,8 @@ namespace Adaptive.Archiver
         /// </summary>
         /// <param name="recordingId">      to be replayed. </param>
         /// <param name="position">         from which the replay should be started. </param>
-        /// <param name="length">           of the stream to be replayed. Use <seealso cref="long.MaxValue"/> to follow a live stream. </param>
+        /// <param name="length"> of the stream to be replayed. Use <seealso cref="long.MaxValue"/> to follow a live
+        /// stream. </param>
         /// <param name="limitCounterId">   to use as the replay bound. </param>
         /// <param name="replayChannel">    to which the replay should be sent. </param>
         /// <param name="replayStreamId">   to which the replay should be sent. </param>
@@ -472,7 +518,8 @@ namespace Adaptive.Archiver
             string replayChannel,
             int replayStreamId,
             long correlationId,
-            long controlSessionId)
+            long controlSessionId
+        )
         {
             return BoundedReplay(
                 recordingId,
@@ -484,7 +531,8 @@ namespace Adaptive.Archiver
                 correlationId,
                 controlSessionId,
                 Aeron.Aeron.NULL_VALUE,
-                Aeron.Aeron.NULL_VALUE);
+                Aeron.Aeron.NULL_VALUE
+            );
         }
 
         /// <summary>
@@ -496,12 +544,13 @@ namespace Adaptive.Archiver
         /// <returns> <code>true</code> if successfully offered otherwise <code>false</code>. </returns>
         public bool StopReplay(long replaySessionId, long correlationId, long controlSessionId)
         {
-            stopReplayRequest.WrapAndApplyHeader(buffer, 0, messageHeader)
+            _stopReplayRequest
+                .WrapAndApplyHeader(_buffer, 0, _messageHeader)
                 .ControlSessionId(controlSessionId)
                 .CorrelationId(correlationId)
                 .ReplaySessionId(replaySessionId);
 
-            return Offer(stopReplayRequest.EncodedLength());
+            return Offer(_stopReplayRequest.EncodedLength());
         }
 
         /// <summary>
@@ -513,13 +562,13 @@ namespace Adaptive.Archiver
         /// <returns> <code>true</code> if successfully offered otherwise <code>false</code>. </returns>
         public bool StopAllReplays(long recordingId, long correlationId, long controlSessionId)
         {
-            stopAllReplaysRequest
-                .WrapAndApplyHeader(buffer, 0, messageHeader)
+            _stopAllReplaysRequest
+                .WrapAndApplyHeader(_buffer, 0, _messageHeader)
                 .ControlSessionId(controlSessionId)
                 .CorrelationId(correlationId)
                 .RecordingId(recordingId);
 
-            return Offer(stopAllReplaysRequest.EncodedLength());
+            return Offer(_stopAllReplaysRequest.EncodedLength());
         }
 
         /// <summary>
@@ -532,14 +581,14 @@ namespace Adaptive.Archiver
         /// <returns> <code>true</code> if successfully offered otherwise <code>false</code>. </returns>
         public bool ListRecordings(long fromRecordingId, int recordCount, long correlationId, long controlSessionId)
         {
-            listRecordingsRequest
-                .WrapAndApplyHeader(buffer, 0, messageHeader)
+            _listRecordingsRequest
+                .WrapAndApplyHeader(_buffer, 0, _messageHeader)
                 .ControlSessionId(controlSessionId)
                 .CorrelationId(correlationId)
                 .FromRecordingId(fromRecordingId)
                 .RecordCount(recordCount);
 
-            return Offer(listRecordingsRequest.EncodedLength());
+            return Offer(_listRecordingsRequest.EncodedLength());
         }
 
         /// <summary>
@@ -547,16 +596,23 @@ namespace Adaptive.Archiver
         /// </summary>
         /// <param name="fromRecordingId">  at which to begin listing. </param>
         /// <param name="recordCount">      for the number of descriptors to be listed. </param>
-        /// <param name="channelFragment">  to match recordings on from the original channel URI in the archive descriptor. </param>
+        /// <param name="channelFragment"> to match recordings on from the original channel URI in the archive
+        /// descriptor. </param>
         /// <param name="streamId">         to match recordings on. </param>
         /// <param name="correlationId">    for this request. </param>
         /// <param name="controlSessionId"> for this request. </param>
         /// <returns> <code>true</code> if successfully offered otherwise <code>false</code>. </returns>
-        public bool ListRecordingsForUri(long fromRecordingId, int recordCount, string channelFragment, int streamId,
-            long correlationId, long controlSessionId)
+        public bool ListRecordingsForUri(
+            long fromRecordingId,
+            int recordCount,
+            string channelFragment,
+            int streamId,
+            long correlationId,
+            long controlSessionId
+        )
         {
-            listRecordingsForUriRequest
-                .WrapAndApplyHeader(buffer, 0, messageHeader)
+            _listRecordingsForUriRequest
+                .WrapAndApplyHeader(_buffer, 0, _messageHeader)
                 .ControlSessionId(controlSessionId)
                 .CorrelationId(correlationId)
                 .FromRecordingId(fromRecordingId)
@@ -564,7 +620,7 @@ namespace Adaptive.Archiver
                 .StreamId(streamId)
                 .Channel(channelFragment);
 
-            return Offer(listRecordingsForUriRequest.EncodedLength());
+            return Offer(_listRecordingsForUriRequest.EncodedLength());
         }
 
         /// <summary>
@@ -576,22 +632,22 @@ namespace Adaptive.Archiver
         /// <returns> <code>true</code> if successfully offered otherwise <code>false</code>. </returns>
         public bool ListRecording(long recordingId, long correlationId, long controlSessionId)
         {
-            listRecordingRequest
-                .WrapAndApplyHeader(buffer, 0, messageHeader)
+            _listRecordingRequest
+                .WrapAndApplyHeader(_buffer, 0, _messageHeader)
                 .ControlSessionId(controlSessionId)
                 .CorrelationId(correlationId)
                 .RecordingId(recordingId);
 
-            return Offer(listRecordingRequest.EncodedLength());
+            return Offer(_listRecordingRequest.EncodedLength());
         }
 
         /// <summary>
         /// Extend an existing, non-active, recorded stream for the same channel and stream id.
         /// <para>
         /// The channel must be configured for the initial position from which it will be extended. This can be done
-        /// with <seealso cref="ChannelUriStringBuilder.InitialPosition(long, int, int)"/>. The details required to initialise can
-        /// be found by calling <seealso cref="ListRecording(long, long, long)"/>.
-        /// 
+        /// with <seealso cref="ChannelUriStringBuilder.InitialPosition(long, int, int)"/> . The details required to
+        /// initialise can be found by calling <seealso cref="ListRecording(long, long, long)"/> .
+        ///
         /// </para>
         /// </summary>
         /// <param name="channel">          to be recorded. </param>
@@ -601,11 +657,17 @@ namespace Adaptive.Archiver
         /// <param name="correlationId">    for this request. </param>
         /// <param name="controlSessionId"> for this request. </param>
         /// <returns> <code>true</code> if successfully offered otherwise <code>false</code>. </returns>
-        public bool ExtendRecording(string channel, int streamId, SourceLocation sourceLocation, long recordingId,
-            long correlationId, long controlSessionId)
+        public bool ExtendRecording(
+            string channel,
+            int streamId,
+            SourceLocation sourceLocation,
+            long recordingId,
+            long correlationId,
+            long controlSessionId
+        )
         {
-            extendRecordingRequest
-                .WrapAndApplyHeader(buffer, 0, messageHeader)
+            _extendRecordingRequest
+                .WrapAndApplyHeader(_buffer, 0, _messageHeader)
                 .ControlSessionId(controlSessionId)
                 .CorrelationId(correlationId)
                 .RecordingId(recordingId)
@@ -613,16 +675,16 @@ namespace Adaptive.Archiver
                 .SourceLocation(sourceLocation)
                 .Channel(channel);
 
-            return Offer(extendRecordingRequest.EncodedLength());
+            return Offer(_extendRecordingRequest.EncodedLength());
         }
 
         /// <summary>
         /// Extend an existing, non-active, recorded stream for a the same channel and stream id.
         /// <para>
         /// The channel must be configured for the initial position from which it will be extended. This can be done
-        /// with <seealso cref="ChannelUriStringBuilder.InitialPosition(long, int, int)"/>. The details required to initialise can
-        /// be found by calling <seealso cref="ListRecording(long, long, long)"/>.
-        /// 
+        /// with <seealso cref="ChannelUriStringBuilder.InitialPosition(long, int, int)"/> . The details required to
+        /// initialise can be found by calling <seealso cref="ListRecording(long, long, long)"/> .
+        ///
         /// </para>
         /// </summary>
         /// <param name="channel">          to be recorded. </param>
@@ -633,11 +695,18 @@ namespace Adaptive.Archiver
         /// <param name="correlationId">    for this request. </param>
         /// <param name="controlSessionId"> for this request. </param>
         /// <returns> <code>true</code> if successfully offered otherwise <code>false</code>. </returns>
-        public bool ExtendRecording(string channel, int streamId, SourceLocation sourceLocation, bool autoStop,
-            long recordingId, long correlationId, long controlSessionId)
+        public bool ExtendRecording(
+            string channel,
+            int streamId,
+            SourceLocation sourceLocation,
+            bool autoStop,
+            long recordingId,
+            long correlationId,
+            long controlSessionId
+        )
         {
-            extendRecordingRequest2
-                .WrapAndApplyHeader(buffer, 0, messageHeader)
+            _extendRecordingRequest2
+                .WrapAndApplyHeader(_buffer, 0, _messageHeader)
                 .ControlSessionId(controlSessionId)
                 .CorrelationId(correlationId)
                 .RecordingId(recordingId)
@@ -646,7 +715,7 @@ namespace Adaptive.Archiver
                 .AutoStop(autoStop ? BooleanType.TRUE : BooleanType.FALSE)
                 .Channel(channel);
 
-            return Offer(extendRecordingRequest2.EncodedLength());
+            return Offer(_extendRecordingRequest2.EncodedLength());
         }
 
         /// <summary>
@@ -658,18 +727,19 @@ namespace Adaptive.Archiver
         /// <returns> <code>true</code> if successfully offered otherwise <code>false</code>. </returns>
         public bool GetRecordingPosition(long recordingId, long correlationId, long controlSessionId)
         {
-            recordingPositionRequest
-                .WrapAndApplyHeader(buffer, 0, messageHeader)
+            _recordingPositionRequest
+                .WrapAndApplyHeader(_buffer, 0, _messageHeader)
                 .ControlSessionId(controlSessionId)
                 .CorrelationId(correlationId)
                 .RecordingId(recordingId);
 
-            return Offer(recordingPositionRequest.EncodedLength());
+            return Offer(_recordingPositionRequest.EncodedLength());
         }
 
         /// <summary>
-        /// Truncate a stopped recording to a given position that is less than the stopped position. The provided position
-        /// must be on a fragment boundary. Truncating a recording to the start position effectively deletes the recording.
+        /// Truncate a stopped recording to a given position that is less than the stopped position. The provided
+        /// position must be on a fragment boundary. Truncating a recording to the start position effectively deletes
+        /// the recording.
         ///
         /// </summary>
         /// <param name="recordingId">      of the stopped recording to be truncated. </param>
@@ -679,19 +749,19 @@ namespace Adaptive.Archiver
         /// <returns> <code>true</code> if successfully offered otherwise <code>false</code>. </returns>
         public bool TruncateRecording(long recordingId, long position, long correlationId, long controlSessionId)
         {
-            truncateRecordingRequest
-                .WrapAndApplyHeader(buffer, 0, messageHeader)
+            _truncateRecordingRequest
+                .WrapAndApplyHeader(_buffer, 0, _messageHeader)
                 .ControlSessionId(controlSessionId)
                 .CorrelationId(correlationId)
                 .RecordingId(recordingId)
                 .Position(position);
 
-            return Offer(truncateRecordingRequest.EncodedLength());
+            return Offer(_truncateRecordingRequest.EncodedLength());
         }
 
         /// <summary>
-        /// Purge a stopped recording, i.e. mark recording as <seealso cref="RecordingState.INVALID"/>
-        /// and delete the corresponding segment files. The space in the Catalog will be reclaimed upon compaction.
+        /// Purge a stopped recording, i.e. mark recording as <seealso cref="RecordingState.INVALID"/> and delete the
+        /// corresponding segment files. The space in the Catalog will be reclaimed upon compaction.
         /// </summary>
         /// <param name="recordingId">      of the stopped recording to be purged. </param>
         /// <param name="correlationId">    for this request. </param>
@@ -699,13 +769,13 @@ namespace Adaptive.Archiver
         /// <returns> <code>true</code> if successfully offered otherwise <code>false</code>. </returns>
         public bool PurgeRecording(long recordingId, long correlationId, long controlSessionId)
         {
-            purgeRecordingRequest
-                .WrapAndApplyHeader(buffer, 0, messageHeader)
+            _purgeRecordingRequest
+                .WrapAndApplyHeader(_buffer, 0, _messageHeader)
                 .ControlSessionId(controlSessionId)
                 .CorrelationId(correlationId)
                 .RecordingId(recordingId);
 
-            return Offer(purgeRecordingRequest.EncodedLength());
+            return Offer(_purgeRecordingRequest.EncodedLength());
         }
 
         /// <summary>
@@ -717,13 +787,13 @@ namespace Adaptive.Archiver
         /// <returns> <code>true</code> if successfully offered otherwise <code>false</code>. </returns>
         public bool GetStartPosition(long recordingId, long correlationId, long controlSessionId)
         {
-            startPositionRequest
-                .WrapAndApplyHeader(buffer, 0, messageHeader)
+            _startPositionRequest
+                .WrapAndApplyHeader(_buffer, 0, _messageHeader)
                 .ControlSessionId(controlSessionId)
                 .CorrelationId(correlationId)
                 .RecordingId(recordingId);
 
-            return Offer(startPositionRequest.EncodedLength());
+            return Offer(_startPositionRequest.EncodedLength());
         }
 
         /// <summary>
@@ -735,31 +805,32 @@ namespace Adaptive.Archiver
         /// <returns> <code>true</code> if successfully offered otherwise <code>false</code>. </returns>
         public bool GetStopPosition(long recordingId, long correlationId, long controlSessionId)
         {
-            stopPositionRequest
-                .WrapAndApplyHeader(buffer, 0, messageHeader)
+            _stopPositionRequest
+                .WrapAndApplyHeader(_buffer, 0, _messageHeader)
                 .ControlSessionId(controlSessionId)
                 .CorrelationId(correlationId)
                 .RecordingId(recordingId);
 
-            return Offer(stopPositionRequest.EncodedLength());
+            return Offer(_stopPositionRequest.EncodedLength());
         }
 
         /// <summary>
         /// Get the stop or active recorded position of a recording.
         /// </summary>
-        /// <param name="recordingId">      of the recording that the stop of active recording position is being requested for. </param>
+        /// <param name="recordingId"> of the recording that the stop of active recording position is being requested
+        /// for. </param>
         /// <param name="correlationId">    for this request. </param>
         /// <param name="controlSessionId"> for this request. </param>
         /// <returns> <code>true</code> if successfully offered otherwise <code>false</code>. </returns>
         public bool GetMaxRecordedPosition(long recordingId, long correlationId, long controlSessionId)
         {
-            maxRecordedPositionRequestEncoder
-                .WrapAndApplyHeader(buffer, 0, messageHeader)
+            _maxRecordedPositionRequestEncoder
+                .WrapAndApplyHeader(_buffer, 0, _messageHeader)
                 .ControlSessionId(controlSessionId)
                 .CorrelationId(correlationId)
                 .RecordingId(recordingId);
 
-            return Offer(maxRecordedPositionRequestEncoder.EncodedLength());
+            return Offer(_maxRecordedPositionRequestEncoder.EncodedLength());
         }
 
         /// <summary>
@@ -770,29 +841,36 @@ namespace Adaptive.Archiver
         /// <returns> <code>true</code> if successfully offered otherwise <code>false</code>. </returns>
         public bool ArchiveId(long correlationId, long controlSessionId)
         {
-            archiveIdRequestEncoder
-                .WrapAndApplyHeader(buffer, 0, messageHeader)
+            _archiveIdRequestEncoder
+                .WrapAndApplyHeader(_buffer, 0, _messageHeader)
                 .ControlSessionId(controlSessionId)
                 .CorrelationId(correlationId);
 
-            return Offer(archiveIdRequestEncoder.EncodedLength());
+            return Offer(_archiveIdRequestEncoder.EncodedLength());
         }
 
         /// <summary>
         /// Find the last recording that matches the given criteria.
         /// </summary>
         /// <param name="minRecordingId">   to search back to. </param>
-        /// <param name="channelFragment">  for a contains match on the original channel stored with the archive descriptor. </param>
+        /// <param name="channelFragment"> for a contains match on the original channel stored with the archive
+        /// descriptor. </param>
         /// <param name="streamId">         of the recording to match. </param>
         /// <param name="sessionId">        of the recording to match. </param>
         /// <param name="correlationId">    for this request. </param>
         /// <param name="controlSessionId"> for this request. </param>
         /// <returns> <code>true</code> if successfully offered otherwise <code>false</code>. </returns>
-        public bool FindLastMatchingRecording(long minRecordingId, string channelFragment, int streamId, int sessionId,
-            long correlationId, long controlSessionId)
+        public bool FindLastMatchingRecording(
+            long minRecordingId,
+            string channelFragment,
+            int streamId,
+            int sessionId,
+            long correlationId,
+            long controlSessionId
+        )
         {
-            findLastMatchingRecordingRequest
-                .WrapAndApplyHeader(buffer, 0, messageHeader)
+            _findLastMatchingRecordingRequest
+                .WrapAndApplyHeader(_buffer, 0, _messageHeader)
                 .ControlSessionId(controlSessionId)
                 .CorrelationId(correlationId)
                 .MinRecordingId(minRecordingId)
@@ -800,7 +878,7 @@ namespace Adaptive.Archiver
                 .StreamId(streamId)
                 .Channel(channelFragment);
 
-            return Offer(findLastMatchingRecordingRequest.EncodedLength());
+            return Offer(_findLastMatchingRecordingRequest.EncodedLength());
         }
 
         /// <summary>
@@ -808,17 +886,25 @@ namespace Adaptive.Archiver
         /// </summary>
         /// <param name="pseudoIndex">       in the list of active recording subscriptions. </param>
         /// <param name="subscriptionCount"> for the number of descriptors to be listed. </param>
-        /// <param name="channelFragment">   for a contains match on the stripped channel used with the registered subscription. </param>
+        /// <param name="channelFragment"> for a contains match on the stripped channel used with the registered
+        /// subscription. </param>
         /// <param name="streamId">          for the subscription. </param>
         /// <param name="applyStreamId">     when matching. </param>
         /// <param name="correlationId">     for this request. </param>
         /// <param name="controlSessionId">  for this request. </param>
         /// <returns> <code>true</code> if successfully offered otherwise <code>false</code>. </returns>
-        public bool ListRecordingSubscriptions(int pseudoIndex, int subscriptionCount, string channelFragment,
-            int streamId, bool applyStreamId, long correlationId, long controlSessionId)
+        public bool ListRecordingSubscriptions(
+            int pseudoIndex,
+            int subscriptionCount,
+            string channelFragment,
+            int streamId,
+            bool applyStreamId,
+            long correlationId,
+            long controlSessionId
+        )
         {
-            listRecordingSubscriptionsRequest
-                .WrapAndApplyHeader(buffer, 0, messageHeader)
+            _listRecordingSubscriptionsRequest
+                .WrapAndApplyHeader(_buffer, 0, _messageHeader)
                 .ControlSessionId(controlSessionId)
                 .CorrelationId(correlationId)
                 .PseudoIndex(pseudoIndex)
@@ -827,30 +913,35 @@ namespace Adaptive.Archiver
                 .StreamId(streamId)
                 .Channel(channelFragment);
 
-            return Offer(listRecordingSubscriptionsRequest.EncodedLength());
+            return Offer(_listRecordingSubscriptionsRequest.EncodedLength());
         }
 
         /// <summary>
         /// Replicate a recording from a source archive to a destination which can be considered a backup for a primary
-        /// archive. The source recording will be replayed via the provided replay channel and use the original stream id.
-        /// If the destination recording id is <seealso cref="Adaptive.Aeron.Aeron.NULL_VALUE"/> then a new destination recording is created,
-        /// otherwise the provided destination recording id will be extended. The details of the source recording
-        /// descriptor will be replicated.
+        /// archive. The source recording will be replayed via the provided replay channel and use the original stream
+        /// id. If the destination recording id is <seealso cref="Adaptive.Aeron.Aeron.NULL_VALUE"/> then a new
+        /// destination recording is created, otherwise the provided destination recording id will be extended. The
+        /// details of the source recording descriptor will be replicated.
         /// <para>
         /// For a source recording that is still active the replay can merge with the live stream and then follow it
         /// directly and no longer require the replay from the source. This would require a multicast live destination.
         /// </para>
         /// <para>
-        /// Errors will be reported asynchronously and can be checked for with <seealso cref="AeronArchive.PollForErrorResponse()"/>
-        /// or <seealso cref="AeronArchive.CheckForErrorResponse()"/>.
-        /// 
+        /// Errors will be reported asynchronously and can be checked for with
+        /// <seealso cref="AeronArchive.PollForErrorResponse()"/>
+        /// or <seealso cref="AeronArchive.CheckForErrorResponse()"/> .
+        ///
         /// </para>
         /// </summary>
         /// <param name="srcRecordingId">     recording id which must exist in the source archive. </param>
-        /// <param name="dstRecordingId">     recording to extend in the destination, otherwise <seealso cref="Adaptive.Aeron.Aeron.NULL_VALUE"/>. </param>
-        /// <param name="srcControlChannel">  remote control channel for the source archive to instruct the replay on. </param>
-        /// <param name="srcControlStreamId"> remote control stream id for the source archive to instruct the replay on. </param>
-        /// <param name="liveDestination">    destination for the live stream if merge is required. Empty or null for no merge. </param>
+        /// <param name="dstRecordingId"> recording to extend in the destination, otherwise
+        /// <seealso cref="Adaptive.Aeron.Aeron.NULL_VALUE"/>. </param>
+        /// <param name="srcControlChannel"> remote control channel for the source archive to instruct the replay on.
+        /// </param>
+        /// <param name="srcControlStreamId"> remote control stream id for the source archive to instruct the replay on.
+        /// </param>
+        /// <param name="liveDestination"> destination for the live stream if merge is required. Empty or null for no
+        /// merge. </param>
         /// <param name="correlationId">      for this request. </param>
         /// <param name="controlSessionId">   for this request. </param>
         /// <returns> <code>true</code> if successfully offered otherwise <code>false</code>. </returns>
@@ -861,7 +952,8 @@ namespace Adaptive.Archiver
             string srcControlChannel,
             string liveDestination,
             long correlationId,
-            long controlSessionId)
+            long controlSessionId
+        )
         {
             return Replicate(
                 srcRecordingId,
@@ -878,33 +970,40 @@ namespace Adaptive.Archiver
                 Aeron.Aeron.NULL_VALUE,
                 Aeron.Aeron.NULL_VALUE,
                 NullCredentialsSupplier.NULL_CREDENTIAL,
-                null);
+                null
+            );
         }
 
         /// <summary>
         /// Replicate a recording from a source archive to a destination which can be considered a backup for a primary
-        /// archive. The source recording will be replayed via the provided replay channel and use the original stream id.
-        /// If the destination recording id is <seealso cref="Adaptive.Aeron.Aeron.NULL_VALUE"/> then a new destination recording is created,
-        /// otherwise the provided destination recording id will be extended. The details of the source recording
-        /// descriptor will be replicated.
+        /// archive. The source recording will be replayed via the provided replay channel and use the original stream
+        /// id. If the destination recording id is <seealso cref="Adaptive.Aeron.Aeron.NULL_VALUE"/> then a new
+        /// destination recording is created, otherwise the provided destination recording id will be extended. The
+        /// details of the source recording descriptor will be replicated.
         /// <para>
         /// For a source recording that is still active the replay can merge with the live stream and then follow it
         /// directly and no longer require the replay from the source. This would require a multicast live destination.
         /// </para>
         /// <para>
-        /// Errors will be reported asynchronously and can be checked for with <seealso cref="AeronArchive.PollForErrorResponse()"/>
-        /// or <seealso cref="AeronArchive.CheckForErrorResponse()"/>.
-        /// 
+        /// Errors will be reported asynchronously and can be checked for with
+        /// <seealso cref="AeronArchive.PollForErrorResponse()"/>
+        /// or <seealso cref="AeronArchive.CheckForErrorResponse()"/> .
+        ///
         /// </para>
         /// </summary>
         /// <param name="srcRecordingId">     recording id which must exist in the source archive. </param>
-        /// <param name="dstRecordingId">     recording to extend in the destination, otherwise <seealso cref="Adaptive.Aeron.Aeron.NULL_VALUE"/>. </param>
-        /// <param name="stopPosition">       position to stop the replication. <seealso cref="AeronArchive.NULL_POSITION"/> to stop at end
-        ///                           of current recording. </param>
-        /// <param name="srcControlStreamId"> remote control stream id for the source archive to instruct the replay on. </param>
-        /// <param name="srcControlChannel">  remote control channel for the source archive to instruct the replay on. </param>
-        /// <param name="liveDestination">    destination for the live stream if merge is required. Empty or null for no merge. </param>
-        /// <param name="replicationChannel"> channel over which the replication will occur. Empty or null for default channel. </param>
+        /// <param name="dstRecordingId"> recording to extend in the destination, otherwise
+        /// <seealso cref="Adaptive.Aeron.Aeron.NULL_VALUE"/>. </param>
+        /// <param name="stopPosition"> position to stop the replication. <seealso cref="AeronArchive.NULL_POSITION"/>
+        /// to stop at end of current recording. </param>
+        /// <param name="srcControlStreamId"> remote control stream id for the source archive to instruct the replay on.
+        /// </param>
+        /// <param name="srcControlChannel"> remote control channel for the source archive to instruct the replay on.
+        /// </param>
+        /// <param name="liveDestination"> destination for the live stream if merge is required. Empty or null for no
+        /// merge. </param>
+        /// <param name="replicationChannel"> channel over which the replication will occur. Empty or null for default
+        /// channel. </param>
         /// <param name="correlationId">      for this request. </param>
         /// <param name="controlSessionId">   for this request. </param>
         /// <returns> <code>true</code> if successfully offered otherwise <code>false</code>. </returns>
@@ -917,7 +1016,8 @@ namespace Adaptive.Archiver
             string liveDestination,
             string replicationChannel,
             long correlationId,
-            long controlSessionId)
+            long controlSessionId
+        )
         {
             return Replicate(
                 srcRecordingId,
@@ -934,32 +1034,39 @@ namespace Adaptive.Archiver
                 Aeron.Aeron.NULL_VALUE,
                 Aeron.Aeron.NULL_VALUE,
                 NullCredentialsSupplier.NULL_CREDENTIAL,
-                null);
+                null
+            );
         }
 
         /// <summary>
         /// Replicate a recording from a source archive to a destination which can be considered a backup for a primary
-        /// archive. The source recording will be replayed via the provided replay channel and use the original stream id.
-        /// If the destination recording id is <seealso cref="Adaptive.Aeron.Aeron.NULL_VALUE"/> then a new destination recording is created,
-        /// otherwise the provided destination recording id will be extended. The details of the source recording
-        /// descriptor will be replicated. The subscription used in the archive will be tagged with the provided tags.
+        /// archive. The source recording will be replayed via the provided replay channel and use the original stream
+        /// id. If the destination recording id is <seealso cref="Adaptive.Aeron.Aeron.NULL_VALUE"/> then a new
+        /// destination recording is created, otherwise the provided destination recording id will be extended. The
+        /// details of the source recording descriptor will be replicated. The subscription used in the archive will be
+        /// tagged with the provided tags.
         /// <para>
         /// For a source recording that is still active the replay can merge with the live stream and then follow it
         /// directly and no longer require the replay from the source. This would require a multicast live destination.
         /// </para>
         /// <para>
-        /// Errors will be reported asynchronously and can be checked for with <seealso cref="AeronArchive.PollForErrorResponse()"/>
-        /// or <seealso cref="AeronArchive.CheckForErrorResponse()"/>.
-        /// 
+        /// Errors will be reported asynchronously and can be checked for with
+        /// <seealso cref="AeronArchive.PollForErrorResponse()"/>
+        /// or <seealso cref="AeronArchive.CheckForErrorResponse()"/> .
+        ///
         /// </para>
         /// </summary>
         /// <param name="srcRecordingId">     recording id which must exist in the source archive. </param>
-        /// <param name="dstRecordingId">     recording to extend in the destination, otherwise <seealso cref="Adaptive.Aeron.Aeron.NULL_VALUE"/>. </param>
+        /// <param name="dstRecordingId"> recording to extend in the destination, otherwise
+        /// <seealso cref="Adaptive.Aeron.Aeron.NULL_VALUE"/>. </param>
         /// <param name="channelTagId">       used to tag the replication subscription. </param>
         /// <param name="subscriptionTagId">  used to tag the replication subscription. </param>
-        /// <param name="srcControlChannel">  remote control channel for the source archive to instruct the replay on. </param>
-        /// <param name="srcControlStreamId"> remote control stream id for the source archive to instruct the replay on. </param>
-        /// <param name="liveDestination">    destination for the live stream if merge is required. Empty or null for no merge. </param>
+        /// <param name="srcControlChannel"> remote control channel for the source archive to instruct the replay on.
+        /// </param>
+        /// <param name="srcControlStreamId"> remote control stream id for the source archive to instruct the replay on.
+        /// </param>
+        /// <param name="liveDestination"> destination for the live stream if merge is required. Empty or null for no
+        /// merge. </param>
         /// <param name="correlationId">      for this request. </param>
         /// <param name="controlSessionId">   for this request. </param>
         /// <returns> <code>true</code> if successfully offered otherwise <code>false</code>. </returns>
@@ -972,7 +1079,8 @@ namespace Adaptive.Archiver
             string srcControlChannel,
             string liveDestination,
             long correlationId,
-            long controlSessionId)
+            long controlSessionId
+        )
         {
             return Replicate(
                 srcRecordingId,
@@ -989,35 +1097,43 @@ namespace Adaptive.Archiver
                 Aeron.Aeron.NULL_VALUE,
                 Aeron.Aeron.NULL_VALUE,
                 NullCredentialsSupplier.NULL_CREDENTIAL,
-                null);
+                null
+            );
         }
 
         /// <summary>
         /// Replicate a recording from a source archive to a destination which can be considered a backup for a primary
-        /// archive. The source recording will be replayed via the provided replay channel and use the original stream id.
-        /// If the destination recording id is <seealso cref="Adaptive.Aeron.Aeron.NULL_VALUE"/> then a new destination recording is created,
-        /// otherwise the provided destination recording id will be extended. The details of the source recording
-        /// descriptor will be replicated. The subscription used in the archive will be tagged with the provided tags.
+        /// archive. The source recording will be replayed via the provided replay channel and use the original stream
+        /// id. If the destination recording id is <seealso cref="Adaptive.Aeron.Aeron.NULL_VALUE"/> then a new
+        /// destination recording is created, otherwise the provided destination recording id will be extended. The
+        /// details of the source recording descriptor will be replicated. The subscription used in the archive will be
+        /// tagged with the provided tags.
         /// <para>
         /// For a source recording that is still active the replay can merge with the live stream and then follow it
         /// directly and no longer require the replay from the source. This would require a multicast live destination.
         /// </para>
         /// <para>
-        /// Errors will be reported asynchronously and can be checked for with <seealso cref="AeronArchive.PollForErrorResponse()"/>
-        /// or <seealso cref="AeronArchive.CheckForErrorResponse()"/>.
-        /// 
+        /// Errors will be reported asynchronously and can be checked for with
+        /// <seealso cref="AeronArchive.PollForErrorResponse()"/>
+        /// or <seealso cref="AeronArchive.CheckForErrorResponse()"/> .
+        ///
         /// </para>
         /// </summary>
         /// <param name="srcRecordingId">     recording id which must exist in the source archive. </param>
-        /// <param name="dstRecordingId">     recording to extend in the destination, otherwise <seealso cref="Adaptive.Aeron.Aeron.NULL_VALUE"/>. </param>
-        /// <param name="stopPosition">       position to stop the replication. <seealso cref="AeronArchive.NULL_POSITION"/> to stop at end
-        ///                           of current recording. </param>
+        /// <param name="dstRecordingId"> recording to extend in the destination, otherwise
+        /// <seealso cref="Adaptive.Aeron.Aeron.NULL_VALUE"/>. </param>
+        /// <param name="stopPosition"> position to stop the replication. <seealso cref="AeronArchive.NULL_POSITION"/>
+        /// to stop at end of current recording. </param>
         /// <param name="channelTagId">       used to tag the replication subscription. </param>
         /// <param name="subscriptionTagId">  used to tag the replication subscription. </param>
-        /// <param name="srcControlChannel">  remote control channel for the source archive to instruct the replay on. </param>
-        /// <param name="srcControlStreamId"> remote control stream id for the source archive to instruct the replay on. </param>
-        /// <param name="liveDestination">    destination for the live stream if merge is required. Empty or null for no merge. </param>
-        /// <param name="replicationChannel"> channel over which the replication will occur. Empty or null for default channel. </param>
+        /// <param name="srcControlChannel"> remote control channel for the source archive to instruct the replay on.
+        /// </param>
+        /// <param name="srcControlStreamId"> remote control stream id for the source archive to instruct the replay on.
+        /// </param>
+        /// <param name="liveDestination"> destination for the live stream if merge is required. Empty or null for no
+        /// merge. </param>
+        /// <param name="replicationChannel"> channel over which the replication will occur. Empty or null for default
+        /// channel. </param>
         /// <param name="correlationId">      for this request. </param>
         /// <param name="controlSessionId">   for this request. </param>
         /// <returns> <code>true</code> if successfully offered otherwise <code>false</code>. </returns>
@@ -1032,7 +1148,8 @@ namespace Adaptive.Archiver
             string liveDestination,
             string replicationChannel,
             long correlationId,
-            long controlSessionId)
+            long controlSessionId
+        )
         {
             return Replicate(
                 srcRecordingId,
@@ -1049,28 +1166,32 @@ namespace Adaptive.Archiver
                 Aeron.Aeron.NULL_VALUE,
                 Aeron.Aeron.NULL_VALUE,
                 NullCredentialsSupplier.NULL_CREDENTIAL,
-                null);
+                null
+            );
         }
 
         /// <summary>
         /// Replicate a recording from a source archive to a destination which can be considered a backup for a primary
-        /// archive. The behaviour of the replication is controlled through the <seealso cref="ReplicationParams"/>.
+        /// archive. The behaviour of the replication is controlled through the <seealso cref="ReplicationParams"/> .
         /// <para>
         /// For a source recording that is still active the replay can merge with the live stream and then follow it
         /// directly and no longer require the replay from the source. This would require a multicast live destination.
         /// </para>
         /// <para>
-        /// Errors will be reported asynchronously and can be checked for with <seealso cref="AeronArchive.PollForErrorResponse()"/>
-        /// or <seealso cref="AeronArchive.CheckForErrorResponse()"/>.
+        /// Errors will be reported asynchronously and can be checked for with
+        /// <seealso cref="AeronArchive.PollForErrorResponse()"/>
+        /// or <seealso cref="AeronArchive.CheckForErrorResponse()"/> .
         /// </para>
         /// <para>
         /// The ReplicationParams is free to be reused when this call completes.
-        ///     
+        ///
         /// </para>
         /// </summary>
         /// <param name="srcRecordingId">     recording id which must exist in the source archive. </param>
-        /// <param name="srcControlChannel">  remote control channel for the source archive to instruct the replay on. </param>
-        /// <param name="srcControlStreamId"> remote control stream id for the source archive to instruct the replay on. </param>
+        /// <param name="srcControlChannel"> remote control channel for the source archive to instruct the replay on.
+        /// </param>
+        /// <param name="srcControlStreamId"> remote control stream id for the source archive to instruct the replay on.
+        /// </param>
         /// <param name="replicationParams">  optional parameters to control the behaviour of the replication. </param>
         /// <param name="correlationId">      for this request. </param>
         /// <param name="controlSessionId">   for this request. </param>
@@ -1082,13 +1203,18 @@ namespace Adaptive.Archiver
             string srcControlChannel,
             ReplicationParams replicationParams,
             long correlationId,
-            long controlSessionId)
+            long controlSessionId
+        )
         {
-            if (null != replicationParams.LiveDestination() &&
-                Aeron.Aeron.NULL_VALUE != replicationParams.ReplicationSessionId())
+            if (
+                null != replicationParams.LiveDestination()
+                && Aeron.Aeron.NULL_VALUE != replicationParams.ReplicationSessionId()
+            )
             {
                 throw new ArgumentException(
-                    "ReplicationParams.LiveDestination and ReplicationParams.ReplicationSessionId can not be specified together");
+                    "ReplicationParams.LiveDestination and "
+                        + "ReplicationParams.ReplicationSessionId can not be specified together"
+                );
             }
 
             return Replicate(
@@ -1106,7 +1232,8 @@ namespace Adaptive.Archiver
                 replicationParams.FileIoMaxLength(),
                 replicationParams.ReplicationSessionId(),
                 replicationParams.EncodedCredentials(),
-                replicationParams.SrcResponseChannel());
+                replicationParams.SrcResponseChannel()
+            );
         }
 
         /// <summary>
@@ -1118,13 +1245,13 @@ namespace Adaptive.Archiver
         /// <returns> <code>true</code> if successfully offered otherwise <code>false</code>. </returns>
         public bool StopReplication(long replicationId, long correlationId, long controlSessionId)
         {
-            stopReplicationRequest
-                .WrapAndApplyHeader(buffer, 0, messageHeader)
+            _stopReplicationRequest
+                .WrapAndApplyHeader(_buffer, 0, _messageHeader)
                 .ControlSessionId(controlSessionId)
                 .CorrelationId(correlationId)
                 .ReplicationId(replicationId);
 
-            return Offer(stopReplicationRequest.EncodedLength());
+            return Offer(_stopReplicationRequest.EncodedLength());
         }
 
         /// <summary>
@@ -1134,7 +1261,7 @@ namespace Adaptive.Archiver
         /// </para>
         /// <para>
         /// It is not possible to detach segments which are active for recording or being replayed.
-        /// 
+        ///
         /// </para>
         /// </summary>
         /// <param name="recordingId">      to which the operation applies. </param>
@@ -1145,14 +1272,14 @@ namespace Adaptive.Archiver
         /// <seealso cref="AeronArchive.SegmentFileBasePosition(long, long, int, int)"></seealso>
         public bool DetachSegments(long recordingId, long newStartPosition, long correlationId, long controlSessionId)
         {
-            detachSegmentsRequest
-                .WrapAndApplyHeader(buffer, 0, messageHeader)
+            _detachSegmentsRequest
+                .WrapAndApplyHeader(_buffer, 0, _messageHeader)
                 .ControlSessionId(controlSessionId)
                 .CorrelationId(correlationId)
                 .RecordingId(recordingId)
                 .NewStartPosition(newStartPosition);
 
-            return Offer(detachSegmentsRequest.EncodedLength());
+            return Offer(_detachSegmentsRequest.EncodedLength());
         }
 
         /// <summary>
@@ -1165,13 +1292,13 @@ namespace Adaptive.Archiver
         /// <seealso cref="DetachSegments(long, long, long, long)"></seealso>
         public bool DeleteDetachedSegments(long recordingId, long correlationId, long controlSessionId)
         {
-            deleteDetachedSegmentsRequest
-                .WrapAndApplyHeader(buffer, 0, messageHeader)
+            _deleteDetachedSegmentsRequest
+                .WrapAndApplyHeader(_buffer, 0, _messageHeader)
                 .ControlSessionId(controlSessionId)
                 .CorrelationId(correlationId)
                 .RecordingId(recordingId);
 
-            return Offer(deleteDetachedSegmentsRequest.EncodedLength());
+            return Offer(_deleteDetachedSegmentsRequest.EncodedLength());
         }
 
         /// <summary>
@@ -1181,7 +1308,7 @@ namespace Adaptive.Archiver
         /// </para>
         /// <para>
         /// It is not possible to purge segments which are active for recording or being replayed.
-        /// 
+        ///
         /// </para>
         /// </summary>
         /// <param name="recordingId">      to which the operation applies. </param>
@@ -1194,22 +1321,22 @@ namespace Adaptive.Archiver
         /// <seealso cref="AeronArchive.SegmentFileBasePosition(long, long, int, int)"></seealso>
         public bool PurgeSegments(long recordingId, long newStartPosition, long correlationId, long controlSessionId)
         {
-            purgeSegmentsRequest
-                .WrapAndApplyHeader(buffer, 0, messageHeader)
+            _purgeSegmentsRequest
+                .WrapAndApplyHeader(_buffer, 0, _messageHeader)
                 .ControlSessionId(controlSessionId)
                 .CorrelationId(correlationId)
                 .RecordingId(recordingId)
                 .NewStartPosition(newStartPosition);
 
-            return Offer(purgeSegmentsRequest.EncodedLength());
+            return Offer(_purgeSegmentsRequest.EncodedLength());
         }
 
         /// <summary>
         /// Attach segments to the beginning of a recording to restore history that was previously detached.
         /// <para>
-        /// Segment files must match the existing recording and join exactly to the start position of the recording
-        /// they are being attached to.
-        /// 
+        /// Segment files must match the existing recording and join exactly to the start position of the recording they
+        /// are being attached to.
+        ///
         /// </para>
         /// </summary>
         /// <param name="recordingId">      to which the operation applies. </param>
@@ -1219,29 +1346,29 @@ namespace Adaptive.Archiver
         /// <seealso cref="DetachSegments(long, long, long, long)"></seealso>
         public bool AttachSegments(long recordingId, long correlationId, long controlSessionId)
         {
-            attachSegmentsRequest
-                .WrapAndApplyHeader(buffer, 0, messageHeader)
+            _attachSegmentsRequest
+                .WrapAndApplyHeader(_buffer, 0, _messageHeader)
                 .ControlSessionId(controlSessionId)
                 .CorrelationId(correlationId)
                 .RecordingId(recordingId);
 
-            return Offer(attachSegmentsRequest.EncodedLength());
+            return Offer(_attachSegmentsRequest.EncodedLength());
         }
 
         /// <summary>
         /// Migrate segments from a source recording and attach them to the beginning or end of a destination recording.
         /// <para>
         /// The source recording must match the destination recording for segment length, term length, mtu length, and
-        /// stream id. The source recording must join to the destination recording on a segment boundary and without gaps,
-        /// i.e., the stop position and term id of one must match the start position and term id of the other.
+        /// stream id. The source recording must join to the destination recording on a segment boundary and without
+        /// gaps, i.e., the stop position and term id of one must match the start position and term id of the other.
         /// </para>
         /// <para>
-        /// The source recording must be stopped. The destination recording must be stopped if migrating segments
-        /// to the end of the destination recording.
+        /// The source recording must be stopped. The destination recording must be stopped if migrating segments to the
+        /// end of the destination recording.
         /// </para>
         /// <para>
         /// The source recording will be effectively truncated back to its start position after the migration.
-        ///    
+        ///
         /// </para>
         /// </summary>
         /// <param name="srcRecordingId">   source recording from which the segments will be migrated. </param>
@@ -1251,14 +1378,14 @@ namespace Adaptive.Archiver
         /// <returns> <code>true</code> if successfully offered otherwise <code>false</code>. </returns>
         public bool MigrateSegments(long srcRecordingId, long dstRecordingId, long correlationId, long controlSessionId)
         {
-            migrateSegmentsRequest
-                .WrapAndApplyHeader(buffer, 0, messageHeader)
+            _migrateSegmentsRequest
+                .WrapAndApplyHeader(_buffer, 0, _messageHeader)
                 .ControlSessionId(controlSessionId)
                 .CorrelationId(correlationId)
                 .SrcRecordingId(srcRecordingId)
                 .DstRecordingId(dstRecordingId);
 
-            return Offer(migrateSegmentsRequest.EncodedLength());
+            return Offer(_migrateSegmentsRequest.EncodedLength());
         }
 
         /// <summary>
@@ -1271,15 +1398,15 @@ namespace Adaptive.Archiver
         /// <returns> true if successfully offered </returns>
         public bool RequestReplayToken(long lastCorrelationId, long controlSessionId, long recordingId)
         {
-            replayTokenRequestEncoder
-                .WrapAndApplyHeader(buffer, 0, messageHeader)
+            _replayTokenRequestEncoder
+                .WrapAndApplyHeader(_buffer, 0, _messageHeader)
                 .ControlSessionId(controlSessionId)
                 .CorrelationId(lastCorrelationId)
                 .RecordingId(recordingId);
 
-            return Offer(replayTokenRequestEncoder.EncodedLength());
+            return Offer(_replayTokenRequestEncoder.EncodedLength());
         }
-        
+
         /// <summary>
         /// Update the channel for a recording.
         /// </summary>
@@ -1290,24 +1417,24 @@ namespace Adaptive.Archiver
         /// <returns> true if successfully offered. </returns>
         public bool UpdateChannel(long recordingId, string channel, long correlationId, long controlSessionId)
         {
-            updateChannelRequestEncoder
-                .WrapAndApplyHeader(buffer, 0, messageHeader)
+            _updateChannelRequestEncoder
+                .WrapAndApplyHeader(_buffer, 0, _messageHeader)
                 .ControlSessionId(controlSessionId)
                 .CorrelationId(correlationId)
                 .RecordingId(recordingId)
                 .Channel(channel);
 
-            return Offer(updateChannelRequestEncoder.EncodedLength());
+            return Offer(_updateChannelRequestEncoder.EncodedLength());
         }
 
         private bool Offer(int length)
         {
-            retryIdleStrategy.Reset();
+            _retryIdleStrategy.Reset();
 
-            int attempts = retryAttempts;
+            int attempts = _retryAttempts;
             while (true)
             {
-                long position = publication.Offer(buffer, 0, MessageHeaderEncoder.ENCODED_LENGTH + length);
+                long position = _publication.Offer(_buffer, 0, MessageHeaderEncoder.ENCODED_LENGTH + length);
                 if (position > 0)
                 {
                     return true;
@@ -1326,7 +1453,8 @@ namespace Adaptive.Archiver
                 if (position == Publication.MAX_POSITION_EXCEEDED)
                 {
                     throw new ArchiveException(
-                        "offer failed due to max position being reached: term-length=" + publication.TermBufferLength);
+                        "offer failed due to max position being reached: term-length=" + _publication.TermBufferLength
+                    );
                 }
 
                 if (--attempts <= 0)
@@ -1334,18 +1462,18 @@ namespace Adaptive.Archiver
                     return false;
                 }
 
-                retryIdleStrategy.Idle();
+                _retryIdleStrategy.Idle();
             }
         }
 
         private bool OfferWithTimeout(int length, AgentInvoker aeronClientInvoker)
         {
-            retryIdleStrategy.Reset();
+            _retryIdleStrategy.Reset();
 
-            long deadlineNs = nanoClock.NanoTime() + connectTimeoutNs;
+            long deadlineNs = _nanoClock.NanoTime() + _connectTimeoutNs;
             while (true)
             {
-                long result = publication.Offer(buffer, 0, MessageHeaderEncoder.ENCODED_LENGTH + length);
+                long result = _publication.Offer(_buffer, 0, MessageHeaderEncoder.ENCODED_LENGTH + length);
                 if (result > 0)
                 {
                     return true;
@@ -1361,7 +1489,7 @@ namespace Adaptive.Archiver
                     throw new ArchiveException("offer failed due to max position being reached");
                 }
 
-                if (deadlineNs - nanoClock.NanoTime() < 0)
+                if (deadlineNs - _nanoClock.NanoTime() < 0)
                 {
                     return false;
                 }
@@ -1371,7 +1499,7 @@ namespace Adaptive.Archiver
                     aeronClientInvoker.Invoke();
                 }
 
-                retryIdleStrategy.Idle();
+                _retryIdleStrategy.Idle();
             }
         }
 
@@ -1384,10 +1512,11 @@ namespace Adaptive.Archiver
             long correlationId,
             long controlSessionId,
             int fileIoMaxLength,
-            long replayToken)
+            long replayToken
+        )
         {
-            replayRequest
-                .WrapAndApplyHeader(buffer, 0, messageHeader)
+            _replayRequest
+                .WrapAndApplyHeader(_buffer, 0, _messageHeader)
                 .ControlSessionId(controlSessionId)
                 .CorrelationId(correlationId)
                 .RecordingId(recordingId)
@@ -1398,7 +1527,7 @@ namespace Adaptive.Archiver
                 .ReplayToken(replayToken)
                 .ReplayChannel(replayChannel);
 
-            return Offer(replayRequest.EncodedLength());
+            return Offer(_replayRequest.EncodedLength());
         }
 
         private bool BoundedReplay(
@@ -1411,10 +1540,11 @@ namespace Adaptive.Archiver
             long correlationId,
             long controlSessionId,
             int fileIoMaxLength,
-            long replayToken)
+            long replayToken
+        )
         {
-            boundedReplayRequest
-                .WrapAndApplyHeader(buffer, 0, messageHeader)
+            _boundedReplayRequest
+                .WrapAndApplyHeader(_buffer, 0, _messageHeader)
                 .ControlSessionId(controlSessionId)
                 .CorrelationId(correlationId)
                 .RecordingId(recordingId)
@@ -1426,7 +1556,7 @@ namespace Adaptive.Archiver
                 .ReplayToken(replayToken)
                 .ReplayChannel(replayChannel);
 
-            return Offer(boundedReplayRequest.EncodedLength());
+            return Offer(_boundedReplayRequest.EncodedLength());
         }
 
         private bool Replicate(
@@ -1444,10 +1574,11 @@ namespace Adaptive.Archiver
             int fileIoMaxLength,
             int replicationSessionId,
             byte[] encodedCredentials,
-            string srcResponseChannel)
+            string srcResponseChannel
+        )
         {
-            replicateRequest
-                .WrapAndApplyHeader(buffer, 0, messageHeader)
+            _replicateRequest
+                .WrapAndApplyHeader(_buffer, 0, _messageHeader)
                 .ControlSessionId(controlSessionId)
                 .CorrelationId(correlationId)
                 .SrcRecordingId(srcRecordingId)
@@ -1464,7 +1595,7 @@ namespace Adaptive.Archiver
                 .PutEncodedCredentials(encodedCredentials, 0, encodedCredentials.Length)
                 .SrcResponseChannel(srcResponseChannel);
 
-            return Offer(replicateRequest.EncodedLength());
+            return Offer(_replicateRequest.EncodedLength());
         }
     }
 }

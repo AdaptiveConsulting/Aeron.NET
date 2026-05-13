@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright 2014 - 2017 Adaptive Financial Consulting Ltd
+ * Copyright 2014 - 2026 Adaptive Financial Consulting Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,10 +34,12 @@ namespace Adaptive.Aeron.Tests
         [Test]
         public void ShouldFindMaxCapacityWhenRequested()
         {
-            Assert.AreEqual(BufferBuilder.MAX_CAPACITY,
-                BufferBuilder.FindSuitableCapacity(0, BufferBuilder.MAX_CAPACITY));
+            Assert.AreEqual(
+                BufferBuilder.MaxCapacity,
+                BufferBuilder.FindSuitableCapacity(0, BufferBuilder.MaxCapacity)
+            );
         }
-        
+
         [Test]
         public void ShouldInitialiseToDefaultValues()
         {
@@ -49,7 +51,7 @@ namespace Adaptive.Aeron.Tests
         [Test]
         public void ShouldAppendNothingForZeroLength()
         {
-            var srcBuffer = new UnsafeBuffer(new byte[BufferBuilder.INIT_MIN_CAPACITY]);
+            var srcBuffer = new UnsafeBuffer(new byte[BufferBuilder.InitMinCapacity]);
 
             _bufferBuilder.Append(srcBuffer, 0, 0);
 
@@ -59,7 +61,7 @@ namespace Adaptive.Aeron.Tests
         [Test]
         public void ShouldGrowToMultipleOfInitialCapacity()
         {
-            var srcCapacity = BufferBuilder.INIT_MIN_CAPACITY * 5;
+            var srcCapacity = BufferBuilder.InitMinCapacity * 5;
             var srcBuffer = new UnsafeBuffer(new byte[srcCapacity]);
 
             _bufferBuilder.Append(srcBuffer, 0, srcBuffer.Capacity);
@@ -71,7 +73,7 @@ namespace Adaptive.Aeron.Tests
         [Test]
         public void ShouldAppendThenReset()
         {
-            var srcBuffer = new UnsafeBuffer(new byte[BufferBuilder.INIT_MIN_CAPACITY]);
+            var srcBuffer = new UnsafeBuffer(new byte[BufferBuilder.InitMinCapacity]);
 
             _bufferBuilder.Append(srcBuffer, 0, srcBuffer.Capacity);
 
@@ -85,7 +87,7 @@ namespace Adaptive.Aeron.Tests
         [Test]
         public void ShouldAppendOneBufferWithoutResizing()
         {
-            var srcBuffer = new UnsafeBuffer(new byte[BufferBuilder.INIT_MIN_CAPACITY]);
+            var srcBuffer = new UnsafeBuffer(new byte[BufferBuilder.InitMinCapacity]);
             var bytes = Encoding.UTF8.GetBytes("Hello World");
             srcBuffer.PutBytes(0, bytes, 0, bytes.Length);
 
@@ -95,14 +97,14 @@ namespace Adaptive.Aeron.Tests
             _bufferBuilder.Buffer().GetBytes(0, temp, 0, bytes.Length);
 
             Assert.AreEqual(bytes.Length, _bufferBuilder.Limit());
-            Assert.AreEqual(BufferBuilder.INIT_MIN_CAPACITY, _bufferBuilder.Capacity());
+            Assert.AreEqual(BufferBuilder.InitMinCapacity, _bufferBuilder.Capacity());
             Assert.AreEqual(bytes, temp);
         }
 
         [Test]
         public void ShouldAppendTwoBuffersWithoutResizing()
         {
-            var srcBuffer = new UnsafeBuffer(new byte[BufferBuilder.INIT_MIN_CAPACITY]);
+            var srcBuffer = new UnsafeBuffer(new byte[BufferBuilder.InitMinCapacity]);
             var bytes = Encoding.UTF8.GetBytes("1111111122222222");
             srcBuffer.PutBytes(0, bytes, 0, bytes.Length);
 
@@ -113,7 +115,7 @@ namespace Adaptive.Aeron.Tests
             _bufferBuilder.Buffer().GetBytes(0, temp, 0, bytes.Length);
 
             Assert.AreEqual(bytes.Length, _bufferBuilder.Limit());
-            Assert.AreEqual(BufferBuilder.INIT_MIN_CAPACITY, _bufferBuilder.Capacity());
+            Assert.AreEqual(BufferBuilder.InitMinCapacity, _bufferBuilder.Capacity());
             Assert.AreEqual(bytes, temp);
         }
 
@@ -183,14 +185,17 @@ namespace Adaptive.Aeron.Tests
         [Test]
         public void ShouldCompactBufferToLowerLimit()
         {
-            var bufferLength = BufferBuilder.INIT_MIN_CAPACITY / 2;
+            var bufferLength = BufferBuilder.InitMinCapacity / 2;
             var buffer = new byte[bufferLength];
             var srcBuffer = new UnsafeBuffer(buffer);
 
             var bufferBuilder = new BufferBuilder();
 
             const int bufferCount = 5;
-            for (var i = 0; i < bufferCount; i++) bufferBuilder.Append(srcBuffer, 0, buffer.Length);
+            for (var i = 0; i < bufferCount; i++)
+            {
+                bufferBuilder.Append(srcBuffer, 0, buffer.Length);
+            }
 
             var expectedLimit = buffer.Length * bufferCount;
             Assert.AreEqual(expectedLimit, bufferBuilder.Limit());
@@ -213,12 +218,18 @@ namespace Adaptive.Aeron.Tests
         {
             internal static void Fill<T>(T[] array, T value)
             {
-                for (var i = 0; i < array.Length; i++) array[i] = value;
+                for (var i = 0; i < array.Length; i++)
+                {
+                    array[i] = value;
+                }
             }
 
             internal static void Fill<T>(T[] array, int fromIndex, int toIndex, T value)
             {
-                for (var i = fromIndex; i < toIndex; i++) array[i] = value;
+                for (var i = fromIndex; i < toIndex; i++)
+                {
+                    array[i] = value;
+                }
             }
         }
     }

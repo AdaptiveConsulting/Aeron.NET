@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright 2014 - 2017 Adaptive Financial Consulting Ltd
+ * Copyright 2014 - 2026 Adaptive Financial Consulting Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,11 +26,16 @@ namespace Adaptive.Aeron.LogBuffer
     /// <summary>
     /// Utility functions for reading a term within a log buffer.
     /// </summary>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage(
+        "Major Code Smell",
+        "S1118:Utility classes should not have public constructors",
+        Justification = "Public ctor in shipped API surface; marking static would break consumers."
+    )]
     public class TermReader
     {
         /// <summary>
-        /// Reads data from a term in a log buffer and updates a passed <seealso cref="IPosition"/> so progress is not lost in the
-        /// event of an exception.
+        /// Reads data from a term in a log buffer and updates a passed <seealso cref="IPosition"/> so progress is not
+        /// lost in the event of an exception.
         /// </summary>
         /// <param name="termBuffer">         to be read for fragments. </param>
         /// <param name="termOffset">         within the buffer that the read should begin. </param>
@@ -50,7 +55,8 @@ namespace Adaptive.Aeron.LogBuffer
             Header header,
             IErrorHandler errorHandler,
             long currentPosition,
-            IPosition subscriberPosition)
+            IPosition subscriberPosition
+        )
         {
             int fragmentsRead = 0;
             int offset = termOffset;
@@ -74,11 +80,15 @@ namespace Adaptive.Aeron.LogBuffer
                     {
                         ++fragmentsRead;
                         header.Offset = frameOffset;
-                        handler.OnFragment(termBuffer, frameOffset + DataHeaderFlyweight.HEADER_LENGTH, frameLength - DataHeaderFlyweight.HEADER_LENGTH, header);
+                        handler.OnFragment(
+                            termBuffer,
+                            frameOffset + DataHeaderFlyweight.HEADER_LENGTH,
+                            frameLength - DataHeaderFlyweight.HEADER_LENGTH,
+                            header
+                        );
                     }
-                } 
+                }
             }
-
             catch (Exception ex)
             {
                 errorHandler.OnError(ex);
@@ -97,7 +107,7 @@ namespace Adaptive.Aeron.LogBuffer
 
         /// <summary>
         /// Reads data from a term in a log buffer.
-        /// 
+        ///
         /// </summary>
         /// <param name="termBuffer">     to be read for fragments. </param>
         /// <param name="termOffset">     offset within the buffer that the read should begin. </param>
@@ -113,7 +123,8 @@ namespace Adaptive.Aeron.LogBuffer
             IFragmentHandler handler,
             int fragmentsLimit,
             Header header,
-            ErrorHandler errorHandler)
+            ErrorHandler errorHandler
+        )
         {
             int fragmentsRead = 0;
             int offset = termOffset;
@@ -137,7 +148,12 @@ namespace Adaptive.Aeron.LogBuffer
                     {
                         ++fragmentsRead;
                         header.Offset = frameOffset;
-                        handler.OnFragment(termBuffer, frameOffset + DataHeaderFlyweight.HEADER_LENGTH, frameLength - DataHeaderFlyweight.HEADER_LENGTH, header);
+                        handler.OnFragment(
+                            termBuffer,
+                            frameOffset + DataHeaderFlyweight.HEADER_LENGTH,
+                            frameLength - DataHeaderFlyweight.HEADER_LENGTH,
+                            header
+                        );
                     }
                 }
             }
@@ -158,7 +174,7 @@ namespace Adaptive.Aeron.LogBuffer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static long Pack(int offset, int fragmentsRead)
         {
-            return ((long) offset << 32) | (uint) fragmentsRead;
+            return ((long)offset << 32) | (uint)fragmentsRead;
         }
 
         /// <summary>
@@ -169,7 +185,7 @@ namespace Adaptive.Aeron.LogBuffer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int FragmentsRead(long readOutcome)
         {
-            return (int) readOutcome;
+            return (int)readOutcome;
         }
 
         /// <summary>
@@ -180,7 +196,7 @@ namespace Adaptive.Aeron.LogBuffer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int Offset(long readOutcome)
         {
-            return (int) ((long) ((ulong) readOutcome >> 32));
+            return (int)((long)((ulong)readOutcome >> 32));
         }
     }
 }

@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright 2014 - 2017 Adaptive Financial Consulting Ltd
+ * Copyright 2014 - 2026 Adaptive Financial Consulting Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,8 @@ using System;
 namespace Adaptive.Agrona.Concurrent.Status
 {
     /// <summary>
-    /// Atomic counter that is backed by an <seealso cref="IAtomicBuffer"/> that can be read across threads and processes.
+    /// Atomic counter that is backed by an <seealso cref="IAtomicBuffer"/> that can be read across threads and
+    /// processes.
     /// </summary>
     public class AtomicCounter : IDisposable
     {
@@ -32,7 +33,8 @@ namespace Adaptive.Agrona.Concurrent.Status
         /// </summary>
         /// <param name="buffer">    containing the counter. </param>
         /// <param name="counterId"> identifier of the counter. </param>
-        public AtomicCounter(IAtomicBuffer buffer, int counterId) : this(buffer, counterId, null)
+        public AtomicCounter(IAtomicBuffer buffer, int counterId)
+            : this(buffer, counterId, null)
         {
         }
 
@@ -52,7 +54,7 @@ namespace Adaptive.Agrona.Concurrent.Status
         }
 
         /// <summary>
-        /// Identity for the counter within the <seealso cref="CountersManager"/>.
+        /// Identity for the counter within the <seealso cref="CountersManager"/> .
         /// </summary>
         /// <returns> identity for the counter within the <seealso cref="CountersManager"/>. </returns>
         public int Id { get; }

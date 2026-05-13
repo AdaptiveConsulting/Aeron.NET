@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright 2014 - 2017 Adaptive Financial Consulting Ltd
+ * Copyright 2014 - 2026 Adaptive Financial Consulting Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,7 +30,7 @@ namespace Adaptive.Aeron.Samples.IpcThroughput
         private static readonly int MessageLength = SampleConfiguration.MESSAGE_LENGTH;
         private static readonly int MessageCountLimit = SampleConfiguration.FRAGMENT_COUNT_LIMIT;
         private static readonly string Channel = Aeron.Context.IPC_CHANNEL;
-        private static readonly int StreamID = SampleConfiguration.STREAM_ID;
+        private static readonly int StreamId = SampleConfiguration.STREAM_ID;
 
         public static void Main()
         {
@@ -39,13 +39,16 @@ namespace Adaptive.Aeron.Samples.IpcThroughput
             var running = new AtomicBoolean(true);
 
             using (var aeron = Aeron.Connect())
-            using (var publication = aeron.AddPublication(Channel, StreamID))
-            using (var subscription = aeron.AddSubscription(Channel, StreamID))
+            using (var publication = aeron.AddPublication(Channel, StreamId))
+            using (var subscription = aeron.AddSubscription(Channel, StreamId))
             {
                 var subscriber = new Subscriber(running, subscription);
-                var subscriberThread = new Thread(subscriber.Run) {Name = "subscriber"};
-                var publisherThread = new Thread(new Publisher(running, publication).Run) {Name = "publisher"};
-                var rateReporterThread = new Thread(new RateReporter(running, subscriber).Run) {Name = "rate-reporter"};
+                var subscriberThread = new Thread(subscriber.Run) { Name = "subscriber" };
+                var publisherThread = new Thread(new Publisher(running, publication).Run) { Name = "publisher" };
+                var rateReporterThread = new Thread(new RateReporter(running, subscriber).Run)
+                {
+                    Name = "rate-reporter",
+                };
 
                 rateReporterThread.Start();
                 subscriberThread.Start();
@@ -64,29 +67,31 @@ namespace Adaptive.Aeron.Samples.IpcThroughput
 
         public class RateReporter
         {
-            internal readonly AtomicBoolean Running;
-            internal readonly Subscriber Subscriber;
+            internal readonly AtomicBoolean _running;
+            internal readonly Subscriber _subscriber;
             private readonly Stopwatch _stopwatch;
 
             public RateReporter(AtomicBoolean running, Subscriber subscriber)
             {
-                Running = running;
-                Subscriber = subscriber;
+                _running = running;
+                _subscriber = subscriber;
                 _stopwatch = Stopwatch.StartNew();
             }
 
             public void Run()
             {
-                var lastTotalBytes = Subscriber.TotalBytes();
+                var lastTotalBytes = _subscriber.TotalBytes();
 
-                while (Running)
+                while (_running)
                 {
                     Thread.Sleep(1000);
 
-                    var newTotalBytes = Subscriber.TotalBytes();
+                    var newTotalBytes = _subscriber.TotalBytes();
                     var duration = _stopwatch.ElapsedMilliseconds;
                     var bytesTransferred = newTotalBytes - lastTotalBytes;
-                    Console.WriteLine($"Duration {duration:N0}ms - {bytesTransferred/MessageLength:N0} messages - {bytesTransferred:N0} bytes, GC0 {GC.CollectionCount(0)}, GC1 {GC.CollectionCount(1)}, GC2 {GC.CollectionCount(2)}");
+                    Console.WriteLine(
+                        $"Duration {duration:N0}ms - {bytesTransferred / MessageLength:N0} messages - {bytesTransferred:N0} bytes, GC0 {GC.CollectionCount(0)}, GC1 {GC.CollectionCount(1)}, GC2 {GC.CollectionCount(2)}"
+                    );
 
                     _stopwatch.Restart();
                     lastTotalBytes = newTotalBytes;
@@ -96,32 +101,37 @@ namespace Adaptive.Aeron.Samples.IpcThroughput
 
         public sealed class Publisher
         {
-            internal readonly AtomicBoolean Running;
-            internal readonly Publication Publication;
+            internal readonly AtomicBoolean _running;
+            internal readonly Publication _publication;
 
             public Publisher(AtomicBoolean running, Publication publication)
             {
-                Running = running;
-                Publication = publication;
+                _running = running;
+                _publication = publication;
             }
 
             public void Run()
             {
-                var publication = Publication;
-                using (var byteBuffer = BufferUtil.AllocateDirectAligned(publication.MaxMessageLength, BitUtil.CACHE_LINE_LENGTH))
+                var publication = _publication;
+                using (
+                    var byteBuffer = BufferUtil.AllocateDirectAligned(
+                        publication.MaxMessageLength,
+                        BitUtil.CACHE_LINE_LENGTH
+                    )
+                )
                 using (var buffer = new UnsafeBuffer(byteBuffer))
                 {
                     long backPressureCount = 0;
                     long totalMessageCount = 0;
 
-                    while (Running)
+                    while (_running)
                     {
                         for (var i = 0; i < BurstLength; i++)
                         {
                             while (publication.Offer(buffer, 0, MessageLength) <= 0)
                             {
                                 ++backPressureCount;
-                                if (!Running)
+                                if (!_running)
                                 {
                                     break;
                                 }
@@ -131,7 +141,7 @@ namespace Adaptive.Aeron.Samples.IpcThroughput
                         }
                     }
 
-                    var backPressureRatio = backPressureCount/(double) totalMessageCount;
+                    var backPressureRatio = backPressureCount / (double)totalMessageCount;
                     Console.WriteLine($"Publisher back pressure ratio: {backPressureRatio}");
                 }
             }
@@ -139,15 +149,15 @@ namespace Adaptive.Aeron.Samples.IpcThroughput
 
         public class Subscriber : IFragmentHandler
         {
-            internal readonly AtomicBoolean Running;
-            internal readonly Subscription Subscription;
+            internal readonly AtomicBoolean _running;
+            internal readonly Subscription _subscription;
 
             private readonly AtomicLong _totalBytes = new AtomicLong();
 
             public Subscriber(AtomicBoolean running, Subscription subscription)
             {
-                Running = running;
-                Subscription = subscription;
+                _running = running;
+                _subscription = subscription;
             }
 
             public long TotalBytes()
@@ -157,18 +167,18 @@ namespace Adaptive.Aeron.Samples.IpcThroughput
 
             public void Run()
             {
-                while (Subscription.ImageCount == 0)
+                while (_subscription.ImageCount == 0)
                 {
                     // wait for an image to be ready
                     Thread.Yield();
                 }
 
-                var image = Subscription.Images[0];
+                var image = _subscription.Images[0];
 
                 long failedPolls = 0;
                 long successfulPolls = 0;
 
-                while (Running)
+                while (_running)
                 {
                     var fragmentsRead = image.Poll(this, MessageCountLimit);
                     if (0 == fragmentsRead)
@@ -181,7 +191,7 @@ namespace Adaptive.Aeron.Samples.IpcThroughput
                     }
                 }
 
-                var failureRatio = failedPolls / (double) (successfulPolls + failedPolls);
+                var failureRatio = failedPolls / (double)(successfulPolls + failedPolls);
                 Console.WriteLine($"Subscriber poll failure ratio: {failureRatio}");
             }
 

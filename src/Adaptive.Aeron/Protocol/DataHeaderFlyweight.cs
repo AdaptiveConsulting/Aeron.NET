@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright 2014 - 2017 Adaptive Financial Consulting Ltd
+ * Copyright 2014 - 2026 Adaptive Financial Consulting Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,8 +15,6 @@
  */
 
 using System;
-using System.Text;
-using Adaptive.Aeron.LogBuffer;
 using Adaptive.Agrona;
 using Adaptive.Agrona.Concurrent;
 
@@ -24,8 +22,9 @@ namespace Adaptive.Aeron.Protocol
 {
     /// <summary>
     /// Flyweight for Data Frame header of a message fragment.
-    /// 
-    /// <a target="_blank" href="https://github.com/aeron-io/aeron/wiki/Protocol-Specification#data-frame">Data Frame</a>
+    ///
+    /// <a target="_blank"
+    /// href="https://github.com/aeron-io/aeron/wiki/Protocol-Specification#data-frame">Data Frame</a>
     /// wiki page.
     /// </summary>
     public class DataHeaderFlyweight : HeaderFlyweight
@@ -69,7 +68,7 @@ namespace Adaptive.Aeron.Protocol
         /// Begin, End, EOS, and Revoked Flags.
         /// </summary>
         public static readonly short BEGIN_END_EOS_AND_REVOKED_FLAGS = BEGIN_FLAG | END_FLAG | EOS_FLAG | REVOKED_FLAG;
-        
+
         /// <summary>
         /// Default value to be placed in the reserved value field.
         /// </summary>
@@ -79,27 +78,27 @@ namespace Adaptive.Aeron.Protocol
         /// Offset in the frame at which the term-offset field begins.
         /// </summary>
         public const int TERM_OFFSET_FIELD_OFFSET = 8;
-        
+
         /// <summary>
         /// Offset in the frame at which the session-id field begins.
         /// </summary>
         public const int SESSION_ID_FIELD_OFFSET = 12;
-        
+
         /// <summary>
         /// Offset in the frame at which the stream-id field begins.
         /// </summary>
         public const int STREAM_ID_FIELD_OFFSET = 16;
-        
+
         /// <summary>
         /// Offset in the frame at which the term-id field begins.
         /// </summary>
         public const int TERM_ID_FIELD_OFFSET = 20;
-        
+
         /// <summary>
         /// Offset in the frame at which the reserved value field begins.
         /// </summary>
         public const int RESERVED_VALUE_OFFSET = 24;
-        
+
         /// <summary>
         /// Offset in the frame at which the data payload begins.
         /// </summary>
@@ -116,7 +115,8 @@ namespace Adaptive.Aeron.Protocol
         /// Construct the flyweight over a frame.
         /// </summary>
         /// <param name="buffer"> containing the frame. </param>
-        public DataHeaderFlyweight(UnsafeBuffer buffer) : base(buffer)
+        public DataHeaderFlyweight(UnsafeBuffer buffer)
+            : base(buffer)
         {
         }
 
@@ -130,7 +130,7 @@ namespace Adaptive.Aeron.Protocol
         {
             return termBuffer.GetInt(frameOffset + FRAME_LENGTH_FIELD_OFFSET, ByteOrder.LittleEndian);
         }
-        
+
         /// <summary>
         /// Is the frame at data frame at the beginning of packet a heartbeat message?
         /// </summary>
@@ -202,6 +202,7 @@ namespace Adaptive.Aeron.Protocol
         {
             return GetInt(STREAM_ID_FIELD_OFFSET);
         }
+
         /// <summary>
         /// Get the stream-id field from the header.
         /// </summary>
@@ -297,7 +298,7 @@ namespace Adaptive.Aeron.Protocol
         {
             return GetLong(RESERVED_VALUE_OFFSET);
         }
-        
+
         /// <summary>
         /// Get the reserved value field from the header.
         /// </summary>
@@ -342,7 +343,7 @@ namespace Adaptive.Aeron.Protocol
             var buffer = new UnsafeBuffer(BufferUtil.AllocateDirectAligned(HEADER_LENGTH, BitUtil.CACHE_LINE_LENGTH));
 
             buffer.PutByte(VERSION_FIELD_OFFSET, CURRENT_VERSION);
-            buffer.PutByte(FLAGS_FIELD_OFFSET, (byte) BEGIN_AND_END_FLAGS);
+            buffer.PutByte(FLAGS_FIELD_OFFSET, (byte)BEGIN_AND_END_FLAGS);
             buffer.PutShort(TYPE_FIELD_OFFSET, HDR_TYPE_DATA);
             buffer.PutInt(SESSION_ID_FIELD_OFFSET, sessionId);
             buffer.PutInt(STREAM_ID_FIELD_OFFSET, streamId);
@@ -354,17 +355,18 @@ namespace Adaptive.Aeron.Protocol
 
         public override string ToString()
         {
-            return "DATA Header{" +
-                   "frame-length=" + FrameLength() +
-                   " version=" + Version() +
-                   " flags=" + new String(HeaderFlyweight.FlagsToChars(Flags())) +
-                   " type=" + HeaderType() +
-                   " term-offset=" + TermOffset() +
-                   " session-id=" + SessionId() +
-                   " stream-id=" + StreamId() +
-                   " term-id=" + TermId() +
-                   " reserved-value=" + ReservedValue() +
-                   "}";
+            return
+                "DATA Header{" +
+                "frame-length=" + FrameLength() +
+                " version=" + Version() +
+                " flags=" + new String(HeaderFlyweight.FlagsToChars(Flags())) +
+                " type=" + HeaderType() +
+                " term-offset=" + TermOffset() +
+                " session-id=" + SessionId() +
+                " stream-id=" + StreamId() +
+                " term-id=" + TermId() +
+                " reserved-value=" + ReservedValue() +
+                "}";
         }
     }
 }

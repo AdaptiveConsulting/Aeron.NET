@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright 2014 - 2017 Adaptive Financial Consulting Ltd
+ * Copyright 2014 - 2026 Adaptive Financial Consulting Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.Runtime.CompilerServices;
 using System.Text;
 using Adaptive.Agrona;
@@ -23,7 +24,7 @@ namespace Adaptive.Aeron.Protocol
 {
     /// <summary>
     /// Flyweight for general Aeron network protocol header of a message frame.
-    /// 
+    /// <pre>
     /// 0                   1                   2                   3
     /// 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
     /// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -32,14 +33,14 @@ namespace Adaptive.Aeron.Protocol
     /// |  Version    |     Flags     |               Type              |
     /// +-------------+---------------+---------------------------------+
     /// |                       Depends on Type                        ...
-    /// 
+    /// </pre>
     /// </summary>
     public class HeaderFlyweight : UnsafeBuffer
     {
-        public static readonly byte[] EMPTY_BUFFER = new byte[0];
+        public static readonly byte[] EMPTY_BUFFER = Array.Empty<byte>();
 
         /// <summary>
-        /// Header type PAD. 
+        /// Header type PAD.
         /// </summary>
         public const int HDR_TYPE_PAD = 0x00;
 
@@ -59,7 +60,7 @@ namespace Adaptive.Aeron.Protocol
         public const int HDR_TYPE_SM = 0x03;
 
         /// <summary>
-        /// Header type ERR. 
+        /// Header type ERR.
         /// </summary>
         public const int HDR_TYPE_ERR = 0x04;
 
@@ -69,10 +70,10 @@ namespace Adaptive.Aeron.Protocol
         public const int HDR_TYPE_SETUP = 0x05;
 
         /// <summary>
-        /// Header type RTT Measurement. 
+        /// Header type RTT Measurement.
         /// </summary>
         public const int HDR_TYPE_RTTM = 0x06;
-        
+
         /// <summary>
         /// Header type RESOLUTION.
         /// </summary>
@@ -97,9 +98,9 @@ namespace Adaptive.Aeron.Protocol
         /// Header type Response Setup.
         /// </summary>
         public const int HDR_TYPE_RSP_SETUP = 0x0B;
-        
+
         /// <summary>
-        /// Header type EXT. 
+        /// Header type EXT.
         /// </summary>
         public const int HDR_TYPE_EXT = 0xFFFF;
 
@@ -112,22 +113,22 @@ namespace Adaptive.Aeron.Protocol
         /// Offset in the frame at which the frame length field begins.
         /// </summary>
         public const int FRAME_LENGTH_FIELD_OFFSET = 0;
-        
+
         /// <summary>
         /// Offset in the frame at which the version field begins.
         /// </summary>
         public const int VERSION_FIELD_OFFSET = 4;
-        
+
         /// <summary>
         /// Offset in the frame at which the flags field begins.
         /// </summary>
         public const int FLAGS_FIELD_OFFSET = 5;
-        
+
         /// <summary>
         /// Offset in the frame at which the frame type field begins.
         /// </summary>
         public const int TYPE_FIELD_OFFSET = 6;
-        
+
         /// <summary>
         /// Minimum length of any Aeron frame.
         /// </summary>
@@ -144,7 +145,8 @@ namespace Adaptive.Aeron.Protocol
         /// Construct a flyweight which wraps a <seealso cref="UnsafeBuffer"/> over the frame.
         /// </summary>
         /// <param name="buffer"> to wrap for the flyweight. </param>
-        public HeaderFlyweight(UnsafeBuffer buffer) : base(buffer)
+        public HeaderFlyweight(UnsafeBuffer buffer)
+            : base(buffer)
         {
         }
 
@@ -155,7 +157,7 @@ namespace Adaptive.Aeron.Protocol
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public short Version()
         {
-            return (short) (GetByte(VERSION_FIELD_OFFSET) & 0xFF);
+            return (short)(GetByte(VERSION_FIELD_OFFSET) & 0xFF);
         }
 
         /// <summary>
@@ -166,7 +168,7 @@ namespace Adaptive.Aeron.Protocol
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public HeaderFlyweight Version(short version)
         {
-            PutByte(VERSION_FIELD_OFFSET, (byte) version);
+            PutByte(VERSION_FIELD_OFFSET, (byte)version);
 
             return this;
         }
@@ -178,7 +180,7 @@ namespace Adaptive.Aeron.Protocol
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public short Flags()
         {
-            return (short) (GetByte(FLAGS_FIELD_OFFSET) & 0xFF);
+            return (short)(GetByte(FLAGS_FIELD_OFFSET) & 0xFF);
         }
 
         /// <summary>
@@ -189,7 +191,7 @@ namespace Adaptive.Aeron.Protocol
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public HeaderFlyweight Flags(short flags)
         {
-            PutByte(FLAGS_FIELD_OFFSET, (byte) flags);
+            PutByte(FLAGS_FIELD_OFFSET, (byte)flags);
 
             return this;
         }
@@ -212,7 +214,7 @@ namespace Adaptive.Aeron.Protocol
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public HeaderFlyweight HeaderType(int type)
         {
-            PutShort(TYPE_FIELD_OFFSET, (short) type);
+            PutShort(TYPE_FIELD_OFFSET, (short)type);
 
             return this;
         }
@@ -239,7 +241,7 @@ namespace Adaptive.Aeron.Protocol
 
             return this;
         }
-        
+
         /// <summary>
         /// Convert header flags to an array of chars to be human-readable.
         /// </summary>
@@ -247,7 +249,7 @@ namespace Adaptive.Aeron.Protocol
         /// <returns> header flags converted to an array of chars to be human-readable. </returns>
         public static char[] FlagsToChars(short flags)
         {
-            char[] chars = {'0', '0', '0', '0', '0', '0', '0', '0'};
+            char[] chars = { '0', '0', '0', '0', '0', '0', '0', '0' };
             int length = chars.Length;
             short mask = (short)(1 << (length - 1));
 
@@ -272,7 +274,7 @@ namespace Adaptive.Aeron.Protocol
         public static void AppendFlagsAsChars(short flags, StringBuilder stringBuilder)
         {
             const int length = 8;
-            short mask = (short) (1 << (length - 1));
+            short mask = (short)(1 << (length - 1));
 
             for (int i = 0; i < length; i++)
             {

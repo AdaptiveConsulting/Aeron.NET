@@ -1,0 +1,874 @@
+abstract Adaptive.Agrona.Concurrent.StatusIndicator.SetOrdered(long value) -> void
+abstract Adaptive.Agrona.Concurrent.StatusIndicatorReader.GetVolatile() -> long
+abstract Adaptive.Agrona.Concurrent.StatusIndicatorReader.Id.get -> int
+Adaptive.Agrona.BitUtil
+Adaptive.Agrona.BitUtil.BitUtil() -> void
+Adaptive.Agrona.BufferUtil
+Adaptive.Agrona.BufferUtil.BufferUtil() -> void
+Adaptive.Agrona.ByteBuffer
+Adaptive.Agrona.ByteBuffer.~ByteBuffer() -> void
+Adaptive.Agrona.ByteBuffer.BufferPointer.get -> System.IntPtr
+Adaptive.Agrona.ByteBuffer.ByteBuffer(int capacity, int byteAlignment) -> void
+Adaptive.Agrona.ByteBuffer.Capacity.get -> int
+Adaptive.Agrona.ByteBuffer.Dispose() -> void
+Adaptive.Agrona.ByteBuffer.Get(int index) -> byte
+Adaptive.Agrona.ByteOrder
+Adaptive.Agrona.ByteOrder.BigEndian = 0 -> Adaptive.Agrona.ByteOrder
+Adaptive.Agrona.ByteOrder.LittleEndian = 1 -> Adaptive.Agrona.ByteOrder
+Adaptive.Agrona.CacheLinePadding
+Adaptive.Agrona.CacheLinePadding.CacheLinePadding() -> void
+Adaptive.Agrona.CloseHelper
+Adaptive.Agrona.Collections.ArrayUtil
+Adaptive.Agrona.Collections.ArrayUtil.ArrayUtil() -> void
+Adaptive.Agrona.Collections.CollectionUtil
+Adaptive.Agrona.Collections.CollectionUtil.CollectionUtil() -> void
+Adaptive.Agrona.Collections.DictionaryExtensions
+Adaptive.Agrona.Collections.IntObjConsumer<T>
+Adaptive.Agrona.Collections.ListUtil
+Adaptive.Agrona.Collections.Map<TKey, TValue>
+Adaptive.Agrona.Collections.Map<TKey, TValue>.Clear() -> void
+Adaptive.Agrona.Collections.Map<TKey, TValue>.ContainsKey(TKey key) -> bool
+Adaptive.Agrona.Collections.Map<TKey, TValue>.Count.get -> int
+Adaptive.Agrona.Collections.Map<TKey, TValue>.ForEach(System.Action<TKey, TValue> consumer) -> void
+Adaptive.Agrona.Collections.Map<TKey, TValue>.Get(TKey key) -> TValue
+Adaptive.Agrona.Collections.Map<TKey, TValue>.GetEnumerator() -> System.Collections.Generic.IEnumerator<System.Collections.Generic.KeyValuePair<TKey, TValue>>
+Adaptive.Agrona.Collections.Map<TKey, TValue>.KeyValuePairs.get -> System.Collections.Generic.ICollection<System.Collections.Generic.KeyValuePair<TKey, TValue>>
+Adaptive.Agrona.Collections.Map<TKey, TValue>.Map(TValue defaultValue = default(TValue)) -> void
+Adaptive.Agrona.Collections.Map<TKey, TValue>.Put(TKey key, TValue value) -> TValue
+Adaptive.Agrona.Collections.Map<TKey, TValue>.Remove(TKey key) -> TValue
+Adaptive.Agrona.Collections.Map<TKey, TValue>.Values.get -> System.Collections.Generic.ICollection<TValue>
+Adaptive.Agrona.Concurrent.AgentInvoker
+Adaptive.Agrona.Concurrent.AgentInvoker.Agent() -> Adaptive.Agrona.Concurrent.IAgent
+Adaptive.Agrona.Concurrent.AgentInvoker.AgentInvoker(Adaptive.Agrona.IErrorHandler errorHandler, Adaptive.Agrona.Concurrent.Status.AtomicCounter errorCounter, Adaptive.Agrona.Concurrent.IAgent agent) -> void
+Adaptive.Agrona.Concurrent.AgentInvoker.Dispose() -> void
+Adaptive.Agrona.Concurrent.AgentInvoker.Invoke() -> int
+Adaptive.Agrona.Concurrent.AgentInvoker.IsClosed.get -> bool
+Adaptive.Agrona.Concurrent.AgentInvoker.IsRunning.get -> bool
+Adaptive.Agrona.Concurrent.AgentInvoker.IsStarted.get -> bool
+Adaptive.Agrona.Concurrent.AgentInvoker.Start() -> void
+Adaptive.Agrona.Concurrent.AgentRunner
+Adaptive.Agrona.Concurrent.AgentRunner.Agent() -> Adaptive.Agrona.Concurrent.IAgent
+Adaptive.Agrona.Concurrent.AgentRunner.AgentRunner(Adaptive.Agrona.Concurrent.IIdleStrategy idleStrategy, Adaptive.Agrona.IErrorHandler errorHandler, Adaptive.Agrona.Concurrent.Status.AtomicCounter errorCounter, Adaptive.Agrona.Concurrent.IAgent agent) -> void
+Adaptive.Agrona.Concurrent.AgentRunner.Dispose() -> void
+Adaptive.Agrona.Concurrent.AgentRunner.IsClosed.get -> bool
+Adaptive.Agrona.Concurrent.AgentRunner.Run() -> void
+Adaptive.Agrona.Concurrent.AgentRunner.Thread() -> System.Threading.Thread
+Adaptive.Agrona.Concurrent.AgentTerminationException
+Adaptive.Agrona.Concurrent.AgentTerminationException.AgentTerminationException() -> void
+Adaptive.Agrona.Concurrent.AgentTerminationException.AgentTerminationException(string message) -> void
+Adaptive.Agrona.Concurrent.AgentTerminationException.AgentTerminationException(System.Exception innerException) -> void
+Adaptive.Agrona.Concurrent.AtomicBoolean
+Adaptive.Agrona.Concurrent.AtomicBoolean.AtomicBoolean(bool initialValue) -> void
+Adaptive.Agrona.Concurrent.AtomicBoolean.CompareAndSet(bool comparand, bool newValue) -> bool
+Adaptive.Agrona.Concurrent.AtomicBoolean.Get() -> bool
+Adaptive.Agrona.Concurrent.AtomicBoolean.Set(bool value) -> void
+Adaptive.Agrona.Concurrent.AtomicLong
+Adaptive.Agrona.Concurrent.AtomicLong.Add(long add) -> void
+Adaptive.Agrona.Concurrent.AtomicLong.AtomicLong() -> void
+Adaptive.Agrona.Concurrent.AtomicLong.Get() -> long
+Adaptive.Agrona.Concurrent.AtomicLong.IncrementAndGet() -> long
+Adaptive.Agrona.Concurrent.AtomicLong.LazySet(long newValue) -> void
+Adaptive.Agrona.Concurrent.AtomicLong.Set(long value) -> void
+Adaptive.Agrona.Concurrent.AtomicReference<T>
+Adaptive.Agrona.Concurrent.AtomicReference<T>.AtomicReference() -> void
+Adaptive.Agrona.Concurrent.AtomicReference<T>.CompareAndSet(T compareValue, T newValue) -> bool
+Adaptive.Agrona.Concurrent.AtomicReference<T>.Get() -> T
+Adaptive.Agrona.Concurrent.AtomicReference<T>.GetAndSet(T value) -> T
+Adaptive.Agrona.Concurrent.AtomicReference<T>.LazySet(T newValue) -> void
+Adaptive.Agrona.Concurrent.BackgroundThreadFactory
+Adaptive.Agrona.Concurrent.BackgroundThreadFactory.BackgroundThreadFactory() -> void
+Adaptive.Agrona.Concurrent.BackgroundThreadFactory.NewThread(System.Threading.ThreadStart runner) -> System.Threading.Thread
+Adaptive.Agrona.Concurrent.BackoffIdleStrategy
+Adaptive.Agrona.Concurrent.BackoffIdleStrategy.BackoffIdleStrategy(long maxSpins, long maxYields, long minParkPeriodMs, long maxParkPeriodMs) -> void
+Adaptive.Agrona.Concurrent.BackoffIdleStrategy.Idle() -> void
+Adaptive.Agrona.Concurrent.BackoffIdleStrategy.Idle(int workCount) -> void
+Adaptive.Agrona.Concurrent.BackoffIdleStrategy.Reset() -> void
+Adaptive.Agrona.Concurrent.Broadcast.BroadcastBufferDescriptor
+Adaptive.Agrona.Concurrent.Broadcast.BroadcastBufferDescriptor.BroadcastBufferDescriptor() -> void
+Adaptive.Agrona.Concurrent.Broadcast.BroadcastReceiver
+Adaptive.Agrona.Concurrent.Broadcast.BroadcastReceiver.BroadcastReceiver(Adaptive.Agrona.Concurrent.IAtomicBuffer buffer) -> void
+Adaptive.Agrona.Concurrent.Broadcast.BroadcastReceiver.Buffer() -> Adaptive.Agrona.IMutableDirectBuffer
+Adaptive.Agrona.Concurrent.Broadcast.BroadcastReceiver.Capacity() -> int
+Adaptive.Agrona.Concurrent.Broadcast.BroadcastReceiver.LappedCount() -> long
+Adaptive.Agrona.Concurrent.Broadcast.BroadcastReceiver.Length() -> int
+Adaptive.Agrona.Concurrent.Broadcast.BroadcastReceiver.Offset() -> int
+Adaptive.Agrona.Concurrent.Broadcast.BroadcastReceiver.ReceiveNext() -> bool
+Adaptive.Agrona.Concurrent.Broadcast.BroadcastReceiver.TypeId() -> int
+Adaptive.Agrona.Concurrent.Broadcast.BroadcastReceiver.Validate() -> bool
+Adaptive.Agrona.Concurrent.Broadcast.CopyBroadcastReceiver
+Adaptive.Agrona.Concurrent.Broadcast.CopyBroadcastReceiver.CopyBroadcastReceiver() -> void
+Adaptive.Agrona.Concurrent.Broadcast.CopyBroadcastReceiver.CopyBroadcastReceiver(Adaptive.Agrona.Concurrent.Broadcast.BroadcastReceiver receiver, Adaptive.Agrona.IMutableDirectBuffer scratchBuffer) -> void
+Adaptive.Agrona.Concurrent.Broadcast.CopyBroadcastReceiver.CopyBroadcastReceiver(Adaptive.Agrona.Concurrent.Broadcast.BroadcastReceiver receiver, int scratchBufferLength) -> void
+Adaptive.Agrona.Concurrent.Broadcast.CopyBroadcastReceiver.CopyBroadcastReceiver(Adaptive.Agrona.Concurrent.Broadcast.BroadcastReceiver receiver) -> void
+Adaptive.Agrona.Concurrent.Broadcast.CopyBroadcastReceiver.Receive(Adaptive.Agrona.Concurrent.MessageHandler handler) -> int
+Adaptive.Agrona.Concurrent.Broadcast.RecordDescriptor
+Adaptive.Agrona.Concurrent.Broadcast.RecordDescriptor.RecordDescriptor() -> void
+Adaptive.Agrona.Concurrent.BusySpinIdleStrategy
+Adaptive.Agrona.Concurrent.BusySpinIdleStrategy.BusySpinIdleStrategy() -> void
+Adaptive.Agrona.Concurrent.BusySpinIdleStrategy.Idle() -> void
+Adaptive.Agrona.Concurrent.BusySpinIdleStrategy.Idle(int workCount) -> void
+Adaptive.Agrona.Concurrent.BusySpinIdleStrategy.Reset() -> void
+Adaptive.Agrona.Concurrent.CachedEpochClock
+Adaptive.Agrona.Concurrent.CachedEpochClock.CachedEpochClock() -> void
+Adaptive.Agrona.Concurrent.CachedEpochClock.Time() -> long
+Adaptive.Agrona.Concurrent.CachedEpochClock.Update(long timeMs) -> void
+Adaptive.Agrona.Concurrent.CompositeAgent
+Adaptive.Agrona.Concurrent.CompositeAgent.CompositeAgent(params Adaptive.Agrona.Concurrent.IAgent[] agents) -> void
+Adaptive.Agrona.Concurrent.CompositeAgent.CompositeAgent(System.Collections.Generic.List<Adaptive.Agrona.Concurrent.IAgent> agents) -> void
+Adaptive.Agrona.Concurrent.CompositeAgent.DoWork() -> int
+Adaptive.Agrona.Concurrent.CompositeAgent.OnClose() -> void
+Adaptive.Agrona.Concurrent.CompositeAgent.OnStart() -> void
+Adaptive.Agrona.Concurrent.CompositeAgent.RoleName() -> string
+Adaptive.Agrona.Concurrent.Configuration
+Adaptive.Agrona.Concurrent.Configuration.Configuration() -> void
+Adaptive.Agrona.Concurrent.ControllableIdleStrategy
+Adaptive.Agrona.Concurrent.ControllableIdleStrategy.ControllableIdleStrategy(Adaptive.Agrona.Concurrent.StatusIndicatorReader statusIndicatorReader) -> void
+Adaptive.Agrona.Concurrent.ControllableIdleStrategy.Idle() -> void
+Adaptive.Agrona.Concurrent.ControllableIdleStrategy.Idle(int workCount) -> void
+Adaptive.Agrona.Concurrent.ControllableIdleStrategy.Reset() -> void
+Adaptive.Agrona.Concurrent.CountedErrorHandler
+Adaptive.Agrona.Concurrent.CountedErrorHandler.CountedErrorHandler(Adaptive.Agrona.IErrorHandler errorHandler, Adaptive.Agrona.Concurrent.Status.AtomicCounter errorCounter) -> void
+Adaptive.Agrona.Concurrent.CountedErrorHandler.OnError(System.Exception throwable) -> void
+Adaptive.Agrona.Concurrent.DefaultThreadFactory
+Adaptive.Agrona.Concurrent.DefaultThreadFactory.DefaultThreadFactory() -> void
+Adaptive.Agrona.Concurrent.DefaultThreadFactory.NewThread(System.Threading.ThreadStart runner) -> System.Threading.Thread
+Adaptive.Agrona.Concurrent.Errors.DistinctErrorLog
+Adaptive.Agrona.Concurrent.Errors.DistinctErrorLog.DistinctErrorLog(Adaptive.Agrona.Concurrent.IAtomicBuffer buffer, Adaptive.Agrona.Concurrent.IEpochClock clock) -> void
+Adaptive.Agrona.Concurrent.Errors.DistinctErrorLog.DistinctObservation
+Adaptive.Agrona.Concurrent.Errors.DistinctErrorLog.DistinctObservation.DistinctObservation(System.Exception throwable, int offset) -> void
+Adaptive.Agrona.Concurrent.Errors.DistinctErrorLog.Record(System.Exception observation) -> bool
+Adaptive.Agrona.Concurrent.Errors.ErrorConsumer
+Adaptive.Agrona.Concurrent.Errors.ErrorLogReader
+Adaptive.Agrona.Concurrent.Errors.ErrorLogReader.ErrorLogReader() -> void
+Adaptive.Agrona.Concurrent.Errors.LoggingErrorHandler
+Adaptive.Agrona.Concurrent.Errors.LoggingErrorHandler.Dispose() -> void
+Adaptive.Agrona.Concurrent.Errors.LoggingErrorHandler.DistinctErrorLog() -> Adaptive.Agrona.Concurrent.Errors.DistinctErrorLog
+Adaptive.Agrona.Concurrent.Errors.LoggingErrorHandler.ErrorOverflow() -> System.IO.TextWriter
+Adaptive.Agrona.Concurrent.Errors.LoggingErrorHandler.IsDiposed.get -> bool
+Adaptive.Agrona.Concurrent.Errors.LoggingErrorHandler.LoggingErrorHandler(Adaptive.Agrona.Concurrent.Errors.DistinctErrorLog log, System.IO.TextWriter errorOverflow) -> void
+Adaptive.Agrona.Concurrent.Errors.LoggingErrorHandler.LoggingErrorHandler(Adaptive.Agrona.Concurrent.Errors.DistinctErrorLog log) -> void
+Adaptive.Agrona.Concurrent.Errors.LoggingErrorHandler.OnError(System.Exception exception) -> void
+Adaptive.Agrona.Concurrent.IAgent
+Adaptive.Agrona.Concurrent.IAgent.DoWork() -> int
+Adaptive.Agrona.Concurrent.IAgent.OnClose() -> void
+Adaptive.Agrona.Concurrent.IAgent.OnStart() -> void
+Adaptive.Agrona.Concurrent.IAgent.RoleName() -> string
+Adaptive.Agrona.Concurrent.IAtomicBuffer
+Adaptive.Agrona.Concurrent.IAtomicBuffer.AddIntOrdered(int index, int increment) -> int
+Adaptive.Agrona.Concurrent.IAtomicBuffer.AddLongOrdered(int index, long increment) -> long
+Adaptive.Agrona.Concurrent.IAtomicBuffer.CompareAndSetInt(int index, int expectedValue, int updateValue) -> bool
+Adaptive.Agrona.Concurrent.IAtomicBuffer.CompareAndSetLong(int index, long expectedValue, long updateValue) -> bool
+Adaptive.Agrona.Concurrent.IAtomicBuffer.GetAndAddInt(int index, int delta) -> int
+Adaptive.Agrona.Concurrent.IAtomicBuffer.GetAndAddLong(int index, long delta) -> long
+Adaptive.Agrona.Concurrent.IAtomicBuffer.GetByteVolatile(int index) -> byte
+Adaptive.Agrona.Concurrent.IAtomicBuffer.GetIntVolatile(int index) -> int
+Adaptive.Agrona.Concurrent.IAtomicBuffer.GetLongVolatile(int index) -> long
+Adaptive.Agrona.Concurrent.IAtomicBuffer.GetShortVolatile(int index) -> short
+Adaptive.Agrona.Concurrent.IAtomicBuffer.PutByteVolatile(int index, byte value) -> void
+Adaptive.Agrona.Concurrent.IAtomicBuffer.PutIntOrdered(int index, int value) -> void
+Adaptive.Agrona.Concurrent.IAtomicBuffer.PutIntRelease(int index, int value) -> void
+Adaptive.Agrona.Concurrent.IAtomicBuffer.PutIntVolatile(int index, int value) -> void
+Adaptive.Agrona.Concurrent.IAtomicBuffer.PutLongOrdered(int index, long value) -> void
+Adaptive.Agrona.Concurrent.IAtomicBuffer.PutLongRelease(int index, long value) -> void
+Adaptive.Agrona.Concurrent.IAtomicBuffer.PutLongVolatile(int index, long value) -> void
+Adaptive.Agrona.Concurrent.IAtomicBuffer.PutShortVolatile(int index, short value) -> void
+Adaptive.Agrona.Concurrent.IAtomicBuffer.VerifyAlignment() -> void
+Adaptive.Agrona.Concurrent.IdleStrategyFactory
+Adaptive.Agrona.Concurrent.IEpochClock
+Adaptive.Agrona.Concurrent.IEpochClock.Time() -> long
+Adaptive.Agrona.Concurrent.IIdleStrategy
+Adaptive.Agrona.Concurrent.IIdleStrategy.Idle() -> void
+Adaptive.Agrona.Concurrent.IIdleStrategy.Idle(int workCount) -> void
+Adaptive.Agrona.Concurrent.IIdleStrategy.Reset() -> void
+Adaptive.Agrona.Concurrent.ILock
+Adaptive.Agrona.Concurrent.ILock.Lock() -> void
+Adaptive.Agrona.Concurrent.ILock.TryLock() -> bool
+Adaptive.Agrona.Concurrent.ILock.Unlock() -> void
+Adaptive.Agrona.Concurrent.INanoClock
+Adaptive.Agrona.Concurrent.INanoClock.NanoTime() -> long
+Adaptive.Agrona.Concurrent.IThreadFactory
+Adaptive.Agrona.Concurrent.IThreadFactory.NewThread(System.Threading.ThreadStart runner) -> System.Threading.Thread
+Adaptive.Agrona.Concurrent.MessageHandler
+Adaptive.Agrona.Concurrent.NoOpIdleStrategy
+Adaptive.Agrona.Concurrent.NoOpIdleStrategy.Idle() -> void
+Adaptive.Agrona.Concurrent.NoOpIdleStrategy.Idle(int workCount) -> void
+Adaptive.Agrona.Concurrent.NoOpIdleStrategy.NoOpIdleStrategy() -> void
+Adaptive.Agrona.Concurrent.NoOpIdleStrategy.Reset() -> void
+Adaptive.Agrona.Concurrent.NoOpLock
+Adaptive.Agrona.Concurrent.NoOpLock.Lock() -> void
+Adaptive.Agrona.Concurrent.NoOpLock.NoOpLock() -> void
+Adaptive.Agrona.Concurrent.NoOpLock.TryLock() -> bool
+Adaptive.Agrona.Concurrent.NoOpLock.Unlock() -> void
+Adaptive.Agrona.Concurrent.NullEpochClock
+Adaptive.Agrona.Concurrent.NullEpochClock.NullEpochClock() -> void
+Adaptive.Agrona.Concurrent.NullEpochClock.Time() -> long
+Adaptive.Agrona.Concurrent.ReentrantLock
+Adaptive.Agrona.Concurrent.ReentrantLock.Lock() -> void
+Adaptive.Agrona.Concurrent.ReentrantLock.ReentrantLock() -> void
+Adaptive.Agrona.Concurrent.ReentrantLock.TryLock() -> bool
+Adaptive.Agrona.Concurrent.ReentrantLock.Unlock() -> void
+Adaptive.Agrona.Concurrent.RingBuffer.IRingBuffer
+Adaptive.Agrona.Concurrent.RingBuffer.IRingBuffer.Abort(int index) -> void
+Adaptive.Agrona.Concurrent.RingBuffer.IRingBuffer.Buffer() -> Adaptive.Agrona.Concurrent.IAtomicBuffer
+Adaptive.Agrona.Concurrent.RingBuffer.IRingBuffer.Capacity() -> int
+Adaptive.Agrona.Concurrent.RingBuffer.IRingBuffer.Commit(int index) -> void
+Adaptive.Agrona.Concurrent.RingBuffer.IRingBuffer.ConsumerHeartbeatTime() -> long
+Adaptive.Agrona.Concurrent.RingBuffer.IRingBuffer.ConsumerHeartbeatTime(long time) -> void
+Adaptive.Agrona.Concurrent.RingBuffer.IRingBuffer.ConsumerPosition() -> long
+Adaptive.Agrona.Concurrent.RingBuffer.IRingBuffer.MaxMsgLength() -> int
+Adaptive.Agrona.Concurrent.RingBuffer.IRingBuffer.NextCorrelationId() -> long
+Adaptive.Agrona.Concurrent.RingBuffer.IRingBuffer.ProducerPosition() -> long
+Adaptive.Agrona.Concurrent.RingBuffer.IRingBuffer.Read(Adaptive.Agrona.Concurrent.MessageHandler handler, int messageCountLimit) -> int
+Adaptive.Agrona.Concurrent.RingBuffer.IRingBuffer.Read(Adaptive.Agrona.Concurrent.MessageHandler handler) -> int
+Adaptive.Agrona.Concurrent.RingBuffer.IRingBuffer.Size() -> int
+Adaptive.Agrona.Concurrent.RingBuffer.IRingBuffer.TryClaim(int msgTypeId, int length) -> int
+Adaptive.Agrona.Concurrent.RingBuffer.IRingBuffer.Unblock() -> bool
+Adaptive.Agrona.Concurrent.RingBuffer.IRingBuffer.Write(int msgTypeId, Adaptive.Agrona.IDirectBuffer srcBuffer, int srcIndex, int length) -> bool
+Adaptive.Agrona.Concurrent.RingBuffer.ManyToOneRingBuffer
+Adaptive.Agrona.Concurrent.RingBuffer.ManyToOneRingBuffer.Abort(int index) -> void
+Adaptive.Agrona.Concurrent.RingBuffer.ManyToOneRingBuffer.Buffer() -> Adaptive.Agrona.Concurrent.IAtomicBuffer
+Adaptive.Agrona.Concurrent.RingBuffer.ManyToOneRingBuffer.Capacity() -> int
+Adaptive.Agrona.Concurrent.RingBuffer.ManyToOneRingBuffer.Commit(int index) -> void
+Adaptive.Agrona.Concurrent.RingBuffer.ManyToOneRingBuffer.ConsumerHeartbeatTime() -> long
+Adaptive.Agrona.Concurrent.RingBuffer.ManyToOneRingBuffer.ConsumerHeartbeatTime(long time) -> void
+Adaptive.Agrona.Concurrent.RingBuffer.ManyToOneRingBuffer.ConsumerPosition() -> long
+Adaptive.Agrona.Concurrent.RingBuffer.ManyToOneRingBuffer.ManyToOneRingBuffer(Adaptive.Agrona.Concurrent.IAtomicBuffer buffer) -> void
+Adaptive.Agrona.Concurrent.RingBuffer.ManyToOneRingBuffer.MaxMsgLength() -> int
+Adaptive.Agrona.Concurrent.RingBuffer.ManyToOneRingBuffer.NextCorrelationId() -> long
+Adaptive.Agrona.Concurrent.RingBuffer.ManyToOneRingBuffer.ProducerPosition() -> long
+Adaptive.Agrona.Concurrent.RingBuffer.ManyToOneRingBuffer.Read(Adaptive.Agrona.Concurrent.MessageHandler handler) -> int
+Adaptive.Agrona.Concurrent.RingBuffer.ManyToOneRingBuffer.Size() -> int
+Adaptive.Agrona.Concurrent.RingBuffer.ManyToOneRingBuffer.TryClaim(int msgTypeId, int length) -> int
+Adaptive.Agrona.Concurrent.RingBuffer.ManyToOneRingBuffer.Unblock() -> bool
+Adaptive.Agrona.Concurrent.RingBuffer.ManyToOneRingBuffer.Write(int msgTypeId, Adaptive.Agrona.IDirectBuffer srcBuffer, int offset, int length) -> bool
+Adaptive.Agrona.Concurrent.RingBuffer.RecordDescriptor
+Adaptive.Agrona.Concurrent.RingBuffer.RecordDescriptor.RecordDescriptor() -> void
+Adaptive.Agrona.Concurrent.RingBuffer.RingBufferDescriptor
+Adaptive.Agrona.Concurrent.RingBuffer.RingBufferDescriptor.RingBufferDescriptor() -> void
+Adaptive.Agrona.Concurrent.ShutdownSignalBarrier
+Adaptive.Agrona.Concurrent.ShutdownSignalBarrier.Await() -> void
+Adaptive.Agrona.Concurrent.ShutdownSignalBarrier.Close() -> void
+Adaptive.Agrona.Concurrent.ShutdownSignalBarrier.Dispose() -> void
+Adaptive.Agrona.Concurrent.ShutdownSignalBarrier.Remove() -> void
+Adaptive.Agrona.Concurrent.ShutdownSignalBarrier.ShutdownSignalBarrier() -> void
+Adaptive.Agrona.Concurrent.ShutdownSignalBarrier.ShutdownSignalBarrier(Adaptive.Agrona.Concurrent.ShutdownSignalBarrier.SignalHandler signalHandler) -> void
+Adaptive.Agrona.Concurrent.ShutdownSignalBarrier.Signal() -> void
+Adaptive.Agrona.Concurrent.ShutdownSignalBarrier.SignalAll() -> void
+Adaptive.Agrona.Concurrent.ShutdownSignalBarrier.SignalHandler
+Adaptive.Agrona.Concurrent.SleepingIdleStrategy
+Adaptive.Agrona.Concurrent.SleepingIdleStrategy.Idle() -> void
+Adaptive.Agrona.Concurrent.SleepingIdleStrategy.Idle(int workCount) -> void
+Adaptive.Agrona.Concurrent.SleepingIdleStrategy.Reset() -> void
+Adaptive.Agrona.Concurrent.SleepingIdleStrategy.SleepingIdleStrategy(int sleepPeriodMs) -> void
+Adaptive.Agrona.Concurrent.SpinWaitIdleStrategy
+Adaptive.Agrona.Concurrent.SpinWaitIdleStrategy.Idle() -> void
+Adaptive.Agrona.Concurrent.SpinWaitIdleStrategy.Idle(int workCount) -> void
+Adaptive.Agrona.Concurrent.SpinWaitIdleStrategy.Reset() -> void
+Adaptive.Agrona.Concurrent.SpinWaitIdleStrategy.SpinWaitIdleStrategy() -> void
+Adaptive.Agrona.Concurrent.Status.AtomicCounter
+Adaptive.Agrona.Concurrent.Status.AtomicCounter.AtomicCounter(Adaptive.Agrona.Concurrent.IAtomicBuffer buffer, int counterId, Adaptive.Agrona.Concurrent.Status.CountersManager countersManager) -> void
+Adaptive.Agrona.Concurrent.Status.AtomicCounter.AtomicCounter(Adaptive.Agrona.Concurrent.IAtomicBuffer buffer, int counterId) -> void
+Adaptive.Agrona.Concurrent.Status.AtomicCounter.CompareAndSet(long expectedValue, long updateValue) -> bool
+Adaptive.Agrona.Concurrent.Status.AtomicCounter.Get() -> long
+Adaptive.Agrona.Concurrent.Status.AtomicCounter.GetAndAdd(long increment) -> long
+Adaptive.Agrona.Concurrent.Status.AtomicCounter.GetAndAddOrdered(long increment) -> long
+Adaptive.Agrona.Concurrent.Status.AtomicCounter.GetWeak() -> long
+Adaptive.Agrona.Concurrent.Status.AtomicCounter.Id.get -> int
+Adaptive.Agrona.Concurrent.Status.AtomicCounter.Increment() -> long
+Adaptive.Agrona.Concurrent.Status.AtomicCounter.IncrementOrdered() -> long
+Adaptive.Agrona.Concurrent.Status.AtomicCounter.ProposeMax(long proposedValue) -> bool
+Adaptive.Agrona.Concurrent.Status.AtomicCounter.ProposeMaxOrdered(long proposedValue) -> bool
+Adaptive.Agrona.Concurrent.Status.AtomicCounter.Set(long value) -> void
+Adaptive.Agrona.Concurrent.Status.AtomicCounter.SetOrdered(long value) -> void
+Adaptive.Agrona.Concurrent.Status.AtomicCounter.SetRelease(long value) -> void
+Adaptive.Agrona.Concurrent.Status.AtomicLongPosition
+Adaptive.Agrona.Concurrent.Status.AtomicLongPosition.AtomicLongPosition() -> void
+Adaptive.Agrona.Concurrent.Status.AtomicLongPosition.Dispose() -> void
+Adaptive.Agrona.Concurrent.Status.AtomicLongPosition.Get() -> long
+Adaptive.Agrona.Concurrent.Status.AtomicLongPosition.GetVolatile() -> long
+Adaptive.Agrona.Concurrent.Status.AtomicLongPosition.Id.get -> int
+Adaptive.Agrona.Concurrent.Status.AtomicLongPosition.ProposeMax(long proposedValue) -> bool
+Adaptive.Agrona.Concurrent.Status.AtomicLongPosition.ProposeMaxOrdered(long proposedValue) -> bool
+Adaptive.Agrona.Concurrent.Status.AtomicLongPosition.Set(long value) -> void
+Adaptive.Agrona.Concurrent.Status.AtomicLongPosition.SetOrdered(long value) -> void
+Adaptive.Agrona.Concurrent.Status.AtomicLongPosition.SetRelease(long value) -> void
+Adaptive.Agrona.Concurrent.Status.AtomicLongPosition.SetVolatile(long value) -> void
+Adaptive.Agrona.Concurrent.Status.CountersManager
+Adaptive.Agrona.Concurrent.Status.CountersManager.Allocate(int typeId, Adaptive.Agrona.IDirectBuffer keyBuffer, int keyOffset, int keyLength, Adaptive.Agrona.IDirectBuffer labelBuffer, int labelOffset, int labelLength) -> int
+Adaptive.Agrona.Concurrent.Status.CountersManager.Allocate(string label, int typeId = 0) -> int
+Adaptive.Agrona.Concurrent.Status.CountersManager.Allocate(string label, int typeId, System.Action<Adaptive.Agrona.IMutableDirectBuffer> keyFunc) -> int
+Adaptive.Agrona.Concurrent.Status.CountersManager.CountersManager(Adaptive.Agrona.Concurrent.IAtomicBuffer metaDataBuffer, Adaptive.Agrona.Concurrent.IAtomicBuffer valuesBuffer, System.Text.Encoding labelCharset, Adaptive.Agrona.Concurrent.IEpochClock epochClock, long freeToReuseTimeoutMs) -> void
+Adaptive.Agrona.Concurrent.Status.CountersManager.CountersManager(Adaptive.Agrona.Concurrent.IAtomicBuffer metaDataBuffer, Adaptive.Agrona.Concurrent.IAtomicBuffer valuesBuffer, System.Text.Encoding labelCharset) -> void
+Adaptive.Agrona.Concurrent.Status.CountersManager.CountersManager(Adaptive.Agrona.Concurrent.IAtomicBuffer metaDataBuffer, Adaptive.Agrona.Concurrent.IAtomicBuffer valuesBuffer) -> void
+Adaptive.Agrona.Concurrent.Status.CountersManager.Free(int counterId) -> void
+Adaptive.Agrona.Concurrent.Status.CountersManager.NewCounter(int typeId, Adaptive.Agrona.IDirectBuffer keyBuffer, int keyOffset, int keyLength, Adaptive.Agrona.IDirectBuffer labelBuffer, int labelOffset, int labelLength) -> Adaptive.Agrona.Concurrent.Status.AtomicCounter
+Adaptive.Agrona.Concurrent.Status.CountersManager.NewCounter(string label, int typeId, System.Action<Adaptive.Agrona.IMutableDirectBuffer> keyFunc) -> Adaptive.Agrona.Concurrent.Status.AtomicCounter
+Adaptive.Agrona.Concurrent.Status.CountersManager.NewCounter(string label, int typeId) -> Adaptive.Agrona.Concurrent.Status.AtomicCounter
+Adaptive.Agrona.Concurrent.Status.CountersManager.NewCounter(string label) -> Adaptive.Agrona.Concurrent.Status.AtomicCounter
+Adaptive.Agrona.Concurrent.Status.CountersManager.SetCounterValue(int counterId, long value) -> void
+Adaptive.Agrona.Concurrent.Status.CountersReader
+Adaptive.Agrona.Concurrent.Status.CountersReader.CounterConsumer
+Adaptive.Agrona.Concurrent.Status.CountersReader.CountersReader(Adaptive.Agrona.Concurrent.IAtomicBuffer metaDataBuffer, Adaptive.Agrona.Concurrent.IAtomicBuffer valuesBuffer, System.Text.Encoding encoding) -> void
+Adaptive.Agrona.Concurrent.Status.CountersReader.CountersReader(Adaptive.Agrona.Concurrent.IAtomicBuffer metaDataBuffer, Adaptive.Agrona.Concurrent.IAtomicBuffer valuesBuffer) -> void
+Adaptive.Agrona.Concurrent.Status.CountersReader.FindByTypeIdAndRegistrationId(int typeId, long registrationId) -> int
+Adaptive.Agrona.Concurrent.Status.CountersReader.ForEach(Adaptive.Agrona.Collections.IntObjConsumer<string> consumer) -> void
+Adaptive.Agrona.Concurrent.Status.CountersReader.ForEach(Adaptive.Agrona.Concurrent.Status.CountersReader.CounterConsumer consumer) -> void
+Adaptive.Agrona.Concurrent.Status.CountersReader.ForEach(Adaptive.Agrona.Concurrent.Status.CountersReader.MetaData metaData) -> void
+Adaptive.Agrona.Concurrent.Status.CountersReader.GetCounterLabel(int counterId) -> string
+Adaptive.Agrona.Concurrent.Status.CountersReader.GetCounterRegistrationId(int counterId) -> long
+Adaptive.Agrona.Concurrent.Status.CountersReader.GetCounterState(int counterId) -> int
+Adaptive.Agrona.Concurrent.Status.CountersReader.GetCounterTypeId(int counterId) -> int
+Adaptive.Agrona.Concurrent.Status.CountersReader.GetCounterValue(int counterId) -> long
+Adaptive.Agrona.Concurrent.Status.CountersReader.GetFreeForReuseDeadline(int counterId) -> long
+Adaptive.Agrona.Concurrent.Status.CountersReader.LabelCharset.get -> System.Text.Encoding
+Adaptive.Agrona.Concurrent.Status.CountersReader.MaxCounterId.get -> int
+Adaptive.Agrona.Concurrent.Status.CountersReader.MaxCounterId.set -> void
+Adaptive.Agrona.Concurrent.Status.CountersReader.MetaData
+Adaptive.Agrona.Concurrent.Status.CountersReader.MetaDataBuffer.get -> Adaptive.Agrona.Concurrent.IAtomicBuffer
+Adaptive.Agrona.Concurrent.Status.CountersReader.ValidateCounterId(int counterId) -> void
+Adaptive.Agrona.Concurrent.Status.CountersReader.ValuesBuffer.get -> Adaptive.Agrona.Concurrent.IAtomicBuffer
+Adaptive.Agrona.Concurrent.Status.IPosition
+Adaptive.Agrona.Concurrent.Status.IPosition.Get() -> long
+Adaptive.Agrona.Concurrent.Status.IPosition.ProposeMax(long proposedValue) -> bool
+Adaptive.Agrona.Concurrent.Status.IPosition.ProposeMaxOrdered(long proposedValue) -> bool
+Adaptive.Agrona.Concurrent.Status.IPosition.Set(long value) -> void
+Adaptive.Agrona.Concurrent.Status.IPosition.SetOrdered(long value) -> void
+Adaptive.Agrona.Concurrent.Status.IPosition.SetRelease(long value) -> void
+Adaptive.Agrona.Concurrent.Status.IPosition.SetVolatile(long value) -> void
+Adaptive.Agrona.Concurrent.Status.IReadablePosition
+Adaptive.Agrona.Concurrent.Status.IReadablePosition.GetVolatile() -> long
+Adaptive.Agrona.Concurrent.Status.IReadablePosition.Id.get -> int
+Adaptive.Agrona.Concurrent.Status.UnsafeBufferPosition
+Adaptive.Agrona.Concurrent.Status.UnsafeBufferPosition.Dispose() -> void
+Adaptive.Agrona.Concurrent.Status.UnsafeBufferPosition.Get() -> long
+Adaptive.Agrona.Concurrent.Status.UnsafeBufferPosition.GetVolatile() -> long
+Adaptive.Agrona.Concurrent.Status.UnsafeBufferPosition.Id.get -> int
+Adaptive.Agrona.Concurrent.Status.UnsafeBufferPosition.IsClosed.get -> bool
+Adaptive.Agrona.Concurrent.Status.UnsafeBufferPosition.ProposeMax(long proposedValue) -> bool
+Adaptive.Agrona.Concurrent.Status.UnsafeBufferPosition.ProposeMaxOrdered(long proposedValue) -> bool
+Adaptive.Agrona.Concurrent.Status.UnsafeBufferPosition.Set(long value) -> void
+Adaptive.Agrona.Concurrent.Status.UnsafeBufferPosition.SetOrdered(long value) -> void
+Adaptive.Agrona.Concurrent.Status.UnsafeBufferPosition.SetRelease(long value) -> void
+Adaptive.Agrona.Concurrent.Status.UnsafeBufferPosition.SetVolatile(long value) -> void
+Adaptive.Agrona.Concurrent.Status.UnsafeBufferPosition.UnsafeBufferPosition(Adaptive.Agrona.Concurrent.UnsafeBuffer buffer, int counterId, Adaptive.Agrona.Concurrent.Status.CountersManager countersManager) -> void
+Adaptive.Agrona.Concurrent.Status.UnsafeBufferPosition.UnsafeBufferPosition(Adaptive.Agrona.Concurrent.UnsafeBuffer buffer, int counterId) -> void
+Adaptive.Agrona.Concurrent.StatusIndicator
+Adaptive.Agrona.Concurrent.StatusIndicator.StatusIndicator() -> void
+Adaptive.Agrona.Concurrent.StatusIndicatorReader
+Adaptive.Agrona.Concurrent.StatusIndicatorReader.StatusIndicatorReader() -> void
+Adaptive.Agrona.Concurrent.StopwatchClock
+Adaptive.Agrona.Concurrent.StopwatchClock.NanoTime() -> long
+Adaptive.Agrona.Concurrent.StopwatchClock.StopwatchClock() -> void
+Adaptive.Agrona.Concurrent.SystemEpochClock
+Adaptive.Agrona.Concurrent.SystemEpochClock.SystemEpochClock() -> void
+Adaptive.Agrona.Concurrent.SystemEpochClock.Time() -> long
+Adaptive.Agrona.Concurrent.SystemNanoClock
+Adaptive.Agrona.Concurrent.SystemNanoClock.NanoTime() -> long
+Adaptive.Agrona.Concurrent.SystemNanoClock.SystemNanoClock() -> void
+Adaptive.Agrona.Concurrent.UnsafeBuffer
+Adaptive.Agrona.Concurrent.UnsafeBuffer.~UnsafeBuffer() -> void
+Adaptive.Agrona.Concurrent.UnsafeBuffer.AddIntOrdered(int index, int increment) -> int
+Adaptive.Agrona.Concurrent.UnsafeBuffer.AddLongOrdered(int index, long increment) -> long
+Adaptive.Agrona.Concurrent.UnsafeBuffer.BoundsCheck(int index, int length) -> void
+Adaptive.Agrona.Concurrent.UnsafeBuffer.BufferPointer.get -> System.IntPtr
+Adaptive.Agrona.Concurrent.UnsafeBuffer.ByteArray.get -> byte[]
+Adaptive.Agrona.Concurrent.UnsafeBuffer.ByteBuffer.get -> Adaptive.Agrona.ByteBuffer
+Adaptive.Agrona.Concurrent.UnsafeBuffer.Capacity.get -> int
+Adaptive.Agrona.Concurrent.UnsafeBuffer.CheckLimit(int limit) -> void
+Adaptive.Agrona.Concurrent.UnsafeBuffer.CompareAndSetInt(int index, int expectedValue, int updateValue) -> bool
+Adaptive.Agrona.Concurrent.UnsafeBuffer.CompareAndSetLong(int index, long expectedValue, long updateValue) -> bool
+Adaptive.Agrona.Concurrent.UnsafeBuffer.CompareTo(Adaptive.Agrona.IDirectBuffer that) -> int
+Adaptive.Agrona.Concurrent.UnsafeBuffer.Dispose() -> void
+Adaptive.Agrona.Concurrent.UnsafeBuffer.GetAndAddInt(int index, int delta) -> int
+Adaptive.Agrona.Concurrent.UnsafeBuffer.GetAndAddLong(int index, long delta) -> long
+Adaptive.Agrona.Concurrent.UnsafeBuffer.GetByte(int index) -> byte
+Adaptive.Agrona.Concurrent.UnsafeBuffer.GetBytes(int index, Adaptive.Agrona.IMutableDirectBuffer dstBuffer, int dstIndex, int length) -> void
+Adaptive.Agrona.Concurrent.UnsafeBuffer.GetBytes(int index, byte[] dst, int offset, int length) -> void
+Adaptive.Agrona.Concurrent.UnsafeBuffer.GetBytes(int index, byte[] dst) -> void
+Adaptive.Agrona.Concurrent.UnsafeBuffer.GetByteVolatile(int index) -> byte
+Adaptive.Agrona.Concurrent.UnsafeBuffer.GetChar(int index) -> char
+Adaptive.Agrona.Concurrent.UnsafeBuffer.GetDouble(int index, Adaptive.Agrona.ByteOrder byteOrder) -> double
+Adaptive.Agrona.Concurrent.UnsafeBuffer.GetDouble(int index) -> double
+Adaptive.Agrona.Concurrent.UnsafeBuffer.GetFloat(int index, Adaptive.Agrona.ByteOrder byteOrder) -> float
+Adaptive.Agrona.Concurrent.UnsafeBuffer.GetFloat(int index) -> float
+Adaptive.Agrona.Concurrent.UnsafeBuffer.GetInt(int index, Adaptive.Agrona.ByteOrder byteOrder) -> int
+Adaptive.Agrona.Concurrent.UnsafeBuffer.GetInt(int index) -> int
+Adaptive.Agrona.Concurrent.UnsafeBuffer.GetIntVolatile(int index) -> int
+Adaptive.Agrona.Concurrent.UnsafeBuffer.GetLong(int index, Adaptive.Agrona.ByteOrder byteOrder) -> long
+Adaptive.Agrona.Concurrent.UnsafeBuffer.GetLong(int index) -> long
+Adaptive.Agrona.Concurrent.UnsafeBuffer.GetLongVolatile(int index) -> long
+Adaptive.Agrona.Concurrent.UnsafeBuffer.GetShort(int index, Adaptive.Agrona.ByteOrder byteOrder) -> short
+Adaptive.Agrona.Concurrent.UnsafeBuffer.GetShort(int index) -> short
+Adaptive.Agrona.Concurrent.UnsafeBuffer.GetShortVolatile(int index) -> short
+Adaptive.Agrona.Concurrent.UnsafeBuffer.GetStringAscii(int index, int length, System.Text.StringBuilder appendable) -> int
+Adaptive.Agrona.Concurrent.UnsafeBuffer.GetStringAscii(int index, int length) -> string
+Adaptive.Agrona.Concurrent.UnsafeBuffer.GetStringAscii(int index, System.Text.StringBuilder appendable) -> int
+Adaptive.Agrona.Concurrent.UnsafeBuffer.GetStringAscii(int index) -> string
+Adaptive.Agrona.Concurrent.UnsafeBuffer.GetStringUtf8(int index, int length) -> string
+Adaptive.Agrona.Concurrent.UnsafeBuffer.GetStringUtf8(int index) -> string
+Adaptive.Agrona.Concurrent.UnsafeBuffer.GetStringWithoutLengthAscii(int index, int length) -> string
+Adaptive.Agrona.Concurrent.UnsafeBuffer.GetStringWithoutLengthUtf8(int index, int length) -> string
+Adaptive.Agrona.Concurrent.UnsafeBuffer.IsExpandable.get -> bool
+Adaptive.Agrona.Concurrent.UnsafeBuffer.PutByte(int index, byte value) -> void
+Adaptive.Agrona.Concurrent.UnsafeBuffer.PutBytes(int index, Adaptive.Agrona.IDirectBuffer srcBuffer, int srcIndex, int length) -> void
+Adaptive.Agrona.Concurrent.UnsafeBuffer.PutBytes(int index, byte[] src, int offset, int length) -> void
+Adaptive.Agrona.Concurrent.UnsafeBuffer.PutBytes(int index, byte[] src) -> void
+Adaptive.Agrona.Concurrent.UnsafeBuffer.PutByteVolatile(int index, byte value) -> void
+Adaptive.Agrona.Concurrent.UnsafeBuffer.PutChar(int index, char value) -> void
+Adaptive.Agrona.Concurrent.UnsafeBuffer.PutDouble(int index, double value, Adaptive.Agrona.ByteOrder byteOrder) -> void
+Adaptive.Agrona.Concurrent.UnsafeBuffer.PutDouble(int index, double value) -> void
+Adaptive.Agrona.Concurrent.UnsafeBuffer.PutFloat(int index, float value, Adaptive.Agrona.ByteOrder byteOrder) -> void
+Adaptive.Agrona.Concurrent.UnsafeBuffer.PutFloat(int index, float value) -> void
+Adaptive.Agrona.Concurrent.UnsafeBuffer.PutInt(int index, int value, Adaptive.Agrona.ByteOrder byteOrder) -> void
+Adaptive.Agrona.Concurrent.UnsafeBuffer.PutInt(int index, int value) -> void
+Adaptive.Agrona.Concurrent.UnsafeBuffer.PutIntOrdered(int index, int value) -> void
+Adaptive.Agrona.Concurrent.UnsafeBuffer.PutIntRelease(int index, int value) -> void
+Adaptive.Agrona.Concurrent.UnsafeBuffer.PutIntVolatile(int index, int value) -> void
+Adaptive.Agrona.Concurrent.UnsafeBuffer.PutLong(int index, long value, Adaptive.Agrona.ByteOrder byteOrder) -> void
+Adaptive.Agrona.Concurrent.UnsafeBuffer.PutLong(int index, long value) -> void
+Adaptive.Agrona.Concurrent.UnsafeBuffer.PutLongOrdered(int index, long value) -> void
+Adaptive.Agrona.Concurrent.UnsafeBuffer.PutLongRelease(int index, long value) -> void
+Adaptive.Agrona.Concurrent.UnsafeBuffer.PutLongVolatile(int index, long value) -> void
+Adaptive.Agrona.Concurrent.UnsafeBuffer.PutShort(int index, short value, Adaptive.Agrona.ByteOrder byteOrder) -> void
+Adaptive.Agrona.Concurrent.UnsafeBuffer.PutShort(int index, short value) -> void
+Adaptive.Agrona.Concurrent.UnsafeBuffer.PutShortVolatile(int index, short value) -> void
+Adaptive.Agrona.Concurrent.UnsafeBuffer.PutStringAscii(int index, string value, int maxEncodedSize) -> int
+Adaptive.Agrona.Concurrent.UnsafeBuffer.PutStringAscii(int index, string value) -> int
+Adaptive.Agrona.Concurrent.UnsafeBuffer.PutStringUtf8(int index, string value, int maxEncodedSize) -> int
+Adaptive.Agrona.Concurrent.UnsafeBuffer.PutStringUtf8(int index, string value) -> int
+Adaptive.Agrona.Concurrent.UnsafeBuffer.PutStringWithoutLengthAscii(int index, string value, int valueOffset, int length) -> int
+Adaptive.Agrona.Concurrent.UnsafeBuffer.PutStringWithoutLengthAscii(int index, string value) -> int
+Adaptive.Agrona.Concurrent.UnsafeBuffer.PutStringWithoutLengthUtf8(int index, string value) -> int
+Adaptive.Agrona.Concurrent.UnsafeBuffer.SetMemory(int index, int length, byte value) -> void
+Adaptive.Agrona.Concurrent.UnsafeBuffer.UnsafeBuffer() -> void
+Adaptive.Agrona.Concurrent.UnsafeBuffer.UnsafeBuffer(Adaptive.Agrona.ByteBuffer buffer) -> void
+Adaptive.Agrona.Concurrent.UnsafeBuffer.UnsafeBuffer(Adaptive.Agrona.IDirectBuffer buffer, int offset, int length) -> void
+Adaptive.Agrona.Concurrent.UnsafeBuffer.UnsafeBuffer(Adaptive.Agrona.IDirectBuffer buffer) -> void
+Adaptive.Agrona.Concurrent.UnsafeBuffer.UnsafeBuffer(Adaptive.Agrona.Util.MappedByteBuffer buffer, int offset, int length) -> void
+Adaptive.Agrona.Concurrent.UnsafeBuffer.UnsafeBuffer(Adaptive.Agrona.Util.MappedByteBuffer buffer) -> void
+Adaptive.Agrona.Concurrent.UnsafeBuffer.UnsafeBuffer(byte[] buffer, int offset, int length) -> void
+Adaptive.Agrona.Concurrent.UnsafeBuffer.UnsafeBuffer(byte[] buffer) -> void
+Adaptive.Agrona.Concurrent.UnsafeBuffer.UnsafeBuffer(System.IntPtr address, int length) -> void
+Adaptive.Agrona.Concurrent.UnsafeBuffer.UnsafeBuffer(System.IntPtr address, int offset, int length) -> void
+Adaptive.Agrona.Concurrent.UnsafeBuffer.VerifyAlignment() -> void
+Adaptive.Agrona.Concurrent.UnsafeBuffer.Wrap(Adaptive.Agrona.ByteBuffer buffer) -> void
+Adaptive.Agrona.Concurrent.UnsafeBuffer.Wrap(Adaptive.Agrona.IDirectBuffer buffer, int offset, int length) -> void
+Adaptive.Agrona.Concurrent.UnsafeBuffer.Wrap(Adaptive.Agrona.IDirectBuffer buffer) -> void
+Adaptive.Agrona.Concurrent.UnsafeBuffer.Wrap(byte[] buffer, int offset, int length) -> void
+Adaptive.Agrona.Concurrent.UnsafeBuffer.Wrap(byte[] buffer) -> void
+Adaptive.Agrona.Concurrent.UnsafeBuffer.Wrap(byte* pointer, int length) -> void
+Adaptive.Agrona.Concurrent.UnsafeBuffer.Wrap(byte* pointer, int offset, int length) -> void
+Adaptive.Agrona.Concurrent.UnsafeBuffer.Wrap(int memoryAddress, int length) -> void
+Adaptive.Agrona.Concurrent.UnsafeBuffer.Wrap(System.IntPtr pointer, int length) -> void
+Adaptive.Agrona.Concurrent.UnsafeBuffer.Wrap(System.IntPtr pointer, int offset, int length) -> void
+Adaptive.Agrona.Concurrent.YieldingIdleStrategy
+Adaptive.Agrona.Concurrent.YieldingIdleStrategy.Idle() -> void
+Adaptive.Agrona.Concurrent.YieldingIdleStrategy.Idle(int workCount) -> void
+Adaptive.Agrona.Concurrent.YieldingIdleStrategy.Reset() -> void
+Adaptive.Agrona.Concurrent.YieldingIdleStrategy.YieldingIdleStrategy() -> void
+Adaptive.Agrona.DelegatingErrorHandler
+Adaptive.Agrona.DelegatingErrorHandler.Next(Adaptive.Agrona.IErrorHandler errorHandler) -> void
+Adaptive.Agrona.EndianessConverter
+Adaptive.Agrona.ErrorHandler
+Adaptive.Agrona.ExpandableArrayBuffer
+Adaptive.Agrona.ExpandableArrayBuffer.~ExpandableArrayBuffer() -> void
+Adaptive.Agrona.ExpandableArrayBuffer.BoundsCheck(int index, int length) -> void
+Adaptive.Agrona.ExpandableArrayBuffer.BufferPointer.get -> System.IntPtr
+Adaptive.Agrona.ExpandableArrayBuffer.ByteArray.get -> byte[]
+Adaptive.Agrona.ExpandableArrayBuffer.ByteBuffer.get -> Adaptive.Agrona.ByteBuffer
+Adaptive.Agrona.ExpandableArrayBuffer.Capacity.get -> int
+Adaptive.Agrona.ExpandableArrayBuffer.CheckLimit(int limit) -> void
+Adaptive.Agrona.ExpandableArrayBuffer.CompareTo(Adaptive.Agrona.IDirectBuffer other) -> int
+Adaptive.Agrona.ExpandableArrayBuffer.ExpandableArrayBuffer() -> void
+Adaptive.Agrona.ExpandableArrayBuffer.ExpandableArrayBuffer(int initialCapacity) -> void
+Adaptive.Agrona.ExpandableArrayBuffer.GetByte(int index) -> byte
+Adaptive.Agrona.ExpandableArrayBuffer.GetBytes(int index, Adaptive.Agrona.IMutableDirectBuffer dstBuffer, int dstIndex, int length) -> void
+Adaptive.Agrona.ExpandableArrayBuffer.GetBytes(int index, byte[] dst, int offset, int length) -> void
+Adaptive.Agrona.ExpandableArrayBuffer.GetBytes(int index, byte[] dst) -> void
+Adaptive.Agrona.ExpandableArrayBuffer.GetChar(int index) -> char
+Adaptive.Agrona.ExpandableArrayBuffer.GetDouble(int index) -> double
+Adaptive.Agrona.ExpandableArrayBuffer.GetFloat(int index) -> float
+Adaptive.Agrona.ExpandableArrayBuffer.GetInt(int index, Adaptive.Agrona.ByteOrder byteOrder) -> int
+Adaptive.Agrona.ExpandableArrayBuffer.GetInt(int index) -> int
+Adaptive.Agrona.ExpandableArrayBuffer.GetLong(int index, Adaptive.Agrona.ByteOrder byteOrder) -> long
+Adaptive.Agrona.ExpandableArrayBuffer.GetLong(int index) -> long
+Adaptive.Agrona.ExpandableArrayBuffer.GetShort(int index, Adaptive.Agrona.ByteOrder byteOrder) -> short
+Adaptive.Agrona.ExpandableArrayBuffer.GetShort(int index) -> short
+Adaptive.Agrona.ExpandableArrayBuffer.GetStringAscii(int index, int length, System.Text.StringBuilder appendable) -> int
+Adaptive.Agrona.ExpandableArrayBuffer.GetStringAscii(int index, int length) -> string
+Adaptive.Agrona.ExpandableArrayBuffer.GetStringAscii(int index, System.Text.StringBuilder appendable) -> int
+Adaptive.Agrona.ExpandableArrayBuffer.GetStringAscii(int index) -> string
+Adaptive.Agrona.ExpandableArrayBuffer.GetStringUtf8(int index, int length) -> string
+Adaptive.Agrona.ExpandableArrayBuffer.GetStringUtf8(int index) -> string
+Adaptive.Agrona.ExpandableArrayBuffer.GetStringWithoutLengthAscii(int index, int length) -> string
+Adaptive.Agrona.ExpandableArrayBuffer.GetStringWithoutLengthUtf8(int index, int length) -> string
+Adaptive.Agrona.ExpandableArrayBuffer.IsExpandable.get -> bool
+Adaptive.Agrona.ExpandableArrayBuffer.PutByte(int index, byte value) -> void
+Adaptive.Agrona.ExpandableArrayBuffer.PutBytes(int index, Adaptive.Agrona.IDirectBuffer srcBuffer, int srcIndex, int length) -> void
+Adaptive.Agrona.ExpandableArrayBuffer.PutBytes(int index, byte[] src, int offset, int length) -> void
+Adaptive.Agrona.ExpandableArrayBuffer.PutBytes(int index, byte[] src) -> void
+Adaptive.Agrona.ExpandableArrayBuffer.PutChar(int index, char value) -> void
+Adaptive.Agrona.ExpandableArrayBuffer.PutDouble(int index, double value) -> void
+Adaptive.Agrona.ExpandableArrayBuffer.PutFloat(int index, float value) -> void
+Adaptive.Agrona.ExpandableArrayBuffer.PutInt(int index, int value, Adaptive.Agrona.ByteOrder byteOrder) -> void
+Adaptive.Agrona.ExpandableArrayBuffer.PutInt(int index, int value) -> void
+Adaptive.Agrona.ExpandableArrayBuffer.PutLong(int index, long value, Adaptive.Agrona.ByteOrder byteOrder) -> void
+Adaptive.Agrona.ExpandableArrayBuffer.PutLong(int index, long value) -> void
+Adaptive.Agrona.ExpandableArrayBuffer.PutShort(int index, short value, Adaptive.Agrona.ByteOrder byteOrder) -> void
+Adaptive.Agrona.ExpandableArrayBuffer.PutShort(int index, short value) -> void
+Adaptive.Agrona.ExpandableArrayBuffer.PutStringAscii(int index, string value, int maxEncodedSize) -> int
+Adaptive.Agrona.ExpandableArrayBuffer.PutStringAscii(int index, string value) -> int
+Adaptive.Agrona.ExpandableArrayBuffer.PutStringUtf8(int index, string value, int maxEncodedSize) -> int
+Adaptive.Agrona.ExpandableArrayBuffer.PutStringUtf8(int index, string value) -> int
+Adaptive.Agrona.ExpandableArrayBuffer.PutStringWithoutLengthAscii(int index, string value, int valueOffset, int length) -> int
+Adaptive.Agrona.ExpandableArrayBuffer.PutStringWithoutLengthAscii(int index, string value) -> int
+Adaptive.Agrona.ExpandableArrayBuffer.PutStringWithoutLengthUtf8(int index, string value) -> int
+Adaptive.Agrona.ExpandableArrayBuffer.SetMemory(int index, int length, byte value) -> void
+Adaptive.Agrona.ExpandableArrayBuffer.Wrap(Adaptive.Agrona.IDirectBuffer buffer, int offset, int length) -> void
+Adaptive.Agrona.ExpandableArrayBuffer.Wrap(Adaptive.Agrona.IDirectBuffer buffer) -> void
+Adaptive.Agrona.ExpandableArrayBuffer.Wrap(byte[] buffer, int offset, int length) -> void
+Adaptive.Agrona.ExpandableArrayBuffer.Wrap(byte[] buffer) -> void
+Adaptive.Agrona.ExpandableArrayBuffer.Wrap(System.IntPtr pointer, int length) -> void
+Adaptive.Agrona.ExpandableArrayBuffer.Wrap(System.IntPtr pointer, int offset, int length) -> void
+Adaptive.Agrona.IDirectBuffer
+Adaptive.Agrona.IDirectBuffer.BoundsCheck(int index, int length) -> void
+Adaptive.Agrona.IDirectBuffer.BufferPointer.get -> System.IntPtr
+Adaptive.Agrona.IDirectBuffer.ByteArray.get -> byte[]
+Adaptive.Agrona.IDirectBuffer.ByteBuffer.get -> Adaptive.Agrona.ByteBuffer
+Adaptive.Agrona.IDirectBuffer.Capacity.get -> int
+Adaptive.Agrona.IDirectBuffer.CheckLimit(int limit) -> void
+Adaptive.Agrona.IDirectBuffer.GetByte(int index) -> byte
+Adaptive.Agrona.IDirectBuffer.GetBytes(int index, Adaptive.Agrona.IMutableDirectBuffer dstBuffer, int dstIndex, int length) -> void
+Adaptive.Agrona.IDirectBuffer.GetBytes(int index, byte[] dst, int offset, int length) -> void
+Adaptive.Agrona.IDirectBuffer.GetBytes(int index, byte[] dst) -> void
+Adaptive.Agrona.IDirectBuffer.GetChar(int index) -> char
+Adaptive.Agrona.IDirectBuffer.GetDouble(int index) -> double
+Adaptive.Agrona.IDirectBuffer.GetFloat(int index) -> float
+Adaptive.Agrona.IDirectBuffer.GetInt(int index, Adaptive.Agrona.ByteOrder byteOrder) -> int
+Adaptive.Agrona.IDirectBuffer.GetInt(int index) -> int
+Adaptive.Agrona.IDirectBuffer.GetLong(int index, Adaptive.Agrona.ByteOrder byteOrder) -> long
+Adaptive.Agrona.IDirectBuffer.GetLong(int index) -> long
+Adaptive.Agrona.IDirectBuffer.GetShort(int index, Adaptive.Agrona.ByteOrder byteOrder) -> short
+Adaptive.Agrona.IDirectBuffer.GetShort(int index) -> short
+Adaptive.Agrona.IDirectBuffer.GetStringAscii(int index, int length, System.Text.StringBuilder appendable) -> int
+Adaptive.Agrona.IDirectBuffer.GetStringAscii(int index, int length) -> string
+Adaptive.Agrona.IDirectBuffer.GetStringAscii(int index, System.Text.StringBuilder appendable) -> int
+Adaptive.Agrona.IDirectBuffer.GetStringAscii(int index) -> string
+Adaptive.Agrona.IDirectBuffer.GetStringUtf8(int index, int length) -> string
+Adaptive.Agrona.IDirectBuffer.GetStringUtf8(int index) -> string
+Adaptive.Agrona.IDirectBuffer.GetStringWithoutLengthAscii(int index, int length) -> string
+Adaptive.Agrona.IDirectBuffer.GetStringWithoutLengthUtf8(int index, int length) -> string
+Adaptive.Agrona.IDirectBuffer.Wrap(Adaptive.Agrona.IDirectBuffer buffer, int offset, int length) -> void
+Adaptive.Agrona.IDirectBuffer.Wrap(Adaptive.Agrona.IDirectBuffer buffer) -> void
+Adaptive.Agrona.IDirectBuffer.Wrap(byte[] buffer, int offset, int length) -> void
+Adaptive.Agrona.IDirectBuffer.Wrap(byte[] buffer) -> void
+Adaptive.Agrona.IDirectBuffer.Wrap(System.IntPtr pointer, int length) -> void
+Adaptive.Agrona.IDirectBuffer.Wrap(System.IntPtr pointer, int offset, int length) -> void
+Adaptive.Agrona.IErrorHandler
+Adaptive.Agrona.IErrorHandler.OnError(System.Exception exception) -> void
+Adaptive.Agrona.IManagedResource
+Adaptive.Agrona.IManagedResource.Delete() -> void
+Adaptive.Agrona.IManagedResource.TimeOfLastStateChange() -> long
+Adaptive.Agrona.IManagedResource.TimeOfLastStateChange(long time) -> void
+Adaptive.Agrona.IMutableDirectBuffer
+Adaptive.Agrona.IMutableDirectBuffer.IsExpandable.get -> bool
+Adaptive.Agrona.IMutableDirectBuffer.PutByte(int index, byte value) -> void
+Adaptive.Agrona.IMutableDirectBuffer.PutBytes(int index, Adaptive.Agrona.IDirectBuffer srcBuffer, int srcIndex, int length) -> void
+Adaptive.Agrona.IMutableDirectBuffer.PutBytes(int index, byte[] src, int offset, int length) -> void
+Adaptive.Agrona.IMutableDirectBuffer.PutBytes(int index, byte[] src) -> void
+Adaptive.Agrona.IMutableDirectBuffer.PutChar(int index, char value) -> void
+Adaptive.Agrona.IMutableDirectBuffer.PutDouble(int index, double value) -> void
+Adaptive.Agrona.IMutableDirectBuffer.PutFloat(int index, float value) -> void
+Adaptive.Agrona.IMutableDirectBuffer.PutInt(int index, int value, Adaptive.Agrona.ByteOrder byteOrder) -> void
+Adaptive.Agrona.IMutableDirectBuffer.PutInt(int index, int value) -> void
+Adaptive.Agrona.IMutableDirectBuffer.PutLong(int index, long value, Adaptive.Agrona.ByteOrder byteOrder) -> void
+Adaptive.Agrona.IMutableDirectBuffer.PutLong(int index, long value) -> void
+Adaptive.Agrona.IMutableDirectBuffer.PutShort(int index, short value, Adaptive.Agrona.ByteOrder byteOrder) -> void
+Adaptive.Agrona.IMutableDirectBuffer.PutShort(int index, short value) -> void
+Adaptive.Agrona.IMutableDirectBuffer.PutStringAscii(int index, string value) -> int
+Adaptive.Agrona.IMutableDirectBuffer.PutStringUtf8(int index, string value, int maxEncodedSize) -> int
+Adaptive.Agrona.IMutableDirectBuffer.PutStringUtf8(int index, string value) -> int
+Adaptive.Agrona.IMutableDirectBuffer.PutStringWithoutLengthAscii(int index, string value, int valueOffset, int length) -> int
+Adaptive.Agrona.IMutableDirectBuffer.PutStringWithoutLengthAscii(int index, string value) -> int
+Adaptive.Agrona.IMutableDirectBuffer.PutStringWithoutLengthUtf8(int index, string value) -> int
+Adaptive.Agrona.IMutableDirectBuffer.SetMemory(int index, int length, byte value) -> void
+Adaptive.Agrona.IoUtil
+Adaptive.Agrona.IoUtil.IoUtil() -> void
+Adaptive.Agrona.MapMode
+Adaptive.Agrona.MapMode.ReadOnly = 0 -> Adaptive.Agrona.MapMode
+Adaptive.Agrona.MapMode.ReadWrite = 1 -> Adaptive.Agrona.MapMode
+Adaptive.Agrona.MarkFile
+Adaptive.Agrona.MarkFile.Buffer() -> Adaptive.Agrona.Concurrent.UnsafeBuffer
+Adaptive.Agrona.MarkFile.DeleteDirectory(bool ignoreFailures) -> void
+Adaptive.Agrona.MarkFile.Dispose() -> void
+Adaptive.Agrona.MarkFile.FileName() -> System.IO.FileInfo
+Adaptive.Agrona.MarkFile.IsClosed() -> bool
+Adaptive.Agrona.MarkFile.MappedByteBuffer() -> Adaptive.Agrona.Util.MappedByteBuffer
+Adaptive.Agrona.MarkFile.MarkFile(Adaptive.Agrona.Concurrent.UnsafeBuffer buffer, int versionFieldOffset, int timestampFieldOffset) -> void
+Adaptive.Agrona.MarkFile.MarkFile(Adaptive.Agrona.Util.MappedByteBuffer mappedBuffer, int versionFieldOffset, int timestampFieldOffset) -> void
+Adaptive.Agrona.MarkFile.MarkFile(System.IO.DirectoryInfo directory, string filename, bool warnIfDirectoryExists, bool dirDeleteOnStart, int versionFieldOffset, int timestampFieldOffset, int totalFileLength, long timeoutMs, Adaptive.Agrona.Concurrent.IEpochClock epochClock, System.Action<int> versionCheck, System.Action<string> logger) -> void
+Adaptive.Agrona.MarkFile.MarkFile(System.IO.DirectoryInfo directory, string filename, int versionFieldOffset, int timestampFieldOffset, long timeoutMs, Adaptive.Agrona.Concurrent.IEpochClock epochClock, System.Action<int> versionCheck, System.Action<string> logger) -> void
+Adaptive.Agrona.MarkFile.MarkFile(System.IO.FileInfo markFile, bool shouldPreExist, int versionFieldOffset, int timestampFieldOffset, int totalFileLength, long timeoutMs, Adaptive.Agrona.Concurrent.IEpochClock epochClock, System.Action<int> versionCheck, System.Action<string> logger) -> void
+Adaptive.Agrona.MarkFile.ParentDirectory() -> System.IO.DirectoryInfo
+Adaptive.Agrona.MarkFile.SignalReady(int version) -> void
+Adaptive.Agrona.MarkFile.TimestampOrdered(long timestamp) -> void
+Adaptive.Agrona.MarkFile.TimestampRelease(long timestamp) -> void
+Adaptive.Agrona.MarkFile.TimestampVolatile() -> long
+Adaptive.Agrona.MarkFile.TimestampWeak() -> long
+Adaptive.Agrona.MarkFile.VersionVolatile() -> int
+Adaptive.Agrona.MarkFile.VersionWeak() -> int
+Adaptive.Agrona.Objects
+Adaptive.Agrona.SBE.ICompositeDecoderFlyweight
+Adaptive.Agrona.SBE.ICompositeDecoderFlyweight.Wrap(Adaptive.Agrona.IDirectBuffer buffer, int offset) -> Adaptive.Agrona.SBE.ICompositeDecoderFlyweight
+Adaptive.Agrona.SBE.ICompositeEncoderFlyweight
+Adaptive.Agrona.SBE.IDecoderFlyweight
+Adaptive.Agrona.SBE.IEncoderFlyweight
+Adaptive.Agrona.SBE.IEncoderFlyweight.Wrap(Adaptive.Agrona.IMutableDirectBuffer buffer, int offset) -> Adaptive.Agrona.SBE.IEncoderFlyweight
+Adaptive.Agrona.SBE.IFlyweight
+Adaptive.Agrona.SBE.IFlyweight.EncodedLength() -> int
+Adaptive.Agrona.SBE.IMessageDecoderFlyweight
+Adaptive.Agrona.SBE.IMessageDecoderFlyweight.Wrap(Adaptive.Agrona.IDirectBuffer buffer, int offset, int actingBlockLength, int actingVersion) -> Adaptive.Agrona.SBE.IMessageDecoderFlyweight
+Adaptive.Agrona.SBE.IMessageEncoderFlyweight
+Adaptive.Agrona.SBE.IMessageFlyweight
+Adaptive.Agrona.SBE.IMessageFlyweight.Offset() -> int
+Adaptive.Agrona.SBE.IMessageFlyweight.SbeBlockLength() -> int
+Adaptive.Agrona.SBE.IMessageFlyweight.SbeSchemaId() -> int
+Adaptive.Agrona.SBE.IMessageFlyweight.SbeSchemaVersion() -> int
+Adaptive.Agrona.SBE.IMessageFlyweight.SbeSemanticType() -> string
+Adaptive.Agrona.SBE.IMessageFlyweight.SbeTemplateId() -> int
+Adaptive.Agrona.SemanticVersion
+Adaptive.Agrona.SemanticVersion.SemanticVersion() -> void
+Adaptive.Agrona.SystemUtil
+Adaptive.Agrona.SystemUtil.SystemUtil() -> void
+Adaptive.Agrona.TimeUnit
+Adaptive.Agrona.TimeUnit.Convert(long sourceValue, Adaptive.Agrona.TimeUnit destinationTimeUnit) -> long
+Adaptive.Agrona.TimeUnit.ToMillis(long value) -> long
+Adaptive.Agrona.TimeUnit.ToNanos(long value) -> long
+Adaptive.Agrona.Util.ByteUtil
+Adaptive.Agrona.Util.ByteUtil.ByteUtil() -> void
+Adaptive.Agrona.Util.IntUtil
+Adaptive.Agrona.Util.LockSupport
+Adaptive.Agrona.Util.MappedByteBuffer
+Adaptive.Agrona.Util.MappedByteBuffer.~MappedByteBuffer() -> void
+Adaptive.Agrona.Util.MappedByteBuffer.Capacity.get -> long
+Adaptive.Agrona.Util.MappedByteBuffer.Dispose() -> void
+Adaptive.Agrona.Util.MappedByteBuffer.FillWithZeros() -> void
+Adaptive.Agrona.Util.MappedByteBuffer.Force() -> void
+Adaptive.Agrona.Util.MappedByteBuffer.MappedByteBuffer(System.IO.MemoryMappedFiles.MemoryMappedFile memoryMappedFile, long offset, long length) -> void
+Adaptive.Agrona.Util.MappedByteBuffer.MappedByteBuffer(System.IO.MemoryMappedFiles.MemoryMappedFile memoryMappedFile) -> void
+Adaptive.Agrona.Util.MappedByteBuffer.Pointer.get -> System.IntPtr
+Adaptive.Agrona.Util.NanoUtil
+Adaptive.Agrona.Util.ThrowHelper
+Adaptive.Agrona.Util.UnixTimeConverter
+const Adaptive.Agrona.BitUtil.CACHE_LINE_LENGTH = 64 -> int
+const Adaptive.Agrona.BitUtil.SIZE_OF_BOOLEAN = 1 -> int
+const Adaptive.Agrona.BitUtil.SIZE_OF_BYTE = 1 -> int
+const Adaptive.Agrona.BitUtil.SIZE_OF_CHAR = 2 -> int
+const Adaptive.Agrona.BitUtil.SIZE_OF_DOUBLE = 8 -> int
+const Adaptive.Agrona.BitUtil.SIZE_OF_FLOAT = 4 -> int
+const Adaptive.Agrona.BitUtil.SIZE_OF_INT = 4 -> int
+const Adaptive.Agrona.BitUtil.SIZE_OF_LONG = 8 -> int
+const Adaptive.Agrona.BitUtil.SIZE_OF_SHORT = 2 -> int
+const Adaptive.Agrona.Collections.ArrayUtil.UNKNOWN_INDEX = -1 -> int
+const Adaptive.Agrona.Concurrent.Broadcast.CopyBroadcastReceiver.ScratchBufferSize = 4096 -> int
+const Adaptive.Agrona.Concurrent.Broadcast.RecordDescriptor.HeaderLength = 8 -> int
+const Adaptive.Agrona.Concurrent.Broadcast.RecordDescriptor.LengthOffset = 0 -> int
+const Adaptive.Agrona.Concurrent.Broadcast.RecordDescriptor.PaddingMsgTypeID = -1 -> int
+const Adaptive.Agrona.Concurrent.Broadcast.RecordDescriptor.RecordAlignment = 8 -> int
+const Adaptive.Agrona.Concurrent.Broadcast.RecordDescriptor.TypeOffset = 4 -> int
+const Adaptive.Agrona.Concurrent.Configuration.IDLE_MAX_SPINS = 10 -> long
+const Adaptive.Agrona.Concurrent.Configuration.IDLE_MAX_YIELDS = 40 -> long
+const Adaptive.Agrona.Concurrent.Configuration.IDLE_MIN_PARK_MS = 1 -> long
+const Adaptive.Agrona.Concurrent.ControllableIdleStrategy.BUSY_SPIN = 2 -> int
+const Adaptive.Agrona.Concurrent.ControllableIdleStrategy.NOOP = 1 -> int
+const Adaptive.Agrona.Concurrent.ControllableIdleStrategy.NOT_CONTROLLED = 0 -> int
+const Adaptive.Agrona.Concurrent.ControllableIdleStrategy.PARK = 4 -> int
+const Adaptive.Agrona.Concurrent.ControllableIdleStrategy.YIELD = 3 -> int
+const Adaptive.Agrona.Concurrent.Errors.DistinctErrorLog.LengthOffset = 0 -> int
+const Adaptive.Agrona.Concurrent.RingBuffer.ManyToOneRingBuffer.PaddingMsgTypeId = -1 -> int
+const Adaptive.Agrona.Concurrent.RingBuffer.RecordDescriptor.Alignment = 8 -> int
+const Adaptive.Agrona.Concurrent.RingBuffer.RecordDescriptor.HeaderLength = 8 -> int
+const Adaptive.Agrona.Concurrent.Status.CountersReader.DEFAULT_OWNER_ID = 0 -> long
+const Adaptive.Agrona.Concurrent.Status.CountersReader.DEFAULT_REGISTRATION_ID = 0 -> long
+const Adaptive.Agrona.Concurrent.Status.CountersReader.DEFAULT_TYPE_ID = 0 -> int
+const Adaptive.Agrona.Concurrent.Status.CountersReader.NULL_COUNTER_ID = -1 -> int
+const Adaptive.Agrona.Concurrent.Status.CountersReader.RECORD_ALLOCATED = 1 -> int
+const Adaptive.Agrona.Concurrent.Status.CountersReader.RECORD_RECLAIMED = -1 -> int
+const Adaptive.Agrona.Concurrent.Status.CountersReader.RECORD_UNUSED = 0 -> int
+const Adaptive.Agrona.Concurrent.UnsafeBuffer.ALIGNMENT = 8 -> int
+const Adaptive.Agrona.ExpandableArrayBuffer.INITIAL_CAPACITY = 128 -> int
+override Adaptive.Agrona.CacheLinePadding.ToString() -> string
+override Adaptive.Agrona.Concurrent.ControllableIdleStrategy.ToString() -> string
+override Adaptive.Agrona.Concurrent.ShutdownSignalBarrier.ToString() -> string
+readonly Adaptive.Agrona.Concurrent.CountedErrorHandler.AsErrorHandler -> Adaptive.Agrona.ErrorHandler
+readonly Adaptive.Agrona.Concurrent.Errors.DistinctErrorLog.DistinctObservation.Offset -> int
+readonly Adaptive.Agrona.Concurrent.Errors.DistinctErrorLog.DistinctObservation.Throwable -> System.Exception
+static Adaptive.Agrona.BitUtil.Align(int value, int alignment) -> int
+static Adaptive.Agrona.BitUtil.Align(long value, long alignment) -> long
+static Adaptive.Agrona.BitUtil.FindNextPositivePowerOfTwo(int value) -> int
+static Adaptive.Agrona.BitUtil.FromHex(string value) -> byte[]
+static Adaptive.Agrona.BitUtil.FromHexByteArray(byte[] buffer) -> byte[]
+static Adaptive.Agrona.BitUtil.GenerateRandomisedId() -> int
+static Adaptive.Agrona.BitUtil.IsAligned(long address, int alignment) -> bool
+static Adaptive.Agrona.BitUtil.IsEven(int value) -> bool
+static Adaptive.Agrona.BitUtil.IsPowerOfTwo(int value) -> bool
+static Adaptive.Agrona.BitUtil.Next(int current, int max) -> int
+static Adaptive.Agrona.BitUtil.Previous(int current, int max) -> int
+static Adaptive.Agrona.BitUtil.ToHex(byte[] buffer, int offset, int length) -> string
+static Adaptive.Agrona.BitUtil.ToHex(byte[] buffer) -> string
+static Adaptive.Agrona.BitUtil.ToHexByteArray(byte[] buffer, int offset, int length) -> byte[]
+static Adaptive.Agrona.BitUtil.ToHexByteArray(byte[] buffer) -> byte[]
+static Adaptive.Agrona.BufferUtil.Allocate(int capacity) -> Adaptive.Agrona.ByteBuffer
+static Adaptive.Agrona.BufferUtil.AllocateDirect(int capacity) -> Adaptive.Agrona.ByteBuffer
+static Adaptive.Agrona.BufferUtil.AllocateDirectAligned(int capacity, int alignment) -> Adaptive.Agrona.ByteBuffer
+static Adaptive.Agrona.BufferUtil.BoundsCheck(byte[] buffer, long index, int length) -> void
+static Adaptive.Agrona.CloseHelper.CloseAll(System.Collections.Generic.IEnumerable<System.IDisposable> disposables) -> void
+static Adaptive.Agrona.CloseHelper.CloseAll<T>(Adaptive.Agrona.IErrorHandler errorHandler, System.Collections.Generic.ICollection<T> disposables) -> void
+static Adaptive.Agrona.CloseHelper.Dispose(Adaptive.Agrona.ErrorHandler errorHandler, System.Action disposable) -> void
+static Adaptive.Agrona.CloseHelper.Dispose(Adaptive.Agrona.ErrorHandler errorHandler, System.IDisposable disposable) -> void
+static Adaptive.Agrona.CloseHelper.Dispose(Adaptive.Agrona.IErrorHandler errorHandler, System.IDisposable disposable) -> void
+static Adaptive.Agrona.CloseHelper.Dispose(System.IDisposable disposable) -> void
+static Adaptive.Agrona.CloseHelper.QuietDispose(System.Action disposable) -> void
+static Adaptive.Agrona.CloseHelper.QuietDispose(System.IDisposable disposable) -> void
+static Adaptive.Agrona.Collections.ArrayUtil.Add<T>(T[] oldElements, T elementToAdd) -> T[]
+static Adaptive.Agrona.Collections.ArrayUtil.EnsureCapacity<T>(T[] oldElements, int requiredLength) -> T[]
+static Adaptive.Agrona.Collections.ArrayUtil.NewArray<T>(T[] oldElements, int length) -> T[]
+static Adaptive.Agrona.Collections.ArrayUtil.Remove<T>(T[] oldElements, int index) -> T[]
+static Adaptive.Agrona.Collections.ArrayUtil.Remove<T>(T[] oldElements, T elementToRemove) -> T[]
+static Adaptive.Agrona.Collections.CollectionUtil.GetOrDefault<TKey, TValue>(System.Collections.Generic.IDictionary<TKey, TValue> map, TKey key, System.Func<TKey, TValue> supplier) -> TValue
+static Adaptive.Agrona.Collections.DictionaryExtensions.GetOrDefault<TKey, TValue>(this System.Collections.Generic.IDictionary<TKey, TValue> dictionary, TKey key, TValue default = default(TValue)) -> TValue
+static Adaptive.Agrona.Collections.ListUtil.FastUnorderedRemove<T>(System.Collections.Generic.List<T> list, int i, int lastIndex) -> void
+static Adaptive.Agrona.Collections.ListUtil.FastUnorderedRemove<T>(System.Collections.Generic.List<T> list, T e) -> bool
+static Adaptive.Agrona.Concurrent.AgentRunner.StartOnThread(Adaptive.Agrona.Concurrent.AgentRunner runner, Adaptive.Agrona.Concurrent.IThreadFactory threadFactory) -> System.Threading.Thread
+static Adaptive.Agrona.Concurrent.AgentRunner.StartOnThread(Adaptive.Agrona.Concurrent.AgentRunner runner) -> System.Threading.Thread
+static Adaptive.Agrona.Concurrent.AtomicBoolean.implicit operator bool(Adaptive.Agrona.Concurrent.AtomicBoolean value) -> bool
+static Adaptive.Agrona.Concurrent.Broadcast.BroadcastBufferDescriptor.CheckCapacity(int capacity) -> void
+static Adaptive.Agrona.Concurrent.Broadcast.RecordDescriptor.CalculateMaxMessageLength(int capacity) -> int
+static Adaptive.Agrona.Concurrent.Broadcast.RecordDescriptor.CheckTypeId(int msgTypeId) -> void
+static Adaptive.Agrona.Concurrent.Broadcast.RecordDescriptor.GetLengthOffset(int recordOffset) -> int
+static Adaptive.Agrona.Concurrent.Broadcast.RecordDescriptor.GetMsgOffset(int recordOffset) -> int
+static Adaptive.Agrona.Concurrent.Broadcast.RecordDescriptor.GetTypeOffset(int recordOffset) -> int
+static Adaptive.Agrona.Concurrent.Errors.ErrorLogReader.HasErrors(Adaptive.Agrona.Concurrent.IAtomicBuffer buffer) -> bool
+static Adaptive.Agrona.Concurrent.Errors.ErrorLogReader.Read(Adaptive.Agrona.Concurrent.IAtomicBuffer buffer, Adaptive.Agrona.Concurrent.Errors.ErrorConsumer consumer, long sinceTimestamp) -> int
+static Adaptive.Agrona.Concurrent.Errors.ErrorLogReader.Read(Adaptive.Agrona.Concurrent.IAtomicBuffer buffer, Adaptive.Agrona.Concurrent.Errors.ErrorConsumer consumer) -> int
+static Adaptive.Agrona.Concurrent.IdleStrategyFactory.Create(string strategyName, Adaptive.Agrona.Concurrent.StatusIndicator controllableStatus) -> Adaptive.Agrona.Concurrent.IIdleStrategy
+static Adaptive.Agrona.Concurrent.RingBuffer.RecordDescriptor.CheckTypeId(int msgTypeId) -> void
+static Adaptive.Agrona.Concurrent.RingBuffer.RecordDescriptor.EncodedMsgOffset(int recordOffset) -> int
+static Adaptive.Agrona.Concurrent.RingBuffer.RecordDescriptor.LengthOffset(int recordOffset) -> int
+static Adaptive.Agrona.Concurrent.RingBuffer.RecordDescriptor.MessageTypeId(long header) -> int
+static Adaptive.Agrona.Concurrent.RingBuffer.RecordDescriptor.RecordLength(long header) -> int
+static Adaptive.Agrona.Concurrent.RingBuffer.RecordDescriptor.TypeOffset(int recordOffset) -> int
+static Adaptive.Agrona.Concurrent.RingBuffer.RingBufferDescriptor.CheckCapacity(int capacity) -> void
+static Adaptive.Agrona.Concurrent.Status.CountersReader.CounterOffset(int counterId) -> int
+static Adaptive.Agrona.Concurrent.Status.CountersReader.MetaDataOffset(int counterId) -> int
+static Adaptive.Agrona.EndianessConverter.ApplyDouble(Adaptive.Agrona.ByteOrder byteOrder, double value) -> double
+static Adaptive.Agrona.EndianessConverter.ApplyFloat(Adaptive.Agrona.ByteOrder byteOrder, float value) -> float
+static Adaptive.Agrona.EndianessConverter.ApplyInt16(Adaptive.Agrona.ByteOrder byteOrder, short value) -> short
+static Adaptive.Agrona.EndianessConverter.ApplyInt32(Adaptive.Agrona.ByteOrder byteOrder, int value) -> int
+static Adaptive.Agrona.EndianessConverter.ApplyInt64(Adaptive.Agrona.ByteOrder byteOrder, long value) -> long
+static Adaptive.Agrona.EndianessConverter.ApplyUint16(Adaptive.Agrona.ByteOrder byteOrder, ushort value) -> ushort
+static Adaptive.Agrona.EndianessConverter.ApplyUint32(Adaptive.Agrona.ByteOrder byteOrder, uint value) -> uint
+static Adaptive.Agrona.EndianessConverter.ApplyUint64(Adaptive.Agrona.ByteOrder byteOrder, ulong value) -> ulong
+static Adaptive.Agrona.IoUtil.CheckFileExists(string path) -> void
+static Adaptive.Agrona.IoUtil.CheckFileExists(System.IO.FileInfo file, string name) -> void
+static Adaptive.Agrona.IoUtil.Delete(System.IO.DirectoryInfo directory, bool b) -> void
+static Adaptive.Agrona.IoUtil.EnsureDirectoryExists(System.IO.DirectoryInfo directory, string descriptionLabel) -> void
+static Adaptive.Agrona.IoUtil.MapExistingFile(string path, Adaptive.Agrona.MapMode mapMode) -> Adaptive.Agrona.Util.MappedByteBuffer
+static Adaptive.Agrona.IoUtil.MapExistingFile(System.IO.FileInfo location, string descriptionLabel) -> Adaptive.Agrona.Util.MappedByteBuffer
+static Adaptive.Agrona.IoUtil.MapExistingFile(System.IO.FileInfo path, long offset, long length) -> Adaptive.Agrona.Util.MappedByteBuffer
+static Adaptive.Agrona.IoUtil.MapExistingFile(System.IO.FileStream fileStream) -> Adaptive.Agrona.Util.MappedByteBuffer
+static Adaptive.Agrona.IoUtil.MapNewFile(System.IO.FileInfo cncFile, long length, bool fillWithZeros = true) -> Adaptive.Agrona.Util.MappedByteBuffer
+static Adaptive.Agrona.IoUtil.MapNewOrExistingFile(System.IO.FileInfo cncFile, long length) -> Adaptive.Agrona.Util.MappedByteBuffer
+static Adaptive.Agrona.IoUtil.OpenMemoryMappedFile(string path) -> System.IO.MemoryMappedFiles.MemoryMappedFile
+static Adaptive.Agrona.IoUtil.Unmap(Adaptive.Agrona.Util.MappedByteBuffer wrapper) -> void
+static Adaptive.Agrona.MarkFile.EnsureDirectoryExists(System.IO.DirectoryInfo directory, string filename, bool warnIfDirectoryExists, bool dirDeleteOnStart, int versionFieldOffset, int timestampFieldOffset, long timeoutMs, Adaptive.Agrona.Concurrent.IEpochClock epochClock, System.Action<int> versionCheck, System.Action<string> logger) -> void
+static Adaptive.Agrona.MarkFile.EnsureMarkFileLink(System.IO.DirectoryInfo serviceDir, System.IO.FileInfo actualFile, string linkFilename) -> void
+static Adaptive.Agrona.MarkFile.IsActive(Adaptive.Agrona.Util.MappedByteBuffer cncByteBuffer, Adaptive.Agrona.Concurrent.IEpochClock epochClock, long timeoutMs, int versionFieldOffset, int timestampFieldOffset, System.Action<int> versionCheck, System.Action<string> logger) -> bool
+static Adaptive.Agrona.MarkFile.MapExistingFile(System.IO.FileInfo cncFile, System.Action<string> logger, long offset, long length) -> Adaptive.Agrona.Util.MappedByteBuffer
+static Adaptive.Agrona.MarkFile.MapExistingFile(System.IO.FileInfo cncFile, System.Action<string> logger) -> Adaptive.Agrona.Util.MappedByteBuffer
+static Adaptive.Agrona.MarkFile.MapExistingMarkFile(System.IO.FileInfo markFile, int versionFieldOffset, int timestampFieldOffset, long timeoutMs, Adaptive.Agrona.Concurrent.IEpochClock epochClock, System.Action<int> versionCheck, System.Action<string> logger) -> Adaptive.Agrona.Util.MappedByteBuffer
+static Adaptive.Agrona.MarkFile.MapNewFile(System.IO.FileInfo cncFile, long length) -> Adaptive.Agrona.Util.MappedByteBuffer
+static Adaptive.Agrona.MarkFile.mapNewOrExistingMarkFile(System.IO.FileInfo markFile, bool shouldPreExist, int versionFieldOffset, int timestampFieldOffset, long totalFileLength, long timeoutMs, Adaptive.Agrona.Concurrent.IEpochClock epochClock, System.Action<int> versionCheck, System.Action<string> logger) -> Adaptive.Agrona.Util.MappedByteBuffer
+static Adaptive.Agrona.Objects.RequireNonNull<T>(T obj, string name) -> T
+static Adaptive.Agrona.Objects.RequireNonNull<T>(T obj) -> T
+static Adaptive.Agrona.SemanticVersion.Compose(int major, int minor, int patch) -> int
+static Adaptive.Agrona.SemanticVersion.Major(int version) -> int
+static Adaptive.Agrona.SemanticVersion.Minor(int version) -> int
+static Adaptive.Agrona.SemanticVersion.Patch(int version) -> int
+static Adaptive.Agrona.SemanticVersion.ToString(int version) -> string
+static Adaptive.Agrona.SystemUtil.ParseDuration(string propertyName, string propertyValue) -> long
+static Adaptive.Agrona.SystemUtil.ParseSize(string propertyName, string propertyValue) -> long
+static Adaptive.Agrona.Util.ByteUtil.MemoryCopy(byte* destination, byte* source, uint length) -> void
+static Adaptive.Agrona.Util.IntUtil.NumberOfLeadingZeros(int i) -> int
+static Adaptive.Agrona.Util.IntUtil.NumberOfTrailingZeros(int i) -> int
+static Adaptive.Agrona.Util.LockSupport.ParkNanos(long nanos) -> void
+static Adaptive.Agrona.Util.NanoUtil.FromMilliseconds(long milliseconds) -> long
+static Adaptive.Agrona.Util.NanoUtil.FromSeconds(long seconds) -> long
+static Adaptive.Agrona.Util.NanoUtil.ToMillis(long resourceLingerDurationNs) -> int
+static Adaptive.Agrona.Util.ThrowHelper.ThrowArgumentException() -> void
+static Adaptive.Agrona.Util.ThrowHelper.ThrowArgumentException(string message) -> void
+static Adaptive.Agrona.Util.ThrowHelper.ThrowArgumentNullException(string argument) -> void
+static Adaptive.Agrona.Util.ThrowHelper.ThrowArgumentOutOfRangeException() -> void
+static Adaptive.Agrona.Util.ThrowHelper.ThrowArgumentOutOfRangeException(string argument) -> void
+static Adaptive.Agrona.Util.ThrowHelper.ThrowIndexOutOfRangeException(string message) -> void
+static Adaptive.Agrona.Util.ThrowHelper.ThrowInvalidCastException() -> void
+static Adaptive.Agrona.Util.ThrowHelper.ThrowInvalidOperationException_ForVariantTypeMissmatch() -> void
+static Adaptive.Agrona.Util.ThrowHelper.ThrowInvalidOperationException() -> void
+static Adaptive.Agrona.Util.ThrowHelper.ThrowInvalidOperationException(string message) -> void
+static Adaptive.Agrona.Util.ThrowHelper.ThrowKeyNotFoundException(string message) -> void
+static Adaptive.Agrona.Util.ThrowHelper.ThrowNotImplementedException() -> void
+static Adaptive.Agrona.Util.ThrowHelper.ThrowNotImplementedException(string message) -> void
+static Adaptive.Agrona.Util.ThrowHelper.ThrowNotSupportedException() -> void
+static Adaptive.Agrona.Util.ThrowHelper.ThrowObjectDisposedException(string objectName) -> void
+static Adaptive.Agrona.Util.UnixTimeConverter.CurrentUnixTimeMillis() -> long
+static Adaptive.Agrona.Util.UnixTimeConverter.FromUnixTimeMillis(long epoch) -> System.DateTime
+static readonly Adaptive.Agrona.BufferUtil.NullBytes -> byte[]
+static readonly Adaptive.Agrona.Collections.ArrayUtil.EMPTY_STRING_ARRAY -> string[]
+static readonly Adaptive.Agrona.Concurrent.AgentRunner.RETRY_CLOSE_TIMEOUT_MS -> int
+static readonly Adaptive.Agrona.Concurrent.BackgroundThreadFactory.Instance -> Adaptive.Agrona.Concurrent.BackgroundThreadFactory
+static readonly Adaptive.Agrona.Concurrent.Broadcast.BroadcastBufferDescriptor.LatestCounterOffset -> int
+static readonly Adaptive.Agrona.Concurrent.Broadcast.BroadcastBufferDescriptor.TailCounterOffset -> int
+static readonly Adaptive.Agrona.Concurrent.Broadcast.BroadcastBufferDescriptor.TailIntentCounterOffset -> int
+static readonly Adaptive.Agrona.Concurrent.Broadcast.BroadcastBufferDescriptor.TrailerLength -> int
+static readonly Adaptive.Agrona.Concurrent.Configuration.IDLE_MAX_PARK_MS -> long
+static readonly Adaptive.Agrona.Concurrent.Errors.DistinctErrorLog.EncodedErrorOffset -> int
+static readonly Adaptive.Agrona.Concurrent.Errors.DistinctErrorLog.FirstObservationTimestampOffset -> int
+static readonly Adaptive.Agrona.Concurrent.Errors.DistinctErrorLog.LastObservationTimestampOffset -> int
+static readonly Adaptive.Agrona.Concurrent.Errors.DistinctErrorLog.ObservationCountOffset -> int
+static readonly Adaptive.Agrona.Concurrent.Errors.DistinctErrorLog.RecordAlignment -> int
+static readonly Adaptive.Agrona.Concurrent.NoOpLock.Instance -> Adaptive.Agrona.Concurrent.NoOpLock
+static readonly Adaptive.Agrona.Concurrent.RingBuffer.RingBufferDescriptor.ConsumerHeartbeatOffset -> int
+static readonly Adaptive.Agrona.Concurrent.RingBuffer.RingBufferDescriptor.CorrelationCounterOffset -> int
+static readonly Adaptive.Agrona.Concurrent.RingBuffer.RingBufferDescriptor.HeadCachePositionOffset -> int
+static readonly Adaptive.Agrona.Concurrent.RingBuffer.RingBufferDescriptor.HeadPositionOffset -> int
+static readonly Adaptive.Agrona.Concurrent.RingBuffer.RingBufferDescriptor.TailPositionOffset -> int
+static readonly Adaptive.Agrona.Concurrent.RingBuffer.RingBufferDescriptor.TrailerLength -> int
+static readonly Adaptive.Agrona.Concurrent.Status.CountersReader.COUNTER_LENGTH -> int
+static readonly Adaptive.Agrona.Concurrent.Status.CountersReader.FREE_FOR_REUSE_DEADLINE_OFFSET -> int
+static readonly Adaptive.Agrona.Concurrent.Status.CountersReader.FULL_LABEL_LENGTH -> int
+static readonly Adaptive.Agrona.Concurrent.Status.CountersReader.KEY_OFFSET -> int
+static readonly Adaptive.Agrona.Concurrent.Status.CountersReader.LABEL_OFFSET -> int
+static readonly Adaptive.Agrona.Concurrent.Status.CountersReader.MAX_KEY_LENGTH -> int
+static readonly Adaptive.Agrona.Concurrent.Status.CountersReader.MAX_LABEL_LENGTH -> int
+static readonly Adaptive.Agrona.Concurrent.Status.CountersReader.METADATA_LENGTH -> int
+static readonly Adaptive.Agrona.Concurrent.Status.CountersReader.NOT_FREE_TO_REUSE -> long
+static readonly Adaptive.Agrona.Concurrent.Status.CountersReader.OWNER_ID_OFFSET -> int
+static readonly Adaptive.Agrona.Concurrent.Status.CountersReader.REGISTRATION_ID_OFFSET -> int
+static readonly Adaptive.Agrona.Concurrent.Status.CountersReader.TYPE_ID_OFFSET -> int
+static readonly Adaptive.Agrona.Concurrent.SystemEpochClock.INSTANCE -> Adaptive.Agrona.Concurrent.SystemEpochClock
+static readonly Adaptive.Agrona.Concurrent.SystemNanoClock.INSTANCE -> Adaptive.Agrona.Concurrent.SystemNanoClock
+static readonly Adaptive.Agrona.Concurrent.UnsafeBuffer.DISABLE_BOUNDS_CHECKS_PROP_NAME -> string
+static readonly Adaptive.Agrona.Concurrent.YieldingIdleStrategy.INSTANCE -> Adaptive.Agrona.Concurrent.YieldingIdleStrategy
+static readonly Adaptive.Agrona.ExpandableArrayBuffer.MAX_ARRAY_LENGTH -> int
+static readonly Adaptive.Agrona.TimeUnit.MILLIS -> Adaptive.Agrona.TimeUnit
+static readonly Adaptive.Agrona.TimeUnit.NANOSECONDS -> Adaptive.Agrona.TimeUnit
+virtual Adaptive.Agrona.Collections.IntObjConsumer<T>.Invoke(int i, T v) -> void
+virtual Adaptive.Agrona.Concurrent.Errors.ErrorConsumer.Invoke(int observationCount, long firstObservationTimestamp, long lastObservationTimestamp, string encodedException) -> void
+virtual Adaptive.Agrona.Concurrent.MessageHandler.Invoke(int msgTypeId, Adaptive.Agrona.IMutableDirectBuffer buffer, int index, int length) -> void
+virtual Adaptive.Agrona.Concurrent.RingBuffer.ManyToOneRingBuffer.Read(Adaptive.Agrona.Concurrent.MessageHandler handler, int messageCountLimit) -> int
+virtual Adaptive.Agrona.Concurrent.ShutdownSignalBarrier.SignalHandler.Invoke() -> void
+virtual Adaptive.Agrona.Concurrent.Status.AtomicCounter.Dispose() -> void
+virtual Adaptive.Agrona.Concurrent.Status.AtomicCounter.IsClosed.get -> bool
+virtual Adaptive.Agrona.Concurrent.Status.CountersReader.CounterConsumer.Invoke(long value, int counterId, string label) -> void
+virtual Adaptive.Agrona.Concurrent.Status.CountersReader.MetaData.Invoke(int counterId, int typeId, Adaptive.Agrona.IDirectBuffer keyBuffer, string label) -> void
+virtual Adaptive.Agrona.ErrorHandler.Invoke(System.Exception exception) -> void

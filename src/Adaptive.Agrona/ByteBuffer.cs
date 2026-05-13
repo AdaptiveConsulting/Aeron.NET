@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright 2014 - 2017 Adaptive Financial Consulting Ltd
+ * Copyright 2014 - 2026 Adaptive Financial Consulting Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,7 +36,7 @@ namespace Adaptive.Agrona
             ptr = (ptr + byteAlignment - 1) & ~(byteAlignment - 1);
             BufferPointer = new IntPtr(ptr);
         }
-        
+
         ~ByteBuffer()
         {
             Dispose(false);
@@ -50,7 +50,9 @@ namespace Adaptive.Agrona
         private void Dispose(bool disposing)
         {
             if (_disposed)
+            {
                 return;
+            }
 
             _bufferHandle.Free();
 

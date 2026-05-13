@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright 2014 - 2017 Adaptive Financial Consulting Ltd
+ * Copyright 2014 - 2026 Adaptive Financial Consulting Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@ using System.Runtime.CompilerServices;
 namespace Adaptive.Agrona.Concurrent.Status
 {
     /// <summary>
-    /// Reports a position by recording it in an <seealso cref="UnsafeBuffer"/>.
+    /// Reports a position by recording it in an <seealso cref="UnsafeBuffer"/> .
     /// </summary>
     public class UnsafeBufferPosition : IPosition
     {
@@ -33,7 +33,8 @@ namespace Adaptive.Agrona.Concurrent.Status
         /// </summary>
         /// <param name="buffer">    containing the counter. </param>
         /// <param name="counterId"> identifier of the counter. </param>
-        public UnsafeBufferPosition(UnsafeBuffer buffer, int counterId) : this(buffer, counterId, null)
+        public UnsafeBufferPosition(UnsafeBuffer buffer, int counterId)
+            : this(buffer, counterId, null)
         {
         }
 

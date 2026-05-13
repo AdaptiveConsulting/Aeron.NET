@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright 2014 - 2017 Adaptive Financial Consulting Ltd
+ * Copyright 2014 - 2026 Adaptive Financial Consulting Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,7 +35,8 @@ namespace Adaptive.Aeron.LogBuffer
         /// <param name="initialTermId">       this stream started at. </param>
         /// <param name="positionBitsToShift"> for calculating positions. </param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Header(int initialTermId, int positionBitsToShift) : this(initialTermId, positionBitsToShift, null)
+        public Header(int initialTermId, int positionBitsToShift)
+            : this(initialTermId, positionBitsToShift, null)
         {
         }
 
@@ -56,7 +57,8 @@ namespace Adaptive.Aeron.LogBuffer
         /// <summary>
         /// Context for storing state related to the context of the callback where the header is used.
         /// </summary>
-        /// <returns>  context for storing state related to the context of the callback where the header is used.</returns>
+        /// <returns> context for storing state related to the context of the callback where the header is
+        /// used.</returns>
         public object Context { get; set; }
 
         /// <summary>
@@ -67,8 +69,7 @@ namespace Adaptive.Aeron.LogBuffer
         {
             get
             {
-                return LogBufferDescriptor.ComputePosition(TermId, NextTermOffset, PositionBitsToShift,
-                    InitialTermId);
+                return LogBufferDescriptor.ComputePosition(TermId, NextTermOffset, PositionBitsToShift, InitialTermId);
             }
         }
 
@@ -139,7 +140,8 @@ namespace Adaptive.Aeron.LogBuffer
         /// The offset in the term at which the frame begins.
         /// </summary>
         /// <returns> the offset in the term at which the frame begins. </returns>
-        public int TermOffset => Buffer.GetInt(Offset + DataHeaderFlyweight.TERM_OFFSET_FIELD_OFFSET, ByteOrder.LittleEndian);
+        public int TermOffset =>
+            Buffer.GetInt(Offset + DataHeaderFlyweight.TERM_OFFSET_FIELD_OFFSET, ByteOrder.LittleEndian);
 
         /// <summary>
         /// Calculates the offset of the frame immediately after this one.
@@ -148,14 +150,16 @@ namespace Adaptive.Aeron.LogBuffer
         public int NextTermOffset => BitUtil.Align(TermOffset + TermOccupancyLength, FrameDescriptor.FRAME_ALIGNMENT);
 
         /// <summary>
-        /// The type of the frame which should always be <seealso cref="HeaderFlyweight.HDR_TYPE_DATA"/>.
+        /// The type of the frame which should always be <seealso cref="HeaderFlyweight.HDR_TYPE_DATA"/> .
         /// </summary>
-        /// <returns> type of the frame which should always be <seealso cref="HeaderFlyweight.HDR_TYPE_DATA"/>. </returns>
+        /// <returns> type of the frame which should always be <seealso cref="HeaderFlyweight.HDR_TYPE_DATA"/>.
+        /// </returns>
         public int Type => Buffer.GetShort(Offset + HeaderFlyweight.TYPE_FIELD_OFFSET) & 0xFFFF;
 
         /// <summary>
-        /// The flags for this frame. Valid flags are <seealso cref="DataHeaderFlyweight.BEGIN_FLAG"/>
-        /// and <seealso cref="DataHeaderFlyweight.END_FLAG"/>. A convenience flag <seealso cref="DataHeaderFlyweight.BEGIN_AND_END_FLAGS"/>
+        /// The flags for this frame. Valid flags are <seealso cref="DataHeaderFlyweight.BEGIN_FLAG"/> and
+        /// <seealso cref="DataHeaderFlyweight.END_FLAG"/> . A convenience flag
+        /// <seealso cref="DataHeaderFlyweight.BEGIN_AND_END_FLAGS"/>
         /// can be used for both flags.
         /// </summary>
         /// <returns> the flags for this frame. </returns>
@@ -165,7 +169,7 @@ namespace Adaptive.Aeron.LogBuffer
         /// Get the value stored in the reserve space at the end of a data frame header.
         /// <para>
         /// Note: The value is in <seealso cref="ByteOrder.LittleEndian"/> format.
-        /// 
+        ///
         /// </para>
         /// </summary>
         /// <returns> the value stored in the reserve space at the end of a data frame header. </returns>
@@ -174,11 +178,12 @@ namespace Adaptive.Aeron.LogBuffer
 
         /// <summary>
         /// Total amount of space occupied by this message when it is within the term buffer. When fragmented this will
-        /// include the length of the header for each fragment. Used when doing reassembly of fragmented packets. If
-        /// the packet is not fragmented this will be <seealso cref="Aeron.NULL_VALUE"/>.
+        /// include the length of the header for each fragment. Used when doing reassembly of fragmented packets. If the
+        /// packet is not fragmented this will be <seealso cref="Aeron.NULL_VALUE"/> .
         /// </summary>
         /// <param name="value"> total fragmented length of the message. </param>
-        /// <returns> total fragmented length of this message or <code>Aeron.NULL_VALUE</code> if not fragmented. </returns>
+        /// <returns> total fragmented length of this message or <code>Aeron.NULL_VALUE</code> if not fragmented.
+        /// </returns>
         public int FragmentedFrameLength
         {
             get => _fragmentedFrameLength;

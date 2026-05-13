@@ -1,6 +1,21 @@
+/*
+ * Copyright 2014 - 2026 Adaptive Financial Consulting Ltd
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 using System;
 using System.IO;
-using Adaptive.Aeron.LogBuffer;
 using Adaptive.Agrona.Concurrent;
 using NUnit.Framework;
 using static Adaptive.Aeron.LogBuffer.LogBufferDescriptor;
@@ -48,7 +63,8 @@ namespace Adaptive.Aeron.Tests
             var exception = Assert.Throws<InvalidOperationException>(() => new LogBuffers(logFile));
             Assert.IsTrue(
                 exception.Message.StartsWith("Term length") && exception.Message.EndsWith("length=" + termLength),
-                "Unexpected message: " + exception.Message);
+                "Unexpected message: " + exception.Message
+            );
         }
 
         [TestCase(-100)]
@@ -69,7 +85,8 @@ namespace Adaptive.Aeron.Tests
             var exception = Assert.Throws<InvalidOperationException>(() => new LogBuffers(logFile));
             Assert.IsTrue(
                 exception.Message.StartsWith("Page size") && exception.Message.EndsWith("page size=" + pageSize),
-                "Unexpected message: " + exception.Message);
+                "Unexpected message: " + exception.Message
+            );
         }
 
         [Test]
@@ -88,7 +105,8 @@ namespace Adaptive.Aeron.Tests
             var exception = Assert.Throws<InvalidOperationException>(() => new LogBuffers(logFile));
             Assert.AreEqual(
                 "Log file length less than min length of " + LOG_META_DATA_LENGTH + ": length=" + fileLength,
-                exception.Message);
+                exception.Message
+            );
         }
     }
 }

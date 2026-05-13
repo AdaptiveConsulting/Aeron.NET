@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright 2014 - 2017 Adaptive Financial Consulting Ltd
+ * Copyright 2014 - 2026 Adaptive Financial Consulting Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,15 +24,15 @@ namespace Adaptive.Aeron.Samples.RateSubscriber
     /// <summary>
     /// Example that displays current rate while receiving data
     /// </summary>
-    public class RateSubscriber
+    public static class RateSubscriber
     {
-        private static readonly int StreamID = SampleConfiguration.STREAM_ID;
+        private static readonly int StreamId = SampleConfiguration.STREAM_ID;
         private static readonly string Channel = Aeron.Context.IPC_CHANNEL;
         private static readonly int FragmentCountLimit = SampleConfiguration.FRAGMENT_COUNT_LIMIT;
 
         public static void Main()
         {
-            Console.WriteLine("Subscribing to " + Channel + " on stream Id " + StreamID);
+            Console.WriteLine("Subscribing to " + Channel + " on stream Id " + StreamId);
 
             var ctx = new Aeron.Context()
                 .AvailableImageHandler(SamplesUtil.PrintAvailableImage)
@@ -42,11 +42,13 @@ namespace Adaptive.Aeron.Samples.RateSubscriber
             var fragmentAssembler = new FragmentAssembler(SamplesUtil.RateReporterHandler(reporter));
             var running = new AtomicBoolean(true);
 
-            var t = new Thread(subscription => SamplesUtil.SubscriberLoop(fragmentAssembler, FragmentCountLimit, running)((Subscription) subscription));
+            var t = new Thread(subscription =>
+                SamplesUtil.SubscriberLoop(fragmentAssembler, FragmentCountLimit, running)((Subscription)subscription)
+            );
             var report = new Thread(reporter.Run);
 
             using (var aeron = Aeron.Connect(ctx))
-            using (var subscription = aeron.AddSubscription(Channel, StreamID))
+            using (var subscription = aeron.AddSubscription(Channel, StreamId))
             {
                 t.Start(subscription);
                 report.Start();

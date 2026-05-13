@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright 2014 - 2017 Adaptive Financial Consulting Ltd
+ * Copyright 2014 - 2026 Adaptive Financial Consulting Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,6 +21,11 @@ namespace Adaptive.Agrona.Concurrent.RingBuffer
     /// <summary>
     /// Description of the record structure for message framing in the a <seealso cref="RingBuffer"/>.
     /// </summary>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage(
+        "Major Code Smell",
+        "S1118:Utility classes should not have public constructors",
+        Justification = "Public ctor in shipped API surface; marking static would break consumers."
+    )]
     public class RecordDescriptor
     {
         /// <summary>
@@ -41,7 +46,7 @@ namespace Adaptive.Agrona.Concurrent.RingBuffer
         /// </pre>
         /// </para>
         /// </summary>
-        public const int HeaderLength = BitUtil.SIZE_OF_INT*2;
+        public const int HeaderLength = BitUtil.SIZE_OF_INT * 2;
 
         /// <summary>
         /// Alignment as a multiple of bytes for each record.
@@ -85,12 +90,12 @@ namespace Adaptive.Agrona.Concurrent.RingBuffer
         /// <returns> the length field from the header. </returns>
         public static int RecordLength(long header)
         {
-            return (int) header;
+            return (int)header;
         }
 
         public static int MessageTypeId(long header)
         {
-            return (int) (long) ((ulong) header >> 32);
+            return (int)(long)((ulong)header >> 32);
         }
 
         /// <summary>

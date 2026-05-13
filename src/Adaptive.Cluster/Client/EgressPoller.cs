@@ -1,4 +1,19 @@
-﻿using System;
+/*
+ * Copyright 2014 - 2026 Adaptive Financial Consulting Ltd
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 using Adaptive.Aeron;
 using Adaptive.Aeron.LogBuffer;
 using Adaptive.Agrona;
@@ -13,27 +28,27 @@ namespace Adaptive.Cluster.Client
     /// </summary>
     public class EgressPoller : IControlledFragmentHandler
     {
-        private readonly int fragmentLimit;
-        private readonly MessageHeaderDecoder messageHeaderDecoder = new MessageHeaderDecoder();
-        private readonly SessionEventDecoder sessionEventDecoder = new SessionEventDecoder();
-        private readonly ChallengeDecoder challengeDecoder = new ChallengeDecoder();
-        private readonly NewLeaderEventDecoder newLeaderEventDecoder = new NewLeaderEventDecoder();
-        private readonly SessionMessageHeaderDecoder sessionMessageHeaderDecoder = new SessionMessageHeaderDecoder();
-        private readonly ControlledFragmentAssembler fragmentAssembler;
-        private readonly Subscription subscription;
+        private readonly int _fragmentLimit;
+        private readonly MessageHeaderDecoder _messageHeaderDecoder = new MessageHeaderDecoder();
+        private readonly SessionEventDecoder _sessionEventDecoder = new SessionEventDecoder();
+        private readonly ChallengeDecoder _challengeDecoder = new ChallengeDecoder();
+        private readonly NewLeaderEventDecoder _newLeaderEventDecoder = new NewLeaderEventDecoder();
+        private readonly SessionMessageHeaderDecoder _sessionMessageHeaderDecoder = new SessionMessageHeaderDecoder();
+        private readonly ControlledFragmentAssembler _fragmentAssembler;
+        private readonly Subscription _subscription;
 
-        private Image egressImage;
-        private long clusterSessionId = NULL_VALUE;
-        private long correlationId = NULL_VALUE;
-        private long leadershipTermId = NULL_VALUE;
-        private int leaderMemberId = NULL_VALUE;
-        private int templateId = NULL_VALUE;
-        private int version = 0;
-        private long leaderHeartbeatTimeoutNs = NULL_VALUE;
-        private bool isPollComplete = false;
-        private EventCode eventCode;
-        private string detail = "";
-        private byte[] encodedChallenge;
+        private Image _egressImage;
+        private long _clusterSessionId = NULL_VALUE;
+        private long _correlationId = NULL_VALUE;
+        private long _leadershipTermId = NULL_VALUE;
+        private int _leaderMemberId = NULL_VALUE;
+        private int _templateId = NULL_VALUE;
+        private int _version = 0;
+        private long _leaderHeartbeatTimeoutNs = NULL_VALUE;
+        private bool _isPollComplete = false;
+        private EventCode _eventCode;
+        private string _detail = "";
+        private byte[] _encodedChallenge;
 
         /// <summary>
         /// Construct a poller on the egress subscription.
@@ -42,10 +57,10 @@ namespace Adaptive.Cluster.Client
         /// <param name="fragmentLimit"> for each poll operation. </param>
         public EgressPoller(Subscription subscription, int fragmentLimit)
         {
-            this.fragmentAssembler = new ControlledFragmentAssembler(this);
+            _fragmentAssembler = new ControlledFragmentAssembler(this);
 
-            this.subscription = subscription;
-            this.fragmentLimit = fragmentLimit;
+            _subscription = subscription;
+            _fragmentLimit = fragmentLimit;
         }
 
         /// <summary>
@@ -54,16 +69,18 @@ namespace Adaptive.Cluster.Client
         /// <returns> the <seealso cref="Subscription"/> used for polling events. </returns>
         public Subscription Subscription()
         {
-            return subscription;
+            return _subscription;
         }
 
         /// <summary>
-        /// <seealso cref="Image"/> for the egress response from the cluster which can be used for connection tracking.
+        /// <seealso cref="Image"/> for the egress response from the cluster which can be used for connection
+        /// tracking.
         /// </summary>
-        /// <returns> <seealso cref="Image"/> for the egress response from the cluster which can be used for connection tracking. </returns>
+        /// <returns> <seealso cref="Image"/> for the egress response from the cluster which can be used for
+        /// connection tracking. </returns>
         public Image EgressImage()
         {
-            return egressImage;
+            return _egressImage;
         }
 
         /// <summary>
@@ -72,43 +89,51 @@ namespace Adaptive.Cluster.Client
         /// <returns> the template id of the last received event. </returns>
         public int TemplateId()
         {
-            return templateId;
+            return _templateId;
         }
 
         /// <summary>
-        /// Cluster session id of the last polled event or <see cref="Adaptive.Aeron.Aeron.NULL_VALUE"/> if poll returned nothing.
+        /// Cluster session id of the last polled event or <see cref="Adaptive.Aeron.Aeron.NULL_VALUE"/> if poll
+        /// returned nothing.
         /// </summary>
-        /// <returns> cluster session id of the last polled event or <see cref="Adaptive.Aeron.Aeron.NULL_VALUE"/> if not returned. </returns>
+        /// <returns> cluster session id of the last polled event or <see cref="Adaptive.Aeron.Aeron.NULL_VALUE"/>
+        /// if not returned. </returns>
         public long ClusterSessionId()
         {
-            return clusterSessionId;
+            return _clusterSessionId;
         }
 
         /// <summary>
-        /// Correlation id of the last polled event or <see cref="Adaptive.Aeron.Aeron.NULL_VALUE"/> if poll returned nothing.
+        /// Correlation id of the last polled event or <see cref="Adaptive.Aeron.Aeron.NULL_VALUE"/> if poll returned
+        /// nothing.
         /// </summary>
-        /// <returns> correlation id of the last polled event or <see cref="Adaptive.Aeron.Aeron.NULL_VALUE"/> if not returned. </returns>
+        /// <returns> correlation id of the last polled event or <see cref="Adaptive.Aeron.Aeron.NULL_VALUE"/>
+        /// if not returned. </returns>
         public long CorrelationId()
         {
-            return correlationId;
+            return _correlationId;
         }
 
         /// <summary>
-        /// Leadership term id of the last polled event or <see cref="Adaptive.Aeron.Aeron.NULL_VALUE"/> if poll returned nothing.
+        /// Leadership term id of the last polled event or <see cref="Adaptive.Aeron.Aeron.NULL_VALUE"/> if poll
+        /// returned nothing.
         /// </summary>
-        /// <returns> leadership term id of the last polled event or <see cref="Adaptive.Aeron.Aeron.NULL_VALUE"/> if not returned. </returns>
+        /// <returns> leadership term id of the last polled event or
+        /// <see cref="Adaptive.Aeron.Aeron.NULL_VALUE"/> if not returned. </returns>
         public long LeadershipTermId()
         {
-            return leadershipTermId;
+            return _leadershipTermId;
         }
 
         /// <summary>
-        /// Leader cluster member id of the last polled event or <see cref="Adaptive.Aeron.Aeron.NULL_VALUE"/> if poll returned nothing.
+        /// Leader cluster member id of the last polled event or <see cref="Adaptive.Aeron.Aeron.NULL_VALUE"/> if poll
+        /// returned nothing.
         /// </summary>
-        /// <returns> leader cluster member id of the last polled event or <see cref="Adaptive.Aeron.Aeron.NULL_VALUE"/> if poll returned nothing. </returns>
+        /// <returns> leader cluster member id of the last polled event or
+        /// <see cref="Adaptive.Aeron.Aeron.NULL_VALUE"/> if poll returned nothing. </returns>
         public int LeaderMemberId()
         {
-            return leaderMemberId;
+            return _leaderMemberId;
         }
 
         /// <summary>
@@ -117,7 +142,7 @@ namespace Adaptive.Cluster.Client
         /// <returns> the event code returned from the last session event. </returns>
         public EventCode EventCode()
         {
-            return eventCode;
+            return _eventCode;
         }
 
         /// <summary>
@@ -126,16 +151,17 @@ namespace Adaptive.Cluster.Client
         /// <returns> response from the server in semantic version form. </returns>
         public int Version()
         {
-            return version;
+            return _version;
         }
-        
+
         /// <summary>
         /// Leader heartbeat timeout of the last polled event or <seealso cref="NULL_VALUE"/> if not available.
         /// </summary>
-        /// <returns> leader heartbeat timeout of the last polled event or <seealso cref="NULL_VALUE"/> if not available. </returns>
+        /// <returns> leader heartbeat timeout of the last polled event or <seealso cref="NULL_VALUE"/> if not
+        /// available. </returns>
         public long LeaderHeartbeatTimeoutNs()
         {
-            return leaderHeartbeatTimeoutNs;
+            return _leaderHeartbeatTimeoutNs;
         }
 
         /// <summary>
@@ -144,7 +170,7 @@ namespace Adaptive.Cluster.Client
         /// <returns> the detail returned from the last session event. </returns>
         public string Detail()
         {
-            return detail;
+            return _detail;
         }
 
         /// <summary>
@@ -153,7 +179,7 @@ namespace Adaptive.Cluster.Client
         /// <returns> the challenge data in the last challenge or null if last message was not a challenge. </returns>
         public byte[] EncodedChallenge()
         {
-            return encodedChallenge;
+            return _encodedChallenge;
         }
 
         /// <summary>
@@ -162,7 +188,7 @@ namespace Adaptive.Cluster.Client
         /// <returns> true if the last polling action received a complete event. </returns>
         public bool IsPollComplete()
         {
-            return isPollComplete;
+            return _isPollComplete;
         }
 
         /// <summary>
@@ -171,7 +197,7 @@ namespace Adaptive.Cluster.Client
         /// <returns> true if last message was a challenge or false if not. </returns>
         public bool IsChallenged()
         {
-            return ChallengeDecoder.TEMPLATE_ID == templateId;
+            return ChallengeDecoder.TEMPLATE_ID == _templateId;
         }
 
         /// <summary>
@@ -180,98 +206,117 @@ namespace Adaptive.Cluster.Client
         /// <returns> number of fragments consumed. </returns>
         public int Poll()
         {
-            if (isPollComplete)
+            if (_isPollComplete)
             {
-                clusterSessionId = NULL_VALUE;
-                correlationId = NULL_VALUE;
-                leadershipTermId = NULL_VALUE;
-                leaderMemberId = NULL_VALUE;
-                templateId = NULL_VALUE;
-                version = 0;
-                leaderHeartbeatTimeoutNs = NULL_VALUE;
-                eventCode = Codecs.EventCode.NULL_VALUE;
-                detail = "";
-                encodedChallenge = null;
-                isPollComplete = false;
+                _clusterSessionId = NULL_VALUE;
+                _correlationId = NULL_VALUE;
+                _leadershipTermId = NULL_VALUE;
+                _leaderMemberId = NULL_VALUE;
+                _templateId = NULL_VALUE;
+                _version = 0;
+                _leaderHeartbeatTimeoutNs = NULL_VALUE;
+                _eventCode = Codecs.EventCode.NULL_VALUE;
+                _detail = "";
+                _encodedChallenge = null;
+                _isPollComplete = false;
             }
 
-            return subscription.ControlledPoll(fragmentAssembler, fragmentLimit);
+            return _subscription.ControlledPoll(_fragmentAssembler, _fragmentLimit);
         }
 
         /// <inheritdoc />
         public ControlledFragmentHandlerAction OnFragment(IDirectBuffer buffer, int offset, int length, Header header)
         {
-            if (isPollComplete)
+            if (_isPollComplete)
             {
                 return ABORT;
             }
 
-            messageHeaderDecoder.Wrap(buffer, offset);
+            _messageHeaderDecoder.Wrap(buffer, offset);
 
-            int schemaId = messageHeaderDecoder.SchemaId();
+            int schemaId = _messageHeaderDecoder.SchemaId();
             if (schemaId != MessageHeaderDecoder.SCHEMA_ID)
             {
                 return CONTINUE;
             }
 
-            templateId = messageHeaderDecoder.TemplateId();
-            switch (templateId)
+            _templateId = _messageHeaderDecoder.TemplateId();
+            switch (_templateId)
             {
                 case SessionMessageHeaderDecoder.TEMPLATE_ID:
-                    sessionMessageHeaderDecoder.Wrap(buffer, offset + MessageHeaderDecoder.ENCODED_LENGTH,
-                        messageHeaderDecoder.BlockLength(), messageHeaderDecoder.Version());
+                    _sessionMessageHeaderDecoder.Wrap(
+                        buffer,
+                        offset + MessageHeaderDecoder.ENCODED_LENGTH,
+                        _messageHeaderDecoder.BlockLength(),
+                        _messageHeaderDecoder.Version()
+                    );
 
-                    leadershipTermId = sessionMessageHeaderDecoder.LeadershipTermId();
-                    clusterSessionId = sessionMessageHeaderDecoder.ClusterSessionId();
-                    isPollComplete = true;
+                    _leadershipTermId = _sessionMessageHeaderDecoder.LeadershipTermId();
+                    _clusterSessionId = _sessionMessageHeaderDecoder.ClusterSessionId();
+                    _isPollComplete = true;
                     return BREAK;
 
                 case SessionEventDecoder.TEMPLATE_ID:
-                    sessionEventDecoder.Wrap(buffer, offset + MessageHeaderDecoder.ENCODED_LENGTH,
-                        messageHeaderDecoder.BlockLength(), messageHeaderDecoder.Version());
+                    _sessionEventDecoder.Wrap(
+                        buffer,
+                        offset + MessageHeaderDecoder.ENCODED_LENGTH,
+                        _messageHeaderDecoder.BlockLength(),
+                        _messageHeaderDecoder.Version()
+                    );
 
-                    clusterSessionId = sessionEventDecoder.ClusterSessionId();
-                    correlationId = sessionEventDecoder.CorrelationId();
-                    leadershipTermId = sessionEventDecoder.LeadershipTermId();
-                    leaderMemberId = sessionEventDecoder.LeaderMemberId();
-                    eventCode = sessionEventDecoder.Code();
-                    version = sessionEventDecoder.Version();
-                    leaderHeartbeatTimeoutNs = LeaderHeartbeatTimeoutNs(sessionEventDecoder);
-                    detail = sessionEventDecoder.Detail();
-                    isPollComplete = true;
-                    egressImage = (Image)header.Context;
+                    _clusterSessionId = _sessionEventDecoder.ClusterSessionId();
+                    _correlationId = _sessionEventDecoder.CorrelationId();
+                    _leadershipTermId = _sessionEventDecoder.LeadershipTermId();
+                    _leaderMemberId = _sessionEventDecoder.LeaderMemberId();
+                    _eventCode = _sessionEventDecoder.Code();
+                    _version = _sessionEventDecoder.Version();
+                    _leaderHeartbeatTimeoutNs = LeaderHeartbeatTimeoutNsInternal(_sessionEventDecoder);
+                    _detail = _sessionEventDecoder.Detail();
+                    _isPollComplete = true;
+                    _egressImage = (Image)header.Context;
                     return BREAK;
 
                 case NewLeaderEventDecoder.TEMPLATE_ID:
-                    newLeaderEventDecoder.Wrap(buffer, offset + MessageHeaderDecoder.ENCODED_LENGTH,
-                        messageHeaderDecoder.BlockLength(), messageHeaderDecoder.Version());
+                    _newLeaderEventDecoder.Wrap(
+                        buffer,
+                        offset + MessageHeaderDecoder.ENCODED_LENGTH,
+                        _messageHeaderDecoder.BlockLength(),
+                        _messageHeaderDecoder.Version()
+                    );
 
-                    clusterSessionId = newLeaderEventDecoder.ClusterSessionId();
-                    leadershipTermId = newLeaderEventDecoder.LeadershipTermId();
-                    leaderMemberId = newLeaderEventDecoder.LeaderMemberId();
-                    detail = newLeaderEventDecoder.IngressEndpoints();
-                    isPollComplete = true;
-                    egressImage = (Image)header.Context;
+                    _clusterSessionId = _newLeaderEventDecoder.ClusterSessionId();
+                    _leadershipTermId = _newLeaderEventDecoder.LeadershipTermId();
+                    _leaderMemberId = _newLeaderEventDecoder.LeaderMemberId();
+                    _detail = _newLeaderEventDecoder.IngressEndpoints();
+                    _isPollComplete = true;
+                    _egressImage = (Image)header.Context;
                     return BREAK;
 
                 case ChallengeDecoder.TEMPLATE_ID:
-                    challengeDecoder.Wrap(buffer, offset + MessageHeaderDecoder.ENCODED_LENGTH,
-                        messageHeaderDecoder.BlockLength(), messageHeaderDecoder.Version());
+                    _challengeDecoder.Wrap(
+                        buffer,
+                        offset + MessageHeaderDecoder.ENCODED_LENGTH,
+                        _messageHeaderDecoder.BlockLength(),
+                        _messageHeaderDecoder.Version()
+                    );
 
-                    encodedChallenge = new byte[challengeDecoder.EncodedChallengeLength()];
-                    challengeDecoder.GetEncodedChallenge(encodedChallenge, 0,
-                        challengeDecoder.EncodedChallengeLength());
+                    _encodedChallenge = new byte[_challengeDecoder.EncodedChallengeLength()];
+                    _challengeDecoder.GetEncodedChallenge(
+                        _encodedChallenge,
+                        0,
+                        _challengeDecoder.EncodedChallengeLength()
+                    );
 
-                    clusterSessionId = challengeDecoder.ClusterSessionId();
-                    correlationId = challengeDecoder.CorrelationId();
-                    isPollComplete = true;
+                    _clusterSessionId = _challengeDecoder.ClusterSessionId();
+                    _correlationId = _challengeDecoder.CorrelationId();
+                    _isPollComplete = true;
                     return BREAK;
             }
 
             return CONTINUE;
         }
-        
-        private static long LeaderHeartbeatTimeoutNs(SessionEventDecoder sessionEventDecoder)
+
+        private static long LeaderHeartbeatTimeoutNsInternal(SessionEventDecoder sessionEventDecoder)
         {
             long leaderHeartbeatTimeoutNs = sessionEventDecoder.LeaderHeartbeatTimeoutNs();
 
@@ -282,6 +327,5 @@ namespace Adaptive.Cluster.Client
 
             return leaderHeartbeatTimeoutNs;
         }
-
     }
 }

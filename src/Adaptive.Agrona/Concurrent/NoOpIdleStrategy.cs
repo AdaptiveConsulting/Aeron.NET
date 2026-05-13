@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright 2014 - 2017 Adaptive Financial Consulting Ltd
+ * Copyright 2014 - 2026 Adaptive Financial Consulting Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,13 +17,13 @@
 namespace Adaptive.Agrona.Concurrent
 {
     /// <summary>
-    /// Low-latency idle strategy to be employed in loops that do significant work on each iteration such that any
-    /// work in the idle strategy would be wasteful.
+    /// Low-latency idle strategy to be employed in loops that do significant work on each iteration such that any work
+    /// in the idle strategy would be wasteful.
     /// </summary>
     public sealed class NoOpIdleStrategy : IIdleStrategy
     {
         /// <summary>
-        /// <b>Note</b>: this implementation will result in no safepoint poll once inlined.
+        /// <b>Note</b> : this implementation will result in no safepoint poll once inlined.
         /// </summary>
         /// <seealso cref="IIdleStrategy" />
         public void Idle(int workCount)
@@ -31,7 +31,7 @@ namespace Adaptive.Agrona.Concurrent
         }
 
         /// <summary>
-        /// <b>Note</b>: this implementation will result in no safepoint poll once inlined.
+        /// <b>Note</b> : this implementation will result in no safepoint poll once inlined.
         /// </summary>
         /// <seealso cref="IIdleStrategy" />
         public void Idle()

@@ -1,7 +1,22 @@
-﻿using System;
+﻿/*
+ * Copyright 2014 - 2026 Adaptive Financial Consulting Ltd
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+using System;
 using Adaptive.Aeron;
 using Adaptive.Aeron.LogBuffer;
-using Adaptive.Aeron.Status;
 using Adaptive.Agrona;
 using Adaptive.Cluster.Client;
 using Adaptive.Cluster.Codecs;
@@ -15,32 +30,32 @@ namespace Adaptive.Cluster.Service
     /// </summary>
     internal sealed class BoundedLogAdapter : IControlledFragmentHandler, IDisposable
     {
-        private readonly int fragmentLimit;
-        private long maxLogPosition;
-        private Image image;
-        private readonly ClusteredServiceAgent agent;
-        private readonly BufferBuilder builder = new BufferBuilder();
-        private readonly MessageHeaderDecoder messageHeaderDecoder = new MessageHeaderDecoder();
-        private readonly SessionMessageHeaderDecoder sessionHeaderDecoder = new SessionMessageHeaderDecoder();
-        private readonly TimerEventDecoder timerEventDecoder = new TimerEventDecoder();
-        private readonly SessionOpenEventDecoder openEventDecoder = new SessionOpenEventDecoder();
-        private readonly SessionCloseEventDecoder closeEventDecoder = new SessionCloseEventDecoder();
-        private readonly ClusterActionRequestDecoder actionRequestDecoder = new ClusterActionRequestDecoder();
-        private readonly NewLeadershipTermEventDecoder newLeadershipTermEventDecoder =
+        private readonly int _fragmentLimit;
+        private long _maxLogPosition;
+        private Image _image;
+        private readonly ClusteredServiceAgent _agent;
+        private readonly BufferBuilder _builder = new BufferBuilder();
+        private readonly MessageHeaderDecoder _messageHeaderDecoder = new MessageHeaderDecoder();
+        private readonly SessionMessageHeaderDecoder _sessionHeaderDecoder = new SessionMessageHeaderDecoder();
+        private readonly TimerEventDecoder _timerEventDecoder = new TimerEventDecoder();
+        private readonly SessionOpenEventDecoder _openEventDecoder = new SessionOpenEventDecoder();
+        private readonly SessionCloseEventDecoder _closeEventDecoder = new SessionCloseEventDecoder();
+        private readonly ClusterActionRequestDecoder _actionRequestDecoder = new ClusterActionRequestDecoder();
+        private readonly NewLeadershipTermEventDecoder _newLeadershipTermEventDecoder =
             new NewLeadershipTermEventDecoder();
 
         internal BoundedLogAdapter(ClusteredServiceAgent agent, int fragmentLimit)
         {
-            this.agent = agent;
-            this.fragmentLimit = fragmentLimit;
+            this._agent = agent;
+            this._fragmentLimit = fragmentLimit;
         }
 
         public void Dispose()
         {
-            if (null != image)
+            if (null != _image)
             {
-                image.Subscription?.Dispose();
-                image = null;
+                _image.Subscription?.Dispose();
+                _image = null;
             }
         }
 
@@ -55,38 +70,39 @@ namespace Adaptive.Cluster.Service
             }
             else if ((flags & BEGIN_FRAG_FLAG) == BEGIN_FRAG_FLAG)
             {
-                builder.Reset()
+                _builder
+                    .Reset()
                     .CaptureHeader(header)
                     .Append(buffer, offset, length)
                     .NextTermOffset(BitUtil.Align(offset + length + HEADER_LENGTH, FRAME_ALIGNMENT));
             }
-            else if (offset == builder.NextTermOffset())
+            else if (offset == _builder.NextTermOffset())
             {
-                int limit = builder.Limit();
+                int limit = _builder.Limit();
 
-                builder.Append(buffer, offset, length);
+                _builder.Append(buffer, offset, length);
 
                 if ((flags & END_FRAG_FLAG) == END_FRAG_FLAG)
                 {
-                    action = OnMessage(builder.Buffer(), 0, builder.Limit(), builder.CompleteHeader(header));
+                    action = OnMessage(_builder.Buffer(), 0, _builder.Limit(), _builder.CompleteHeader(header));
 
                     if (ControlledFragmentHandlerAction.ABORT == action)
                     {
-                        builder.Limit(limit);
+                        _builder.Limit(limit);
                     }
                     else
                     {
-                        builder.Reset();
+                        _builder.Reset();
                     }
                 }
                 else
                 {
-                    builder.NextTermOffset(BitUtil.Align(offset + length + HEADER_LENGTH, FRAME_ALIGNMENT));
+                    _builder.NextTermOffset(BitUtil.Align(offset + length + HEADER_LENGTH, FRAME_ALIGNMENT));
                 }
             }
             else
             {
-                builder.Reset();
+                _builder.Reset();
             }
 
             return action;
@@ -94,152 +110,171 @@ namespace Adaptive.Cluster.Service
 
         internal void MaxLogPosition(long position)
         {
-            maxLogPosition = position;
+            _maxLogPosition = position;
         }
 
         public bool IsDone()
         {
-            return image.Position >= maxLogPosition || image.IsEndOfStream || image.Closed;
+            return _image.Position >= _maxLogPosition || _image.IsEndOfStream || _image.Closed;
         }
 
         internal void Image(Image image)
         {
-            this.image = image;
+            this._image = image;
         }
 
         internal Image Image()
         {
-            return image;
+            return _image;
         }
 
         public int Poll(long limit)
         {
-            return image.BoundedControlledPoll(this, limit, fragmentLimit);
+            return _image.BoundedControlledPoll(this, limit, _fragmentLimit);
         }
 
+        // Upstream: io.aeron.cluster.service.BoundedLogAdapter#onFragment is @SuppressWarnings("MethodLength").
+        [System.Diagnostics.CodeAnalysis.SuppressMessage(
+            "Major Code Smell",
+            "S138:Functions should not have too many lines",
+            Justification = "Upstream Java parity; method is itself @SuppressWarnings(\"MethodLength\")."
+        )]
         private ControlledFragmentHandlerAction OnMessage(IDirectBuffer buffer, int offset, int length, Header header)
         {
-            messageHeaderDecoder.Wrap(buffer, offset);
-            int templateId = messageHeaderDecoder.TemplateId();
+            _messageHeaderDecoder.Wrap(buffer, offset);
+            int templateId = _messageHeaderDecoder.TemplateId();
 
-            int schemaId = messageHeaderDecoder.SchemaId();
+            int schemaId = _messageHeaderDecoder.SchemaId();
             if (schemaId != MessageHeaderDecoder.SCHEMA_ID)
             {
-                throw new ClusterException("expected schemaId=" + MessageHeaderDecoder.SCHEMA_ID + ", actual=" +
-                                           schemaId);
+                throw new ClusterException(
+                    "expected schemaId=" + MessageHeaderDecoder.SCHEMA_ID + ", actual=" + schemaId
+                );
             }
 
             if (templateId == SessionMessageHeaderEncoder.TEMPLATE_ID)
             {
-                sessionHeaderDecoder.Wrap(
+                _sessionHeaderDecoder.Wrap(
                     buffer,
                     offset + MessageHeaderDecoder.ENCODED_LENGTH,
-                    messageHeaderDecoder.BlockLength(),
-                    messageHeaderDecoder.Version());
+                    _messageHeaderDecoder.BlockLength(),
+                    _messageHeaderDecoder.Version()
+                );
 
-                agent.OnSessionMessage(
+                _agent.OnSessionMessage(
                     header.Position,
-                    sessionHeaderDecoder.ClusterSessionId(),
-                    sessionHeaderDecoder.Timestamp(),
+                    _sessionHeaderDecoder.ClusterSessionId(),
+                    _sessionHeaderDecoder.Timestamp(),
                     buffer,
                     offset + AeronCluster.SESSION_HEADER_LENGTH,
                     length - AeronCluster.SESSION_HEADER_LENGTH,
-                    header);
+                    header
+                );
 
                 return ControlledFragmentHandlerAction.CONTINUE;
             }
 
-
             switch (templateId)
             {
                 case TimerEventDecoder.TEMPLATE_ID:
-                    timerEventDecoder.Wrap(
+                    _timerEventDecoder.Wrap(
                         buffer,
                         offset + MessageHeaderDecoder.ENCODED_LENGTH,
-                        messageHeaderDecoder.BlockLength(),
-                        messageHeaderDecoder.Version());
+                        _messageHeaderDecoder.BlockLength(),
+                        _messageHeaderDecoder.Version()
+                    );
 
-                    agent.OnTimerEvent(
+                    _agent.OnTimerEvent(
                         header.Position,
-                        timerEventDecoder.CorrelationId(),
-                        timerEventDecoder.Timestamp()
+                        _timerEventDecoder.CorrelationId(),
+                        _timerEventDecoder.Timestamp()
                     );
                     break;
 
                 case SessionOpenEventDecoder.TEMPLATE_ID:
-                    openEventDecoder.Wrap(
+                    _openEventDecoder.Wrap(
                         buffer,
                         offset + MessageHeaderDecoder.ENCODED_LENGTH,
-                        messageHeaderDecoder.BlockLength(),
-                        messageHeaderDecoder.Version());
+                        _messageHeaderDecoder.BlockLength(),
+                        _messageHeaderDecoder.Version()
+                    );
 
-                    string responseChannel = openEventDecoder.ResponseChannel();
-                    byte[] encodedPrincipal = new byte[openEventDecoder.EncodedPrincipalLength()];
-                    openEventDecoder.GetEncodedPrincipal(encodedPrincipal, 0, encodedPrincipal.Length);
+                    string responseChannel = _openEventDecoder.ResponseChannel();
+                    byte[] encodedPrincipal = new byte[_openEventDecoder.EncodedPrincipalLength()];
+                    _openEventDecoder.GetEncodedPrincipal(encodedPrincipal, 0, encodedPrincipal.Length);
 
-                    agent.OnSessionOpen(
-                        openEventDecoder.LeadershipTermId(),
+                    _agent.OnSessionOpen(
+                        _openEventDecoder.LeadershipTermId(),
                         header.Position,
-                        openEventDecoder.ClusterSessionId(),
-                        openEventDecoder.Timestamp(),
-                        openEventDecoder.ResponseStreamId(),
+                        _openEventDecoder.ClusterSessionId(),
+                        _openEventDecoder.Timestamp(),
+                        _openEventDecoder.ResponseStreamId(),
                         responseChannel,
-                        encodedPrincipal);
+                        encodedPrincipal
+                    );
                     break;
 
                 case SessionCloseEventDecoder.TEMPLATE_ID:
-                    closeEventDecoder.Wrap(
+                    _closeEventDecoder.Wrap(
                         buffer,
                         offset + MessageHeaderDecoder.ENCODED_LENGTH,
-                        messageHeaderDecoder.BlockLength(),
-                        messageHeaderDecoder.Version());
+                        _messageHeaderDecoder.BlockLength(),
+                        _messageHeaderDecoder.Version()
+                    );
 
-                    agent.OnSessionClose(
-                        closeEventDecoder.LeadershipTermId(),
+                    _agent.OnSessionClose(
+                        _closeEventDecoder.LeadershipTermId(),
                         header.Position,
-                        closeEventDecoder.ClusterSessionId(),
-                        closeEventDecoder.Timestamp(),
-                        closeEventDecoder.CloseReason());
+                        _closeEventDecoder.ClusterSessionId(),
+                        _closeEventDecoder.Timestamp(),
+                        _closeEventDecoder.CloseReason()
+                    );
                     break;
 
                 case ClusterActionRequestDecoder.TEMPLATE_ID:
-                    actionRequestDecoder.Wrap(
+                    _actionRequestDecoder.Wrap(
                         buffer,
                         offset + MessageHeaderDecoder.ENCODED_LENGTH,
-                        messageHeaderDecoder.BlockLength(),
-                        messageHeaderDecoder.Version());
+                        _messageHeaderDecoder.BlockLength(),
+                        _messageHeaderDecoder.Version()
+                    );
 
-                    var flags = ClusterActionRequestDecoder.FlagsNullValue() != actionRequestDecoder.Flags() ?
-                        actionRequestDecoder.Flags() : ClusteredServiceContainer.CLUSTER_ACTION_FLAGS_DEFAULT;
-                    
-                    agent.OnServiceAction(
-                        actionRequestDecoder.LeadershipTermId(),
-                        actionRequestDecoder.LogPosition(),
-                        actionRequestDecoder.Timestamp(),
-                        actionRequestDecoder.Action(),
-                        flags);
+                    var flags =
+                        ClusterActionRequestDecoder.FlagsNullValue() != _actionRequestDecoder.Flags()
+                            ? _actionRequestDecoder.Flags()
+                            : ClusteredServiceContainer.CLUSTER_ACTION_FLAGS_DEFAULT;
+
+                    _agent.OnServiceAction(
+                        _actionRequestDecoder.LeadershipTermId(),
+                        _actionRequestDecoder.LogPosition(),
+                        _actionRequestDecoder.Timestamp(),
+                        _actionRequestDecoder.Action(),
+                        flags
+                    );
                     break;
 
                 case NewLeadershipTermEventDecoder.TEMPLATE_ID:
-                    newLeadershipTermEventDecoder.Wrap(
+                    _newLeadershipTermEventDecoder.Wrap(
                         buffer,
                         offset + MessageHeaderDecoder.ENCODED_LENGTH,
-                        messageHeaderDecoder.BlockLength(),
-                        messageHeaderDecoder.Version());
+                        _messageHeaderDecoder.BlockLength(),
+                        _messageHeaderDecoder.Version()
+                    );
 
-                    var clusterTimeUnit = newLeadershipTermEventDecoder.TimeUnit() == ClusterTimeUnit.NULL_VALUE
-                        ? ClusterTimeUnit.MILLIS
-                        : newLeadershipTermEventDecoder.TimeUnit();
+                    var clusterTimeUnit =
+                        _newLeadershipTermEventDecoder.TimeUnit() == ClusterTimeUnit.NULL_VALUE
+                            ? ClusterTimeUnit.MILLIS
+                            : _newLeadershipTermEventDecoder.TimeUnit();
 
-                    agent.OnNewLeadershipTermEvent(
-                        newLeadershipTermEventDecoder.LeadershipTermId(),
-                        newLeadershipTermEventDecoder.LogPosition(),
-                        newLeadershipTermEventDecoder.Timestamp(),
-                        newLeadershipTermEventDecoder.TermBaseLogPosition(),
-                        newLeadershipTermEventDecoder.LeaderMemberId(),
-                        newLeadershipTermEventDecoder.LogSessionId(),
+                    _agent.OnNewLeadershipTermEvent(
+                        _newLeadershipTermEventDecoder.LeadershipTermId(),
+                        _newLeadershipTermEventDecoder.LogPosition(),
+                        _newLeadershipTermEventDecoder.Timestamp(),
+                        _newLeadershipTermEventDecoder.TermBaseLogPosition(),
+                        _newLeadershipTermEventDecoder.LeaderMemberId(),
+                        _newLeadershipTermEventDecoder.LogSessionId(),
                         clusterTimeUnit,
-                        newLeadershipTermEventDecoder.AppVersion()
+                        _newLeadershipTermEventDecoder.AppVersion()
                     );
                     break;
 

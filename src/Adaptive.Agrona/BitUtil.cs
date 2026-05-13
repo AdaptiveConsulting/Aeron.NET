@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright 2014 - 2017 Adaptive Financial Consulting Ltd
+ * Copyright 2014 - 2026 Adaptive Financial Consulting Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,6 +25,11 @@ namespace Adaptive.Agrona
     /// <summary>
     /// Miscellaneous useful functions for dealing with low level bits and bytes.
     /// </summary>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage(
+        "Major Code Smell",
+        "S1118:Utility classes should not have public constructors",
+        Justification = "Public ctor in shipped API surface; marking static would break consumers."
+    )]
     public class BitUtil
     {
         /// <summary>
@@ -35,7 +40,7 @@ namespace Adaptive.Agrona
         /// <summary>
         /// Size of a boolean in bytes
         /// </summary>
-        public const int SIZE_OF_BOOLEAN= 1;
+        public const int SIZE_OF_BOOLEAN = 1;
 
         /// <summary>
         /// Size of a char in bytes
@@ -72,9 +77,24 @@ namespace Adaptive.Agrona
         /// </summary>
         public const int CACHE_LINE_LENGTH = 64;
 
-        private static readonly byte[] HexDigitTable = {
-            (byte) '0', (byte) '1', (byte) '2', (byte) '3', (byte) '4', (byte) '5', (byte) '6', (byte) '7',
-            (byte) '8', (byte) '9', (byte) 'a', (byte) 'b', (byte) 'c', (byte) 'd', (byte) 'e', (byte) 'f'
+        private static readonly byte[] HexDigitTable =
+        {
+            (byte)'0',
+            (byte)'1',
+            (byte)'2',
+            (byte)'3',
+            (byte)'4',
+            (byte)'5',
+            (byte)'6',
+            (byte)'7',
+            (byte)'8',
+            (byte)'9',
+            (byte)'a',
+            (byte)'b',
+            (byte)'c',
+            (byte)'d',
+            (byte)'e',
+            (byte)'f',
         };
 
         private static readonly byte[] FromHexDigitTable;
@@ -108,13 +128,13 @@ namespace Adaptive.Agrona
 
         private const int LastDigitMask = 1;
 
-	    private static readonly Encoding Utf8Encoding = Encoding.UTF8;
+        private static readonly Encoding Utf8Encoding = Encoding.UTF8;
 
         /// <summary>
         /// Fast method of finding the next power of 2 greater than or equal to the supplied value.
-        /// 
+        ///
         /// If the value is &lt;= 0 then 1 will be returned.
-        /// 
+        ///
         /// This method is not suitable for <seealso cref="int.MinValue"/> or numbers greater than 2^30.
         /// </summary>
         /// <param name="value"> from which to search for next power of 2 </param>
@@ -126,12 +146,12 @@ namespace Adaptive.Agrona
         }
 
         /// <summary>
-        /// Align a value to the next multiple up of alignment.
-        /// If the value equals an alignment multiple then it is returned unchanged.
+        /// Align a value to the next multiple up of alignment. If the value equals an alignment multiple then it is
+        /// returned unchanged.
         /// <para>
-        /// This method executes without branching. This code is designed to be use in the fast path and should not
-        /// be used with negative numbers. Negative numbers will result in undefined behaviour.
-        /// 
+        /// This method executes without branching. This code is designed to be use in the fast path and should not be
+        /// used with negative numbers. Negative numbers will result in undefined behaviour.
+        ///
         /// </para>
         /// </summary>
         /// <param name="value">     to be aligned up. </param>
@@ -144,12 +164,12 @@ namespace Adaptive.Agrona
         }
 
         /// <summary>
-        /// Align a value to the next multiple up of alignment.
-        /// If the value equals an alignment multiple then it is returned unchanged.
+        /// Align a value to the next multiple up of alignment. If the value equals an alignment multiple then it is
+        /// returned unchanged.
         /// <para>
-        /// This method executes without branching. This code is designed to be use in the fast path and should not
-        /// be used with negative numbers. Negative numbers will result in undefined behaviour.
-        /// 
+        /// This method executes without branching. This code is designed to be use in the fast path and should not be
+        /// used with negative numbers. Negative numbers will result in undefined behaviour.
+        ///
         /// </para>
         /// </summary>
         /// <param name="value">     to be aligned up. </param>
@@ -325,11 +345,11 @@ namespace Adaptive.Agrona
             return (address & (alignment - 1)) == 0;
         }
 
-        private static readonly ThreadLocal<Random> threadLocalRandom = new ThreadLocal<Random>(() => new Random());
-        
+        private static readonly ThreadLocal<Random> ThreadLocalRandom = new ThreadLocal<Random>(() => new Random());
+
         public static int GenerateRandomisedId()
         {
-            return threadLocalRandom.Value.Next();
+            return ThreadLocalRandom.Value.Next();
         }
     }
 }

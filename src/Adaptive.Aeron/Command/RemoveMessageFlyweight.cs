@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright 2014 - 2017 Adaptive Financial Consulting Ltd
+ * Copyright 2014 - 2026 Adaptive Financial Consulting Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,8 +23,8 @@ namespace Adaptive.Aeron.Command
 {
     public abstract class RemoveMessageFlyweight : CorrelatedMessageFlyweight
     {
-        internal static readonly int REGISTRATION_ID_FIELD_OFFSET = CORRELATION_ID_FIELD_OFFSET + SIZE_OF_LONG;
-        private static readonly int MINIMUM_LENGTH = REGISTRATION_ID_FIELD_OFFSET + SIZE_OF_LONG;
+        internal static readonly int RegistrationIdFieldOffset = CorrelationIdFieldOffset + SIZE_OF_LONG;
+        private static readonly int MinimumLength = RegistrationIdFieldOffset + SIZE_OF_LONG;
 
         /// <summary>
         /// Wrap the buffer at a given offset for updates.
@@ -45,7 +45,7 @@ namespace Adaptive.Aeron.Command
         /// <returns> registration id field. </returns>
         public long RegistrationId()
         {
-            return buffer.GetLong(offset + REGISTRATION_ID_FIELD_OFFSET);
+            return _buffer.GetLong(_offset + RegistrationIdFieldOffset);
         }
 
         /// <summary>
@@ -55,7 +55,7 @@ namespace Adaptive.Aeron.Command
         /// <returns> this for a fluent API. </returns>
         public RemoveMessageFlyweight RegistrationId(long registrationId)
         {
-            buffer.PutLong(offset + REGISTRATION_ID_FIELD_OFFSET, registrationId);
+            _buffer.PutLong(_offset + RegistrationIdFieldOffset, registrationId);
 
             return this;
         }
@@ -70,15 +70,18 @@ namespace Adaptive.Aeron.Command
         }
 
         /// <summary>
-        /// Validate buffer length is long enough for message.
+        /// Validate _buffer length is long enough for message.
         /// </summary>
         /// <param name="msgTypeId"> type of message. </param>
         /// <param name="length"> of message in bytes to validate. </param>
         public new void ValidateLength(int msgTypeId, int length)
         {
-            if (length < MINIMUM_LENGTH)
+            if (length < MinimumLength)
             {
-                throw new ControlProtocolException(MALFORMED_COMMAND, "command=" + msgTypeId + " too short: length=" + length);
+                throw new ControlProtocolException(
+                    MALFORMED_COMMAND,
+                    "command=" + msgTypeId + " too short: length=" + length
+                );
             }
         }
     }

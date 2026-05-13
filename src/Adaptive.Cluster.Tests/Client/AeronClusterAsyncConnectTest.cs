@@ -1,4 +1,19 @@
-using System;
+/*
+ * Copyright 2014 - 2026 Adaptive Financial Consulting Ltd
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 using Adaptive.Aeron;
 using Adaptive.Aeron.LogBuffer;
 using Adaptive.Aeron.Protocol;
@@ -16,7 +31,7 @@ namespace Adaptive.Cluster.Tests.Client
 {
     public class AeronClusterAsyncConnectTest
     {
-        private const long ONE_HOUR_IN_NANOS = 3_600_000_000_000L;
+        private const long OneHourInNanos = 3_600_000_000_000L;
 
         private AeronType _aeron;
         private AeronType.Context _aeronContext;
@@ -60,16 +75,21 @@ namespace Adaptive.Cluster.Tests.Client
             A.CallTo(() => _aeron.GetSubscription(subscriptionId)).Returns((Subscription)null);
 
             var asyncConnect = new AeronCluster.AsyncConnect(
-                _context, _aeronContext.NanoClock().NanoTime() + ONE_HOUR_IN_NANOS);
+                _context,
+                _aeronContext.NanoClock().NanoTime() + OneHourInNanos
+            );
 
             Assert.IsNull(asyncConnect.Poll());
             Assert.AreEqual(AsyncConnectState.CREATE_EGRESS_SUBSCRIPTION, asyncConnect.State());
 
             asyncConnect.Dispose();
 
-            A.CallTo(() => _aeron.Ctx).MustHaveHappened()
-                .Then(A.CallTo(() => _aeron.AsyncAddSubscription(_context.EgressChannel(), _context.EgressStreamId()))
-                    .MustHaveHappened())
+            A.CallTo(() => _aeron.Ctx)
+                .MustHaveHappened()
+                .Then(
+                    A.CallTo(() => _aeron.AsyncAddSubscription(_context.EgressChannel(), _context.EgressStreamId()))
+                        .MustHaveHappened()
+                )
                 .Then(A.CallTo(() => _aeron.GetSubscription(subscriptionId)).MustHaveHappened())
                 .Then(A.CallTo(() => _aeron.AsyncRemoveSubscription(subscriptionId)).MustHaveHappened());
             A.CallTo(() => _context.Dispose()).MustHaveHappenedOnceExactly();
@@ -85,7 +105,9 @@ namespace Adaptive.Cluster.Tests.Client
             A.CallTo(() => _aeron.GetSubscription(subscriptionId)).Returns(subscription);
 
             var asyncConnect = new AeronCluster.AsyncConnect(
-                _context, _aeronContext.NanoClock().NanoTime() + ONE_HOUR_IN_NANOS);
+                _context,
+                _aeronContext.NanoClock().NanoTime() + OneHourInNanos
+            );
 
             Assert.IsNull(asyncConnect.Poll());
             Assert.AreEqual(AsyncConnectState.CREATE_INGRESS_PUBLICATIONS, asyncConnect.State());
@@ -112,7 +134,9 @@ namespace Adaptive.Cluster.Tests.Client
             A.CallTo(() => _aeron.GetExclusivePublication(publicationId)).Returns((ExclusivePublication)null);
 
             var asyncConnect = new AeronCluster.AsyncConnect(
-                _context, _aeronContext.NanoClock().NanoTime() + ONE_HOUR_IN_NANOS);
+                _context,
+                _aeronContext.NanoClock().NanoTime() + OneHourInNanos
+            );
 
             Assert.IsNull(asyncConnect.Poll());
             Assert.AreEqual(AsyncConnectState.CREATE_INGRESS_PUBLICATIONS, asyncConnect.State());
@@ -122,13 +146,19 @@ namespace Adaptive.Cluster.Tests.Client
 
             asyncConnect.Dispose();
 
-            A.CallTo(() => _aeron.Ctx).MustHaveHappened()
-                .Then(A.CallTo(() => _aeron.AsyncAddSubscription(_context.EgressChannel(), _context.EgressStreamId()))
-                    .MustHaveHappened())
+            A.CallTo(() => _aeron.Ctx)
+                .MustHaveHappened()
+                .Then(
+                    A.CallTo(() => _aeron.AsyncAddSubscription(_context.EgressChannel(), _context.EgressStreamId()))
+                        .MustHaveHappened()
+                )
                 .Then(A.CallTo(() => _aeron.GetSubscription(subscriptionId)).MustHaveHappened())
-                .Then(A.CallTo(
-                        () => _aeron.AsyncAddExclusivePublication(_context.IngressChannel(), _context.IngressStreamId()))
-                    .MustHaveHappened())
+                .Then(
+                    A.CallTo(() =>
+                            _aeron.AsyncAddExclusivePublication(_context.IngressChannel(), _context.IngressStreamId())
+                        )
+                        .MustHaveHappened()
+                )
                 .Then(A.CallTo(() => _aeron.GetExclusivePublication(publicationId)).MustHaveHappened())
                 .Then(A.CallTo(() => _aeron.AsyncRemovePublication(publicationId)).MustHaveHappened())
                 .Then(A.CallTo(() => subscription.Dispose()).MustHaveHappened());
@@ -165,7 +195,9 @@ namespace Adaptive.Cluster.Tests.Client
             A.CallTo(() => _aeron.GetExclusivePublication(publicationId3)).Returns((ExclusivePublication)null);
 
             var asyncConnect = new AeronCluster.AsyncConnect(
-                _context, _aeronContext.NanoClock().NanoTime() + ONE_HOUR_IN_NANOS);
+                _context,
+                _aeronContext.NanoClock().NanoTime() + OneHourInNanos
+            );
 
             Assert.IsNull(asyncConnect.Poll());
             Assert.AreEqual(AsyncConnectState.CREATE_INGRESS_PUBLICATIONS, asyncConnect.State());
@@ -183,12 +215,9 @@ namespace Adaptive.Cluster.Tests.Client
                 .MustHaveHappened(iterations, Times.Exactly);
             A.CallTo(() => _aeron.AsyncAddExclusivePublication("aeron:udp?endpoint=localhost:20002", ingressStreamId))
                 .MustHaveHappenedANumberOfTimesMatching(n => n <= 1);
-            A.CallTo(() => _aeron.GetExclusivePublication(publicationId1))
-                .MustHaveHappened(2, Times.Exactly);
-            A.CallTo(() => _aeron.GetExclusivePublication(publicationId2))
-                .MustHaveHappened(iterations, Times.Exactly);
-            A.CallTo(() => _aeron.GetExclusivePublication(publicationId3))
-                .MustHaveHappened(iterations, Times.Exactly);
+            A.CallTo(() => _aeron.GetExclusivePublication(publicationId1)).MustHaveHappened(2, Times.Exactly);
+            A.CallTo(() => _aeron.GetExclusivePublication(publicationId2)).MustHaveHappened(iterations, Times.Exactly);
+            A.CallTo(() => _aeron.GetExclusivePublication(publicationId3)).MustHaveHappened(iterations, Times.Exactly);
 
             asyncConnect.Dispose();
 
@@ -220,7 +249,9 @@ namespace Adaptive.Cluster.Tests.Client
             A.CallTo(() => _aeron.GetPublication(publicationId)).Returns(publication);
 
             var asyncConnect = new AeronCluster.AsyncConnect(
-                _context, _aeronContext.NanoClock().NanoTime() + ONE_HOUR_IN_NANOS);
+                _context,
+                _aeronContext.NanoClock().NanoTime() + OneHourInNanos
+            );
 
             Assert.IsNull(asyncConnect.Poll());
             Assert.AreEqual(AsyncConnectState.CREATE_INGRESS_PUBLICATIONS, asyncConnect.State());
@@ -240,6 +271,7 @@ namespace Adaptive.Cluster.Tests.Client
         }
 
         [Test]
+#pragma warning disable CA1506
         public void ShouldConnectViaIngressChannel()
         {
             const long subscriptionId = 42L;
@@ -258,7 +290,9 @@ namespace Adaptive.Cluster.Tests.Client
             A.CallTo(() => _aeron.GetPublication(publicationId)).Returns(publication);
 
             var asyncConnect = new AeronCluster.AsyncConnect(
-                _context, _aeronContext.NanoClock().NanoTime() + ONE_HOUR_IN_NANOS);
+                _context,
+                _aeronContext.NanoClock().NanoTime() + OneHourInNanos
+            );
 
             Assert.IsNull(asyncConnect.Poll());
             Assert.AreEqual(AsyncConnectState.CREATE_INGRESS_PUBLICATIONS, asyncConnect.State());
@@ -299,9 +333,7 @@ namespace Adaptive.Cluster.Tests.Client
                 .LeaderHeartbeatTimeoutNs(SessionEventEncoder.LeaderHeartbeatTimeoutNsNullValue())
                 .Detail("you are now connected");
             var egressImage = A.Fake<Image>();
-            var header = new Header(1, 16, egressImage);
-            header.Buffer = responseBuffer;
-            header.Offset = 0;
+            var header = new Header(1, 16, egressImage) { Buffer = responseBuffer, Offset = 0 };
             var headerFlyweight = new DataHeaderFlyweight();
             headerFlyweight.Wrap(responseBuffer, 0, DataHeaderFlyweight.HEADER_LENGTH);
             headerFlyweight.Flags(DataHeaderFlyweight.BEGIN_AND_END_FLAGS);
@@ -313,39 +345,48 @@ namespace Adaptive.Cluster.Tests.Client
                         responseBuffer,
                         DataHeaderFlyweight.HEADER_LENGTH,
                         sessionEventEncoder.EncodedLength(),
-                        header);
+                        header
+                    );
                     return 1;
                 });
 
             Assert.IsNull(asyncConnect.Poll());
             Assert.AreEqual(AsyncConnectState.CONCLUDE_CONNECT, asyncConnect.State());
 
-            var _aeronCluster = asyncConnect.Poll();
-            Assert.IsNotNull(_aeronCluster);
-            Assert.AreEqual(leadershipTermId, _aeronCluster.LeadershipTermId);
-            Assert.AreEqual(leaderMemberId, _aeronCluster.LeaderMemberId);
-            Assert.AreEqual(clusterSessionId, _aeronCluster.ClusterSessionId);
+            var aeronCluster = asyncConnect.Poll();
+            Assert.IsNotNull(aeronCluster);
+            Assert.AreEqual(leadershipTermId, aeronCluster.LeadershipTermId);
+            Assert.AreEqual(leaderMemberId, aeronCluster.LeaderMemberId);
+            Assert.AreEqual(clusterSessionId, aeronCluster.ClusterSessionId);
             Assert.AreEqual(
                 2 * AeronCluster.Configuration.LEADER_HEARTBEAT_TIMEOUT_DEFAULT_NS,
-                _context.NewLeaderTimeoutNs());
+                _context.NewLeaderTimeoutNs()
+            );
 
             asyncConnect.Dispose();
             A.CallTo(() => publication.Dispose()).MustNotHaveHappened();
             A.CallTo(() => subscription.Dispose()).MustNotHaveHappened();
 
-            A.CallTo(() => publication.TryClaim(A<int>._, A<BufferClaim>._)).ReturnsLazily(call =>
-            {
-                int length = call.GetArgument<int>(0);
-                var bufferClaim = call.GetArgument<BufferClaim>(1);
-                bufferClaim.Wrap(responseBuffer, 0, BitUtil.Align(DataHeaderFlyweight.HEADER_LENGTH + length, DataHeaderFlyweight.HEADER_LENGTH));
-                return 42L;
-            });
-            _aeronCluster.Dispose();
-            Assert.IsTrue(_aeronCluster.Closed);
-            A.CallTo(() => publication.TryClaim(A<int>._, A<BufferClaim>._)).MustHaveHappened()
+            A.CallTo(() => publication.TryClaim(A<int>._, A<BufferClaim>._))
+                .ReturnsLazily(call =>
+                {
+                    int length = call.GetArgument<int>(0);
+                    var bufferClaim = call.GetArgument<BufferClaim>(1);
+                    bufferClaim.Wrap(
+                        responseBuffer,
+                        0,
+                        BitUtil.Align(DataHeaderFlyweight.HEADER_LENGTH + length, DataHeaderFlyweight.HEADER_LENGTH)
+                    );
+                    return 42L;
+                });
+            aeronCluster.Dispose();
+            Assert.IsTrue(aeronCluster.Closed);
+            A.CallTo(() => publication.TryClaim(A<int>._, A<BufferClaim>._))
+                .MustHaveHappened()
                 .Then(A.CallTo(() => subscription.Dispose()).MustHaveHappened())
                 .Then(A.CallTo(() => publication.Dispose()).MustHaveHappened());
             A.CallTo(() => _context.Dispose()).MustHaveHappenedOnceExactly();
         }
+#pragma warning restore CA1506
     }
 }

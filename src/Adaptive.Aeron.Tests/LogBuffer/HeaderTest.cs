@@ -1,3 +1,19 @@
+/*
+ * Copyright 2014 - 2026 Adaptive Financial Consulting Ltd
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 using Adaptive.Aeron.LogBuffer;
 using Adaptive.Aeron.Protocol;
 using Adaptive.Agrona.Concurrent;
@@ -29,12 +45,11 @@ namespace Adaptive.Aeron.Tests.LogBuffer
             int frameLength,
             int termOffset,
             int termId,
-            long expectedPosition)
+            long expectedPosition
+        )
         {
             var dataHeaderFlyweight = new DataHeaderFlyweight();
-            var header = new Header(initialTermId, positionBitsToShift);
-            header.Buffer = dataHeaderFlyweight;
-            header.Offset = 0;
+            var header = new Header(initialTermId, positionBitsToShift) { Buffer = dataHeaderFlyweight, Offset = 0 };
             dataHeaderFlyweight.Wrap(new byte[64], 16, 32);
             dataHeaderFlyweight.FrameLength(frameLength);
             dataHeaderFlyweight.TermId(termId);
@@ -67,18 +82,15 @@ namespace Adaptive.Aeron.Tests.LogBuffer
             int sessionId,
             int streamId,
             int termId,
-            long reservedValue)
+            long reservedValue
+        )
         {
             var array = new byte[100];
             const int offset = 16;
             var dataHeaderFlyweight = new DataHeaderFlyweight();
             dataHeaderFlyweight.Wrap(array, offset, 64);
 
-            dataHeaderFlyweight
-                .FrameLength(frameLength)
-                .Version(version)
-                .Flags(flags)
-                .HeaderType(type);
+            dataHeaderFlyweight.FrameLength(frameLength).Version(version).Flags(flags).HeaderType(type);
 
             dataHeaderFlyweight
                 .TermOffset(termOffset)
@@ -87,9 +99,7 @@ namespace Adaptive.Aeron.Tests.LogBuffer
                 .TermId(termId)
                 .ReservedValue(reservedValue);
 
-            var header = new Header(5, 22);
-            header.Buffer = new UnsafeBuffer(array);
-            header.Offset = offset;
+            var header = new Header(5, 22) { Buffer = new UnsafeBuffer(array), Offset = offset };
 
             Assert.AreEqual(frameLength, header.FrameLength);
             Assert.AreEqual(flags, header.Flags);

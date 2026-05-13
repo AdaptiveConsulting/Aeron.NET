@@ -1,0 +1,12 @@
+Adaptive.Aeron.ChannelUri.Diff(Adaptive.Aeron.ChannelUri that) -> System.Collections.Generic.IDictionary<string, string>
+Adaptive.Aeron.ChannelUriStringBuilder.NakDelay(long? nakDelayNs) -> Adaptive.Aeron.ChannelUriStringBuilder
+Adaptive.Aeron.LogBuffer.HeaderWriter.HeaderWriter(long versionFlagsType, long sessionId, long streamId) -> void
+readonly Adaptive.Aeron.LogBuffer.HeaderWriter._sessionId -> long
+readonly Adaptive.Aeron.LogBuffer.HeaderWriter._streamId -> long
+readonly Adaptive.Aeron.LogBuffer.HeaderWriter._versionFlagsType -> long
+static Adaptive.Aeron.AeronCounters.AppendVersionInfo(Adaptive.Agrona.IMutableDirectBuffer tempBuffer, int offset, string fullVersion, string commitHashCode) -> int
+static Adaptive.Aeron.AeronCounters.FormatVersionInfo(string fullVersion, string commitHash) -> string
+static Adaptive.Aeron.AeronCounters.SetReferenceId(Adaptive.Agrona.Concurrent.IAtomicBuffer metaDataBuffer, Adaptive.Agrona.Concurrent.IAtomicBuffer valuesBuffer, int counterId, long referenceId) -> void
+static Adaptive.Aeron.LogBuffer.HeaderWriter.NewInstance(Adaptive.Agrona.Concurrent.UnsafeBuffer defaultHeader) -> Adaptive.Aeron.LogBuffer.HeaderWriter
+virtual Adaptive.Aeron.LogBuffer.HeaderWriter.Write(Adaptive.Agrona.Concurrent.UnsafeBuffer termBuffer, int offset, int length, int termId) -> void
+*REMOVED*Adaptive.Aeron.LogBuffer.HeaderWriter.Write(Adaptive.Agrona.Concurrent.UnsafeBuffer termBuffer, int offset, int length, int termId) -> void

@@ -1,3 +1,19 @@
+﻿/*
+ * Copyright 2014 - 2026 Adaptive Financial Consulting Ltd
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 using Adaptive.Aeron.Security;
 
 namespace Adaptive.Archiver
@@ -9,16 +25,16 @@ namespace Adaptive.Archiver
     /// </summary>
     public class ReplicationParams
     {
-        private long stopPosition;
-        private long dstRecordingId;
-        private string liveDestination;
-        private string replicationChannel;
-        private long channelTagId;
-        private long subscriptionTagId;
-        private int fileIoMaxLength;
-        private int replicationSessionId;
-        private byte[] encodedCredentials;
-        private string srcResponseChannel;
+        private long _stopPosition;
+        private long _dstRecordingId;
+        private string _liveDestination;
+        private string _replicationChannel;
+        private long _channelTagId;
+        private long _subscriptionTagId;
+        private int _fileIoMaxLength;
+        private int _replicationSessionId;
+        private byte[] _encodedCredentials;
+        private string _srcResponseChannel;
 
         /// <summary>
         /// Initialise all parameters to defaults.
@@ -34,28 +50,28 @@ namespace Adaptive.Archiver
         /// <returns> this for a fluent API. </returns>
         public ReplicationParams Reset()
         {
-            stopPosition = AeronArchive.NULL_POSITION;
-            dstRecordingId = Aeron.Aeron.NULL_VALUE;
-            liveDestination = null;
-            replicationChannel = null;
-            channelTagId = Aeron.Aeron.NULL_VALUE;
-            subscriptionTagId = Aeron.Aeron.NULL_VALUE;
-            fileIoMaxLength = Aeron.Aeron.NULL_VALUE;
-            replicationSessionId = Aeron.Aeron.NULL_VALUE;
-            encodedCredentials = NullCredentialsSupplier.NULL_CREDENTIAL;
-            srcResponseChannel = null;
+            _stopPosition = AeronArchive.NULL_POSITION;
+            _dstRecordingId = Aeron.Aeron.NULL_VALUE;
+            _liveDestination = null;
+            _replicationChannel = null;
+            _channelTagId = Aeron.Aeron.NULL_VALUE;
+            _subscriptionTagId = Aeron.Aeron.NULL_VALUE;
+            _fileIoMaxLength = Aeron.Aeron.NULL_VALUE;
+            _replicationSessionId = Aeron.Aeron.NULL_VALUE;
+            _encodedCredentials = NullCredentialsSupplier.NULL_CREDENTIAL;
+            _srcResponseChannel = null;
             return this;
         }
 
         /// <summary>
-        /// Set the stop position for replication, default is <seealso cref="AeronArchive.NULL_POSITION"/>, which will continuously
-        /// replicate.
+        /// Set the stop position for replication, default is <seealso cref="AeronArchive.NULL_POSITION"/> , which will
+        /// continuously replicate.
         /// </summary>
         /// <param name="stopPosition"> position to stop the replication at. </param>
         /// <returns> this for a fluent API </returns>
         public ReplicationParams StopPosition(long stopPosition)
         {
-            this.stopPosition = stopPosition;
+            this._stopPosition = stopPosition;
             return this;
         }
 
@@ -64,18 +80,18 @@ namespace Adaptive.Archiver
         /// <returns> stop position </returns>
         public long StopPosition()
         {
-            return stopPosition;
+            return _stopPosition;
         }
 
         /// <summary>
-        /// The recording in the local archive to extend. Default is <seealso cref="Aeron.Aeron.NULL_VALUE"/> which will trigger the creation
-        /// of a new recording in the destination archive.
+        /// The recording in the local archive to extend. Default is <seealso cref="Aeron.Aeron.NULL_VALUE"/> which will
+        /// trigger the creation of a new recording in the destination archive.
         /// </summary>
         /// <param name="dstRecordingId"> destination recording to extend. </param>
         /// <returns> this for a fluent API. </returns>
         public ReplicationParams DstRecordingId(long dstRecordingId)
         {
-            this.dstRecordingId = dstRecordingId;
+            this._dstRecordingId = dstRecordingId;
             return this;
         }
 
@@ -85,7 +101,7 @@ namespace Adaptive.Archiver
         /// <returns> destination recording id. </returns>
         public long DstRecordingId()
         {
-            return dstRecordingId;
+            return _dstRecordingId;
         }
 
         /// <summary>
@@ -95,7 +111,7 @@ namespace Adaptive.Archiver
         /// <returns> this for a fluent API. </returns>
         public ReplicationParams LiveDestination(string liveChannel)
         {
-            this.liveDestination = liveChannel;
+            this._liveDestination = liveChannel;
             return this;
         }
 
@@ -105,15 +121,16 @@ namespace Adaptive.Archiver
         /// <returns> destination for live stream merge. </returns>
         public string LiveDestination()
         {
-            return liveDestination;
+            return _liveDestination;
         }
 
         /// <summary>
-        /// Channel to use for replicating the recording, empty string will mean that the default channel is used. </summary>
+        /// Channel to use for replicating the recording, empty string will mean that the default channel is used.
+        /// </summary>
         /// <returns> channel to replicate the recording. </returns>
         public string ReplicationChannel()
         {
-            return replicationChannel;
+            return _replicationChannel;
         }
 
         /// <summary>
@@ -124,19 +141,19 @@ namespace Adaptive.Archiver
         /// <returns> this for a fluent API. </returns>
         public ReplicationParams ReplicationChannel(string replicationChannel)
         {
-            this.replicationChannel = replicationChannel;
+            this._replicationChannel = replicationChannel;
             return this;
         }
 
         /// <summary>
-        /// The channel used by the archive's subscription for replication will have the supplied channel tag applied to it.
-        /// The default value for channelTagId is <seealso cref="Aeron.Aeron.NULL_VALUE"/>
+        /// The channel used by the archive's subscription for replication will have the supplied channel tag applied to
+        /// it. The default value for channelTagId is <seealso cref="Aeron.Aeron.NULL_VALUE"/>
         /// </summary>
         /// <param name="channelTagId"> tag to apply to the archive's subscription. </param>
         /// <returns> this for a fluent API </returns>
         public ReplicationParams ChannelTagId(long channelTagId)
         {
-            this.channelTagId = channelTagId;
+            this._channelTagId = channelTagId;
             return this;
         }
 
@@ -146,18 +163,18 @@ namespace Adaptive.Archiver
         /// <returns> channel tag id. </returns>
         public long ChannelTagId()
         {
-            return channelTagId;
+            return _channelTagId;
         }
 
         /// <summary>
-        /// The channel used by the archive's subscription for replication will have the supplied subscription tag applied to
-        /// it. The default value for subscriptionTagId is <seealso cref="Aeron.Aeron.NULL_VALUE"/>
+        /// The channel used by the archive's subscription for replication will have the supplied subscription tag
+        /// applied to it. The default value for subscriptionTagId is <seealso cref="Aeron.Aeron.NULL_VALUE"/>
         /// </summary>
         /// <param name="subscriptionTagId"> tag to apply to the archive's subscription. </param>
         /// <returns> this for a fluent API </returns>
         public ReplicationParams SubscriptionTagId(long subscriptionTagId)
         {
-            this.subscriptionTagId = subscriptionTagId;
+            this._subscriptionTagId = subscriptionTagId;
             return this;
         }
 
@@ -167,41 +184,42 @@ namespace Adaptive.Archiver
         /// <returns> subscription tag id. </returns>
         public long SubscriptionTagId()
         {
-            return subscriptionTagId;
+            return _subscriptionTagId;
         }
 
         /// <summary>
-        /// The maximum size of a file operation when reading from the archive to execute the replication. Will use the value
-        /// defined in the context otherwise. This can be used reduce the size of file IO operations to lower the
+        /// The maximum size of a file operation when reading from the archive to execute the replication. Will use the
+        /// value defined in the context otherwise. This can be used reduce the size of file IO operations to lower the
         /// priority of some replays. Setting it to a value larger than the context value will have no affect.
         /// </summary>
         /// <param name="fileIoMaxLength"> maximum length of a file I/O operation. </param>
         /// <returns> this for a fluent API </returns>
         public ReplicationParams FileIoMaxLength(int fileIoMaxLength)
         {
-            this.fileIoMaxLength = fileIoMaxLength;
+            this._fileIoMaxLength = fileIoMaxLength;
             return this;
         }
 
         /// <summary>
-        /// Gets the maximum length for file IO operations in the replay. Defaults to <seealso cref="Aeron.Aeron.NULL_VALUE"/> if not
+        /// Gets the maximum length for file IO operations in the replay. Defaults to
+        /// <seealso cref="Aeron.Aeron.NULL_VALUE"/> if not
         /// set, which will trigger the use of the Archive.Context default.
         /// </summary>
         /// <returns> maximum length of a file I/O operation. </returns>
         public int FileIoMaxLength()
         {
-            return this.fileIoMaxLength;
+            return this._fileIoMaxLength;
         }
 
         /// <summary>
-        /// Sets the session-id to be used for the replicated file instead of the session id from the source archive. This
-        /// is useful in cases where we are replicating the same recording in multiple stages.
+        /// Sets the session-id to be used for the replicated file instead of the session id from the source archive.
+        /// This is useful in cases where we are replicating the same recording in multiple stages.
         /// </summary>
         /// <param name="replicationSessionId"> the session-id to be set for the received recording. </param>
         /// <returns> this for fluent API </returns>
         public ReplicationParams ReplicationSessionId(int replicationSessionId)
         {
-            this.replicationSessionId = replicationSessionId;
+            this._replicationSessionId = replicationSessionId;
             return this;
         }
 
@@ -211,18 +229,18 @@ namespace Adaptive.Archiver
         /// <returns> session-id to be useful for the replicated recording. </returns>
         public int ReplicationSessionId()
         {
-            return this.replicationSessionId;
+            return this._replicationSessionId;
         }
 
         /// <summary>
-        /// Sets the encoded credentials that will be passed to the source archive for authentication. Currently only simple
-        /// authentication (i.e. not challenge/response) is supported for replication.
+        /// Sets the encoded credentials that will be passed to the source archive for authentication. Currently only
+        /// simple authentication (i.e. not challenge/response) is supported for replication.
         /// </summary>
         /// <param name="encodedCredentials"> credentials to be passed to the source archive. </param>
         /// <returns> this for a fluent API. </returns>
         public ReplicationParams EncodedCredentials(byte[] encodedCredentials)
         {
-            this.encodedCredentials = encodedCredentials;
+            this._encodedCredentials = encodedCredentials;
             return this;
         }
 
@@ -232,9 +250,9 @@ namespace Adaptive.Archiver
         /// <returns> encoded credentials used for authentication. </returns>
         public byte[] EncodedCredentials()
         {
-            return encodedCredentials;
+            return _encodedCredentials;
         }
-        
+
         /// <summary>
         /// Control address of the source archive to use response channels during replication.
         /// </summary>
@@ -242,7 +260,7 @@ namespace Adaptive.Archiver
         /// <returns> this for a fluent API. </returns>
         public ReplicationParams SrcResponseChannel(string responseChannel)
         {
-            this.srcResponseChannel = responseChannel;
+            this._srcResponseChannel = responseChannel;
             return this;
         }
 
@@ -252,37 +270,54 @@ namespace Adaptive.Archiver
         /// <returns> control address of the response publication for the source archive. </returns>
         public string SrcResponseChannel()
         {
-            return srcResponseChannel;
+            return _srcResponseChannel;
         }
 
         public override string ToString()
         {
-            return "ReplicationParams{" +
-                   "stopPosition=" + stopPosition +
-                   ", dstRecordingId=" + dstRecordingId +
-                   ", liveDestination='" + liveDestination + '\'' +
-                   ", replicationChannel='" + replicationChannel + '\'' +
-                   ", channelTagId=" + channelTagId +
-                   ", subscriptionTagId=" + subscriptionTagId +
-                   ", fileIoMaxLength=" + fileIoMaxLength +
-                   ", replicationSessionId=" + replicationSessionId +
-                   '}';
+            return
+                "ReplicationParams{" +
+                "stopPosition=" + _stopPosition +
+                ", dstRecordingId=" + _dstRecordingId +
+                ", liveDestination='" + _liveDestination + '\'' +
+                ", replicationChannel='" + _replicationChannel + '\'' +
+                ", channelTagId=" + _channelTagId +
+                ", subscriptionTagId=" + _subscriptionTagId +
+                ", fileIoMaxLength=" + _fileIoMaxLength +
+                ", replicationSessionId=" + _replicationSessionId +
+                '}';
         }
 
         private bool Equals(ReplicationParams other)
         {
-            return stopPosition == other.stopPosition && dstRecordingId == other.dstRecordingId &&
-                   liveDestination == other.liveDestination && replicationChannel == other.replicationChannel &&
-                   channelTagId == other.channelTagId && subscriptionTagId == other.subscriptionTagId &&
-                   fileIoMaxLength == other.fileIoMaxLength && replicationSessionId == other.replicationSessionId
-                   && Equals(encodedCredentials, other.encodedCredentials);
+            return _stopPosition == other._stopPosition
+                && _dstRecordingId == other._dstRecordingId
+                && _liveDestination == other._liveDestination
+                && _replicationChannel == other._replicationChannel
+                && _channelTagId == other._channelTagId
+                && _subscriptionTagId == other._subscriptionTagId
+                && _fileIoMaxLength == other._fileIoMaxLength
+                && _replicationSessionId == other._replicationSessionId
+                && Equals(_encodedCredentials, other._encodedCredentials);
         }
 
         public override bool Equals(object obj)
         {
-            if (obj is null) return false;
-            if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != GetType()) return false;
+            if (obj is null)
+            {
+                return false;
+            }
+
+            if (ReferenceEquals(this, obj))
+            {
+                return true;
+            }
+
+            if (obj.GetType() != GetType())
+            {
+                return false;
+            }
+
             return Equals((ReplicationParams)obj);
         }
 
@@ -290,15 +325,15 @@ namespace Adaptive.Archiver
         {
             unchecked
             {
-                var hashCode = stopPosition.GetHashCode();
-                hashCode = (hashCode * 397) ^ dstRecordingId.GetHashCode();
-                hashCode = (hashCode * 397) ^ (liveDestination != null ? liveDestination.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (replicationChannel != null ? replicationChannel.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ channelTagId.GetHashCode();
-                hashCode = (hashCode * 397) ^ subscriptionTagId.GetHashCode();
-                hashCode = (hashCode * 397) ^ fileIoMaxLength;
-                hashCode = (hashCode * 397) ^ replicationSessionId;
-                hashCode = (hashCode * 397) ^ (encodedCredentials != null ? encodedCredentials.GetHashCode() : 0);
+                var hashCode = _stopPosition.GetHashCode();
+                hashCode = (hashCode * 397) ^ _dstRecordingId.GetHashCode();
+                hashCode = (hashCode * 397) ^ (_liveDestination != null ? _liveDestination.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (_replicationChannel != null ? _replicationChannel.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ _channelTagId.GetHashCode();
+                hashCode = (hashCode * 397) ^ _subscriptionTagId.GetHashCode();
+                hashCode = (hashCode * 397) ^ _fileIoMaxLength;
+                hashCode = (hashCode * 397) ^ _replicationSessionId;
+                hashCode = (hashCode * 397) ^ (_encodedCredentials != null ? _encodedCredentials.GetHashCode() : 0);
                 return hashCode;
             }
         }

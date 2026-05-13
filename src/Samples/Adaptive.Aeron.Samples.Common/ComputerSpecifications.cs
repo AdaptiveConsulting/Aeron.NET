@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright 2014 - 2017 Adaptive Financial Consulting Ltd
+ * Copyright 2014 - 2026 Adaptive Financial Consulting Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,9 +24,9 @@ using HardwareInformation.Information.Cpu;
 namespace Adaptive.Aeron.Samples.Common
 {
     /// <summary>
-    /// A class that uses the System.Management APIS (WMI) to fetch the most 
-    /// interesting attributes about the computer hardware we are running on.  
-    /// Based on Vance Morrison's MeasureIt tool: http://blogs.msdn.com/b/vancem/archive/2009/02/06/measureit-update-tool-for-doing-microbenchmarks.aspx
+    /// A class that uses the System.Management APIS (WMI) to fetch the most interesting attributes about the computer
+    /// hardware we are running on. Based on Vance Morrison's MeasureIt tool:
+    /// http://blogs.msdn.com/b/vancem/archive/2009/02/06/measureit-update-tool-for-doing-microbenchmarks.aspx
     /// </summary>
     public class ComputerSpecifications
     {
@@ -49,8 +49,8 @@ namespace Adaptive.Aeron.Samples.Common
         public ComputerSpecifications()
         {
             var info = MachineInformationGatherer.GatherInformation();
-            
-            MemoryMBytes = (ulong) info.RAMSticks.Select(i => (long) i.Capacity).Sum();
+
+            MemoryMBytes = (ulong)info.RAMSticks.Select(i => (long)i.Capacity).Sum();
             NumberOfLogicalProcessors = Environment.ProcessorCount;
 
             OperatingSystem = info.OperatingSystem.Platform.ToString();
@@ -61,7 +61,7 @@ namespace Adaptive.Aeron.Samples.Common
 
             ProcessorName = info.Cpu.Name;
             ProcessorDescription = info.Cpu.Vendor;
-            ProcessorClockSpeedMhz = (int) info.Cpu.MaxClockSpeed;
+            ProcessorClockSpeedMhz = (int)info.Cpu.MaxClockSpeed;
             L1KBytes = info.Cpu.Caches.First(c => c.Level == Cache.CacheLevel.LEVEL1).Capacity;
             L2KBytes = info.Cpu.Caches.First(c => c.Level == Cache.CacheLevel.LEVEL2).Capacity;
             L3KBytes = info.Cpu.Caches.First(c => c.Level == Cache.CacheLevel.LEVEL3).Capacity;
@@ -74,7 +74,6 @@ namespace Adaptive.Aeron.Samples.Common
         }
 
         public string Configuration { get; }
-
 
         private static string GetArchitecture() => IntPtr.Size == 4 ? "32-bit" : "64-bit";
 
@@ -94,6 +93,7 @@ namespace Adaptive.Aeron.Samples.Common
         }
 
         public bool IsHyperThreaded => NumberOfCores != NumberOfLogicalProcessors;
+
         private string GetJitFlag() => HasRyuJit ? " [RyuJIT]" : "";
 
         public override string ToString()
@@ -112,9 +112,11 @@ namespace Adaptive.Aeron.Samples.Common
             builder.Append(" - Hyperthreading: ").AppendLine(IsHyperThreaded ? "ON" : "OFF");
             builder.AppendLine();
             builder.AppendLine(
-                $"Memory: {MemoryMBytes}MB, L1Cache: {L1KBytes}KB, L2Cache: {L2KBytes}KB, L3Cache: {L3KBytes}KB");
+                $"Memory: {MemoryMBytes}MB, L1Cache: {L1KBytes}KB, L2Cache: {L2KBytes}KB, L3Cache: {L3KBytes}KB"
+            );
             builder.AppendLine(
-                $".NET Runtime: CLR={ClrVersion}, Arch={Architecture} {Configuration}{GetDebuggerFlag()}{GetJitFlag()}");
+                $".NET Runtime: CLR={ClrVersion}, Arch={Architecture} {Configuration}{GetDebuggerFlag()}{GetJitFlag()}"
+            );
 
             if (Config.Params.Count > 0)
             {

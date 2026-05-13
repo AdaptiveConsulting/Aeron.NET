@@ -1,3 +1,19 @@
+/*
+ * Copyright 2014 - 2026 Adaptive Financial Consulting Ltd
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 using System;
 using System.Threading;
 using Adaptive.Aeron;
@@ -13,10 +29,10 @@ namespace Adaptive.Archiver.Tests
 {
     public class AeronArchiveTest
     {
-        private const string SESSION_ID_PARAM_NAME = "session-id";
-        private const string MTU_LENGTH_PARAM_NAME = "mtu";
-        private const string TERM_LENGTH_PARAM_NAME = "term-length";
-        private const string SPARSE_PARAM_NAME = "sparse";
+        private const string SessionIdParamName = "session-id";
+        private const string MtuLengthParamName = "mtu";
+        private const string TermLengthParamName = "term-length";
+        private const string SparseParamName = "sparse";
 
         private AeronType _aeron;
         private ControlResponsePoller _controlResponsePoller;
@@ -56,23 +72,35 @@ namespace Adaptive.Archiver.Tests
             A.CallTo(() => ctx.ControlResponseChannel()).Returns(responseChannel);
             A.CallTo(() => ctx.ControlResponseStreamId()).Returns(responseStreamId);
             var error = new InvalidOperationException("subscription");
-            A.CallTo(() => _aeron.AsyncAddSubscription(
-                    responseChannel,
-                    responseStreamId,
-                    A<AvailableImageHandler>._,
-                    A<UnavailableImageHandler>._))
+            A.CallTo(() =>
+                    _aeron.AsyncAddSubscription(
+                        responseChannel,
+                        responseStreamId,
+                        A<AvailableImageHandler>._,
+                        A<UnavailableImageHandler>._
+                    )
+                )
                 .Throws(error);
 
             var actualException = Assert.Throws<InvalidOperationException>(() => AeronArchive.ConnectAsync(ctx));
             Assert.AreSame(error, actualException);
 
-            A.CallTo(() => ctx.Conclude()).MustHaveHappened()
+            A.CallTo(() => ctx.Conclude())
+                .MustHaveHappened()
                 .Then(A.CallTo(() => ctx.AeronClient()).MustHaveHappened())
                 .Then(A.CallTo(() => ctx.ControlResponseChannel()).MustHaveHappened())
                 .Then(A.CallTo(() => ctx.ControlResponseStreamId()).MustHaveHappened())
-                .Then(A.CallTo(() => _aeron.AsyncAddSubscription(
-                        responseChannel, responseStreamId, A<AvailableImageHandler>._, A<UnavailableImageHandler>._))
-                    .MustHaveHappened())
+                .Then(
+                    A.CallTo(() =>
+                            _aeron.AsyncAddSubscription(
+                                responseChannel,
+                                responseStreamId,
+                                A<AvailableImageHandler>._,
+                                A<UnavailableImageHandler>._
+                            )
+                        )
+                        .MustHaveHappened()
+                )
                 .Then(A.CallTo(() => ctx.Dispose()).MustHaveHappened());
         }
 
@@ -91,11 +119,14 @@ namespace Adaptive.Archiver.Tests
             A.CallTo(() => ctx.ControlResponseStreamId()).Returns(responseStreamId);
             A.CallTo(() => ctx.ControlRequestChannel()).Returns(requestChannel);
             A.CallTo(() => ctx.ControlRequestStreamId()).Returns(requestStreamId);
-            A.CallTo(() => _aeron.AsyncAddSubscription(
-                    responseChannel,
-                    responseStreamId,
-                    A<AvailableImageHandler>._,
-                    A<UnavailableImageHandler>._))
+            A.CallTo(() =>
+                    _aeron.AsyncAddSubscription(
+                        responseChannel,
+                        responseStreamId,
+                        A<AvailableImageHandler>._,
+                        A<UnavailableImageHandler>._
+                    )
+                )
                 .Returns(subscriptionId);
             var error = new IndexOutOfRangeException("exception");
             A.CallTo(() => _aeron.Ctx).Throws(error);
@@ -103,13 +134,22 @@ namespace Adaptive.Archiver.Tests
             var actualException = Assert.Throws<IndexOutOfRangeException>(() => AeronArchive.ConnectAsync(ctx));
             Assert.AreSame(error, actualException);
 
-            A.CallTo(() => ctx.Conclude()).MustHaveHappened()
+            A.CallTo(() => ctx.Conclude())
+                .MustHaveHappened()
                 .Then(A.CallTo(() => ctx.AeronClient()).MustHaveHappened())
                 .Then(A.CallTo(() => ctx.ControlResponseChannel()).MustHaveHappened())
                 .Then(A.CallTo(() => ctx.ControlResponseStreamId()).MustHaveHappened())
-                .Then(A.CallTo(() => _aeron.AsyncAddSubscription(
-                        responseChannel, responseStreamId, A<AvailableImageHandler>._, A<UnavailableImageHandler>._))
-                    .MustHaveHappened())
+                .Then(
+                    A.CallTo(() =>
+                            _aeron.AsyncAddSubscription(
+                                responseChannel,
+                                responseStreamId,
+                                A<AvailableImageHandler>._,
+                                A<UnavailableImageHandler>._
+                            )
+                        )
+                        .MustHaveHappened()
+                )
                 .Then(A.CallTo(() => _aeron.AsyncRemoveSubscription(subscriptionId)).MustHaveHappened())
                 .Then(A.CallTo(() => ctx.Dispose()).MustHaveHappened());
         }
@@ -149,25 +189,31 @@ namespace Adaptive.Archiver.Tests
                 .ErrorHandler(_errorHandler)
                 .OwnsAeronClient(true);
 
-            var aeronArchive = new AeronArchive(context, _controlResponsePoller, _archiveProxy, controlSessionId, archiveId);
+            var aeronArchive = new AeronArchive(
+                context,
+                _controlResponsePoller,
+                _archiveProxy,
+                controlSessionId,
+                archiveId
+            );
 
             Assert.AreEqual(archiveId, aeronArchive.ArchiveId());
         }
 
         [TestCase(
             "aeron:udp?endpoint=localhost:3388|mtu=2048",
-            "aeron:udp?session-id=5|endpoint=localhost:0|sparse=true|mtu=1024")]
-        [TestCase(
-            "aeron:udp?endpoint=localhost:3388",
-            "aeron:udp?control=localhost:10000|control-mode=dynamic")]
-        [TestCase(
-            "aeron:udp?endpoint=localhost:3388",
-            "aeron:udp?control-mode=manual")]
+            "aeron:udp?session-id=5|endpoint=localhost:0|sparse=true|mtu=1024"
+        )]
+        [TestCase("aeron:udp?endpoint=localhost:3388", "aeron:udp?control=localhost:10000|control-mode=dynamic")]
+        [TestCase("aeron:udp?endpoint=localhost:3388", "aeron:udp?control-mode=manual")]
         [TestCase(
             "aeron:ipc?alias=request|ssc=false|linger=0|session-id=42|sparse=false",
-            "aeron:ipc?term-length=64k|alias=response")]
+            "aeron:ipc?term-length=64k|alias=response"
+        )]
         public void ShouldAddAUniqueSessionIdParameterToBothRequestAndResponseChannels(
-            string requestChannel, string responseChannel)
+            string requestChannel,
+            string responseChannel
+        )
         {
             const int requestStreamId = 42;
             const int responseStreamId = -19;
@@ -199,25 +245,33 @@ namespace Adaptive.Archiver.Tests
 
             var actualRequestChannel = ChannelUri.Parse(context.ControlRequestChannel());
             var actualResponseChannel = ChannelUri.Parse(context.ControlResponseChannel());
-            Assert.IsTrue(actualRequestChannel.ContainsKey(SESSION_ID_PARAM_NAME), "session-id was not added");
-            Assert.AreEqual(sessionId.ToString(), actualRequestChannel.Get(SESSION_ID_PARAM_NAME));
-            Assert.AreEqual(sessionId.ToString(), actualResponseChannel.Get(SESSION_ID_PARAM_NAME));
+            Assert.IsTrue(actualRequestChannel.ContainsKey(SessionIdParamName), "session-id was not added");
+            Assert.AreEqual(sessionId.ToString(), actualRequestChannel.Get(SessionIdParamName));
+            Assert.AreEqual(sessionId.ToString(), actualResponseChannel.Get(SessionIdParamName));
 
-            ChannelUri.Parse(requestChannel).ForEachParameter((key, value) =>
-            {
-                if (!SESSION_ID_PARAM_NAME.Equals(key))
-                {
-                    Assert.AreEqual(value, actualRequestChannel.Get(key));
-                }
-            });
+            ChannelUri
+                .Parse(requestChannel)
+                .ForEachParameter(
+                    (key, value) =>
+                    {
+                        if (!SessionIdParamName.Equals(key))
+                        {
+                            Assert.AreEqual(value, actualRequestChannel.Get(key));
+                        }
+                    }
+                );
 
-            ChannelUri.Parse(responseChannel).ForEachParameter((key, value) =>
-            {
-                if (!SESSION_ID_PARAM_NAME.Equals(key))
-                {
-                    Assert.AreEqual(value, actualResponseChannel.Get(key));
-                }
-            });
+            ChannelUri
+                .Parse(responseChannel)
+                .ForEachParameter(
+                    (key, value) =>
+                    {
+                        if (!SessionIdParamName.Equals(key))
+                        {
+                            Assert.AreEqual(value, actualResponseChannel.Get(key));
+                        }
+                    }
+                );
         }
 
         [Test]
@@ -248,14 +302,19 @@ namespace Adaptive.Archiver.Tests
 
             var actualRequestChannel = ChannelUri.Parse(context.ControlRequestChannel());
             var actualResponseChannel = ChannelUri.Parse(context.ControlResponseChannel());
-            Assert.IsNull(actualRequestChannel.Get(SESSION_ID_PARAM_NAME), "unexpected session-id on request channel");
-            Assert.IsNull(actualResponseChannel.Get(SESSION_ID_PARAM_NAME), "unexpected session-id on response channel");
+            Assert.IsNull(actualRequestChannel.Get(SessionIdParamName), "unexpected session-id on request channel");
+            Assert.IsNull(
+                actualResponseChannel.Get(SessionIdParamName),
+                "unexpected session-id on response channel"
+            );
 
-            ChannelUri.Parse(requestChannel).ForEachParameter(
-                (key, value) => Assert.AreEqual(value, actualRequestChannel.Get(key)));
+            ChannelUri
+                .Parse(requestChannel)
+                .ForEachParameter((key, value) => Assert.AreEqual(value, actualRequestChannel.Get(key)));
 
-            ChannelUri.Parse(responseChannel).ForEachParameter(
-                (key, value) => Assert.AreEqual(value, actualResponseChannel.Get(key)));
+            ChannelUri
+                .Parse(responseChannel)
+                .ForEachParameter((key, value) => Assert.AreEqual(value, actualResponseChannel.Get(key)));
         }
 
         [Test]
@@ -289,17 +348,19 @@ namespace Adaptive.Archiver.Tests
 
             var actualRequestChannel = ChannelUri.Parse(context.ControlRequestChannel());
             var actualResponseChannel = ChannelUri.Parse(context.ControlResponseChannel());
-            Assert.AreEqual(context.ControlMtuLength().ToString(), actualRequestChannel.Get(MTU_LENGTH_PARAM_NAME));
-            Assert.AreEqual(context.ControlMtuLength().ToString(), actualResponseChannel.Get(MTU_LENGTH_PARAM_NAME));
+            Assert.AreEqual(context.ControlMtuLength().ToString(), actualRequestChannel.Get(MtuLengthParamName));
+            Assert.AreEqual(context.ControlMtuLength().ToString(), actualResponseChannel.Get(MtuLengthParamName));
             Assert.AreEqual(
                 context.ControlTermBufferLength().ToString(),
-                actualRequestChannel.Get(TERM_LENGTH_PARAM_NAME));
+                actualRequestChannel.Get(TermLengthParamName)
+            );
             Assert.AreEqual(
                 context.ControlTermBufferLength().ToString(),
-                actualResponseChannel.Get(TERM_LENGTH_PARAM_NAME));
+                actualResponseChannel.Get(TermLengthParamName)
+            );
             string sparseStr = context.ControlTermBufferSparse() ? "true" : "false";
-            Assert.AreEqual(sparseStr, actualRequestChannel.Get(SPARSE_PARAM_NAME));
-            Assert.AreEqual(sparseStr, actualResponseChannel.Get(SPARSE_PARAM_NAME));
+            Assert.AreEqual(sparseStr, actualRequestChannel.Get(SparseParamName));
+            Assert.AreEqual(sparseStr, actualResponseChannel.Get(SparseParamName));
         }
 
         [TestCase(int.MinValue)]
@@ -317,7 +378,8 @@ namespace Adaptive.Archiver.Tests
             var exception = Assert.Throws<ConfigurationException>(() => context.Conclude());
             Assert.AreEqual(
                 "AeronArchive.Context.messageRetryAttempts must be > 0, got: " + retryAttempts,
-                exception.Message);
+                exception.Message
+            );
         }
 
         [Test]
@@ -343,6 +405,7 @@ namespace Adaptive.Archiver.Tests
         }
 
         [Test]
+#pragma warning disable CA1506
         public void CloseNotOwningAeronClient()
         {
             const long controlSessionId = 42L;
@@ -375,21 +438,35 @@ namespace Adaptive.Archiver.Tests
                 .Lock(new NoOpLock())
                 .ErrorHandler(_errorHandler)
                 .OwnsAeronClient(false);
-            var aeronArchive = new AeronArchive(context, _controlResponsePoller, _archiveProxy, controlSessionId, archiveId);
+            var aeronArchive = new AeronArchive(
+                context,
+                _controlResponsePoller,
+                _archiveProxy,
+                controlSessionId,
+                archiveId
+            );
 
             aeronArchive.Dispose();
 
-            A.CallTo(() => _errorHandler.OnError(A<Exception>.That.Matches(ex =>
-                ReferenceEquals(closeSessionException, ex) &&
-                ex.GetSuppressed().Count >= 2 &&
-                ReferenceEquals(publicationException, ex.GetSuppressed()[0]) &&
-                ReferenceEquals(subscriptionException, ex.GetSuppressed()[1])))).MustHaveHappened();
+            A.CallTo(() =>
+                    _errorHandler.OnError(
+                        A<Exception>.That.Matches(ex =>
+                            ReferenceEquals(closeSessionException, ex)
+                            && ex.GetSuppressed().Count >= 2
+                            && ReferenceEquals(publicationException, ex.GetSuppressed()[0])
+                            && ReferenceEquals(subscriptionException, ex.GetSuppressed()[1])
+                        )
+                    )
+                )
+                .MustHaveHappened();
             A.CallTo(_errorHandler).MustHaveHappenedOnceExactly();
             A.CallTo(() => publication.Dispose()).MustHaveHappened();
             A.CallTo(() => subscription.Dispose()).MustHaveHappened();
         }
+#pragma warning restore CA1506
 
         [Test]
+#pragma warning disable CA1506
         public void CloseOwningAeronClient()
         {
             const long controlSessionId = 42L;
@@ -420,7 +497,13 @@ namespace Adaptive.Archiver.Tests
                 .Lock(new NoOpLock())
                 .ErrorHandler(_errorHandler)
                 .OwnsAeronClient(true);
-            var aeronArchive = new AeronArchive(context, _controlResponsePoller, _archiveProxy, controlSessionId, archiveId);
+            var aeronArchive = new AeronArchive(
+                context,
+                _controlResponsePoller,
+                _archiveProxy,
+                controlSessionId,
+                archiveId
+            );
 
             var ex = Assert.Throws<IndexOutOfRangeException>(() => aeronArchive.Dispose());
 
@@ -429,5 +512,6 @@ namespace Adaptive.Archiver.Tests
             A.CallTo(_errorHandler).MustHaveHappenedOnceExactly();
             Assert.AreEqual(aeronException, ex.GetSuppressed()[0]);
         }
+#pragma warning restore CA1506
     }
 }

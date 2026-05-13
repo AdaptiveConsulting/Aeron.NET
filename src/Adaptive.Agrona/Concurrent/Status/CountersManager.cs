@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright 2014 - 2017 Adaptive Financial Consulting Ltd
+ * Copyright 2014 - 2026 Adaptive Financial Consulting Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,9 +22,9 @@ namespace Adaptive.Agrona.Concurrent.Status
 {
     /// <summary>
     /// Manages the allocation and freeing of counters that are normally stored in a memory-mapped file.
-    /// 
+    ///
     /// This class in not threadsafe. Counters should be centrally managed.
-    /// 
+    ///
     /// <b>Values Buffer</b>
     /// <pre>
     ///   0                   1                   2                   3
@@ -41,7 +41,7 @@ namespace Adaptive.Agrona.Concurrent.Status
     /// ...                                                              |
     ///  +---------------------------------------------------------------+
     /// </pre>
-    /// 
+    ///
     /// <b>Meta Data Buffer</b>
     /// <pre>
     ///   0                   1                   2                   3
@@ -81,9 +81,18 @@ namespace Adaptive.Agrona.Concurrent.Status
         /// <param name="metaDataBuffer">       containing the types, keys, and labels for the counters. </param>
         /// <param name="valuesBuffer">         containing the values of the counters themselves. </param>
         /// <param name="labelCharset">         for the label encoding. </param>
-        /// <param name="epochClock">           to use for determining time for keep counter from being reused after being freed. </param>
-        /// <param name="freeToReuseTimeoutMs"> timeout (in milliseconds) to keep counter from being reused after being freed. </param>
-        public CountersManager(IAtomicBuffer metaDataBuffer, IAtomicBuffer valuesBuffer, Encoding labelCharset, IEpochClock epochClock, long freeToReuseTimeoutMs) : base(metaDataBuffer, valuesBuffer, labelCharset)
+        /// <param name="epochClock"> to use for determining time for keep counter from being reused after being freed.
+        /// </param>
+        /// <param name="freeToReuseTimeoutMs"> timeout (in milliseconds) to keep counter from being reused after being
+        /// freed. </param>
+        public CountersManager(
+            IAtomicBuffer metaDataBuffer,
+            IAtomicBuffer valuesBuffer,
+            Encoding labelCharset,
+            IEpochClock epochClock,
+            long freeToReuseTimeoutMs
+        )
+            : base(metaDataBuffer, valuesBuffer, labelCharset)
         {
             valuesBuffer.VerifyAlignment();
             _epochClock = epochClock;
@@ -100,11 +109,11 @@ namespace Adaptive.Agrona.Concurrent.Status
         /// </summary>
         /// <param name="metaDataBuffer"> containing the types, keys, and labels for the counters. </param>
         /// <param name="valuesBuffer">   containing the values of the counters themselves. </param>
-        public CountersManager(IAtomicBuffer metaDataBuffer, IAtomicBuffer valuesBuffer) : base(metaDataBuffer, valuesBuffer)
+        public CountersManager(IAtomicBuffer metaDataBuffer, IAtomicBuffer valuesBuffer)
+            : base(metaDataBuffer, valuesBuffer)
         {
             valuesBuffer.VerifyAlignment();
             _epochClock = new NullEpochClock();
-
 
             if (metaDataBuffer.Capacity < valuesBuffer.Capacity * 2)
             {
@@ -118,7 +127,8 @@ namespace Adaptive.Agrona.Concurrent.Status
         /// <param name="metaDataBuffer"> containing the types, keys, and labels for the counters. </param>
         /// <param name="valuesBuffer">   containing the values of the counters themselves. </param>
         /// <param name="labelCharset">   for the label encoding. </param>
-        public CountersManager(IAtomicBuffer metaDataBuffer, IAtomicBuffer valuesBuffer, Encoding labelCharset) : this(metaDataBuffer, valuesBuffer, labelCharset, new NullEpochClock(), 0)
+        public CountersManager(IAtomicBuffer metaDataBuffer, IAtomicBuffer valuesBuffer, Encoding labelCharset)
+            : this(metaDataBuffer, valuesBuffer, labelCharset, new NullEpochClock(), 0)
         {
             valuesBuffer.VerifyAlignment();
 
@@ -160,9 +170,9 @@ namespace Adaptive.Agrona.Concurrent.Status
 
         /// <summary>
         /// Allocate a new counter with a given label.
-        /// 
-        /// The key function will be called with a buffer with the exact length of available key space
-        /// in the record for the user to store what they want for the key. No offset is required.
+        ///
+        /// The key function will be called with a buffer with the exact length of available key space in the record for
+        /// the user to store what they want for the key. No offset is required.
         /// </summary>
         /// <param name="label">   to describe the counter. </param>
         /// <param name="typeId">  for the type of counter. </param>
@@ -198,7 +208,7 @@ namespace Adaptive.Agrona.Concurrent.Status
         /// Allocate a counter with the minimum of allocation by allowing the label an key to be provided and copied.
         /// <para>
         /// If the keyBuffer is null then a copy of the key is not attempted.
-        ///    
+        ///
         /// </para>
         /// </summary>
         /// <param name="typeId">      for the counter. </param>
@@ -209,7 +219,15 @@ namespace Adaptive.Agrona.Concurrent.Status
         /// <param name="labelOffset"> within the labelBuffer at which the label begins. </param>
         /// <param name="labelLength"> of the label in the labelBuffer. </param>
         /// <returns> the id allocated for the counter. </returns>
-        public int Allocate(int typeId, IDirectBuffer keyBuffer, int keyOffset, int keyLength, IDirectBuffer labelBuffer, int labelOffset, int labelLength)
+        public int Allocate(
+            int typeId,
+            IDirectBuffer keyBuffer,
+            int keyOffset,
+            int keyLength,
+            IDirectBuffer labelBuffer,
+            int labelOffset,
+            int labelLength
+        )
         {
             int counterId = NextCounterId();
             CheckCountersCapacity(counterId);
@@ -232,7 +250,12 @@ namespace Adaptive.Agrona.Concurrent.Status
 
                 length = Math.Min(labelLength, MAX_LABEL_LENGTH);
                 MetaDataBuffer.PutInt(recordOffset + LABEL_OFFSET, length);
-                MetaDataBuffer.PutBytes(recordOffset + LABEL_OFFSET + BitUtil.SIZE_OF_INT, labelBuffer, labelOffset, length);
+                MetaDataBuffer.PutBytes(
+                    recordOffset + LABEL_OFFSET + BitUtil.SIZE_OF_INT,
+                    labelBuffer,
+                    labelOffset,
+                    length
+                );
 
                 MetaDataBuffer.PutIntOrdered(recordOffset, RECORD_ALLOCATED);
             }
@@ -244,7 +267,6 @@ namespace Adaptive.Agrona.Concurrent.Status
 
             return counterId;
         }
-
 
         /// <summary>
         /// Allocate a counter record and wrap it with a new <seealso cref="AtomicCounter"/> for use with a default type
@@ -284,7 +306,7 @@ namespace Adaptive.Agrona.Concurrent.Status
         /// Allocate a counter record and wrap it with a new <seealso cref="AtomicCounter"/> for use.
         /// <para>
         /// If the keyBuffer is null then a copy of the key is not attempted.
-        /// 
+        ///
         /// </para>
         /// </summary>
         /// <param name="typeId">      for the counter. </param>
@@ -302,11 +324,15 @@ namespace Adaptive.Agrona.Concurrent.Status
             int keyLength,
             IDirectBuffer labelBuffer,
             int labelOffset,
-            int labelLength)
+            int labelLength
+        )
         {
-            return new AtomicCounter(ValuesBuffer, Allocate(typeId, keyBuffer, keyOffset, keyLength, labelBuffer, labelOffset, labelLength), this);
+            return new AtomicCounter(
+                ValuesBuffer,
+                Allocate(typeId, keyBuffer, keyOffset, keyLength, labelBuffer, labelOffset, labelLength),
+                this
+            );
         }
-
 
         /// <summary>
         /// Free the counter identified by counterId.
@@ -322,7 +348,10 @@ namespace Adaptive.Agrona.Concurrent.Status
                 throw new System.InvalidOperationException("counter not allocated: id=" + counterId);
             }
 
-            MetaDataBuffer.PutLong(recordOffset + FREE_FOR_REUSE_DEADLINE_OFFSET, _epochClock.Time() + _freeToReuseTimeoutMs);
+            MetaDataBuffer.PutLong(
+                recordOffset + FREE_FOR_REUSE_DEADLINE_OFFSET,
+                _epochClock.Time() + _freeToReuseTimeoutMs
+            );
             MetaDataBuffer.SetMemory(recordOffset + KEY_OFFSET, MAX_KEY_LENGTH, 0);
             MetaDataBuffer.PutIntOrdered(recordOffset, RECORD_RECLAIMED);
             _freeList.Add(counterId);
@@ -346,7 +375,9 @@ namespace Adaptive.Agrona.Concurrent.Status
             {
                 int counterId = _freeList[i];
 
-                long deadlineMs = MetaDataBuffer.GetLongVolatile(MetaDataOffset(counterId) + FREE_FOR_REUSE_DEADLINE_OFFSET);
+                long deadlineMs = MetaDataBuffer.GetLongVolatile(
+                    MetaDataOffset(counterId) + FREE_FOR_REUSE_DEADLINE_OFFSET
+                );
 
                 if (nowMs >= deadlineMs)
                 {
@@ -364,7 +395,12 @@ namespace Adaptive.Agrona.Concurrent.Status
         {
             if (Encoding.ASCII.Equals(LabelCharset))
             {
-                int length = MetaDataBuffer.PutStringWithoutLengthAscii(recordOffset + LABEL_OFFSET + BitUtil.SIZE_OF_INT, label, 0, MAX_LABEL_LENGTH);
+                int length = MetaDataBuffer.PutStringWithoutLengthAscii(
+                    recordOffset + LABEL_OFFSET + BitUtil.SIZE_OF_INT,
+                    label,
+                    0,
+                    MAX_LABEL_LENGTH
+                );
                 MetaDataBuffer.PutInt(recordOffset + LABEL_OFFSET, length);
             }
             else

@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright 2014 - 2017 Adaptive Financial Consulting Ltd
+ * Copyright 2014 - 2026 Adaptive Financial Consulting Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,15 +15,14 @@
  */
 
 using System.Text;
-using Adaptive.Aeron.Exceptions;
 using Adaptive.Agrona;
 
 namespace Adaptive.Aeron.Command
 {
     /// <summary>
-    /// Control message for adding or removing a destination for a Publication in multi-destination-cast or a Subscription
-    /// in multi-destination Subscription.
-    /// 
+    /// Control message for adding or removing a destination for a Publication in multi-destination-cast or a
+    /// Subscription in multi-destination Subscription.
+    ///
     ///  0                   1                   2                   3
     ///  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
     /// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -41,15 +40,16 @@ namespace Adaptive.Aeron.Command
     /// |                       Channel(ASCII)                        ...
     /// ..                                                              |
     /// +---------------------------------------------------------------+
-    /// 
+    ///
     /// </summary>
     public class DestinationMessageFlyweight : CorrelatedMessageFlyweight
     {
-        private static readonly int REGISTRATION_CORRELATION_ID_OFFSET = CORRELATION_ID_FIELD_OFFSET + BitUtil.SIZE_OF_LONG;
-        private static readonly int CHANNEL_OFFSET = REGISTRATION_CORRELATION_ID_OFFSET + BitUtil.SIZE_OF_LONG;
-        private static readonly int MINIMUM_LENGTH = CHANNEL_OFFSET + BitUtil.SIZE_OF_INT;
+        private static readonly int RegistrationCorrelationIdOffset =
+            CorrelationIdFieldOffset + BitUtil.SIZE_OF_LONG;
+        private static readonly int ChannelOffset = RegistrationCorrelationIdOffset + BitUtil.SIZE_OF_LONG;
+        private static readonly int MinimumLength = ChannelOffset + BitUtil.SIZE_OF_INT;
 
-        private int lengthOfChannel;
+        private int _lengthOfChannel;
 
         /// <summary>
         /// Wrap the buffer at a given offset for updates.
@@ -63,14 +63,14 @@ namespace Adaptive.Aeron.Command
 
             return this;
         }
-        
+
         /// <summary>
         /// Return correlation id used in registration field.
         /// </summary>
         /// <returns> correlation id field. </returns>
         public long RegistrationCorrelationId()
         {
-            return buffer.GetLong(offset + REGISTRATION_CORRELATION_ID_OFFSET);
+            return _buffer.GetLong(_offset + RegistrationCorrelationIdOffset);
         }
 
         /// <summary>
@@ -80,7 +80,7 @@ namespace Adaptive.Aeron.Command
         /// <returns> this for a fluent API. </returns>
         public DestinationMessageFlyweight RegistrationCorrelationId(long correlationId)
         {
-            buffer.PutLong(offset + REGISTRATION_CORRELATION_ID_OFFSET, correlationId);
+            _buffer.PutLong(_offset + RegistrationCorrelationIdOffset, correlationId);
 
             return this;
         }
@@ -91,16 +91,16 @@ namespace Adaptive.Aeron.Command
         /// <returns> channel field. </returns>
         public string Channel()
         {
-            return buffer.GetStringAscii(offset + CHANNEL_OFFSET);
+            return _buffer.GetStringAscii(_offset + ChannelOffset);
         }
-        
+
         /// <summary>
-        /// Append the channel value to a <seealso cref="StringBuilder"/>.
+        /// Append the channel value to a <seealso cref="StringBuilder"/> .
         /// </summary>
         /// <param name="stringBuilder"> to append channel to. </param>
         public void AppendChannel(StringBuilder stringBuilder)
         {
-            buffer.GetStringAscii(offset + CHANNEL_OFFSET, stringBuilder);
+            _buffer.GetStringAscii(_offset + ChannelOffset, stringBuilder);
         }
 
         /// <summary>
@@ -110,7 +110,7 @@ namespace Adaptive.Aeron.Command
         /// <returns> this for a fluent API. </returns>
         public DestinationMessageFlyweight Channel(string channel)
         {
-            lengthOfChannel = buffer.PutStringAscii(offset + CHANNEL_OFFSET, channel);
+            _lengthOfChannel = _buffer.PutStringAscii(_offset + ChannelOffset, channel);
 
             return this;
         }
@@ -121,9 +121,9 @@ namespace Adaptive.Aeron.Command
         /// <returns> length of the frame in bytes. </returns>
         public int Length()
         {
-            return CHANNEL_OFFSET + lengthOfChannel;
+            return ChannelOffset + _lengthOfChannel;
         }
-        
+
         /// <summary>
         /// Compute the length of the command message for a given channel length.
         /// </summary>
@@ -131,7 +131,7 @@ namespace Adaptive.Aeron.Command
         /// <returns> the length of the command message for a given channel length. </returns>
         public static int ComputeLength(int channelLength)
         {
-            return MINIMUM_LENGTH + channelLength;
+            return MinimumLength + channelLength;
         }
     }
 }

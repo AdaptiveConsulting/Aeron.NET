@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright 2014 - 2017 Adaptive Financial Consulting Ltd
+ * Copyright 2014 - 2026 Adaptive Financial Consulting Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@ using Adaptive.Agrona.Concurrent.Status;
 namespace Adaptive.Agrona.Concurrent
 {
     /// <summary>
-    /// Agent runner containing an <see cref="IAgent"/> which is run on a <see cref="Thread"/>.
+    /// Agent runner containing an <see cref="IAgent"/> which is run on a <see cref="Thread"/> .
     /// <para>
     /// Note: An instance should only be started once and then discarded, it should not be reused.
     /// </para>
@@ -31,10 +31,10 @@ namespace Adaptive.Agrona.Concurrent
         /// <summary>
         /// Indicates that the runner is being closed.
         /// </summary>
-        private static readonly Thread TOMBSTONE = new Thread(() => { });
+        private static readonly Thread Tombstone = new Thread(() => { });
 
         public static readonly int RETRY_CLOSE_TIMEOUT_MS = 3000;
-        
+
         private volatile bool _isRunning = true;
 
         /// <summary>
@@ -53,14 +53,30 @@ namespace Adaptive.Agrona.Concurrent
         /// </summary>
         /// <param name="idleStrategy"> to use for Agent run loop </param>
         /// <param name="errorHandler"> to be called if an <seealso cref="Exception"/> is encountered </param>
-        /// <param name="errorCounter"> to be incremented each time an exception is encountered. This may be null.</param>
+        /// <param name="errorCounter"> to be incremented each time an exception is encountered. This may be
+        /// null.</param>
         /// <param name="agent">        to be run in this thread. </param>
-        public AgentRunner(IIdleStrategy idleStrategy, IErrorHandler errorHandler, AtomicCounter errorCounter, IAgent agent)
+        public AgentRunner(
+            IIdleStrategy idleStrategy,
+            IErrorHandler errorHandler,
+            AtomicCounter errorCounter,
+            IAgent agent
+        )
         {
-            if (idleStrategy == null) throw new ArgumentNullException(nameof(idleStrategy));
-            if (errorHandler == null) throw new ArgumentNullException(nameof(errorHandler));
-            if (agent == null) throw new ArgumentNullException(nameof(agent));
+            if (idleStrategy == null)
+            {
+                throw new ArgumentNullException(nameof(idleStrategy));
+            }
 
+            if (errorHandler == null)
+            {
+                throw new ArgumentNullException(nameof(errorHandler));
+            }
+
+            if (agent == null)
+            {
+                throw new ArgumentNullException(nameof(agent));
+            }
 
             _idleStrategy = idleStrategy;
             _errorHandler = errorHandler;
@@ -116,9 +132,9 @@ namespace Adaptive.Agrona.Concurrent
         }
 
         /// <summary>
-        /// Run an <seealso cref="IAgent"/>.
+        /// Run an <seealso cref="IAgent"/> .
         /// <para>
-        /// This method does not return until the run loop is stopped via <seealso cref="Dispose()"/>.
+        /// This method does not return until the run loop is stopped via <seealso cref="Dispose()"/> .
         /// </para>
         /// </summary>
         public void Run()
@@ -167,7 +183,8 @@ namespace Adaptive.Agrona.Concurrent
         }
 
         /// <summary>
-        /// Stop the running Agent and cleanup. This will wait for the work loop to exit and the <seealso cref="IAgent"/> performing
+        /// Stop the running Agent and cleanup. This will wait for the work loop to exit and the
+        /// <seealso cref="IAgent"/> performing
         /// it <seealso cref="IAgent.OnClose()"/> logic.
         /// <para>
         /// The clean up logic will only be performed once even if close is called from multiple concurrent threads.
@@ -177,7 +194,7 @@ namespace Adaptive.Agrona.Concurrent
         {
             _isRunning = false;
 
-            var thread = _thread.GetAndSet(TOMBSTONE);
+            var thread = _thread.GetAndSet(Tombstone);
 
             if (null == thread)
             {
@@ -191,7 +208,7 @@ namespace Adaptive.Agrona.Concurrent
                     _errorHandler.OnError(ex);
                 }
             }
-            else if (TOMBSTONE != thread)
+            else if (Tombstone != thread)
             {
                 while (true)
                 {
@@ -204,8 +221,10 @@ namespace Adaptive.Agrona.Concurrent
                             return;
                         }
 
-                        Console.Error.WriteLine($"Timeout waiting for agent '{_agent.RoleName()}' to close, Retrying...");
-                        
+                        Console.Error.WriteLine(
+                            $"Timeout waiting for agent '{_agent.RoleName()}' to close, Retrying..."
+                        );
+
                         thread.Interrupt();
                     }
                     catch (ThreadInterruptedException)

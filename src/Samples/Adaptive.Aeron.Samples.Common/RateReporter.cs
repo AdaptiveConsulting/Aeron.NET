@@ -1,5 +1,5 @@
-/*
- * Copyright 2014 - 2017 Adaptive Financial Consulting Ltd
+﻿/*
+ * Copyright 2014 - 2026 Adaptive Financial Consulting Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@ namespace Adaptive.Aeron.Samples.Common
 {
     /// <summary>
     /// Tracker and reporter of rates.
-    /// 
+    ///
     /// Uses volatile semantics for counters.
     /// </summary>
     public class RateReporter
@@ -40,7 +40,6 @@ namespace Adaptive.Aeron.Samples.Common
         private long _lastTotalBytes;
         private readonly Stopwatch _stopwatch;
         private long _lastTotalMessages;
-
 
         /// <summary>
         /// Create a rate reporter with the given report interval in nanoseconds and the reporting function.
@@ -66,8 +65,9 @@ namespace Adaptive.Aeron.Samples.Common
                 var currentTotalMessages = _totalMessages;
                 var currentTotalBytes = _totalBytes;
                 var timespanMs = _stopwatch.ElapsedMilliseconds;
-                var messagesPerSec = (currentTotalMessages - _lastTotalMessages)*_reportIntervalMs/(double) timespanMs;
-                var bytesPerSec = (currentTotalBytes - _lastTotalBytes)*_reportIntervalMs/(double) timespanMs;
+                var messagesPerSec =
+                    (currentTotalMessages - _lastTotalMessages) * _reportIntervalMs / (double)timespanMs;
+                var bytesPerSec = (currentTotalBytes - _lastTotalBytes) * _reportIntervalMs / (double)timespanMs;
 
                 _reportingFunc(messagesPerSec, bytesPerSec, currentTotalMessages, currentTotalBytes);
 

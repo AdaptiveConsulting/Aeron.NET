@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright 2014 - 2017 Adaptive Financial Consulting Ltd
+ * Copyright 2014 - 2026 Adaptive Financial Consulting Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,16 +19,15 @@ namespace Adaptive.Agrona
     public enum ByteOrder
     {
         /// <summary>
-        /// Constant denoting big-endian byte order.  In this order, the bytes of a
-        /// multibyte value are ordered from most significant to least significant.
+        /// Constant denoting big-endian byte order. In this order, the bytes of a multibyte value are ordered from most
+        /// significant to least significant.
         /// </summary>
         BigEndian,
 
         /// <summary>
-        /// Constant denoting little-endian byte order.  In this order, the bytes of
-        /// a multibyte value are ordered from least significant to most
-        /// significant.
+        /// Constant denoting little-endian byte order. In this order, the bytes of a multibyte value are ordered from
+        /// least significant to most significant.
         /// </summary>
-        LittleEndian
+        LittleEndian,
     }
 }

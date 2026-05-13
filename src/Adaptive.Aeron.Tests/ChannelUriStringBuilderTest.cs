@@ -1,3 +1,19 @@
+/*
+ * Copyright 2014 - 2026 Adaptive Financial Consulting Ltd
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 using System;
 using NUnit.Framework;
 
@@ -6,13 +22,13 @@ namespace Adaptive.Aeron.Tests
     public class ChannelUriStringBuilderTest
     {
         // Constants moved here to avoid pulling private nested constants from Aeron.Configuration.
-        private const string MAX_RESEND_PARAM_NAME = "max-resend";
-        private const string PUBLICATION_WINDOW_LENGTH_PARAM_NAME = "pub-wnd";
-        private const string STREAM_ID_PARAM_NAME = "stream-id";
-        private const string UNTETHERED_LINGER_TIMEOUT_PARAM_NAME = "untethered-linger-timeout";
-        private const string UNTETHERED_RESTING_TIMEOUT_PARAM_NAME = "untethered-resting-timeout";
-        private const string UNTETHERED_WINDOW_LIMIT_TIMEOUT_PARAM_NAME = "untethered-window-limit-timeout";
-        private const string RESPONSE_CORRELATION_ID_PARAM_NAME = "response-correlation-id";
+        private const string MaxResendParamName = "max-resend";
+        private const string PublicationWindowLengthParamName = "pub-wnd";
+        private const string StreamIdParamName = "stream-id";
+        private const string UntetheredLingerTimeoutParamName = "untethered-linger-timeout";
+        private const string UntetheredRestingTimeoutParamName = "untethered-resting-timeout";
+        private const string UntetheredWindowLimitTimeoutParamName = "untethered-window-limit-timeout";
+        private const string ResponseCorrelationIdParamName = "response-correlation-id";
 
         [Test]
         public void ShouldValidateMedia()
@@ -29,8 +45,9 @@ namespace Adaptive.Aeron.Tests
         [Test]
         public void ShouldValidateInitialPosition()
         {
-            Assert.Throws<ArgumentException>(
-                () => new ChannelUriStringBuilder().Media("udp").Endpoint("address:port").TermId(999).Validate());
+            Assert.Throws<ArgumentException>(() =>
+                new ChannelUriStringBuilder().Media("udp").Endpoint("address:port").TermId(999).Validate()
+            );
         }
 
         [Test]
@@ -43,19 +60,14 @@ namespace Adaptive.Aeron.Tests
         [Test]
         public void ShouldGenerateBasicUdpChannel()
         {
-            var builder = new ChannelUriStringBuilder()
-                .Media("udp")
-                .Endpoint("localhost:9999");
+            var builder = new ChannelUriStringBuilder().Media("udp").Endpoint("localhost:9999");
             Assert.AreEqual("aeron:udp?endpoint=localhost:9999", builder.Build());
         }
 
         [Test]
         public void ShouldGenerateBasicUdpChannelSpy()
         {
-            var builder = new ChannelUriStringBuilder()
-                .Prefix("aeron-spy")
-                .Media("udp")
-                .Endpoint("localhost:9999");
+            var builder = new ChannelUriStringBuilder().Prefix("aeron-spy").Media("udp").Endpoint("localhost:9999");
             Assert.AreEqual("aeron-spy:aeron:udp?endpoint=localhost:9999", builder.Build());
         }
 
@@ -82,7 +94,8 @@ namespace Adaptive.Aeron.Tests
                 .TermOffset(64);
             Assert.AreEqual(
                 "aeron:udp?endpoint=address:9999|term-length=128k|init-term-id=777|term-id=999|term-offset=64",
-                builder.Build());
+                builder.Build()
+            );
         }
 
         [Test]
@@ -93,9 +106,7 @@ namespace Adaptive.Aeron.Tests
                 .Endpoint("address:9999")
                 .SocketSndbufLength(8192)
                 .SocketRcvbufLength(4096);
-            Assert.AreEqual(
-                "aeron:udp?endpoint=address:9999|so-sndbuf=8k|so-rcvbuf=4k",
-                builder.Build());
+            Assert.AreEqual("aeron:udp?endpoint=address:9999|so-sndbuf=8k|so-rcvbuf=4k", builder.Build());
         }
 
         [Test]
@@ -105,18 +116,14 @@ namespace Adaptive.Aeron.Tests
                 .Media("udp")
                 .Endpoint("address:9999")
                 .ReceiverWindowLength(8192);
-            Assert.AreEqual(
-                "aeron:udp?endpoint=address:9999|rcv-wnd=8k",
-                builder.Build());
+            Assert.AreEqual("aeron:udp?endpoint=address:9999|rcv-wnd=8k", builder.Build());
         }
 
         [Test]
         public void ShouldGenerateChannelWithLingerTimeout()
         {
             const long lingerNs = 987654321123456789L;
-            var builder = new ChannelUriStringBuilder()
-                .Media("ipc")
-                .Linger(lingerNs);
+            var builder = new ChannelUriStringBuilder().Media("ipc").Linger(lingerNs);
 
             Assert.AreEqual(lingerNs, builder.Linger());
             Assert.AreEqual("aeron:ipc?linger=987654321123456789ns", builder.Build());
@@ -125,10 +132,7 @@ namespace Adaptive.Aeron.Tests
         [Test]
         public void ShouldGenerateChannelWithoutLingerTimeoutIfNullIsPassed()
         {
-            var builder = new ChannelUriStringBuilder()
-                .Media("udp")
-                .Endpoint("address:9999")
-                .Linger((long?)null);
+            var builder = new ChannelUriStringBuilder().Media("udp").Endpoint("address:9999").Linger((long?)null);
 
             Assert.IsNull(builder.Linger());
             Assert.AreEqual("aeron:udp?endpoint=address:9999", builder.Build());
@@ -137,8 +141,9 @@ namespace Adaptive.Aeron.Tests
         [Test]
         public void ShouldRejectNegativeLingerTimeout()
         {
-            var exception = Assert.Throws<ArgumentException>(
-                () => new ChannelUriStringBuilder().Media("udp").Endpoint("address:9999").Linger(-1L));
+            var exception = Assert.Throws<ArgumentException>(() =>
+                new ChannelUriStringBuilder().Media("udp").Endpoint("address:9999").Linger(-1L)
+            );
             Assert.AreEqual("`linger` value cannot be negative: -1", exception.Message);
         }
 
@@ -176,12 +181,15 @@ namespace Adaptive.Aeron.Tests
         [Test]
         public void ShouldRejectInvalidOffsets()
         {
-            Assert.Throws<ArgumentException>(
-                () => new ChannelUriStringBuilder().MediaReceiveTimestampOffset("breserved"));
-            Assert.Throws<ArgumentException>(
-                () => new ChannelUriStringBuilder().ChannelReceiveTimestampOffset("breserved"));
-            Assert.Throws<ArgumentException>(
-                () => new ChannelUriStringBuilder().ChannelSendTimestampOffset("breserved"));
+            Assert.Throws<ArgumentException>(() =>
+                new ChannelUriStringBuilder().MediaReceiveTimestampOffset("breserved")
+            );
+            Assert.Throws<ArgumentException>(() =>
+                new ChannelUriStringBuilder().ChannelReceiveTimestampOffset("breserved")
+            );
+            Assert.Throws<ArgumentException>(() =>
+                new ChannelUriStringBuilder().ChannelSendTimestampOffset("breserved")
+            );
         }
 
         [Test]
@@ -203,34 +211,48 @@ namespace Adaptive.Aeron.Tests
         [Test]
         public void ShouldHandleUntetheredWindowLimitTimeoutWithUnits()
         {
-            Assert.AreEqual(1000L, new ChannelUriStringBuilder()
-                .UntetheredWindowLimitTimeout("1us").UntetheredWindowLimitTimeoutNs());
-            Assert.AreEqual(1L, new ChannelUriStringBuilder()
-                .UntetheredWindowLimitTimeout("1ns").UntetheredWindowLimitTimeoutNs());
-            Assert.AreEqual(1000000L, new ChannelUriStringBuilder()
-                .UntetheredWindowLimitTimeout("1ms").UntetheredWindowLimitTimeoutNs());
+            Assert.AreEqual(
+                1000L,
+                new ChannelUriStringBuilder().UntetheredWindowLimitTimeout("1us").UntetheredWindowLimitTimeoutNs()
+            );
+            Assert.AreEqual(
+                1L,
+                new ChannelUriStringBuilder().UntetheredWindowLimitTimeout("1ns").UntetheredWindowLimitTimeoutNs()
+            );
+            Assert.AreEqual(
+                1000000L,
+                new ChannelUriStringBuilder().UntetheredWindowLimitTimeout("1ms").UntetheredWindowLimitTimeoutNs()
+            );
         }
 
         [Test]
         public void ShouldHandleUntetheredRestingTimeoutWithUnits()
         {
-            Assert.AreEqual(1000L, new ChannelUriStringBuilder()
-                .UntetheredRestingTimeout("1us").UntetheredRestingTimeoutNs());
-            Assert.AreEqual(1L, new ChannelUriStringBuilder()
-                .UntetheredRestingTimeout("1ns").UntetheredRestingTimeoutNs());
-            Assert.AreEqual(1000000L, new ChannelUriStringBuilder()
-                .UntetheredRestingTimeout("1ms").UntetheredRestingTimeoutNs());
+            Assert.AreEqual(
+                1000L,
+                new ChannelUriStringBuilder().UntetheredRestingTimeout("1us").UntetheredRestingTimeoutNs()
+            );
+            Assert.AreEqual(
+                1L,
+                new ChannelUriStringBuilder().UntetheredRestingTimeout("1ns").UntetheredRestingTimeoutNs()
+            );
+            Assert.AreEqual(
+                1000000L,
+                new ChannelUriStringBuilder().UntetheredRestingTimeout("1ms").UntetheredRestingTimeoutNs()
+            );
         }
 
         [Test]
         public void ShouldHandleMaxRetransmits()
         {
             Assert.AreEqual(20, new ChannelUriStringBuilder().MaxResend(20).MaxResend());
-            Assert.IsTrue(new ChannelUriStringBuilder().MaxResend(20).Build()
-                .Contains(MAX_RESEND_PARAM_NAME + "=20"));
-            Assert.AreEqual(30, new ChannelUriStringBuilder()
-                .MaxResend(ChannelUri.Parse(new ChannelUriStringBuilder().MaxResend(30).Build()))
-                .MaxResend());
+            Assert.IsTrue(new ChannelUriStringBuilder().MaxResend(20).Build().Contains(MaxResendParamName + "=20"));
+            Assert.AreEqual(
+                30,
+                new ChannelUriStringBuilder()
+                    .MaxResend(ChannelUri.Parse(new ChannelUriStringBuilder().MaxResend(30).Build()))
+                    .MaxResend()
+            );
         }
 
         [Test]
@@ -242,7 +264,7 @@ namespace Adaptive.Aeron.Tests
             Assert.AreEqual(streamId, new ChannelUriStringBuilder().StreamId(streamId).StreamId());
 
             string uri = new ChannelUriStringBuilder().StreamId(streamId).Build();
-            Assert.AreEqual(streamId.ToString(), ChannelUri.Parse(uri).Get(STREAM_ID_PARAM_NAME));
+            Assert.AreEqual(streamId.ToString(), ChannelUri.Parse(uri).Get(StreamIdParamName));
         }
 
         [Test]
@@ -258,13 +280,16 @@ namespace Adaptive.Aeron.Tests
             Assert.IsNull(new ChannelUriStringBuilder().PublicationWindowLength());
 
             const int pubWindowLength = 7777;
-            Assert.AreEqual(pubWindowLength,
-                new ChannelUriStringBuilder().PublicationWindowLength(pubWindowLength).PublicationWindowLength());
+            Assert.AreEqual(
+                pubWindowLength,
+                new ChannelUriStringBuilder().PublicationWindowLength(pubWindowLength).PublicationWindowLength()
+            );
 
             string uri = new ChannelUriStringBuilder().PublicationWindowLength(pubWindowLength).Build();
             Assert.AreEqual(
                 pubWindowLength.ToString(),
-                ChannelUri.Parse(uri).Get(PUBLICATION_WINDOW_LENGTH_PARAM_NAME));
+                ChannelUri.Parse(uri).Get(PublicationWindowLengthParamName)
+            );
         }
 
         [TestCase("abc")]
@@ -272,7 +297,7 @@ namespace Adaptive.Aeron.Tests
         public void ShouldRejectInvalidPublicationWindowLength(string pubWnd)
         {
             var uri = ChannelUri.Parse("aeron:ipc");
-            uri.Put(PUBLICATION_WINDOW_LENGTH_PARAM_NAME, pubWnd);
+            uri.Put(PublicationWindowLengthParamName, pubWnd);
             // .NET throws FormatException for "abc", OverflowException for the too-big value.
             Assert.Catch(() => new ChannelUriStringBuilder().PublicationWindowLength(uri));
         }
@@ -281,31 +306,33 @@ namespace Adaptive.Aeron.Tests
         [TestCase("-2")]
         public void ShouldThrowAnExceptionOnInvalidResponseCorrelationId(string responseCorrelationId)
         {
-            var channelUri = ChannelUri.Parse("aeron:udp?" + RESPONSE_CORRELATION_ID_PARAM_NAME +
-                "=" + responseCorrelationId);
-            Assert.Throws<ArgumentException>(
-                () => new ChannelUriStringBuilder().ResponseCorrelationId(channelUri));
+            var channelUri = ChannelUri.Parse(
+                "aeron:udp?" + ResponseCorrelationIdParamName + "=" + responseCorrelationId
+            );
+            Assert.Throws<ArgumentException>(() => new ChannelUriStringBuilder().ResponseCorrelationId(channelUri));
         }
 
         [TestCase("prototype")]
         [TestCase("2")]
         public void ShouldNotThrowAnExceptionOnValidResponseCorrelationId(string responseCorrelationId)
         {
-            var channelUri = ChannelUri.Parse("aeron:udp?" + RESPONSE_CORRELATION_ID_PARAM_NAME +
-                "=" + responseCorrelationId);
+            var channelUri = ChannelUri.Parse(
+                "aeron:udp?" + ResponseCorrelationIdParamName + "=" + responseCorrelationId
+            );
             Assert.DoesNotThrow(() => new ChannelUriStringBuilder().ResponseCorrelationId(channelUri));
         }
 
         [Test]
         public void ShouldBuildChannelBuilderUsingExistingStringWithAllTheFields()
         {
-            const string uri = "aeron-spy:aeron:udp?endpoint=127.0.0.1:0|interface=127.0.0.1|control=127.0.0.2:0|" +
-                "control-mode=manual|tags=2,4|alias=foo|cc=cubic|fc=min|reliable=false|ttl=16|mtu=8992|" +
-                "term-length=1m|init-term-id=5|term-offset=64|term-id=4353|session-id=2314234|gtag=3|" +
-                "linger=100000055000001ns|sparse=true|eos=true|tether=false|group=false|ssc=true|so-sndbuf=8m|" +
-                "so-rcvbuf=2m|rcv-wnd=1m|media-rcv-ts-offset=reserved|channel-rcv-ts-offset=0|" +
-                "channel-snd-ts-offset=8|response-endpoint=127.0.0.3:0|response-correlation-id=12345|nak-delay=100us|" +
-                "untethered-window-limit-timeout=1us|untethered-resting-timeout=5us|stream-id=87|pub-wnd=10224";
+            const string uri =
+                "aeron-spy:aeron:udp?endpoint=127.0.0.1:0|interface=127.0.0.1|control=127.0.0.2:0|"
+                + "control-mode=manual|tags=2,4|alias=foo|cc=cubic|fc=min|reliable=false|ttl=16|mtu=8992|"
+                + "term-length=1m|init-term-id=5|term-offset=64|term-id=4353|session-id=2314234|gtag=3|"
+                + "linger=100000055000001ns|sparse=true|eos=true|tether=false|group=false|ssc=true|so-sndbuf=8m|"
+                + "so-rcvbuf=2m|rcv-wnd=1m|media-rcv-ts-offset=reserved|channel-rcv-ts-offset=0|"
+                + "channel-snd-ts-offset=8|response-endpoint=127.0.0.3:0|response-correlation-id=12345|nak-delay=100us|"
+                + "untethered-window-limit-timeout=1us|untethered-resting-timeout=5us|stream-id=87|pub-wnd=10224";
 
             var fromString = ChannelUri.Parse(uri);
             var fromBuilder = ChannelUri.Parse(new ChannelUriStringBuilder(uri).Build());
@@ -329,7 +356,8 @@ namespace Adaptive.Aeron.Tests
         public void ShouldHandleUntetheredParameters(
             long untetheredWindowLimitTimeoutNs,
             long untetheredLingerTimeoutNs,
-            long untetheredRestingTimeoutNs)
+            long untetheredRestingTimeoutNs
+        )
         {
             var builder = new ChannelUriStringBuilder("aeron:ipc")
                 .UntetheredWindowLimitTimeoutNs(untetheredWindowLimitTimeoutNs)
@@ -343,13 +371,16 @@ namespace Adaptive.Aeron.Tests
             var uri = ChannelUri.Parse(builder.Build());
             Assert.AreEqual(
                 Adaptive.Agrona.SystemUtil.FormatDuration(untetheredWindowLimitTimeoutNs),
-                uri.Get(UNTETHERED_WINDOW_LIMIT_TIMEOUT_PARAM_NAME));
+                uri.Get(UntetheredWindowLimitTimeoutParamName)
+            );
             Assert.AreEqual(
                 Adaptive.Agrona.SystemUtil.FormatDuration(untetheredLingerTimeoutNs),
-                uri.Get(UNTETHERED_LINGER_TIMEOUT_PARAM_NAME));
+                uri.Get(UntetheredLingerTimeoutParamName)
+            );
             Assert.AreEqual(
                 Adaptive.Agrona.SystemUtil.FormatDuration(untetheredRestingTimeoutNs),
-                uri.Get(UNTETHERED_RESTING_TIMEOUT_PARAM_NAME));
+                uri.Get(UntetheredRestingTimeoutParamName)
+            );
         }
 
         [Test]
@@ -381,11 +412,19 @@ namespace Adaptive.Aeron.Tests
                 .Build();
 
             CollectionAssert.IsEmpty(
-                ChannelUri.Parse(channel).Diff(
-                    ChannelUri.Parse("aeron:udp?endpoint=localhost:5050|mtu=8k|term-length=4m|rcv-wnd=1k|so-sndbuf=64k|" +
-                        "so-rcvbuf=32k|pub-wnd=1m|untethered-linger-timeout=3ms|untethered-window-limit-timeout=100us|" +
-                        "untethered-resting-timeout=1s|linger=50ms|nak-delay=123456789ns|max-resend=1000|rejoin=false|" +
-                        "tether=true|stream-id=-87|term-id=-5|init-term-id=-9|term-offset=1048576")));
+                ChannelUri
+                    .Parse(channel)
+                    .Diff(
+                        ChannelUri.Parse(
+                            "aeron:udp?endpoint=localhost:5050|mtu=8k|term-length=4m|rcv-wnd=1k|so-sndbuf=64k|"
+                                + "so-rcvbuf=32k|pub-wnd=1m|untethered-linger-timeout=3ms|"
+                                + "untethered-window-limit-timeout=100us|"
+                                + "untethered-resting-timeout=1s|linger=50ms|nak-delay=123456789ns|"
+                                + "max-resend=1000|rejoin=false|"
+                                + "tether=true|stream-id=-87|term-id=-5|init-term-id=-9|term-offset=1048576"
+                        )
+                    )
+            );
         }
     }
 }

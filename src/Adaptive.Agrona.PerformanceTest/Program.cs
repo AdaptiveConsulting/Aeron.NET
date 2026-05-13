@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright 2014 - 2017 Adaptive Financial Consulting Ltd
+ * Copyright 2014 - 2026 Adaptive Financial Consulting Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,19 +19,19 @@ using System.Diagnostics;
 
 namespace Adaptive.Agrona.PerformanceTest
 {
-    class Program
+    static class Program
     {
         static void Main(string[] args)
         {
             // warm up
-            new ManyToOneRingBufferConcurrentTest().ExchangeMessages(10*1000);
-            new ManyToOneRingBufferConcurrentTest().ProvideCorrelationIds(10*1000);
+            new ManyToOneRingBufferConcurrentTest().ExchangeMessages(10 * 1000);
+            new ManyToOneRingBufferConcurrentTest().ProvideCorrelationIds(10 * 1000);
 
             var iterations = 3;
             for (var i = 0; i < iterations; i++)
             {
                 var sw = Stopwatch.StartNew();
-                new ManyToOneRingBufferConcurrentTest().ExchangeMessages(10*1000*1000);
+                new ManyToOneRingBufferConcurrentTest().ExchangeMessages(10 * 1000 * 1000);
                 Console.WriteLine("ExchangeMessages run {0} done in {1}ms", i, sw.ElapsedMilliseconds);
             }
 

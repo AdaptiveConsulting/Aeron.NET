@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright 2014 - 2017 Adaptive Financial Consulting Ltd
+ * Copyright 2014 - 2026 Adaptive Financial Consulting Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,7 +25,8 @@ using static Adaptive.Aeron.Command.ControlProtocolEvents;
 namespace Adaptive.Aeron
 {
     /// <summary>
-    /// Analogue of the <see cref="DriverProxy"/> on the client side for dispatching driver events to the client conductor.
+    /// Analogue of the <see cref="DriverProxy"/> on the client side for dispatching driver events to the client
+    /// conductor.
     /// </summary>
     internal class DriverEventsAdapter
     {
@@ -52,9 +53,10 @@ namespace Adaptive.Aeron
 
         internal DriverEventsAdapter(
             long clientId,
-            CopyBroadcastReceiver receiver, 
+            CopyBroadcastReceiver receiver,
             ClientConductor conductor,
-            HashSet<long> asyncCommandIdSet)
+            HashSet<long> asyncCommandIdSet
+        )
         {
             _clientId = clientId;
             _receiver = receiver;
@@ -85,6 +87,17 @@ namespace Adaptive.Aeron
 
         internal long ClientId => _clientId;
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage(
+            "Major Code Smell",
+            "S138:Functions should not have too many lines",
+            // Upstream: io.aeron.DriverEventsAdapter#onMessage is @SuppressWarnings("MethodLength").
+            Justification = "Upstream Java parity; method is itself @SuppressWarnings(\"MethodLength\")."
+        )]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage(
+            "Maintainability",
+            "CA1502:Avoid excessive complexity",
+            Justification = "Switch dispatch mirrors upstream Java (see Upstream comment above)."
+        )]
         public void OnMessage(int msgTypeId, IMutableDirectBuffer buffer, int index, int length)
         {
             switch (msgTypeId)
@@ -113,8 +126,12 @@ namespace Adaptive.Aeron
 
                     if (_asyncCommandIdSet.Remove(correlationId) && notProcessed)
                     {
-                        _conductor.OnAsyncError(correlationId, errorCodeValue, errorCode,
-                            _errorResponse.ErrorMessage());
+                        _conductor.OnAsyncError(
+                            correlationId,
+                            errorCodeValue,
+                            errorCode,
+                            _errorResponse.ErrorMessage()
+                        );
                     }
 
                     break;
@@ -130,10 +147,10 @@ namespace Adaptive.Aeron
                         _imageReady.SubscriptionRegistrationId(),
                         _imageReady.SubscriberPositionId(),
                         _imageReady.LogFileName(),
-                        _imageReady.SourceIdentity());
+                        _imageReady.SourceIdentity()
+                    );
                     break;
                 }
-
 
                 case ON_PUBLICATION_READY:
                 {
@@ -150,7 +167,8 @@ namespace Adaptive.Aeron
                             _publicationReady.SessionId(),
                             _publicationReady.PublicationLimitCounterId(),
                             _publicationReady.ChannelStatusCounterId(),
-                            _publicationReady.LogFileName());
+                            _publicationReady.LogFileName()
+                        );
                     }
 
                     break;
@@ -210,7 +228,8 @@ namespace Adaptive.Aeron
                             _publicationReady.SessionId(),
                             _publicationReady.PublicationLimitCounterId(),
                             _publicationReady.ChannelStatusCounterId(),
-                            _publicationReady.LogFileName());
+                            _publicationReady.LogFileName()
+                        );
                     }
 
                     break;
@@ -297,7 +316,7 @@ namespace Adaptive.Aeron
         private static ErrorCode GetErrorCode(int errorCodeValue)
         {
             return Enum.IsDefined(typeof(ErrorCode), errorCodeValue)
-                ? (ErrorCode) errorCodeValue
+                ? (ErrorCode)errorCodeValue
                 : ErrorCode.UNKNOWN_CODE_VALUE;
         }
     }

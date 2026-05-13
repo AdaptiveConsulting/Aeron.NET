@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright 2014 - 2017 Adaptive Financial Consulting Ltd
+ * Copyright 2014 - 2026 Adaptive Financial Consulting Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@ namespace Adaptive.Aeron
     public interface ILogBuffersFactory
     {
         /// <summary>
-        /// Map a log file into memory and wrap each section with a <seealso cref="UnsafeBuffer"/>.
+        /// Map a log file into memory and wrap each section with a <seealso cref="UnsafeBuffer"/> .
         /// </summary>
         /// <param name="logFileName"> to be mapped into memory. </param>
         /// <returns> a representation of the mapped log buffer. </returns>

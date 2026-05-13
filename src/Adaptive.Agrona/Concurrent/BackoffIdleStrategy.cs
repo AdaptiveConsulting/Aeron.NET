@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright 2014 - 2017 Adaptive Financial Consulting Ltd
+ * Copyright 2014 - 2026 Adaptive Financial Consulting Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-
 using System;
 using System.Threading;
 
@@ -22,10 +21,9 @@ namespace Adaptive.Agrona.Concurrent
 {
     /// <summary>
     /// Idling strategy for threads when they have no work to do.
-    /// 
-    /// Spin for maxSpins, then
-    /// <see cref="Thread.Yield"/> for maxYields, then
-    /// <see cref="Thread.Sleep(int)"/> on an exponential backup to maxParkPeriodMs
+    ///
+    /// Spin for maxSpins, then <see cref="Thread.Yield"/> for maxYields, then <see cref="Thread.Sleep(int)"/> on an
+    /// exponential backup to maxParkPeriodMs
     /// </summary>
     /// TODO Padding to avoid false sharing
     public class BackoffIdleStrategy : IIdleStrategy
@@ -35,7 +33,7 @@ namespace Adaptive.Agrona.Concurrent
             NOT_IDLE,
             SPINNING,
             YIELDING,
-            PARKING
+            PARKING,
         }
 
         private readonly long _maxSpins;

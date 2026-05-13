@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright 2014 - 2017 Adaptive Financial Consulting Ltd
+ * Copyright 2014 - 2026 Adaptive Financial Consulting Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,25 +24,30 @@ namespace Adaptive.Aeron
 {
     /// <summary>
     /// Separates the concern of communicating with the client conductor away from the rest of the client.
-    /// 
+    ///
     /// For writing commands into the client conductor buffer.
-    /// 
-    /// Note: this class is not thread safe and is expecting to be called within <see cref="Aeron.Context.ClientLock(Adaptive.Agrona.Concurrent.ILock)"/>.
+    ///
+    /// Note: this class is not thread safe and is expecting to be called within
+    /// <see cref="Aeron.Context.ClientLock(Adaptive.Agrona.Concurrent.ILock)"/> .
     /// </summary>
     public class DriverProxy
     {
         private readonly long _clientId;
         private readonly PublicationMessageFlyweight _publicationMessageFlyweight = new PublicationMessageFlyweight();
-        private readonly SubscriptionMessageFlyweight _subscriptionMessageFlyweight = new SubscriptionMessageFlyweight();
+        private readonly SubscriptionMessageFlyweight _subscriptionMessageFlyweight =
+            new SubscriptionMessageFlyweight();
         private readonly RemoveCounterFlyweight _removeCounterFlyweight = new RemoveCounterFlyweight();
         private readonly RemovePublicationFlyweight _removePublicationFlyweight = new RemovePublicationFlyweight();
         private readonly RemoveSubscriptionFlyweight _removeSubscriptionFlyweight = new RemoveSubscriptionFlyweight();
         private readonly DestinationMessageFlyweight _destinationMessageFlyweight = new DestinationMessageFlyweight();
-        private readonly DestinationByIdMessageFlyweight _destinationByIdMessageFlyweight = new DestinationByIdMessageFlyweight();
+        private readonly DestinationByIdMessageFlyweight _destinationByIdMessageFlyweight =
+            new DestinationByIdMessageFlyweight();
         private readonly CounterMessageFlyweight _counterMessageFlyweight = new CounterMessageFlyweight();
-        private readonly StaticCounterMessageFlyweight _staticCounterMessageFlyweight = new StaticCounterMessageFlyweight();
+        private readonly StaticCounterMessageFlyweight _staticCounterMessageFlyweight =
+            new StaticCounterMessageFlyweight();
         private readonly RejectImageFlyweight _rejectImageFlyweight = new RejectImageFlyweight();
-        private readonly GetNextAvailableSessionIdMessageFlyweight _getNextAvailableSessionIdMessageFlyweight = new GetNextAvailableSessionIdMessageFlyweight();
+        private readonly GetNextAvailableSessionIdMessageFlyweight _getNextAvailableSessionIdMessageFlyweight =
+            new GetNextAvailableSessionIdMessageFlyweight();
         private readonly IRingBuffer _toDriverCommandBuffer;
 
         public DriverProxy(IRingBuffer toDriverCommandBuffer, long clientId)
@@ -125,8 +130,7 @@ namespace Adaptive.Aeron
         public long RemovePublication(long registrationId, bool revoke)
         {
             long correlationId = _toDriverCommandBuffer.NextCorrelationId();
-            int index = _toDriverCommandBuffer.TryClaim(REMOVE_PUBLICATION,
-                RemovePublicationFlyweight.Length());
+            int index = _toDriverCommandBuffer.TryClaim(REMOVE_PUBLICATION, RemovePublicationFlyweight.Length());
             if (index < 0)
             {
                 throw new AeronException("failed to write remove publication command");
@@ -182,8 +186,7 @@ namespace Adaptive.Aeron
         public long RemoveSubscription(long registrationId)
         {
             long correlationId = _toDriverCommandBuffer.NextCorrelationId();
-            int index = _toDriverCommandBuffer.TryClaim(REMOVE_SUBSCRIPTION,
-                RemoveSubscriptionFlyweight.Length());
+            int index = _toDriverCommandBuffer.TryClaim(REMOVE_SUBSCRIPTION, RemoveSubscriptionFlyweight.Length());
             if (index < 0)
             {
                 throw new AeronException("failed to write remove subscription command");
@@ -260,13 +263,16 @@ namespace Adaptive.Aeron
         /// Remove a destination from the send channel of an existing MDC Publication.
         /// </summary>
         /// <param name="publicationRegistrationId">  of the Publication. </param>
-        /// <param name="destinationRegistrationId"> used for the <seealso cref="AddDestination(long, string)"/> command. </param>
+        /// <param name="destinationRegistrationId"> used for the <seealso cref="AddDestination(long, string)"/>
+        /// command. </param>
         /// <returns> the correlation id for the command. </returns>
         public long RemoveDestination(long publicationRegistrationId, long destinationRegistrationId)
         {
             long correlationId = _toDriverCommandBuffer.NextCorrelationId();
-            int index = _toDriverCommandBuffer.TryClaim(REMOVE_DESTINATION_BY_ID,
-                DestinationByIdMessageFlyweight.MESSAGE_LENGTH);
+            int index = _toDriverCommandBuffer.TryClaim(
+                REMOVE_DESTINATION_BY_ID,
+                DestinationByIdMessageFlyweight.MESSAGE_LENGTH
+            );
             if (index < 0)
             {
                 throw new AeronException("failed to write remove destination command");
@@ -316,7 +322,8 @@ namespace Adaptive.Aeron
         /// Remove a destination from the receive channel endpoint of an existing MDS Subscription.
         /// </summary>
         /// <param name="registrationId">  of the Subscription. </param>
-        /// <param name="endpointChannel"> used for the <seealso cref="AddRcvDestination(long, string)"/> command. </param>
+        /// <param name="endpointChannel"> used for the <seealso cref="AddRcvDestination(long, string)"/> command.
+        /// </param>
         /// <returns> the correlation id for the command. </returns>
         public long RemoveRcvDestination(long registrationId, string endpointChannel)
         {
@@ -351,8 +358,15 @@ namespace Adaptive.Aeron
         /// <param name="labelOffset"> offset at which the label begins. </param>
         /// <param name="labelLength"> length in bytes for the label. </param>
         /// <returns> the correlation id for the command. </returns>
-        public long AddCounter(int typeId, IDirectBuffer keyBuffer, int keyOffset, int keyLength,
-            IDirectBuffer labelBuffer, int labelOffset, int labelLength)
+        public long AddCounter(
+            int typeId,
+            IDirectBuffer keyBuffer,
+            int keyOffset,
+            int keyLength,
+            IDirectBuffer labelBuffer,
+            int labelOffset,
+            int labelLength
+        )
         {
             long correlationId = _toDriverCommandBuffer.NextCorrelationId();
             int length = CounterMessageFlyweight.ComputeLength(keyLength, labelLength);
@@ -412,8 +426,7 @@ namespace Adaptive.Aeron
         public long RemoveCounter(long registrationId)
         {
             long correlationId = _toDriverCommandBuffer.NextCorrelationId();
-            int index = _toDriverCommandBuffer.TryClaim(REMOVE_COUNTER,
-                RemoveCounterFlyweight.Length());
+            int index = _toDriverCommandBuffer.TryClaim(REMOVE_COUNTER, RemoveCounterFlyweight.Length());
             if (index < 0)
             {
                 throw new AeronException("failed to write remove counter command");
@@ -435,8 +448,7 @@ namespace Adaptive.Aeron
         /// </summary>
         public void ClientClose()
         {
-            int index = _toDriverCommandBuffer.TryClaim(CLIENT_CLOSE,
-                CorrelatedMessageFlyweight.LENGTH);
+            int index = _toDriverCommandBuffer.TryClaim(CLIENT_CLOSE, CorrelatedMessageFlyweight.LENGTH);
             if (index > 0)
             {
                 (new CorrelatedMessageFlyweight())
@@ -506,16 +518,21 @@ namespace Adaptive.Aeron
             return correlationId;
         }
 
-
         public override string ToString()
         {
-            return "DriverProxy{" +
-                   "clientId=" + _clientId +
-                   '}';
+            return "DriverProxy{" + "clientId=" + _clientId + '}';
         }
 
-        internal long AddStaticCounter(int typeId, IDirectBuffer keyBuffer, int keyOffset, int keyLength,
-            IDirectBuffer labelBuffer, int labelOffset, int labelLength, long registrationId)
+        internal long AddStaticCounter(
+            int typeId,
+            IDirectBuffer keyBuffer,
+            int keyOffset,
+            int keyLength,
+            IDirectBuffer labelBuffer,
+            int labelOffset,
+            int labelLength,
+            long registrationId
+        )
         {
             long correlationId = _toDriverCommandBuffer.NextCorrelationId();
             int length = StaticCounterMessageFlyweight.ComputeLength(keyLength, labelLength);
@@ -562,12 +579,14 @@ namespace Adaptive.Aeron
 
             return correlationId;
         }
-        
+
         internal long NextAvailableSessionId(int streamId)
         {
             long correlationId = _toDriverCommandBuffer.NextCorrelationId();
             int index = _toDriverCommandBuffer.TryClaim(
-                GET_NEXT_AVAILABLE_SESSION_ID, GetNextAvailableSessionIdMessageFlyweight.LENGTH);
+                GET_NEXT_AVAILABLE_SESSION_ID,
+                GetNextAvailableSessionIdMessageFlyweight.LENGTH
+            );
             if (index < 0)
             {
                 throw new AeronException("failed to write next session id command");

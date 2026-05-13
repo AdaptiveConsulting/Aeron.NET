@@ -1,7 +1,22 @@
+﻿/*
+ * Copyright 2014 - 2026 Adaptive Financial Consulting Ltd
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 using System;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Threading;
 using Adaptive.Agrona.Concurrent;
 using NUnit.Framework;
@@ -21,10 +36,17 @@ namespace Adaptive.Aeron.Tests
             _aeronDir = Aeron.Context.GetAeronDirectoryName();
             if (Directory.Exists(_aeronDir))
             {
-                try { Directory.Delete(_aeronDir, recursive: true); } catch { }
+                try
+                {
+                    Directory.Delete(_aeronDir, recursive: true);
+                }
+                catch
+                {
+                }
             }
 
-            var rootDir = GetSolutionDirectory(TestContext.CurrentContext.TestDirectory)?.Parent
+            var rootDir =
+                GetSolutionDirectory(TestContext.CurrentContext.TestDirectory)?.Parent
                 ?? throw new FileNotFoundException("could not find root directory of project");
             var jarPath = Path.Combine(rootDir.FullName, "driver", "media-driver.jar");
 
@@ -33,7 +55,7 @@ namespace Adaptive.Aeron.Tests
                 FileName = "java",
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
-                UseShellExecute = false
+                UseShellExecute = false,
             };
             psi.ArgumentList.Add("--add-opens");
             psi.ArgumentList.Add("java.base/jdk.internal.misc=ALL-UNNAMED");
@@ -46,11 +68,12 @@ namespace Adaptive.Aeron.Tests
             psi.ArgumentList.Add("-cp");
             psi.ArgumentList.Add(jarPath);
             psi.ArgumentList.Add($"-Daeron.dir={_aeronDir}");
-            psi.ArgumentList.Add("-Daeron.driver.termination.validator=io.aeron.driver.DefaultAllowTerminationValidator");
+            psi.ArgumentList.Add(
+                "-Daeron.driver.termination.validator=io.aeron.driver.DefaultAllowTerminationValidator"
+            );
             psi.ArgumentList.Add("io.aeron.driver.MediaDriver");
 
-            _driver = Process.Start(psi)
-                ?? throw new InvalidOperationException("failed to start media driver");
+            _driver = Process.Start(psi) ?? throw new InvalidOperationException("failed to start media driver");
 
             WaitForDriverReady();
         }
@@ -62,8 +85,7 @@ namespace Adaptive.Aeron.Tests
             try
             {
                 var token = new UnsafeBuffer(Array.Empty<byte>());
-                Aeron.Context.RequestDriverTermination(
-                    new DirectoryInfo(_aeronDir), token, 0, 0);
+                Aeron.Context.RequestDriverTermination(new DirectoryInfo(_aeronDir), token, 0, 0);
             }
             catch
             {
@@ -72,7 +94,13 @@ namespace Adaptive.Aeron.Tests
 
             if (!_driver.WaitForExit(ShutdownTimeoutMs))
             {
-                try { _driver.Kill(entireProcessTree: true); } catch { }
+                try
+                {
+                    _driver.Kill(entireProcessTree: true);
+                }
+                catch
+                {
+                }
                 _driver.WaitForExit(ShutdownTimeoutMs);
             }
             _driver.Dispose();
@@ -98,14 +126,13 @@ namespace Adaptive.Aeron.Tests
                 }
             }
 
-            throw new TimeoutException(
-                $"media driver did not become ready within {StartupTimeoutMs}ms", last);
+            throw new TimeoutException($"media driver did not become ready within {StartupTimeoutMs}ms", last);
         }
 
         private static DirectoryInfo GetSolutionDirectory(string currentPath)
         {
             var directory = new DirectoryInfo(currentPath ?? Directory.GetCurrentDirectory());
-            while (directory != null && !directory.GetFiles("*.sln").Any())
+            while (directory != null && directory.GetFiles("*.sln").Length == 0)
             {
                 directory = directory.Parent;
             }

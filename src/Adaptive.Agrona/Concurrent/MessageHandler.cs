@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright 2014 - 2017 Adaptive Financial Consulting Ltd
+ * Copyright 2014 - 2026 Adaptive Financial Consulting Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,8 +17,8 @@
 namespace Adaptive.Agrona.Concurrent
 {
     /// <summary>
-    /// Callback interface for processing of messages that are read from a buffer.
-    /// Called for the processing of each message read from a buffer in turn.
+    /// Callback interface for processing of messages that are read from a buffer. Called for the processing of each
+    /// message read from a buffer in turn.
     /// </summary>
     /// <param name="msgTypeId"> type of the encoded message.</param>
     /// <param name="buffer"> containing the encoded message.</param>
