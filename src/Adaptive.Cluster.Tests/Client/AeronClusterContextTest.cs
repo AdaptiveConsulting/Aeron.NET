@@ -46,7 +46,7 @@ namespace Adaptive.Cluster.Tests.Client
             _context.IngressChannel(ingressChannel);
 
             var exception = Assert.Throws<ConfigurationException>(() => _context.Conclude());
-            Assert.AreEqual("ingressChannel must be specified", exception.Message);
+            Assert.AreEqual("ERROR - ingressChannel must be specified", exception.Message);
         }
 
         [Test]
@@ -56,7 +56,7 @@ namespace Adaptive.Cluster.Tests.Client
 
             var exception = Assert.Throws<ConfigurationException>(() => _context.Conclude());
             Assert.AreEqual(
-                "AeronCluster.Context ingressEndpoints must be null when using IPC ingress",
+                "ERROR - AeronCluster.Context ingressEndpoints must be null when using IPC ingress",
                 exception.Message
             );
         }
@@ -68,7 +68,7 @@ namespace Adaptive.Cluster.Tests.Client
             _context.EgressChannel(egressChannel);
 
             var exception = Assert.Throws<ConfigurationException>(() => _context.Conclude());
-            Assert.AreEqual("egressChannel must be specified", exception.Message);
+            Assert.AreEqual("ERROR - egressChannel must be specified", exception.Message);
         }
 
         [TestCase(null)]
@@ -109,7 +109,8 @@ namespace Adaptive.Cluster.Tests.Client
 
             var exception = Assert.Throws<ConfigurationException>(() => _context.Conclude());
             Assert.AreEqual(
-                "AeronCluster.Context.clientName length must be <= " + AeronType.Configuration.MAX_CLIENT_NAME_LENGTH,
+                "ERROR - AeronCluster.Context.clientName length must be <= "
+                + AeronType.Configuration.MAX_CLIENT_NAME_LENGTH,
                 exception.Message
             );
         }

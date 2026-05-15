@@ -15,6 +15,7 @@
  */
 
 using System;
+using System.Globalization;
 using System.Text;
 using Adaptive.Aeron.LogBuffer;
 using Adaptive.Agrona;
@@ -1592,7 +1593,7 @@ namespace Adaptive.Aeron
         /// <seealso cref="Aeron.Context.SOCKET_SNDBUF_PARAM_NAME"/>
         public ChannelUriStringBuilder SocketSndbufLength(int? socketSndbufLength)
         {
-            _socketSndbufLength = socketSndbufLength;
+            _socketSndbufLength = RequireNonNegative(socketSndbufLength, SOCKET_SNDBUF_PARAM_NAME);
             return this;
         }
 
@@ -1640,7 +1641,7 @@ namespace Adaptive.Aeron
         /// <seealso cref="Aeron.Context.SOCKET_SNDBUF_PARAM_NAME"/>
         public ChannelUriStringBuilder SocketRcvbufLength(int? socketRcvbufLength)
         {
-            _socketRcvbufLength = socketRcvbufLength;
+            _socketRcvbufLength = RequireNonNegative(socketRcvbufLength, SOCKET_RCVBUF_PARAM_NAME);
             return this;
         }
 
@@ -1689,7 +1690,7 @@ namespace Adaptive.Aeron
         /// <seealso cref="Aeron.Context.RECEIVER_WINDOW_LENGTH_PARAM_NAME"/>
         public ChannelUriStringBuilder ReceiverWindowLength(int? receiverWindowLength)
         {
-            this._receiverWindowLength = receiverWindowLength;
+            this._receiverWindowLength = RequireNonNegative(receiverWindowLength, RECEIVER_WINDOW_LENGTH_PARAM_NAME);
             return this;
         }
 
@@ -1758,7 +1759,7 @@ namespace Adaptive.Aeron
             {
                 try
                 {
-                    int.Parse(timestampOffset);
+                    int.Parse(timestampOffset, NumberStyles.Integer, CultureInfo.InvariantCulture);
                 }
                 catch (FormatException)
                 {
@@ -1814,7 +1815,7 @@ namespace Adaptive.Aeron
             {
                 try
                 {
-                    int.Parse(timestampOffset);
+                    int.Parse(timestampOffset, NumberStyles.Integer, CultureInfo.InvariantCulture);
                 }
                 catch (FormatException)
                 {
@@ -1859,7 +1860,7 @@ namespace Adaptive.Aeron
             {
                 try
                 {
-                    int.Parse(timestampOffset);
+                    int.Parse(timestampOffset, NumberStyles.Integer, CultureInfo.InvariantCulture);
                 }
                 catch (FormatException)
                 {
@@ -1973,7 +1974,7 @@ namespace Adaptive.Aeron
             {
                 try
                 {
-                    if (long.Parse(responseCorrelationId) < -1)
+                    if (long.Parse(responseCorrelationId, NumberStyles.Integer, CultureInfo.InvariantCulture) < -1)
                     {
                         throw new FormatException("responseCorrelationId must be positive");
                     }
@@ -2102,6 +2103,7 @@ namespace Adaptive.Aeron
         /// <seealso cref="Aeron.Context.UNTETHERED_WINDOW_LIMIT_TIMEOUT_PARAM_NAME"/>
         public ChannelUriStringBuilder UntetheredWindowLimitTimeoutNs(long? timeout)
         {
+            timeout = RequireNonNegative(timeout, UNTETHERED_WINDOW_LIMIT_TIMEOUT_PARAM_NAME);
             _untetheredWindowLimitTimeoutNs = timeout;
             return this;
         }
@@ -2158,7 +2160,7 @@ namespace Adaptive.Aeron
         /// <seealso cref="Aeron.Context.UNTETHERED_LINGER_TIMEOUT_PARAM_NAME"/>
         public ChannelUriStringBuilder UntetheredLingerTimeoutNs(long? timeout)
         {
-            _untetheredLingerTimeoutNs = timeout;
+            _untetheredLingerTimeoutNs = RequireNonNegative(timeout, UNTETHERED_LINGER_TIMEOUT_PARAM_NAME);
             return this;
         }
 
@@ -2214,7 +2216,7 @@ namespace Adaptive.Aeron
         /// <seealso cref="Aeron.Context.UNTETHERED_RESTING_TIMEOUT_PARAM_NAME"/>
         public ChannelUriStringBuilder UntetheredRestingTimeoutNs(long? timeout)
         {
-            _untetheredRestingTimeoutNs = timeout;
+            _untetheredRestingTimeoutNs = RequireNonNegative(timeout, UNTETHERED_RESTING_TIMEOUT_PARAM_NAME);
             return this;
         }
 
@@ -2250,7 +2252,7 @@ namespace Adaptive.Aeron
         /// <seealso cref="Aeron.Context.MAX_RESEND_PARAM_NAME"/>
         public ChannelUriStringBuilder MaxResend(int? maxResend)
         {
-            this._maxResend = maxResend;
+            this._maxResend = RequireNonNegative(maxResend, MAX_RESEND_PARAM_NAME);
             return this;
         }
 
@@ -2272,7 +2274,7 @@ namespace Adaptive.Aeron
             {
                 try
                 {
-                    return MaxResend(int.Parse(valueStr));
+                    return MaxResend(int.Parse(valueStr, NumberStyles.Integer, CultureInfo.InvariantCulture));
                 }
                 catch (System.FormatException ex)
                 {
@@ -2328,7 +2330,7 @@ namespace Adaptive.Aeron
             {
                 try
                 {
-                    return StreamId(int.Parse(valueStr));
+                    return StreamId(int.Parse(valueStr, NumberStyles.Integer, CultureInfo.InvariantCulture));
                 }
                 catch (System.FormatException ex)
                 {
@@ -2345,7 +2347,8 @@ namespace Adaptive.Aeron
         /// <seealso cref="Aeron.Context.PUBLICATION_WINDOW_LENGTH_PARAM_NAME"/>
         public ChannelUriStringBuilder PublicationWindowLength(int? publicationWindowLength)
         {
-            this._publicationWindowLength = publicationWindowLength;
+            this._publicationWindowLength =
+                RequireNonNegative(publicationWindowLength, PUBLICATION_WINDOW_LENGTH_PARAM_NAME);
             return this;
         }
 
@@ -2497,6 +2500,24 @@ namespace Adaptive.Aeron
         private static string PrefixTag(bool isTagged, long? value)
         {
             return isTagged ? TAG_PREFIX + value : value.ToString();
+        }
+
+        private static long? RequireNonNegative(long? value, string name)
+        {
+            if (null != value && value.Value < 0)
+            {
+                throw new ArgumentException("`" + name + "` value cannot be negative: " + value);
+            }
+            return value;
+        }
+
+        private static int? RequireNonNegative(int? value, string name)
+        {
+            if (null != value && value.Value < 0)
+            {
+                throw new ArgumentException("`" + name + "` value cannot be negative: " + value);
+            }
+            return value;
         }
     }
 }

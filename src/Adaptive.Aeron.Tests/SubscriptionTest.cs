@@ -16,6 +16,7 @@
 
 using Adaptive.Aeron.LogBuffer;
 using Adaptive.Aeron.Protocol;
+using Adaptive.Aeron.Status;
 using Adaptive.Agrona.Concurrent;
 using Adaptive.Agrona.Concurrent.Status;
 using FakeItEasy;
@@ -154,6 +155,52 @@ namespace Adaptive.Aeron.Tests
                 });
 
             Assert.AreEqual(2, _subscription.Poll(_fragmentHandler, FragmentCountLimit));
+        }
+
+        // Cases where TryResolveChannelEndpointPort short-circuits without reading from the CountersReader.
+        // These cover the 1.51.0 caching/MDS-manual logic added in Subscription.cs.
+        // Tests that exercise LocalSocketAddressStatus lookups (active/errored bind addresses) are not
+        // ported yet — they require a .NET-side Allocate helper that doesn't exist today.
+        [TestCase("aeron:ipc")]
+        [TestCase("aeron:udp?control-mode=response|control=localhost:5555")]
+        [TestCase("aeron:udp?endpoint=localhost:8888")]
+        [TestCase("aeron:udp?control-mode=manual|endpoint=localhost:0")]
+        [TestCase("aeron:udp?control-mode=dynamic|control=localhost:7777")]
+        public void TryResolveChannelEndpointPortReturnsOriginalUriIfEndpointDoesNotNeedResolving(string channel)
+        {
+            const int channelStatusId = 777;
+            _subscription = new Subscription(
+                _conductor,
+                channel,
+                StreamId1,
+                SubscriptionCorrelationId,
+                _availableImageHandler,
+                _unavailableImageHandler
+            )
+            {
+                ChannelStatusId = channelStatusId
+            };
+            A.CallTo(() => _conductor.ChannelStatus(channelStatusId)).Returns(ChannelEndpointStatus.ERRORED);
+
+            Assert.AreSame(channel, _subscription.TryResolveChannelEndpointPort());
+            // Subsequent calls return the same cached result.
+            Assert.AreSame(channel, _subscription.TryResolveChannelEndpointPort());
+        }
+
+        [Test]
+        public void ShouldAcceptBrokenChannelUriAtCreationTime()
+        {
+            const string channel = "broken uri";
+            _subscription = new Subscription(
+                _conductor,
+                channel,
+                StreamId1,
+                SubscriptionCorrelationId,
+                _availableImageHandler,
+                _unavailableImageHandler
+            );
+
+            Assert.AreEqual(channel, _subscription.Channel);
         }
     }
 }

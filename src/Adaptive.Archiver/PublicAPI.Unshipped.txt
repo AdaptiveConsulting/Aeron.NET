@@ -1,0 +1,66 @@
+Adaptive.Archiver.ArchiveEvent
+Adaptive.Archiver.ArchiveEvent.ArchiveEvent(string message) -> void
+Adaptive.Archiver.ArchiveEvent.ArchiveEvent(string message, Adaptive.Aeron.Exceptions.Category category) -> void
+Adaptive.Archiver.IPersistentSubscriptionListener
+Adaptive.Archiver.IPersistentSubscriptionListener.OnError(System.Exception e) -> void
+Adaptive.Archiver.IPersistentSubscriptionListener.OnLiveJoined() -> void
+Adaptive.Archiver.IPersistentSubscriptionListener.OnLiveLeft() -> void
+Adaptive.Archiver.PersistentSubscription
+Adaptive.Archiver.PersistentSubscription.Context
+Adaptive.Archiver.PersistentSubscription.Context.Aeron() -> Adaptive.Aeron.Aeron
+Adaptive.Archiver.PersistentSubscription.Context.Aeron(Adaptive.Aeron.Aeron aeron) -> Adaptive.Archiver.PersistentSubscription.Context
+Adaptive.Archiver.PersistentSubscription.Context.AeronArchiveContext() -> Adaptive.Archiver.AeronArchive.Context
+Adaptive.Archiver.PersistentSubscription.Context.AeronArchiveContext(Adaptive.Archiver.AeronArchive.Context aeronArchiveContext) -> Adaptive.Archiver.PersistentSubscription.Context
+Adaptive.Archiver.PersistentSubscription.Context.AeronDirectoryName() -> string
+Adaptive.Archiver.PersistentSubscription.Context.AeronDirectoryName(string aeronDirectoryName) -> Adaptive.Archiver.PersistentSubscription.Context
+Adaptive.Archiver.PersistentSubscription.Context.Clone() -> Adaptive.Archiver.PersistentSubscription.Context
+Adaptive.Archiver.PersistentSubscription.Context.Conclude() -> void
+Adaptive.Archiver.PersistentSubscription.Context.Context() -> void
+Adaptive.Archiver.PersistentSubscription.Context.Dispose() -> void
+Adaptive.Archiver.PersistentSubscription.Context.IsConcluded() -> bool
+Adaptive.Archiver.PersistentSubscription.Context.JoinDifferenceCounter() -> Adaptive.Aeron.Counter
+Adaptive.Archiver.PersistentSubscription.Context.JoinDifferenceCounter(Adaptive.Aeron.Counter joinDifferenceCounter) -> Adaptive.Archiver.PersistentSubscription.Context
+Adaptive.Archiver.PersistentSubscription.Context.Listener() -> Adaptive.Archiver.IPersistentSubscriptionListener
+Adaptive.Archiver.PersistentSubscription.Context.Listener(Adaptive.Archiver.IPersistentSubscriptionListener listener) -> Adaptive.Archiver.PersistentSubscription.Context
+Adaptive.Archiver.PersistentSubscription.Context.LiveChannel() -> string
+Adaptive.Archiver.PersistentSubscription.Context.LiveChannel(string liveChannel) -> Adaptive.Archiver.PersistentSubscription.Context
+Adaptive.Archiver.PersistentSubscription.Context.LiveJoinedCounter() -> Adaptive.Aeron.Counter
+Adaptive.Archiver.PersistentSubscription.Context.LiveJoinedCounter(Adaptive.Aeron.Counter liveJoinedCounter) -> Adaptive.Archiver.PersistentSubscription.Context
+Adaptive.Archiver.PersistentSubscription.Context.LiveLeftCounter() -> Adaptive.Aeron.Counter
+Adaptive.Archiver.PersistentSubscription.Context.LiveLeftCounter(Adaptive.Aeron.Counter liveLeftCounter) -> Adaptive.Archiver.PersistentSubscription.Context
+Adaptive.Archiver.PersistentSubscription.Context.LiveStreamId() -> int
+Adaptive.Archiver.PersistentSubscription.Context.LiveStreamId(int liveStreamId) -> Adaptive.Archiver.PersistentSubscription.Context
+Adaptive.Archiver.PersistentSubscription.Context.OwnsAeronClient() -> bool
+Adaptive.Archiver.PersistentSubscription.Context.OwnsAeronClient(bool ownsAeronClient) -> Adaptive.Archiver.PersistentSubscription.Context
+Adaptive.Archiver.PersistentSubscription.Context.RecordingId() -> long
+Adaptive.Archiver.PersistentSubscription.Context.RecordingId(long recordingId) -> Adaptive.Archiver.PersistentSubscription.Context
+Adaptive.Archiver.PersistentSubscription.Context.ReplayChannel() -> string
+Adaptive.Archiver.PersistentSubscription.Context.ReplayChannel(string replayChannel) -> Adaptive.Archiver.PersistentSubscription.Context
+Adaptive.Archiver.PersistentSubscription.Context.ReplayStreamId() -> int
+Adaptive.Archiver.PersistentSubscription.Context.ReplayStreamId(int replayStreamId) -> Adaptive.Archiver.PersistentSubscription.Context
+Adaptive.Archiver.PersistentSubscription.Context.StartPosition() -> long
+Adaptive.Archiver.PersistentSubscription.Context.StartPosition(long startPosition) -> Adaptive.Archiver.PersistentSubscription.Context
+Adaptive.Archiver.PersistentSubscription.Context.StateCounter() -> Adaptive.Aeron.Counter
+Adaptive.Archiver.PersistentSubscription.Context.StateCounter(Adaptive.Aeron.Counter stateCounter) -> Adaptive.Archiver.PersistentSubscription.Context
+Adaptive.Archiver.PersistentSubscription.ControlledPoll(Adaptive.Aeron.LogBuffer.IControlledFragmentHandler fragmentHandler, int fragmentLimit) -> int
+Adaptive.Archiver.PersistentSubscription.Dispose() -> void
+Adaptive.Archiver.PersistentSubscription.FailureReason() -> System.Exception
+Adaptive.Archiver.PersistentSubscription.HasFailed() -> bool
+Adaptive.Archiver.PersistentSubscription.IsLive() -> bool
+Adaptive.Archiver.PersistentSubscription.IsReplaying() -> bool
+Adaptive.Archiver.PersistentSubscription.Poll(Adaptive.Aeron.LogBuffer.IFragmentHandler fragmentHandler, int fragmentLimit) -> int
+Adaptive.Archiver.PersistentSubscriptionException
+Adaptive.Archiver.PersistentSubscriptionException.PersistentSubscriptionException(Adaptive.Archiver.PersistentSubscriptionException.Reason reason, string message) -> void
+Adaptive.Archiver.PersistentSubscriptionException.Reason
+Adaptive.Archiver.PersistentSubscriptionException.Reason.GENERIC = 0 -> Adaptive.Archiver.PersistentSubscriptionException.Reason
+Adaptive.Archiver.PersistentSubscriptionException.Reason.INVALID_START_POSITION = 3 -> Adaptive.Archiver.PersistentSubscriptionException.Reason
+Adaptive.Archiver.PersistentSubscriptionException.Reason.RECORDING_NOT_FOUND = 1 -> Adaptive.Archiver.PersistentSubscriptionException.Reason
+Adaptive.Archiver.PersistentSubscriptionException.Reason.STREAM_ID_MISMATCH = 2 -> Adaptive.Archiver.PersistentSubscriptionException.Reason
+Adaptive.Archiver.PersistentSubscriptionException.ReasonValue.get -> Adaptive.Archiver.PersistentSubscriptionException.Reason
+const Adaptive.Archiver.ArchiveException.INVALID_POSITION = 16 -> int
+const Adaptive.Archiver.PersistentSubscription.FROM_LIVE = -2 -> long
+const Adaptive.Archiver.PersistentSubscription.FROM_START = -1 -> long
+static Adaptive.Archiver.ArchiveException.BuildReplayBeforeStartErrorMsg(long recordingId, long replayStartPosition, long startPosition) -> string
+static Adaptive.Archiver.ArchiveException.BuildReplayExceedsLimitErrorMsg(long recordingId, long replayStartPosition, long limitPosition) -> string
+static Adaptive.Archiver.ArchiveException.BuildUnknownRecordingErrorMsg(long recordingId) -> string
+static Adaptive.Archiver.PersistentSubscription.Create(Adaptive.Archiver.PersistentSubscription.Context ctx) -> Adaptive.Archiver.PersistentSubscription

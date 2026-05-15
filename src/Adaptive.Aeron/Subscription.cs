@@ -43,6 +43,9 @@ namespace Adaptive.Aeron
         internal readonly string _channel;
         internal readonly AvailableImageHandler _availableImageHandler;
         internal readonly UnavailableImageHandler _unavailableImageHandler;
+        internal ChannelUri _channelUri;
+        internal string _resolvedChannel;
+        internal string _resolvedEndpoint;
         internal int _channelStatusId;
 
         // padding to prevent false sharing
@@ -65,12 +68,14 @@ namespace Adaptive.Aeron
             _streamId = streamId;
             _conductor = clientConductor;
             _channel = channel;
+            _channelUri = null;
+            _resolvedChannel = null;
+            _resolvedEndpoint = null;
             _availableImageHandler = availableImageHandler;
             _unavailableImageHandler = unavailableImageHandler;
             _roundRobinIndex = 0;
             _isClosed = false;
             _images = EmptyImages;
-            _channelStatusId = 0;
         }
     }
 
@@ -389,7 +394,10 @@ namespace Adaptive.Aeron
         /// <returns> image at given index. </returns>
         public Image ImageAtIndex(int index)
         {
-            return Images[index];
+            // Direct array access matches Java's `images[index]`. The Images property allocates
+            // a ReadOnlyCollection wrapper on every call; that's wasted work on hot poll paths
+            // (PersistentSubscription.Replay()/AttemptSwitch() hits this every tick per image).
+            return _fields._images[index];
         }
 
         /// <summary>
@@ -549,64 +557,70 @@ namespace Adaptive.Aeron
         /// <summary>
         /// Resolve channel endpoint and replace it with the port from the ephemeral range when 0 was provided. If there
         /// are no addresses, or if there is more than one, returned from <seealso cref="LocalSocketAddresses"/> then
-        /// the original
-        /// <seealso cref="Channel"/> is returned.
-        /// <para>
-        /// If the channel is not <seealso cref="ChannelEndpointStatus.ACTIVE"/> , then {@code null} will be returned.
-        ///
-        /// </para>
         /// </summary>
-        /// <returns> channel URI string with an endpoint being resolved to the allocated port. </returns>
+        /// <returns> original channel URI string if it does not have an endpoint (IPC, response channel, MDS) or if
+        /// endpoint is not using an ephemeral port, channel URI where ephemeral port is resolved to the actual bind
+        /// port or <c>null</c> if the channel is not <seealso cref="ChannelEndpointStatus.ACTIVE"/>. </returns>
         /// <seealso cref="ChannelStatus"/>
         /// <seealso cref="LocalSocketAddresses"/>
+        /// <remarks>Since 1.51.0 — caches the resolved channel/endpoint and short-circuits when the endpoint is
+        /// missing, not ephemeral, or MDS manual control mode.</remarks>
         public string TryResolveChannelEndpointPort()
         {
-            long channelStatus = ChannelStatus;
-
-            if (ChannelEndpointStatus.ACTIVE == channelStatus)
+            if (null == _fields._resolvedChannel)
             {
-                IList<string> localSocketAddresses = LocalSocketAddressStatus.FindAddresses(
-                    _fields._conductor.CountersReader(),
-                    channelStatus,
-                    _fields._channelStatusId
-                );
-
-                if (1 == localSocketAddresses.Count)
+                if (null == _fields._channelUri)
                 {
                     ChannelUri uri = ChannelUri.Parse(_fields._channel);
                     string endpoint = uri.Get(Aeron.Context.ENDPOINT_PARAM_NAME);
-
-                    if (null != endpoint && endpoint.EndsWith(":0", StringComparison.Ordinal))
+                    if (null == endpoint ||
+                        !endpoint.EndsWith(":0", StringComparison.Ordinal) ||
+                        Aeron.Context.MDC_CONTROL_MODE_MANUAL.Equals(
+                            uri.Get(Aeron.Context.MDC_CONTROL_MODE_PARAM_NAME),
+                            StringComparison.Ordinal))
                     {
-                        uri.ReplaceEndpointWildcardPort(localSocketAddresses[0]);
-                        return uri.ToString();
+                        _fields._resolvedChannel = _fields._channel;
+                        return _fields._channel;
                     }
+                    _fields._channelUri = uri;
                 }
 
-                return _fields._channel;
+                string resolved = ResolvedEndpoint;
+                if (null != resolved)
+                {
+                    _fields._channelUri.ReplaceEndpointWildcardPort(resolved);
+                    _fields._resolvedChannel = _fields._channelUri.ToString();
+                }
             }
-
-            return null;
+            return _fields._resolvedChannel;
         }
 
         /// <summary>
-        /// Find the resolved endpoint for the channel. This may be null if MDS is used and no destination is yet added.
-        /// The result will similar to taking the first element returned from <seealso cref="LocalSocketAddresses"/> .
-        /// If more than one destination is added then the first found is returned.
-        /// <para>
-        /// If the channel is not <seealso cref="ChannelEndpointStatus.ACTIVE"/> , then {@code null} will be returned.
-        ///
-        /// </para>
+        /// Find the resolved endpoint for the channel. This may be <c>null</c> if MDS is used and no destination is yet
+        /// added. The result will similar to taking the first element returned from
+        /// <seealso cref="LocalSocketAddresses"/>. If more than one destination is added then the first found is
+        /// returned.
         /// </summary>
-        /// <returns> The resolved endpoint or null if not found. </returns>
+        /// <returns> resolved endpoint or <c>null</c> if not found. </returns>
         /// <seealso cref="ChannelStatus"/>
         /// <seealso cref="LocalSocketAddresses"/>
-        public string ResolvedEndpoint =>
-            LocalSocketAddressStatus.FindAddress(
-                _fields._conductor.CountersReader(),
-                ChannelStatus,
-                _fields._channelStatusId
-            );
+        /// <remarks>Since 1.51.0 — caches the resolved endpoint after the first successful lookup.</remarks>
+        public string ResolvedEndpoint
+        {
+            get
+            {
+                if (null == _fields._resolvedEndpoint)
+                {
+                    _fields._resolvedEndpoint = LocalSocketAddressStatus.FindAddress(
+                        _fields._conductor.CountersReader(),
+                        ChannelStatus,
+                        _fields._channelStatusId
+                    );
+                }
+
+                return _fields._resolvedEndpoint;
+            }
+        }
 
         internal void InternalClose(long lingerDurationNs)
         {

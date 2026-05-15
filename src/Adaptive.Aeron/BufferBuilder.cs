@@ -40,6 +40,7 @@ namespace Adaptive.Aeron
 
         private int _limit;
         private int _nextTermOffset = Aeron.NULL_VALUE;
+        private int _firstFrameLength;
         private readonly UnsafeBuffer _buffer = new UnsafeBuffer();
         readonly UnsafeBuffer _headerBuffer = new UnsafeBuffer();
         readonly Header _completeHeader = new Header(0, 0);
@@ -192,6 +193,8 @@ namespace Adaptive.Aeron
             _completeHeader.Offset = 0;
             _completeHeader.Buffer = _headerBuffer;
 
+            _firstFrameLength = header.FrameLength;
+
             _headerBuffer.PutBytes(0, header.Buffer, header.Offset, HEADER_LENGTH);
             return this;
         }
@@ -204,15 +207,14 @@ namespace Adaptive.Aeron
         /// <returns> complete message header. </returns>
         public Header CompleteHeader(Header header)
         {
-            int firstFrameLength = _headerBuffer.GetInt(FRAME_LENGTH_FIELD_OFFSET, ByteOrder.LittleEndian);
-            int fragmentedFrameLength = ComputeFragmentedFrameLength(_limit, firstFrameLength - HEADER_LENGTH);
+            // compute the `fragmented frame length` of the complete message
+            int fragmentedFrameLength = ComputeFragmentedFrameLength(_limit, _firstFrameLength - HEADER_LENGTH);
             _completeHeader.Context = header.Context;
             _completeHeader.FragmentedFrameLength = fragmentedFrameLength;
 
             _headerBuffer.PutInt(FRAME_LENGTH_FIELD_OFFSET, HEADER_LENGTH + _limit, ByteOrder.LittleEndian);
             // compute complete flags
             _headerBuffer.PutByte(FLAGS_OFFSET, (byte)(_headerBuffer.GetByte(FLAGS_OFFSET) | header.Flags));
-            // compute the `fragmented frame length` of the complete message
 
             return _completeHeader;
         }
