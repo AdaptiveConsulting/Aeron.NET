@@ -49,6 +49,7 @@ namespace Adaptive.Aeron.Exceptions
 
         public AeronException(Exception cause) : base(cause?.ToString(), cause)
         {
+            Category = Category.ERROR;
         }
 
         protected AeronException(SerializationInfo info, StreamingContext context) : base(info, context)
@@ -57,27 +58,32 @@ namespace Adaptive.Aeron.Exceptions
         }
 
         public AeronException(string message)
-            : base(message)
+            : base(FormatMessage(message, Category.ERROR))
         {
             Category = Category.ERROR;
         }
 
         public AeronException(string message, Category category)
-            : base(message)
+            : base(FormatMessage(message, category))
         {
             Category = category;
         }
 
         public AeronException(string message, Exception innerException)
-            : base(message, innerException)
+            : base(FormatMessage(message, Category.ERROR), innerException)
         {
             Category = Category.ERROR;
         }
 
         public AeronException(string message, Exception innerException, Category category)
-            : base(message, innerException)
+            : base(FormatMessage(message, category), innerException)
         {
             Category = category;
+        }
+
+        private static string FormatMessage(string message, Category category)
+        {
+            return category + " - " + message;
         }
 
         /// <summary>

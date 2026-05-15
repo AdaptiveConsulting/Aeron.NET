@@ -255,7 +255,7 @@ namespace Adaptive.Aeron
 
         public string RoleName()
         {
-            return "aeron-client-conductor";
+            return "aeron-client";
         }
 
         internal bool IsClosed()
@@ -479,7 +479,9 @@ namespace Adaptive.Aeron
 
         internal void OnNewCounter(long correlationId, int counterId)
         {
-            _resourceByRegIdMap.Put(correlationId, new Counter(correlationId, this, _counterValuesBuffer, counterId));
+            _resourceByRegIdMap.Put(
+                correlationId,
+                new Counter(correlationId, correlationId, true, this, _counterValuesBuffer, counterId));
             OnAvailableCounter(correlationId, counterId);
         }
 
@@ -1674,7 +1676,7 @@ namespace Adaptive.Aeron
             }
         }
 
-        internal void ReleaseCounter(Counter counter)
+        internal void RemoveCounter(Counter counter)
         {
             _clientLock.Lock();
             try
@@ -1686,10 +1688,10 @@ namespace Adaptive.Aeron
 
                 EnsureNotReentrant();
 
-                long registrationId = counter.RegistrationId;
-                if (counter == _resourceByRegIdMap.Remove(registrationId))
+                long correlationId = counter.CorrelationId;
+                if (counter == _resourceByRegIdMap.Remove(correlationId) && counter.ClientOwned())
                 {
-                    _asyncCommandIdSet.Add(_driverProxy.RemoveCounter(registrationId));
+                    _asyncCommandIdSet.Add(_driverProxy.RemoveCounter(correlationId));
                 }
             }
             finally
@@ -1732,9 +1734,17 @@ namespace Adaptive.Aeron
 
         internal void CloseImages(Image[] images, UnavailableImageHandler unavailableImageHandler, long lingerNs)
         {
+            // Two-pass to match upstream Java: close every image first, then release the log
+            // buffers, then notify handlers. Single-pass close-and-release would let one image's
+            // ReleaseLogBuffers free memory still being read by a peer image that maps the same
+            // buffer.
             foreach (var image in images)
             {
                 image.Close();
+            }
+
+            foreach (var image in images)
+            {
                 ReleaseLogBuffers(image.LogBuffers, image.CorrelationId, lingerNs);
             }
 
@@ -1752,7 +1762,13 @@ namespace Adaptive.Aeron
             CountersReader countersReader = _aeron.CountersReader;
             _resourceByRegIdMap.Put(
                 correlationId,
-                new Counter(countersReader, countersReader.GetCounterRegistrationId(counterId), counterId)
+                new Counter(
+                    correlationId,
+                    countersReader.GetCounterRegistrationId(counterId),
+                    false,
+                    this,
+                    _counterValuesBuffer,
+                    counterId)
             );
         }
 
@@ -1916,19 +1932,10 @@ namespace Adaptive.Aeron
 
                     return;
                 }
-
-                try
-                {
-                    Thread.Sleep(1);
-                }
-                catch (ThreadInterruptedException)
-                {
-                    TerminateConductor();
-                    throw new AeronException("thread interrupted");
-                }
             } while (deadlineNs - _nanoClock.NanoTime() > 0);
 
-            throw new DriverTimeoutException("no response from MediaDriver within " + _driverTimeoutNs + "ns");
+            throw new DriverTimeoutException(
+                "no response from MediaDriver within " + SystemUtil.FormatDuration(_driverTimeoutNs));
         }
 
         private int CheckTimeouts(long nowNs)
@@ -1955,10 +1962,9 @@ namespace Adaptive.Aeron
 
                 throw new ConductorServiceTimeoutException(
                     "service interval exceeded: timeout="
-                        + _interServiceTimeoutNs
-                        + "ns, actual="
-                        + (nowNs - _timeOfLastServiceNs)
-                        + "ns"
+                        + SystemUtil.FormatDuration(_interServiceTimeoutNs)
+                        + ", interval="
+                        + SystemUtil.FormatDuration(nowNs - _timeOfLastServiceNs)
                 );
             }
         }
@@ -2010,7 +2016,7 @@ namespace Adaptive.Aeron
                                 _countersReader.MetaDataBuffer,
                                 counterId,
                                 " name=" + _ctx.ClientName()
-                            //+ " " + AeronCounters.formatVersionInfo(AeronVersion.VERSION, AeronVersion.GIT_SHA)
+                                + " " + AeronCounters.FormatVersionInfo(AeronVersion.VERSION, AeronVersion.GIT_SHA)
                             );
                             _timeOfLastKeepAliveNs = nowNs;
                         }
@@ -2082,7 +2088,7 @@ namespace Adaptive.Aeron
                     publication.InternalClose();
                     ReleaseLogBuffers(publication.LogBuffers, publication.OriginalRegistrationId, NULL_VALUE);
                 }
-                else if (resource is Counter counter && this == counter.ClientConductor())
+                else if (resource is Counter counter && counter.ClientOwned())
                 {
                     counter.InternalClose();
                     NotifyUnavailableCounterHandlers(counter.RegistrationId, counter.Id);

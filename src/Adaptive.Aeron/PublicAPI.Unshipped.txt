@@ -1,6 +1,66 @@
 Adaptive.Aeron.ChannelUri.Diff(Adaptive.Aeron.ChannelUri that) -> System.Collections.Generic.IDictionary<string, string>
 Adaptive.Aeron.ChannelUriStringBuilder.NakDelay(long? nakDelayNs) -> Adaptive.Aeron.ChannelUriStringBuilder
+Adaptive.Aeron.Counter.Counter(Adaptive.Agrona.Concurrent.Status.CountersReader countersReader, int counterId) -> void
+Adaptive.Aeron.Counter.CorrelationId.get -> long
+Adaptive.Aeron.Status.ReadableCounter.GetPlain() -> long
 Adaptive.Aeron.LogBuffer.HeaderWriter.HeaderWriter(long versionFlagsType, long sessionId, long streamId) -> void
+const Adaptive.Aeron.AeronCounters.ATS_AEAD_ERRORS_TYPE_ID = 69 -> int
+const Adaptive.Aeron.AeronCounters.ATS_BYTES_DECRYPTED_TYPE_ID = 68 -> int
+const Adaptive.Aeron.AeronCounters.ATS_BYTES_ENCRYPTED_TYPE_ID = 67 -> int
+const Adaptive.Aeron.AeronCounters.ATS_DISCARDS_NON_ATS_TYPE_ID = 66 -> int
+const Adaptive.Aeron.AeronCounters.ATS_DROPPED_SM_TYPE_ID = 74 -> int
+const Adaptive.Aeron.AeronCounters.ATS_EC_KEY_SIG_ERRORS_TYPE_ID = 71 -> int
+const Adaptive.Aeron.AeronCounters.ATS_RSA_KEY_UNKNOWN_TYPE_ID = 70 -> int
+const Adaptive.Aeron.AeronCounters.ATS_TRANSPORTS_TYPE_ID = 65 -> int
+const Adaptive.Aeron.AeronCounters.ATS_UNICAST_RE_KEYING_RSA_KEY_MISMATCH_TYPE_ID = 73 -> int
+const Adaptive.Aeron.AeronCounters.ATS_UNICAST_RE_KEYINGS_TYPE_ID = 72 -> int
+const Adaptive.Aeron.AeronCounters.DPDK_ARP_MISS_TYPE_ID = 85 -> int
+const Adaptive.Aeron.AeronCounters.DPDK_BYTES_TYPE_ID = 83 -> int
+const Adaptive.Aeron.AeronCounters.DPDK_CHECKSUM_FAILURE_TYPE_ID = 89 -> int
+const Adaptive.Aeron.AeronCounters.DPDK_ERROR_TYPE_ID = 79 -> int
+const Adaptive.Aeron.AeronCounters.DPDK_EXTENDED_STATS_TYPE_ID = 92 -> int
+const Adaptive.Aeron.AeronCounters.DPDK_FRAGMENTED_PACKETS_TYPE_ID = 90 -> int
+const Adaptive.Aeron.AeronCounters.DPDK_MEMPOOL_AVAILABLE_TYPE_ID = 91 -> int
+const Adaptive.Aeron.AeronCounters.DPDK_MISSED_PACKETS_TYPE_ID = 84 -> int
+const Adaptive.Aeron.AeronCounters.DPDK_NOBUFS_TYPE_ID = 77 -> int
+const Adaptive.Aeron.AeronCounters.DPDK_PKTS_TYPE_ID = 82 -> int
+const Adaptive.Aeron.AeronCounters.DPDK_POLLER_TYPE_ID = 87 -> int
+const Adaptive.Aeron.AeronCounters.DPDK_PORT_INFO_TYPE_ID = 75 -> int
+const Adaptive.Aeron.AeronCounters.DPDK_QUEUE_DROP_COUNT_TYPE_ID = 88 -> int
+const Adaptive.Aeron.AeronCounters.DPDK_RX_RECEIVER_DISCARD_TYPE_ID = 95 -> int
+const Adaptive.Aeron.AeronCounters.DPDK_RX_SENDER_DISCARD_TYPE_ID = 86 -> int
+const Adaptive.Aeron.AeronCounters.DPDK_RX_UNSUPPORTED_ETHERNET_TYPE_TYPE_ID = 93 -> int
+const Adaptive.Aeron.AeronCounters.DPDK_RX_UNSUPPORTED_PROTOCOL_TYPE_ID = 94 -> int
+const Adaptive.Aeron.AeronCounters.DPDK_TRANSPORT_TYPE_ID = 76 -> int
+const Adaptive.Aeron.AeronCounters.DPDK_TX_EAGAIN_TYPE_ID = 78 -> int
+const Adaptive.Aeron.AeronCounters.EF_VI_PORT_INFO_TYPE_ID = 50 -> int
+const Adaptive.Aeron.AeronCounters.EF_VI_RX_BYTES_TYPE_ID = 58 -> int
+const Adaptive.Aeron.AeronCounters.EF_VI_RX_DISCARD_TYPE_ID = 55 -> int
+const Adaptive.Aeron.AeronCounters.EF_VI_RX_INVALID_TYPE_ID = 56 -> int
+const Adaptive.Aeron.AeronCounters.EF_VI_RX_PKTS_TYPE_ID = 57 -> int
+const Adaptive.Aeron.AeronCounters.EF_VI_TRANSPORT_TYPE_ID = 51 -> int
+const Adaptive.Aeron.AeronCounters.EF_VI_TX_BYTES_TYPE_ID = 60 -> int
+const Adaptive.Aeron.AeronCounters.EF_VI_TX_EAGAIN_TYPE_ID = 53 -> int
+const Adaptive.Aeron.AeronCounters.EF_VI_TX_ERROR_TYPE_ID = 54 -> int
+const Adaptive.Aeron.AeronCounters.EF_VI_TX_NOBUFS_TYPE_ID = 52 -> int
+const Adaptive.Aeron.AeronCounters.EF_VI_TX_PKTS_TYPE_ID = 59 -> int
+const Adaptive.Aeron.AeronCounters.NAME_RESOLVER_BOOTSTRAP_NEIGHBOR_COUNTER_TYPE_ID = 21 -> int
+const Adaptive.Aeron.AeronCounters.PERSISTENT_SUBSCRIPTION_JOIN_DIFFERENCE_TYPE_ID = 115 -> int
+const Adaptive.Aeron.AeronCounters.PERSISTENT_SUBSCRIPTION_LIVE_JOINED_COUNT_TYPE_ID = 117 -> int
+const Adaptive.Aeron.AeronCounters.PERSISTENT_SUBSCRIPTION_LIVE_LEFT_COUNT_TYPE_ID = 116 -> int
+const Adaptive.Aeron.AeronCounters.PERSISTENT_SUBSCRIPTION_STATE_TYPE_ID = 114 -> int
+const Adaptive.Aeron.AeronCounters.SELECTOR_CLIENTS_COUNTER_TYPE_ID = 300 -> int
+const Adaptive.Aeron.AeronCounters.SELECTOR_CYCLE_TIME_THRESHOLD_EXCEEDED_TYPE_ID = 303 -> int
+const Adaptive.Aeron.AeronCounters.SELECTOR_MAX_CYCLE_TIME_TYPE_ID = 302 -> int
+const Adaptive.Aeron.AeronCounters.SELECTOR_SUBSCRIPTIONS_COUNTER_TYPE_ID = 301 -> int
+const Adaptive.Aeron.AeronCounters.SYSTEM_COUNTER_ID_ASYNC_EXECUTOR_PROXY_FAILS = 45 -> int
+const Adaptive.Aeron.AeronCounters.SYSTEM_COUNTER_ID_STATUS_MESSAGES_REJECTED = 44 -> int
+const Adaptive.Aeron.AeronCounters.VMA_RX_DATA_COPY_BYTES_TYPE_ID = 63 -> int
+const Adaptive.Aeron.AeronCounters.VMA_RX_ZERO_COPY_BYTES_TYPE_ID = 62 -> int
+const Adaptive.Aeron.AeronCounters.VMA_TRANSPORTS_TYPE_ID = 61 -> int
+const Adaptive.Aeron.LogBuffer.LogBufferDescriptor.LOG_BUFFER_TYPE_CONCURRENT_PUBLICATION = 0 -> byte
+const Adaptive.Aeron.LogBuffer.LogBufferDescriptor.LOG_BUFFER_TYPE_EXCLUSIVE_PUBLICATION = 1 -> byte
+const Adaptive.Aeron.LogBuffer.LogBufferDescriptor.LOG_BUFFER_TYPE_PUBLICATION_IMAGE = 2 -> byte
 readonly Adaptive.Aeron.LogBuffer.HeaderWriter._sessionId -> long
 readonly Adaptive.Aeron.LogBuffer.HeaderWriter._streamId -> long
 readonly Adaptive.Aeron.LogBuffer.HeaderWriter._versionFlagsType -> long
@@ -8,5 +68,36 @@ static Adaptive.Aeron.AeronCounters.AppendVersionInfo(Adaptive.Agrona.IMutableDi
 static Adaptive.Aeron.AeronCounters.FormatVersionInfo(string fullVersion, string commitHash) -> string
 static Adaptive.Aeron.AeronCounters.SetReferenceId(Adaptive.Agrona.Concurrent.IAtomicBuffer metaDataBuffer, Adaptive.Agrona.Concurrent.IAtomicBuffer valuesBuffer, int counterId, long referenceId) -> void
 static Adaptive.Aeron.LogBuffer.HeaderWriter.NewInstance(Adaptive.Agrona.Concurrent.UnsafeBuffer defaultHeader) -> Adaptive.Aeron.LogBuffer.HeaderWriter
+static Adaptive.Aeron.LogBuffer.LogBufferDescriptor.Type(Adaptive.Agrona.Concurrent.UnsafeBuffer metadataBuffer) -> byte
+static Adaptive.Aeron.LogBuffer.LogBufferDescriptor.Type(Adaptive.Agrona.Concurrent.UnsafeBuffer metadataBuffer, byte value) -> void
+static readonly Adaptive.Aeron.LogBuffer.LogBufferDescriptor.LOG_TYPE_OFFSET -> int
 virtual Adaptive.Aeron.LogBuffer.HeaderWriter.Write(Adaptive.Agrona.Concurrent.UnsafeBuffer termBuffer, int offset, int length, int termId) -> void
+*REMOVED*Adaptive.Aeron.Counter.Counter(Adaptive.Agrona.Concurrent.Status.CountersReader countersReader, long registrationId, int counterId) -> void
 *REMOVED*Adaptive.Aeron.LogBuffer.HeaderWriter.Write(Adaptive.Agrona.Concurrent.UnsafeBuffer termBuffer, int offset, int length, int termId) -> void
+*REMOVED*const Adaptive.Aeron.AeronVersion.MINOR_VERSION = 49 -> int
+*REMOVED*const Adaptive.Aeron.AeronVersion.VERSION = "1.49.0" -> string
+const Adaptive.Aeron.AeronVersion.MINOR_VERSION = 51 -> int
+const Adaptive.Aeron.AeronVersion.VERSION = "1.51.0" -> string
+static readonly Adaptive.Aeron.AeronVersion.GIT_SHA -> string
+static Adaptive.Aeron.Config.GetSizeAsLong(string propertyName, long defaultValue) -> long
+Adaptive.Aeron.Security.SimpleAuthenticator
+Adaptive.Aeron.Security.SimpleAuthenticator.OnChallengedSession(Adaptive.Aeron.Security.ISessionProxy sessionProxy, long nowMs) -> void
+Adaptive.Aeron.Security.SimpleAuthenticator.OnChallengeResponse(long sessionId, byte[] encodedCredentials, long nowMs) -> void
+Adaptive.Aeron.Security.SimpleAuthenticator.OnConnectedSession(Adaptive.Aeron.Security.ISessionProxy sessionProxy, long nowMs) -> void
+Adaptive.Aeron.Security.SimpleAuthenticator.OnConnectRequest(long sessionId, byte[] encodedCredentials, long nowMs) -> void
+Adaptive.Aeron.Security.SimpleAuthenticator.Builder
+Adaptive.Aeron.Security.SimpleAuthenticator.Builder.Builder() -> void
+Adaptive.Aeron.Security.SimpleAuthenticator.Builder.Principal(byte[] encodedPrincipal, byte[] encodedCredentials) -> Adaptive.Aeron.Security.SimpleAuthenticator.Builder
+Adaptive.Aeron.Security.SimpleAuthenticator.Builder.NewInstance() -> Adaptive.Aeron.Security.SimpleAuthenticator
+Adaptive.Aeron.Security.SimpleAuthorisationService
+Adaptive.Aeron.Security.SimpleAuthorisationService.IsAuthorised(int protocolId, int actionId, object type, byte[] encodedPrincipal) -> bool
+Adaptive.Aeron.Security.SimpleAuthorisationService.Builder
+Adaptive.Aeron.Security.SimpleAuthorisationService.Builder.Builder() -> void
+Adaptive.Aeron.Security.SimpleAuthorisationService.Builder.WithDefaultAuthorisation(Adaptive.Aeron.Security.IAuthorisationService defaultAuthorisation) -> Adaptive.Aeron.Security.SimpleAuthorisationService.Builder
+Adaptive.Aeron.Security.SimpleAuthorisationService.Builder.AddPrincipalRule(int protocolId, int actionId, object type, byte[] encodedPrincipal, bool isAllowed) -> Adaptive.Aeron.Security.SimpleAuthorisationService.Builder
+Adaptive.Aeron.Security.SimpleAuthorisationService.Builder.AddPrincipalRule(int protocolId, int actionId, byte[] encodedPrincipal, bool isAllowed) -> Adaptive.Aeron.Security.SimpleAuthorisationService.Builder
+Adaptive.Aeron.Security.SimpleAuthorisationService.Builder.AddPrincipalRule(int protocolId, byte[] encodedPrincipal, bool isAllowed) -> Adaptive.Aeron.Security.SimpleAuthorisationService.Builder
+Adaptive.Aeron.Security.SimpleAuthorisationService.Builder.AddGeneralRule(int protocolId, int actionId, object type, bool isAllowed) -> Adaptive.Aeron.Security.SimpleAuthorisationService.Builder
+Adaptive.Aeron.Security.SimpleAuthorisationService.Builder.AddGeneralRule(int protocolId, int actionId, bool isAllowed) -> Adaptive.Aeron.Security.SimpleAuthorisationService.Builder
+Adaptive.Aeron.Security.SimpleAuthorisationService.Builder.AddGeneralRule(int protocolId, bool isAllowed) -> Adaptive.Aeron.Security.SimpleAuthorisationService.Builder
+Adaptive.Aeron.Security.SimpleAuthorisationService.Builder.NewInstance() -> Adaptive.Aeron.Security.SimpleAuthorisationService

@@ -78,7 +78,9 @@ namespace Adaptive.Cluster.Tests.Client
             var listener = A.Fake<IEgressListener>();
             var adapter = new EgressAdapter(listener, 42, A.Fake<Subscription>(), 5);
             var exception = Assert.Throws<ClusterException>(() => adapter.OnFragment(_buffer, 0, 64, new Header(0, 0)));
-            Assert.AreEqual("expected schemaId=" + MessageHeaderDecoder.SCHEMA_ID + ", actual=0", exception.Message);
+            Assert.AreEqual(
+                "ERROR - expected schemaId=" + MessageHeaderDecoder.SCHEMA_ID + ", actual=0",
+                exception.Message);
         }
 
         [Test]

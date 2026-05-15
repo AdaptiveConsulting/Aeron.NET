@@ -9,10 +9,10 @@ namespace Adaptive.Cluster.Codecs {
 
 public class JoinLogDecoder
 {
-    public const ushort BLOCK_LENGTH = 36;
+    public const ushort BLOCK_LENGTH = 40;
     public const ushort TEMPLATE_ID = 40;
     public const ushort SCHEMA_ID = 111;
-    public const ushort SCHEMA_VERSION = 14;
+    public const ushort SCHEMA_VERSION = 16;
 
     private JoinLogDecoder _parentMessage;
     private IDirectBuffer _buffer;
@@ -451,6 +451,47 @@ public class JoinLogDecoder
     }
 
 
+    public static int IsStandbyId()
+    {
+        return 9;
+    }
+
+    public static int IsStandbySinceVersion()
+    {
+        return 16;
+    }
+
+    public static int IsStandbyEncodingOffset()
+    {
+        return 36;
+    }
+
+    public static int IsStandbyEncodingLength()
+    {
+        return 4;
+    }
+
+    public static string IsStandbyMetaAttribute(MetaAttribute metaAttribute)
+    {
+        switch (metaAttribute)
+        {
+            case MetaAttribute.EPOCH: return "unix";
+            case MetaAttribute.TIME_UNIT: return "nanosecond";
+            case MetaAttribute.SEMANTIC_TYPE: return "";
+            case MetaAttribute.PRESENCE: return "optional";
+        }
+
+        return "";
+    }
+
+    public BooleanType IsStandby()
+    {
+        if (_actingVersion < 16) return BooleanType.NULL_VALUE;
+
+        return (BooleanType)_buffer.GetInt(_offset + 36, ByteOrder.LittleEndian);
+    }
+
+
     public static int LogChannelId()
     {
         return 8;
@@ -590,7 +631,12 @@ public class JoinLogDecoder
         builder.Append("Role=");
         builder.Append(Role());
         builder.Append('|');
-        //Token{signal=BEGIN_VAR_DATA, name='logChannel', referencedName='null', description='null', id=8, version=0, deprecated=0, encodedLength=0, offset=36, componentTokenCount=6, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=BEGIN_FIELD, name='isStandby', referencedName='null', description='null', id=9, version=16, deprecated=0, encodedLength=0, offset=36, componentTokenCount=6, encoding=Encoding{presence=OPTIONAL, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=BEGIN_ENUM, name='BooleanType', referencedName='null', description='Language independent boolean type.', id=-1, version=16, deprecated=0, encodedLength=4, offset=36, componentTokenCount=4, encoding=Encoding{presence=REQUIRED, primitiveType=INT32, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        builder.Append("IsStandby=");
+        builder.Append(IsStandby());
+        builder.Append('|');
+        //Token{signal=BEGIN_VAR_DATA, name='logChannel', referencedName='null', description='null', id=8, version=0, deprecated=0, encodedLength=0, offset=40, componentTokenCount=6, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
         builder.Append("LogChannel=");
         builder.Append(LogChannel());
 

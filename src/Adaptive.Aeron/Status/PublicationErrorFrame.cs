@@ -155,7 +155,7 @@ namespace Adaptive.Aeron.Status
         public override string ToString()
         {
             return
-                "CounterMessageFlyweight{" +
+                "PublicationErrorFrame{" +
                 "registrationId=" + _registrationId +
                 ", sessionId=" + _sessionId +
                 ", streamId=" + _streamId +

@@ -9,10 +9,10 @@ namespace Adaptive.Cluster.Codecs {
 
 public class BackupQueryDecoder
 {
-    public const ushort BLOCK_LENGTH = 16;
+    public const ushort BLOCK_LENGTH = 24;
     public const ushort TEMPLATE_ID = 77;
     public const ushort SCHEMA_ID = 111;
-    public const ushort SCHEMA_VERSION = 14;
+    public const ushort SCHEMA_VERSION = 16;
 
     private BackupQueryDecoder _parentMessage;
     private IDirectBuffer _buffer;
@@ -249,6 +249,59 @@ public class BackupQueryDecoder
         return _buffer.GetInt(_offset + 12, ByteOrder.LittleEndian);
     }
 
+    public static int LogPositionId()
+    {
+        return 6;
+    }
+
+    public static int LogPositionSinceVersion()
+    {
+        return 16;
+    }
+
+    public static int LogPositionEncodingOffset()
+    {
+        return 16;
+    }
+
+    public static int LogPositionEncodingLength()
+    {
+        return 8;
+    }
+
+    public static string LogPositionMetaAttribute(MetaAttribute metaAttribute)
+    {
+        switch (metaAttribute)
+        {
+            case MetaAttribute.EPOCH: return "unix";
+            case MetaAttribute.TIME_UNIT: return "nanosecond";
+            case MetaAttribute.SEMANTIC_TYPE: return "";
+            case MetaAttribute.PRESENCE: return "optional";
+        }
+
+        return "";
+    }
+
+    public static long LogPositionNullValue()
+    {
+        return -9223372036854775808L;
+    }
+
+    public static long LogPositionMinValue()
+    {
+        return -9223372036854775807L;
+    }
+
+    public static long LogPositionMaxValue()
+    {
+        return 9223372036854775807L;
+    }
+
+    public long LogPosition()
+    {
+        return _buffer.GetLong(_offset + 16, ByteOrder.LittleEndian);
+    }
+
 
     public static int ResponseChannelId()
     {
@@ -427,7 +480,12 @@ public class BackupQueryDecoder
         builder.Append("Version=");
         builder.Append(Version());
         builder.Append('|');
-        //Token{signal=BEGIN_VAR_DATA, name='responseChannel', referencedName='null', description='null', id=4, version=0, deprecated=0, encodedLength=0, offset=16, componentTokenCount=6, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=BEGIN_FIELD, name='logPosition', referencedName='null', description='null', id=6, version=16, deprecated=0, encodedLength=0, offset=16, componentTokenCount=3, encoding=Encoding{presence=OPTIONAL, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=ENCODING, name='int64', referencedName='null', description='null', id=-1, version=0, deprecated=0, encodedLength=8, offset=16, componentTokenCount=1, encoding=Encoding{presence=OPTIONAL, primitiveType=INT64, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        builder.Append("LogPosition=");
+        builder.Append(LogPosition());
+        builder.Append('|');
+        //Token{signal=BEGIN_VAR_DATA, name='responseChannel', referencedName='null', description='null', id=4, version=0, deprecated=0, encodedLength=0, offset=24, componentTokenCount=6, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
         builder.Append("ResponseChannel=");
         builder.Append(ResponseChannel());
         builder.Append('|');

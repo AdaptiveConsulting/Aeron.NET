@@ -9,10 +9,10 @@ namespace Adaptive.Cluster.Codecs {
 
 public class NewLeadershipTermDecoder
 {
-    public const ushort BLOCK_LENGTH = 88;
+    public const ushort BLOCK_LENGTH = 96;
     public const ushort TEMPLATE_ID = 53;
     public const ushort SCHEMA_ID = 111;
-    public const ushort SCHEMA_VERSION = 14;
+    public const ushort SCHEMA_VERSION = 16;
 
     private NewLeadershipTermDecoder _parentMessage;
     private IDirectBuffer _buffer;
@@ -775,6 +775,60 @@ public class NewLeadershipTermDecoder
     }
 
 
+    public static int CommitPositionId()
+    {
+        return 14;
+    }
+
+    public static int CommitPositionSinceVersion()
+    {
+        return 15;
+    }
+
+    public static int CommitPositionEncodingOffset()
+    {
+        return 88;
+    }
+
+    public static int CommitPositionEncodingLength()
+    {
+        return 8;
+    }
+
+    public static string CommitPositionMetaAttribute(MetaAttribute metaAttribute)
+    {
+        switch (metaAttribute)
+        {
+            case MetaAttribute.EPOCH: return "unix";
+            case MetaAttribute.TIME_UNIT: return "nanosecond";
+            case MetaAttribute.SEMANTIC_TYPE: return "";
+            case MetaAttribute.PRESENCE: return "required";
+        }
+
+        return "";
+    }
+
+    public static long CommitPositionNullValue()
+    {
+        return -9223372036854775808L;
+    }
+
+    public static long CommitPositionMinValue()
+    {
+        return -9223372036854775807L;
+    }
+
+    public static long CommitPositionMaxValue()
+    {
+        return 9223372036854775807L;
+    }
+
+    public long CommitPosition()
+    {
+        return _buffer.GetLong(_offset + 88, ByteOrder.LittleEndian);
+    }
+
+
 
     public override string ToString()
     {
@@ -868,6 +922,11 @@ public class NewLeadershipTermDecoder
         //Token{signal=BEGIN_ENUM, name='BooleanType', referencedName='null', description='Language independent boolean type.', id=-1, version=0, deprecated=0, encodedLength=4, offset=84, componentTokenCount=4, encoding=Encoding{presence=REQUIRED, primitiveType=INT32, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='null', timeUnit=null, semanticType='null'}}
         builder.Append("IsStartup=");
         builder.Append(IsStartup());
+        builder.Append('|');
+        //Token{signal=BEGIN_FIELD, name='commitPosition', referencedName='null', description='null', id=14, version=15, deprecated=0, encodedLength=0, offset=88, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=ENCODING, name='int64', referencedName='null', description='null', id=-1, version=0, deprecated=0, encodedLength=8, offset=88, componentTokenCount=1, encoding=Encoding{presence=REQUIRED, primitiveType=INT64, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        builder.Append("CommitPosition=");
+        builder.Append(CommitPosition());
 
         Limit(originalLimit);
 

@@ -61,6 +61,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Unsealer.Fody", "Weavers\Un
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Adaptive.Aeron.Analyzers", "Adaptive.Aeron.Analyzers\Adaptive.Aeron.Analyzers.csproj", "{926CB849-94C6-4F3E-8B4F-1DB5157A8782}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Adaptive.Archiver.IntegrationTests", "Adaptive.Archiver.IntegrationTests\Adaptive.Archiver.IntegrationTests.csproj", "{93095200-8C85-439B-BB5E-D3440BBBF334}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -457,6 +459,22 @@ Global
 		{926CB849-94C6-4F3E-8B4F-1DB5157A8782}.Release|x64.Build.0 = Release|Any CPU
 		{926CB849-94C6-4F3E-8B4F-1DB5157A8782}.Release|x86.ActiveCfg = Release|Any CPU
 		{926CB849-94C6-4F3E-8B4F-1DB5157A8782}.Release|x86.Build.0 = Release|Any CPU
+		{93095200-8C85-439B-BB5E-D3440BBBF334}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{93095200-8C85-439B-BB5E-D3440BBBF334}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{93095200-8C85-439B-BB5E-D3440BBBF334}.Debug|arm64.ActiveCfg = Debug|Any CPU
+		{93095200-8C85-439B-BB5E-D3440BBBF334}.Debug|arm64.Build.0 = Debug|Any CPU
+		{93095200-8C85-439B-BB5E-D3440BBBF334}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{93095200-8C85-439B-BB5E-D3440BBBF334}.Debug|x64.Build.0 = Debug|Any CPU
+		{93095200-8C85-439B-BB5E-D3440BBBF334}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{93095200-8C85-439B-BB5E-D3440BBBF334}.Debug|x86.Build.0 = Debug|Any CPU
+		{93095200-8C85-439B-BB5E-D3440BBBF334}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{93095200-8C85-439B-BB5E-D3440BBBF334}.Release|Any CPU.Build.0 = Release|Any CPU
+		{93095200-8C85-439B-BB5E-D3440BBBF334}.Release|arm64.ActiveCfg = Release|Any CPU
+		{93095200-8C85-439B-BB5E-D3440BBBF334}.Release|arm64.Build.0 = Release|Any CPU
+		{93095200-8C85-439B-BB5E-D3440BBBF334}.Release|x64.ActiveCfg = Release|Any CPU
+		{93095200-8C85-439B-BB5E-D3440BBBF334}.Release|x64.Build.0 = Release|Any CPU
+		{93095200-8C85-439B-BB5E-D3440BBBF334}.Release|x86.ActiveCfg = Release|Any CPU
+		{93095200-8C85-439B-BB5E-D3440BBBF334}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

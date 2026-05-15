@@ -1121,7 +1121,8 @@ namespace Adaptive.Aeron
                     baseDirName = Path.Combine(Path.GetTempPath(), "aeron");
                 }
 
-                AERON_DIR_PROP_DEFAULT = baseDirName + "-" + Environment.UserName;
+                var userName = Environment.UserName;
+                AERON_DIR_PROP_DEFAULT = baseDirName + "-" + (string.IsNullOrEmpty(userName) ? "default" : userName);
             }
 
             /// <summary>
@@ -1487,7 +1488,8 @@ namespace Adaptive.Aeron
             /// <seealso cref="PRINT_CONFIGURATION_ON_START_PROP_NAME"/>
             public static bool ShouldPrintConfigurationOnStart()
             {
-                return "true".Equals(Config.GetProperty(PRINT_CONFIGURATION_ON_START_PROP_NAME));
+                // Use bool.TryParse for case-insensitive parsing to match Java's parseBoolean.
+                return bool.TryParse(Config.GetProperty(PRINT_CONFIGURATION_ON_START_PROP_NAME), out var b) && b;
             }
 
             /// <summary>
@@ -1502,7 +1504,7 @@ namespace Adaptive.Aeron
                     case "stdout":
                         return Console.Out;
 
-                    case "noop":
+                    case "no_op":
                         return new StreamWriter(Stream.Null);
 
                     case "stderr":
@@ -1537,7 +1539,11 @@ namespace Adaptive.Aeron
             {
                 if (null == _aeronDirectory)
                 {
-                    _aeronDirectory = new DirectoryInfo(_aeronDirectoryName);
+                    // Match Java's CommonContext.concludeAeronDirectory() which calls
+                    // new File(name).getCanonicalFile() — normalises ./.. and resolves to the
+                    // absolute path. Two processes referencing the same dir via different
+                    // relative paths must agree on the canonical form to share the CnC file.
+                    _aeronDirectory = new DirectoryInfo(Path.GetFullPath(_aeronDirectoryName));
                 }
 
                 return this;
@@ -2569,7 +2575,6 @@ namespace Adaptive.Aeron
                 _cncMetaDataBuffer?.Dispose();
                 _countersMetaDataBuffer?.Dispose();
                 _countersValuesBuffer?.Dispose();
-                _cncByteBuffer?.Dispose();
             }
 
             /// <summary>
@@ -2672,7 +2677,7 @@ namespace Adaptive.Aeron
                     {
                         if (clock.Time() > deadlineMs)
                         {
-                            throw new DriverTimeoutException("no driver heartbeat detected.");
+                            throw new DriverTimeoutException("no driver heartbeat detected");
                         }
 
                         Sleep(Configuration.AWAITING_IDLE_SLEEP_MS);
@@ -2683,7 +2688,7 @@ namespace Adaptive.Aeron
                     {
                         if (timeMs > deadlineMs)
                         {
-                            throw new DriverTimeoutException("no driver heartbeat detected.");
+                            throw new DriverTimeoutException("no driver heartbeat detected");
                         }
 
                         IoUtil.Unmap(_cncByteBuffer);
@@ -2769,7 +2774,7 @@ namespace Adaptive.Aeron
                 {
                     if (null != logProgress)
                     {
-                        logProgress("INFO: Aeron CnC file " + cncFile + "exists");
+                        logProgress("INFO: Aeron CnC file exists: " + cncFile);
                     }
 
                     return IoUtil.MapExistingFile(cncFile, CncFileDescriptor.CNC_FILE);
@@ -2853,7 +2858,7 @@ namespace Adaptive.Aeron
                 {
                     if (UnixTimeConverter.CurrentUnixTimeMillis() > (startTimeMs + driverTimeoutMs))
                     {
-                        throw new DriverTimeoutException("CnC file is created but not initialised.");
+                        throw new DriverTimeoutException("CnC file is created but not initialised");
                     }
 
                     Sleep(1);
@@ -2866,7 +2871,7 @@ namespace Adaptive.Aeron
                 );
 
                 long timestampMs = toDriverBuffer.ConsumerHeartbeatTime();
-                long nowMs = DateTime.Now.ToFileTimeUtc();
+                long nowMs = UnixTimeConverter.CurrentUnixTimeMillis();
                 long timestampAgeMs = nowMs - timestampMs;
 
                 logger("INFO: Aeron toDriver consumer heartbeat age is (ms):" + timestampAgeMs);

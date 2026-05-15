@@ -28,7 +28,8 @@ namespace Adaptive.Archiver
         /// <summary>
         /// Default number of retry attempts to be made when offering requests.
         /// </summary>
-        public const int DEFAULT_RETRY_ATTEMPTS = 3;
+        /// <seealso cref="AeronArchive.Configuration.MESSAGE_RETRY_ATTEMPTS_DEFAULT"/>
+        public const int DEFAULT_RETRY_ATTEMPTS = AeronArchive.Configuration.MESSAGE_RETRY_ATTEMPTS_DEFAULT;
 
         private readonly long _connectTimeoutNs;
         private readonly int _retryAttempts;

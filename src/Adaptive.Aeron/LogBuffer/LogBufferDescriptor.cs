@@ -75,6 +75,24 @@ namespace Adaptive.Aeron.LogBuffer
         public const int PAGE_MAX_SIZE = 1024 * 1024 * 1024;
 
         /// <summary>
+        /// Value for the <c>type</c> field to indicate a concurrent publication.
+        /// </summary>
+        /// <remarks>Since 1.51.0</remarks>
+        public const byte LOG_BUFFER_TYPE_CONCURRENT_PUBLICATION = 0;
+
+        /// <summary>
+        /// Value for the <c>type</c> field to indicate an exclusive publication.
+        /// </summary>
+        /// <remarks>Since 1.51.0</remarks>
+        public const byte LOG_BUFFER_TYPE_EXCLUSIVE_PUBLICATION = 1;
+
+        /// <summary>
+        /// Value for the <c>type</c> field to indicate a subscription.
+        /// </summary>
+        /// <remarks>Since 1.51.0</remarks>
+        public const byte LOG_BUFFER_TYPE_PUBLICATION_IMAGE = 2;
+
+        /// <summary>
         /// Section index for which buffer contains the log metadata.
         /// </summary>
         public static readonly int LOG_META_DATA_SECTION_INDEX = PARTITION_COUNT;
@@ -162,6 +180,15 @@ namespace Adaptive.Aeron.LogBuffer
         /// Offset within the log metadata where the 'publication revoked' status is indicated.
         /// </summary>
         public static readonly int LOG_IS_PUBLICATION_REVOKED_OFFSET;
+
+        /// <summary>
+        /// Offset within the log metadata where the type of the log buffer is stored.
+        /// </summary>
+        /// <seealso cref="LOG_BUFFER_TYPE_CONCURRENT_PUBLICATION"/>
+        /// <seealso cref="LOG_BUFFER_TYPE_EXCLUSIVE_PUBLICATION"/>
+        /// <seealso cref="LOG_BUFFER_TYPE_PUBLICATION_IMAGE"/>
+        /// <remarks>Since 1.51.0</remarks>
+        public static readonly int LOG_TYPE_OFFSET;
 
         /**
          * Offset within the log metadata where the rejoin property is stored.
@@ -416,6 +443,7 @@ namespace Adaptive.Aeron.LogBuffer
             LOG_SPIES_SIMULATE_CONNECTION_OFFSET = LOG_SIGNAL_EOS_OFFSET + SIZE_OF_BYTE;
             LOG_TETHER_OFFSET = LOG_SPIES_SIMULATE_CONNECTION_OFFSET + SIZE_OF_BYTE;
             LOG_IS_PUBLICATION_REVOKED_OFFSET = LOG_TETHER_OFFSET + SIZE_OF_BYTE;
+            LOG_TYPE_OFFSET = LOG_IS_PUBLICATION_REVOKED_OFFSET + SIZE_OF_BYTE;
             LOG_UNTETHERED_LINGER_TIMEOUT_NS_OFFSET = LOG_IS_PUBLICATION_REVOKED_OFFSET + SIZE_OF_INT;
 
             LOG_META_DATA_LENGTH = PAGE_MIN_SIZE;
@@ -1148,6 +1176,32 @@ namespace Adaptive.Aeron.LogBuffer
         public static void IsPublicationRevoked(UnsafeBuffer metadataBuffer, bool value)
         {
             metadataBuffer.PutByte(LOG_IS_PUBLICATION_REVOKED_OFFSET, (byte)(value ? 1 : 0));
+        }
+
+        /// <summary>
+        /// Get type information from this log buffer.
+        /// </summary>
+        /// <param name="metadataBuffer"> containing the meta data. </param>
+        /// <returns> one of <see cref="LOG_BUFFER_TYPE_CONCURRENT_PUBLICATION"/>,
+        /// <see cref="LOG_BUFFER_TYPE_EXCLUSIVE_PUBLICATION"/>, or
+        /// <see cref="LOG_BUFFER_TYPE_PUBLICATION_IMAGE"/>. </returns>
+        /// <remarks>Since 1.51.0</remarks>
+        public static byte Type(UnsafeBuffer metadataBuffer)
+        {
+            return metadataBuffer.GetByte(LOG_TYPE_OFFSET);
+        }
+
+        /// <summary>
+        /// Set <c>type</c> information for this log buffer.
+        /// </summary>
+        /// <param name="metadataBuffer"> containing the meta data. </param>
+        /// <param name="value">          one of <see cref="LOG_BUFFER_TYPE_CONCURRENT_PUBLICATION"/>,
+        ///                               <see cref="LOG_BUFFER_TYPE_EXCLUSIVE_PUBLICATION"/>, or
+        ///                               <see cref="LOG_BUFFER_TYPE_PUBLICATION_IMAGE"/>. </param>
+        /// <remarks>Since 1.51.0</remarks>
+        public static void Type(UnsafeBuffer metadataBuffer, byte value)
+        {
+            metadataBuffer.PutByte(LOG_TYPE_OFFSET, value);
         }
 
         /// <summary>

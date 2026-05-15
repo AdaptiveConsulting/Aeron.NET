@@ -26,12 +26,21 @@ namespace Adaptive.Aeron
     public sealed class Counter : AtomicCounter
     {
         private readonly ClientConductor _clientConductor;
+        private readonly bool _clientOwned;
         private AtomicBoolean _isClosed = new AtomicBoolean(false);
 
-        internal Counter(long registrationId, ClientConductor clientConductor, IAtomicBuffer buffer, int counterId)
+        internal Counter(
+            long correlationId,
+            long registrationId,
+            bool clientOwned,
+            ClientConductor clientConductor,
+            IAtomicBuffer buffer,
+            int counterId)
             : base(buffer, counterId)
         {
+            CorrelationId = correlationId;
             RegistrationId = registrationId;
+            _clientOwned = clientOwned;
             _clientConductor = clientConductor;
         }
 
@@ -39,11 +48,11 @@ namespace Adaptive.Aeron
         /// Construct a read-write view of an existing counter.
         /// </summary>
         /// <param name="countersReader"> for getting access to the buffers. </param>
-        /// <param name="registrationId"> assigned by the driver for the counter or
-        /// <see cref="Adaptive.Aeron.Aeron.NULL_VALUE"/> if not known. </param>
         /// <param name="counterId">      for the counter to be viewed. </param>
         /// <exception cref="AeronException"> if the id has for the counter has not been allocated. </exception>
-        public Counter(CountersReader countersReader, long registrationId, int counterId)
+        /// <remarks>Since 1.51.0 — the <c>registrationId</c> parameter was removed; it is now read from the
+        /// <see cref="CountersReader"/>.</remarks>
+        public Counter(CountersReader countersReader, int counterId)
             : base(countersReader.ValuesBuffer, counterId)
         {
             if (countersReader.GetCounterState(counterId) != CountersReader.RECORD_ALLOCATED)
@@ -51,12 +60,26 @@ namespace Adaptive.Aeron
                 throw new AeronException("Counter id is not allocated: " + counterId);
             }
 
-            RegistrationId = registrationId;
+            CorrelationId = Aeron.NULL_VALUE;
+            RegistrationId = countersReader.GetCounterRegistrationId(counterId);
+            _clientOwned = true;
             _clientConductor = null;
         }
 
         /// <summary>
-        /// Return the registration id used to register this counter with the media driver.
+        /// The correlation id of the counter creation command sent to the media driver, or
+        /// <see cref="Adaptive.Aeron.Aeron.NULL_VALUE"/> if unknown.
+        /// </summary>
+        /// <remarks>Since 1.51.0</remarks>
+        public long CorrelationId { get; }
+
+        /// <summary>
+        /// Return the registration id used to register this counter with the media driver. Can also be retrieved by
+        /// calling <see cref="CountersReader.GetCounterRegistrationId(int)"/>.
+        /// <para>
+        /// For non-static counters this is the same as <see cref="CorrelationId"/>. For static counters this will be a
+        /// user-defined value specified at creation time.
+        /// </para>
         /// </summary>
         /// <value> the registration id used to register this counter with the media driver. </value>
         public long RegistrationId { get; }
@@ -74,7 +97,7 @@ namespace Adaptive.Aeron
             {
                 base.Dispose();
 
-                _clientConductor?.ReleaseCounter(this);
+                _clientConductor?.RemoveCounter(this);
             }
         }
 
@@ -90,9 +113,9 @@ namespace Adaptive.Aeron
             _isClosed.Set(true);
         }
 
-        internal ClientConductor ClientConductor()
+        internal bool ClientOwned()
         {
-            return _clientConductor;
+            return _clientOwned;
         }
     }
 }
