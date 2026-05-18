@@ -56,7 +56,7 @@ namespace Adaptive.Aeron.Security
 
             if (_authenticatedSessionIdToPrincipalMap.TryGetValue(sessionId, out var principal))
             {
-                if (sessionProxy.Authenticate(principal.EncodedPrincipal))
+                if (sessionProxy.Authenticate(principal._encodedPrincipal))
                 {
                     _authenticatedSessionIdToPrincipalMap.Remove(sessionId);
                 }
@@ -90,7 +90,7 @@ namespace Adaptive.Aeron.Security
             public Builder Principal(byte[] encodedPrincipal, byte[] encodedCredentials)
             {
                 var principal = new Principal(encodedPrincipal, encodedCredentials);
-                _principalsByCredentials[principal.Credentials] = principal;
+                _principalsByCredentials[principal._credentials] = principal;
                 return this;
             }
 
@@ -105,35 +105,35 @@ namespace Adaptive.Aeron.Security
 
         private sealed class Principal
         {
-            internal readonly byte[] EncodedPrincipal;
-            internal readonly Credentials Credentials;
+            internal readonly byte[] _encodedPrincipal;
+            internal readonly Credentials _credentials;
 
             internal Principal(byte[] encodedPrincipal, byte[] encodedCredentials)
             {
-                EncodedPrincipal = encodedPrincipal;
-                Credentials = new Credentials(encodedCredentials);
+                _encodedPrincipal = encodedPrincipal;
+                _credentials = new Credentials(encodedCredentials);
             }
 
             internal bool CredentialsMatch(byte[] encodedCredentials)
             {
-                return ByteArrayEquals(Credentials.EncodedCredentials, encodedCredentials);
+                return ByteArrayEquals(_credentials._encodedCredentials, encodedCredentials);
             }
         }
 
         private sealed class Credentials : IEquatable<Credentials>
         {
-            internal readonly byte[] EncodedCredentials;
+            internal readonly byte[] _encodedCredentials;
             private readonly int _hashCode;
 
             internal Credentials(byte[] encodedCredentials)
             {
-                EncodedCredentials = encodedCredentials;
+                _encodedCredentials = encodedCredentials;
                 _hashCode = ComputeHash(encodedCredentials);
             }
 
             public bool Equals(Credentials other)
             {
-                return !ReferenceEquals(other, null) && ByteArrayEquals(EncodedCredentials, other.EncodedCredentials);
+                return !ReferenceEquals(other, null) && ByteArrayEquals(_encodedCredentials, other._encodedCredentials);
             }
 
             public override bool Equals(object obj)
