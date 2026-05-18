@@ -456,7 +456,12 @@ namespace Adaptive.Agrona.Concurrent.Status
 
         protected void ValidateCounterId(int counterId)
         {
-            if (counterId < 0 || counterId > MaxCounterId)
+            // .NET's MaxCounterId is one-past-max (capacity / COUNTER_LENGTH), used as the
+            // upper bound in `for (i = 0; i < MaxCounterId; i++)` iteration loops throughout
+            // the codebase. So a counterId equal to MaxCounterId is out of bounds — it would
+            // produce CounterOffset(counterId) == capacity and a buffer-overrun read.
+            // Java's maxCounterId is one less (inclusive max) and uses `> maxCounterId` here.
+            if (counterId < 0 || counterId >= MaxCounterId)
             {
                 throw new System.ArgumentException(
                     "Counter id " + counterId + " out of range: maxCounterId=" + MaxCounterId
