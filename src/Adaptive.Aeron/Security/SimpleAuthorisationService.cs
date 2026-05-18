@@ -34,9 +34,9 @@ namespace Adaptive.Aeron.Security
 
         private SimpleAuthorisationService(Builder builder)
         {
-            _defaultAuthorisation = builder.DefaultAuthorisation;
-            _principalByKeyMap = new Dictionary<ByteArrayKey, Principal>(builder.PrincipalByKeyMap);
-            _defaultPrincipal = builder.DefaultPrincipal;
+            _defaultAuthorisation = builder._defaultAuthorisation;
+            _principalByKeyMap = new Dictionary<ByteArrayKey, Principal>(builder._principalByKeyMap);
+            _defaultPrincipal = builder._defaultPrincipal;
         }
 
         public bool IsAuthorised(int protocolId, int actionId, object type, byte[] encodedPrincipal)
@@ -67,14 +67,14 @@ namespace Adaptive.Aeron.Security
         /// </summary>
         public sealed class Builder
         {
-            internal IAuthorisationService DefaultAuthorisation = DenyAllAuthorisationService.INSTANCE;
-            internal readonly Dictionary<ByteArrayKey, Principal> PrincipalByKeyMap =
+            internal IAuthorisationService _defaultAuthorisation = DenyAllAuthorisationService.INSTANCE;
+            internal readonly Dictionary<ByteArrayKey, Principal> _principalByKeyMap =
                 new Dictionary<ByteArrayKey, Principal>();
-            internal readonly Principal DefaultPrincipal = new Principal(Array.Empty<byte>());
+            internal readonly Principal _defaultPrincipal = new Principal(Array.Empty<byte>());
 
             public Builder WithDefaultAuthorisation(IAuthorisationService defaultAuthorisation)
             {
-                DefaultAuthorisation = defaultAuthorisation;
+                _defaultAuthorisation = defaultAuthorisation;
                 return this;
             }
 
@@ -83,42 +83,42 @@ namespace Adaptive.Aeron.Security
             {
                 var principal = GetOrAddPrincipal(encodedPrincipal);
                 var byTypeMap = isAllowed
-                    ? principal.ByProtocolActionTypeAllowed
-                    : principal.ByProtocolActionTypeDenied;
+                    ? principal._byProtocolActionTypeAllowed
+                    : principal._byProtocolActionTypeDenied;
                 GetOrAddSet(byTypeMap, protocolId, actionId).Add(type);
                 return this;
             }
 
             public Builder AddPrincipalRule(int protocolId, int actionId, byte[] encodedPrincipal, bool isAllowed)
             {
-                GetOrAddPrincipal(encodedPrincipal).ByProtocolAction[(protocolId, actionId)] = isAllowed;
+                GetOrAddPrincipal(encodedPrincipal)._byProtocolAction[(protocolId, actionId)] = isAllowed;
                 return this;
             }
 
             public Builder AddPrincipalRule(int protocolId, byte[] encodedPrincipal, bool isAllowed)
             {
-                GetOrAddPrincipal(encodedPrincipal).ByProtocol[protocolId] = isAllowed;
+                GetOrAddPrincipal(encodedPrincipal)._byProtocol[protocolId] = isAllowed;
                 return this;
             }
 
             public Builder AddGeneralRule(int protocolId, int actionId, object type, bool isAllowed)
             {
                 var byTypeMap = isAllowed
-                    ? DefaultPrincipal.ByProtocolActionTypeAllowed
-                    : DefaultPrincipal.ByProtocolActionTypeDenied;
+                    ? _defaultPrincipal._byProtocolActionTypeAllowed
+                    : _defaultPrincipal._byProtocolActionTypeDenied;
                 GetOrAddSet(byTypeMap, protocolId, actionId).Add(type);
                 return this;
             }
 
             public Builder AddGeneralRule(int protocolId, int actionId, bool isAllowed)
             {
-                DefaultPrincipal.ByProtocolAction[(protocolId, actionId)] = isAllowed;
+                _defaultPrincipal._byProtocolAction[(protocolId, actionId)] = isAllowed;
                 return this;
             }
 
             public Builder AddGeneralRule(int protocolId, bool isAllowed)
             {
-                DefaultPrincipal.ByProtocol[protocolId] = isAllowed;
+                _defaultPrincipal._byProtocol[protocolId] = isAllowed;
                 return this;
             }
 
@@ -130,10 +130,10 @@ namespace Adaptive.Aeron.Security
             private Principal GetOrAddPrincipal(byte[] encodedPrincipal)
             {
                 var key = new ByteArrayKey(encodedPrincipal);
-                if (!PrincipalByKeyMap.TryGetValue(key, out var principal))
+                if (!_principalByKeyMap.TryGetValue(key, out var principal))
                 {
                     principal = new Principal(encodedPrincipal);
-                    PrincipalByKeyMap[key] = principal;
+                    _principalByKeyMap[key] = principal;
                 }
                 return principal;
             }
@@ -153,51 +153,51 @@ namespace Adaptive.Aeron.Security
 
         internal sealed class Principal
         {
-            internal readonly Dictionary<int, bool> ByProtocol = new Dictionary<int, bool>();
-            internal readonly Dictionary<(int, int), bool> ByProtocolAction = new Dictionary<(int, int), bool>();
-            internal readonly Dictionary<(int, int), HashSet<object>> ByProtocolActionTypeAllowed =
+            internal readonly Dictionary<int, bool> _byProtocol = new Dictionary<int, bool>();
+            internal readonly Dictionary<(int, int), bool> _byProtocolAction = new Dictionary<(int, int), bool>();
+            internal readonly Dictionary<(int, int), HashSet<object>> _byProtocolActionTypeAllowed =
                 new Dictionary<(int, int), HashSet<object>>();
-            internal readonly Dictionary<(int, int), HashSet<object>> ByProtocolActionTypeDenied =
+            internal readonly Dictionary<(int, int), HashSet<object>> _byProtocolActionTypeDenied =
                 new Dictionary<(int, int), HashSet<object>>();
-            internal readonly byte[] EncodedPrincipal;
+            internal readonly byte[] _encodedPrincipal;
 
             internal Principal(byte[] encodedPrincipal)
             {
-                EncodedPrincipal = encodedPrincipal;
+                _encodedPrincipal = encodedPrincipal;
             }
 
             internal bool? IsAuthorised(int protocolId, int actionId, object type)
             {
-                if (ByProtocolActionTypeAllowed.TryGetValue((protocolId, actionId), out var allowed)
+                if (_byProtocolActionTypeAllowed.TryGetValue((protocolId, actionId), out var allowed)
                     && allowed.Contains(type))
                 {
                     return true;
                 }
 
-                if (ByProtocolActionTypeDenied.TryGetValue((protocolId, actionId), out var denied)
+                if (_byProtocolActionTypeDenied.TryGetValue((protocolId, actionId), out var denied)
                     && denied.Contains(type))
                 {
                     return false;
                 }
 
-                if (ByProtocolAction.TryGetValue((protocolId, actionId), out var authorised))
+                if (_byProtocolAction.TryGetValue((protocolId, actionId), out var authorised))
                 {
                     return authorised;
                 }
 
-                return ByProtocol.TryGetValue(protocolId, out var byProtocol) ? byProtocol : (bool?)null;
+                return _byProtocol.TryGetValue(protocolId, out var byProtocol) ? byProtocol : (bool?)null;
             }
         }
 
         internal sealed class ByteArrayKey : IEquatable<ByteArrayKey>
         {
-            internal readonly byte[] Data;
+            private readonly byte[] _data;
             private readonly int _hashCode;
 
             internal ByteArrayKey(byte[] data)
             {
-                Data = data ?? Array.Empty<byte>();
-                _hashCode = ComputeHash(Data);
+                _data = data ?? Array.Empty<byte>();
+                _hashCode = ComputeHash(_data);
             }
 
             public bool Equals(ByteArrayKey other)
@@ -206,13 +206,13 @@ namespace Adaptive.Aeron.Security
                 {
                     return false;
                 }
-                if (Data.Length != other.Data.Length)
+                if (_data.Length != other._data.Length)
                 {
                     return false;
                 }
-                for (var i = 0; i < Data.Length; i++)
+                for (var i = 0; i < _data.Length; i++)
                 {
-                    if (Data[i] != other.Data[i])
+                    if (_data[i] != other._data[i])
                     {
                         return false;
                     }
