@@ -1136,7 +1136,7 @@ namespace Adaptive.Aeron
         /// <seealso cref="ControlEndpoint()"/>
         public ChannelUriStringBuilder Group(bool? group)
         {
-            this._group = group;
+            _group = group;
             return this;
         }
 
@@ -1298,7 +1298,7 @@ namespace Adaptive.Aeron
         /// <seealso cref="Aeron.Context.CONGESTION_CONTROL_PARAM_NAME"/>
         public ChannelUriStringBuilder CongestionControl(string congestionControl)
         {
-            this._cc = congestionControl;
+            _cc = congestionControl;
             return this;
         }
 
@@ -1331,7 +1331,7 @@ namespace Adaptive.Aeron
         /// <seealso cref="Aeron.Context.FLOW_CONTROL_PARAM_NAME"/>
         public ChannelUriStringBuilder FlowControl(string flowControl)
         {
-            this._fc = flowControl;
+            _fc = flowControl;
             return this;
         }
 
@@ -1427,7 +1427,7 @@ namespace Adaptive.Aeron
         /// <seealso cref="Aeron.Context.GROUP_TAG_PARAM_NAME"/>
         public ChannelUriStringBuilder GroupTag(long? groupTag)
         {
-            this._groupTag = groupTag;
+            _groupTag = groupTag;
             return this;
         }
 
@@ -1476,7 +1476,7 @@ namespace Adaptive.Aeron
         /// <seealso cref="Aeron.Context.REJOIN_PARAM_NAME"/>
         public ChannelUriStringBuilder Rejoin(bool? rejoin)
         {
-            this._rejoin = rejoin;
+            _rejoin = rejoin;
             return this;
         }
 
@@ -1519,7 +1519,7 @@ namespace Adaptive.Aeron
         /// <seealso cref="Aeron.Context.SPIES_SIMULATE_CONNECTION_PARAM_NAME"></seealso>
         public ChannelUriStringBuilder SpiesSimulateConnection(bool? spiesSimulateConnection)
         {
-            this._ssc = spiesSimulateConnection;
+            _ssc = spiesSimulateConnection;
             return this;
         }
 
@@ -1657,7 +1657,7 @@ namespace Adaptive.Aeron
             string valueStr = channelUri.Get(SOCKET_RCVBUF_PARAM_NAME);
             if (null == valueStr)
             {
-                this._socketRcvbufLength = null;
+                _socketRcvbufLength = null;
                 return this;
             }
             else
@@ -1690,7 +1690,7 @@ namespace Adaptive.Aeron
         /// <seealso cref="Aeron.Context.RECEIVER_WINDOW_LENGTH_PARAM_NAME"/>
         public ChannelUriStringBuilder ReceiverWindowLength(int? receiverWindowLength)
         {
-            this._receiverWindowLength = RequireNonNegative(receiverWindowLength, RECEIVER_WINDOW_LENGTH_PARAM_NAME);
+            _receiverWindowLength = RequireNonNegative(receiverWindowLength, RECEIVER_WINDOW_LENGTH_PARAM_NAME);
             return this;
         }
 
@@ -1707,7 +1707,7 @@ namespace Adaptive.Aeron
             string valueStr = channelUri.Get(RECEIVER_WINDOW_LENGTH_PARAM_NAME);
             if (null == valueStr)
             {
-                this._receiverWindowLength = null;
+                _receiverWindowLength = null;
                 return this;
             }
             else
@@ -1772,7 +1772,7 @@ namespace Adaptive.Aeron
                 }
             }
 
-            this._mediaReceiveTimestampOffset = timestampOffset;
+            _mediaReceiveTimestampOffset = timestampOffset;
             return this;
         }
 
@@ -1828,7 +1828,7 @@ namespace Adaptive.Aeron
                 }
             }
 
-            this._channelReceiveTimestampOffset = timestampOffset;
+            _channelReceiveTimestampOffset = timestampOffset;
             return this;
         }
 
@@ -1909,7 +1909,7 @@ namespace Adaptive.Aeron
         /// <seealso cref="Aeron.Context.RESPONSE_ENDPOINT_PARAM_NAME"/>
         public ChannelUriStringBuilder ResponseEndpoint(string responseEndpoint)
         {
-            this._responseEndpoint = responseEndpoint;
+            _responseEndpoint = responseEndpoint;
             return this;
         }
 
@@ -1932,7 +1932,7 @@ namespace Adaptive.Aeron
         /// <seealso cref="Aeron.Context.RESPONSE_ENDPOINT_PARAM_NAME"/>
         public string ResponseEndpoint()
         {
-            return this._responseEndpoint;
+            return _responseEndpoint;
         }
 
         /// <summary>
@@ -2252,7 +2252,7 @@ namespace Adaptive.Aeron
         /// <seealso cref="Aeron.Context.MAX_RESEND_PARAM_NAME"/>
         public ChannelUriStringBuilder MaxResend(int? maxResend)
         {
-            this._maxResend = RequireNonNegative(maxResend, MAX_RESEND_PARAM_NAME);
+            _maxResend = RequireNonNegative(maxResend, MAX_RESEND_PARAM_NAME);
             return this;
         }
 
@@ -2267,7 +2267,7 @@ namespace Adaptive.Aeron
             string valueStr = channelUri.Get(MAX_RESEND_PARAM_NAME);
             if (null == valueStr)
             {
-                this._maxResend = null;
+                _maxResend = null;
                 return this;
             }
             else
@@ -2309,7 +2309,7 @@ namespace Adaptive.Aeron
         /// <returns> this for a fluent API. </returns>
         public ChannelUriStringBuilder StreamId(int? streamId)
         {
-            this._streamId = streamId;
+            _streamId = streamId;
             return this;
         }
 
@@ -2323,7 +2323,7 @@ namespace Adaptive.Aeron
             string valueStr = channelUri.Get(STREAM_ID_PARAM_NAME);
             if (null == valueStr)
             {
-                this._streamId = null;
+                _streamId = null;
                 return this;
             }
             else
@@ -2347,7 +2347,7 @@ namespace Adaptive.Aeron
         /// <seealso cref="Aeron.Context.PUBLICATION_WINDOW_LENGTH_PARAM_NAME"/>
         public ChannelUriStringBuilder PublicationWindowLength(int? publicationWindowLength)
         {
-            this._publicationWindowLength =
+            _publicationWindowLength =
                 RequireNonNegative(publicationWindowLength, PUBLICATION_WINDOW_LENGTH_PARAM_NAME);
             return this;
         }
@@ -2364,7 +2364,7 @@ namespace Adaptive.Aeron
             string valueStr = channelUri.Get(PUBLICATION_WINDOW_LENGTH_PARAM_NAME);
             if (null == valueStr)
             {
-                this._publicationWindowLength = null;
+                _publicationWindowLength = null;
                 return this;
             }
             else
