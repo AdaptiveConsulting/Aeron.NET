@@ -18,7 +18,7 @@ using System;
 
 namespace Adaptive.Archiver.IntegrationTests.Helpers
 {
-    internal sealed class PersistentSubscriptionListenerImpl : IPersistentSubscriptionListener
+    internal sealed class PersistentSubscriptionListener : IPersistentSubscriptionListener
     {
         public int LiveJoinedCount { get; private set; }
         public int LiveLeftCount { get; private set; }

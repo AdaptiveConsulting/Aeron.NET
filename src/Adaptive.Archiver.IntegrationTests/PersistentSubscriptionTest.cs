@@ -43,7 +43,7 @@ namespace Adaptive.Archiver.IntegrationTests
         protected AeronArchive AeronArchive;
         protected AeronArchive.Context AeronArchiveCtxTpl;
         protected PersistentSubscription.Context PersistentSubscriptionCtx;
-        protected PersistentSubscriptionListenerImpl Listener;
+        protected PersistentSubscriptionListener Listener;
         protected readonly List<IDisposable> Closeables = new();
 
         // MDC control port — picked per test in SetUp. Two tests sharing this port would
@@ -68,7 +68,7 @@ namespace Adaptive.Archiver.IntegrationTests
 
             AeronArchive = AeronArchive.Connect(CloneArchiveCtx());
 
-            Listener = new PersistentSubscriptionListenerImpl();
+            Listener = new PersistentSubscriptionListener();
             PersistentSubscriptionCtx = new PersistentSubscription.Context()
                 .Aeron(Aeron)
                 .RecordingId(13)
