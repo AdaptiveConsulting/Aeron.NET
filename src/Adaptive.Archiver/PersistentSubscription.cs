@@ -729,11 +729,11 @@ namespace Adaptive.Archiver
                 int errorCode = (int)_replayRequest.RelevantId;
 
                 PersistentSubscriptionException.Reason reason;
-                if (errorCode == ArchiveException.INVALID_POSITION)
+                if (ArchiveException.INVALID_POSITION == errorCode)
                 {
                     reason = PersistentSubscriptionException.Reason.INVALID_START_POSITION;
                 }
-                else if (errorCode == ArchiveException.UNKNOWN_RECORDING)
+                else if (ArchiveException.UNKNOWN_RECORDING == errorCode)
                 {
                     reason = PersistentSubscriptionException.Reason.RECORDING_NOT_FOUND;
                 }
@@ -1128,10 +1128,11 @@ namespace Adaptive.Archiver
         private void OnLiveImageDeadlineBreached()
         {
             _liveImageDeadlineBreached = true;
-            _listener.OnError(new AeronEvent("No image became available on the live subscription within " +
-                                             SystemUtil.FormatDuration(_messageTimeoutNs) + ". This could be " +
-                                             "caused by the publisher being down, or by a misconfiguration of the " +
-                                             "subscriber or a firewall between them."));
+            _listener.OnError(new AeronEvent(
+                "No image became available on the live subscription within " +
+                SystemUtil.FormatDuration(_messageTimeoutNs) + ". This could be " +
+                "caused by the publisher being down, or by a misconfiguration of the " +
+                "subscriber or a firewall between them."));
         }
 
         private int AttemptSwitch(int fragmentLimit, bool isControlled)
