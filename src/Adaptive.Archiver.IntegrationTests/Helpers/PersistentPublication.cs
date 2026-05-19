@@ -70,9 +70,9 @@ namespace Adaptive.Archiver.IntegrationTests.Helpers
         public long ReceiverCount()
         {
             var counterId = _countersReader.FindByTypeIdAndRegistrationId(
-                Adaptive.Aeron.AeronCounters.FLOW_CONTROL_RECEIVERS_COUNTER_TYPE_ID,
+                AeronCounters.FLOW_CONTROL_RECEIVERS_COUNTER_TYPE_ID,
                 _publication.RegistrationId);
-            if (counterId == Adaptive.Agrona.Concurrent.Status.CountersReader.NULL_COUNTER_ID)
+            if (CountersReader.NULL_COUNTER_ID == counterId)
             {
                 throw new System.InvalidOperationException(
                     "flow-control receivers counter not found for publication "
@@ -156,7 +156,7 @@ namespace Adaptive.Archiver.IntegrationTests.Helpers
 
         public void Persist(IList<byte[]> messages)
         {
-            if (messages.Count == 0)
+            if (0 == messages.Count)
             {
                 return;
             }
