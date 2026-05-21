@@ -281,41 +281,25 @@ namespace Adaptive.Archiver
         }
 
         /// <summary>
-        /// Indicates if the persistent subscription is reading from the live stream.
+        /// True if the persistent subscription is reading from the live stream.
         /// </summary>
-        /// <returns> true if persistent subscription is reading from the live stream. </returns>
-        public bool IsLive()
-        {
-            return State.LIVE == _state;
-        }
+        public bool IsLive => State.LIVE == _state;
 
         /// <summary>
-        /// Indicates if the persistent subscription is replaying from a recording.
+        /// True if the persistent subscription is replaying from a recording.
         /// </summary>
-        /// <returns> true if persistent subscription is replaying from a recording. </returns>
-        public bool IsReplaying()
-        {
-            return State.REPLAY == _state || State.ATTEMPT_SWITCH == _state;
-        }
+        public bool IsReplaying => State.REPLAY == _state || State.ATTEMPT_SWITCH == _state;
 
         /// <summary>
-        /// Indicates if the persistent subscription failed.
+        /// True if the persistent subscription has failed.
         /// </summary>
-        /// <returns> true if persistent subscription has failed. </returns>
-        public bool HasFailed()
-        {
-            return State.FAILED == _state;
-        }
+        public bool HasFailed => State.FAILED == _state;
 
         /// <summary>
-        /// The terminal error that caused the persistent subscription to fail.
-        /// Only meaningful when <see cref="HasFailed"/> returns true.
+        /// The terminal error that caused the persistent subscription to fail, or <c>null</c> if not in the
+        /// failed state. Only meaningful when <see cref="HasFailed"/> is true.
         /// </summary>
-        /// <returns> exception indicating the failure reason, or null if not in the failed state. </returns>
-        public Exception FailureReason()
-        {
-            return _failureReason;
-        }
+        public Exception FailureReason => _failureReason;
 
         /// <summary>
         /// Close this PersistentSubscription and release any resources owned by it.
@@ -372,15 +356,7 @@ namespace Adaptive.Archiver
             }
         }
 
-        internal Context ContextInternal()
-        {
-            return _ctx;
-        }
-
-        internal long JoinDifference()
-        {
-            return _joinDifference;
-        }
+        internal long JoinDifference => _joinDifference;
 
         private void UpdateJoinDifference(long joinDifference)
         {
@@ -1181,7 +1157,7 @@ namespace Adaptive.Archiver
                 }
             }
 
-            if (IsLive())
+            if (IsLive)
             {
                 CleanUpReplay();
                 CleanUpReplaySubscription();
@@ -1725,13 +1701,9 @@ namespace Adaptive.Archiver
             }
 
             /// <summary>
-            /// Has the context had the <see cref="Conclude()"/> method called.
+            /// True if the <see cref="Conclude()"/> method has been called.
             /// </summary>
-            /// <returns> true if the <see cref="Conclude()"/> method has been called. </returns>
-            public bool IsConcluded()
-            {
-                return 0 != Volatile.Read(ref _isConcluded);
-            }
+            public bool IsConcluded => 0 != Volatile.Read(ref _isConcluded);
 
             public Context Aeron(AeronClient aeron)
             {

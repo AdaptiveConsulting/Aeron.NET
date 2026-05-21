@@ -17,7 +17,7 @@ Adaptive.Archiver.PersistentSubscription.Context.Clone() -> Adaptive.Archiver.Pe
 Adaptive.Archiver.PersistentSubscription.Context.Conclude() -> void
 Adaptive.Archiver.PersistentSubscription.Context.Context() -> void
 Adaptive.Archiver.PersistentSubscription.Context.Dispose() -> void
-Adaptive.Archiver.PersistentSubscription.Context.IsConcluded() -> bool
+Adaptive.Archiver.PersistentSubscription.Context.IsConcluded.get -> bool
 Adaptive.Archiver.PersistentSubscription.Context.JoinDifferenceCounter() -> Adaptive.Aeron.Counter
 Adaptive.Archiver.PersistentSubscription.Context.JoinDifferenceCounter(Adaptive.Aeron.Counter joinDifferenceCounter) -> Adaptive.Archiver.PersistentSubscription.Context
 Adaptive.Archiver.PersistentSubscription.Context.Listener() -> Adaptive.Archiver.IPersistentSubscriptionListener
@@ -44,10 +44,10 @@ Adaptive.Archiver.PersistentSubscription.Context.StateCounter() -> Adaptive.Aero
 Adaptive.Archiver.PersistentSubscription.Context.StateCounter(Adaptive.Aeron.Counter stateCounter) -> Adaptive.Archiver.PersistentSubscription.Context
 Adaptive.Archiver.PersistentSubscription.ControlledPoll(Adaptive.Aeron.LogBuffer.IControlledFragmentHandler fragmentHandler, int fragmentLimit) -> int
 Adaptive.Archiver.PersistentSubscription.Dispose() -> void
-Adaptive.Archiver.PersistentSubscription.FailureReason() -> System.Exception
-Adaptive.Archiver.PersistentSubscription.HasFailed() -> bool
-Adaptive.Archiver.PersistentSubscription.IsLive() -> bool
-Adaptive.Archiver.PersistentSubscription.IsReplaying() -> bool
+Adaptive.Archiver.PersistentSubscription.FailureReason.get -> System.Exception
+Adaptive.Archiver.PersistentSubscription.HasFailed.get -> bool
+Adaptive.Archiver.PersistentSubscription.IsLive.get -> bool
+Adaptive.Archiver.PersistentSubscription.IsReplaying.get -> bool
 Adaptive.Archiver.PersistentSubscription.Poll(Adaptive.Aeron.LogBuffer.IFragmentHandler fragmentHandler, int fragmentLimit) -> int
 Adaptive.Archiver.PersistentSubscriptionException
 Adaptive.Archiver.PersistentSubscriptionException.PersistentSubscriptionException(Adaptive.Archiver.PersistentSubscriptionException.Reason reason, string message) -> void

@@ -203,14 +203,14 @@ namespace Adaptive.Archiver.IntegrationTests
             PersistentSubscriptionCtx.RecordingId(nonExistentRecordingId);
 
             using var persistentSubscription = PersistentSubscription.Create(PersistentSubscriptionCtx);
-            Tests.ExecuteUntil(persistentSubscription.HasFailed, () => Poll(persistentSubscription, null, 1));
+            Tests.ExecuteUntil(() => persistentSubscription.HasFailed, () => Poll(persistentSubscription, null, 1));
 
             Assert.That(Listener.ErrorCount, Is.EqualTo(1));
             Assert.That(Listener.LastException, Is.InstanceOf<PersistentSubscriptionException>());
             Assert.That(
                 ((PersistentSubscriptionException)Listener.LastException).ReasonValue,
                 Is.EqualTo(PersistentSubscriptionException.Reason.RECORDING_NOT_FOUND));
-            Assert.That(persistentSubscription.FailureReason(), Is.SameAs(Listener.LastException));
+            Assert.That(persistentSubscription.FailureReason, Is.SameAs(Listener.LastException));
         }
 
         [Test, Timeout(15_000)]
@@ -219,7 +219,7 @@ namespace Adaptive.Archiver.IntegrationTests
             PersistentSubscriptionCtx.Listener(null);
 
             using var persistentSubscription = PersistentSubscription.Create(PersistentSubscriptionCtx);
-            Tests.ExecuteUntil(persistentSubscription.HasFailed, () => Poll(persistentSubscription, null, 1));
+            Tests.ExecuteUntil(() => persistentSubscription.HasFailed, () => Poll(persistentSubscription, null, 1));
         }
 
         [Test, Timeout(15_000)]
@@ -236,14 +236,14 @@ namespace Adaptive.Archiver.IntegrationTests
                 .LiveStreamId(liveStreamId);
 
             using var persistentSubscription = PersistentSubscription.Create(PersistentSubscriptionCtx);
-            Tests.ExecuteUntil(persistentSubscription.HasFailed, () => Poll(persistentSubscription, null, 1));
+            Tests.ExecuteUntil(() => persistentSubscription.HasFailed, () => Poll(persistentSubscription, null, 1));
 
             Assert.That(Listener.ErrorCount, Is.EqualTo(1));
             Assert.That(Listener.LastException, Is.InstanceOf<PersistentSubscriptionException>());
             Assert.That(
                 ((PersistentSubscriptionException)Listener.LastException).ReasonValue,
                 Is.EqualTo(PersistentSubscriptionException.Reason.STREAM_ID_MISMATCH));
-            Assert.That(persistentSubscription.FailureReason(), Is.SameAs(Listener.LastException));
+            Assert.That(persistentSubscription.FailureReason, Is.SameAs(Listener.LastException));
         }
 
         [Test, Timeout(15_000)]
@@ -263,14 +263,14 @@ namespace Adaptive.Archiver.IntegrationTests
                 .StartPosition(startPosition);
 
             using var persistentSubscription = PersistentSubscription.Create(PersistentSubscriptionCtx);
-            Tests.ExecuteUntil(persistentSubscription.HasFailed, () => Poll(persistentSubscription, null, 1));
+            Tests.ExecuteUntil(() => persistentSubscription.HasFailed, () => Poll(persistentSubscription, null, 1));
 
             Assert.That(Listener.ErrorCount, Is.EqualTo(1));
             Assert.That(Listener.LastException, Is.InstanceOf<PersistentSubscriptionException>());
             Assert.That(
                 ((PersistentSubscriptionException)Listener.LastException).ReasonValue,
                 Is.EqualTo(PersistentSubscriptionException.Reason.INVALID_START_POSITION));
-            Assert.That(persistentSubscription.FailureReason(), Is.SameAs(Listener.LastException));
+            Assert.That(persistentSubscription.FailureReason, Is.SameAs(Listener.LastException));
         }
 
         [Test, Timeout(15_000)]
@@ -291,14 +291,14 @@ namespace Adaptive.Archiver.IntegrationTests
                 .StartPosition(startPosition);
 
             using var persistentSubscription = PersistentSubscription.Create(PersistentSubscriptionCtx);
-            Tests.ExecuteUntil(persistentSubscription.HasFailed, () => Poll(persistentSubscription, null, 1));
+            Tests.ExecuteUntil(() => persistentSubscription.HasFailed, () => Poll(persistentSubscription, null, 1));
 
             Assert.That(Listener.ErrorCount, Is.EqualTo(1));
             Assert.That(Listener.LastException, Is.InstanceOf<PersistentSubscriptionException>());
             Assert.That(
                 ((PersistentSubscriptionException)Listener.LastException).ReasonValue,
                 Is.EqualTo(PersistentSubscriptionException.Reason.INVALID_START_POSITION));
-            Assert.That(persistentSubscription.FailureReason(), Is.SameAs(Listener.LastException));
+            Assert.That(persistentSubscription.FailureReason, Is.SameAs(Listener.LastException));
         }
 
         [Test, Timeout(15_000)]
@@ -320,7 +320,9 @@ namespace Adaptive.Archiver.IntegrationTests
             var fragmentHandler = new BufferingFragmentHandler();
 
             using var persistentSubscription = PersistentSubscription.Create(PersistentSubscriptionCtx);
-            Tests.ExecuteUntil(persistentSubscription.IsLive, () => Poll(persistentSubscription, fragmentHandler, 10));
+            Tests.ExecuteUntil(
+                () => persistentSubscription.IsLive,
+                () => Poll(persistentSubscription, fragmentHandler, 10));
 
             Tests.ExecuteUntil(
                 () => fragmentHandler.HasReceivedPayloads(secondBatch.Count),
@@ -343,7 +345,9 @@ namespace Adaptive.Archiver.IntegrationTests
             var fragmentHandler = new BufferingFragmentHandler();
 
             using var persistentSubscription = PersistentSubscription.Create(PersistentSubscriptionCtx);
-            Tests.ExecuteUntil(persistentSubscription.IsLive, () => Poll(persistentSubscription, fragmentHandler, 10));
+            Tests.ExecuteUntil(
+                () => persistentSubscription.IsLive,
+                () => Poll(persistentSubscription, fragmentHandler, 10));
 
             Assert.That(Listener.LiveJoinedCount, Is.EqualTo(1));
             Assert.That(fragmentHandler.ReceivedPayloads, Is.Empty);
@@ -375,7 +379,9 @@ namespace Adaptive.Archiver.IntegrationTests
             var fragmentHandler = new BufferingFragmentHandler();
 
             using var persistentSubscription = PersistentSubscription.Create(PersistentSubscriptionCtx);
-            Tests.ExecuteUntil(persistentSubscription.IsLive, () => Poll(persistentSubscription, fragmentHandler, 10));
+            Tests.ExecuteUntil(
+                () => persistentSubscription.IsLive,
+                () => Poll(persistentSubscription, fragmentHandler, 10));
 
             Assert.That(Listener.LiveJoinedCount, Is.EqualTo(1));
             Assert.That(fragmentHandler.ReceivedPayloads, Is.Empty);
@@ -406,12 +412,12 @@ namespace Adaptive.Archiver.IntegrationTests
             var fragmentHandler = new BufferingFragmentHandler();
             using var persistentSubscription = PersistentSubscription.Create(PersistentSubscriptionCtx);
             Tests.ExecuteUntil(
-                persistentSubscription.HasFailed,
+                () => persistentSubscription.HasFailed,
                 () => Poll(persistentSubscription, fragmentHandler, 1));
 
             Assert.That(Listener.ErrorCount, Is.EqualTo(1));
             Assert.That(Listener.LastException, Is.InstanceOf<PersistentSubscriptionException>());
-            Assert.That(persistentSubscription.FailureReason(), Is.SameAs(Listener.LastException));
+            Assert.That(persistentSubscription.FailureReason, Is.SameAs(Listener.LastException));
         }
 
         [TestCase(0L)]
@@ -459,7 +465,7 @@ namespace Adaptive.Archiver.IntegrationTests
 
             using var persistentSubscription = PersistentSubscription.Create(PersistentSubscriptionCtx);
             Tests.ExecuteUntil(
-                persistentSubscription.IsLive,
+                () => persistentSubscription.IsLive,
                 () => Poll(persistentSubscription, fragmentHandler, 10), 18_000);
 
             Assert.That(fragmentHandler.ReceivedPayloads, Is.Empty);
@@ -492,7 +498,9 @@ namespace Adaptive.Archiver.IntegrationTests
 
             var fragmentHandler = new BufferingFragmentHandler();
             using var persistentSubscription = PersistentSubscription.Create(PersistentSubscriptionCtx);
-            Tests.ExecuteUntil(persistentSubscription.IsLive, () => Poll(persistentSubscription, fragmentHandler, 1));
+            Tests.ExecuteUntil(
+                () => persistentSubscription.IsLive,
+                () => Poll(persistentSubscription, fragmentHandler, 1));
 
             persistentPublication.Publish(secondBatch);
 
@@ -521,7 +529,9 @@ namespace Adaptive.Archiver.IntegrationTests
 
             var fragmentHandler = new BufferingFragmentHandler();
             using var persistentSubscription = PersistentSubscription.Create(PersistentSubscriptionCtx);
-            Tests.ExecuteUntil(persistentSubscription.IsLive, () => Poll(persistentSubscription, fragmentHandler, 1));
+            Tests.ExecuteUntil(
+                () => persistentSubscription.IsLive,
+                () => Poll(persistentSubscription, fragmentHandler, 1));
 
             var liveMessages = GenerateRandomPayloads(3);
             persistentPublication.Publish(liveMessages);
@@ -557,7 +567,9 @@ namespace Adaptive.Archiver.IntegrationTests
                 () => Poll(persistentSubscription, fragmentHandler, 10));
             AssertPayloads(fragmentHandler.ReceivedPayloads, oldMessages);
 
-            Tests.ExecuteUntil(persistentSubscription.IsLive, () => Poll(persistentSubscription, fragmentHandler, 10));
+            Tests.ExecuteUntil(
+                () => persistentSubscription.IsLive,
+                () => Poll(persistentSubscription, fragmentHandler, 10));
 
             var newMessages = GenerateFixedPayloads(16, OneKbMessageSize);
             persistentPublication.Publish(newMessages);
@@ -566,8 +578,8 @@ namespace Adaptive.Archiver.IntegrationTests
                 () => fragmentHandler.HasReceivedPayloads(oldMessages.Count + newMessages.Count),
                 () => Poll(persistentSubscription, fragmentHandler, 10));
 
-            Assert.That(persistentSubscription.IsLive(), Is.True);
-            Assert.That(persistentSubscription.IsReplaying(), Is.False);
+            Assert.That(persistentSubscription.IsLive, Is.True);
+            Assert.That(persistentSubscription.IsReplaying, Is.False);
         }
 
         [Test, Timeout(30_000)]
@@ -607,10 +619,10 @@ namespace Adaptive.Archiver.IntegrationTests
                 () => fragmentHandler.HasReceivedPayloads(recordedMessages.Count),
                 () => Poll(persistentSubscription, fragmentHandler, 10));
 
-            Assert.That(persistentSubscription.IsReplaying(), Is.True);
+            Assert.That(persistentSubscription.IsReplaying, Is.True);
 
             Tests.ExecuteUntil(
-                persistentSubscription.HasFailed,
+                () => persistentSubscription.HasFailed,
                 () => Poll(persistentSubscription, fragmentHandler, 1));
 
             Assert.That(fragmentHandler.ReceivedPayloads.Count, Is.EqualTo(recordedMessages.Count));
@@ -619,7 +631,7 @@ namespace Adaptive.Archiver.IntegrationTests
             Assert.That(
                 ((PersistentSubscriptionException)Listener.LastException).ReasonValue,
                 Is.EqualTo(PersistentSubscriptionException.Reason.INVALID_START_POSITION));
-            Assert.That(persistentSubscription.FailureReason(), Is.SameAs(Listener.LastException));
+            Assert.That(persistentSubscription.FailureReason, Is.SameAs(Listener.LastException));
         }
 
         [Test, Timeout(15_000)]
@@ -636,7 +648,9 @@ namespace Adaptive.Archiver.IntegrationTests
 
             var fragmentHandler = new BufferingFragmentHandler();
             using var persistentSubscription = PersistentSubscription.Create(PersistentSubscriptionCtx);
-            Tests.ExecuteUntil(persistentSubscription.IsLive, () => Poll(persistentSubscription, fragmentHandler, 10));
+            Tests.ExecuteUntil(
+                () => persistentSubscription.IsLive,
+                () => Poll(persistentSubscription, fragmentHandler, 10));
 
             persistentPublication.Dispose();
             Closeables.Remove(persistentPublication);
@@ -646,14 +660,14 @@ namespace Adaptive.Archiver.IntegrationTests
             Closeables.Add(replacement);
 
             Tests.ExecuteUntil(
-                persistentSubscription.HasFailed,
+                () => persistentSubscription.HasFailed,
                 () => Poll(persistentSubscription, fragmentHandler, 10));
 
             // Java asserts the full "ERROR - live stream joined..." string, where "ERROR - " is
             // prepended by Java's AeronException base-class constructor. The .NET AeronException
             // does NOT prepend the category name (see follow-up task) -- a separate base-class
             // fix is needed before this can match Java byte-for-byte. Test logical content for now.
-            Assert.That(persistentSubscription.FailureReason()?.Message,
+            Assert.That(persistentSubscription.FailureReason?.Message,
                 Does.Contain("live stream joined at position 0 which is earlier than last seen position 128"));
         }
 
@@ -686,14 +700,14 @@ namespace Adaptive.Archiver.IntegrationTests
                 () => fragmentHandler.HasReceivedPayloads(5),
                 () => Poll(persistentSubscription, fragmentHandler, 10));
 
-            Assert.That(persistentSubscription.IsReplaying(), Is.True);
+            Assert.That(persistentSubscription.IsReplaying, Is.True);
 
             Tests.ExecuteUntil(() => Listener.ErrorCount > 0, () => Poll(persistentSubscription, fragmentHandler, 10));
             Assert.That(Listener.LastException?.Message,
                 Does.Contain("No image became available on the live subscription"));
-            Assert.That(persistentSubscription.HasFailed(), Is.False);
-            Assert.That(persistentSubscription.FailureReason(), Is.Null);
-            Assert.That(persistentSubscription.IsReplaying(), Is.True);
+            Assert.That(persistentSubscription.HasFailed, Is.False);
+            Assert.That(persistentSubscription.FailureReason, Is.Null);
+            Assert.That(persistentSubscription.IsReplaying, Is.True);
 
             var moreMessages = GenerateRandomPayloads(3);
             persistentPublication.Persist(moreMessages);
@@ -702,7 +716,7 @@ namespace Adaptive.Archiver.IntegrationTests
                 () => fragmentHandler.HasReceivedPayloads(messages.Count + moreMessages.Count),
                 () => Poll(persistentSubscription, fragmentHandler, 10));
 
-            Assert.That(persistentSubscription.IsReplaying(), Is.True);
+            Assert.That(persistentSubscription.IsReplaying, Is.True);
             AssertPayloads(fragmentHandler.ReceivedPayloads, messages, moreMessages);
         }
 
@@ -721,7 +735,9 @@ namespace Adaptive.Archiver.IntegrationTests
 
             var fragmentHandler = new BufferingFragmentHandler();
             using var persistentSubscription = PersistentSubscription.Create(PersistentSubscriptionCtx);
-            Tests.ExecuteUntil(persistentSubscription.IsLive, () => Poll(persistentSubscription, fragmentHandler, 1));
+            Tests.ExecuteUntil(
+                () => persistentSubscription.IsLive,
+                () => Poll(persistentSubscription, fragmentHandler, 1));
 
             persistentPublication.Stop();
 
@@ -736,11 +752,11 @@ namespace Adaptive.Archiver.IntegrationTests
             persistentPublication.ClosePublicationOnly();
 
             Tests.ExecuteUntil(
-                persistentSubscription.HasFailed,
+                () => persistentSubscription.HasFailed,
                 () => Poll(persistentSubscription, fragmentHandler, 1));
 
             Assert.That(
-                ((PersistentSubscriptionException)persistentSubscription.FailureReason()).ReasonValue,
+                ((PersistentSubscriptionException)persistentSubscription.FailureReason).ReasonValue,
                 Is.EqualTo(PersistentSubscriptionException.Reason.INVALID_START_POSITION));
         }
 
@@ -764,7 +780,9 @@ namespace Adaptive.Archiver.IntegrationTests
 
             var fragmentHandler = new BufferingFragmentHandler();
             using var persistentSubscription = PersistentSubscription.Create(PersistentSubscriptionCtx);
-            Tests.ExecuteUntil(persistentSubscription.IsLive, () => Poll(persistentSubscription, fragmentHandler, 1));
+            Tests.ExecuteUntil(
+                () => persistentSubscription.IsLive,
+                () => Poll(persistentSubscription, fragmentHandler, 1));
 
             // Consume a batch of messages on live.
             var firstBatch = GenerateFixedPayloads(5, OneKbMessageSize);
@@ -788,11 +806,11 @@ namespace Adaptive.Archiver.IntegrationTests
             persistentPublication.ClosePublicationOnly();
 
             Tests.ExecuteUntil(
-                persistentSubscription.HasFailed,
+                () => persistentSubscription.HasFailed,
                 () => Poll(persistentSubscription, fragmentHandler, 10));
 
             Assert.That(Listener.LastException, Is.InstanceOf<PersistentSubscriptionException>());
-            Assert.That(persistentSubscription.FailureReason(), Is.SameAs(Listener.LastException));
+            Assert.That(persistentSubscription.FailureReason, Is.SameAs(Listener.LastException));
             Assert.That(
                 ((PersistentSubscriptionException)Listener.LastException).ReasonValue,
                 Is.EqualTo(PersistentSubscriptionException.Reason.INVALID_START_POSITION));
@@ -818,7 +836,9 @@ namespace Adaptive.Archiver.IntegrationTests
 
             var fragmentHandler = new BufferingFragmentHandler();
             using var persistentSubscription = PersistentSubscription.Create(PersistentSubscriptionCtx);
-            Tests.ExecuteUntil(persistentSubscription.IsLive, () => Poll(persistentSubscription, fragmentHandler, 1));
+            Tests.ExecuteUntil(
+                () => persistentSubscription.IsLive,
+                () => Poll(persistentSubscription, fragmentHandler, 1));
 
             Tests.AwaitConnected(fastConsumer);
 
@@ -846,11 +866,11 @@ namespace Adaptive.Archiver.IntegrationTests
 
             // PS cannot fall back -- the recording is gone.
             Tests.ExecuteUntil(
-                persistentSubscription.HasFailed,
+                () => persistentSubscription.HasFailed,
                 () => Poll(persistentSubscription, fragmentHandler, 10));
 
             Assert.That(Listener.LastException, Is.InstanceOf<PersistentSubscriptionException>());
-            Assert.That(persistentSubscription.FailureReason(), Is.SameAs(Listener.LastException));
+            Assert.That(persistentSubscription.FailureReason, Is.SameAs(Listener.LastException));
             Assert.That(Listener.LastException.Message, Does.Contain("unknown recording id:"));
         }
 
@@ -872,11 +892,11 @@ namespace Adaptive.Archiver.IntegrationTests
                 .StartPosition(startPosition);
 
             using var persistentSubscription = PersistentSubscription.Create(PersistentSubscriptionCtx);
-            Tests.ExecuteUntil(persistentSubscription.HasFailed, () => Poll(persistentSubscription, null, 1));
+            Tests.ExecuteUntil(() => persistentSubscription.HasFailed, () => Poll(persistentSubscription, null, 1));
 
             Assert.That(Listener.ErrorCount, Is.EqualTo(1));
             Assert.That(Listener.LastException, Is.InstanceOf<PersistentSubscriptionException>());
-            Assert.That(persistentSubscription.FailureReason(), Is.SameAs(Listener.LastException));
+            Assert.That(persistentSubscription.FailureReason, Is.SameAs(Listener.LastException));
         }
 
         [Test, Timeout(20_000)]
@@ -901,9 +921,11 @@ namespace Adaptive.Archiver.IntegrationTests
             Tests.ExecuteUntil(
                 () => fragmentHandler.HasReceivedPayloads(1),
                 () => Poll(persistentSubscription, fragmentHandler, 1));
-            Assert.That(persistentSubscription.IsReplaying(), Is.True);
+            Assert.That(persistentSubscription.IsReplaying, Is.True);
 
-            Tests.ExecuteUntil(persistentSubscription.IsLive, () => Poll(persistentSubscription, fragmentHandler, 10));
+            Tests.ExecuteUntil(
+                () => persistentSubscription.IsLive,
+                () => Poll(persistentSubscription, fragmentHandler, 10));
 
             Assert.That(Listener.LiveJoinedCount, Is.EqualTo(1));
             Assert.That(Listener.LiveLeftCount, Is.EqualTo(0));
@@ -915,7 +937,7 @@ namespace Adaptive.Archiver.IntegrationTests
             Tests.ExecuteUntil(
                 () => fragmentHandler.HasReceivedPayloads(firstBatch.Count + secondBatch.Count),
                 () => Poll(persistentSubscription, fragmentHandler, 10));
-            Assert.That(persistentSubscription.IsLive(), Is.True);
+            Assert.That(persistentSubscription.IsLive, Is.True);
 
             using var fastDriver = new EmbeddedMediaDriver();
             using var fastAeron = AeronClient.Connect(
@@ -936,7 +958,7 @@ namespace Adaptive.Archiver.IntegrationTests
             }
 
             Tests.ExecuteUntil(
-                persistentSubscription.IsReplaying,
+                () => persistentSubscription.IsReplaying,
                 () => Poll(persistentSubscription, fragmentHandler, 10));
             Assert.That(Listener.LiveLeftCount, Is.EqualTo(1));
 
@@ -945,7 +967,7 @@ namespace Adaptive.Archiver.IntegrationTests
 
             Tests.ExecuteUntil(
                 () => fragmentHandler.HasReceivedPayloads(persistentPublication.PublishedMessageCount)
-                      && persistentSubscription.IsLive(),
+                      && persistentSubscription.IsLive,
                 () => Poll(persistentSubscription, fragmentHandler, 10));
 
             Assert.That(Listener.LiveJoinedCount, Is.EqualTo(2));
@@ -972,9 +994,11 @@ namespace Adaptive.Archiver.IntegrationTests
             var fragmentHandler = new BufferingFragmentHandler();
             using var persistentSubscription = PersistentSubscription.Create(PersistentSubscriptionCtx);
 
-            Tests.ExecuteUntil(persistentSubscription.IsLive, () => Poll(persistentSubscription, fragmentHandler, 10));
+            Tests.ExecuteUntil(
+                () => persistentSubscription.IsLive,
+                () => Poll(persistentSubscription, fragmentHandler, 10));
             Assert.That(Listener.LiveJoinedCount, Is.EqualTo(1));
-            Assert.That(persistentSubscription.IsReplaying(), Is.False);
+            Assert.That(persistentSubscription.IsReplaying, Is.False);
 
             var secondBatch = GenerateRandomPayloads(5);
             persistentPublication.Persist(secondBatch);
@@ -1002,7 +1026,7 @@ namespace Adaptive.Archiver.IntegrationTests
             }
 
             Tests.ExecuteUntil(
-                persistentSubscription.IsReplaying,
+                () => persistentSubscription.IsReplaying,
                 () => Poll(persistentSubscription, fragmentHandler, 10));
             Assert.That(Listener.LiveLeftCount, Is.EqualTo(1));
 
@@ -1011,7 +1035,7 @@ namespace Adaptive.Archiver.IntegrationTests
 
             var expectedCount = secondBatch.Count + thirdBatch.Count + fourthBatch.Count;
             Tests.ExecuteUntil(
-                () => fragmentHandler.HasReceivedPayloads(expectedCount) && persistentSubscription.IsLive(),
+                () => fragmentHandler.HasReceivedPayloads(expectedCount) && persistentSubscription.IsLive,
                 () => Poll(persistentSubscription, fragmentHandler, 10));
 
             Assert.That(Listener.LiveJoinedCount, Is.EqualTo(2));
@@ -1049,21 +1073,21 @@ namespace Adaptive.Archiver.IntegrationTests
             Tests.ExecuteUntil(
                 () => fragmentHandler.HasReceivedPayloads(32),
                 () => Poll(persistentSubscription, fragmentHandler, 10));
-            Assert.That(persistentSubscription.IsReplaying(), Is.True);
+            Assert.That(persistentSubscription.IsReplaying, Is.True);
 
             Tests.ExecuteUntil(
                 () => persistentPublication.ReceiverCount() == 2,
                 () => Poll(persistentSubscription, fragmentHandler, 10));
 
             // Consuming on the slow consumer lets the sender push past the initial 4k window.
-            Tests.ExecuteUntil(persistentSubscription.IsLive,
+            Tests.ExecuteUntil(() => persistentSubscription.IsLive,
                 () =>
                 {
                     Poll(persistentSubscription, fragmentHandler, 10);
                     slowConsumer.Poll((b, o, l, h) => { }, 10);
                 });
 
-            Assert.That(persistentSubscription.JoinDifference(), Is.LessThanOrEqualTo(0));
+            Assert.That(persistentSubscription.JoinDifference, Is.LessThanOrEqualTo(0));
         }
 
         [Test, Timeout(60_000)]
@@ -1108,7 +1132,7 @@ namespace Adaptive.Archiver.IntegrationTests
                 PersistentSubscriptionCtx.ReplayStreamId(), dropRate);
 
             Tests.ExecuteUntil(
-                () => fragmentHandler.HasReceivedPayloads(messages.Count) && persistentSubscription.IsLive(),
+                () => fragmentHandler.HasReceivedPayloads(messages.Count) && persistentSubscription.IsLive,
                 () => Poll(persistentSubscription, fragmentHandler, 10), timeoutMs: 50_000);
 
             AssertPayloads(fragmentHandler.ReceivedPayloads, messages);
@@ -1161,11 +1185,13 @@ namespace Adaptive.Archiver.IntegrationTests
             using var persistentSubscription = PersistentSubscription.Create(PersistentSubscriptionCtx);
 
             Tests.ExecuteUntil(
-                persistentSubscription.IsReplaying,
+                () => persistentSubscription.IsReplaying,
                 () => Poll(persistentSubscription, fragmentHandler, 1));
             Assert.That(fragmentHandler.ReceivedPayloads.Count, Is.EqualTo(0));
 
-            Tests.ExecuteUntil(persistentSubscription.IsLive, () => Poll(persistentSubscription, fragmentHandler, 1));
+            Tests.ExecuteUntil(
+                () => persistentSubscription.IsLive,
+                () => Poll(persistentSubscription, fragmentHandler, 1));
             Assert.That(fragmentHandler.ReceivedPayloads.Count, Is.EqualTo(0));
 
             lossController.DisableFrameData();
@@ -1210,7 +1236,9 @@ namespace Adaptive.Archiver.IntegrationTests
             var fragmentHandler = new BufferingFragmentHandler();
             using var persistentSubscription = PersistentSubscription.Create(PersistentSubscriptionCtx);
 
-            Tests.ExecuteUntil(persistentSubscription.IsLive, () => Poll(persistentSubscription, fragmentHandler, 1));
+            Tests.ExecuteUntil(
+                () => persistentSubscription.IsLive,
+                () => Poll(persistentSubscription, fragmentHandler, 1));
 
             // Sticky drop starting from the first frame whose payload matches the second half:
             // PS receives the first fragment, then loses the rest of the stream. It must
@@ -1220,13 +1248,15 @@ namespace Adaptive.Archiver.IntegrationTests
             persistentPublication.Publish(new List<byte[]> { largeMessage });
 
             Tests.ExecuteUntil(
-                persistentSubscription.IsReplaying,
+                () => persistentSubscription.IsReplaying,
                 () => Poll(persistentSubscription, fragmentHandler, 1));
             Assert.That(fragmentHandler.ReceivedPayloads.Count, Is.EqualTo(0));
 
             lossController.DisableStreamIdFrameData();
 
-            Tests.ExecuteUntil(persistentSubscription.IsLive, () => Poll(persistentSubscription, fragmentHandler, 1));
+            Tests.ExecuteUntil(
+                () => persistentSubscription.IsLive,
+                () => Poll(persistentSubscription, fragmentHandler, 1));
             AssertPayloads(fragmentHandler.ReceivedPayloads, new List<byte[]> { largeMessage });
         }
 
@@ -1276,7 +1306,7 @@ namespace Adaptive.Archiver.IntegrationTests
                 () =>
                 {
                     Poll(persistentSubscription, fragmentHandler, 1);
-                    Assert.That(persistentSubscription.IsReplaying(), Is.True);
+                    Assert.That(persistentSubscription.IsReplaying, Is.True);
                 });
 
             // Stop replay from advancing.
@@ -1289,7 +1319,7 @@ namespace Adaptive.Archiver.IntegrationTests
             persistentPublication.Publish(messagesToConsumeAfterAddingLive);
 
             Tests.ExecuteUntil(
-                () => persistentSubscription.JoinDifference() != long.MinValue,
+                () => persistentSubscription.JoinDifference != long.MinValue,
                 () => Poll(persistentSubscription, fragmentHandler, 10));
 
             lossController.DisableStreamId();
@@ -1297,10 +1327,10 @@ namespace Adaptive.Archiver.IntegrationTests
 
             Tests.ExecuteUntil(
                 () => fragmentHandler.HasReceivedPayloads(persistentPublication.PublishedMessageCount)
-                      && persistentSubscription.IsLive(),
+                      && persistentSubscription.IsLive,
                 () => Poll(persistentSubscription, fragmentHandler, 10));
 
-            Assert.That(persistentSubscription.JoinDifference(), Is.EqualTo(2048));
+            Assert.That(persistentSubscription.JoinDifference, Is.EqualTo(2048));
 
             var messagesToConsumeOnLive = GenerateFixedPayloads(2, OneKbMessageSize);
             persistentPublication.Publish(messagesToConsumeOnLive);
@@ -1308,7 +1338,7 @@ namespace Adaptive.Archiver.IntegrationTests
                 () => fragmentHandler.HasReceivedPayloads(persistentPublication.PublishedMessageCount),
                 () => Poll(persistentSubscription, fragmentHandler, 10));
 
-            Assert.That(persistentSubscription.IsLive(), Is.True);
+            Assert.That(persistentSubscription.IsLive, Is.True);
             AssertPayloads(
                 fragmentHandler.ReceivedPayloads,
                 messagesToConsumeOnReplay, messagesToConsumeAfterAddingLive, messagesToConsumeOnLive);
@@ -1348,7 +1378,7 @@ namespace Adaptive.Archiver.IntegrationTests
             Action pollAndTrack = () =>
             {
                 Poll(persistentSubscription, fragmentHandler, 10);
-                if (persistentSubscription.IsReplaying())
+                if (persistentSubscription.IsReplaying)
                 {
                     observedReplaying[0] = true;
                 }
@@ -1357,7 +1387,7 @@ namespace Adaptive.Archiver.IntegrationTests
             // Wait for one AWAIT_LIVE deadline breach.
             Tests.ExecuteUntil(() => Listener.ErrorCount > 0, pollAndTrack, 30_000);
             Assert.That(Listener.ErrorCount, Is.EqualTo(1));
-            Assert.That(persistentSubscription.IsLive(), Is.False);
+            Assert.That(persistentSubscription.IsLive, Is.False);
             Assert.That(observedReplaying[0], Is.False);
 
             var resumedPublication = PersistentPublication.Resume(
@@ -1368,7 +1398,7 @@ namespace Adaptive.Archiver.IntegrationTests
             var firstBatch = GenerateFixedPayloads(1, OneKbMessageSize);
             resumedPublication.Persist(firstBatch);
             Tests.ExecuteUntil(() => fragmentHandler.HasReceivedPayloads(firstBatch.Count), pollAndTrack);
-            Tests.ExecuteUntil(persistentSubscription.IsLive, pollAndTrack);
+            Tests.ExecuteUntil(() => persistentSubscription.IsLive, pollAndTrack);
 
             // Reset observedReplaying — only post-revoke catchup-refresh should flip it back true.
             observedReplaying[0] = false;
@@ -1447,7 +1477,7 @@ namespace Adaptive.Archiver.IntegrationTests
             Action pollAndTrack = () =>
             {
                 Poll(persistentSubscription, fragmentHandler, 10);
-                if (persistentSubscription.IsReplaying())
+                if (persistentSubscription.IsReplaying)
                 {
                     observedReplaying[0] = true;
                 }
@@ -1459,7 +1489,7 @@ namespace Adaptive.Archiver.IntegrationTests
             Assert.That(
                 Listener.LastException.Message,
                 Does.Contain("No image became available on the live subscription"));
-            Assert.That(persistentSubscription.IsLive(), Is.False);
+            Assert.That(persistentSubscription.IsLive, Is.False);
             Assert.That(observedReplaying[0], Is.False);
 
             lossController.EnableSetupAtPosition();
@@ -1471,7 +1501,7 @@ namespace Adaptive.Archiver.IntegrationTests
             var postResumeMessages = GenerateFixedPayloads(4, OneKbMessageSize);
             resumedPublication.Persist(postResumeMessages);
 
-            Tests.ExecuteUntil(persistentSubscription.IsLive, pollAndTrack);
+            Tests.ExecuteUntil(() => persistentSubscription.IsLive, pollAndTrack);
             Tests.ExecuteUntil(
                 () => fragmentHandler.HasReceivedPayloads(postResumeMessages.Count), pollAndTrack);
             AssertPayloads(fragmentHandler.ReceivedPayloads, postResumeMessages);
@@ -1520,7 +1550,7 @@ namespace Adaptive.Archiver.IntegrationTests
             using var persistentSubscription = PersistentSubscription.Create(PersistentSubscriptionCtx);
 
             Tests.ExecuteUntil(
-                persistentSubscription.IsReplaying,
+                () => persistentSubscription.IsReplaying,
                 () => Poll(persistentSubscription, fragmentHandler, fragmentLimit));
             Tests.ExecuteUntil(
                 () => fragmentHandler.HasReceivedPayloads(replayMessages.Count),
@@ -1529,7 +1559,7 @@ namespace Adaptive.Archiver.IntegrationTests
 
             // Wait for PS to leave REPLAY/ATTEMPT_SWITCH — proves closed-image cleanup path ran.
             Tests.ExecuteUntil(
-                () => !persistentSubscription.IsReplaying(),
+                () => !persistentSubscription.IsReplaying,
                 () => Poll(persistentSubscription, fragmentHandler, fragmentLimit));
 
             // Re-allow SETUPs; the next one carries the live image at snd_pos == stopPosition,
@@ -1537,7 +1567,7 @@ namespace Adaptive.Archiver.IntegrationTests
             lossController.DisableSetupAtPosition();
 
             Tests.ExecuteUntil(
-                persistentSubscription.IsLive,
+                () => persistentSubscription.IsLive,
                 () => Poll(persistentSubscription, fragmentHandler, fragmentLimit));
             Assert.That(Listener.LiveJoinedCount, Is.EqualTo(1));
             Assert.That(fragmentHandler.ReceivedPayloads.Count, Is.EqualTo(replayMessages.Count));
@@ -1550,12 +1580,12 @@ namespace Adaptive.Archiver.IntegrationTests
                 () =>
                 {
                     Poll(persistentSubscription, fragmentHandler, fragmentLimit);
-                    Assert.That(persistentSubscription.IsLive(), Is.True);
+                    Assert.That(persistentSubscription.IsLive, Is.True);
                 });
 
-            Assert.That(persistentSubscription.IsReplaying(), Is.False);
+            Assert.That(persistentSubscription.IsReplaying, Is.False);
             Assert.That(Listener.LiveLeftCount, Is.EqualTo(0));
-            Assert.That(persistentSubscription.JoinDifference(), Is.EqualTo(0));
+            Assert.That(persistentSubscription.JoinDifference, Is.EqualTo(0));
             AssertPayloads(fragmentHandler.ReceivedPayloads, replayMessages, liveMessages);
         }
 
@@ -1626,7 +1656,9 @@ namespace Adaptive.Archiver.IntegrationTests
             var fragmentHandler = new BufferingFragmentHandler();
             using var persistentSubscription = PersistentSubscription.Create(PersistentSubscriptionCtx);
 
-            Tests.ExecuteUntil(persistentSubscription.IsLive, () => Poll(persistentSubscription, fragmentHandler, 10));
+            Tests.ExecuteUntil(
+                () => persistentSubscription.IsLive,
+                () => Poll(persistentSubscription, fragmentHandler, 10));
             Assert.That(fragmentHandler.ReceivedPayloads.Count, Is.EqualTo(0));
             Assert.That(Listener.LiveJoinedCount, Is.EqualTo(1));
             Assert.That(Listener.LiveLeftCount, Is.EqualTo(0));
@@ -1634,14 +1666,16 @@ namespace Adaptive.Archiver.IntegrationTests
             lossController.EnableStreamId(PersistentSubscriptionCtx.LiveStreamId());
 
             Tests.ExecuteUntil(
-                () => !persistentSubscription.IsLive(),
+                () => !persistentSubscription.IsLive,
                 () => Poll(persistentSubscription, fragmentHandler, 10));
             Assert.That(Listener.LiveJoinedCount, Is.EqualTo(1));
             Assert.That(Listener.LiveLeftCount, Is.EqualTo(1));
 
             lossController.DisableStreamId();
 
-            Tests.ExecuteUntil(persistentSubscription.IsLive, () => Poll(persistentSubscription, fragmentHandler, 10));
+            Tests.ExecuteUntil(
+                () => persistentSubscription.IsLive,
+                () => Poll(persistentSubscription, fragmentHandler, 10));
             Assert.That(fragmentHandler.ReceivedPayloads.Count, Is.EqualTo(0));
             Assert.That(Listener.LiveJoinedCount, Is.EqualTo(2));
             Assert.That(Listener.LiveLeftCount, Is.EqualTo(1));
@@ -1683,7 +1717,9 @@ namespace Adaptive.Archiver.IntegrationTests
             // but post-attach DATA frames are sampled for drop.
             lossController.EnableStreamIdFrameDataRandom(TestContexts.StreamId, 0.3);
 
-            Tests.ExecuteUntil(persistentSubscription.IsLive, () => Poll(persistentSubscription, fragmentHandler, 10));
+            Tests.ExecuteUntil(
+                () => persistentSubscription.IsLive,
+                () => Poll(persistentSubscription, fragmentHandler, 10));
 
             var liveMessages = GenerateFixedPayloads(30, OneKbMessageSize);
             persistentPublication.Publish(liveMessages);
@@ -1733,7 +1769,7 @@ namespace Adaptive.Archiver.IntegrationTests
 
             Tests.ExecuteUntil(
                 () => fragmentHandler.HasReceivedPayloads(initialMessages.Count + liveMessages.Count)
-                      && persistentSubscription.IsLive(),
+                      && persistentSubscription.IsLive,
                 () => Poll(persistentSubscription, fragmentHandler, 10), timeoutMs: 50_000);
 
             AssertPayloads(fragmentHandler.ReceivedPayloads, initialMessages, liveMessages);
@@ -1801,7 +1837,7 @@ namespace Adaptive.Archiver.IntegrationTests
             using var persistentSubscription = PersistentSubscription.Create(PersistentSubscriptionCtx);
 
             Tests.ExecuteUntil(
-                persistentSubscription.IsLive,
+                () => persistentSubscription.IsLive,
                 () => Poll(persistentSubscription, fragmentHandler, 1), timeoutMs: 30_000);
 
             Assert.That(
@@ -1830,10 +1866,10 @@ namespace Adaptive.Archiver.IntegrationTests
             Closeables.Add(remoteArchive2);
 
             Tests.ExecuteUntil(
-                persistentSubscription.IsReplaying,
+                () => persistentSubscription.IsReplaying,
                 () => Poll(persistentSubscription, fragmentHandler, 10), timeoutMs: 30_000);
             Tests.ExecuteUntil(
-                persistentSubscription.IsLive,
+                () => persistentSubscription.IsLive,
                 () => Poll(persistentSubscription, fragmentHandler, 10), timeoutMs: 30_000);
 
             AssertPayloads(fragmentHandler.ReceivedPayloads, firstBatch, secondBatch, thirdBatch);
@@ -1903,7 +1939,7 @@ namespace Adaptive.Archiver.IntegrationTests
             Tests.ExecuteUntil(
                 () => fragmentHandler.HasReceivedPayloads(5),
                 () => Poll(persistentSubscription, fragmentHandler, 1));
-            Assert.That(persistentSubscription.IsReplaying(), Is.True);
+            Assert.That(persistentSubscription.IsReplaying, Is.True);
 
             // Kill archive while PS is still replaying.
             DisposeWithTimeout(remoteAeronArchive, 3_000, "remoteAeronArchive");
@@ -1912,9 +1948,9 @@ namespace Adaptive.Archiver.IntegrationTests
             remoteDriver.Dispose();
 
             Tests.ExecuteUntil(
-                () => !persistentSubscription.IsReplaying(),
+                () => !persistentSubscription.IsReplaying,
                 () => Poll(persistentSubscription, fragmentHandler, 1), timeoutMs: 30_000);
-            Assert.That(persistentSubscription.HasFailed(), Is.False);
+            Assert.That(persistentSubscription.HasFailed, Is.False);
 
             // Restart remote driver, aeron, archive.
             var remoteDriver2 = new EmbeddedMediaDriver(remoteAeronDir);
@@ -1930,7 +1966,7 @@ namespace Adaptive.Archiver.IntegrationTests
             Closeables.Add(remoteArchive2);
 
             Tests.ExecuteUntil(
-                persistentSubscription.IsLive,
+                () => persistentSubscription.IsLive,
                 () => Poll(persistentSubscription, fragmentHandler, 10), timeoutMs: 30_000);
 
             AssertPayloads(fragmentHandler.ReceivedPayloads, messages);
@@ -1987,14 +2023,16 @@ namespace Adaptive.Archiver.IntegrationTests
             Tests.ExecuteUntil(() => Listener.ErrorCount > 1,
                 () => Poll(persistentSubscription, fragmentHandler, 1));
             Assert.That(Listener.LastException, Is.InstanceOf<TimeoutException>());
-            Assert.That(persistentSubscription.HasFailed(), Is.False);
-            Assert.That(persistentSubscription.FailureReason(), Is.Null);
+            Assert.That(persistentSubscription.HasFailed, Is.False);
+            Assert.That(persistentSubscription.FailureReason, Is.Null);
 
             Archive = new EmbeddedArchive(
                 Driver.AeronDirectoryName, localArchiveDir, deleteArchiveOnStart: false,
                 controlChannel: archiveControlChannel, aeronClient: Aeron);
 
-            Tests.ExecuteUntil(persistentSubscription.IsLive, () => Poll(persistentSubscription, fragmentHandler, 1));
+            Tests.ExecuteUntil(
+                () => persistentSubscription.IsLive,
+                () => Poll(persistentSubscription, fragmentHandler, 1));
         }
 
         [Test, Timeout(15_000)]
@@ -2018,7 +2056,7 @@ namespace Adaptive.Archiver.IntegrationTests
             using var persistentSubscription = PersistentSubscription.Create(PersistentSubscriptionCtx);
 
             Tests.ExecuteUntil(
-                persistentSubscription.HasFailed,
+                () => persistentSubscription.HasFailed,
                 () => Poll(persistentSubscription, fragmentHandler, 1));
 
             // After FAILED, PS's SetState(FAILED) disposes its _asyncAeronArchive, which sends
@@ -2062,7 +2100,7 @@ namespace Adaptive.Archiver.IntegrationTests
 
             Tests.ExecuteUntil(
                 () => fragmentHandler.HasReceivedPayloads(persistentPublication.PublishedMessageCount)
-                      && persistentSubscription.IsLive(),
+                      && persistentSubscription.IsLive,
                 () => Poll(persistentSubscription, fragmentHandler, 10));
 
             // Kill the archive JVM. PS is already in LIVE so its archive control session is idle;
@@ -2112,7 +2150,7 @@ namespace Adaptive.Archiver.IntegrationTests
             Tests.ExecuteUntil(
                 () => fragmentHandler.HasReceivedPayloads(persistentPublication.PublishedMessageCount),
                 () => Poll(persistentSubscription, fragmentHandler, 1));
-            Assert.That(persistentSubscription.IsReplaying(), Is.True);
+            Assert.That(persistentSubscription.IsReplaying, Is.True);
 
             persistentPublication.Dispose();
 
@@ -2123,7 +2161,9 @@ namespace Adaptive.Archiver.IntegrationTests
                 AeronArchive, TestContexts.IpcChannel, TestContexts.StreamId, recordingId);
             Closeables.Add(resumedPublication);
 
-            Tests.ExecuteUntil(persistentSubscription.IsLive, () => Poll(persistentSubscription, fragmentHandler, 10));
+            Tests.ExecuteUntil(
+                () => persistentSubscription.IsLive,
+                () => Poll(persistentSubscription, fragmentHandler, 10));
 
             var batchAfterResuming = GenerateRandomPayloads(5);
             resumedPublication.Persist(batchAfterResuming);
@@ -2159,10 +2199,10 @@ namespace Adaptive.Archiver.IntegrationTests
                 () => fragmentHandler.HasReceivedPayloads(1),
                 () => Poll(persistentSubscription, fragmentHandler, 1));
 
-            Assert.That(persistentSubscription.IsReplaying(), Is.True);
+            Assert.That(persistentSubscription.IsReplaying, Is.True);
 
             Tests.ExecuteUntil(
-                persistentSubscription.IsLive,
+                () => persistentSubscription.IsLive,
                 () => Poll(persistentSubscription, fragmentHandler, 10));
 
             AssertPayloads(fragmentHandler.ReceivedPayloads, payloads);
@@ -2203,7 +2243,7 @@ namespace Adaptive.Archiver.IntegrationTests
             using var persistentSubscription = PersistentSubscription.Create(PersistentSubscriptionCtx);
 
             Tests.ExecuteUntil(
-                persistentSubscription.IsLive,
+                () => persistentSubscription.IsLive,
                 () => Poll(persistentSubscription, fragmentHandler, fragmentLimit));
             Assert.That(Listener.LiveJoinedCount, Is.EqualTo(1));
 
@@ -2214,8 +2254,8 @@ namespace Adaptive.Archiver.IntegrationTests
                 () => fragmentHandler.HasReceivedPayloads(1),
                 () => Poll(persistentSubscription, fragmentHandler, 1));
 
-            Assert.That(persistentSubscription.IsLive(), Is.True);
-            Assert.That(persistentSubscription.IsReplaying(), Is.False);
+            Assert.That(persistentSubscription.IsLive, Is.True);
+            Assert.That(persistentSubscription.IsReplaying, Is.False);
 
             Tests.ExecuteUntil(
                 () => fragmentHandler.HasReceivedPayloads(payloads.Count),
@@ -2260,7 +2300,7 @@ namespace Adaptive.Archiver.IntegrationTests
             Tests.AwaitConnected(fastSubscription);
 
             Tests.ExecuteUntil(
-                persistentSubscription.IsLive,
+                () => persistentSubscription.IsLive,
                 () => Poll(persistentSubscription, fragmentHandler, 10));
 
             persistentPublication.Persist(GenerateFixedPayloads(32, OneKbMessageSize));
@@ -2277,10 +2317,10 @@ namespace Adaptive.Archiver.IntegrationTests
                 () => fragmentHandler.HasReceivedPayloads(64),
                 () => Poll(persistentSubscription, fragmentHandler, 10));
 
-            Assert.That(persistentSubscription.IsReplaying(), Is.True);
+            Assert.That(persistentSubscription.IsReplaying, Is.True);
 
             Tests.ExecuteUntil(
-                persistentSubscription.IsLive,
+                () => persistentSubscription.IsLive,
                 () => Poll(persistentSubscription, fragmentHandler, 1));
         }
 
@@ -2299,7 +2339,9 @@ namespace Adaptive.Archiver.IntegrationTests
             var fragmentHandler = new BufferingFragmentHandler();
             using var persistentSubscription = PersistentSubscription.Create(PersistentSubscriptionCtx);
 
-            Tests.ExecuteUntil(persistentSubscription.IsLive, () => Poll(persistentSubscription, fragmentHandler, 10));
+            Tests.ExecuteUntil(
+                () => persistentSubscription.IsLive,
+                () => Poll(persistentSubscription, fragmentHandler, 10));
             Assert.That(Listener.LiveLeftCount, Is.EqualTo(0));
             Assert.That(fragmentHandler.ReceivedPayloads.Count, Is.EqualTo(0));
 
@@ -2322,12 +2364,12 @@ namespace Adaptive.Archiver.IntegrationTests
             }
 
             Tests.ExecuteUntil(
-                persistentSubscription.IsReplaying,
+                () => persistentSubscription.IsReplaying,
                 () => Poll(persistentSubscription, fragmentHandler, 10));
             Assert.That(Listener.LiveLeftCount, Is.EqualTo(1));
 
             Tests.ExecuteUntil(
-                () => fragmentHandler.HasReceivedPayloads(firstBatch.Count) && persistentSubscription.IsLive(),
+                () => fragmentHandler.HasReceivedPayloads(firstBatch.Count) && persistentSubscription.IsLive,
                 () => Poll(persistentSubscription, fragmentHandler, 10));
 
             AssertPayloads(fragmentHandler.ReceivedPayloads, firstBatch);
@@ -2356,7 +2398,7 @@ namespace Adaptive.Archiver.IntegrationTests
             Tests.ExecuteUntil(() => Listener.ErrorCount > 0, () => Poll(persistentSubscription, fragmentHandler, 1));
             Assert.That(Listener.LastException.Message,
                 Does.Contain("No image became available on the live subscription"));
-            Assert.That(persistentSubscription.IsLive(), Is.False);
+            Assert.That(persistentSubscription.IsLive, Is.False);
 
             var resumedPublication = PersistentPublication.Resume(
                 AeronArchive, TestContexts.IpcChannel, TestContexts.StreamId, recordingId);
@@ -2364,7 +2406,9 @@ namespace Adaptive.Archiver.IntegrationTests
             var messages = GenerateRandomPayloads(3);
             resumedPublication.Persist(messages);
 
-            Tests.ExecuteUntil(persistentSubscription.IsLive, () => Poll(persistentSubscription, fragmentHandler, 10));
+            Tests.ExecuteUntil(
+                () => persistentSubscription.IsLive,
+                () => Poll(persistentSubscription, fragmentHandler, 10));
 
             Tests.ExecuteUntil(
                 () => fragmentHandler.HasReceivedPayloads(messages.Count),
@@ -2404,7 +2448,7 @@ namespace Adaptive.Archiver.IntegrationTests
                 () => Poll(persistentSubscription, fragmentHandler, 10));
 
             Tests.ExecuteUntil(
-                persistentSubscription.IsLive,
+                () => persistentSubscription.IsLive,
                 () => Poll(persistentSubscription, fragmentHandler, 10));
 
             var liveMessages = GenerateRandomPayloads(2);
@@ -2448,14 +2492,16 @@ namespace Adaptive.Archiver.IntegrationTests
             Tests.ExecuteUntil(() => Listener.ErrorCount > 0, () => Poll(persistentSubscription, fragmentHandler, 10));
             Assert.That(Listener.LastException.Message,
                 Does.Contain("No image became available on the live subscription"));
-            Assert.That(persistentSubscription.HasFailed(), Is.False);
-            Assert.That(persistentSubscription.FailureReason(), Is.Null);
+            Assert.That(persistentSubscription.HasFailed, Is.False);
+            Assert.That(persistentSubscription.FailureReason, Is.Null);
 
             var resumedPublication = PersistentPublication.Resume(
                 AeronArchive, MdcPublicationChannel, TestContexts.StreamId, recordingId);
             Closeables.Add(resumedPublication);
 
-            Tests.ExecuteUntil( persistentSubscription.IsLive, () => Poll(persistentSubscription, fragmentHandler, 10));
+            Tests.ExecuteUntil(
+                () => persistentSubscription.IsLive,
+                () => Poll(persistentSubscription, fragmentHandler, 10));
 
             var newMessages = GenerateFixedPayloads(16, OneKbMessageSize);
             resumedPublication.Persist(newMessages);
@@ -2464,8 +2510,8 @@ namespace Adaptive.Archiver.IntegrationTests
                 () => fragmentHandler.HasReceivedPayloads(oldMessages.Count + newMessages.Count),
                 () => Poll(persistentSubscription, fragmentHandler, 10));
 
-            Assert.That(persistentSubscription.IsLive(), Is.True);
-            Assert.That(persistentSubscription.IsReplaying(), Is.False);
+            Assert.That(persistentSubscription.IsLive, Is.True);
+            Assert.That(persistentSubscription.IsReplaying, Is.False);
             AssertPayloads(fragmentHandler.ReceivedPayloads, oldMessages, newMessages);
         }
 
@@ -2502,7 +2548,9 @@ namespace Adaptive.Archiver.IntegrationTests
                 () => fragmentHandler.HasReceivedPayloads(recordedBatch.Count),
                 () => Poll(persistentSubscription, fragmentHandler, 10));
 
-            Tests.ExecuteUntil(persistentSubscription.IsLive, () => Poll(persistentSubscription, fragmentHandler, 10));
+            Tests.ExecuteUntil(
+                () => persistentSubscription.IsLive,
+                () => Poll(persistentSubscription, fragmentHandler, 10));
             Assert.That(Listener.LiveJoinedCount, Is.EqualTo(1));
             Assert.That(Listener.LiveLeftCount, Is.EqualTo(0));
 
@@ -2532,20 +2580,24 @@ namespace Adaptive.Archiver.IntegrationTests
             var fragmentHandler = new BufferingFragmentHandler();
             using var persistentSubscription = PersistentSubscription.Create(PersistentSubscriptionCtx);
 
-            Tests.ExecuteUntil(persistentSubscription.IsLive, () => Poll(persistentSubscription, fragmentHandler, 1));
+            Tests.ExecuteUntil(
+                () => persistentSubscription.IsLive,
+                () => Poll(persistentSubscription, fragmentHandler, 1));
 
             persistentPublication.Dispose();
 
             Tests.ExecuteUntil(() => Listener.ErrorCount > 0, () => Poll(persistentSubscription, fragmentHandler, 1));
             Assert.That(Listener.LastException.Message,
                 Does.Contain("No image became available on the live subscription"));
-            Assert.That(persistentSubscription.IsLive(), Is.False);
+            Assert.That(persistentSubscription.IsLive, Is.False);
 
             var resumedPublication = PersistentPublication.Resume(
                 AeronArchive, TestContexts.IpcChannel, TestContexts.StreamId, recordingId);
             Closeables.Add(resumedPublication);
 
-            Tests.ExecuteUntil(persistentSubscription.IsLive, () => Poll(persistentSubscription, fragmentHandler, 10));
+            Tests.ExecuteUntil(
+                () => persistentSubscription.IsLive,
+                () => Poll(persistentSubscription, fragmentHandler, 10));
 
             var messages = GenerateRandomPayloads(5);
             resumedPublication.Persist(messages);
@@ -2574,7 +2626,9 @@ namespace Adaptive.Archiver.IntegrationTests
             var fragmentHandler = new BufferingFragmentHandler();
             using var persistentSubscription = PersistentSubscription.Create(PersistentSubscriptionCtx);
 
-            Tests.ExecuteUntil(persistentSubscription.IsLive, () => Poll(persistentSubscription, fragmentHandler, 1));
+            Tests.ExecuteUntil(
+                () => persistentSubscription.IsLive,
+                () => Poll(persistentSubscription, fragmentHandler, 1));
 
             persistentPublication.Persist(payload1);
 
@@ -2605,15 +2659,17 @@ namespace Adaptive.Archiver.IntegrationTests
             Tests.ExecuteUntil(() => Listener.ErrorCount > 0, () => Poll(persistentSubscription, fragmentHandler, 1));
             Assert.That(Listener.LastException.Message,
                 Does.Contain("No image became available on the live subscription"));
-            Assert.That(persistentSubscription.HasFailed(), Is.False);
-            Assert.That(persistentSubscription.FailureReason(), Is.Null);
-            Assert.That(persistentSubscription.IsLive(), Is.False);
+            Assert.That(persistentSubscription.HasFailed, Is.False);
+            Assert.That(persistentSubscription.FailureReason, Is.Null);
+            Assert.That(persistentSubscription.IsLive, Is.False);
 
             var resumedPublication = PersistentPublication.Resume(
                 AeronArchive, TestContexts.IpcChannel, TestContexts.StreamId, recordingId);
             Closeables.Add(resumedPublication);
 
-            Tests.ExecuteUntil(persistentSubscription.IsLive, () => Poll(persistentSubscription, fragmentHandler, 10));
+            Tests.ExecuteUntil(
+                () => persistentSubscription.IsLive,
+                () => Poll(persistentSubscription, fragmentHandler, 10));
 
             var messages = GenerateRandomPayloads(5);
             resumedPublication.Persist(messages);
@@ -2646,7 +2702,9 @@ namespace Adaptive.Archiver.IntegrationTests
 
             var fragmentHandler = new BufferingFragmentHandler();
             var persistentSubscription = PersistentSubscription.Create(ctx);
-            Tests.ExecuteUntil(persistentSubscription.IsLive, () => Poll(persistentSubscription, fragmentHandler, 10));
+            Tests.ExecuteUntil(
+                () => persistentSubscription.IsLive,
+                () => Poll(persistentSubscription, fragmentHandler, 10));
 
             var ownAeron = ctx.Aeron();
             Assert.That(ownAeron, Is.Not.Null);
@@ -2671,7 +2729,9 @@ namespace Adaptive.Archiver.IntegrationTests
 
             var fragmentHandler = new BufferingFragmentHandler();
             var persistentSubscription = PersistentSubscription.Create(ctx);
-            Tests.ExecuteUntil(persistentSubscription.IsLive, () => Poll(persistentSubscription, fragmentHandler, 10));
+            Tests.ExecuteUntil(
+                () => persistentSubscription.IsLive,
+                () => Poll(persistentSubscription, fragmentHandler, 10));
 
             persistentSubscription.Dispose();
             Assert.That(Aeron.IsClosed, Is.False);
@@ -2729,7 +2789,7 @@ namespace Adaptive.Archiver.IntegrationTests
             var lossState = LossState.NotStarted;
             long deadlineTicks = 0;
 
-            while (!persistentSubscription.IsLive())
+            while (!persistentSubscription.IsLive)
             {
                 if (Poll(persistentSubscription, handler, 10) == 0)
                 {
@@ -2738,7 +2798,7 @@ namespace Adaptive.Archiver.IntegrationTests
 
                 if (victimFlow == NetworkFlow.Replay)
                 {
-                    if (lossState == LossState.NotStarted && persistentSubscription.IsReplaying())
+                    if (lossState == LossState.NotStarted && persistentSubscription.IsReplaying)
                     {
                         lossState = LossState.WaitingToStart;
                         deadlineTicks = System.Diagnostics.Stopwatch.GetTimestamp()
@@ -2785,14 +2845,14 @@ namespace Adaptive.Archiver.IntegrationTests
                         lossController.EnableStreamId(PersistentSubscriptionCtx.LiveStreamId());
                     }
 
-                    if (lossState == LossState.InProgress && !persistentSubscription.IsLive())
+                    if (lossState == LossState.InProgress && !persistentSubscription.IsLive)
                     {
                         Assert.That(Listener.LiveLeftCount, Is.EqualTo(1));
                         lossState = LossState.Finished;
                         lossController.DisableStreamId();
                     }
 
-                    if (lossState == LossState.Finished && persistentSubscription.IsLive())
+                    if (lossState == LossState.Finished && persistentSubscription.IsLive)
                     {
                         Assert.That(Listener.LiveJoinedCount, Is.EqualTo(2));
                         break;
@@ -2865,7 +2925,7 @@ namespace Adaptive.Archiver.IntegrationTests
 
             // Tight poll loop matching the Java upstream.
             var deadline = DateTime.UtcNow.AddSeconds(70);
-            while (!persistentSubscription.IsLive())
+            while (!persistentSubscription.IsLive)
             {
                 Poll(persistentSubscription, handler, 10);
                 if (DateTime.UtcNow > deadline)

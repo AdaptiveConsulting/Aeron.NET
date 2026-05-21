@@ -24,25 +24,7 @@ namespace Adaptive.Archiver.IntegrationTests
     {
         protected override int Poll(PersistentSubscription subscription, IFragmentHandler handler, int fragmentLimit)
         {
-            var controlledHandler = handler == null ? null : new ControlledFragmentHandlerAdapter(handler);
-            return subscription.ControlledPoll(controlledHandler, fragmentLimit);
-        }
-
-        private sealed class ControlledFragmentHandlerAdapter : IControlledFragmentHandler
-        {
-            private readonly IFragmentHandler _inner;
-
-            public ControlledFragmentHandlerAdapter(IFragmentHandler inner)
-            {
-                _inner = inner;
-            }
-
-            public ControlledFragmentHandlerAction OnFragment(
-                Adaptive.Agrona.IDirectBuffer buffer, int offset, int length, Header header)
-            {
-                _inner.OnFragment(buffer, offset, length, header);
-                return ControlledFragmentHandlerAction.CONTINUE;
-            }
+            return subscription.ControlledPoll((IControlledFragmentHandler)handler, fragmentLimit);
         }
     }
 }

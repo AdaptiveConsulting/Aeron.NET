@@ -25,12 +25,12 @@ namespace Adaptive.Archiver.IntegrationTests.Helpers
     /// message must carry a monotonically increasing id in both the first and last 8 bytes.
     /// Throws if a fragment is missing, duplicated, or corrupted.
     /// </summary>
-    internal sealed class MessageVerifier : IFragmentHandler
+    internal sealed class MessageVerifier : IFragmentHandler, IControlledFragmentHandler
     {
         public long ExpectedMessageId { get; private set; }
         public long Position { get; private set; }
 
-        public void OnFragment(IDirectBuffer buffer, int offset, int length, Header header)
+        public ControlledFragmentHandlerAction OnFragment(IDirectBuffer buffer, int offset, int length, Header header)
         {
             if (length < 2 * sizeof(long))
             {
@@ -50,6 +50,12 @@ namespace Adaptive.Archiver.IntegrationTests.Helpers
             }
             ExpectedMessageId = messageId1 + 1;
             Position = header.Position;
+            return ControlledFragmentHandlerAction.CONTINUE;
+        }
+
+        void IFragmentHandler.OnFragment(IDirectBuffer buffer, int offset, int length, Header header)
+        {
+            OnFragment(buffer, offset, length, header);
         }
     }
 }

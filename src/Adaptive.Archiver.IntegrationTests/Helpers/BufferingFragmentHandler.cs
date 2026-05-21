@@ -20,17 +20,23 @@ using Adaptive.Agrona;
 
 namespace Adaptive.Archiver.IntegrationTests.Helpers
 {
-    internal sealed class BufferingFragmentHandler : IFragmentHandler
+    internal sealed class BufferingFragmentHandler : IFragmentHandler, IControlledFragmentHandler
     {
         public List<byte[]> ReceivedPayloads { get; } = new();
         public long Position { get; private set; }
 
-        public void OnFragment(IDirectBuffer buffer, int offset, int length, Header header)
+        public ControlledFragmentHandlerAction OnFragment(IDirectBuffer buffer, int offset, int length, Header header)
         {
             Position = header.Position;
             var bytes = new byte[length];
             buffer.GetBytes(offset, bytes);
             ReceivedPayloads.Add(bytes);
+            return ControlledFragmentHandlerAction.CONTINUE;
+        }
+
+        void IFragmentHandler.OnFragment(IDirectBuffer buffer, int offset, int length, Header header)
+        {
+            OnFragment(buffer, offset, length, header);
         }
 
         public bool HasReceivedPayloads(int numberOfPayloads) => ReceivedPayloads.Count >= numberOfPayloads;
