@@ -15,6 +15,7 @@
  */
 
 using System;
+using System.Globalization;
 using System.Text;
 using Adaptive.Aeron.LogBuffer;
 using Adaptive.Agrona;
@@ -1135,7 +1136,7 @@ namespace Adaptive.Aeron
         /// <seealso cref="ControlEndpoint()"/>
         public ChannelUriStringBuilder Group(bool? group)
         {
-            this._group = group;
+            _group = group;
             return this;
         }
 
@@ -1297,7 +1298,7 @@ namespace Adaptive.Aeron
         /// <seealso cref="Aeron.Context.CONGESTION_CONTROL_PARAM_NAME"/>
         public ChannelUriStringBuilder CongestionControl(string congestionControl)
         {
-            this._cc = congestionControl;
+            _cc = congestionControl;
             return this;
         }
 
@@ -1330,7 +1331,7 @@ namespace Adaptive.Aeron
         /// <seealso cref="Aeron.Context.FLOW_CONTROL_PARAM_NAME"/>
         public ChannelUriStringBuilder FlowControl(string flowControl)
         {
-            this._fc = flowControl;
+            _fc = flowControl;
             return this;
         }
 
@@ -1426,7 +1427,7 @@ namespace Adaptive.Aeron
         /// <seealso cref="Aeron.Context.GROUP_TAG_PARAM_NAME"/>
         public ChannelUriStringBuilder GroupTag(long? groupTag)
         {
-            this._groupTag = groupTag;
+            _groupTag = groupTag;
             return this;
         }
 
@@ -1475,7 +1476,7 @@ namespace Adaptive.Aeron
         /// <seealso cref="Aeron.Context.REJOIN_PARAM_NAME"/>
         public ChannelUriStringBuilder Rejoin(bool? rejoin)
         {
-            this._rejoin = rejoin;
+            _rejoin = rejoin;
             return this;
         }
 
@@ -1518,7 +1519,7 @@ namespace Adaptive.Aeron
         /// <seealso cref="Aeron.Context.SPIES_SIMULATE_CONNECTION_PARAM_NAME"></seealso>
         public ChannelUriStringBuilder SpiesSimulateConnection(bool? spiesSimulateConnection)
         {
-            this._ssc = spiesSimulateConnection;
+            _ssc = spiesSimulateConnection;
             return this;
         }
 
@@ -1592,7 +1593,7 @@ namespace Adaptive.Aeron
         /// <seealso cref="Aeron.Context.SOCKET_SNDBUF_PARAM_NAME"/>
         public ChannelUriStringBuilder SocketSndbufLength(int? socketSndbufLength)
         {
-            _socketSndbufLength = socketSndbufLength;
+            _socketSndbufLength = RequireNonNegative(socketSndbufLength, SOCKET_SNDBUF_PARAM_NAME);
             return this;
         }
 
@@ -1640,7 +1641,7 @@ namespace Adaptive.Aeron
         /// <seealso cref="Aeron.Context.SOCKET_SNDBUF_PARAM_NAME"/>
         public ChannelUriStringBuilder SocketRcvbufLength(int? socketRcvbufLength)
         {
-            _socketRcvbufLength = socketRcvbufLength;
+            _socketRcvbufLength = RequireNonNegative(socketRcvbufLength, SOCKET_RCVBUF_PARAM_NAME);
             return this;
         }
 
@@ -1656,7 +1657,7 @@ namespace Adaptive.Aeron
             string valueStr = channelUri.Get(SOCKET_RCVBUF_PARAM_NAME);
             if (null == valueStr)
             {
-                this._socketRcvbufLength = null;
+                _socketRcvbufLength = null;
                 return this;
             }
             else
@@ -1689,7 +1690,7 @@ namespace Adaptive.Aeron
         /// <seealso cref="Aeron.Context.RECEIVER_WINDOW_LENGTH_PARAM_NAME"/>
         public ChannelUriStringBuilder ReceiverWindowLength(int? receiverWindowLength)
         {
-            this._receiverWindowLength = receiverWindowLength;
+            _receiverWindowLength = RequireNonNegative(receiverWindowLength, RECEIVER_WINDOW_LENGTH_PARAM_NAME);
             return this;
         }
 
@@ -1706,7 +1707,7 @@ namespace Adaptive.Aeron
             string valueStr = channelUri.Get(RECEIVER_WINDOW_LENGTH_PARAM_NAME);
             if (null == valueStr)
             {
-                this._receiverWindowLength = null;
+                _receiverWindowLength = null;
                 return this;
             }
             else
@@ -1758,7 +1759,7 @@ namespace Adaptive.Aeron
             {
                 try
                 {
-                    int.Parse(timestampOffset);
+                    int.Parse(timestampOffset, NumberStyles.Integer, CultureInfo.InvariantCulture);
                 }
                 catch (FormatException)
                 {
@@ -1771,7 +1772,7 @@ namespace Adaptive.Aeron
                 }
             }
 
-            this._mediaReceiveTimestampOffset = timestampOffset;
+            _mediaReceiveTimestampOffset = timestampOffset;
             return this;
         }
 
@@ -1814,7 +1815,7 @@ namespace Adaptive.Aeron
             {
                 try
                 {
-                    int.Parse(timestampOffset);
+                    int.Parse(timestampOffset, NumberStyles.Integer, CultureInfo.InvariantCulture);
                 }
                 catch (FormatException)
                 {
@@ -1827,7 +1828,7 @@ namespace Adaptive.Aeron
                 }
             }
 
-            this._channelReceiveTimestampOffset = timestampOffset;
+            _channelReceiveTimestampOffset = timestampOffset;
             return this;
         }
 
@@ -1859,7 +1860,7 @@ namespace Adaptive.Aeron
             {
                 try
                 {
-                    int.Parse(timestampOffset);
+                    int.Parse(timestampOffset, NumberStyles.Integer, CultureInfo.InvariantCulture);
                 }
                 catch (FormatException)
                 {
@@ -1908,7 +1909,7 @@ namespace Adaptive.Aeron
         /// <seealso cref="Aeron.Context.RESPONSE_ENDPOINT_PARAM_NAME"/>
         public ChannelUriStringBuilder ResponseEndpoint(string responseEndpoint)
         {
-            this._responseEndpoint = responseEndpoint;
+            _responseEndpoint = responseEndpoint;
             return this;
         }
 
@@ -1931,7 +1932,7 @@ namespace Adaptive.Aeron
         /// <seealso cref="Aeron.Context.RESPONSE_ENDPOINT_PARAM_NAME"/>
         public string ResponseEndpoint()
         {
-            return this._responseEndpoint;
+            return _responseEndpoint;
         }
 
         /// <summary>
@@ -1973,7 +1974,7 @@ namespace Adaptive.Aeron
             {
                 try
                 {
-                    if (long.Parse(responseCorrelationId) < -1)
+                    if (long.Parse(responseCorrelationId, NumberStyles.Integer, CultureInfo.InvariantCulture) < -1)
                     {
                         throw new FormatException("responseCorrelationId must be positive");
                     }
@@ -2102,6 +2103,7 @@ namespace Adaptive.Aeron
         /// <seealso cref="Aeron.Context.UNTETHERED_WINDOW_LIMIT_TIMEOUT_PARAM_NAME"/>
         public ChannelUriStringBuilder UntetheredWindowLimitTimeoutNs(long? timeout)
         {
+            timeout = RequireNonNegative(timeout, UNTETHERED_WINDOW_LIMIT_TIMEOUT_PARAM_NAME);
             _untetheredWindowLimitTimeoutNs = timeout;
             return this;
         }
@@ -2158,7 +2160,7 @@ namespace Adaptive.Aeron
         /// <seealso cref="Aeron.Context.UNTETHERED_LINGER_TIMEOUT_PARAM_NAME"/>
         public ChannelUriStringBuilder UntetheredLingerTimeoutNs(long? timeout)
         {
-            _untetheredLingerTimeoutNs = timeout;
+            _untetheredLingerTimeoutNs = RequireNonNegative(timeout, UNTETHERED_LINGER_TIMEOUT_PARAM_NAME);
             return this;
         }
 
@@ -2214,7 +2216,7 @@ namespace Adaptive.Aeron
         /// <seealso cref="Aeron.Context.UNTETHERED_RESTING_TIMEOUT_PARAM_NAME"/>
         public ChannelUriStringBuilder UntetheredRestingTimeoutNs(long? timeout)
         {
-            _untetheredRestingTimeoutNs = timeout;
+            _untetheredRestingTimeoutNs = RequireNonNegative(timeout, UNTETHERED_RESTING_TIMEOUT_PARAM_NAME);
             return this;
         }
 
@@ -2250,7 +2252,7 @@ namespace Adaptive.Aeron
         /// <seealso cref="Aeron.Context.MAX_RESEND_PARAM_NAME"/>
         public ChannelUriStringBuilder MaxResend(int? maxResend)
         {
-            this._maxResend = maxResend;
+            _maxResend = RequireNonNegative(maxResend, MAX_RESEND_PARAM_NAME);
             return this;
         }
 
@@ -2265,14 +2267,14 @@ namespace Adaptive.Aeron
             string valueStr = channelUri.Get(MAX_RESEND_PARAM_NAME);
             if (null == valueStr)
             {
-                this._maxResend = null;
+                _maxResend = null;
                 return this;
             }
             else
             {
                 try
                 {
-                    return MaxResend(int.Parse(valueStr));
+                    return MaxResend(int.Parse(valueStr, NumberStyles.Integer, CultureInfo.InvariantCulture));
                 }
                 catch (System.FormatException ex)
                 {
@@ -2307,7 +2309,7 @@ namespace Adaptive.Aeron
         /// <returns> this for a fluent API. </returns>
         public ChannelUriStringBuilder StreamId(int? streamId)
         {
-            this._streamId = streamId;
+            _streamId = streamId;
             return this;
         }
 
@@ -2321,14 +2323,14 @@ namespace Adaptive.Aeron
             string valueStr = channelUri.Get(STREAM_ID_PARAM_NAME);
             if (null == valueStr)
             {
-                this._streamId = null;
+                _streamId = null;
                 return this;
             }
             else
             {
                 try
                 {
-                    return StreamId(int.Parse(valueStr));
+                    return StreamId(int.Parse(valueStr, NumberStyles.Integer, CultureInfo.InvariantCulture));
                 }
                 catch (System.FormatException ex)
                 {
@@ -2345,7 +2347,8 @@ namespace Adaptive.Aeron
         /// <seealso cref="Aeron.Context.PUBLICATION_WINDOW_LENGTH_PARAM_NAME"/>
         public ChannelUriStringBuilder PublicationWindowLength(int? publicationWindowLength)
         {
-            this._publicationWindowLength = publicationWindowLength;
+            _publicationWindowLength =
+                RequireNonNegative(publicationWindowLength, PUBLICATION_WINDOW_LENGTH_PARAM_NAME);
             return this;
         }
 
@@ -2361,7 +2364,7 @@ namespace Adaptive.Aeron
             string valueStr = channelUri.Get(PUBLICATION_WINDOW_LENGTH_PARAM_NAME);
             if (null == valueStr)
             {
-                this._publicationWindowLength = null;
+                _publicationWindowLength = null;
                 return this;
             }
             else
@@ -2497,6 +2500,24 @@ namespace Adaptive.Aeron
         private static string PrefixTag(bool isTagged, long? value)
         {
             return isTagged ? TAG_PREFIX + value : value.ToString();
+        }
+
+        private static long? RequireNonNegative(long? value, string name)
+        {
+            if (null != value && value.Value < 0)
+            {
+                throw new ArgumentException("`" + name + "` value cannot be negative: " + value);
+            }
+            return value;
+        }
+
+        private static int? RequireNonNegative(int? value, string name)
+        {
+            if (null != value && value.Value < 0)
+            {
+                throw new ArgumentException("`" + name + "` value cannot be negative: " + value);
+            }
+            return value;
         }
     }
 }

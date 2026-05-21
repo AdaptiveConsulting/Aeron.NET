@@ -9,10 +9,10 @@ namespace Adaptive.Cluster.Codecs {
 
 public class NewLeadershipTermEncoder
 {
-    public const ushort BLOCK_LENGTH = 88;
+    public const ushort BLOCK_LENGTH = 96;
     public const ushort TEMPLATE_ID = 53;
     public const ushort SCHEMA_ID = 111;
-    public const ushort SCHEMA_VERSION = 14;
+    public const ushort SCHEMA_VERSION = 16;
 
     private NewLeadershipTermEncoder _parentMessage;
     private IMutableDirectBuffer _buffer;
@@ -496,6 +496,36 @@ public class NewLeadershipTermEncoder
         return this;
     }
 
+    public static int CommitPositionEncodingOffset()
+    {
+        return 88;
+    }
+
+    public static int CommitPositionEncodingLength()
+    {
+        return 8;
+    }
+
+    public static long CommitPositionNullValue()
+    {
+        return -9223372036854775808L;
+    }
+
+    public static long CommitPositionMinValue()
+    {
+        return -9223372036854775807L;
+    }
+
+    public static long CommitPositionMaxValue()
+    {
+        return 9223372036854775807L;
+    }
+
+    public NewLeadershipTermEncoder CommitPosition(long value)
+    {
+        _buffer.PutLong(_offset + 88, value, ByteOrder.LittleEndian);
+        return this;
+    }
 
     public override string ToString()
     {

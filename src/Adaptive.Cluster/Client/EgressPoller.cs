@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+using System;
 using Adaptive.Aeron;
 using Adaptive.Aeron.LogBuffer;
 using Adaptive.Agrona;
@@ -300,12 +301,10 @@ namespace Adaptive.Cluster.Client
                         _messageHeaderDecoder.Version()
                     );
 
-                    _encodedChallenge = new byte[_challengeDecoder.EncodedChallengeLength()];
-                    _challengeDecoder.GetEncodedChallenge(
-                        _encodedChallenge,
-                        0,
-                        _challengeDecoder.EncodedChallengeLength()
-                    );
+                    int encodedChallengeLength = _challengeDecoder.EncodedChallengeLength();
+                    _encodedChallenge =
+                        0 == encodedChallengeLength ? Array.Empty<byte>() : new byte[encodedChallengeLength];
+                    _challengeDecoder.GetEncodedChallenge(_encodedChallenge, 0, encodedChallengeLength);
 
                     _clusterSessionId = _challengeDecoder.ClusterSessionId();
                     _correlationId = _challengeDecoder.CorrelationId();

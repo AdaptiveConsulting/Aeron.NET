@@ -84,6 +84,15 @@ namespace Adaptive.Agrona.Concurrent.Status
         }
 
         /// <summary>
+        /// Perform an atomic increment with release ordering semantics.
+        /// </summary>
+        /// <returns> the previous value of the counter </returns>
+        public long IncrementRelease()
+        {
+            return _buffer.AddLongOrdered(_offset, 1);
+        }
+
+        /// <summary>
         /// Set the counter with volatile semantics.
         /// </summary>
         /// <param name="value"> to be set with volatile semantics. </param>

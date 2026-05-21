@@ -377,7 +377,7 @@ namespace Adaptive.Archiver.Tests
 
             var exception = Assert.Throws<ConfigurationException>(() => context.Conclude());
             Assert.AreEqual(
-                "AeronArchive.Context.messageRetryAttempts must be > 0, got: " + retryAttempts,
+                "ERROR - AeronArchive.Context.messageRetryAttempts must be > 0, got: " + retryAttempts,
                 exception.Message
             );
         }

@@ -15,7 +15,7 @@
  */
 
 using System;
-using System.Linq;
+using System.Globalization;
 using System.Threading;
 using Adaptive.Aeron;
 using Adaptive.Aeron.Exceptions;
@@ -476,27 +476,13 @@ namespace Adaptive.Cluster.Client
             {
                 ctx.Conclude();
 
-                Aeron.Aeron aeron = ctx.AeronClient();
-                long deadlineNs = aeron.Ctx.NanoClock().NanoTime() + ctx.MessageTimeoutNs();
-                asyncConnect = new AsyncConnect(ctx, deadlineNs);
-                AgentInvoker aeronClientInvoker = aeron.ConductorAgentInvoker;
-                AgentInvoker agentInvoker = ctx.AgentInvoker();
                 IIdleStrategy idleStrategy = ctx.IdleStrategy();
+                asyncConnect = new AsyncConnect(ctx);
 
                 AeronCluster aeronCluster;
                 AsyncConnect.AsyncConnectState state = asyncConnect.State();
                 while (null == (aeronCluster = asyncConnect.Poll()))
                 {
-                    if (null != aeronClientInvoker)
-                    {
-                        aeronClientInvoker.Invoke();
-                    }
-
-                    if (null != agentInvoker)
-                    {
-                        agentInvoker.Invoke();
-                    }
-
                     if (state != asyncConnect.State())
                     {
                         state = asyncConnect.State();
@@ -549,8 +535,7 @@ namespace Adaptive.Cluster.Client
             {
                 ctx.Conclude();
 
-                long deadlineNs = ctx.AeronClient().Ctx.NanoClock().NanoTime() + ctx.MessageTimeoutNs();
-                return new AsyncConnect(ctx, deadlineNs);
+                return new AsyncConnect(ctx);
             }
             catch (Exception)
             {
@@ -1016,15 +1001,14 @@ namespace Adaptive.Cluster.Client
             _sessionMessageEncoder.LeadershipTermId(leadershipTermId);
 
             _publication?.Dispose();
-            if (_ctx.IngressEndpoints() != null)
+            if (null == _ctx.IngressEndpoints())
             {
-                _fragmentAssembler.Clear();
-                _ctx.IngressEndpoints(ingressEndpoints);
-                UpdateMemberEndpoints(ingressEndpoints, leaderMemberId);
+                _publication = AddNewLeaderIngressPublication(_ctx, _ctx.IngressChannel(), _ctx.IngressStreamId());
             }
             else
             {
-                _publication = AddNewLeaderIngressPublication(_ctx, _ctx.IngressChannel(), _ctx.IngressStreamId());
+                _ctx.IngressEndpoints(ingressEndpoints);
+                UpdateMemberEndpoints(ingressEndpoints, leaderMemberId);
             }
 
             _fragmentAssembler.Clear();
@@ -1073,7 +1057,8 @@ namespace Adaptive.Cluster.Client
                         throw new ConfigurationException("invalid format - member missing '=' separator: " + endpoints);
                     }
 
-                    int memberId = int.Parse(endpoint.Substring(0, separatorIndex));
+                    int memberId = int.Parse(
+                        endpoint.Substring(0, separatorIndex), NumberStyles.Integer, CultureInfo.InvariantCulture);
                     endpointByIdMap.Put(
                         memberId,
                         new MemberIngress(ctx, memberId, endpoint.Substring(separatorIndex + 1))
@@ -1116,7 +1101,7 @@ namespace Adaptive.Cluster.Client
                 ", leadershipTermId=" + _leadershipTermId +
                 ", channel=" + channel +
                 ", streamId=" + streamId +
-                ") within " + ctx.MessageTimeoutNs() + "ns"
+                ") within " + SystemUtil.FormatDuration(ctx.MessageTimeoutNs())
             );
         }
 
@@ -1619,6 +1604,7 @@ namespace Adaptive.Cluster.Client
                         new Aeron.Aeron.Context()
                             .AeronDirectoryName(_aeronDirectoryName)
                             .ErrorHandler(_errorHandler)
+                            .SubscriberErrorHandler(RethrowingErrorHandler.INSTANCE)
                             .ClientName(string.IsNullOrEmpty(_clientName) ? "cluster-client" : _clientName)
                     );
                     _ownsAeronClient = true;
@@ -2249,6 +2235,11 @@ namespace Adaptive.Cluster.Client
             private long _ingressRegistrationId = NULL_VALUE;
             private Publication _ingressPublication;
 
+            internal AsyncConnect(Context ctx)
+                : this(ctx, ctx.AeronClient().Ctx.NanoClock().NanoTime() + ctx.MessageTimeoutNs())
+            {
+            }
+
             internal AsyncConnect(Context ctx, long deadlineNs)
             {
                 _ctx = ctx;
@@ -2374,17 +2365,17 @@ namespace Adaptive.Cluster.Client
                 if (_deadlineNs - _nanoClock.NanoTime() < 0)
                 {
                     bool isConnected = null != _egressSubscription && _egressSubscription.IsConnected;
-                    string endpointPort =
+                    string egressChannel =
                         null != _egressSubscription ? _egressSubscription.TryResolveChannelEndpointPort() : "<unknown>";
 
                     AeronTimeoutException ex = new AeronTimeoutException(
                         "cluster connect timeout: state=" + _state +
-                        " messageTimeout=" + _ctx.MessageTimeoutNs() + "ns" +
+                        " messageTimeout=" + SystemUtil.FormatDuration(_ctx.MessageTimeoutNs()) +
                         " ingressChannel=" + _ctx.IngressChannel() +
                         " ingressEndpoints=" + _ctx.IngressEndpoints() +
                         " ingressPublication=" + _ingressPublication +
                         " egress.isConnected=" + isConnected +
-                        " responseChannel=" + endpointPort);
+                        " responseChannel=" + egressChannel);
 
                     foreach (MemberIngress member in _memberByIdMap.Values)
                     {
@@ -2470,58 +2461,25 @@ namespace Adaptive.Cluster.Client
                 }
                 else
                 {
-                    int publicationCount = 0;
-                    int failureCount = 0;
-                    ChannelUri channelUri = ChannelUri.Parse(_ctx.IngressChannel());
-
+                    int count = 0;
                     foreach (MemberIngress member in _memberByIdMap.Values)
                     {
-                        try
+                        if (null != member._publication || null != member._publicationException)
                         {
-                            if (null != member._publicationException)
-                            {
-                                failureCount++;
-                                continue;
-                            }
-
-                            if (null == member._publication)
-                            {
-                                if (NULL_VALUE == member._registrationId)
-                                {
-                                    if (channelUri.IsUdp)
-                                    {
-                                        channelUri.Put(ENDPOINT_PARAM_NAME, member._endpoint);
-                                    }
-
-                                    member._registrationId = AsyncAddIngressPublication(
-                                        _ctx,
-                                        channelUri.ToString(),
-                                        _ctx.IngressStreamId()
-                                    );
-                                }
-
-                                member._publication = GetIngressPublication(_ctx, member._registrationId);
-                            }
-
-                            if (null != member._publication)
-                            {
-                                member._registrationId = NULL_VALUE;
-                                publicationCount++;
-                            }
+                            count++;
                         }
-                        catch (RegistrationException ex)
+                        else
                         {
-                            member._publicationException = ex;
+                            if (NULL_VALUE == member._registrationId)
+                            {
+                                member.AsyncAddPublication();
+                            }
+                            member.AsyncGetPublication();
                         }
                     }
 
-                    if (publicationCount + failureCount == _memberByIdMap.Count)
+                    if (_memberByIdMap.Count == count)
                     {
-                        if (0 == publicationCount)
-                        {
-                            throw _memberByIdMap.Values.First()._publicationException;
-                        }
-
                         State(AWAIT_PUBLICATION_CONNECTED);
                     }
                 }

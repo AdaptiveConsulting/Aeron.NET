@@ -849,7 +849,7 @@ namespace Adaptive.Aeron
             {
                 try
                 {
-                    var termId = termBuffer.GetInt(offset + TERM_ID_FIELD_OFFSET);
+                    var termId = termBuffer.GetInt(offset + TERM_ID_FIELD_OFFSET, ByteOrder.LittleEndian);
 
                     handler(termBuffer, offset, length, SessionId, termId);
                 }
@@ -910,7 +910,7 @@ namespace Adaptive.Aeron
                 try
                 {
                     long fileOffset = ((long)capacity * activeIndex) + offset;
-                    int termId = termBuffer.GetInt(offset + TERM_ID_FIELD_OFFSET);
+                    int termId = termBuffer.GetInt(offset + TERM_ID_FIELD_OFFSET, ByteOrder.LittleEndian);
 
                     handler(_logBuffers.FileStream, fileOffset, termBuffer, offset, length, SessionId, termId);
                 }

@@ -266,8 +266,6 @@ namespace Adaptive.Archiver
             try
             {
                 IIdleStrategy idleStrategy = ctx.IdleStrategy();
-                AgentInvoker aeronClientInvoker = ctx.AeronClient().ConductorAgentInvoker;
-                AgentInvoker delegatingInvoker = ctx.AgentInvoker();
                 AsyncConnect.AsyncConnectState previousState = asyncConnect.State();
 
                 AeronArchive aeronArchive;
@@ -282,16 +280,6 @@ namespace Adaptive.Archiver
                         idleStrategy.Reset();
                         previousState = asyncConnect.State();
                     }
-
-                    if (null != aeronClientInvoker)
-                    {
-                        aeronClientInvoker.Invoke();
-                    }
-
-                    if (null != delegatingInvoker)
-                    {
-                        delegatingInvoker.Invoke();
-                    }
                 }
 
                 return aeronArchive;
@@ -299,7 +287,8 @@ namespace Adaptive.Archiver
             catch (Exception ex)
             {
                 Exception error = QuietClose(ex, asyncConnect);
-                throw error;
+                System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(error).Throw();
+                throw; // unreachable
             }
         }
 
@@ -868,7 +857,7 @@ namespace Adaptive.Archiver
                     throw new ArchiveException("failed to send stop recording request");
                 }
 
-                PollForResponseAllowingError(_lastCorrelationId, ArchiveException.UNKNOWN_SUBSCRIPTION);
+                PollForResponse(_lastCorrelationId);
             }
             finally
             {
@@ -2455,7 +2444,7 @@ namespace Adaptive.Archiver
 
                 if (!_archiveProxy.UpdateChannel(recordingId, newChannel, _lastCorrelationId, _controlSessionId))
                 {
-                    throw new ArchiveException("failed to send migrate segments request");
+                    throw new ArchiveException("failed to send update channel request");
                 }
 
                 PollForResponse(_lastCorrelationId);
@@ -2471,7 +2460,8 @@ namespace Adaptive.Archiver
             if (deadlineNs - _nanoClock.NanoTime() < 0)
             {
                 throw new AeronTimeoutException(
-                    errorMessage + " - correlationId=" + correlationId + " messageTimeout=" + _messageTimeoutNs + "ns",
+                    errorMessage + " - correlationId=" + correlationId + " messageTimeout="
+                        + SystemUtil.FormatDuration(_messageTimeoutNs),
                     Category.ERROR
                 );
             }
@@ -2517,8 +2507,8 @@ namespace Adaptive.Archiver
                 CheckForDisconnect(subscription);
 
                 CheckDeadline(deadlineNs, "awaiting response", correlationId);
-                _idleStrategy.Idle();
-                InvokeInvokers();
+                int workCount = InvokeInvokers();
+                _idleStrategy.Idle(workCount);
             }
         }
 
@@ -2666,7 +2656,7 @@ namespace Adaptive.Archiver
                     deadlineNs = _nanoClock.NanoTime() + _messageTimeoutNs;
                 }
 
-                InvokeInvokers();
+                int invokerWorkCount = InvokeInvokers();
 
                 if (fragments > 0)
                 {
@@ -2676,7 +2666,7 @@ namespace Adaptive.Archiver
                 CheckForDisconnect(poller.Subscription());
 
                 CheckDeadline(deadlineNs, "awaiting recording descriptors", correlationId);
-                _idleStrategy.Idle();
+                _idleStrategy.Idle(invokerWorkCount);
             }
         }
 
@@ -2708,7 +2698,7 @@ namespace Adaptive.Archiver
                     deadlineNs = _nanoClock.NanoTime() + _messageTimeoutNs;
                 }
 
-                InvokeInvokers();
+                int invokerWorkCount = InvokeInvokers();
 
                 if (fragments > 0)
                 {
@@ -2718,7 +2708,7 @@ namespace Adaptive.Archiver
                 CheckForDisconnect(poller.Subscription());
 
                 CheckDeadline(deadlineNs, "awaiting subscription descriptors", correlationId);
-                _idleStrategy.Idle();
+                _idleStrategy.Idle(invokerWorkCount);
             }
         }
 
@@ -2736,17 +2726,19 @@ namespace Adaptive.Archiver
                 );
         }
 
-        private void InvokeInvokers()
+        private int InvokeInvokers()
         {
+            int workCount = 0;
             if (null != _aeronClientInvoker)
             {
-                _aeronClientInvoker.Invoke();
+                workCount += _aeronClientInvoker.Invoke();
             }
 
             if (null != _agentInvoker)
             {
-                _agentInvoker.Invoke();
+                workCount += _agentInvoker.Invoke();
             }
+            return workCount;
         }
 
         private void EnsureConnected()
@@ -3007,7 +2999,11 @@ namespace Adaptive.Archiver
                     CONTROL_TERM_BUFFER_SPARSE_PROP_NAME,
                     System.Convert.ToString(CONTROL_TERM_BUFFER_SPARSE_DEFAULT)
                 );
-                return "true".Equals(propValue);
+                // Match Java Boolean.parseBoolean — case-insensitive. .NET's Convert.ToString(true)
+                // returns "True" (capital T), so a case-sensitive "true".Equals would always be false
+                // when the property is not overridden — meaning the documented default of true never
+                // took effect.
+                return bool.TryParse(propValue, out var b) && b;
             }
 
             /// <summary>
@@ -3125,7 +3121,8 @@ namespace Adaptive.Archiver
                     RECORDING_EVENTS_ENABLED_PROP_NAME,
                     System.Convert.ToString(RECORDING_EVENTS_ENABLED_DEFAULT)
                 );
-                return "true".Equals(propValue);
+                // See note on ControlTermBufferSparse — case-insensitive to match Java parseBoolean.
+                return bool.TryParse(propValue, out var b) && b;
             }
 
             /// <summary>
@@ -3220,6 +3217,7 @@ namespace Adaptive.Archiver
                             .AeronDirectoryName(_aeronDirectoryName)
                             .ClientName(string.IsNullOrEmpty(_clientName) ? "archive-client" : _clientName)
                             .ErrorHandler(_errorHandler)
+                            .SubscriberErrorHandler(RethrowingErrorHandler.INSTANCE)
                     );
 
                     _ownsAeronClient = true;

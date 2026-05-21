@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Text;
 using Adaptive.Aeron.LogBuffer;
 using Adaptive.Agrona.Collections;
@@ -528,7 +529,12 @@ namespace Adaptive.Aeron
         /// <see cref="Aeron.Context.TAGS_PARAM_NAME"/> <see cref="Aeron.Context.TAG_PREFIX"/>
         public static long GetTag(string paramValue)
         {
-            return IsTagged(paramValue) ? long.Parse(paramValue.Substring(4, paramValue.Length - 4)) : INVALID_TAG;
+            if (!IsTagged(paramValue))
+            {
+                return INVALID_TAG;
+            }
+            var tagText = paramValue.Substring(4, paramValue.Length - 4);
+            return long.Parse(tagText, NumberStyles.Integer, CultureInfo.InvariantCulture);
         }
 
         /// <summary>

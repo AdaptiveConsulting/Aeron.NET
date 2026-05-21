@@ -101,6 +101,55 @@ namespace Adaptive.Archiver
         public const short EMPTY_RECORDING = 15;
 
         /// <summary>
+        /// The position specified for the operation is not valid, e.g. not frame-aligned, below start, or above stop.
+        /// </summary>
+        /// <remarks>Since 1.51.0</remarks>
+        public const int INVALID_POSITION = 16;
+
+        /// <summary>
+        /// Builds an error message for a replay with a start position beyond the limit.
+        /// </summary>
+        /// <param name="recordingId">         the recording id. </param>
+        /// <param name="replayStartPosition"> the replay position. </param>
+        /// <param name="limitPosition">       the limit position. </param>
+        /// <returns> the created message. </returns>
+        /// <remarks>Since 1.51.0</remarks>
+        public static string BuildReplayExceedsLimitErrorMsg(
+            long recordingId, long replayStartPosition, long limitPosition)
+        {
+            return "requested replay start position=" + replayStartPosition
+                + " must be less than the limit position=" + limitPosition
+                + " for recording " + recordingId;
+        }
+
+        /// <summary>
+        /// Builds an error message for a replay with a position before the start position.
+        /// </summary>
+        /// <param name="recordingId">         the recording id. </param>
+        /// <param name="replayStartPosition"> the replay start position. </param>
+        /// <param name="startPosition">       the start position of the recording. </param>
+        /// <returns> the created message. </returns>
+        /// <remarks>Since 1.51.0</remarks>
+        public static string BuildReplayBeforeStartErrorMsg(
+            long recordingId, long replayStartPosition, long startPosition)
+        {
+            return "requested replay start position=" + replayStartPosition
+                + " is less than recording start position=" + startPosition
+                + " for recording " + recordingId;
+        }
+
+        /// <summary>
+        /// Builds an error message for an unknown recording.
+        /// </summary>
+        /// <param name="recordingId"> the recording id. </param>
+        /// <returns> the created message. </returns>
+        /// <remarks>Since 1.51.0</remarks>
+        public static string BuildUnknownRecordingErrorMsg(long recordingId)
+        {
+            return "unknown recording id: " + recordingId;
+        }
+
+        /// <summary>
         /// Error code providing more detail into what went wrong.
         /// </summary>
         /// <returns> code providing more detail into what went wrong. </returns>
@@ -231,6 +280,8 @@ namespace Adaptive.Archiver
                     return "UNAUTHORISED_ACTION";
                 case REPLICATION_CONNECTION_FAILURE:
                     return "REPLICATION_CONNECTION_FAILURE";
+                case INVALID_POSITION:
+                    return "INVALID_POSITION";
                 default:
                     return "unknown error code: " + errorCode;
             }

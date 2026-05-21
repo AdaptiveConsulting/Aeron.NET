@@ -264,6 +264,19 @@ namespace Adaptive.Aeron
         /// <remarks>Since 1.49.0</remarks>
         public const int SYSTEM_COUNTER_ID_CONTROL_PROTOCOL_VERSION = 43;
 
+        /// <summary>
+        /// Counter id for status messages that are rejected while being outside the send window, i.e. being behind or
+        /// ahead of the <c>snd-pos</c> by more than one term.
+        /// </summary>
+        /// <remarks>Since 1.51.0</remarks>
+        public const int SYSTEM_COUNTER_ID_STATUS_MESSAGES_REJECTED = 44;
+
+        /// <summary>
+        /// Counter id for failed offers to the async executor proxy.
+        /// </summary>
+        /// <remarks>Since 1.51.0</remarks>
+        public const int SYSTEM_COUNTER_ID_ASYNC_EXECUTOR_PROXY_FAILS = 45;
+
         // Client/driver counters
 
         /// <summary>
@@ -378,6 +391,188 @@ namespace Adaptive.Aeron
         /// </summary>
         public const int DRIVER_RECEIVER_NAKS_SENT_TYPE_ID = 20;
 
+        /// <summary>
+        /// Counter for each bootstrap neighbors used for driver name resolution.
+        /// </summary>
+        /// <remarks>Since 1.51.0</remarks>
+        public const int NAME_RESOLVER_BOOTSTRAP_NEIGHBOR_COUNTER_TYPE_ID = 21;
+
+        // EF_VI counters
+        /// <summary>EF_VI_PORT_INFO_TYPE_ID.</summary>
+        /// <remarks>Since 1.51.0</remarks>
+        public const int EF_VI_PORT_INFO_TYPE_ID = 50;
+
+        /// <summary>EF_VI_TRANSPORT_TYPE_ID.</summary>
+        /// <remarks>Since 1.51.0</remarks>
+        public const int EF_VI_TRANSPORT_TYPE_ID = 51;
+
+        /// <summary>EF_VI_TX_NOBUFS_TYPE_ID.</summary>
+        /// <remarks>Since 1.51.0</remarks>
+        public const int EF_VI_TX_NOBUFS_TYPE_ID = 52;
+
+        /// <summary>EF_VI_TX_EAGAIN_TYPE_ID.</summary>
+        /// <remarks>Since 1.51.0</remarks>
+        public const int EF_VI_TX_EAGAIN_TYPE_ID = 53;
+
+        /// <summary>EF_VI_TX_ERROR_TYPE_ID.</summary>
+        /// <remarks>Since 1.51.0</remarks>
+        public const int EF_VI_TX_ERROR_TYPE_ID = 54;
+
+        /// <summary>EF_VI_RX_DISCARD_TYPE_ID.</summary>
+        /// <remarks>Since 1.51.0</remarks>
+        public const int EF_VI_RX_DISCARD_TYPE_ID = 55;
+
+        /// <summary>EF_VI_RX_INVALID_TYPE_ID.</summary>
+        /// <remarks>Since 1.51.0</remarks>
+        public const int EF_VI_RX_INVALID_TYPE_ID = 56;
+
+        /// <summary>EF_VI_RX_PKTS_TYPE_ID.</summary>
+        /// <remarks>Since 1.51.0</remarks>
+        public const int EF_VI_RX_PKTS_TYPE_ID = 57;
+
+        /// <summary>EF_VI_RX_BYTES_TYPE_ID.</summary>
+        /// <remarks>Since 1.51.0</remarks>
+        public const int EF_VI_RX_BYTES_TYPE_ID = 58;
+
+        /// <summary>EF_VI_TX_PKTS_TYPE_ID.</summary>
+        /// <remarks>Since 1.51.0</remarks>
+        public const int EF_VI_TX_PKTS_TYPE_ID = 59;
+
+        /// <summary>EF_VI_TX_BYTES_TYPE_ID.</summary>
+        /// <remarks>Since 1.51.0</remarks>
+        public const int EF_VI_TX_BYTES_TYPE_ID = 60;
+
+        // VMA counters
+        /// <summary>VMA_TRANSPORTS_TYPE_ID.</summary>
+        /// <remarks>Since 1.51.0</remarks>
+        public const int VMA_TRANSPORTS_TYPE_ID = 61;
+
+        /// <summary>VMA_RX_ZERO_COPY_BYTES_TYPE_ID.</summary>
+        /// <remarks>Since 1.51.0</remarks>
+        public const int VMA_RX_ZERO_COPY_BYTES_TYPE_ID = 62;
+
+        /// <summary>VMA_RX_DATA_COPY_BYTES_TYPE_ID.</summary>
+        /// <remarks>Since 1.51.0</remarks>
+        public const int VMA_RX_DATA_COPY_BYTES_TYPE_ID = 63;
+
+        // ATS counters
+        /// <summary>ATS_TRANSPORTS_TYPE_ID.</summary>
+        /// <remarks>Since 1.51.0</remarks>
+        public const int ATS_TRANSPORTS_TYPE_ID = 65;
+
+        /// <summary>ATS_DISCARDS_NON_ATS_TYPE_ID.</summary>
+        /// <remarks>Since 1.51.0</remarks>
+        public const int ATS_DISCARDS_NON_ATS_TYPE_ID = 66;
+
+        /// <summary>ATS_BYTES_ENCRYPTED_TYPE_ID.</summary>
+        /// <remarks>Since 1.51.0</remarks>
+        public const int ATS_BYTES_ENCRYPTED_TYPE_ID = 67;
+
+        /// <summary>ATS_BYTES_DECRYPTED_TYPE_ID.</summary>
+        /// <remarks>Since 1.51.0</remarks>
+        public const int ATS_BYTES_DECRYPTED_TYPE_ID = 68;
+
+        /// <summary>ATS_AEAD_ERRORS_TYPE_ID.</summary>
+        /// <remarks>Since 1.51.0</remarks>
+        public const int ATS_AEAD_ERRORS_TYPE_ID = 69;
+
+        /// <summary>ATS_RSA_KEY_UNKNOWN_TYPE_ID.</summary>
+        /// <remarks>Since 1.51.0</remarks>
+        public const int ATS_RSA_KEY_UNKNOWN_TYPE_ID = 70;
+
+        /// <summary>ATS_EC_KEY_SIG_ERRORS_TYPE_ID.</summary>
+        /// <remarks>Since 1.51.0</remarks>
+        public const int ATS_EC_KEY_SIG_ERRORS_TYPE_ID = 71;
+
+        /// <summary>ATS_UNICAST_RE_KEYINGS_TYPE_ID.</summary>
+        /// <remarks>Since 1.51.0</remarks>
+        public const int ATS_UNICAST_RE_KEYINGS_TYPE_ID = 72;
+
+        /// <summary>ATS_UNICAST_RE_KEYING_RSA_KEY_MISMATCH_TYPE_ID.</summary>
+        /// <remarks>Since 1.51.0</remarks>
+        public const int ATS_UNICAST_RE_KEYING_RSA_KEY_MISMATCH_TYPE_ID = 73;
+
+        /// <summary>ATS_DROPPED_SM_TYPE_ID.</summary>
+        /// <remarks>Since 1.51.0</remarks>
+        public const int ATS_DROPPED_SM_TYPE_ID = 74;
+
+        // DPDK counters
+        /// <summary>DPDK_PORT_INFO_TYPE_ID.</summary>
+        /// <remarks>Since 1.51.0</remarks>
+        public const int DPDK_PORT_INFO_TYPE_ID = 75;
+
+        /// <summary>DPDK_TRANSPORT_TYPE_ID.</summary>
+        /// <remarks>Since 1.51.0</remarks>
+        public const int DPDK_TRANSPORT_TYPE_ID = 76;
+
+        /// <summary>DPDK_NOBUFS_TYPE_ID.</summary>
+        /// <remarks>Since 1.51.0</remarks>
+        public const int DPDK_NOBUFS_TYPE_ID = 77;
+
+        /// <summary>DPDK_TX_EAGAIN_TYPE_ID.</summary>
+        /// <remarks>Since 1.51.0</remarks>
+        public const int DPDK_TX_EAGAIN_TYPE_ID = 78;
+
+        /// <summary>DPDK_ERROR_TYPE_ID.</summary>
+        /// <remarks>Since 1.51.0</remarks>
+        public const int DPDK_ERROR_TYPE_ID = 79;
+
+        /// <summary>DPDK_PKTS_TYPE_ID.</summary>
+        /// <remarks>Since 1.51.0</remarks>
+        public const int DPDK_PKTS_TYPE_ID = 82;
+
+        /// <summary>DPDK_BYTES_TYPE_ID.</summary>
+        /// <remarks>Since 1.51.0</remarks>
+        public const int DPDK_BYTES_TYPE_ID = 83;
+
+        /// <summary>DPDK_MISSED_PACKETS_TYPE_ID.</summary>
+        /// <remarks>Since 1.51.0</remarks>
+        public const int DPDK_MISSED_PACKETS_TYPE_ID = 84;
+
+        /// <summary>DPDK_ARP_MISS_TYPE_ID.</summary>
+        /// <remarks>Since 1.51.0</remarks>
+        public const int DPDK_ARP_MISS_TYPE_ID = 85;
+
+        /// <summary>DPDK_RX_SENDER_DISCARD_TYPE_ID.</summary>
+        /// <remarks>Since 1.51.0</remarks>
+        public const int DPDK_RX_SENDER_DISCARD_TYPE_ID = 86;
+
+        /// <summary>DPDK_POLLER_TYPE_ID.</summary>
+        /// <remarks>Since 1.51.0</remarks>
+        public const int DPDK_POLLER_TYPE_ID = 87;
+
+        /// <summary>DPDK_QUEUE_DROP_COUNT_TYPE_ID.</summary>
+        /// <remarks>Since 1.51.0</remarks>
+        public const int DPDK_QUEUE_DROP_COUNT_TYPE_ID = 88;
+
+        /// <summary>DPDK_CHECKSUM_FAILURE_TYPE_ID.</summary>
+        /// <remarks>Since 1.51.0</remarks>
+        public const int DPDK_CHECKSUM_FAILURE_TYPE_ID = 89;
+
+        /// <summary>DPDK_FRAGMENTED_PACKETS_TYPE_ID.</summary>
+        /// <remarks>Since 1.51.0</remarks>
+        public const int DPDK_FRAGMENTED_PACKETS_TYPE_ID = 90;
+
+        /// <summary>DPDK_MEMPOOL_AVAILABLE_TYPE_ID.</summary>
+        /// <remarks>Since 1.51.0</remarks>
+        public const int DPDK_MEMPOOL_AVAILABLE_TYPE_ID = 91;
+
+        /// <summary>DPDK_EXTENDED_STATS_TYPE_ID.</summary>
+        /// <remarks>Since 1.51.0</remarks>
+        public const int DPDK_EXTENDED_STATS_TYPE_ID = 92;
+
+        /// <summary>DPDK_RX_UNSUPPORTED_ETHERNET_TYPE_TYPE_ID.</summary>
+        /// <remarks>Since 1.51.0</remarks>
+        public const int DPDK_RX_UNSUPPORTED_ETHERNET_TYPE_TYPE_ID = 93;
+
+        /// <summary>DPDK_RX_UNSUPPORTED_PROTOCOL_TYPE_ID.</summary>
+        /// <remarks>Since 1.51.0</remarks>
+        public const int DPDK_RX_UNSUPPORTED_PROTOCOL_TYPE_ID = 94;
+
+        /// <summary>DPDK_RX_RECEIVER_DISCARD_TYPE_ID.</summary>
+        /// <remarks>Since 1.51.0</remarks>
+        public const int DPDK_RX_RECEIVER_DISCARD_TYPE_ID = 95;
+
         // Archive counters
         /// <summary>
         /// The position a recording has reached when being archived.
@@ -459,6 +654,34 @@ namespace Adaptive.Aeron
         /// </summary>
         /// <remarks>Since 1.49.0</remarks>
         public const int ARCHIVE_CONTROL_SESSION_TYPE_ID = 113;
+
+        /// <summary>
+        /// The type id of the <seealso cref="Counter"/> used to track the current state of a
+        /// <c>PersistentSubscription</c>.
+        /// </summary>
+        /// <remarks>Since 1.51.0</remarks>
+        public const int PERSISTENT_SUBSCRIPTION_STATE_TYPE_ID = 114;
+
+        /// <summary>
+        /// The type id of the <seealso cref="Counter"/> used to track the join difference of a
+        /// <c>PersistentSubscription</c>.
+        /// </summary>
+        /// <remarks>Since 1.51.0</remarks>
+        public const int PERSISTENT_SUBSCRIPTION_JOIN_DIFFERENCE_TYPE_ID = 115;
+
+        /// <summary>
+        /// The type id of the <seealso cref="Counter"/> used to count how many times a
+        /// <c>PersistentSubscription</c> has left the live channel.
+        /// </summary>
+        /// <remarks>Since 1.51.0</remarks>
+        public const int PERSISTENT_SUBSCRIPTION_LIVE_LEFT_COUNT_TYPE_ID = 116;
+
+        /// <summary>
+        /// The type id of the <seealso cref="Counter"/> used to count how many times a
+        /// <c>PersistentSubscription</c> has joined the live channel.
+        /// </summary>
+        /// <remarks>Since 1.51.0</remarks>
+        public const int PERSISTENT_SUBSCRIPTION_LIVE_JOINED_COUNT_TYPE_ID = 117;
 
         // Cluster counters
 
@@ -590,6 +813,8 @@ namespace Adaptive.Aeron
         /// <summary>
         /// Transition module control toggle type id.
         /// </summary>
+        /// <remarks>Deprecated in 1.51.0 — commented out upstream by aeron-io/aeron#1891. Retained for binary
+        /// compatibility but no longer used by the driver.</remarks>
         public const int TRANSITION_MODULE_CONTROL_TOGGLE_TYPE_ID = 225;
 
         /// <summary>
@@ -681,6 +906,22 @@ namespace Adaptive.Aeron
         /// </summary>
         /// <remarks>Since 1.49.0</remarks>
         public const int CLUSTER_SESSION_TYPE_ID = 241;
+
+        /// <summary>SELECTOR_CLIENTS_COUNTER_TYPE_ID.</summary>
+        /// <remarks>Since 1.51.0</remarks>
+        public const int SELECTOR_CLIENTS_COUNTER_TYPE_ID = 300;
+
+        /// <summary>SELECTOR_SUBSCRIPTIONS_COUNTER_TYPE_ID.</summary>
+        /// <remarks>Since 1.51.0</remarks>
+        public const int SELECTOR_SUBSCRIPTIONS_COUNTER_TYPE_ID = 301;
+
+        /// <summary>SELECTOR_MAX_CYCLE_TIME_TYPE_ID.</summary>
+        /// <remarks>Since 1.51.0</remarks>
+        public const int SELECTOR_MAX_CYCLE_TIME_TYPE_ID = 302;
+
+        /// <summary>SELECTOR_CYCLE_TIME_THRESHOLD_EXCEEDED_TYPE_ID.</summary>
+        /// <remarks>Since 1.51.0</remarks>
+        public const int SELECTOR_CYCLE_TIME_THRESHOLD_EXCEEDED_TYPE_ID = 303;
 
         // ===================
         // Sequencer Counters.

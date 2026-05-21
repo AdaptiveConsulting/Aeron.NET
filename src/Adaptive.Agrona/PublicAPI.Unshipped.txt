@@ -1,3 +1,4 @@
+Adaptive.Agrona.Concurrent.Status.AtomicCounter.IncrementRelease() -> long
 Adaptive.Agrona.SuppressedExceptions
 static Adaptive.Agrona.SuppressedExceptions.AddSuppressed(this System.Exception primary, System.Exception suppressed) -> void
 static Adaptive.Agrona.SuppressedExceptions.GetSuppressed(this System.Exception primary) -> System.Collections.Generic.IReadOnlyList<System.Exception>

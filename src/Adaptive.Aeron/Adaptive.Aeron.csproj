@@ -2,7 +2,7 @@
     <PropertyGroup>
         <TargetFramework>netstandard2.0</TargetFramework>
         <PackageId>Aeron.Client</PackageId>
-        <VersionPrefix>1.49.0</VersionPrefix>
+        <VersionPrefix>1.51.0</VersionPrefix>
         <Authors>Adaptive Financial Consulting Ltd.</Authors>
         <Company>Adaptive Financial Consulting Ltd.</Company>
         <Product>Aeron Client</Product>
@@ -49,4 +49,43 @@
     <ItemGroup>
         <InternalsVisibleTo Include="Adaptive.Aeron.Tests" />
     </ItemGroup>
+    <!--
+        Capture the current short git SHA into AeronVersion.GIT_SHA, matching the upstream
+        Java aeron-client's generated AeronVersion.GIT_SHA constant (which is produced by
+        a Gradle annotation processor). If the working tree is dirty, "+guilty" is
+        appended. If git is unavailable, the value falls back to "unknown".
+    -->
+    <Target Name="GenerateAeronVersionGitSha" BeforeTargets="CoreCompile">
+        <Exec Command="git rev-parse --short=10 HEAD"
+              ConsoleToMSBuild="true"
+              IgnoreExitCode="true"
+              StandardOutputImportance="Low"
+              WorkingDirectory="$(MSBuildProjectDirectory)">
+            <Output TaskParameter="ConsoleOutput" PropertyName="_GitShaRaw" />
+            <Output TaskParameter="ExitCode" PropertyName="_GitShaExitCode" />
+        </Exec>
+        <Exec Command="git status --porcelain"
+              ConsoleToMSBuild="true"
+              IgnoreExitCode="true"
+              StandardOutputImportance="Low"
+              WorkingDirectory="$(MSBuildProjectDirectory)"
+              Condition="'$(_GitShaExitCode)' == '0'">
+            <Output TaskParameter="ConsoleOutput" PropertyName="_GitStatusRaw" />
+        </Exec>
+        <PropertyGroup>
+            <_AeronGitSha Condition="'$(_GitShaExitCode)' == '0' and '$(_GitStatusRaw)' == ''">$(_GitShaRaw)</_AeronGitSha>
+            <_AeronGitSha Condition="'$(_GitShaExitCode)' == '0' and '$(_GitStatusRaw)' != ''">$(_GitShaRaw)+guilty</_AeronGitSha>
+            <_AeronGitSha Condition="'$(_GitShaExitCode)' != '0'">unknown</_AeronGitSha>
+            <_GeneratedGitShaFile>$(IntermediateOutputPath)AeronVersion.GitSha.g.cs</_GeneratedGitShaFile>
+        </PropertyGroup>
+        <MakeDir Directories="$(IntermediateOutputPath)" Condition="!Exists('$(IntermediateOutputPath)')" />
+        <WriteLinesToFile File="$(_GeneratedGitShaFile)"
+                          Lines="// &lt;auto-generated /&gt;%0Anamespace Adaptive.Aeron%0A{%0A    public partial class AeronVersion%0A    {%0A        public static readonly string GIT_SHA = &quot;$(_AeronGitSha)&quot;%3B%0A    }%0A}%0A"
+                          Overwrite="true"
+                          WriteOnlyWhenDifferent="true" />
+        <ItemGroup>
+            <Compile Include="$(_GeneratedGitShaFile)" />
+            <FileWrites Include="$(_GeneratedGitShaFile)" />
+        </ItemGroup>
+    </Target>
 </Project>

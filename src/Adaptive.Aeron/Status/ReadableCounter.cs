@@ -124,12 +124,23 @@ namespace Adaptive.Aeron.Status
 
         /// <summary>
         /// Get the value of the counter using weak ordering semantics. This is the same a standard read of a field.
+        /// <para>
+        /// This call is identical to <see cref="GetPlain"/> and that method is preferred.
+        /// </para>
         /// </summary>
         /// <returns> the  value for the counter. </returns>
         public long GetWeak()
         {
-            // UnsafeAccess.UNSAFE.getLong(buffer, addressOffset);
+            return GetPlain();
+        }
 
+        /// <summary>
+        /// Get the value of the counter using plain memory semantics. This is the same a standard read of a field.
+        /// </summary>
+        /// <returns> the value for the counter. </returns>
+        /// <remarks>Since 1.51.0</remarks>
+        public long GetPlain()
+        {
             return _valueBuffer.GetLong(0);
         }
 

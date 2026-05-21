@@ -16,6 +16,8 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
+using Adaptive.Agrona;
 
 namespace Adaptive.Aeron
 {
@@ -29,16 +31,16 @@ namespace Adaptive.Aeron
 
             foreach (var a in args)
             {
-                if (!a.StartsWith("-D"))
+                if (!a.StartsWith("-D", StringComparison.Ordinal))
                 {
                     continue;
                 }
 
-                var directive = a.Replace("-D", "").Split('=');
+                var directive = a.Substring(2).Split(new[] { '=' }, 2);
 
                 if (directive.Length == 2)
                 {
-                    Params.Add(directive[0], directive[1]);
+                    Params[directive[0]] = directive[1];
                 }
             }
         }
@@ -50,7 +52,8 @@ namespace Adaptive.Aeron
 
         public static int GetInteger(string propertyName, int defaultValue)
         {
-            return Params.TryGetValue(propertyName, out string strValue) && int.TryParse(strValue, out int value)
+            return Params.TryGetValue(propertyName, out string strValue)
+                && int.TryParse(strValue, NumberStyles.Integer, CultureInfo.InvariantCulture, out int value)
                 ? value
                 : defaultValue;
         }
@@ -58,24 +61,58 @@ namespace Adaptive.Aeron
         public static bool GetBoolean(string propertyName)
         {
             var value = GetProperty(propertyName, "false");
-            return value.ToLower() == "true";
+            return bool.TryParse(value, out var b) && b;
         }
 
         public static long GetLong(string propertyName, long defaultValue)
         {
-            return Params.TryGetValue(propertyName, out string strValue) && long.TryParse(strValue, out long value)
+            return Params.TryGetValue(propertyName, out string strValue)
+                && long.TryParse(strValue, NumberStyles.Integer, CultureInfo.InvariantCulture, out long value)
                 ? value
                 : defaultValue;
         }
 
+        /// <summary>
+        /// Returns the property as a duration in nanoseconds, accepting Java suffix notation
+        /// (<c>ns</c> / <c>us</c> / <c>ms</c> / <c>s</c>) as supported by
+        /// <seealso cref="SystemUtil.ParseDuration"/>. Bare integers are interpreted as nanoseconds.
+        /// </summary>
         public static long GetDurationInNanos(string propertyName, long defaultValue)
         {
-            return GetLong(propertyName, defaultValue);
+            return Params.TryGetValue(propertyName, out var strValue)
+                ? SystemUtil.ParseDuration(propertyName, strValue)
+                : defaultValue;
         }
 
+        /// <summary>
+        /// Returns the property as a size in bytes, accepting Java suffix notation
+        /// (<c>k</c> / <c>m</c> / <c>g</c>) as supported by <seealso cref="SystemUtil.ParseSize"/>.
+        /// Bare integers are interpreted as bytes.
+        /// </summary>
         public static int GetSizeAsInt(string propertyName, int defaultValue)
         {
-            return GetInteger(propertyName, defaultValue);
+            if (!Params.TryGetValue(propertyName, out var strValue))
+            {
+                return defaultValue;
+            }
+            var size = SystemUtil.ParseSize(propertyName, strValue);
+            if (size > int.MaxValue || size < int.MinValue)
+            {
+                throw new FormatException(propertyName + " out of range for int: " + strValue);
+            }
+            return (int)size;
+        }
+
+        /// <summary>
+        /// Returns the property as a size in bytes, accepting Java suffix notation
+        /// (<c>k</c> / <c>m</c> / <c>g</c>) as supported by <seealso cref="SystemUtil.ParseSize"/>.
+        /// Bare integers are interpreted as bytes.
+        /// </summary>
+        public static long GetSizeAsLong(string propertyName, long defaultValue)
+        {
+            return Params.TryGetValue(propertyName, out var strValue)
+                ? SystemUtil.ParseSize(propertyName, strValue)
+                : defaultValue;
         }
     }
 }

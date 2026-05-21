@@ -553,7 +553,10 @@ namespace Adaptive.Cluster.Service
                     return RESPONDER_SERVICE_DEFAULT;
                 }
 
-                return "true".Equals(property);
+                // Match Java Boolean.parseBoolean — case-insensitive. Without TryParse, a user
+                // setting aeron.cluster.responder.service=True (capital T) would silently be
+                // treated as false despite the documented default being true.
+                return bool.TryParse(property, out var b) && b;
             }
 
             /// <summary>

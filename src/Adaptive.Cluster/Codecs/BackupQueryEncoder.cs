@@ -9,10 +9,10 @@ namespace Adaptive.Cluster.Codecs {
 
 public class BackupQueryEncoder
 {
-    public const ushort BLOCK_LENGTH = 16;
+    public const ushort BLOCK_LENGTH = 24;
     public const ushort TEMPLATE_ID = 77;
     public const ushort SCHEMA_ID = 111;
-    public const ushort SCHEMA_VERSION = 14;
+    public const ushort SCHEMA_VERSION = 16;
 
     private BackupQueryEncoder _parentMessage;
     private IMutableDirectBuffer _buffer;
@@ -188,6 +188,38 @@ public class BackupQueryEncoder
     public BackupQueryEncoder Version(int value)
     {
         _buffer.PutInt(_offset + 12, value, ByteOrder.LittleEndian);
+        return this;
+    }
+
+
+    public static int LogPositionEncodingOffset()
+    {
+        return 16;
+    }
+
+    public static int LogPositionEncodingLength()
+    {
+        return 8;
+    }
+
+    public static long LogPositionNullValue()
+    {
+        return -9223372036854775808L;
+    }
+
+    public static long LogPositionMinValue()
+    {
+        return -9223372036854775807L;
+    }
+
+    public static long LogPositionMaxValue()
+    {
+        return 9223372036854775807L;
+    }
+
+    public BackupQueryEncoder LogPosition(long value)
+    {
+        _buffer.PutLong(_offset + 16, value, ByteOrder.LittleEndian);
         return this;
     }
 

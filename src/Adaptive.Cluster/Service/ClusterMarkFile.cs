@@ -16,6 +16,7 @@
 
 using System;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using Adaptive.Aeron.LogBuffer;
 using Adaptive.Agrona;
@@ -515,9 +516,10 @@ namespace Adaptive.Cluster
 
             if (observations > 0)
             {
+                var timestamp = DateTime.UtcNow.ToString("yyyy-MM-dd-HH-mm-ss-fff", CultureInfo.InvariantCulture);
                 var errorLogFilename = Path.Combine(
                     markFile.DirectoryName,
-                    type + "-" + DateTime.Now.ToString("yyyy-MM-dd-HH-mm-ss-fff") + "-error.log"
+                    type + "-" + timestamp + "-error.log"
                 );
 
                 logger?.WriteLine("WARNING: existing errors saved to: " + errorLogFilename);

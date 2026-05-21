@@ -21,11 +21,17 @@ namespace Adaptive.Aeron
         "S1118:Utility classes should not have public constructors",
         Justification = "Public ctor in shipped API surface; marking static would break consumers."
     )]
-    public class AeronVersion
+    public partial class AeronVersion
     {
-        public const string VERSION = "1.49.0";
+        public const string VERSION = "1.51.0";
         public const int MAJOR_VERSION = 1;
-        public const int MINOR_VERSION = 49;
+        public const int MINOR_VERSION = 51;
         public const int PATCH_VERSION = 0;
+
+        // GIT_SHA constant is defined in the generated partial AeronVersion.GitSha.g.cs.
+        // The build target in Adaptive.Aeron.csproj writes the current short SHA on every
+        // build, appending "+guilty" when the working tree has uncommitted changes.
+        // When git is not available (e.g. building from a packaged source drop), the
+        // value falls back to "unknown".
     }
 }
