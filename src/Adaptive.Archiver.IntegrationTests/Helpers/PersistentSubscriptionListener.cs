@@ -15,6 +15,8 @@
  */
 
 using System;
+using Adaptive.Aeron.Exceptions;
+using AeronErrorCode = Adaptive.Aeron.ErrorCode;
 
 namespace Adaptive.Archiver.IntegrationTests.Helpers
 {
@@ -23,6 +25,8 @@ namespace Adaptive.Archiver.IntegrationTests.Helpers
         public int LiveJoinedCount { get; private set; }
         public int LiveLeftCount { get; private set; }
         public int ErrorCount { get; private set; }
+        public int TerminalErrorCount { get; private set; }
+        public int NonTransientErrorCount { get; private set; }
         public Exception LastException { get; private set; }
 
         public void OnLiveJoined() => LiveJoinedCount++;
@@ -32,7 +36,18 @@ namespace Adaptive.Archiver.IntegrationTests.Helpers
         public void OnError(Exception e)
         {
             ErrorCount++;
+            if (!IsTransient(e))
+            {
+                NonTransientErrorCount++;
+            }
+            if (e is PersistentSubscriptionException)
+            {
+                TerminalErrorCount++;
+            }
             LastException = e;
         }
+
+        private static bool IsTransient(Exception e) =>
+            e is RegistrationException re && re.ErrorCode() == AeronErrorCode.RESOURCE_TEMPORARILY_UNAVAILABLE;
     }
 }
