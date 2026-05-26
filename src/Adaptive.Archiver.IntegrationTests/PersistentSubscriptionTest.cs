@@ -626,7 +626,7 @@ namespace Adaptive.Archiver.IntegrationTests
                 () => Poll(persistentSubscription, fragmentHandler, 1));
 
             Assert.That(fragmentHandler.ReceivedPayloads.Count, Is.EqualTo(recordedMessages.Count));
-            Assert.That(Listener.ErrorCount, Is.EqualTo(1));
+            Assert.That(Listener.TerminalErrorCount, Is.EqualTo(1));
             Assert.That(Listener.LastException, Is.InstanceOf<PersistentSubscriptionException>());
             Assert.That(
                 ((PersistentSubscriptionException)Listener.LastException).ReasonValue,
@@ -1385,8 +1385,8 @@ namespace Adaptive.Archiver.IntegrationTests
             };
 
             // Wait for one AWAIT_LIVE deadline breach.
-            Tests.ExecuteUntil(() => Listener.ErrorCount > 0, pollAndTrack, 30_000);
-            Assert.That(Listener.ErrorCount, Is.EqualTo(1));
+            Tests.ExecuteUntil(() => Listener.NonTransientErrorCount > 0, pollAndTrack, 30_000);
+            Assert.That(Listener.NonTransientErrorCount, Is.EqualTo(1));
             Assert.That(persistentSubscription.IsLive, Is.False);
             Assert.That(observedReplaying[0], Is.False);
 
@@ -1424,7 +1424,7 @@ namespace Adaptive.Archiver.IntegrationTests
             AssertPayloads(fragmentHandler.ReceivedPayloads, expected);
             Assert.That(observedReplaying[0], Is.True,
                 "PS did not transition through REPLAY/ATTEMPT_SWITCH after revoke");
-            Assert.That(Listener.ErrorCount, Is.EqualTo(1));
+            Assert.That(Listener.NonTransientErrorCount, Is.EqualTo(1));
         }
 
         private void ArmDataDropFromPosition(LossGenController controller, long recordingId, long fromPosition)
@@ -1484,8 +1484,8 @@ namespace Adaptive.Archiver.IntegrationTests
             };
 
             // Wait for one AWAIT_LIVE deadline breach.
-            Tests.ExecuteUntil(() => Listener.ErrorCount > 0, pollAndTrack);
-            Assert.That(Listener.ErrorCount, Is.EqualTo(1));
+            Tests.ExecuteUntil(() => Listener.NonTransientErrorCount > 0, pollAndTrack);
+            Assert.That(Listener.NonTransientErrorCount, Is.EqualTo(1));
             Assert.That(
                 Listener.LastException.Message,
                 Does.Contain("No image became available on the live subscription"));
@@ -1512,7 +1512,7 @@ namespace Adaptive.Archiver.IntegrationTests
                 "PS did not transition through REPLAY/ATTEMPT_SWITCH; refresh path was not exercised");
             Assert.That(Listener.LiveJoinedCount, Is.EqualTo(1));
             Assert.That(Listener.LiveLeftCount, Is.EqualTo(0));
-            Assert.That(Listener.ErrorCount, Is.EqualTo(1));
+            Assert.That(Listener.NonTransientErrorCount, Is.EqualTo(1));
         }
 
         [TestCase(1), TestCase(10), Timeout(20_000)]
