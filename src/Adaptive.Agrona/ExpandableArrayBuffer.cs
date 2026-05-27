@@ -258,7 +258,7 @@ namespace Adaptive.Agrona
         {
             for (int i = index + BitUtil.SIZE_OF_INT, limit = index + BitUtil.SIZE_OF_INT + length; i < limit; i++)
             {
-                char c = *(char*)(_pBuffer + index);
+                char c = (char)*(_pBuffer + i);
                 appendable.Append(c > (char)127 ? '?' : c);
             }
 
@@ -472,7 +472,7 @@ namespace Adaptive.Agrona
                     c = '?';
                 }
 
-                *(char*)(_pBuffer + index + i) = c;
+                *(_pBuffer + index + i) = (byte)c;
             }
 
             return length;
@@ -493,7 +493,7 @@ namespace Adaptive.Agrona
                     c = '?';
                 }
 
-                *(char*)(_pBuffer + index + i) = c;
+                *(_pBuffer + index + i) = (byte)c;
             }
 
             return len;
