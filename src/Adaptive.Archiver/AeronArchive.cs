@@ -3919,20 +3919,6 @@ namespace Adaptive.Archiver
 
                     Aeron.Aeron aeron = ctx.AeronClient();
 
-                    _subscriptionRegistrationId = aeron.AsyncAddSubscription(
-                        ctx.ControlResponseChannel(),
-                        ctx.ControlResponseStreamId(),
-                        null,
-                        (image) =>
-                        {
-                            AeronArchive client = _aeronArchive;
-                            if (null != client)
-                            {
-                                client.State(ArchiveState.DISCONNECTED);
-                            }
-                        }
-                    );
-
                     _state = AsyncConnectState.AWAIT_SUBSCRIPTION;
                     _deadlineNs = aeron.Ctx.NanoClock().NanoTime() + ctx.MessageTimeoutNs();
                 }
@@ -4076,7 +4062,21 @@ namespace Adaptive.Archiver
                     );
                 }
 
-                ExclusivePublication publication = aeron.GetExclusivePublication(_publicationRegistrationId);
+                ExclusivePublication publication = null;
+                try
+                {
+                    publication = aeron.GetExclusivePublication(_publicationRegistrationId);
+                }
+                catch (RegistrationException ex)
+                {
+                    _publicationRegistrationId = Aeron.Aeron.NULL_VALUE;
+
+                    if (ErrorCode.RESOURCE_TEMPORARILY_UNAVAILABLE != ex.ErrorCode())
+                    {
+                        throw;
+                    }
+                }
+
                 if (null != publication)
                 {
                     string clientInfo = "name=" + _ctx.ClientName();
@@ -4227,7 +4227,39 @@ namespace Adaptive.Archiver
 
             private void AwaitSubscription()
             {
-                Subscription subscription = _ctx.AeronClient().GetSubscription(_subscriptionRegistrationId);
+                Aeron.Aeron aeron = _ctx.AeronClient();
+                if (Aeron.Aeron.NULL_VALUE == _subscriptionRegistrationId)
+                {
+                    _subscriptionRegistrationId = aeron.AsyncAddSubscription(
+                        _ctx.ControlResponseChannel(),
+                        _ctx.ControlResponseStreamId(),
+                        null,
+                        (image) =>
+                        {
+                            AeronArchive client = _aeronArchive;
+                            if (null != client)
+                            {
+                                client.State(ArchiveState.DISCONNECTED);
+                            }
+                        }
+                    );
+                }
+
+                Subscription subscription = null;
+                try
+                {
+                    subscription = aeron.GetSubscription(_subscriptionRegistrationId);
+                }
+                catch (RegistrationException ex)
+                {
+                    _subscriptionRegistrationId = Aeron.Aeron.NULL_VALUE;
+
+                    if (ErrorCode.RESOURCE_TEMPORARILY_UNAVAILABLE != ex.ErrorCode())
+                    {
+                        throw;
+                    }
+                }
+
                 if (null != subscription)
                 {
                     CheckAndSetupResponseChannel(_ctx, subscription);

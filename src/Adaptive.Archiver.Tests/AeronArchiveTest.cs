@@ -71,6 +71,8 @@ namespace Adaptive.Archiver.Tests
             A.CallTo(() => ctx.AeronClient()).Returns(_aeron);
             A.CallTo(() => ctx.ControlResponseChannel()).Returns(responseChannel);
             A.CallTo(() => ctx.ControlResponseStreamId()).Returns(responseStreamId);
+            A.CallTo(() => ctx.MessageTimeoutNs()).Returns(3_600_000_000_000L);
+            A.CallTo(() => _aeron.Ctx).Returns(new AeronType.Context().NanoClock(SystemNanoClock.INSTANCE));
             var error = new InvalidOperationException("subscription");
             A.CallTo(() =>
                     _aeron.AsyncAddSubscription(
@@ -82,8 +84,11 @@ namespace Adaptive.Archiver.Tests
                 )
                 .Throws(error);
 
-            var actualException = Assert.Throws<InvalidOperationException>(() => AeronArchive.ConnectAsync(ctx));
+            var asyncConnect = AeronArchive.ConnectAsync(ctx);
+            var actualException = Assert.Throws<InvalidOperationException>(() => asyncConnect.Poll());
             Assert.AreSame(error, actualException);
+
+            asyncConnect.Dispose();
 
             A.CallTo(() => ctx.Conclude())
                 .MustHaveHappened()
@@ -137,21 +142,17 @@ namespace Adaptive.Archiver.Tests
             A.CallTo(() => ctx.Conclude())
                 .MustHaveHappened()
                 .Then(A.CallTo(() => ctx.AeronClient()).MustHaveHappened())
-                .Then(A.CallTo(() => ctx.ControlResponseChannel()).MustHaveHappened())
-                .Then(A.CallTo(() => ctx.ControlResponseStreamId()).MustHaveHappened())
-                .Then(
-                    A.CallTo(() =>
-                            _aeron.AsyncAddSubscription(
-                                responseChannel,
-                                responseStreamId,
-                                A<AvailableImageHandler>._,
-                                A<UnavailableImageHandler>._
-                            )
-                        )
-                        .MustHaveHappened()
-                )
-                .Then(A.CallTo(() => _aeron.AsyncRemoveSubscription(subscriptionId)).MustHaveHappened())
                 .Then(A.CallTo(() => ctx.Dispose()).MustHaveHappened());
+            A.CallTo(() =>
+                    _aeron.AsyncAddSubscription(
+                        responseChannel,
+                        responseStreamId,
+                        A<AvailableImageHandler>._,
+                        A<UnavailableImageHandler>._
+                    )
+                )
+                .MustNotHaveHappened();
+            A.CallTo(() => _aeron.AsyncRemoveSubscription(subscriptionId)).MustNotHaveHappened();
         }
 
         [Test]
