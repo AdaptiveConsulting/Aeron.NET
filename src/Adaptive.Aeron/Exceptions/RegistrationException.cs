@@ -27,10 +27,7 @@ namespace Adaptive.Aeron.Exceptions
         private readonly ErrorCode _code;
 
         public RegistrationException(long correlationId, int errorCodeValue, ErrorCode code, string msg)
-            : base(
-                msg,
-                Adaptive.Aeron.ErrorCode.RESOURCE_TEMPORARILY_UNAVAILABLE == code ? Category.WARN : Category.ERROR
-            )
+            : base(msg, ControlProtocolException.ErrorToCategory(code))
         {
             _correlationId = correlationId;
             _errorCodeValue = errorCodeValue;
