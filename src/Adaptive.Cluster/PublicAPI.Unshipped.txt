@@ -1,0 +1,268 @@
+Adaptive.Cluster.Codecs.BackupQueryDecoder.LogPosition() -> long
+Adaptive.Cluster.Codecs.BackupQueryEncoder.LogPosition(long value) -> Adaptive.Cluster.Codecs.BackupQueryEncoder
+Adaptive.Cluster.Codecs.JoinLogDecoder.IsStandby() -> Adaptive.Cluster.Codecs.BooleanType
+Adaptive.Cluster.Codecs.JoinLogEncoder.IsStandby(Adaptive.Cluster.Codecs.BooleanType value) -> Adaptive.Cluster.Codecs.JoinLogEncoder
+Adaptive.Cluster.Codecs.NewLeadershipTermDecoder.CommitPosition() -> long
+Adaptive.Cluster.Codecs.NewLeadershipTermEncoder.CommitPosition(long value) -> Adaptive.Cluster.Codecs.NewLeadershipTermEncoder
+const Adaptive.Cluster.Codecs.AddPassiveMemberDecoder.SCHEMA_VERSION = 16 -> ushort
+const Adaptive.Cluster.Codecs.AddPassiveMemberEncoder.SCHEMA_VERSION = 16 -> ushort
+const Adaptive.Cluster.Codecs.AdminRequestDecoder.SCHEMA_VERSION = 16 -> ushort
+const Adaptive.Cluster.Codecs.AdminRequestEncoder.SCHEMA_VERSION = 16 -> ushort
+const Adaptive.Cluster.Codecs.AdminResponseDecoder.SCHEMA_VERSION = 16 -> ushort
+const Adaptive.Cluster.Codecs.AdminResponseEncoder.SCHEMA_VERSION = 16 -> ushort
+const Adaptive.Cluster.Codecs.AppendPositionDecoder.SCHEMA_VERSION = 16 -> ushort
+const Adaptive.Cluster.Codecs.AppendPositionEncoder.SCHEMA_VERSION = 16 -> ushort
+const Adaptive.Cluster.Codecs.BackupQueryDecoder.BLOCK_LENGTH = 24 -> ushort
+const Adaptive.Cluster.Codecs.BackupQueryDecoder.SCHEMA_VERSION = 16 -> ushort
+const Adaptive.Cluster.Codecs.BackupQueryEncoder.BLOCK_LENGTH = 24 -> ushort
+const Adaptive.Cluster.Codecs.BackupQueryEncoder.SCHEMA_VERSION = 16 -> ushort
+const Adaptive.Cluster.Codecs.BackupResponseDecoder.SCHEMA_VERSION = 16 -> ushort
+const Adaptive.Cluster.Codecs.BackupResponseEncoder.SCHEMA_VERSION = 16 -> ushort
+const Adaptive.Cluster.Codecs.CancelTimerDecoder.SCHEMA_VERSION = 16 -> ushort
+const Adaptive.Cluster.Codecs.CancelTimerEncoder.SCHEMA_VERSION = 16 -> ushort
+const Adaptive.Cluster.Codecs.CanvassPositionDecoder.SCHEMA_VERSION = 16 -> ushort
+const Adaptive.Cluster.Codecs.CanvassPositionEncoder.SCHEMA_VERSION = 16 -> ushort
+const Adaptive.Cluster.Codecs.CatchupPositionDecoder.SCHEMA_VERSION = 16 -> ushort
+const Adaptive.Cluster.Codecs.CatchupPositionEncoder.SCHEMA_VERSION = 16 -> ushort
+const Adaptive.Cluster.Codecs.ChallengeDecoder.SCHEMA_VERSION = 16 -> ushort
+const Adaptive.Cluster.Codecs.ChallengeEncoder.SCHEMA_VERSION = 16 -> ushort
+const Adaptive.Cluster.Codecs.ChallengeResponseDecoder.SCHEMA_VERSION = 16 -> ushort
+const Adaptive.Cluster.Codecs.ChallengeResponseEncoder.SCHEMA_VERSION = 16 -> ushort
+const Adaptive.Cluster.Codecs.ClientSessionDecoder.SCHEMA_VERSION = 16 -> ushort
+const Adaptive.Cluster.Codecs.ClientSessionEncoder.SCHEMA_VERSION = 16 -> ushort
+const Adaptive.Cluster.Codecs.CloseSessionDecoder.SCHEMA_VERSION = 16 -> ushort
+const Adaptive.Cluster.Codecs.CloseSessionEncoder.SCHEMA_VERSION = 16 -> ushort
+const Adaptive.Cluster.Codecs.ClusterActionRequestDecoder.SCHEMA_VERSION = 16 -> ushort
+const Adaptive.Cluster.Codecs.ClusterActionRequestEncoder.SCHEMA_VERSION = 16 -> ushort
+const Adaptive.Cluster.Codecs.ClusterMembersChangeDecoder.SCHEMA_VERSION = 16 -> ushort
+const Adaptive.Cluster.Codecs.ClusterMembersChangeEncoder.SCHEMA_VERSION = 16 -> ushort
+const Adaptive.Cluster.Codecs.ClusterMembersDecoder.SCHEMA_VERSION = 16 -> ushort
+const Adaptive.Cluster.Codecs.ClusterMembersEncoder.SCHEMA_VERSION = 16 -> ushort
+const Adaptive.Cluster.Codecs.ClusterMembersExtendedResponseDecoder.SCHEMA_VERSION = 16 -> ushort
+const Adaptive.Cluster.Codecs.ClusterMembersExtendedResponseEncoder.SCHEMA_VERSION = 16 -> ushort
+const Adaptive.Cluster.Codecs.ClusterMembersQueryDecoder.SCHEMA_VERSION = 16 -> ushort
+const Adaptive.Cluster.Codecs.ClusterMembersQueryEncoder.SCHEMA_VERSION = 16 -> ushort
+const Adaptive.Cluster.Codecs.ClusterMembersResponseDecoder.SCHEMA_VERSION = 16 -> ushort
+const Adaptive.Cluster.Codecs.ClusterMembersResponseEncoder.SCHEMA_VERSION = 16 -> ushort
+const Adaptive.Cluster.Codecs.ClusterSessionDecoder.SCHEMA_VERSION = 16 -> ushort
+const Adaptive.Cluster.Codecs.ClusterSessionEncoder.SCHEMA_VERSION = 16 -> ushort
+const Adaptive.Cluster.Codecs.CommitPositionDecoder.SCHEMA_VERSION = 16 -> ushort
+const Adaptive.Cluster.Codecs.CommitPositionEncoder.SCHEMA_VERSION = 16 -> ushort
+const Adaptive.Cluster.Codecs.ConsensusModuleDecoder.SCHEMA_VERSION = 16 -> ushort
+const Adaptive.Cluster.Codecs.ConsensusModuleEncoder.SCHEMA_VERSION = 16 -> ushort
+const Adaptive.Cluster.Codecs.HeartbeatRequestDecoder.SCHEMA_VERSION = 16 -> ushort
+const Adaptive.Cluster.Codecs.HeartbeatRequestEncoder.SCHEMA_VERSION = 16 -> ushort
+const Adaptive.Cluster.Codecs.HeartbeatResponseDecoder.SCHEMA_VERSION = 16 -> ushort
+const Adaptive.Cluster.Codecs.HeartbeatResponseEncoder.SCHEMA_VERSION = 16 -> ushort
+const Adaptive.Cluster.Codecs.JoinClusterDecoder.SCHEMA_VERSION = 16 -> ushort
+const Adaptive.Cluster.Codecs.JoinClusterEncoder.SCHEMA_VERSION = 16 -> ushort
+const Adaptive.Cluster.Codecs.JoinLogDecoder.BLOCK_LENGTH = 40 -> ushort
+const Adaptive.Cluster.Codecs.JoinLogDecoder.SCHEMA_VERSION = 16 -> ushort
+const Adaptive.Cluster.Codecs.JoinLogEncoder.BLOCK_LENGTH = 40 -> ushort
+const Adaptive.Cluster.Codecs.JoinLogEncoder.SCHEMA_VERSION = 16 -> ushort
+const Adaptive.Cluster.Codecs.MembershipChangeEventDecoder.SCHEMA_VERSION = 16 -> ushort
+const Adaptive.Cluster.Codecs.MembershipChangeEventEncoder.SCHEMA_VERSION = 16 -> ushort
+const Adaptive.Cluster.Codecs.NewLeaderEventDecoder.SCHEMA_VERSION = 16 -> ushort
+const Adaptive.Cluster.Codecs.NewLeaderEventEncoder.SCHEMA_VERSION = 16 -> ushort
+const Adaptive.Cluster.Codecs.NewLeadershipTermDecoder.BLOCK_LENGTH = 96 -> ushort
+const Adaptive.Cluster.Codecs.NewLeadershipTermDecoder.SCHEMA_VERSION = 16 -> ushort
+const Adaptive.Cluster.Codecs.NewLeadershipTermEncoder.BLOCK_LENGTH = 96 -> ushort
+const Adaptive.Cluster.Codecs.NewLeadershipTermEncoder.SCHEMA_VERSION = 16 -> ushort
+const Adaptive.Cluster.Codecs.NewLeadershipTermEventDecoder.SCHEMA_VERSION = 16 -> ushort
+const Adaptive.Cluster.Codecs.NewLeadershipTermEventEncoder.SCHEMA_VERSION = 16 -> ushort
+const Adaptive.Cluster.Codecs.PendingMessageTrackerDecoder.SCHEMA_VERSION = 16 -> ushort
+const Adaptive.Cluster.Codecs.PendingMessageTrackerEncoder.SCHEMA_VERSION = 16 -> ushort
+const Adaptive.Cluster.Codecs.RemoveMemberDecoder.SCHEMA_VERSION = 16 -> ushort
+const Adaptive.Cluster.Codecs.RemoveMemberEncoder.SCHEMA_VERSION = 16 -> ushort
+const Adaptive.Cluster.Codecs.RequestServiceAckDecoder.SCHEMA_VERSION = 16 -> ushort
+const Adaptive.Cluster.Codecs.RequestServiceAckEncoder.SCHEMA_VERSION = 16 -> ushort
+const Adaptive.Cluster.Codecs.RequestVoteDecoder.SCHEMA_VERSION = 16 -> ushort
+const Adaptive.Cluster.Codecs.RequestVoteEncoder.SCHEMA_VERSION = 16 -> ushort
+const Adaptive.Cluster.Codecs.ScheduleTimerDecoder.SCHEMA_VERSION = 16 -> ushort
+const Adaptive.Cluster.Codecs.ScheduleTimerEncoder.SCHEMA_VERSION = 16 -> ushort
+const Adaptive.Cluster.Codecs.ServiceAckDecoder.SCHEMA_VERSION = 16 -> ushort
+const Adaptive.Cluster.Codecs.ServiceAckEncoder.SCHEMA_VERSION = 16 -> ushort
+const Adaptive.Cluster.Codecs.ServiceTerminationPositionDecoder.SCHEMA_VERSION = 16 -> ushort
+const Adaptive.Cluster.Codecs.ServiceTerminationPositionEncoder.SCHEMA_VERSION = 16 -> ushort
+const Adaptive.Cluster.Codecs.SessionCloseEventDecoder.SCHEMA_VERSION = 16 -> ushort
+const Adaptive.Cluster.Codecs.SessionCloseEventEncoder.SCHEMA_VERSION = 16 -> ushort
+const Adaptive.Cluster.Codecs.SessionCloseRequestDecoder.SCHEMA_VERSION = 16 -> ushort
+const Adaptive.Cluster.Codecs.SessionCloseRequestEncoder.SCHEMA_VERSION = 16 -> ushort
+const Adaptive.Cluster.Codecs.SessionConnectRequestDecoder.SCHEMA_VERSION = 16 -> ushort
+const Adaptive.Cluster.Codecs.SessionConnectRequestEncoder.SCHEMA_VERSION = 16 -> ushort
+const Adaptive.Cluster.Codecs.SessionEventDecoder.SCHEMA_VERSION = 16 -> ushort
+const Adaptive.Cluster.Codecs.SessionEventEncoder.SCHEMA_VERSION = 16 -> ushort
+const Adaptive.Cluster.Codecs.SessionKeepAliveDecoder.SCHEMA_VERSION = 16 -> ushort
+const Adaptive.Cluster.Codecs.SessionKeepAliveEncoder.SCHEMA_VERSION = 16 -> ushort
+const Adaptive.Cluster.Codecs.SessionMessageHeaderDecoder.SCHEMA_VERSION = 16 -> ushort
+const Adaptive.Cluster.Codecs.SessionMessageHeaderEncoder.SCHEMA_VERSION = 16 -> ushort
+const Adaptive.Cluster.Codecs.SessionOpenEventDecoder.SCHEMA_VERSION = 16 -> ushort
+const Adaptive.Cluster.Codecs.SessionOpenEventEncoder.SCHEMA_VERSION = 16 -> ushort
+const Adaptive.Cluster.Codecs.SnapshotMarkerDecoder.SCHEMA_VERSION = 16 -> ushort
+const Adaptive.Cluster.Codecs.SnapshotMarkerEncoder.SCHEMA_VERSION = 16 -> ushort
+const Adaptive.Cluster.Codecs.SnapshotRecordingQueryDecoder.SCHEMA_VERSION = 16 -> ushort
+const Adaptive.Cluster.Codecs.SnapshotRecordingQueryEncoder.SCHEMA_VERSION = 16 -> ushort
+const Adaptive.Cluster.Codecs.SnapshotRecordingsDecoder.SCHEMA_VERSION = 16 -> ushort
+const Adaptive.Cluster.Codecs.SnapshotRecordingsEncoder.SCHEMA_VERSION = 16 -> ushort
+const Adaptive.Cluster.Codecs.StandbySnapshotDecoder.SCHEMA_VERSION = 16 -> ushort
+const Adaptive.Cluster.Codecs.StandbySnapshotEncoder.SCHEMA_VERSION = 16 -> ushort
+const Adaptive.Cluster.Codecs.StopCatchupDecoder.SCHEMA_VERSION = 16 -> ushort
+const Adaptive.Cluster.Codecs.StopCatchupEncoder.SCHEMA_VERSION = 16 -> ushort
+const Adaptive.Cluster.Codecs.TerminationAckDecoder.SCHEMA_VERSION = 16 -> ushort
+const Adaptive.Cluster.Codecs.TerminationAckEncoder.SCHEMA_VERSION = 16 -> ushort
+const Adaptive.Cluster.Codecs.TerminationPositionDecoder.SCHEMA_VERSION = 16 -> ushort
+const Adaptive.Cluster.Codecs.TerminationPositionEncoder.SCHEMA_VERSION = 16 -> ushort
+const Adaptive.Cluster.Codecs.TimerDecoder.SCHEMA_VERSION = 16 -> ushort
+const Adaptive.Cluster.Codecs.TimerEncoder.SCHEMA_VERSION = 16 -> ushort
+const Adaptive.Cluster.Codecs.TimerEventDecoder.SCHEMA_VERSION = 16 -> ushort
+const Adaptive.Cluster.Codecs.TimerEventEncoder.SCHEMA_VERSION = 16 -> ushort
+const Adaptive.Cluster.Codecs.VoteDecoder.SCHEMA_VERSION = 16 -> ushort
+const Adaptive.Cluster.Codecs.VoteEncoder.SCHEMA_VERSION = 16 -> ushort
+static Adaptive.Cluster.Codecs.BackupQueryDecoder.LogPositionEncodingLength() -> int
+static Adaptive.Cluster.Codecs.BackupQueryDecoder.LogPositionEncodingOffset() -> int
+static Adaptive.Cluster.Codecs.BackupQueryDecoder.LogPositionId() -> int
+static Adaptive.Cluster.Codecs.BackupQueryDecoder.LogPositionMaxValue() -> long
+static Adaptive.Cluster.Codecs.BackupQueryDecoder.LogPositionMetaAttribute(Adaptive.Cluster.Codecs.MetaAttribute metaAttribute) -> string
+static Adaptive.Cluster.Codecs.BackupQueryDecoder.LogPositionMinValue() -> long
+static Adaptive.Cluster.Codecs.BackupQueryDecoder.LogPositionNullValue() -> long
+static Adaptive.Cluster.Codecs.BackupQueryDecoder.LogPositionSinceVersion() -> int
+static Adaptive.Cluster.Codecs.BackupQueryEncoder.LogPositionEncodingLength() -> int
+static Adaptive.Cluster.Codecs.BackupQueryEncoder.LogPositionEncodingOffset() -> int
+static Adaptive.Cluster.Codecs.BackupQueryEncoder.LogPositionMaxValue() -> long
+static Adaptive.Cluster.Codecs.BackupQueryEncoder.LogPositionMinValue() -> long
+static Adaptive.Cluster.Codecs.BackupQueryEncoder.LogPositionNullValue() -> long
+static Adaptive.Cluster.Codecs.JoinLogDecoder.IsStandbyEncodingLength() -> int
+static Adaptive.Cluster.Codecs.JoinLogDecoder.IsStandbyEncodingOffset() -> int
+static Adaptive.Cluster.Codecs.JoinLogDecoder.IsStandbyId() -> int
+static Adaptive.Cluster.Codecs.JoinLogDecoder.IsStandbyMetaAttribute(Adaptive.Cluster.Codecs.MetaAttribute metaAttribute) -> string
+static Adaptive.Cluster.Codecs.JoinLogDecoder.IsStandbySinceVersion() -> int
+static Adaptive.Cluster.Codecs.JoinLogEncoder.IsStandbyEncodingLength() -> int
+static Adaptive.Cluster.Codecs.JoinLogEncoder.IsStandbyEncodingOffset() -> int
+static Adaptive.Cluster.Codecs.NewLeadershipTermDecoder.CommitPositionEncodingLength() -> int
+static Adaptive.Cluster.Codecs.NewLeadershipTermDecoder.CommitPositionEncodingOffset() -> int
+static Adaptive.Cluster.Codecs.NewLeadershipTermDecoder.CommitPositionId() -> int
+static Adaptive.Cluster.Codecs.NewLeadershipTermDecoder.CommitPositionMaxValue() -> long
+static Adaptive.Cluster.Codecs.NewLeadershipTermDecoder.CommitPositionMetaAttribute(Adaptive.Cluster.Codecs.MetaAttribute metaAttribute) -> string
+static Adaptive.Cluster.Codecs.NewLeadershipTermDecoder.CommitPositionMinValue() -> long
+static Adaptive.Cluster.Codecs.NewLeadershipTermDecoder.CommitPositionNullValue() -> long
+static Adaptive.Cluster.Codecs.NewLeadershipTermDecoder.CommitPositionSinceVersion() -> int
+static Adaptive.Cluster.Codecs.NewLeadershipTermEncoder.CommitPositionEncodingLength() -> int
+static Adaptive.Cluster.Codecs.NewLeadershipTermEncoder.CommitPositionEncodingOffset() -> int
+static Adaptive.Cluster.Codecs.NewLeadershipTermEncoder.CommitPositionMaxValue() -> long
+static Adaptive.Cluster.Codecs.NewLeadershipTermEncoder.CommitPositionMinValue() -> long
+static Adaptive.Cluster.Codecs.NewLeadershipTermEncoder.CommitPositionNullValue() -> long
+*REMOVED*Adaptive.Cluster.Client.AeronCluster.Configuration.Configuration() -> void
+*REMOVED*const Adaptive.Cluster.Codecs.AddPassiveMemberDecoder.SCHEMA_VERSION = 14 -> ushort
+*REMOVED*const Adaptive.Cluster.Codecs.AddPassiveMemberEncoder.SCHEMA_VERSION = 14 -> ushort
+*REMOVED*const Adaptive.Cluster.Codecs.AdminRequestDecoder.SCHEMA_VERSION = 14 -> ushort
+*REMOVED*const Adaptive.Cluster.Codecs.AdminRequestEncoder.SCHEMA_VERSION = 14 -> ushort
+*REMOVED*const Adaptive.Cluster.Codecs.AdminResponseDecoder.SCHEMA_VERSION = 14 -> ushort
+*REMOVED*const Adaptive.Cluster.Codecs.AdminResponseEncoder.SCHEMA_VERSION = 14 -> ushort
+*REMOVED*const Adaptive.Cluster.Codecs.AppendPositionDecoder.SCHEMA_VERSION = 14 -> ushort
+*REMOVED*const Adaptive.Cluster.Codecs.AppendPositionEncoder.SCHEMA_VERSION = 14 -> ushort
+*REMOVED*const Adaptive.Cluster.Codecs.BackupQueryDecoder.BLOCK_LENGTH = 16 -> ushort
+*REMOVED*const Adaptive.Cluster.Codecs.BackupQueryDecoder.SCHEMA_VERSION = 14 -> ushort
+*REMOVED*const Adaptive.Cluster.Codecs.BackupQueryEncoder.BLOCK_LENGTH = 16 -> ushort
+*REMOVED*const Adaptive.Cluster.Codecs.BackupQueryEncoder.SCHEMA_VERSION = 14 -> ushort
+*REMOVED*const Adaptive.Cluster.Codecs.BackupResponseDecoder.SCHEMA_VERSION = 14 -> ushort
+*REMOVED*const Adaptive.Cluster.Codecs.BackupResponseEncoder.SCHEMA_VERSION = 14 -> ushort
+*REMOVED*const Adaptive.Cluster.Codecs.CancelTimerDecoder.SCHEMA_VERSION = 14 -> ushort
+*REMOVED*const Adaptive.Cluster.Codecs.CancelTimerEncoder.SCHEMA_VERSION = 14 -> ushort
+*REMOVED*const Adaptive.Cluster.Codecs.CanvassPositionDecoder.SCHEMA_VERSION = 14 -> ushort
+*REMOVED*const Adaptive.Cluster.Codecs.CanvassPositionEncoder.SCHEMA_VERSION = 14 -> ushort
+*REMOVED*const Adaptive.Cluster.Codecs.CatchupPositionDecoder.SCHEMA_VERSION = 14 -> ushort
+*REMOVED*const Adaptive.Cluster.Codecs.CatchupPositionEncoder.SCHEMA_VERSION = 14 -> ushort
+*REMOVED*const Adaptive.Cluster.Codecs.ChallengeDecoder.SCHEMA_VERSION = 14 -> ushort
+*REMOVED*const Adaptive.Cluster.Codecs.ChallengeEncoder.SCHEMA_VERSION = 14 -> ushort
+*REMOVED*const Adaptive.Cluster.Codecs.ChallengeResponseDecoder.SCHEMA_VERSION = 14 -> ushort
+*REMOVED*const Adaptive.Cluster.Codecs.ChallengeResponseEncoder.SCHEMA_VERSION = 14 -> ushort
+*REMOVED*const Adaptive.Cluster.Codecs.ClientSessionDecoder.SCHEMA_VERSION = 14 -> ushort
+*REMOVED*const Adaptive.Cluster.Codecs.ClientSessionEncoder.SCHEMA_VERSION = 14 -> ushort
+*REMOVED*const Adaptive.Cluster.Codecs.CloseSessionDecoder.SCHEMA_VERSION = 14 -> ushort
+*REMOVED*const Adaptive.Cluster.Codecs.CloseSessionEncoder.SCHEMA_VERSION = 14 -> ushort
+*REMOVED*const Adaptive.Cluster.Codecs.ClusterActionRequestDecoder.SCHEMA_VERSION = 14 -> ushort
+*REMOVED*const Adaptive.Cluster.Codecs.ClusterActionRequestEncoder.SCHEMA_VERSION = 14 -> ushort
+*REMOVED*const Adaptive.Cluster.Codecs.ClusterMembersChangeDecoder.SCHEMA_VERSION = 14 -> ushort
+*REMOVED*const Adaptive.Cluster.Codecs.ClusterMembersChangeEncoder.SCHEMA_VERSION = 14 -> ushort
+*REMOVED*const Adaptive.Cluster.Codecs.ClusterMembersDecoder.SCHEMA_VERSION = 14 -> ushort
+*REMOVED*const Adaptive.Cluster.Codecs.ClusterMembersEncoder.SCHEMA_VERSION = 14 -> ushort
+*REMOVED*const Adaptive.Cluster.Codecs.ClusterMembersExtendedResponseDecoder.SCHEMA_VERSION = 14 -> ushort
+*REMOVED*const Adaptive.Cluster.Codecs.ClusterMembersExtendedResponseEncoder.SCHEMA_VERSION = 14 -> ushort
+*REMOVED*const Adaptive.Cluster.Codecs.ClusterMembersQueryDecoder.SCHEMA_VERSION = 14 -> ushort
+*REMOVED*const Adaptive.Cluster.Codecs.ClusterMembersQueryEncoder.SCHEMA_VERSION = 14 -> ushort
+*REMOVED*const Adaptive.Cluster.Codecs.ClusterMembersResponseDecoder.SCHEMA_VERSION = 14 -> ushort
+*REMOVED*const Adaptive.Cluster.Codecs.ClusterMembersResponseEncoder.SCHEMA_VERSION = 14 -> ushort
+*REMOVED*const Adaptive.Cluster.Codecs.ClusterSessionDecoder.SCHEMA_VERSION = 14 -> ushort
+*REMOVED*const Adaptive.Cluster.Codecs.ClusterSessionEncoder.SCHEMA_VERSION = 14 -> ushort
+*REMOVED*const Adaptive.Cluster.Codecs.CommitPositionDecoder.SCHEMA_VERSION = 14 -> ushort
+*REMOVED*const Adaptive.Cluster.Codecs.CommitPositionEncoder.SCHEMA_VERSION = 14 -> ushort
+*REMOVED*const Adaptive.Cluster.Codecs.ConsensusModuleDecoder.SCHEMA_VERSION = 14 -> ushort
+*REMOVED*const Adaptive.Cluster.Codecs.ConsensusModuleEncoder.SCHEMA_VERSION = 14 -> ushort
+*REMOVED*const Adaptive.Cluster.Codecs.HeartbeatRequestDecoder.SCHEMA_VERSION = 14 -> ushort
+*REMOVED*const Adaptive.Cluster.Codecs.HeartbeatRequestEncoder.SCHEMA_VERSION = 14 -> ushort
+*REMOVED*const Adaptive.Cluster.Codecs.HeartbeatResponseDecoder.SCHEMA_VERSION = 14 -> ushort
+*REMOVED*const Adaptive.Cluster.Codecs.HeartbeatResponseEncoder.SCHEMA_VERSION = 14 -> ushort
+*REMOVED*const Adaptive.Cluster.Codecs.JoinClusterDecoder.SCHEMA_VERSION = 14 -> ushort
+*REMOVED*const Adaptive.Cluster.Codecs.JoinClusterEncoder.SCHEMA_VERSION = 14 -> ushort
+*REMOVED*const Adaptive.Cluster.Codecs.JoinLogDecoder.BLOCK_LENGTH = 36 -> ushort
+*REMOVED*const Adaptive.Cluster.Codecs.JoinLogDecoder.SCHEMA_VERSION = 14 -> ushort
+*REMOVED*const Adaptive.Cluster.Codecs.JoinLogEncoder.BLOCK_LENGTH = 36 -> ushort
+*REMOVED*const Adaptive.Cluster.Codecs.JoinLogEncoder.SCHEMA_VERSION = 14 -> ushort
+*REMOVED*const Adaptive.Cluster.Codecs.MembershipChangeEventDecoder.SCHEMA_VERSION = 14 -> ushort
+*REMOVED*const Adaptive.Cluster.Codecs.MembershipChangeEventEncoder.SCHEMA_VERSION = 14 -> ushort
+*REMOVED*const Adaptive.Cluster.Codecs.NewLeaderEventDecoder.SCHEMA_VERSION = 14 -> ushort
+*REMOVED*const Adaptive.Cluster.Codecs.NewLeaderEventEncoder.SCHEMA_VERSION = 14 -> ushort
+*REMOVED*const Adaptive.Cluster.Codecs.NewLeadershipTermDecoder.BLOCK_LENGTH = 88 -> ushort
+*REMOVED*const Adaptive.Cluster.Codecs.NewLeadershipTermDecoder.SCHEMA_VERSION = 14 -> ushort
+*REMOVED*const Adaptive.Cluster.Codecs.NewLeadershipTermEncoder.BLOCK_LENGTH = 88 -> ushort
+*REMOVED*const Adaptive.Cluster.Codecs.NewLeadershipTermEncoder.SCHEMA_VERSION = 14 -> ushort
+*REMOVED*const Adaptive.Cluster.Codecs.NewLeadershipTermEventDecoder.SCHEMA_VERSION = 14 -> ushort
+*REMOVED*const Adaptive.Cluster.Codecs.NewLeadershipTermEventEncoder.SCHEMA_VERSION = 14 -> ushort
+*REMOVED*const Adaptive.Cluster.Codecs.PendingMessageTrackerDecoder.SCHEMA_VERSION = 14 -> ushort
+*REMOVED*const Adaptive.Cluster.Codecs.PendingMessageTrackerEncoder.SCHEMA_VERSION = 14 -> ushort
+*REMOVED*const Adaptive.Cluster.Codecs.RemoveMemberDecoder.SCHEMA_VERSION = 14 -> ushort
+*REMOVED*const Adaptive.Cluster.Codecs.RemoveMemberEncoder.SCHEMA_VERSION = 14 -> ushort
+*REMOVED*const Adaptive.Cluster.Codecs.RequestServiceAckDecoder.SCHEMA_VERSION = 14 -> ushort
+*REMOVED*const Adaptive.Cluster.Codecs.RequestServiceAckEncoder.SCHEMA_VERSION = 14 -> ushort
+*REMOVED*const Adaptive.Cluster.Codecs.RequestVoteDecoder.SCHEMA_VERSION = 14 -> ushort
+*REMOVED*const Adaptive.Cluster.Codecs.RequestVoteEncoder.SCHEMA_VERSION = 14 -> ushort
+*REMOVED*const Adaptive.Cluster.Codecs.ScheduleTimerDecoder.SCHEMA_VERSION = 14 -> ushort
+*REMOVED*const Adaptive.Cluster.Codecs.ScheduleTimerEncoder.SCHEMA_VERSION = 14 -> ushort
+*REMOVED*const Adaptive.Cluster.Codecs.ServiceAckDecoder.SCHEMA_VERSION = 14 -> ushort
+*REMOVED*const Adaptive.Cluster.Codecs.ServiceAckEncoder.SCHEMA_VERSION = 14 -> ushort
+*REMOVED*const Adaptive.Cluster.Codecs.ServiceTerminationPositionDecoder.SCHEMA_VERSION = 14 -> ushort
+*REMOVED*const Adaptive.Cluster.Codecs.ServiceTerminationPositionEncoder.SCHEMA_VERSION = 14 -> ushort
+*REMOVED*const Adaptive.Cluster.Codecs.SessionCloseEventDecoder.SCHEMA_VERSION = 14 -> ushort
+*REMOVED*const Adaptive.Cluster.Codecs.SessionCloseEventEncoder.SCHEMA_VERSION = 14 -> ushort
+*REMOVED*const Adaptive.Cluster.Codecs.SessionCloseRequestDecoder.SCHEMA_VERSION = 14 -> ushort
+*REMOVED*const Adaptive.Cluster.Codecs.SessionCloseRequestEncoder.SCHEMA_VERSION = 14 -> ushort
+*REMOVED*const Adaptive.Cluster.Codecs.SessionConnectRequestDecoder.SCHEMA_VERSION = 14 -> ushort
+*REMOVED*const Adaptive.Cluster.Codecs.SessionConnectRequestEncoder.SCHEMA_VERSION = 14 -> ushort
+*REMOVED*const Adaptive.Cluster.Codecs.SessionEventDecoder.SCHEMA_VERSION = 14 -> ushort
+*REMOVED*const Adaptive.Cluster.Codecs.SessionEventEncoder.SCHEMA_VERSION = 14 -> ushort
+*REMOVED*const Adaptive.Cluster.Codecs.SessionKeepAliveDecoder.SCHEMA_VERSION = 14 -> ushort
+*REMOVED*const Adaptive.Cluster.Codecs.SessionKeepAliveEncoder.SCHEMA_VERSION = 14 -> ushort
+*REMOVED*const Adaptive.Cluster.Codecs.SessionMessageHeaderDecoder.SCHEMA_VERSION = 14 -> ushort
+*REMOVED*const Adaptive.Cluster.Codecs.SessionMessageHeaderEncoder.SCHEMA_VERSION = 14 -> ushort
+*REMOVED*const Adaptive.Cluster.Codecs.SessionOpenEventDecoder.SCHEMA_VERSION = 14 -> ushort
+*REMOVED*const Adaptive.Cluster.Codecs.SessionOpenEventEncoder.SCHEMA_VERSION = 14 -> ushort
+*REMOVED*const Adaptive.Cluster.Codecs.SnapshotMarkerDecoder.SCHEMA_VERSION = 14 -> ushort
+*REMOVED*const Adaptive.Cluster.Codecs.SnapshotMarkerEncoder.SCHEMA_VERSION = 14 -> ushort
+*REMOVED*const Adaptive.Cluster.Codecs.SnapshotRecordingQueryDecoder.SCHEMA_VERSION = 14 -> ushort
+*REMOVED*const Adaptive.Cluster.Codecs.SnapshotRecordingQueryEncoder.SCHEMA_VERSION = 14 -> ushort
+*REMOVED*const Adaptive.Cluster.Codecs.SnapshotRecordingsDecoder.SCHEMA_VERSION = 14 -> ushort
+*REMOVED*const Adaptive.Cluster.Codecs.SnapshotRecordingsEncoder.SCHEMA_VERSION = 14 -> ushort
+*REMOVED*const Adaptive.Cluster.Codecs.StandbySnapshotDecoder.SCHEMA_VERSION = 14 -> ushort
+*REMOVED*const Adaptive.Cluster.Codecs.StandbySnapshotEncoder.SCHEMA_VERSION = 14 -> ushort
+*REMOVED*const Adaptive.Cluster.Codecs.StopCatchupDecoder.SCHEMA_VERSION = 14 -> ushort
+*REMOVED*const Adaptive.Cluster.Codecs.StopCatchupEncoder.SCHEMA_VERSION = 14 -> ushort
+*REMOVED*const Adaptive.Cluster.Codecs.TerminationAckDecoder.SCHEMA_VERSION = 14 -> ushort
+*REMOVED*const Adaptive.Cluster.Codecs.TerminationAckEncoder.SCHEMA_VERSION = 14 -> ushort
+*REMOVED*const Adaptive.Cluster.Codecs.TerminationPositionDecoder.SCHEMA_VERSION = 14 -> ushort
+*REMOVED*const Adaptive.Cluster.Codecs.TerminationPositionEncoder.SCHEMA_VERSION = 14 -> ushort
+*REMOVED*const Adaptive.Cluster.Codecs.TimerDecoder.SCHEMA_VERSION = 14 -> ushort
+*REMOVED*const Adaptive.Cluster.Codecs.TimerEncoder.SCHEMA_VERSION = 14 -> ushort
+*REMOVED*const Adaptive.Cluster.Codecs.TimerEventDecoder.SCHEMA_VERSION = 14 -> ushort
+*REMOVED*const Adaptive.Cluster.Codecs.TimerEventEncoder.SCHEMA_VERSION = 14 -> ushort
+*REMOVED*const Adaptive.Cluster.Codecs.VoteDecoder.SCHEMA_VERSION = 14 -> ushort
+*REMOVED*const Adaptive.Cluster.Codecs.VoteEncoder.SCHEMA_VERSION = 14 -> ushort
