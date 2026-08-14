@@ -272,10 +272,10 @@ namespace Adaptive.Aeron
         public const int SYSTEM_COUNTER_ID_STATUS_MESSAGES_REJECTED = 44;
 
         /// <summary>
-        /// Counter id for failed offers to the async executor proxy.
+        /// Counter id for failed offers to the native resource agent proxy.
         /// </summary>
         /// <remarks>Since 1.51.0</remarks>
-        public const int SYSTEM_COUNTER_ID_ASYNC_EXECUTOR_PROXY_FAILS = 45;
+        public const int SYSTEM_COUNTER_ID_NATIVE_RESOURCE_AGENT_PROXY_FAILS = 45;
 
         // Client/driver counters
 
@@ -1051,6 +1051,26 @@ namespace Adaptive.Aeron
         /// Counter id for the replay index's initial log position.
         /// </summary>
         public const int SEQUENCER_REPLAY_INDEX_INITIAL_SEQUENCE_LOG_POSITION_COUNTER_TYPE_ID = 525;
+
+        /// <summary>
+        /// Counter id used for keeping track of the max duty cycle time of the replay-service agent.
+        /// </summary>
+        public const int SEQUENCER_REPLAY_SERVICE_MAX_CYCLE_TIME_COUNTER_TYPE_ID = 545;
+
+        /// <summary>
+        /// Counter id used for keeping track of the count of cycle time threshold exceeded of a replay-service agent.
+        /// </summary>
+        public const int SEQUENCER_REPLAY_SERVICE_CYCLE_TIME_THRESHOLD_EXCEEDED_TYPE_ID = 546;
+
+        /// <summary>
+        /// Counter id used for keeping track of the max duty cycle time of the snapshot-service agent.
+        /// </summary>
+        public const int SEQUENCER_SNAPSHOT_SERVICE_MAX_CYCLE_TIME_COUNTER_TYPE_ID = 547;
+
+        /// <summary>
+        /// Counter id used for keeping track of the count of cycle time threshold exceeded of a snapshot-service agent.
+        /// </summary>
+        public const int SEQUENCER_SNAPSHOT_SERVICE_CYCLE_TIME_THRESHOLD_EXCEEDED_TYPE_ID = 548;
 
         /// <summary>
         /// Checks that the counter specified by {@code counterId} has the counterTypeId that matches the specified
