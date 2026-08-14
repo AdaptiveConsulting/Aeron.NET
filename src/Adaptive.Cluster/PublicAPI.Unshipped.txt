@@ -4,6 +4,10 @@ Adaptive.Cluster.Codecs.JoinLogDecoder.IsStandby() -> Adaptive.Cluster.Codecs.Bo
 Adaptive.Cluster.Codecs.JoinLogEncoder.IsStandby(Adaptive.Cluster.Codecs.BooleanType value) -> Adaptive.Cluster.Codecs.JoinLogEncoder
 Adaptive.Cluster.Codecs.NewLeadershipTermDecoder.CommitPosition() -> long
 Adaptive.Cluster.Codecs.NewLeadershipTermEncoder.CommitPosition(long value) -> Adaptive.Cluster.Codecs.NewLeadershipTermEncoder
+Adaptive.Cluster.IVersionValidator
+Adaptive.Cluster.IVersionValidator.IsVersionCompatible(int contextAppVersion, int appVersionUnderTest) -> bool
+Adaptive.Cluster.Service.ClusteredServiceContainer.Context.AppVersionValidator() -> Adaptive.Cluster.IVersionValidator
+Adaptive.Cluster.Service.ClusteredServiceContainer.Context.AppVersionValidator(Adaptive.Cluster.IVersionValidator versionValidator) -> Adaptive.Cluster.Service.ClusteredServiceContainer.Context
 const Adaptive.Cluster.Codecs.AddPassiveMemberDecoder.SCHEMA_VERSION = 16 -> ushort
 const Adaptive.Cluster.Codecs.AddPassiveMemberEncoder.SCHEMA_VERSION = 16 -> ushort
 const Adaptive.Cluster.Codecs.AdminRequestDecoder.SCHEMA_VERSION = 16 -> ushort
@@ -266,3 +270,5 @@ static Adaptive.Cluster.Codecs.NewLeadershipTermEncoder.CommitPositionNullValue(
 *REMOVED*const Adaptive.Cluster.Codecs.TimerEventEncoder.SCHEMA_VERSION = 14 -> ushort
 *REMOVED*const Adaptive.Cluster.Codecs.VoteDecoder.SCHEMA_VERSION = 14 -> ushort
 *REMOVED*const Adaptive.Cluster.Codecs.VoteEncoder.SCHEMA_VERSION = 14 -> ushort
+*REMOVED*Adaptive.Cluster.Service.ClusteredServiceContainer.Context.AppVersionValidator() -> Adaptive.Cluster.AppVersionValidator
+*REMOVED*Adaptive.Cluster.Service.ClusteredServiceContainer.Context.AppVersionValidator(Adaptive.Cluster.AppVersionValidator appVersionValidator) -> Adaptive.Cluster.Service.ClusteredServiceContainer.Context

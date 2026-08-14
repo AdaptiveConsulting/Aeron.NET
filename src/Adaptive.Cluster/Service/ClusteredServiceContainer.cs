@@ -690,7 +690,7 @@ namespace Adaptive.Cluster.Service
             private Aeron.Aeron _aeron;
             private DutyCycleTracker _dutyCycleTracker;
             private SnapshotDurationTracker _snapshotDurationTracker;
-            private AppVersionValidator _appVersionValidator;
+            private IVersionValidator _versionValidator;
             private bool _ownsAeronClient;
 
             private IClusteredService _clusteredService;
@@ -748,9 +748,9 @@ namespace Adaptive.Cluster.Service
                     _idleStrategySupplier = Configuration.IdleStrategySupplier(null);
                 }
 
-                if (null == _appVersionValidator)
+                if (null == _versionValidator)
                 {
-                    _appVersionValidator = Cluster.AppVersionValidator.SEMANTIC_VERSIONING_VALIDATOR;
+                    _versionValidator = Cluster.AppVersionValidator.SEMANTIC_VERSIONING_VALIDATOR;
                 }
 
                 if (null == _epochClock)
@@ -1026,11 +1026,11 @@ namespace Adaptive.Cluster.Service
             ///
             /// </para>
             /// </summary>
-            /// <param name="appVersionValidator"> for user application. </param>
+            /// <param name="versionValidator"> for user application. </param>
             /// <returns> this for fluent API. </returns>
-            public Context AppVersionValidator(AppVersionValidator appVersionValidator)
+            public Context AppVersionValidator(IVersionValidator versionValidator)
             {
-                this._appVersionValidator = appVersionValidator;
+                this._versionValidator = versionValidator;
                 return this;
             }
 
@@ -1041,10 +1041,10 @@ namespace Adaptive.Cluster.Service
             ///
             /// </para>
             /// </summary>
-            /// <returns> AppVersionValidator in use. </returns>
-            public AppVersionValidator AppVersionValidator()
+            /// <returns> IVersionValidator in use. </returns>
+            public IVersionValidator AppVersionValidator()
             {
-                return _appVersionValidator;
+                return _versionValidator;
             }
 
             /// <summary>
