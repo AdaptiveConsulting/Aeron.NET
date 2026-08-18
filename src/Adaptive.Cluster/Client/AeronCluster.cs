@@ -1087,11 +1087,28 @@ namespace Adaptive.Cluster.Client
             long deadlineNs = _nanoClock.NanoTime() + ctx.MessageTimeoutNs();
             do
             {
-                Publication publication = GetIngressPublication(ctx, registrationId);
-                if (null != publication)
+                if (NULL_VALUE == registrationId)
                 {
-                    return publication;
+                    registrationId = AsyncAddIngressPublication(ctx, channel, streamId);
                 }
+
+                try
+                {
+                    Publication publication = GetIngressPublication(ctx, registrationId);
+                    if (null != publication)
+                    {
+                        return publication;
+                    }
+                }
+                catch (RegistrationException ex)
+                {
+                    registrationId = NULL_VALUE;
+                    if (ErrorCode.RESOURCE_TEMPORARILY_UNAVAILABLE != ex.ErrorCode())
+                    {
+                        throw;
+                    }
+                }
+
                 _idleStrategy.Idle(ctx.RunAgentInvokers());
             } while (_nanoClock.NanoTime() < deadlineNs);
 
@@ -2447,10 +2464,13 @@ namespace Adaptive.Cluster.Client
                         {
                             _ingressPublication = GetIngressPublication(_ctx, _ingressRegistrationId);
                         }
-                        catch (RegistrationException)
+                        catch (RegistrationException ex)
                         {
                             _ingressRegistrationId = NULL_VALUE;
-                            throw;
+                            if (ErrorCode.RESOURCE_TEMPORARILY_UNAVAILABLE != ex.ErrorCode())
+                            {
+                                throw;
+                            }
                         }
                     }
                     else
@@ -2461,27 +2481,7 @@ namespace Adaptive.Cluster.Client
                 }
                 else
                 {
-                    int count = 0;
-                    foreach (MemberIngress member in _memberByIdMap.Values)
-                    {
-                        if (null != member._publication || null != member._publicationException)
-                        {
-                            count++;
-                        }
-                        else
-                        {
-                            if (NULL_VALUE == member._registrationId)
-                            {
-                                member.AsyncAddPublication();
-                            }
-                            member.AsyncGetPublication();
-                        }
-                    }
-
-                    if (_memberByIdMap.Count == count)
-                    {
-                        State(AWAIT_PUBLICATION_CONNECTED);
-                    }
+                    State(AWAIT_PUBLICATION_CONNECTED);
                 }
             }
 
@@ -2494,8 +2494,12 @@ namespace Adaptive.Cluster.Client
                     {
                         foreach (MemberIngress member in _memberByIdMap.Values)
                         {
-                            if (null == member._publication && NULL_VALUE != member._registrationId)
+                            if (null == member._publication && null == member._publicationException)
                             {
+                                if (NULL_VALUE == member._registrationId)
+                                {
+                                    member.AsyncAddPublication();
+                                }
                                 member.AsyncGetPublication();
                             }
 
@@ -2728,7 +2732,11 @@ namespace Adaptive.Cluster.Client
             }
             catch (RegistrationException ex)
             {
-                _publicationException = ex;
+                if (ErrorCode.RESOURCE_TEMPORARILY_UNAVAILABLE != ex.ErrorCode())
+                {
+                    _publicationException = ex;
+                }
+
                 _registrationId = NULL_VALUE;
             }
         }

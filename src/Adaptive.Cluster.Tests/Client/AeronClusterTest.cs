@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using Adaptive.Aeron;
+using Adaptive.Aeron.Exceptions;
 using Adaptive.Aeron.LogBuffer;
 using Adaptive.Aeron.Protocol;
 using Adaptive.Agrona;
@@ -211,6 +212,37 @@ namespace Adaptive.Cluster.Tests.Client
             _nanoTime += 1;
 
             Assert.AreEqual(0, _aeronCluster.PollEgress());
+            Assert.IsFalse(_aeronCluster.Closed);
+        }
+
+        [Test]
+        public void ShouldRetryNewLeaderIngressPublicationWhenSendChannelEndpointIsClosing()
+        {
+            long registrationId = _ingressPublication.RegistrationId;
+            A.CallTo(() => _aeron.GetExclusivePublication(registrationId))
+                .Throws(
+                    new RegistrationException(
+                        registrationId,
+                        (int)ErrorCode.RESOURCE_TEMPORARILY_UNAVAILABLE,
+                        ErrorCode.RESOURCE_TEMPORARILY_UNAVAILABLE,
+                        "send_channel_endpoint found in CLOSING state, please retry"
+                    )
+                )
+                .Once()
+                .Then.Returns(_ingressPublication);
+
+            MakeEgressSubscriptionDeliverNewLeaderEvent();
+
+            Assert.AreEqual(1, _aeronCluster.PollEgress());
+            A.CallTo(() =>
+                    _egressListener.OnNewLeader(
+                        ClusterSessionId,
+                        _leadershipTermId,
+                        _leaderMemberId,
+                        IngressEndpoints
+                    )
+                )
+                .MustHaveHappened();
             Assert.IsFalse(_aeronCluster.Closed);
         }
 
