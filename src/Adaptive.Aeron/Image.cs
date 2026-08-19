@@ -176,6 +176,7 @@ namespace Adaptive.Aeron
         /// <summary>
         /// The position this <seealso cref="Image"/> has been consumed to by the subscriber.
         /// </summary>
+        /// <remarks> The Position setter is deprecated and will be removed in 1.53.0. </remarks>
         /// <returns> the position this <seealso cref="Image"/> has been consumed to by the subscriber. </returns>
         public long Position
         {
@@ -730,6 +731,7 @@ namespace Adaptive.Aeron
         /// <returns> the resulting position after the scan terminates which is a complete message. </returns>
         /// <seealso cref="ControlledFragmentAssembler"/>
         /// <seealso cref="ImageControlledFragmentAssembler"/>
+        [Obsolete("Will be removed in 1.53.0.")]
         public long ControlledPeek(long initialPosition, IControlledFragmentHandler handler, long limitPosition)
         {
             if (_isClosed)
@@ -809,6 +811,7 @@ namespace Adaptive.Aeron
             return resultingPosition;
         }
 
+        [Obsolete("Will be removed in 1.53.0.")]
         public long ControlledPeek(long initialPosition, ControlledFragmentHandler handler, long limitPosition)
         {
             var fragmentHandler = HandlerHelper.ToControlledFragmentHandler(handler);

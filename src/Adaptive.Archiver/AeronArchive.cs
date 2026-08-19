@@ -1705,6 +1705,8 @@ namespace Adaptive.Archiver
         /// position must be on a fragment boundary. Truncating a recording to the start position effectively deletes
         /// the recording.
         ///
+        /// Truncating a recording will stop any concurrent replays of that recording.
+        ///
         /// </summary>
         /// <param name="recordingId"> of the stopped recording to be truncated. </param>
         /// <param name="position">    to which the recording will be truncated. </param>
