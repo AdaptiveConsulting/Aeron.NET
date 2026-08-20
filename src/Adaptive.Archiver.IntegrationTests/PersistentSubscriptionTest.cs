@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using Adaptive.Agrona;
 using Adaptive.Aeron.LogBuffer;
 using Adaptive.Archiver.IntegrationTests.Helpers;
 using Adaptive.Archiver.IntegrationTests.Infrastructure;
@@ -84,32 +85,13 @@ namespace Adaptive.Archiver.IntegrationTests
         [TearDown]
         public virtual void TearDown()
         {
-            foreach (var c in System.Linq.Enumerable.Reverse(Closeables))
-            {
-                DisposeWithTimeout(c, 3_000, "Closeable");
-            }
+            CloseHelper.CloseAll(System.Linq.Enumerable.Reverse(Closeables));
             Closeables.Clear();
 
-            DisposeWithTimeout(AeronArchive, 3_000, "AeronArchive");
-            DisposeWithTimeout(Aeron, 3_000, "Aeron");
-
-            try
-            {
-                Archive?.Dispose();
-            }
-            catch
-            {
-                // Ignored
-            }
-
-            try
-            {
-                Driver?.Dispose();
-            }
-            catch
-            {
-                // Ignored
-            }
+            CloseHelper.Dispose(AeronArchive);
+            CloseHelper.Dispose(Aeron);
+            CloseHelper.Dispose(Archive);
+            CloseHelper.Dispose(Driver);
         }
 
         private static void DisposeWithTimeout(IDisposable target, int timeoutMs, string name)
