@@ -192,6 +192,11 @@ namespace Adaptive.Agrona.Concurrent
         /// </summary>
         public void Dispose()
         {
+            if (IsClosed)
+            {
+                return;
+            }
+
             _isRunning = false;
 
             var thread = _thread.GetAndSet(Tombstone);
@@ -210,27 +215,42 @@ namespace Adaptive.Agrona.Concurrent
             }
             else if (Tombstone != thread)
             {
-                while (true)
+                var wasInterrupted = false;
+                try
                 {
-                    try
+                    while (thread.IsAlive)
                     {
-                        thread.Join(RETRY_CLOSE_TIMEOUT_MS);
-
-                        if (!thread.IsAlive || IsClosed)
+                        try
                         {
-                            return;
+                            if (wasInterrupted)
+                            {
+                                Console.Error.WriteLine(
+                                    $"Agent '{_agent.RoleName()}' failed to close due to close interrupted, retrying..."
+                                );
+                                thread.Interrupt();
+                            }
+
+                            thread.Join(RETRY_CLOSE_TIMEOUT_MS);
+
+                            if (thread.IsAlive)
+                            {
+                                Console.Error.WriteLine(
+                                    $"Agent '{_agent.RoleName()}' failed to close due to timeout, retrying..."
+                                );
+                                thread.Interrupt();
+                            }
                         }
-
-                        Console.Error.WriteLine(
-                            $"Timeout waiting for agent '{_agent.RoleName()}' to close, Retrying..."
-                        );
-
-                        thread.Interrupt();
+                        catch (ThreadInterruptedException)
+                        {
+                            wasInterrupted = true;
+                        }
                     }
-                    catch (ThreadInterruptedException)
+                }
+                finally
+                {
+                    if (wasInterrupted)
                     {
                         System.Threading.Thread.CurrentThread.Interrupt();
-                        return;
                     }
                 }
             }
