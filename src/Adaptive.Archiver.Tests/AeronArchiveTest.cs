@@ -33,6 +33,7 @@ namespace Adaptive.Archiver.Tests
         private const string MtuLengthParamName = "mtu";
         private const string TermLengthParamName = "term-length";
         private const string SparseParamName = "sparse";
+        private const long LongMessageTimeoutNs = 60L * 1000 * 1000 * 1000;
 
         private AeronType _aeron;
         private ControlResponsePoller _controlResponsePoller;
@@ -63,15 +64,44 @@ namespace Adaptive.Archiver.Tests
         }
 
         [Test]
-        public void AsyncConnectShouldCloseContext()
+        public void AsyncConnectShouldCloseResourceInCaseOfExceptionUponStartup()
         {
-            const string responseChannel = "aeron:udp?endpoint=localhost:1234";
-            const int responseStreamId = 49;
+            var ctx = A.Fake<Context>();
+            A.CallTo(() => ctx.AeronClient()).Returns(_aeron);
+
+            var aeronContext = A.Fake<AeronType.Context>();
+            A.CallTo(() => _aeron.Ctx).Returns(aeronContext);
+            var nanoClock = A.Fake<INanoClock>();
+            A.CallTo(() => aeronContext.NanoClock()).Returns(nanoClock);
+            var error = new InvalidOperationException("TEST");
+            A.CallTo(() => nanoClock.NanoTime()).Throws(error);
+
+            var actualException = Assert.Throws<InvalidOperationException>(() => AeronArchive.ConnectAsync(ctx));
+            Assert.AreSame(error, actualException);
+
+            A.CallTo(() => nanoClock.NanoTime())
+                .MustHaveHappened()
+                .Then(A.CallTo(() => ctx.Dispose()).MustHaveHappened());
+        }
+
+        [Test]
+        public void ShouldReleasePendingSubscriptionWhenClosedBeforeConnected()
+        {
+            const string responseChannel = "aeron:udp?endpoint=localhost:0";
+            const int responseStreamId = 42;
+            const long registrationId = 43L;
+
             var ctx = A.Fake<Context>();
             A.CallTo(() => ctx.AeronClient()).Returns(_aeron);
             A.CallTo(() => ctx.ControlResponseChannel()).Returns(responseChannel);
             A.CallTo(() => ctx.ControlResponseStreamId()).Returns(responseStreamId);
-            var error = new InvalidOperationException("subscription");
+            A.CallTo(() => ctx.MessageTimeoutNs()).Returns(LongMessageTimeoutNs);
+            A.CallTo(() => ctx.OwnsAeronClient()).Returns(false);
+
+            var aeronContext = A.Fake<AeronType.Context>();
+            A.CallTo(() => aeronContext.NanoClock()).Returns(SystemNanoClock.INSTANCE);
+            A.CallTo(() => _aeron.Ctx).Returns(aeronContext);
+
             A.CallTo(() =>
                     _aeron.AsyncAddSubscription(
                         responseChannel,
@@ -80,38 +110,29 @@ namespace Adaptive.Archiver.Tests
                         A<UnavailableImageHandler>._
                     )
                 )
-                .Throws(error);
+                .Returns(registrationId);
+            A.CallTo(() => _aeron.GetSubscription(registrationId)).Returns((Subscription)null);
 
-            var actualException = Assert.Throws<InvalidOperationException>(() => AeronArchive.ConnectAsync(ctx));
-            Assert.AreSame(error, actualException);
+            using (var asyncConnect = AeronArchive.ConnectAsync(ctx))
+            {
+                Assert.IsNull(asyncConnect.Poll());
+                Assert.AreEqual(
+                    AeronArchive.AsyncConnect.AsyncConnectState.AWAIT_SUBSCRIPTION,
+                    asyncConnect.State());
+            }
 
-            A.CallTo(() => ctx.Conclude())
-                .MustHaveHappened()
-                .Then(A.CallTo(() => ctx.AeronClient()).MustHaveHappened())
-                .Then(A.CallTo(() => ctx.ControlResponseChannel()).MustHaveHappened())
-                .Then(A.CallTo(() => ctx.ControlResponseStreamId()).MustHaveHappened())
-                .Then(
-                    A.CallTo(() =>
-                            _aeron.AsyncAddSubscription(
-                                responseChannel,
-                                responseStreamId,
-                                A<AvailableImageHandler>._,
-                                A<UnavailableImageHandler>._
-                            )
-                        )
-                        .MustHaveHappened()
-                )
-                .Then(A.CallTo(() => ctx.Dispose()).MustHaveHappened());
+            A.CallTo(() => _aeron.AsyncRemoveSubscription(registrationId)).MustHaveHappenedOnceExactly();
+            A.CallTo(() => ctx.Dispose()).MustHaveHappenedOnceExactly();
         }
 
         [Test]
-        public void AsyncConnectShouldCloseResourceInCaseOfExceptionUponStartup()
+        public void ShouldReleasePendingPublicationWhenClosedBeforeConnected()
         {
             const string responseChannel = "aeron:udp?endpoint=localhost:0";
-            const int responseStreamId = 49;
+            const int responseStreamId = 42;
             const string requestChannel = "aeron:udp?endpoint=localhost:1234";
-            const int requestStreamId = -15;
-            const long subscriptionId = -3275938475934759L;
+            const int requestStreamId = 43;
+            const long pubRegistrationId = 45L;
 
             var ctx = A.Fake<Context>();
             A.CallTo(() => ctx.AeronClient()).Returns(_aeron);
@@ -119,6 +140,14 @@ namespace Adaptive.Archiver.Tests
             A.CallTo(() => ctx.ControlResponseStreamId()).Returns(responseStreamId);
             A.CallTo(() => ctx.ControlRequestChannel()).Returns(requestChannel);
             A.CallTo(() => ctx.ControlRequestStreamId()).Returns(requestStreamId);
+            A.CallTo(() => ctx.MessageTimeoutNs()).Returns(LongMessageTimeoutNs);
+            A.CallTo(() => ctx.OwnsAeronClient()).Returns(false);
+            A.CallTo(() => ctx.ErrorHandler()).Returns(_errorHandler);
+
+            var aeronContext = A.Fake<AeronType.Context>();
+            A.CallTo(() => aeronContext.NanoClock()).Returns(SystemNanoClock.INSTANCE);
+            A.CallTo(() => _aeron.Ctx).Returns(aeronContext);
+
             A.CallTo(() =>
                     _aeron.AsyncAddSubscription(
                         responseChannel,
@@ -127,31 +156,121 @@ namespace Adaptive.Archiver.Tests
                         A<UnavailableImageHandler>._
                     )
                 )
-                .Returns(subscriptionId);
-            var error = new IndexOutOfRangeException("exception");
-            A.CallTo(() => _aeron.Ctx).Throws(error);
+                .Returns(44L);
+            var subscription = A.Fake<Subscription>();
+            A.CallTo(() => _aeron.GetSubscription(A<long>._)).Returns(subscription);
+            A.CallTo(() => _aeron.AsyncAddExclusivePublication(requestChannel, requestStreamId))
+                .Returns(pubRegistrationId);
+            A.CallTo(() => _aeron.GetExclusivePublication(A<long>._)).Returns((ExclusivePublication)null);
 
-            var actualException = Assert.Throws<IndexOutOfRangeException>(() => AeronArchive.ConnectAsync(ctx));
-            Assert.AreSame(error, actualException);
+            using (var asyncConnect = AeronArchive.ConnectAsync(ctx))
+            {
+                Assert.AreEqual(
+                    AeronArchive.AsyncConnect.AsyncConnectState.AWAIT_SUBSCRIPTION,
+                    asyncConnect.State());
+                Assert.IsNull(asyncConnect.Poll());
+                Assert.AreEqual(
+                    AeronArchive.AsyncConnect.AsyncConnectState.ADD_PUBLICATION,
+                    asyncConnect.State());
+                Assert.IsNull(asyncConnect.Poll());
+                Assert.AreEqual(
+                    AeronArchive.AsyncConnect.AsyncConnectState.ADD_PUBLICATION,
+                    asyncConnect.State());
+            }
 
-            A.CallTo(() => ctx.Conclude())
-                .MustHaveHappened()
-                .Then(A.CallTo(() => ctx.AeronClient()).MustHaveHappened())
-                .Then(A.CallTo(() => ctx.ControlResponseChannel()).MustHaveHappened())
-                .Then(A.CallTo(() => ctx.ControlResponseStreamId()).MustHaveHappened())
-                .Then(
-                    A.CallTo(() =>
-                            _aeron.AsyncAddSubscription(
-                                responseChannel,
-                                responseStreamId,
-                                A<AvailableImageHandler>._,
-                                A<UnavailableImageHandler>._
-                            )
-                        )
-                        .MustHaveHappened()
+            A.CallTo(() => subscription.Dispose()).MustHaveHappenedOnceExactly();
+            A.CallTo(() => _aeron.AsyncRemovePublication(pubRegistrationId)).MustHaveHappenedOnceExactly();
+            A.CallTo(() => ctx.Dispose()).MustHaveHappenedOnceExactly();
+        }
+
+        [Test]
+        public void ShouldRetryAddingResourcesWhenResourceTemporarilyUnavailable()
+        {
+            const string responseChannel = "aeron:udp?endpoint=localhost:0";
+            const int responseStreamId = 42;
+            const string requestChannel = "aeron:udp?endpoint=localhost:1234";
+            const int requestStreamId = 43;
+
+            var ctx = A.Fake<Context>();
+            A.CallTo(() => ctx.AeronClient()).Returns(_aeron);
+            A.CallTo(() => ctx.ControlResponseChannel()).Returns(responseChannel);
+            A.CallTo(() => ctx.ControlResponseStreamId()).Returns(responseStreamId);
+            A.CallTo(() => ctx.ControlRequestChannel()).Returns(requestChannel);
+            A.CallTo(() => ctx.ControlRequestStreamId()).Returns(requestStreamId);
+            A.CallTo(() => ctx.MessageTimeoutNs()).Returns(LongMessageTimeoutNs);
+            A.CallTo(() => ctx.OwnsAeronClient()).Returns(false);
+            A.CallTo(() => ctx.ErrorHandler()).Returns(_errorHandler);
+
+            var aeronContext = A.Fake<AeronType.Context>();
+            A.CallTo(() => aeronContext.NanoClock()).Returns(SystemNanoClock.INSTANCE);
+            A.CallTo(() => _aeron.Ctx).Returns(aeronContext);
+
+            var resourceUnavailable = new RegistrationException(
+                1,
+                (int)ErrorCode.RESOURCE_TEMPORARILY_UNAVAILABLE,
+                ErrorCode.RESOURCE_TEMPORARILY_UNAVAILABLE,
+                "WARN - resource temporarily unavailable, please retry");
+
+            A.CallTo(() =>
+                    _aeron.AsyncAddSubscription(
+                        responseChannel,
+                        responseStreamId,
+                        A<AvailableImageHandler>._,
+                        A<UnavailableImageHandler>._
+                    )
                 )
-                .Then(A.CallTo(() => _aeron.AsyncRemoveSubscription(subscriptionId)).MustHaveHappened())
-                .Then(A.CallTo(() => ctx.Dispose()).MustHaveHappened());
+                .ReturnsNextFromSequence(1L, 44L);
+            var subscription = A.Fake<Subscription>();
+            A.CallTo(() => _aeron.GetSubscription(A<long>._))
+                .Throws(resourceUnavailable).Once()
+                .Then.Returns(subscription);
+            A.CallTo(() => _aeron.AsyncAddExclusivePublication(requestChannel, requestStreamId))
+                .ReturnsNextFromSequence(3L, 45L);
+            var publication = A.Fake<ExclusivePublication>();
+            A.CallTo(() => _aeron.GetExclusivePublication(A<long>._))
+                .Throws(resourceUnavailable).Once()
+                .Then.Returns(publication);
+
+            using (var asyncConnect = AeronArchive.ConnectAsync(ctx))
+            {
+                Assert.AreEqual(
+                    AeronArchive.AsyncConnect.AsyncConnectState.AWAIT_SUBSCRIPTION,
+                    asyncConnect.State());
+                Assert.IsNull(asyncConnect.Poll());
+                Assert.AreEqual(
+                    AeronArchive.AsyncConnect.AsyncConnectState.AWAIT_SUBSCRIPTION,
+                    asyncConnect.State());
+                Assert.IsNull(asyncConnect.Poll());
+                Assert.AreEqual(
+                    AeronArchive.AsyncConnect.AsyncConnectState.ADD_PUBLICATION,
+                    asyncConnect.State());
+                Assert.IsNull(asyncConnect.Poll());
+                Assert.AreEqual(
+                    AeronArchive.AsyncConnect.AsyncConnectState.ADD_PUBLICATION,
+                    asyncConnect.State());
+                Assert.IsNull(asyncConnect.Poll());
+                Assert.AreEqual(
+                    AeronArchive.AsyncConnect.AsyncConnectState.AWAIT_PUBLICATION_CONNECTED,
+                    asyncConnect.State());
+
+                A.CallTo(() =>
+                        _aeron.AsyncAddSubscription(
+                            responseChannel,
+                            responseStreamId,
+                            A<AvailableImageHandler>._,
+                            A<UnavailableImageHandler>._
+                        )
+                    )
+                    .MustHaveHappenedTwiceExactly();
+                A.CallTo(() => _aeron.GetSubscription(A<long>._)).MustHaveHappenedTwiceExactly();
+                A.CallTo(() => _aeron.AsyncAddExclusivePublication(requestChannel, requestStreamId))
+                    .MustHaveHappenedTwiceExactly();
+                A.CallTo(() => _aeron.GetExclusivePublication(A<long>._)).MustHaveHappenedTwiceExactly();
+            }
+
+            A.CallTo(() => subscription.Dispose()).MustHaveHappenedOnceExactly();
+            A.CallTo(() => publication.Dispose()).MustHaveHappenedOnceExactly();
+            A.CallTo(() => ctx.Dispose()).MustHaveHappenedOnceExactly();
         }
 
         [Test]
