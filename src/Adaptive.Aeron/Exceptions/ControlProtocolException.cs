@@ -28,7 +28,7 @@ namespace Adaptive.Aeron.Exceptions
         /// <param name="code"> for the type of error. </param>
         /// <param name="msg">  providing more detail. </param>
         public ControlProtocolException(ErrorCode code, string msg)
-            : base(msg)
+            : base(msg, ErrorToCategory(code))
         {
             _code = code;
         }
@@ -39,7 +39,7 @@ namespace Adaptive.Aeron.Exceptions
         /// <param name="code">      for the type of error. </param>
         /// <param name="rootCause"> of the error. </param>
         public ControlProtocolException(ErrorCode code, Exception rootCause)
-            : base(rootCause)
+            : base(rootCause, ErrorToCategory(code))
         {
             _code = code;
         }
@@ -51,7 +51,7 @@ namespace Adaptive.Aeron.Exceptions
         /// <param name="msg">       providing more detail. </param>
         /// <param name="rootCause"> of the error. </param>
         public ControlProtocolException(ErrorCode code, string msg, Exception rootCause)
-            : base(msg, rootCause)
+            : base(msg, rootCause, ErrorToCategory(code))
         {
             _code = code;
         }
@@ -64,6 +64,11 @@ namespace Adaptive.Aeron.Exceptions
         public ErrorCode ErrorCode()
         {
             return _code;
+        }
+
+        internal static Category ErrorToCategory(ErrorCode code)
+        {
+            return Adaptive.Aeron.ErrorCode.RESOURCE_TEMPORARILY_UNAVAILABLE == code ? Category.WARN : Category.ERROR;
         }
     }
 }
