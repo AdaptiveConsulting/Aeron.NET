@@ -172,6 +172,7 @@ namespace Adaptive.Cluster.Tests.Client
             A.CallTo(() => _aeron.AsyncAddSubscription(_context.EgressChannel(), _context.EgressStreamId()))
                 .Returns(subscriptionId);
             var subscription = A.Fake<Subscription>();
+            A.CallTo(() => subscription.TryResolveChannelEndpointPort()).Returns("something");
             A.CallTo(() => _aeron.GetSubscription(subscriptionId)).Returns(subscription);
 
             const int ingressStreamId = 878;
@@ -206,24 +207,28 @@ namespace Adaptive.Cluster.Tests.Client
             for (int i = 0; i < iterations; i++)
             {
                 Assert.IsNull(asyncConnect.Poll());
-                Assert.AreEqual(AsyncConnectState.CREATE_INGRESS_PUBLICATIONS, asyncConnect.State());
+                Assert.AreEqual(AsyncConnectState.AWAIT_PUBLICATION_CONNECTED, asyncConnect.State());
             }
 
             A.CallTo(() => _aeron.AsyncAddExclusivePublication("aeron:udp?endpoint=localhost:20000", ingressStreamId))
                 .MustHaveHappenedANumberOfTimesMatching(n => n <= 1);
             A.CallTo(() => _aeron.AsyncAddExclusivePublication("aeron:udp?endpoint=localhost:20001", ingressStreamId))
-                .MustHaveHappened(iterations, Times.Exactly);
+                .MustHaveHappened(iterations - 1, Times.Exactly);
             A.CallTo(() => _aeron.AsyncAddExclusivePublication("aeron:udp?endpoint=localhost:20002", ingressStreamId))
                 .MustHaveHappenedANumberOfTimesMatching(n => n <= 1);
             A.CallTo(() => _aeron.GetExclusivePublication(publicationId1)).MustHaveHappened(2, Times.Exactly);
-            A.CallTo(() => _aeron.GetExclusivePublication(publicationId2)).MustHaveHappened(iterations, Times.Exactly);
-            A.CallTo(() => _aeron.GetExclusivePublication(publicationId3)).MustHaveHappened(iterations, Times.Exactly);
+            A.CallTo(() => _aeron.GetExclusivePublication(publicationId2))
+                .MustHaveHappened(iterations - 1, Times.Exactly);
+            A.CallTo(() => _aeron.GetExclusivePublication(publicationId3))
+                .MustHaveHappened(iterations - 1, Times.Exactly);
 
             asyncConnect.Dispose();
 
-            A.CallTo(() => subscription.Dispose()).MustHaveHappened();
-            A.CallTo(subscription).MustHaveHappenedOnceExactly();
-            A.CallTo(() => publication1.Dispose()).MustHaveHappened();
+            A.CallTo(() => subscription.TryResolveChannelEndpointPort())
+                .MustHaveHappened(iterations - 1, Times.Exactly);
+            A.CallTo(() => subscription.Dispose()).MustHaveHappenedOnceExactly();
+            A.CallTo(() => publication1.IsConnected).MustHaveHappened(iterations - 2, Times.Exactly);
+            A.CallTo(() => publication1.Dispose()).MustHaveHappenedOnceExactly();
             A.CallTo(() => _context.Dispose()).MustHaveHappenedOnceExactly();
             A.CallTo(() => _aeron.AsyncRemovePublication(publicationId3))
                 .MustHaveHappenedANumberOfTimesMatching(n => n <= 1);
