@@ -105,3 +105,4 @@ Adaptive.Aeron.Security.SimpleAuthorisationService.Builder.AddGeneralRule(int pr
 Adaptive.Aeron.Security.SimpleAuthorisationService.Builder.AddGeneralRule(int protocolId, int actionId, bool isAllowed) -> Adaptive.Aeron.Security.SimpleAuthorisationService.Builder
 Adaptive.Aeron.Security.SimpleAuthorisationService.Builder.AddGeneralRule(int protocolId, bool isAllowed) -> Adaptive.Aeron.Security.SimpleAuthorisationService.Builder
 Adaptive.Aeron.Security.SimpleAuthorisationService.Builder.NewInstance() -> Adaptive.Aeron.Security.SimpleAuthorisationService
+Adaptive.Aeron.Exceptions.AeronException.AeronException(System.Exception cause, Adaptive.Aeron.Exceptions.Category category) -> void
