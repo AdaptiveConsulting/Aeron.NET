@@ -216,6 +216,7 @@ namespace Adaptive.Agrona.Concurrent
             else if (Tombstone != thread)
             {
                 var wasInterrupted = false;
+                var hasLoggedInterrupt = false;
                 try
                 {
                     while (thread.IsAlive)
@@ -224,9 +225,12 @@ namespace Adaptive.Agrona.Concurrent
                         {
                             if (wasInterrupted)
                             {
-                                Console.Error.WriteLine(
-                                    $"Agent '{_agent.RoleName()}' failed to close due to close interrupted, retrying..."
-                                );
+                                if (!hasLoggedInterrupt)
+                                {
+                                    LogError("close interrupted");
+                                    hasLoggedInterrupt = true;
+                                }
+
                                 thread.Interrupt();
                             }
 
@@ -234,9 +238,7 @@ namespace Adaptive.Agrona.Concurrent
 
                             if (thread.IsAlive)
                             {
-                                Console.Error.WriteLine(
-                                    $"Agent '{_agent.RoleName()}' failed to close due to timeout, retrying..."
-                                );
+                                LogError("timeout");
                                 thread.Interrupt();
                             }
                         }
@@ -254,6 +256,13 @@ namespace Adaptive.Agrona.Concurrent
                     }
                 }
             }
+        }
+
+        private void LogError(string reason)
+        {
+            Console.Error.WriteLine(
+                $"Agent '{_agent.RoleName()}' failed to close due to {reason}, retrying..."
+            );
         }
 
         private bool DoDutyCycle(IIdleStrategy idleStrategy, IAgent agent)
