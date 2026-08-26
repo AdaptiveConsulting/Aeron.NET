@@ -15,6 +15,7 @@
  */
 
 using Adaptive.Aeron;
+using Adaptive.Aeron.Exceptions;
 using Adaptive.Aeron.LogBuffer;
 using Adaptive.Aeron.Protocol;
 using Adaptive.Aeron.Security;
@@ -235,6 +236,63 @@ namespace Adaptive.Cluster.Tests.Client
             A.CallTo(() => _aeron.AsyncRemoveSubscription(subscriptionId)).MustNotHaveHappened();
             A.CallTo(() => _aeron.AsyncRemovePublication(publicationId1)).MustNotHaveHappened();
             A.CallTo(() => _aeron.AsyncRemovePublication(publicationId2)).MustNotHaveHappened();
+        }
+
+        [Test]
+        public void ShouldRetryMemberIngressPublicationWhenSendChannelEndpointIsClosing()
+        {
+            const long subscriptionId = 42L;
+            A.CallTo(() => _aeron.AsyncAddSubscription(_context.EgressChannel(), _context.EgressStreamId()))
+                .Returns(subscriptionId);
+            var subscription = A.Fake<Subscription>();
+            A.CallTo(() => subscription.TryResolveChannelEndpointPort())
+                .Returns("aeron:udp?endpoint=localhost:8888");
+            A.CallTo(() => _aeron.GetSubscription(subscriptionId)).Returns(subscription);
+
+            const int ingressStreamId = 878;
+            _context
+                .IsIngressExclusive(true)
+                .IngressEndpoints("0=localhost:20000")
+                .IngressStreamId(ingressStreamId);
+
+            const long publicationId = -6342756432L;
+            var publication = A.Fake<ExclusivePublication>();
+            A.CallTo(() => publication.IsConnected).Returns(true);
+            A.CallTo(() => _aeron.AsyncAddExclusivePublication("aeron:udp?endpoint=localhost:20000", ingressStreamId))
+                .Returns(publicationId);
+
+            A.CallTo(() => _aeron.GetExclusivePublication(publicationId))
+                .Throws(
+                    new RegistrationException(
+                        publicationId,
+                        (int)ErrorCode.RESOURCE_TEMPORARILY_UNAVAILABLE,
+                        ErrorCode.RESOURCE_TEMPORARILY_UNAVAILABLE,
+                        "send_channel_endpoint found in CLOSING state, please retry"
+                    )
+                )
+                .Once()
+                .Then.Returns(publication);
+
+            var asyncConnect = new AeronCluster.AsyncConnect(
+                _context,
+                _aeronContext.NanoClock().NanoTime() + OneHourInNanos
+            );
+
+            Assert.IsNull(asyncConnect.Poll());
+            Assert.AreEqual(AsyncConnectState.CREATE_INGRESS_PUBLICATIONS, asyncConnect.State());
+
+            Assert.IsNull(asyncConnect.Poll());
+            Assert.AreEqual(AsyncConnectState.AWAIT_PUBLICATION_CONNECTED, asyncConnect.State());
+
+            Assert.IsNull(asyncConnect.Poll());
+            Assert.AreEqual(AsyncConnectState.AWAIT_PUBLICATION_CONNECTED, asyncConnect.State());
+
+            Assert.IsNull(asyncConnect.Poll());
+            Assert.AreEqual(AsyncConnectState.SEND_MESSAGE, asyncConnect.State());
+
+            A.CallTo(() => _aeron.GetExclusivePublication(publicationId)).MustHaveHappened(2, Times.Exactly);
+
+            asyncConnect.Dispose();
         }
 
         [Test]
