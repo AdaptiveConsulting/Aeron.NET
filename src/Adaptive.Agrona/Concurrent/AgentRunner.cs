@@ -187,6 +187,10 @@ namespace Adaptive.Agrona.Concurrent
         /// <seealso cref="IAgent"/> performing
         /// it <seealso cref="IAgent.OnClose()"/> logic.
         /// <para>
+        /// Note: if the caller thread is interrupted while invoking this method then the agent thread will be
+        /// interrupted as well, but the loop will not exit until the agent thread fully terminates.
+        /// </para>
+        /// <para>
         /// The clean up logic will only be performed once even if close is called from multiple concurrent threads.
         /// </para>
         /// </summary>
