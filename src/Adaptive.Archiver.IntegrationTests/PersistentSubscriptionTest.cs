@@ -89,8 +89,8 @@ namespace Adaptive.Archiver.IntegrationTests
             Closeables.Clear();
 
             CloseHelper.Dispose(AeronArchive);
-            CloseHelper.Dispose(Aeron);
             CloseHelper.Dispose(Archive);
+            CloseHelper.Dispose(Aeron);
             CloseHelper.Dispose(Driver);
         }
 
