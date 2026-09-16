@@ -37,10 +37,12 @@ namespace Adaptive.Agrona.Concurrent
 
         private volatile bool _isRunning = true;
 
+        private volatile bool _isClosed;
+
         /// <summary>
         /// Has the <see cref="IAgent"/> been closed?
         /// </summary>
-        public bool IsClosed { get; private set; }
+        public bool IsClosed => _isClosed;
 
         private readonly AtomicCounter _errorCounter;
         private readonly IErrorHandler _errorHandler;
@@ -178,7 +180,7 @@ namespace Adaptive.Agrona.Concurrent
             }
             finally
             {
-                IsClosed = true;
+                _isClosed = true;
             }
         }
 
@@ -209,7 +211,7 @@ namespace Adaptive.Agrona.Concurrent
             {
                 try
                 {
-                    IsClosed = true;
+                    _isClosed = true;
                     _agent.OnClose();
                 }
                 catch (Exception ex)
