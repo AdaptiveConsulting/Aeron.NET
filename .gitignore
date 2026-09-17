@@ -237,3 +237,6 @@ _Pvt_Extensions
 .fake/
 
 cluster-mark-service-*.dat
+
+# macOS
+.DS_Store

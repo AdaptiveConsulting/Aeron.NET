@@ -3082,7 +3082,6 @@ namespace Adaptive.Aeron
                 {
                     _loggingErrorHandler = loggingErrorHandler;
                     _userErrorHandler = userErrorHandler;
-                    throw new NotImplementedException();
                 }
 
                 public void OnError(Exception exception)
