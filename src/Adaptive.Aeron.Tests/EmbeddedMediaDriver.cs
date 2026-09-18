@@ -33,7 +33,7 @@ namespace Adaptive.Aeron.Tests
 
         public EmbeddedMediaDriver()
         {
-            _aeronDir = Aeron.Context.GetAeronDirectoryName();
+            _aeronDir = Path.Combine(Path.GetTempPath(), "aeron-" + Guid.NewGuid().ToString("N"));
             if (Directory.Exists(_aeronDir))
             {
                 try
@@ -72,11 +72,21 @@ namespace Adaptive.Aeron.Tests
                 "-Daeron.driver.termination.validator=io.aeron.driver.DefaultAllowTerminationValidator"
             );
             psi.ArgumentList.Add("-Daeron.threading.mode=SHARED");
+            psi.ArgumentList.Add("-Daeron.dir.delete.on.shutdown=true");
             psi.ArgumentList.Add("io.aeron.driver.MediaDriver");
 
             _driver = Process.Start(psi) ?? throw new InvalidOperationException("failed to start media driver");
 
-            WaitForDriverReady();
+            try
+            {
+                WaitForDriverReady();
+            }
+            catch
+            {
+                ShutdownDriver();
+                _driver.Dispose();
+                throw;
+            }
         }
 
         public string AeronDirectoryName => _aeronDir;
@@ -95,19 +105,59 @@ namespace Adaptive.Aeron.Tests
 
             if (!_driver.WaitForExit(ShutdownTimeoutMs))
             {
+                ShutdownDriver();
+            }
+
+            bool exited;
+            try
+            {
+                exited = _driver.HasExited;
+            }
+            catch
+            {
+                exited = false;
+            }
+
+            _driver.Dispose();
+
+            if (exited)
+            {
                 try
                 {
-                    _driver.Kill(entireProcessTree: true);
+                    if (Directory.Exists(_aeronDir))
+                    {
+                        Directory.Delete(_aeronDir, recursive: true);
+                    }
                 }
                 catch
                 {
                 }
-                _driver.WaitForExit(ShutdownTimeoutMs);
             }
-            _driver.Dispose();
         }
 
-        private static void WaitForDriverReady()
+        private void ShutdownDriver()
+        {
+            try
+            {
+                if (!_driver.HasExited)
+                {
+                    _driver.Kill(entireProcessTree: true);
+                }
+            }
+            catch
+            {
+            }
+
+            try
+            {
+                _driver.WaitForExit(ShutdownTimeoutMs);
+            }
+            catch
+            {
+            }
+        }
+
+        private void WaitForDriverReady()
         {
             var clock = new SystemEpochClock();
             var deadline = clock.Time() + StartupTimeoutMs;
@@ -115,9 +165,15 @@ namespace Adaptive.Aeron.Tests
 
             while (clock.Time() < deadline)
             {
+                if (_driver.HasExited)
+                {
+                    throw new InvalidOperationException(
+                        $"driver process exited prematurely with code {_driver.ExitCode}");
+                }
+
                 try
                 {
-                    using var aeron = Aeron.Connect();
+                    using var aeron = Aeron.Connect(new Aeron.Context().AeronDirectoryName(_aeronDir));
                     return;
                 }
                 catch (Exception e)

@@ -23,9 +23,14 @@ namespace Adaptive.Aeron.Tests
     public class ContextText
     {
         private EmbeddedMediaDriver _driver;
+        private Aeron.Context _ctx;
 
         [SetUp]
-        public void StartDriver() => _driver = new EmbeddedMediaDriver();
+        public void SetUp()
+        {
+            _driver = new EmbeddedMediaDriver();
+            _ctx = new Aeron.Context().AeronDirectoryName(_driver.AeronDirectoryName);
+        }
 
         [TearDown]
         public void StopDriver() => _driver?.Dispose();
@@ -33,20 +38,16 @@ namespace Adaptive.Aeron.Tests
         [Test]
         public void ShouldNotAllowConcludeMoreThanOnce()
         {
-            var ctx = new Aeron.Context();
-
-            ctx.Conclude();
-            Assert.Throws(typeof(ConcurrentConcludeException), () => ctx.Conclude());
+            _ctx.Conclude();
+            Assert.Throws(typeof(ConcurrentConcludeException), () => _ctx.Conclude());
         }
 
         [Test]
         public void ShouldAllowConcludeOfClonedContext()
         {
-            var ctx = new Aeron.Context();
+            var ctx2 = _ctx.Clone();
 
-            var ctx2 = ctx.Clone();
-
-            ctx.Conclude();
+            _ctx.Conclude();
             ctx2.Conclude();
         }
     }

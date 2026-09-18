@@ -35,10 +35,8 @@ namespace Adaptive.Aeron.Tests
         [Test]
         public void ShouldAllocateCapacityForCounterMetadataBuffer()
         {
-            string aeronDir = Aeron.Context.GetAeronDirectoryName();
-
             MappedByteBuffer cncByteBuffer = IoUtil.MapExistingFile(
-                Path.Combine(aeronDir, "cnc.dat"),
+                Path.Combine(_driver.AeronDirectoryName, "cnc.dat"),
                 MapMode.ReadOnly
             );
 
