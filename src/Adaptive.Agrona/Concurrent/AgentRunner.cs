@@ -37,10 +37,12 @@ namespace Adaptive.Agrona.Concurrent
 
         private volatile bool _isRunning = true;
 
+        private volatile bool _isClosed;
+
         /// <summary>
         /// Has the <see cref="IAgent"/> been closed?
         /// </summary>
-        public bool IsClosed { get; private set; }
+        public bool IsClosed => _isClosed;
 
         private readonly AtomicCounter _errorCounter;
         private readonly IErrorHandler _errorHandler;
@@ -178,7 +180,7 @@ namespace Adaptive.Agrona.Concurrent
             }
             finally
             {
-                IsClosed = true;
+                _isClosed = true;
             }
         }
 
@@ -187,11 +189,20 @@ namespace Adaptive.Agrona.Concurrent
         /// <seealso cref="IAgent"/> performing
         /// it <seealso cref="IAgent.OnClose()"/> logic.
         /// <para>
+        /// Note: if the caller thread is interrupted while invoking this method then the agent thread will be
+        /// interrupted as well, but the loop will not exit until the agent thread fully terminates.
+        /// </para>
+        /// <para>
         /// The clean up logic will only be performed once even if close is called from multiple concurrent threads.
         /// </para>
         /// </summary>
         public void Dispose()
         {
+            if (IsClosed)
+            {
+                return;
+            }
+
             _isRunning = false;
 
             var thread = _thread.GetAndSet(Tombstone);
@@ -200,7 +211,7 @@ namespace Adaptive.Agrona.Concurrent
             {
                 try
                 {
-                    IsClosed = true;
+                    _isClosed = true;
                     _agent.OnClose();
                 }
                 catch (Exception ex)
@@ -210,30 +221,54 @@ namespace Adaptive.Agrona.Concurrent
             }
             else if (Tombstone != thread)
             {
-                while (true)
+                var wasInterrupted = false;
+                var hasLoggedInterrupt = false;
+                try
                 {
-                    try
+                    while (thread.IsAlive)
                     {
-                        thread.Join(RETRY_CLOSE_TIMEOUT_MS);
-
-                        if (!thread.IsAlive || IsClosed)
+                        try
                         {
-                            return;
+                            if (wasInterrupted)
+                            {
+                                if (!hasLoggedInterrupt)
+                                {
+                                    LogError("close interrupted");
+                                    hasLoggedInterrupt = true;
+                                }
+
+                                thread.Interrupt();
+                            }
+
+                            thread.Join(RETRY_CLOSE_TIMEOUT_MS);
+
+                            if (thread.IsAlive)
+                            {
+                                LogError("timeout");
+                                thread.Interrupt();
+                            }
                         }
-
-                        Console.Error.WriteLine(
-                            $"Timeout waiting for agent '{_agent.RoleName()}' to close, Retrying..."
-                        );
-
-                        thread.Interrupt();
+                        catch (ThreadInterruptedException)
+                        {
+                            wasInterrupted = true;
+                        }
                     }
-                    catch (ThreadInterruptedException)
+                }
+                finally
+                {
+                    if (wasInterrupted)
                     {
                         System.Threading.Thread.CurrentThread.Interrupt();
-                        return;
                     }
                 }
             }
+        }
+
+        private void LogError(string reason)
+        {
+            Console.Error.WriteLine(
+                $"Agent '{_agent.RoleName()}' failed to close due to {reason}, retrying..."
+            );
         }
 
         private bool DoDutyCycle(IIdleStrategy idleStrategy, IAgent agent)
