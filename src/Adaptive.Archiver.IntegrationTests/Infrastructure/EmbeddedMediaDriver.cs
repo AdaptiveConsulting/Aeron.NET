@@ -109,6 +109,7 @@ namespace Adaptive.Archiver.IntegrationTests.Infrastructure
             psi.ArgumentList.Add("-Daeron.untethered.window.limit.timeout=1s");
             psi.ArgumentList.Add("-Daeron.untethered.linger.timeout=1s");
             psi.ArgumentList.Add("-Daeron.publication.linger.timeout=1s");
+            psi.ArgumentList.Add("-Daeron.threading.mode=SHARED");
             if (withLossGenerators)
             {
                 psi.ArgumentList.Add(

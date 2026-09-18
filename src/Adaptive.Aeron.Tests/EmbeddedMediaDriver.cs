@@ -71,6 +71,7 @@ namespace Adaptive.Aeron.Tests
             psi.ArgumentList.Add(
                 "-Daeron.driver.termination.validator=io.aeron.driver.DefaultAllowTerminationValidator"
             );
+            psi.ArgumentList.Add("-Daeron.threading.mode=SHARED");
             psi.ArgumentList.Add("io.aeron.driver.MediaDriver");
 
             _driver = Process.Start(psi) ?? throw new InvalidOperationException("failed to start media driver");
