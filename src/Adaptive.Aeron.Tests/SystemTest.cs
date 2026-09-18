@@ -37,7 +37,7 @@ namespace Adaptive.Aeron.Tests
         [Test]
         public void BasicMessageTest()
         {
-            using var aeron = Aeron.Connect();
+            using var aeron = Aeron.Connect(new Aeron.Context().AeronDirectoryName(_driver.AeronDirectoryName));
             var publication = aeron.AddPublication("aeron:ipc", 1);
             var subscription = aeron.AddSubscription("aeron:ipc", 1);
             Await(() => publication.IsConnected);
