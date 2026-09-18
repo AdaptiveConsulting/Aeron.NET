@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Copyright 2014 - 2026 Adaptive Financial Consulting Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -32,7 +32,6 @@ namespace Adaptive.Archiver.IntegrationTests.Infrastructure
     internal sealed class EmbeddedMediaDriver : IDisposable
     {
         private const int StartupTimeoutMs = 15_000;
-        private const int ShutdownTimeoutMs = 10_000;
 
         private readonly Process _driver;
         private readonly string _aeronDir;
@@ -61,7 +60,9 @@ namespace Adaptive.Archiver.IntegrationTests.Infrastructure
 
             if (Directory.Exists(_aeronDir))
             {
-                try { Directory.Delete(_aeronDir, recursive: true); } catch { }
+                try
+                { Directory.Delete(_aeronDir, recursive: true); }
+                catch { }
             }
 
             var rootDir =
@@ -125,17 +126,28 @@ namespace Adaptive.Archiver.IntegrationTests.Infrastructure
 
             _driver = Process.Start(psi) ?? throw new InvalidOperationException("failed to start media driver");
 
-            WaitForDriverReady();
+            try
+            {
+                WaitForDriverReady();
+            }
+            catch
+            {
+                EmbeddedProcess.Shutdown(_driver, "EmbeddedMediaDriver");
+                _driver.Dispose();
+                throw;
+            }
         }
 
         public string AeronDirectoryName => _aeronDir;
 
         public void Dispose()
         {
-            EmbeddedArchive.ShutdownProcess(_driver, "EmbeddedMediaDriver");
+            EmbeddedProcess.Shutdown(_driver, "EmbeddedMediaDriver");
 
             bool exited = false;
-            try { exited = _driver.HasExited; } catch { }
+            try
+            { exited = _driver.HasExited; }
+            catch { }
 
             _driver.Dispose();
 

@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Copyright 2014 - 2026 Adaptive Financial Consulting Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -32,7 +32,6 @@ namespace Adaptive.Archiver.IntegrationTests.Infrastructure
     internal sealed class EmbeddedArchive : IDisposable
     {
         private const int StartupTimeoutMs = 30_000;
-        private const int ShutdownTimeoutMs = 10_000;
 
         // Each instance binds the archive's UDP control channel to a unique random port in the
         // ephemeral range so that two tests running back-to-back can't collide if a teardown's
@@ -79,7 +78,8 @@ namespace Adaptive.Archiver.IntegrationTests.Infrastructure
             else
             {
                 int port;
-                lock (PortPicker) { port = PortPicker.Next(MinPort, MaxPort); }
+                lock (PortPicker)
+                { port = PortPicker.Next(MinPort, MaxPort); }
                 _controlChannel = $"aeron:udp?endpoint=localhost:{port}";
             }
 
@@ -130,7 +130,16 @@ namespace Adaptive.Archiver.IntegrationTests.Infrastructure
 
             _archive = Process.Start(psi) ?? throw new InvalidOperationException("failed to start aeron archive");
 
-            WaitForArchiveReady(aeronDirectoryName, aeronClient);
+            try
+            {
+                WaitForArchiveReady(aeronDirectoryName, aeronClient);
+            }
+            catch
+            {
+                EmbeddedProcess.Shutdown(_archive, "EmbeddedArchive");
+                _archive.Dispose();
+                throw;
+            }
         }
 
         public string ArchiveDir => _archiveDir;
@@ -156,10 +165,12 @@ namespace Adaptive.Archiver.IntegrationTests.Infrastructure
         {
             // Dispose the probe before killing the JVM so its pub/sub are cleanly removed
             // from the conductor before the process disappears under them.
-            try { _probeClient?.Dispose(); } catch { }
+            try
+            { _probeClient?.Dispose(); }
+            catch { }
             _probeClient = null;
 
-            ShutdownProcess(_archive, "EmbeddedArchive");
+            EmbeddedProcess.Shutdown(_archive, "EmbeddedArchive");
 
             try
             {
@@ -176,15 +187,19 @@ namespace Adaptive.Archiver.IntegrationTests.Infrastructure
 
         public void Dispose()
         {
-            ShutdownProcess(_archive, "EmbeddedArchive");
+            EmbeddedProcess.Shutdown(_archive, "EmbeddedArchive");
 
             // Dispose the probe after the JVM is dead so there is no window between
             // REMOVE_PUBLICATION and a subsequent ADD_PUBLICATION to the same channel.
-            try { _probeClient?.Dispose(); } catch { }
+            try
+            { _probeClient?.Dispose(); }
+            catch { }
             _probeClient = null;
 
             bool exited = false;
-            try { exited = _archive.HasExited; } catch { }
+            try
+            { exited = _archive.HasExited; }
+            catch { }
 
             _archive.Dispose();
 
@@ -203,38 +218,6 @@ namespace Adaptive.Archiver.IntegrationTests.Infrastructure
             }
         }
 
-        internal static void ShutdownProcess(Process process, string name)
-        {
-            try
-            {
-                if (!process.HasExited)
-                {
-                    // Process.Kill maps to SIGKILL on Unix and TerminateProcess on Windows;
-                    // neither can be ignored by the target. entireProcessTree is best-effort —
-                    // safe on both platforms.
-                    process.Kill(entireProcessTree: true);
-                }
-            }
-            catch
-            {
-            }
-
-            try { process.WaitForExit(ShutdownTimeoutMs); } catch { }
-
-            try
-            {
-                if (!process.HasExited)
-                {
-                    NUnit.Framework.TestContext.Progress.WriteLine(
-                        $"WARNING: {name} JVM pid={process.Id} did not exit within {ShutdownTimeoutMs}ms after Kill");
-                }
-            }
-            catch
-            {
-                // Process object may already be disposed (e.g. by an outer using); not our problem.
-            }
-        }
-
         private void WaitForArchiveReady(string aeronDirectoryName, AeronClient aeronClient)
         {
             var deadline = DateTime.UtcNow.AddMilliseconds(StartupTimeoutMs);
@@ -245,7 +228,9 @@ namespace Adaptive.Archiver.IntegrationTests.Infrastructure
                 if (_archive.HasExited)
                 {
                     string stderr = "";
-                    try { stderr = _archive.StandardError.ReadToEnd(); } catch { }
+                    try
+                    { stderr = _archive.StandardError.ReadToEnd(); }
+                    catch { }
                     throw new InvalidOperationException(
                         $"archive process exited prematurely with code {_archive.ExitCode}\nSTDERR:\n{stderr}");
                 }
