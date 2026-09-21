@@ -2087,8 +2087,6 @@ namespace Adaptive.Archiver.IntegrationTests
 
             // Kill the archive JVM. PS is already in LIVE so its archive control session is idle;
             // it should keep consuming the live channel without noticing.
-            DisposeWithTimeout(AeronArchive, 3_000, "AeronArchive (mid-test)");
-            AeronArchive = null;
             Archive.Dispose();
             Archive = null;
 
