@@ -80,8 +80,12 @@ virtual Adaptive.Aeron.LogBuffer.HeaderWriter.Write(Adaptive.Agrona.Concurrent.U
 *REMOVED*Adaptive.Aeron.LogBuffer.HeaderWriter.Write(Adaptive.Agrona.Concurrent.UnsafeBuffer termBuffer, int offset, int length, int termId) -> void
 *REMOVED*const Adaptive.Aeron.AeronVersion.MINOR_VERSION = 49 -> int
 *REMOVED*const Adaptive.Aeron.AeronVersion.VERSION = "1.49.0" -> string
-const Adaptive.Aeron.AeronVersion.MINOR_VERSION = 51 -> int
-const Adaptive.Aeron.AeronVersion.VERSION = "1.51.0" -> string
+*REMOVED*const Adaptive.Aeron.AeronVersion.MINOR_VERSION = 51 -> int
+*REMOVED*const Adaptive.Aeron.AeronVersion.VERSION = "1.51.0" -> string
+*REMOVED*const Adaptive.Aeron.AeronVersion.PATCH_VERSION = 0 -> int
+const Adaptive.Aeron.AeronVersion.MINOR_VERSION = 52 -> int
+const Adaptive.Aeron.AeronVersion.PATCH_VERSION = 2 -> int
+const Adaptive.Aeron.AeronVersion.VERSION = "1.52.2" -> string
 static readonly Adaptive.Aeron.AeronVersion.GIT_SHA -> string
 static Adaptive.Aeron.Config.GetSizeAsLong(string propertyName, long defaultValue) -> long
 Adaptive.Aeron.Security.SimpleAuthenticator

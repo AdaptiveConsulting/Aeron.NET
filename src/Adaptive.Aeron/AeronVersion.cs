@@ -23,10 +23,10 @@ namespace Adaptive.Aeron
     )]
     public partial class AeronVersion
     {
-        public const string VERSION = "1.51.0";
+        public const string VERSION = "1.52.2";
         public const int MAJOR_VERSION = 1;
-        public const int MINOR_VERSION = 51;
-        public const int PATCH_VERSION = 0;
+        public const int MINOR_VERSION = 52;
+        public const int PATCH_VERSION = 2;
 
         // GIT_SHA constant is defined in the generated partial AeronVersion.GitSha.g.cs.
         // The build target in Adaptive.Aeron.csproj writes the current short SHA on every
